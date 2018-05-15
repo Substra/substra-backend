@@ -12,8 +12,8 @@ def hash_upload(fileobj):
     openedfile = fileobj.open()
     sha256_hash = hashlib.sha256()
     # Read and update hash string value in blocks of 4K
-    for byte_block in iter(lambda: openedfile.read(CHUNKSIZE), b""):
-        sha256_hash.update(byte_block)
+    for byte_block in iter(lambda: openedfile.read(CHUNKSIZE), ""):
+        sha256_hash.update(byte_block.encode())
     return sha256_hash.hexdigest()
 
 
@@ -26,7 +26,7 @@ class Problem(models.Model):
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
-        if self.pkhash is None:
+        if not self.pkhash:
             self.pkhash = hash_upload(self.description)
         super(Problem, self).save(*args, **kwargs)
 
@@ -42,7 +42,7 @@ class DataOpener(models.Model):
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
-        if self.pkhash is None:
+        if not self.pkhash:
             self.pkhash = hash_upload(self.script)
         super(DataOpener, self).save(*args, **kwargs)
 
