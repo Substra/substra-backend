@@ -1,6 +1,6 @@
 import shutil
 import tempfile
-import StringIO
+from io import StringIO
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase, override_settings
 from .models import Problem, hash_upload
@@ -18,9 +18,10 @@ def get_temporary_text_file(contents, filename):
     :type contents: str
     :type filename: str
     """
-    io = StringIO.StringIO()
-    io.write(contents)
-    text_file = InMemoryUploadedFile(io, None, filename, 'text', io.len, None)
+    io = StringIO()
+    iolength = io.write(contents)
+    text_file = InMemoryUploadedFile(io, None, filename, 'text',
+                                     iolength, None)
     # Setting the file to its start
     text_file.seek(0)
     return text_file
