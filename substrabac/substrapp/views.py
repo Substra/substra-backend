@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from substrapp.models import Problem
-from substrapp.serializers import ProblemSerializer
+from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
 from substrapp.utils import compute_hash
 
 
@@ -51,24 +51,21 @@ class ProblemList(APIView):
         data = request.data
         print('data', request.data)
         print('files', request.FILES)
-        serializer = ProblemSerializer(data=data)
-        if serializer.is_valid():
-            # save problem metrics and description in local Storage
-            # print(serializer.data)
-            # problem = Problem(description=serializer.data["description"],
-            #                   metrics=serializer.data["metrics"])
-            problem = Problem(description=request.FILES["description"],
-                              metrics=request.FILES["metrics"])
-            problem.save()
-            # serializer.save()
-            # print('test', serializer.data)
+        problem_serializer = ProblemSerializer(data={'metrics': data['metrics'],
+                                                'description':
+                                                data['description']})
+        ledger_serializer = LedgerProblemSerializer(data={'test_data':
+                                                     data['test_data'],
+                                                     'name': data['name']})
+        if problem_serializer.is_valid():
+            problem_serializer.save()
             # run smart contract to register problem in ledger
             # TODO using problem.pk as description hash
             # need to compute metrics hash
             # metrics_hash = compute_hash(problem.metrics)
             # print(metrics_hash)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response(problem_serializer.validated_data, status=status.HTTP_201_CREATED)
+        return Response(problem_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Create your views here.
