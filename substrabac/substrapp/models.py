@@ -1,22 +1,8 @@
-import hashlib
 from django.db import models
+from .utils import compute_hash
 
 
-CHUNKSIZE = 4096
-
-
-def hash_upload(fileobj):
-    """
-    Returns the hash of a file
-    """
-    openedfile = fileobj.open()
-    sha256_hash = hashlib.sha256()
-    # Read and update hash string value in blocks of 4K
-    for byte_block in iter(lambda: openedfile.read(CHUNKSIZE), ""):
-        sha256_hash.update(byte_block.encode())
-    return sha256_hash.hexdigest()
-
-
+# TODO for files?? b64.b64encode(zlib.compress(f.read())) ??
 class Problem(models.Model):
     """Storage Problem table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
@@ -27,7 +13,7 @@ class Problem(models.Model):
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = hash_upload(self.description)
+            self.pkhash = compute_hash(self.description)
         super(Problem, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -43,7 +29,7 @@ class DataOpener(models.Model):
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = hash_upload(self.script)
+            self.pkhash = compute_hash(self.script)
         super(DataOpener, self).save(*args, **kwargs)
 
     def __str__(self):
@@ -59,8 +45,8 @@ class Data(models.Model):
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
-        if self.pkhash is None:
-            self.pkhash = hash_upload(self.features)
+        if not self.pkhash:
+            self.pkhash = compute_hash(self.features)
         super(Data, self).save(*args, **kwargs)
 
     def __str__(self):
