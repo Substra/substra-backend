@@ -76,7 +76,7 @@ class QueryTests(APITestCase):
 
     def test_add_problem(self):
         url = reverse('substrapp:problem')
-        description_content = "Super problem"
+        description_content = "My Super top problem"
         metrics_content = "def metrics():\n\tpass"
         description = get_temporary_text_file(description_content,
                                               "description.md")
