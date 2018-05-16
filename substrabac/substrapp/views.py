@@ -49,17 +49,24 @@ class ProblemList(APIView):
         response_serializer: ProblemSerializer
         """
         data = request.data
+        print('data', request.data)
+        print('files', request.FILES)
         serializer = ProblemSerializer(data=data)
         if serializer.is_valid():
             # save problem metrics and description in local Storage
-            # ?? need to check if data['files'].keys() contains description and
-            # metrics?? if not, return status.HTTP_406_NOT_ACCEPTABLE
-            problem = serializer.save()
+            # print(serializer.data)
+            # problem = Problem(description=serializer.data["description"],
+            #                   metrics=serializer.data["metrics"])
+            problem = Problem(description=request.FILES["description"],
+                              metrics=request.FILES["metrics"])
+            problem.save()
+            # serializer.save()
+            # print('test', serializer.data)
             # run smart contract to register problem in ledger
             # TODO using problem.pk as description hash
             # need to compute metrics hash
-            metrics_hash = compute_hash(problem.metrics)
-            print(metrics_hash)
+            # metrics_hash = compute_hash(problem.metrics)
+            # print(metrics_hash)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

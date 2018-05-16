@@ -10,3 +10,12 @@ class ProblemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Problem
         fields = '__all__'
+
+    # def create(self, validated_data):
+    #     Problem.objects.create(description=validated_data["description"],
+    #                            metrics=validated_data["metrics"])
+    #     
+
+    # def update(self, instance, validated_data):
+
+    
