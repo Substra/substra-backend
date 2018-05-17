@@ -77,12 +77,12 @@ WSGI_APPLICATION = 'substrabac.wsgi.application'
 
 DATABASES = {
     'default': {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("SUBSTRABAC_DB_NAME"),
-        "USER": os.environ.get("SUBSTRABAC_DB_USER"),
-        "PASSWORD": os.environ.get("SUBSTRABAC_DB_PWD"),
-        "HOST": "localhost",
-        "PORT": "",
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('SUBSTRABAC_DB_NAME', 'substrabac'),
+        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabac'),
+        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabac'),
+        'HOST': 'localhost',
+        'PORT': '',
     }
 }
 
