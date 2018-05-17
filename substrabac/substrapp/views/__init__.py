@@ -3,5 +3,6 @@
 from .data import DataViewSet
 from .dataOpener import DataOpenerViewSet
 from .problem import ProblemViewSet
+from .algo import AlgoViewSet
 
-__all__ = ['NotebookViewSet', 'TreeViewSet', 'FolderViewSet']
+__all__ = ['DataViewSet', 'DataOpenerViewSet', 'ProblemViewSet', 'AlgoViewSet']

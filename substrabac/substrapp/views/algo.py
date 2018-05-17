@@ -3,13 +3,13 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from substrapp.models import Data, DataOpener
-from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.models import Algo, Problem
+from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 
 
-class DataViewSet(ModelViewSet):
-    queryset = Data.objects.all()
-    serializer_class = DataSerializer
+class AlgoViewSet(ModelViewSet):
+    queryset = Algo.objects.all()
+    serializer_class = AlgoSerializer
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -17,25 +17,23 @@ class DataViewSet(ModelViewSet):
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        # get pkhash of data_opener from name
+        # get pkhash of problem from name
         try:
-            data_opener = DataOpener.objects.get(name=data['data_opener'])
+            problem = Problem.objects.get(pkhash=data['problem'])
         except:
-            return Response({'message': 'This DataOpener name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'This Problem pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
 
-            serializer = self.get_serializer(data={'features': data['features'],
-                                                   'labels': data['labels']})
+            serializer = self.get_serializer(data={'algo': data['algo']})
             serializer.is_valid(raise_exception=True)
 
             # create on db
             instance = self.perform_create(serializer)
 
             # init ledger serializer
-            ledger_serializer = LedgerDataSerializer(data={'problems': data.getlist('problems'),
-                                                           'name': data['name'],
+            ledger_serializer = LedgerAlgoSerializer(data={'name': data['name'],
                                                            'permission': data.get('permission', 'all'),
-                                                           'data_opener': data_opener.pkhash,
+                                                           'problem': problem.pkhash,
                                                            'instance_pkhash': instance.pkhash})
             if not ledger_serializer.is_valid():
                 # delete instance

@@ -1,4 +1,5 @@
 from rest_framework import status, mixins
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -44,16 +45,24 @@ class ProblemViewSet(mixins.CreateModelMixin,
         """
 
         data = request.data
-        problem_serializer = self.get_serializer(data={'metrics': data['metrics'],
+        serializer = self.get_serializer(data={'metrics': data['metrics'],
                                                        'description': data['description']})
-        problem_serializer.is_valid(raise_exception=True)
-        problem = self.perform_create(problem_serializer)
+        serializer.is_valid(raise_exception=True)
 
+        # create on db
+        instance = self.perform_create(serializer)
+
+        # init ledger serializer
         ledger_serializer = LedgerProblemSerializer(data={'test_data': data.getlist('test_data'),
                                                           'name': data['name'],
-                                                          'problem_pkhash': problem.pkhash})
-        ledger_serializer.is_valid(raise_exception=True)
+                                                          'instance_pkhash': instance.pkhash})
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
+
+        # create on ledger
         ledger_serializer.create(ledger_serializer.validated_data)
 
-        headers = self.get_success_headers(problem_serializer.data)
-        return Response(problem_serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
