@@ -23,7 +23,6 @@ class AlgoViewSet(ModelViewSet):
         except:
             return Response({'message': 'This Problem pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-
             serializer = self.get_serializer(data={'algo': data['algo']})
             serializer.is_valid(raise_exception=True)
 
@@ -32,7 +31,7 @@ class AlgoViewSet(ModelViewSet):
 
             # init ledger serializer
             ledger_serializer = LedgerAlgoSerializer(data={'name': data['name'],
-                                                           'permission': data.get('permission', 'all'),
+                                                           'permissions': data.get('permissions', 'all'),
                                                            'problem': problem.pkhash,
                                                            'instance_pkhash': instance.pkhash})
             if not ledger_serializer.is_valid():

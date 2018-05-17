@@ -34,7 +34,7 @@ class DataViewSet(ModelViewSet):
             # init ledger serializer
             ledger_serializer = LedgerDataSerializer(data={'problems': data.getlist('problems'),
                                                            'name': data['name'],
-                                                           'permission': data.get('permission', 'all'),
+                                                           'permissions': data.get('permissions', 'all'),
                                                            'data_opener': data_opener.pkhash,
                                                            'instance_pkhash': instance.pkhash})
             if not ledger_serializer.is_valid():
