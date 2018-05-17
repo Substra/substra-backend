@@ -10,17 +10,36 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
-import os
+import os, sys
+from libs.helpers.gen_secret_key import write_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
+
+sys.path.append(PROJECT_ROOT)
+sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'notebook')))
+sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'settings')))
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'fod9z-5hk0qhsbu@=ssz9)vsqgaumi_dyi9_h-ok(9&wwsgntw'
+SECRET_FILE = os.path.normpath(os.path.join(PROJECT_ROOT, 'SECRET'))
+
+# KEY CONFIGURATION
+# Try to load the SECRET_KEY from our SECRET_FILE. If that fails, then generate
+# a random SECRET_KEY and save it into our SECRET_FILE for future loading. If
+# everything fails, then just raise an exception.
+try:
+    SECRET_KEY = open(SECRET_FILE).read().strip()
+except IOError:
+    try:
+        SECRET_KEY = write_secret_key(SECRET_FILE)
+    except IOError:
+        raise Exception('Cannot open file `%s` for writing.' % SECRET_FILE)
+# END KEY CONFIGURATION
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -38,7 +57,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'substrapp.apps.SubstrappConfig',
+    'substrapp',
 ]
 
 MIDDLEWARE = [
@@ -73,19 +92,14 @@ WSGI_APPLICATION = 'substrabac.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+# https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('SUBSTRABAC_DB_NAME', 'substrabac'),
-        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabac'),
-        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabac'),
-        'HOST': 'localhost',
-        'PORT': '',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(PROJECT_ROOT, 'db.sqlite3'),
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
