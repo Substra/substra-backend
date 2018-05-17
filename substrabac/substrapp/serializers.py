@@ -14,4 +14,3 @@ class LedgerProblemSerializer(serializers.Serializer):
         min_length=69, max_length=69), min_length=1, max_length=None)
     name = serializers.CharField(min_length=1, max_length=60)
 
-    
