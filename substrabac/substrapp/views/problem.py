@@ -53,7 +53,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
                                                           'name': data['name'],
                                                           'problem_pkhash': problem.pkhash})
         ledger_serializer.is_valid(raise_exception=True)
-        ledger_serializer.save()
+        ledger_serializer.create(ledger_serializer.validated_data)
 
         headers = self.get_success_headers(problem_serializer.data)
         return Response(problem_serializer.data, status=status.HTTP_201_CREATED, headers=headers)

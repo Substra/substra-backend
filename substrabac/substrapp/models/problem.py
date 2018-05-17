@@ -1,9 +1,10 @@
 from django.db import models
+
+from libs.timestampModel import TimeStamped
 from .utils import compute_hash
 
 
-# TODO for files?? b64.b64encode(zlib.compress(f.read())) ??
-class Problem(models.Model):
+class Problem(TimeStamped):
     """Storage Problem table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False, blank=True)
