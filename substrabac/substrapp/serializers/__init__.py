@@ -7,4 +7,4 @@ from .algo import AlgoSerializer
 from .ledger import *
 
 __all__ = ['DataSerializer', 'ProblemSerializer', 'DataOpenerSerializer', 'AlgoSerializer',
-           'LedgerProblemSerializer', 'LedgerDataSerializer', 'LedgerAlgoSerializer']
+           'LedgerProblemSerializer', 'LedgerDataSerializer', 'LedgerAlgoSerializer', 'LedgerLearnupletSerializer']
