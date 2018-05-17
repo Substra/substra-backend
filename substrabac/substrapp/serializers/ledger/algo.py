@@ -1,14 +1,13 @@
 from rest_framework import serializers
 
 
-class LedgerProblemSerializer(serializers.Serializer):
-    test_data = serializers.ListField(child=serializers.CharField(min_length=69, max_length=69),
-                                      min_length=1,
-                                      max_length=None)
+class LedgerAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=60)
+    permission = serializers.CharField(min_length=1, max_length=60)
 
     def create(self, validated_data):
         instance_pkhash = self.initial_data.get('instance_pkhash')
+        problem = self.initial_data.get('problem')
 
         # TODO use asynchrone task for calling ledger
 

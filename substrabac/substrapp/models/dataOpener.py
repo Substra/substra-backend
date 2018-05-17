@@ -15,4 +15,5 @@ class DataOpener(models.Model):
         super(DataOpener, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "%s %s" % (self.pkhash, self.name)
+        return "DataOpener with pkhash %(pkhash)s with name %(name)s" % {'pkhash': self.pkhash,
+                                                                         'name': self.name}

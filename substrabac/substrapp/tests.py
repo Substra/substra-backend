@@ -96,10 +96,9 @@ class QueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart')
         r = response.json()
 
-        self.assertEqual(r, {
-            'pkhash': '90f49bb9a9233d4ea55f516831a364047448e4b5e714dea1824a90b61e86a217',
-            'validated': False,
-            'description': 'http://testserver/substrapp/problem/description.md',
-            'metrics': 'http://testserver/substrapp/problem/metrics.py'})
+        self.assertEqual(r['pkhash'], '90f49bb9a9233d4ea55f516831a364047448e4b5e714dea1824a90b61e86a217')
+        self.assertEqual(r['validated'], False)
+        self.assertEqual(r['description'], 'http://testserver/substrapp/problem/description.md')
+        self.assertEqual(r['metrics'], 'http://testserver/substrapp/problem/metrics.py')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
