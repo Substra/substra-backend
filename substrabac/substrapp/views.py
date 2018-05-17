@@ -3,7 +3,6 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from substrapp.models import Problem
 from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
-from substrapp.utils import compute_hash
 
 
 class ProblemList(APIView):
