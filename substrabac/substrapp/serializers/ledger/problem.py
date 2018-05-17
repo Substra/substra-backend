@@ -10,10 +10,12 @@ class LedgerProblemSerializer(serializers.Serializer):
     def create(self, validated_data):
         problem_pkhash = self.initial_data.get('problem_pkhash')
 
+        # TODO use asynchrone task for calling ledger
+
+        # pass problem to validated True if ok, else create cron that delete problem.validated = False older than x days
+
         # run smart contract to register problem in ledger
         # TODO using problem.pk as description hash
         # need to compute metrics hash
         # metrics_hash = compute_hash(problem.metrics)
         # print(metrics_hash)
-
-        return {}
