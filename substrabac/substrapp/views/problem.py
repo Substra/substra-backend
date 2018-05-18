@@ -1,11 +1,23 @@
+import json
+import os
+import sys
+from subprocess import check_output, CalledProcessError, call
+
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp.conf import conf
 from substrapp.models import Problem
 from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
+
+from hfc.fabric import Client
+
+from substrapp.util import switchToUserIdentity
+
+cli = Client(net_profile="../network.json")
 
 """List all problems saved on local storage or submit a new one"""
 
@@ -70,6 +82,59 @@ class ProblemViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # TODO get problems from ledgers
         data = []
+
+        org_name = 'owkin'
+        org = conf['orgs'][org_name]
+        org_admin_home = org['admin_home']
+        peer = org['peers'][0]
+
+        os.environ['FABRIC_CFG_PATH'] = '/home/guillaume/Projects/substra/substra-network/data'
+
+        data = {
+            'CA_ADMIN_USER_PASS': '%(name)s:%(pass)s' % {
+                'name': org['users']['admin']['name'],
+                'pass': org['users']['admin']['pass'],
+            },
+            'CA_URL': '%(host)s:%(port)s' % {'host': org['ca']['host'], 'port': org['ca']['port']}
+        }
+
+        os.environ['FABRIC_CA_CLIENT_HOME'] = org_admin_home
+        os.environ['FABRIC_CA_CLIENT_TLS_CERTFILES'] = '../../substra-network' + org['tls']['certfile']
+
+        #call(['fabric-ca-client', 'enroll', '-d', '-u', 'https://%(CA_ADMIN_USER_PASS)s@%(CA_URL)s' % data])
+        os.environ['CORE_PEER_LOCALMSPID'] = org['org_msp_id']
+
+        channel_name = conf['misc']['channel_name']
+        chaincode_name = conf['misc']['chaincode_name']
+
+        sys.stdout.write(
+            'Querying chaincode in the channel \'%(CHANNEL_NAME)s\' on the peer \'%(PEER_HOST)s\' ...\n' % {
+                'CHANNEL_NAME': channel_name,
+                'PEER_HOST': peer['host']
+            })
+        sys.stdout.flush()
+
+        try:
+            output = check_output(
+                ['../bin/peer', '--logging-level=debug',  'chaincode', 'query', '-C', channel_name, '-n', chaincode_name, '-c', '{"Args":["queryObjects","problem"]}']).decode()
+        except CalledProcessError as e:
+            output = e.output.decode()
+            # uncomment for debug
+            # print(output)
+        else:
+            try:
+                value = output.split(': ')[1].replace('\n', '')
+                value = json.loads(value)
+            except:
+                return output
+            else:
+                sys.stdout.write(
+                    'Query of channel \'%(CHANNEL_NAME)s\' on peer \'%(PEER_HOST)s\' was successful\n' % {
+                        'CHANNEL_NAME': channel_name,
+                        'PEER_HOST': peer['host']
+                    })
+                sys.stdout.flush()
+                return value
 
         return Response(data, status=status.HTTP_200_OK)
 
