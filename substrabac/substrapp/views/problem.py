@@ -1,3 +1,4 @@
+from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -10,7 +11,6 @@ from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
 
 
 class ProblemViewSet(mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      GenericViewSet):
     queryset = Problem.objects.all()
@@ -66,3 +66,53 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def list(self, request, *args, **kwargs):
+        # TODO get problems from ledgers
+        data = []
+
+        return Response(data, status=status.HTTP_200_OK)
+
+    def metrics(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # TODO fetch problem from ledger
+        # if requester has permission, return metrics
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data['metrics'])
+
+    def leaderboard(self, request, *args, **kwargs):
+
+        # TODO fetch problem from ledger
+
+        try:
+            # try to get it from local db
+            instance = self.get_object()
+        except Http404:
+            # TODO get instance from remote node
+            # check hash
+            # save problem in local db for later use
+            pass
+        else:
+            pass
+
+            # TODO query list of algos and models from ledger
+
+            # sort algos given the best perfs of their models
+
+            # return success, problem info, sorted algo + models
+
+            serializer = self.get_serializer(instance)
+            return Response(serializer.data)
+
+    def data(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # TODO fetch list of data from ledger
+        # query list of related algos and models from ledger
+
+        # return success and model
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
