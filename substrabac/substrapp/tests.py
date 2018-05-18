@@ -1,14 +1,16 @@
 import shutil
 import tempfile
 from io import StringIO
+
 from django.urls import reverse
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase, override_settings
+
 from rest_framework import status
 from rest_framework.test import APITestCase
-from .models import Problem, DataOpener, Data
-from .utils import compute_hash
 
+from .models import Problem, DataOpener, Data
+from substrapp.models.utils import compute_hash
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -75,20 +77,28 @@ class ModelTests(TestCase):
 class QueryTests(APITestCase):
 
     def test_add_problem(self):
-        url = reverse('substrapp:problem')
-        description_content = "My Super top problem"
-        metrics_content = "def metrics():\n\tpass"
-        description = get_temporary_text_file(description_content,
-                                              "description.md")
-        metrics = get_temporary_text_file(metrics_content, "metrics.py")
+        url = reverse('substrapp:problem-list')
+
+        description_content = 'My Super top problem'
+        metrics_content = 'def metrics():\n\tpass'
+
+        description = get_temporary_text_file(description_content, 'description.md')
+        metrics = get_temporary_text_file(metrics_content, 'metrics.py')
+
         data = {
-            "name": "tough problem",
-            "test_data": ["data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
-                          "data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389"],
-            "description": description,
-            "metrics": metrics,
+            'name': 'tough problem',
+            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'description': description,
+            'metrics': metrics,
         }
-        # response = self.client.post(url, data, format='json')
+
         response = self.client.post(url, data, format='multipart')
-        print(response.content)
+        r = response.json()
+
+        self.assertEqual(r['pkhash'], '90f49bb9a9233d4ea55f516831a364047448e4b5e714dea1824a90b61e86a217')
+        self.assertEqual(r['validated'], False)
+        self.assertEqual(r['description'], 'http://testserver/substrapp/problem/description.md')
+        self.assertEqual(r['metrics'], 'http://testserver/substrapp/problem/metrics.py')
+
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
