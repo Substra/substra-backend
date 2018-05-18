@@ -102,6 +102,9 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# idea files
 .idea
 
+#secret files
 SECRET
