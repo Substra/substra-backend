@@ -44,3 +44,12 @@ class AlgoViewSet(ModelViewSet):
 
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def files(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # TODO fetch algo from ledger
+        # if requester has permission, return instance
+
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
