@@ -51,8 +51,9 @@ class ProblemViewSet(mixins.CreateModelMixin,
         """
 
         data = request.data
-        serializer = self.get_serializer(data={'metrics': data['metrics'],
-                                               'description': data['description']})
+        serializer = self.get_serializer(data={'metrics': data.get('metrics'),
+                                               'description': data.get('description')})
+
         serializer.is_valid(raise_exception=True)
 
         # create on db
@@ -60,8 +61,9 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
         # init ledger serializer
         ledger_serializer = LedgerProblemSerializer(data={'test_data': data.getlist('test_data'),
-                                                          'name': data['name'],
-                                                          'instance_pkhash': instance.pkhash})
+                                                              'name': data.get('name'),
+                                                              'instance_pkhash': instance.pkhash})
+
         if not ledger_serializer.is_valid():
             # delete instance
             instance.delete()

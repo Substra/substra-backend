@@ -24,8 +24,9 @@ class DataViewSet(ModelViewSet):
             return Response({'message': 'This DataOpener name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
 
-            serializer = self.get_serializer(data={'features': data['features'],
-                                                   'labels': data['labels']})
+            serializer = self.get_serializer(data={'features': data.get('features'),
+                                                   'labels': data.get('labels')})
+
             serializer.is_valid(raise_exception=True)
 
             # create on db
@@ -33,10 +34,11 @@ class DataViewSet(ModelViewSet):
 
             # init ledger serializer
             ledger_serializer = LedgerDataSerializer(data={'problems': data.getlist('problems'),
-                                                           'name': data['name'],
+                                                           'name': data.get('name'),
                                                            'permissions': data.get('permissions', 'all'),
                                                            'data_opener': data_opener.pkhash,
                                                            'instance_pkhash': instance.pkhash})
+
             if not ledger_serializer.is_valid():
                 # delete instance
                 instance.delete()
