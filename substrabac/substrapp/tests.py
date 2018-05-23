@@ -105,15 +105,18 @@ class QueryTests(APITestCase):
             get_sample_data()
 
     def tearDown(self):
-        shutil.rmtree(MEDIA_ROOT)
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
 
-    def test_add_problem(self):
+    def test_add_problem_ok(self):
         url = reverse('substrapp:problem-list')
 
         data = {
             'name': 'tough problem',
-            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                          '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.problem_description,
             'metrics': self.problem_metrics,
         }
@@ -128,7 +131,18 @@ class QueryTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_add_data_opener(self):
+    def test_add_problem_ko(self):
+        url = reverse('substrapp:problem-list')
+
+        data = {'name': 'empty problem'}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = {'metrics': self.problem_metrics, 'description': self.problem_description}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_dataopener_ok(self):
         url = reverse('substrapp:dataopener-list')
 
         data = {
@@ -144,6 +158,13 @@ class QueryTests(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_add_dataopener_ko(self):
+        url = reverse('substrapp:dataopener-list')
+
+        data = {'name': 'toto'}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_data(self):
 
         # add associated data opener
@@ -156,7 +177,7 @@ class QueryTests(APITestCase):
             'features': self.data_features,
             'labels': self.data_labels,
             'name': 'liver slide',
-            'problems': ['problem_%s' % compute_hash(self.problem_description)],
+            'problems': [compute_hash(self.problem_description)],
             'data_opener': dataopener_name,
             'permissions': 'all'
         }
@@ -168,3 +189,60 @@ class QueryTests(APITestCase):
         self.assertEqual(r['labels'], 'http://testserver/data/%s' % self.data_labels_filename)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_data_ko(self):
+        url = reverse('substrapp:data-list')
+
+        data = {'data_opener': 'not existing'}
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+        self.assertEqual(r['message'], 'This DataOpener name does not exist.')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        dataopener_name = 'slide opener'
+        DataOpener.objects.create(name=dataopener_name, script=self.dataopener_script)
+
+        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = {'data_opener': dataopener_name,
+                'name': 'liver slide', 'permissions': 'all',
+                'problems': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379']}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_learnuplet_ok(self):
+        # Add associated problem
+        description, _, metrics, _ = get_sample_problem()
+        Problem.objects.create(description=description,
+                               metrics=metrics)
+        # post data
+        url = reverse('substrapp:learnuplet-list')
+
+        data = {'problem': compute_hash(description),
+                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_learnuplet_ko(self):
+        url = reverse('substrapp:learnuplet-list')
+
+        data = {'problem': 'a' * 64,
+                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+        self.assertIn('does not exist', r['message'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        description, _, metrics, _ = get_sample_problem()
+        Problem.objects.create(description=description,
+                               metrics=metrics)
+        data = {'problem': compute_hash(description)}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
