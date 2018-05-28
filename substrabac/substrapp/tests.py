@@ -9,7 +9,7 @@ from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Problem, DataOpener, Data
+from substrapp.models import Problem, DataOpener, Data, Algo
 from substrapp.models.utils import compute_hash
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -45,9 +45,9 @@ def get_sample_problem():
     return description, description_filename, metrics, metrics_filename
 
 
-def get_sample_dataopener():
+def get_sample_script():
     script_content = "import slidelib\n\ndef read():\n\tpass"
-    script_filename = "read.py"
+    script_filename = "script.py"
     script = get_temporary_text_file(script_content, script_filename)
 
     return script, script_filename
@@ -82,7 +82,7 @@ class ModelTests(TestCase):
         self.assertFalse(problem.validated)
 
     def test_create_data_opener(self):
-        script, _ = get_sample_dataopener()
+        script, _ = get_sample_script()
         data_opener = DataOpener.objects.create(script=script, name="slides_opener")
         self.assertEqual(data_opener.pkhash, compute_hash(script))
 
@@ -92,6 +92,13 @@ class ModelTests(TestCase):
         self.assertEqual(data.pkhash, compute_hash(features))
         self.assertFalse(data.validated)
 
+    def test_create_algo(self):
+        script, _ = get_sample_script()
+        algo = Algo.objects.create(algo=script)
+        self.assertEqual(algo.pkhash, compute_hash(script))
+        self.assertFalse(algo.validated)
+
+
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
@@ -100,7 +107,7 @@ class QueryTests(APITestCase):
     def setUp(self):
         self.problem_description, self.problem_description_filename,\
         self.problem_metrics, self.problem_metrics_filename = get_sample_problem()
-        self.dataopener_script, self.dataopener_script_filename = get_sample_dataopener()
+        self.script, self.script_filename = get_sample_script()
         self.data_features, self.data_features_filename, self.data_labels, self.data_labels_filename =\
             get_sample_data()
 
@@ -147,14 +154,14 @@ class QueryTests(APITestCase):
 
         data = {
             'name': 'slide opener',
-            'script': self.dataopener_script
+            'script': self.script
         }
 
         response = self.client.post(url, data, format='multipart')
         r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.dataopener_script))
-        self.assertEqual(r['script'], 'http://testserver/dataopener/%s' % self.dataopener_script_filename)
+        self.assertEqual(r['pkhash'], compute_hash(self.script))
+        self.assertEqual(r['script'], 'http://testserver/dataopener/%s' % self.script_filename)
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -165,11 +172,12 @@ class QueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data(self):
+
+    def test_add_data_ok(self):
 
         # add associated data opener
         dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.dataopener_script)
+        DataOpener.objects.create(name=dataopener_name, script=self.script)
 
         url = reverse('substrapp:data-list')
 
@@ -193,6 +201,7 @@ class QueryTests(APITestCase):
     def test_add_data_ko(self):
         url = reverse('substrapp:data-list')
 
+        # missing data opener
         data = {'data_opener': 'not existing'}
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -200,17 +209,75 @@ class QueryTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.dataopener_script)
+        DataOpener.objects.create(name=dataopener_name, script=self.script)
 
-        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
-        response = self.client.post(url, data, format='multipart')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
+        # missing local storage field
         data = {'data_opener': dataopener_name,
                 'name': 'liver slide', 'permissions': 'all',
                 'problems': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379']}
         response = self.client.post(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # missing ledger field
+        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_algo_ok(self):
+
+        # add associated problem
+        Problem.objects.create(description=self.problem_description,
+                               metrics=self.problem_metrics)
+
+        url = reverse('substrapp:algo-list')
+
+        data = {
+            'algo': self.script,
+            'name': 'super top algo',
+            'problem': compute_hash(self.problem_description),
+            'permissions': 'all'
+        }
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+
+        self.assertEqual(r['pkhash'], compute_hash(self.script))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_algo_ko(self):
+        url = reverse('substrapp:algo-list')
+
+        # non existing associated problem
+        data = {
+            'algo': self.script,
+            'name': 'super top algo',
+            'problem': 'non existing problem',
+            'permissions': 'all'
+        }
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+        self.assertIn('does not exist', r['message'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        Problem.objects.create(description=self.problem_description,
+                               metrics=self.problem_metrics)
+
+        # missing local storage field
+        data = {
+            'name': 'super top algo',
+            'problem': compute_hash(self.problem_description),
+            'permissions': 'all'
+        }
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # missing ledger field
+        data = {
+            'algo': self.script,
+            'problem': compute_hash(self.problem_description),
+        }
+        response = self.client.post(url, data, format='multipart')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
     def test_add_learnuplet_ok(self):
         # Add associated problem
@@ -239,10 +306,23 @@ class QueryTests(APITestCase):
         self.assertIn('does not exist', r['message'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        description, _, metrics, _ = get_sample_problem()
-        Problem.objects.create(description=description,
-                               metrics=metrics)
-        data = {'problem': compute_hash(description)}
+        Problem.objects.create(description=self.problem_description,
+                               metrics=self.problem_metrics)
+        data = {'problem': compute_hash(self.problem_description)}
         response = self.client.post(url, data, format='multipart')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_get_problem_metrics(self):
+        problem = Problem.objects.create(description=self.problem_description,
+                                         metrics=self.problem_metrics)
+        response = self.client.get('/problem/%s/metrics/' % problem.pkhash)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        r = response.json()
+        self.assertEqual(r, 'http://testserver/problem/%s/metrics/%s' % (problem.pkhash, self.problem_metrics_filename))
+
+    def test_get_algo_files(self):
+        algo = Algo.objects.create(algo=self.script)
+        response = self.client.get('/algo/%s/files/' % algo.pkhash)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        r = response.json()
+        self.assertEqual(r, 'http://testserver/algo/%s/files/%s' % (algo.pkhash, self.script_filename))

@@ -61,8 +61,8 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
         # init ledger serializer
         ledger_serializer = LedgerProblemSerializer(data={'test_data': data.getlist('test_data'),
-                                                              'name': data.get('name'),
-                                                              'instance_pkhash': instance.pkhash})
+                                                          'name': data.get('name'),
+                                                          'instance_pkhash': instance.pkhash})
 
         if not ledger_serializer.is_valid():
             # delete instance
