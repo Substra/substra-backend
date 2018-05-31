@@ -5,6 +5,7 @@ from subprocess import check_output, CalledProcessError, call
 
 from django.http import Http404
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -13,11 +14,11 @@ from substrapp.conf import conf
 from substrapp.models import Problem
 from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
 
-from hfc.fabric import Client
+# from hfc.fabric import Client
 
-from substrapp.util import switchToUserIdentity
+# from substrapp.util import switchToUserIdentity
 
-cli = Client(net_profile="../network.json")
+# cli = Client(net_profile="../network.json")
 
 """List all problems saved on local storage or submit a new one"""
 
@@ -58,7 +59,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
         data = request.data
         serializer = self.get_serializer(data={'metrics': data['metrics'],
-                                                       'description': data['description']})
+                                               'description': data['description']})
         serializer.is_valid(raise_exception=True)
 
         # create on db
@@ -80,47 +81,36 @@ class ProblemViewSet(mixins.CreateModelMixin,
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        # TODO get problems from ledgers
-        data = []
-
         org_name = 'owkin'
         org = conf['orgs'][org_name]
-        org_admin_home = org['admin_home']
         peer = org['peers'][0]
 
-        os.environ['FABRIC_CFG_PATH'] = '/home/guillaume/Projects/substra/substra-network/data'
-
-        data = {
-            'CA_ADMIN_USER_PASS': '%(name)s:%(pass)s' % {
-                'name': org['users']['admin']['name'],
-                'pass': org['users']['admin']['pass'],
-            },
-            'CA_URL': '%(host)s:%(port)s' % {'host': org['ca']['host'], 'port': org['ca']['port']}
-        }
-
-        os.environ['FABRIC_CA_CLIENT_HOME'] = org_admin_home
-        os.environ['FABRIC_CA_CLIENT_TLS_CERTFILES'] = '../../substra-network' + org['tls']['certfile']
-
-        #call(['fabric-ca-client', 'enroll', '-d', '-u', 'https://%(CA_ADMIN_USER_PASS)s@%(CA_URL)s' % data])
-        os.environ['CORE_PEER_LOCALMSPID'] = org['org_msp_id']
+        # update config path for using right core.yaml
+        cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/' + org_name + '/' + peer['name'])
+        print(cfg_path)
+        os.environ['FABRIC_CFG_PATH'] = cfg_path
 
         channel_name = conf['misc']['channel_name']
         chaincode_name = conf['misc']['chaincode_name']
 
-        sys.stdout.write(
-            'Querying chaincode in the channel \'%(CHANNEL_NAME)s\' on the peer \'%(PEER_HOST)s\' ...\n' % {
-                'CHANNEL_NAME': channel_name,
-                'PEER_HOST': peer['host']
-            })
-        sys.stdout.flush()
+        print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
+            'channel_name': channel_name,
+            'peer_host': peer['host']
+        }, flush=True)
 
         try:
-            output = check_output(
-                ['../bin/peer', '--logging-level=debug',  'chaincode', 'query', '-C', channel_name, '-n', chaincode_name, '-c', '{"Args":["queryObjects","problem"]}']).decode()
+            output = check_output(['../bin/peer',
+                                   '--logging-level=debug',
+                                   'chaincode', 'query',
+                                   '-C', channel_name,
+                                   '-n', chaincode_name,
+                                   '-c', '{"Args":["queryObjects","problem"]}']).decode()
         except CalledProcessError as e:
             output = e.output.decode()
             # uncomment for debug
-            # print(output)
+            print(output, flush=True)
+            data = output
+            st = status.HTTP_400_BAD_REQUEST
         else:
             try:
                 value = output.split(': ')[1].replace('\n', '')
@@ -128,16 +118,17 @@ class ProblemViewSet(mixins.CreateModelMixin,
             except:
                 return output
             else:
-                sys.stdout.write(
-                    'Query of channel \'%(CHANNEL_NAME)s\' on peer \'%(PEER_HOST)s\' was successful\n' % {
-                        'CHANNEL_NAME': channel_name,
-                        'PEER_HOST': peer['host']
-                    })
-                sys.stdout.flush()
-                return value
+                msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
+                    'channel_name': channel_name,
+                    'peer_host': peer['host']
+                }
+                print(msg, flush=True)
+                st = status.HTTP_200_OK
+                data = value
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(data, status=st)
 
+    @action(detail=True)
     def metrics(self, request, *args, **kwargs):
         instance = self.get_object()
 
@@ -147,6 +138,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance)
         return Response(serializer.data['metrics'])
 
+    @action(detail=True)
     def leaderboard(self, request, *args, **kwargs):
 
         # TODO fetch problem from ledger
@@ -171,6 +163,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
 
+    @action(detail=True)
     def data(self, request, *args, **kwargs):
         instance = self.get_object()
 

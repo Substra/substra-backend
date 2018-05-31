@@ -1,11 +1,14 @@
 conf = {
     'orgs': {
         'owkin': {
+            'org_msp_dir': '/data/orgs/owkin/msp',
+            'org_msp_id': 'owkinMSP',
+            'admin_home': '/data/orgs/owkin/admin',
+            'user_home': '/data/orgs/owkin/user',
+            'anchor_tx_file': '/data/orgs/owkin/anchors.tx',
             'tls': {
                 # careful, `ca-cert.pem` is the default cert name file and a example file with this name is already present in the docker image, do not forget to remove these examples files in your docker CMD overriding if naming the same way
                 'certfile': '/data/orgs/owkin/ca-cert.pem',
-                'key': 'server.key',
-                'cert': 'server.crt',
                 'clientkey': ''
             },
             'ca': {
@@ -34,13 +37,14 @@ conf = {
                 'cn': 'rca-owkin',
                 'hosts': ['rca-orderer', 'rca-owkin', 'rca-chu-nantes']
             },
-            'org_msp_dir': '/data/orgs/owkin/msp',
-            'org_msp_id': 'owkinMSP',
-            'admin_home': '/data/orgs/owkin/admin',
-            'user_home': '/etc/hyperledger/fabric/orgs/owkin/user',
-            'anchor_tx_file': '/data/orgs/owkin/anchors.tx',
-            'peer_home': '/opt/gopath/src/github.com/hyperledger/fabric/peer',
-            'msp_config_path': '/opt/gopath/src/github.com/hyperledger/fabric/peer/msp',
+            'core': {
+                'peer_home': '/opt/gopath/src/github.com/hyperledger/fabric/peer',
+                'msp_config_path': '/opt/gopath/src/github.com/hyperledger/fabric/peer/msp',
+                'tls': {
+                    'key': 'server.key',
+                    'cert': 'server.crt'
+                }
+            },
             'peers': [
                 {
                     'name': 'peer1',
@@ -57,11 +61,15 @@ conf = {
             ]
         },
         'chu-nantes': {
+            'org_msp_dir': '/data/orgs/chu-nantes/msp',
+            'org_msp_id': 'chu-nantesMSP',
+            'admin_home': '/data/orgs/chu-nantes/admin',
+            'user_home': '/etc/hyperledger/fabric/orgs/chu-nantes/user',
+            'anchor_tx_file': '/data/orgs/chu-nantes/anchors.tx',
             'tls': {
                 # careful, `ca-cert.pem` is the default cert name file and a example file with this name is already present in the docker image, do not forget to remove these examples files if naming the same way
                 'certfile': '/data/orgs/chu-nantes/ca-cert.pem',
-                'key': 'server.key',
-                'cert': 'server.crt',
+                'clientkey': ''
             },
             'ca': {
                 'name': 'rca-chu-nantes',
@@ -89,13 +97,14 @@ conf = {
                 'cn': 'rca-chu-nantes',
                 'hosts': ['rca-orderer', 'rca-owkin', 'rca-chu-nantes']
             },
-            'org_msp_dir': '/data/orgs/chu-nantes/msp',
-            'org_msp_id': 'chu-nantesMSP',
-            'admin_home': '/data/orgs/chu-nantes/admin',
-            'user_home': '/etc/hyperledger/fabric/orgs/chu-nantes/user',
-            'anchor_tx_file': '/data/orgs/chu-nantes/anchors.tx',
-            'peer_home': '/opt/gopath/src/github.com/hyperledger/fabric/peer',
-            'msp_config_path': '/opt/gopath/src/github.com/hyperledger/fabric/peer/msp',
+            'core': {
+                'peer_home': '/opt/gopath/src/github.com/hyperledger/fabric/peer',
+                'msp_config_path': '/opt/gopath/src/github.com/hyperledger/fabric/peer/msp',
+                'tls': {
+                    'key': 'server.key',
+                    'cert': 'server.crt'
+                }
+            },
             'peers': [
                 {
                     'name': 'peer1',

@@ -98,7 +98,7 @@ class QueryTests(APITestCase):
 
         self.assertEqual(r['pkhash'], '90f49bb9a9233d4ea55f516831a364047448e4b5e714dea1824a90b61e86a217')
         self.assertEqual(r['validated'], False)
-        self.assertEqual(r['description'], 'http://testserver/substrapp/problem/description.md')
-        self.assertEqual(r['metrics'], 'http://testserver/substrapp/problem/metrics.py')
+        self.assertEqual(r['description'], 'http://testserver/problem/description.md')
+        self.assertEqual(r['metrics'], 'http://testserver/problem/metrics.py')
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
