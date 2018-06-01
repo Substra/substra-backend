@@ -80,14 +80,15 @@ class ProblemViewSet(mixins.CreateModelMixin,
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def list(self, request, *args, **kwargs):
-        org_name = 'owkin'
-        org = conf['orgs'][org_name]
-        peer = org['peers'][0]
+    def queryLedger(self, options):
+        org = options['org']
+        peer = options['peer']
+        args = options['args']
+
+        org_name = org['org_name']
 
         # update config path for using right core.yaml
         cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/' + org_name + '/' + peer['name'])
-        print(cfg_path)
         os.environ['FABRIC_CFG_PATH'] = cfg_path
 
         channel_name = conf['misc']['channel_name']
@@ -102,9 +103,10 @@ class ProblemViewSet(mixins.CreateModelMixin,
             output = check_output(['../bin/peer',
                                    '--logging-level=debug',
                                    'chaincode', 'query',
+                                   '-r',
                                    '-C', channel_name,
                                    '-n', chaincode_name,
-                                   '-c', '{"Args":["queryObjects","problem"]}']).decode()
+                                   '-c', args]).decode()
         except CalledProcessError as e:
             output = e.output.decode()
             # uncomment for debug
@@ -123,8 +125,22 @@ class ProblemViewSet(mixins.CreateModelMixin,
                     'peer_host': peer['host']
                 }
                 print(msg, flush=True)
-                st = status.HTTP_200_OK
                 data = value
+                st = status.HTTP_200_OK
+
+        return data, st
+
+    def list(self, request, *args, **kwargs):
+
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        data, st = self.queryLedger({
+            'org': org,
+            'peer': peer,
+            'args': '{"Args":["queryObjects","problem"]}'
+        })
 
         return Response(data, status=st)
 
