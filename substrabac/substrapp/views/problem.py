@@ -1,7 +1,8 @@
 import json
 import os
+import subprocess
 import sys
-from subprocess import check_output, CalledProcessError, call
+from subprocess import check_output, CalledProcessError, call, STDOUT
 
 from django.http import Http404
 from rest_framework import status, mixins
@@ -99,34 +100,37 @@ class ProblemViewSet(mixins.CreateModelMixin,
             'peer_host': peer['host']
         }, flush=True)
 
-        try:
-            output = check_output(['../bin/peer',
-                                   '--logging-level=debug',
-                                   'chaincode', 'query',
-                                   '-r',
-                                   '-C', channel_name,
-                                   '-n', chaincode_name,
-                                   '-c', args]).decode()
-        except CalledProcessError as e:
-            output = e.output.decode()
-            # uncomment for debug
-            print(output, flush=True)
-            data = output
-            st = status.HTTP_400_BAD_REQUEST
-        else:
+        output = subprocess.run(['../bin/peer',
+                                 '--logging-level=debug',
+                                 'chaincode', 'query',
+                                 '-r',
+                                 '-C', channel_name,
+                                 '-n', chaincode_name,
+                                 '-c', args],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+
+        data = output.stdout.decode('utf-8')
+        if data:
             try:
-                value = output.split(': ')[1].replace('\n', '')
-                value = json.loads(value)
+                data = data.split(': ')[1].replace('\n', '')
+                data = json.loads(data)
             except:
-                return output
+                st = status.HTTP_400_BAD_REQUEST
             else:
                 msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
                     'channel_name': channel_name,
                     'peer_host': peer['host']
                 }
                 print(msg, flush=True)
-                data = value
                 st = status.HTTP_200_OK
+        else:
+            msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+            data = {'message': msg}
+            st = status.HTTP_400_BAD_REQUEST
+            if 'access denied' in msg:
+                st = status.HTTP_403_FORBIDDEN
+
 
         return data, st
 
