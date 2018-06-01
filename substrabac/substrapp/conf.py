@@ -1,6 +1,7 @@
 conf = {
     'orgs': {
         'owkin': {
+            'org_name': 'owkin',
             'org_msp_dir': '/data/orgs/owkin/msp',
             'org_msp_id': 'owkinMSP',
             'admin_home': '/data/orgs/owkin/admin',
@@ -61,10 +62,11 @@ conf = {
             ]
         },
         'chu-nantes': {
+            'org_name': 'chu-nantes',
             'org_msp_dir': '/data/orgs/chu-nantes/msp',
             'org_msp_id': 'chu-nantesMSP',
             'admin_home': '/data/orgs/chu-nantes/admin',
-            'user_home': '/etc/hyperledger/fabric/orgs/chu-nantes/user',
+            'user_home': '/data/orgs/chu-nantes/user',
             'anchor_tx_file': '/data/orgs/chu-nantes/anchors.tx',
             'tls': {
                 # careful, `ca-cert.pem` is the default cert name file and a example file with this name is already present in the docker image, do not forget to remove these examples files if naming the same way
@@ -125,6 +127,13 @@ conf = {
         'orderer': {
             'host': 'orderer1-orderer',
             'port': 7050,
+            'org_name': 'orderer',
+            'org_msp_dir': '/data/orgs/orderer/msp',
+            'org_msp_id': 'ordererMSP',
+            'admin_home': '/data/orgs/orderer/admin',
+            'broadcast_dir': '/data/logs/broadcast',
+            'home': '/etc/hyperledger/orderer',
+            'local_msp_dir': '/etc/hyperledger/orderer/msp',
             'tls': {
                 # careful, `ca-cert.pem` is the default cert name file and a example file with this name is already present in the docker image, do not forget to remove these examples files in your docker CMD overriding if naming the same way
                 'certfile': '/data/orgs/orderer/ca-cert.pem',
@@ -156,13 +165,7 @@ conf = {
             'csr': {
                 'cn': 'rca-orderer',
                 'hosts': ['rca-orderer', 'rca-owkin', 'rca-chu-nantes']
-            },
-            'org_msp_dir': '/data/orgs/orderer/msp',
-            'org_msp_id': 'ordererMSP',
-            'admin_home': '/data/orgs/orderer/admin',
-            'broadcast_dir': '/data/logs/broadcast',
-            'home': '/etc/hyperledger/orderer',
-            'local_msp_dir': '/etc/hyperledger/orderer/msp',
+            }
         }
     },
     'misc': {
@@ -174,9 +177,9 @@ conf = {
         'config_update_envelope_file': '/tmp/config_update_as_envelope.pb',
         'setup_logfile': '/data/logs/setup.log',
         'setup_success_file': '/data/logs/setup.successful',
+        'run_logfile': '/data/logs/run.log',
         'run_sumfile': '/data/logs/run.sum',
         'run_success_file': '/data/logs/run.successful',
         'run_fail_file': '/data/logs/run.fail'
-
     }
 }
