@@ -110,6 +110,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
 
+        st = status.HTTP_200_OK
         data = output.stdout.decode('utf-8')
         if data:
             try:
@@ -123,13 +124,17 @@ class ProblemViewSet(mixins.CreateModelMixin,
                     'peer_host': peer['host']
                 }
                 print(msg, flush=True)
-                st = status.HTTP_200_OK
         else:
-            msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
-            data = {'message': msg}
-            st = status.HTTP_400_BAD_REQUEST
-            if 'access denied' in msg:
-                st = status.HTTP_403_FORBIDDEN
+            try:
+                msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+                data = {'message': msg}
+            except:
+                msg = output.stderr.decode('utf-8')
+                data = {'message': msg}
+            finally:
+                st = status.HTTP_400_BAD_REQUEST
+                if 'access denied' in msg:
+                    st = status.HTTP_403_FORBIDDEN
 
 
         return data, st
