@@ -1,7 +1,17 @@
 Django==2.0.5
 django-filter==1.1.0
 djangorestframework==3.8.2
+grpcio >= 1.0.1
 ipython==6.4.0
 ipython-genutils==0.2.0
 psycopg2-binary==2.7.4
+requests == 2.18.4
 
+protobuf==3.5.2post1
+
+cryptography >= 1.9
+hkdf >= 0.0.3
+pycryptodomex >= 3.4.2
+pysha3 == 1.0b1
+rx >= 1.5.3
+six >= 1.4.0
