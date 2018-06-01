@@ -1,13 +1,19 @@
-from rest_framework import status
+from django.http import Http404
+from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet
 
+from substrapp.conf import conf
 from substrapp.models import Algo, Problem
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
+from substrapp.views.utils import queryLedger
 
 
-class AlgoViewSet(ModelViewSet):
+class AlgoViewSet(mixins.CreateModelMixin,
+                  mixins.ListModelMixin,
+                  GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
 
@@ -45,11 +51,41 @@ class AlgoViewSet(ModelViewSet):
             headers = self.get_success_headers(serializer.data)
             return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def list(self, request, *args, **kwargs):
+
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        data, st = queryLedger({
+            'org': org,
+            'peer': peer,
+            'args': '{"Args":["queryObjects", "algo"]}'
+        })
+
+        return Response(data, status=st)
+
+    @action(detail=True)
     def files(self, request, *args, **kwargs):
-        instance = self.get_object()
+        # fetch algo from ledger
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
 
-        # TODO fetch algo from ledger
-        # if requester has permission, return instance
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
 
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data)
+        try:
+            # try to get it from local db
+            instance = self.get_object()
+        except Http404:
+            # get instance from remote node
+            algo, st = queryLedger({
+                'org': org,
+                'peer': peer,
+                'args': '{"Args":["queryObject","' + pk + '"]}'
+            })
+        finally:
+            # TODO if requester has permission, return instance
+
+            # serializer = self.get_serializer(instance)
+            return Response(algo)

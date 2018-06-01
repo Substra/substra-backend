@@ -14,7 +14,7 @@ router.register(r'problem', ProblemViewSet, base_name='problem')
 router.register(r'data', DataViewSet, base_name='data')
 router.register(r'dataopener', DataOpenerViewSet, base_name='dataopener')
 router.register(r'algo', AlgoViewSet, base_name='algo')
-router.register(r'learnuplet', LearnupletViewSet, base_name='algo')
+router.register(r'learnuplet', LearnupletViewSet, base_name='learnuplet')
 
 
 urlpatterns = [
