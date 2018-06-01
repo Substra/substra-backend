@@ -1,11 +1,25 @@
+import json
+import os
+import subprocess
+import sys
+from subprocess import check_output, CalledProcessError, call, STDOUT
+
 from django.http import Http404
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp.conf import conf
 from substrapp.models import Problem
 from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
+
+# from hfc.fabric import Client
+
+# from substrapp.util import switchToUserIdentity
+
+# cli = Client(net_profile="../network.json")
 
 """List all problems saved on local storage or submit a new one"""
 
@@ -46,7 +60,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
         data = request.data
         serializer = self.get_serializer(data={'metrics': data['metrics'],
-                                                       'description': data['description']})
+                                               'description': data['description']})
         serializer.is_valid(raise_exception=True)
 
         # create on db
@@ -67,12 +81,79 @@ class ProblemViewSet(mixins.CreateModelMixin,
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+    def queryLedger(self, options):
+        org = options['org']
+        peer = options['peer']
+        args = options['args']
+
+        org_name = org['org_name']
+
+        # update config path for using right core.yaml
+        cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/' + org_name + '/' + peer['name'])
+        os.environ['FABRIC_CFG_PATH'] = cfg_path
+
+        channel_name = conf['misc']['channel_name']
+        chaincode_name = conf['misc']['chaincode_name']
+
+        print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
+            'channel_name': channel_name,
+            'peer_host': peer['host']
+        }, flush=True)
+
+        output = subprocess.run(['../bin/peer',
+                                 '--logging-level=debug',
+                                 'chaincode', 'query',
+                                 '-r',
+                                 '-C', channel_name,
+                                 '-n', chaincode_name,
+                                 '-c', args],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
+
+        st = status.HTTP_200_OK
+        data = output.stdout.decode('utf-8')
+        if data:
+            try:
+                data = data.split(': ')[1].replace('\n', '')
+                data = json.loads(data)
+            except:
+                st = status.HTTP_400_BAD_REQUEST
+            else:
+                msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
+                    'channel_name': channel_name,
+                    'peer_host': peer['host']
+                }
+                print(msg, flush=True)
+        else:
+            try:
+                msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+                data = {'message': msg}
+            except:
+                msg = output.stderr.decode('utf-8')
+                data = {'message': msg}
+            finally:
+                st = status.HTTP_400_BAD_REQUEST
+                if 'access denied' in msg:
+                    st = status.HTTP_403_FORBIDDEN
+
+
+        return data, st
+
     def list(self, request, *args, **kwargs):
-        # TODO get problems from ledgers
-        data = []
 
-        return Response(data, status=status.HTTP_200_OK)
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
 
+        data, st = self.queryLedger({
+            'org': org,
+            'peer': peer,
+            'args': '{"Args":["queryObjects","problem"]}'
+        })
+
+        return Response(data, status=st)
+
+    @action(detail=True)
     def metrics(self, request, *args, **kwargs):
         instance = self.get_object()
 
@@ -82,6 +163,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance)
         return Response(serializer.data['metrics'])
 
+    @action(detail=True)
     def leaderboard(self, request, *args, **kwargs):
 
         # TODO fetch problem from ledger
@@ -106,6 +188,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(instance)
             return Response(serializer.data)
 
+    @action(detail=True)
     def data(self, request, *args, **kwargs):
         instance = self.get_object()
 

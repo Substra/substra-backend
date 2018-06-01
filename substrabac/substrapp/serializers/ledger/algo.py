@@ -9,6 +9,6 @@ class LedgerAlgoSerializer(serializers.Serializer):
         instance_pkhash = self.initial_data.get('instance_pkhash')
         problem = self.initial_data.get('problem')
 
-        # TODO use asynchrone task for calling ledger
+        # TODO use asynchronous task for calling ledger
 
         # pass instance to validated True if ok, else create cron that delete instance.validated = False older than x days
