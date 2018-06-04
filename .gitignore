@@ -108,3 +108,6 @@ venv.bak/
 
 #secret files
 SECRET
+
+# conf from substra-network
+substrabac/**/conf

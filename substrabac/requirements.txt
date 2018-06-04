@@ -1,4 +1,6 @@
 Django==2.0.5
+PyYAML==3.12
+
 django-filter==1.1.0
 djangorestframework==3.8.2
 grpcio >= 1.0.1
