@@ -51,13 +51,15 @@ conf = {
                     'name': 'peer1',
                     'pass': 'peer1pw',
                     'host': 'peer1-owkin',
-                    'port': 7051
+                    'port': 7051,
+                    'external_port': 7051
                 },
                 {
                     'name': 'peer2',
                     'pass': 'peer2pw',
                     'host': 'peer2-owkin',
-                    'port': 7051
+                    'port': 7051,
+                    'external_port': 8051
                 }
             ]
         },
@@ -112,13 +114,15 @@ conf = {
                     'name': 'peer1',
                     'pass': 'peer1pw',
                     'host': 'peer1-chu-nantes',
-                    'port': 7051
+                    'port': 7051,
+                    'external_port': 9051
                 },
                 {
                     'name': 'peer2',
                     'pass': 'peer2pw',
                     'host': 'peer2-chu-nantes',
-                    'port': 7051
+                    'port': 7051,
+                    'external_port': 10051
                 }
             ]
         },
