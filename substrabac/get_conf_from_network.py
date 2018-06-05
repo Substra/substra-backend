@@ -13,7 +13,9 @@ try:
 except ImportError:
     from yaml import Loader, Dumper
 
-SUBSTRA_NETWORK_PATH = os.environ.get('SUBSTRA_NETWORK_PATH', '../../substra-network/')
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+SUBSTRA_NETWORK_PATH = os.environ.get('SUBSTRA_NETWORK_PATH', os.path.join(dir_path, '../../substra-network/'))
 ORGS = ('owkin', 'chu-nantes')
 current_user = os.environ.get('USER', 'toto')
 
@@ -22,7 +24,7 @@ def create_core_peer_config():
     for org_name in conf['orgs'].keys():
         org = conf['orgs'][org_name]
         for peer in org['peers']:
-            stream = open('./core.yaml', 'r')
+            stream = open(os.path.join(dir_path, './core.yaml'), 'r')
             yaml_data = load(stream, Loader=Loader)
 
             # override template here
@@ -41,11 +43,11 @@ def create_core_peer_config():
             yaml_data['peer']['tls']['clientAuthRequired'] = 'true'
             yaml_data['peer']['tls']['clientRootCAs'] = ['../ca-cert.pem']
 
-
             yaml_data['logging']['level'] = 'debug'
 
-            filename = './substrapp/conf/%(org_name)s/%(peer_name)s/core.yaml' % {'org_name': org_name,
-                                                                                  'peer_name': peer['name']}
+            filename = os.path.join(dir_path, './substrapp/conf/%(org_name)s/%(peer_name)s/core.yaml' % {
+                'org_name': org_name,
+                'peer_name': peer['name']})
             with open(filename, 'w+') as f:
                 f.write(dump(yaml_data, default_flow_style=False))
 
@@ -53,19 +55,23 @@ def create_core_peer_config():
 def get_conf_from_network():
     for org in ORGS:
         # copy msp
-        call('sudo cp -R ' + os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user') +
-             ' ./substrapp/conf/' + org, shell=True)
+        call(['sudo', 'cp', '-R',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user'),
+              os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy ca-cert.pem
-        call('sudo cp ' + os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem') +
-             ' ./substrapp/conf/' + org, shell=True)
+        call(['sudo', 'cp',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem'),
+              os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy tls cli-client
-        call('sudo cp -R ' + os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/tls') +
-             ' ./substrapp/conf/' + org, shell=True)
+        call(['sudo', 'cp', '-R',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/tls'),
+              os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # modify rights
-        call('sudo chown -R ' + current_user + ':' + current_user + ' ./substrapp/conf/' + org, shell=True)
+        call(['sudo', 'chown', '-R', current_user + ':' + current_user,
+              os.path.join(dir_path, './substrapp/conf/' + org)])
 
 
 if __name__ == "__main__":
