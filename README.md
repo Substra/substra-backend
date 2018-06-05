@@ -32,7 +32,7 @@ Run the `get_conf_from_network.py` script for getting generated files from the s
 ```
 python get_conf_from_network.py
 ```
-It will populate the `substrapp/conf` folders.
+It will populate the `substrapp/conf` folder.
 
 ## Launch the server
 
