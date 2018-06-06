@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 
 class LedgerProblemSerializer(serializers.Serializer):
-    test_data = serializers.ListField(child=serializers.CharField(min_length=69, max_length=69),
+    test_data = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                       min_length=1,
                                       max_length=None)
     name = serializers.CharField(min_length=1, max_length=60)

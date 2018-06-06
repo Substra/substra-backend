@@ -2,8 +2,8 @@ from rest_framework import serializers
 
 
 class LedgerLearnupletSerializer(serializers.Serializer):
-    model = serializers.CharField(min_length=69, max_length=69)
-    train_data = serializers.ListField(child=serializers.CharField(min_length=69, max_length=69),
+    model = serializers.CharField(min_length=64, max_length=64)
+    train_data = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                        min_length=1,
                                        max_length=None)
 
