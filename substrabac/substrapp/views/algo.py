@@ -1,3 +1,4 @@
+
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -25,18 +26,18 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         # get pkhash of problem from name
         try:
-            problem = Problem.objects.get(pkhash=data['problem'])
+            problem = Problem.objects.get(pkhash=data.get('problem'))
         except:
             return Response({'message': 'This Problem pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            serializer = self.get_serializer(data={'algo': data['algo']})
+            serializer = self.get_serializer(data={'algo': data.get('algo')})
             serializer.is_valid(raise_exception=True)
 
             # create on db
             instance = self.perform_create(serializer)
 
             # init ledger serializer
-            ledger_serializer = LedgerAlgoSerializer(data={'name': data['name'],
+            ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
                                                            'permissions': data.get('permissions', 'all'),
                                                            'problem': problem.pkhash,
                                                            'instance_pkhash': instance.pkhash})
@@ -86,6 +87,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
             })
         finally:
             # TODO if requester has permission, return instance
+            pass
 
-            # serializer = self.get_serializer(instance)
-            return Response(algo)
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data['algo'])
+
