@@ -84,6 +84,8 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
 
+        # can modify result by interrogating `request.version`
+
         # using chu-nantes as in our testing owkin has been revoked
         org = conf['orgs']['chu-nantes']
         peer = org['peers'][0]

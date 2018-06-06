@@ -128,7 +128,11 @@ class QueryTests(APITestCase):
             'metrics': self.problem_metrics,
         }
 
-        response = self.client.post(url, data, format='multipart')
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+
+        response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
 
         self.assertEqual(r['pkhash'], compute_hash(self.problem_description))
@@ -142,12 +146,65 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:problem-list')
 
         data = {'name': 'empty problem'}
-        response = self.client.post(url, data, format='multipart')
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         data = {'metrics': self.problem_metrics, 'description': self.problem_description}
-        response = self.client.post(url, data, format='multipart')
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_problem_no_version(self):
+        url = reverse('substrapp:problem-list')
+
+        description_content = 'My Super top problem'
+        metrics_content = 'def metrics():\n\tpass'
+
+        description = get_temporary_text_file(description_content, 'description.md')
+        metrics = get_temporary_text_file(metrics_content, 'metrics.py')
+
+        data = {
+            'name': 'tough problem',
+            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'description': description,
+            'metrics': metrics,
+        }
+
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_add_problem_wrong_version(self):
+        url = reverse('substrapp:problem-list')
+
+        description_content = 'My Super top problem'
+        metrics_content = 'def metrics():\n\tpass'
+
+        description = get_temporary_text_file(description_content, 'description.md')
+        metrics = get_temporary_text_file(metrics_content, 'metrics.py')
+
+        data = {
+            'name': 'tough problem',
+            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'description': description,
+            'metrics': metrics,
+        }
+
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_add_dataopener_ok(self):
         url = reverse('substrapp:dataopener-list')
@@ -156,8 +213,11 @@ class QueryTests(APITestCase):
             'name': 'slide opener',
             'script': self.script
         }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
 
-        response = self.client.post(url, data, format='multipart')
+        response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
 
         self.assertEqual(r['pkhash'], compute_hash(self.script))
@@ -169,11 +229,98 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:dataopener-list')
 
         data = {'name': 'toto'}
-        response = self.client.post(url, data, format='multipart')
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_dataopener_no_version(self):
+        url = reverse('substrapp:dataopener-list')
+
+        data = {
+            'name': 'slide opener',
+            'script': self.script
+        }
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_add_dataopener_wrong_version(self):
+        url = reverse('substrapp:dataopener-list')
+
+        data = {
+            'name': 'slide opener',
+            'script': self.script
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_add_data_ok(self):
+
+        # add associated data opener
+        dataopener_name = 'slide opener'
+        DataOpener.objects.create(name=dataopener_name, script=self.script)
+
+        url = reverse('substrapp:data-list')
+
+        data = {
+            'features': self.data_features,
+            'labels': self.data_labels,
+            'name': 'liver slide',
+            'problems': [compute_hash(self.problem_description)],
+            'data_opener': dataopener_name,
+            'permissions': 'all'
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+
+        self.assertEqual(r['pkhash'], compute_hash(self.data_features))
+        self.assertEqual(r['features'], 'http://testserver/data/%s' % self.data_features_filename)
+        self.assertEqual(r['labels'], 'http://testserver/data/%s' % self.data_labels_filename)
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_data_ko(self):
+        url = reverse('substrapp:data-list')
+
+        # missing data opener
+        data = {'data_opener': 'not existing'}
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+        self.assertEqual(r['message'], 'This DataOpener name does not exist.')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        dataopener_name = 'slide opener'
+        DataOpener.objects.create(name=dataopener_name, script=self.script)
+
+        # missing local storage field
+        data = {'data_opener': dataopener_name,
+                'name': 'liver slide', 'permissions': 'all',
+                'problems': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379']}
+        response = self.client.post(url, data, format='multipart', **extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # missing ledger field
+        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
+        response = self.client.post(url, data, format='multipart', **extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_data_no_version(self):
 
         # add associated data opener
         dataopener_name = 'slide opener'
@@ -192,38 +339,96 @@ class QueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart')
         r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.data_features))
-        self.assertEqual(r['features'], 'http://testserver/data/%s' % self.data_features_filename)
-        self.assertEqual(r['labels'], 'http://testserver/data/%s' % self.data_labels_filename)
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+    def test_add_data_wrong_version(self):
 
-    def test_add_data_ko(self):
-        url = reverse('substrapp:data-list')
-
-        # missing data opener
-        data = {'data_opener': 'not existing'}
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-        self.assertEqual(r['message'], 'This DataOpener name does not exist.')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
+        # add associated data opener
         dataopener_name = 'slide opener'
         DataOpener.objects.create(name=dataopener_name, script=self.script)
 
+        url = reverse('substrapp:data-list')
+
+        data = {
+            'features': self.data_features,
+            'labels': self.data_labels,
+            'name': 'liver slide',
+            'problems': [compute_hash(self.problem_description)],
+            'data_opener': dataopener_name,
+            'permissions': 'all'
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_add_algo_ok(self):
+
+        # add associated problem
+        Problem.objects.create(description=self.problem_description,
+                               metrics=self.problem_metrics)
+
+        url = reverse('substrapp:algo-list')
+
+        data = {
+            'algo': self.script,
+            'name': 'super top algo',
+            'problem': compute_hash(self.problem_description),
+            'permissions': 'all'
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+
+        self.assertEqual(r['pkhash'], compute_hash(self.script))
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_algo_ko(self):
+        url = reverse('substrapp:algo-list')
+
+        # non existing associated problem
+        data = {
+            'algo': self.script,
+            'name': 'super top algo',
+            'problem': 'non existing problem',
+            'permissions': 'all'
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+        self.assertIn('does not exist', r['message'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        Problem.objects.create(description=self.problem_description,
+                               metrics=self.problem_metrics)
+
         # missing local storage field
-        data = {'data_opener': dataopener_name,
-                'name': 'liver slide', 'permissions': 'all',
-                'problems': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379']}
-        response = self.client.post(url, data, format='multipart')
+        data = {
+            'name': 'super top algo',
+            'problem': compute_hash(self.problem_description),
+            'permissions': 'all'
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # missing ledger field
-        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
-        response = self.client.post(url, data, format='multipart')
+        data = {
+            'algo': self.script,
+            'problem': compute_hash(self.problem_description),
+        }
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_algo_ok(self):
+    def test_add_algo_no_version(self):
 
         # add associated problem
         Problem.objects.create(description=self.problem_description,
@@ -240,44 +445,31 @@ class QueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart')
         r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.script))
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_algo_ko(self):
-        url = reverse('substrapp:algo-list')
+    def test_add_algo_wrong_version(self):
 
-        # non existing associated problem
-        data = {
-            'algo': self.script,
-            'name': 'super top algo',
-            'problem': 'non existing problem',
-            'permissions': 'all'
-        }
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-        self.assertIn('does not exist', r['message'])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
+        # add associated problem
         Problem.objects.create(description=self.problem_description,
                                metrics=self.problem_metrics)
 
-        # missing local storage field
+        url = reverse('substrapp:algo-list')
+
         data = {
+            'algo': self.script,
             'name': 'super top algo',
             'problem': compute_hash(self.problem_description),
             'permissions': 'all'
         }
-        response = self.client.post(url, data, format='multipart')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # missing ledger field
-        data = {
-            'algo': self.script,
-            'problem': compute_hash(self.problem_description),
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
 
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_add_learnuplet_ok(self):
         # Add associated problem
@@ -290,8 +482,11 @@ class QueryTests(APITestCase):
         data = {'problem': compute_hash(description),
                 'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
 
-        response = self.client.post(url, data, format='multipart')
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_learnuplet_ko(self):
@@ -301,7 +496,11 @@ class QueryTests(APITestCase):
                 'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
-        response = self.client.post(url, data, format='multipart')
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+
+        response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
         self.assertIn('does not exist', r['message'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -309,20 +508,100 @@ class QueryTests(APITestCase):
         Problem.objects.create(description=self.problem_description,
                                metrics=self.problem_metrics)
         data = {'problem': compute_hash(self.problem_description)}
-        response = self.client.post(url, data, format='multipart')
+        response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_add_learnuplet_no_version(self):
+        # Add associated problem
+        description, _, metrics, _ = get_sample_problem()
+        Problem.objects.create(description=description,
+                               metrics=metrics)
+        # post data
+        url = reverse('substrapp:learnuplet-list')
+
+        data = {'problem': compute_hash(description),
+                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+
+        response = self.client.post(url, data, format='multipart')
+        r = response.json()
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_add_learnuplet_wrong_version(self):
+        # Add associated problem
+        description, _, metrics, _ = get_sample_problem()
+        Problem.objects.create(description=description,
+                               metrics=metrics)
+        # post data
+        url = reverse('substrapp:learnuplet-list')
+
+        data = {'problem': compute_hash(description),
+                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        response = self.client.post(url, data, format='multipart', **extra)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_get_problem_metrics(self):
         problem = Problem.objects.create(description=self.problem_description,
                                          metrics=self.problem_metrics)
-        response = self.client.get('/problem/%s/metrics/' % problem.pkhash)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
         self.assertEqual(r, 'http://testserver/problem/%s/metrics/%s' % (problem.pkhash, self.problem_metrics_filename))
 
+    def test_get_problem_metrics_no_version(self):
+        problem = Problem.objects.create(description=self.problem_description,
+                                         metrics=self.problem_metrics)
+        response = self.client.get('/problem/%s/metrics/' % problem.pkhash)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_get_problem_metrics_wrong_version(self):
+        problem = Problem.objects.create(description=self.problem_description,
+                                         metrics=self.problem_metrics)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
     def test_get_algo_files(self):
         algo = Algo.objects.create(algo=self.script)
-        response = self.client.get('/algo/%s/files/' % algo.pkhash)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=1.0',
+        }
+        response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
         self.assertEqual(r, 'http://testserver/algo/%s/files/%s' % (algo.pkhash, self.script_filename))
+
+    def test_get_algo_files_no_version(self):
+        algo = Algo.objects.create(algo=self.script)
+        response = self.client.get('/algo/%s/files/' % algo.pkhash)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_get_algo_files_wrong_version(self):
+        algo = Algo.objects.create(algo=self.script)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
