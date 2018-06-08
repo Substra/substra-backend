@@ -2,11 +2,15 @@ from django.db import models
 from .utils import compute_hash
 
 
+def upload_to(instance, filename):
+    return 'algos/{0}/{1}'.format(instance.pk, filename)
+
+
 class Algo(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False)
-    algo = models.FileField()
+    algo = models.FileField(upload_to=upload_to)
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""

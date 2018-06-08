@@ -12,7 +12,7 @@ from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
-from substrapp.views.utils import queryLedger
+from substrapp.utils import queryLedger
 
 """List all problems saved on local storage or submit a new one"""
 
@@ -80,6 +80,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
         if st == status.HTTP_201_CREATED:
             headers = self.get_success_headers(serializer.data)
 
+        data.update(serializer.data)
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):

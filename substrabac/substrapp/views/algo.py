@@ -9,7 +9,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.conf import conf
 from substrapp.models import Algo, Problem
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.views.utils import queryLedger
+from substrapp.utils import queryLedger
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
