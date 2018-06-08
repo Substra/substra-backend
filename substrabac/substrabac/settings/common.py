@@ -11,16 +11,14 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
 import os, sys
-from libs.helpers.gen_secret_key import write_secret_key
+from libs.gen_secret_key import write_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
 sys.path.append(PROJECT_ROOT)
-sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'notebook')))
-sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'settings')))
-
+sys.path.append(os.path.normpath(os.path.join(PROJECT_ROOT, 'libs')))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.0/howto/deployment/checklist/
@@ -46,7 +44,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
 # Application definition
 
 INSTALLED_APPS = [
@@ -68,6 +65,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    #'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
 ]
 
 ROOT_URLCONF = 'substrabac.urls'
@@ -89,7 +87,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'substrabac.wsgi.application'
-
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -119,7 +116,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
 
@@ -133,8 +129,18 @@ USE_L10N = True
 
 USE_TZ = True
 
-
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias')
+MEDIA_URL = '/media/'
+
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.AdminRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    )
+}
