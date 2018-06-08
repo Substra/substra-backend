@@ -17,6 +17,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 SUBSTRA_NETWORK_PATH = os.environ.get('SUBSTRA_NETWORK_PATH', os.path.join(dir_path, '../../substra-network/'))
 ORGS = ('owkin', 'chu-nantes')
+ORDERERS = ('orderer',)
 current_user = os.environ.get('USER', 'toto')
 
 
@@ -69,9 +70,15 @@ def get_conf_from_network():
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/tls'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
-        # modify rights
-        call(['sudo', 'chown', '-R', current_user + ':' + current_user,
+    for org in ORDERERS:
+        # copy ca-cert.pem
+        call(['sudo', 'cp',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
+
+    # modify rights
+    call(['sudo', 'chown', '-R', current_user + ':' + current_user,
+          os.path.join(dir_path, './substrapp/conf/')])
 
 
 if __name__ == "__main__":

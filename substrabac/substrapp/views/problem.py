@@ -1,3 +1,4 @@
+from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -42,10 +43,10 @@ class ProblemViewSet(mixins.CreateModelMixin,
                 http://127.0.0.1:8000/substrapp/problem/ \n
             Use double quotes for the json, simple quotes don't work.\n
         - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/runapp/rawdata/',\
-                          auth=('username', 'password'),\
-                          json={'name': 'tough problem', 'test_data': '??',\
-                        'files': {'iris.csv': 'bla', 'specific.py': 'bli'}})\n
+            requests.post('http://127.0.0.1:8000/problem/',\
+                          #auth=('username', 'password'),\
+                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']}\
+                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')})\n
         ---
         response_serializer: ProblemSerializer
         """
@@ -57,7 +58,10 @@ class ProblemViewSet(mixins.CreateModelMixin,
         serializer.is_valid(raise_exception=True)
 
         # create on db
-        instance = self.perform_create(serializer)
+        try:
+            instance = self.perform_create(serializer)
+        except IntegrityError as exc:
+            return Response({'message': 'A problem with this description file already exists.'}, status=status.HTTP_409_CONFLICT)
 
         # init ledger serializer
         ledger_serializer = LedgerProblemSerializer(data={'test_data': data.getlist('test_data'),
@@ -70,10 +74,13 @@ class ProblemViewSet(mixins.CreateModelMixin,
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
-        ledger_serializer.create(ledger_serializer.validated_data)
+        data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        headers = {}
+        if st == status.HTTP_201_CREATED:
+            headers = self.get_success_headers(serializer.data)
+
+        return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
 
