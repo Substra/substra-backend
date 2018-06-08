@@ -37,3 +37,13 @@ It will populate the `substrapp/conf` folder.
 ## Launch the server
 
 Run the server locally: `python manage.py runserver`.
+
+## Testing with the browsable API
+
+For displaying data in a web browser, you will have to override your headers, especially the Accept header for specifiying the version.
+In chrome, you can use the modheader extension available [here](https://chrome.google.com/webstore/detail/modheader/idgpnmonknjnojddfkpgkljpfnnfcklj):
+
+You can then configure it like that:
+![](assets/modheader_config.png) 
+
+Now you can reach http://localhost:8000/ :tada:
