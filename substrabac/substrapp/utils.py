@@ -78,7 +78,7 @@ def invokeLedger(options):
 
     orderer = conf['orderers']['orderer']
     orderer_ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    '../conf/orderer/ca-cert.pem')
+                                   '../conf/orderer/conf/orderer/ca-cert.pem')
     orderer_key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                     '../conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.key')
     orderer_cert_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),

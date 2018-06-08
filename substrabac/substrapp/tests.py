@@ -2,6 +2,8 @@ import shutil
 import tempfile
 from io import StringIO
 
+import mock
+
 from django.urls import reverse
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import TestCase, override_settings
@@ -11,6 +13,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import Problem, DataOpener, Data, Algo
 from substrapp.models.utils import compute_hash
+from substrapp.serializers import LedgerProblemSerializer
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -63,6 +66,9 @@ def get_sample_data():
 
     return features, features_filename, labels, labels_filename
 
+
+def create(self):
+    return {}, status.HTTP_201_CREATED
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class ModelTests(TestCase):
@@ -117,6 +123,7 @@ class QueryTests(APITestCase):
         except FileNotFoundError:
             pass
 
+    #@mock.patch('serializers.LedgerProblemSerializer.create', side_effect=create)
     def test_add_problem_ok(self):
         url = reverse('substrapp:problem-list')
 
@@ -129,25 +136,27 @@ class QueryTests(APITestCase):
         }
 
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
+        with mock.patch.object(LedgerProblemSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {}, status.HTTP_201_CREATED
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.problem_description))
-        self.assertEqual(r['validated'], False)
-        self.assertEqual(r['description'], 'http://testserver/problem/%s' % self.problem_description_filename)
-        self.assertEqual(r['metrics'], 'http://testserver/problem/%s' % self.problem_metrics_filename)
+            self.assertEqual(r['pkhash'], compute_hash(self.problem_description))
+            self.assertEqual(r['validated'], False)
+            self.assertEqual(r['description'], 'http://testserver/media/problems/%s/%s' % (r['pkhash'], self.problem_description_filename))
+            self.assertEqual(r['metrics'], 'http://testserver/media/problems/%s/%s' % (r['pkhash'], self.problem_metrics_filename))
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_problem_ko(self):
         url = reverse('substrapp:problem-list')
 
         data = {'name': 'empty problem'}
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -197,7 +206,7 @@ class QueryTests(APITestCase):
         }
 
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
@@ -214,14 +223,14 @@ class QueryTests(APITestCase):
             'script': self.script
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
 
         self.assertEqual(r['pkhash'], compute_hash(self.script))
-        self.assertEqual(r['script'], 'http://testserver/dataopener/%s' % self.script_filename)
+        self.assertEqual(r['script'], 'http://testserver/media/dataopeners/%s/%s' % (r['pkhash'], self.script_filename))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -230,7 +239,7 @@ class QueryTests(APITestCase):
 
         data = {'name': 'toto'}
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -256,7 +265,7 @@ class QueryTests(APITestCase):
             'script': self.script
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -281,14 +290,14 @@ class QueryTests(APITestCase):
             'permissions': 'all'
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
 
         self.assertEqual(r['pkhash'], compute_hash(self.data_features))
-        self.assertEqual(r['features'], 'http://testserver/data/%s' % self.data_features_filename)
-        self.assertEqual(r['labels'], 'http://testserver/data/%s' % self.data_labels_filename)
+        self.assertEqual(r['features'], 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_features_filename))
+        self.assertEqual(r['labels'], 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_labels_filename))
 
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -298,7 +307,7 @@ class QueryTests(APITestCase):
         # missing data opener
         data = {'data_opener': 'not existing'}
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -359,7 +368,7 @@ class QueryTests(APITestCase):
             'permissions': 'all'
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -382,7 +391,7 @@ class QueryTests(APITestCase):
             'permissions': 'all'
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -401,7 +410,7 @@ class QueryTests(APITestCase):
             'permissions': 'all'
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -463,7 +472,7 @@ class QueryTests(APITestCase):
             'permissions': 'all'
         }
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
@@ -483,7 +492,7 @@ class QueryTests(APITestCase):
                 'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
@@ -497,7 +506,7 @@ class QueryTests(APITestCase):
                 'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
@@ -540,7 +549,7 @@ class QueryTests(APITestCase):
                 'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
@@ -552,12 +561,12 @@ class QueryTests(APITestCase):
         problem = Problem.objects.create(description=self.problem_description,
                                          metrics=self.problem_metrics)
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
-        self.assertEqual(r, 'http://testserver/problem/%s/metrics/%s' % (problem.pkhash, self.problem_metrics_filename))
+        self.assertEqual(r, 'http://testserver/media/problems/%s/%s' % (problem.pkhash, self.problem_metrics_filename))
 
     def test_get_problem_metrics_no_version(self):
         problem = Problem.objects.create(description=self.problem_description,
@@ -571,7 +580,7 @@ class QueryTests(APITestCase):
         problem = Problem.objects.create(description=self.problem_description,
                                          metrics=self.problem_metrics)
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
         response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
         r = response.json()
@@ -581,12 +590,12 @@ class QueryTests(APITestCase):
     def test_get_algo_files(self):
         algo = Algo.objects.create(algo=self.script)
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=1.0',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
-        self.assertEqual(r, 'http://testserver/algo/%s/files/%s' % (algo.pkhash, self.script_filename))
+        self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
 
     def test_get_algo_files_no_version(self):
         algo = Algo.objects.create(algo=self.script)
@@ -598,7 +607,7 @@ class QueryTests(APITestCase):
     def test_get_algo_files_wrong_version(self):
         algo = Algo.objects.create(algo=self.script)
         extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
         response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
         r = response.json()

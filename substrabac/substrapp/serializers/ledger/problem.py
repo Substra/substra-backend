@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 
 from substrapp.conf import conf
 from substrapp.models import Problem
-from substrapp.views.utils import invokeLedger
+from substrapp.utils import invokeLedger
 
 
 class LedgerProblemSerializer(serializers.Serializer):
