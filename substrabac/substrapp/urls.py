@@ -16,7 +16,6 @@ router.register(r'dataopener', DataOpenerViewSet, base_name='dataopener')
 router.register(r'algo', AlgoViewSet, base_name='algo')
 router.register(r'learnuplet', LearnupletViewSet, base_name='learnuplet')
 
-
 urlpatterns = [
     url(r'^', include(router.urls)),
 ]
