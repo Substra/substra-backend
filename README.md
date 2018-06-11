@@ -41,7 +41,7 @@ Run the server locally: `python manage.py runserver`.
 ## Testing with the browsable API
 
 For displaying data in a web browser, you will have to override your headers, especially the Accept header for specifiying the version.
-In chrome, you can use the modheader extension available [here](https://chrome.google.com/webstore/detail/modheader/idgpnmonknjnojddfkpgkljpfnnfcklj):
+You can use the modheader extension available [here for Chrome](https://chrome.google.com/webstore/detail/modheader/idgpnmonknjnojddfkpgkljpfnnfcklj) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/modheader-firefox/):
 
 You can then configure it like that:
 ![](assets/modheader_config.png) 
