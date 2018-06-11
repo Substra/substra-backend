@@ -66,7 +66,6 @@ def queryLedger(options):
 
 
 def invokeLedger(options):
-
     org = options['org']
     peer = options['peer']
     args = options['args']
@@ -78,11 +77,11 @@ def invokeLedger(options):
 
     orderer = conf['orderers']['orderer']
     orderer_ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   '../conf/orderer/conf/orderer/ca-cert.pem')
+                                   'conf/orderer/ca-cert.pem')
     orderer_key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    '../conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.key')
+                                    'conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.key')
     orderer_cert_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    '../conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.crt')
+                                     'conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.crt')
 
     os.environ['FABRIC_CFG_PATH'] = cfg_path
 
