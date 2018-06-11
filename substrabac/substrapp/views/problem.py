@@ -46,7 +46,8 @@ class ProblemViewSet(mixins.CreateModelMixin,
             requests.post('http://127.0.0.1:8000/problem/',\
                           #auth=('username', 'password'),\
                           data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']}\
-                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')})\n
+                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
+                          headers={'Accept': 'application/json;version=0.0'})\n
         ---
         response_serializer: ProblemSerializer
         """
