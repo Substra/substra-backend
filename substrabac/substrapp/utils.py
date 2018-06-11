@@ -15,7 +15,7 @@ def queryLedger(options):
     org_name = org['org_name']
 
     # update config path for using right core.yaml
-    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/' + org_name + '/' + peer['name'])
+    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './conf/' + org_name + '/' + peer['name'])
     os.environ['FABRIC_CFG_PATH'] = cfg_path
 
     channel_name = conf['misc']['channel_name']
@@ -74,7 +74,7 @@ def invokeLedger(options):
     org_name = org['org_name']
 
     # update config path for using right core.yaml
-    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../conf/' + org_name + '/' + peer['name'])
+    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './conf/' + org_name + '/' + peer['name'])
 
     orderer = conf['orderers']['orderer']
     orderer_ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
