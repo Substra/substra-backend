@@ -12,7 +12,7 @@ from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
-from substrapp.views.utils import queryLedger
+from substrapp.utils import queryLedger
 
 """List all problems saved on local storage or submit a new one"""
 
@@ -43,10 +43,11 @@ class ProblemViewSet(mixins.CreateModelMixin,
                 http://127.0.0.1:8000/substrapp/problem/ \n
             Use double quotes for the json, simple quotes don't work.\n
         - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/problem/',\
-                          #auth=('username', 'password'),\
-                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']}\
-                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')})\n
+            requests.post('http://127.0.0.1:8000/problem/',
+                          #auth=('username', 'password'),
+                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']},
+                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
+                          headers={'Accept': 'application/json;version=0.0'}) \n
         ---
         response_serializer: ProblemSerializer
         """
@@ -80,9 +81,12 @@ class ProblemViewSet(mixins.CreateModelMixin,
         if st == status.HTTP_201_CREATED:
             headers = self.get_success_headers(serializer.data)
 
+        data.update(serializer.data)
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
+
+        # can modify result by interrogating `request.version`
 
         # using chu-nantes as in our testing owkin has been revoked
         org = conf['orgs']['chu-nantes']
