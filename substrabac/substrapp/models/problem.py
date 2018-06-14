@@ -4,12 +4,16 @@ from libs.timestampModel import TimeStamped
 from .utils import compute_hash
 
 
+def upload_to(instance, filename):
+    return 'problems/{0}/{1}'.format(instance.pk, filename)
+
+
 class Problem(TimeStamped):
     """Storage Problem table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False, blank=True)
-    description = models.FileField()
-    metrics = models.FileField()
+    description = models.FileField(upload_to=upload_to)
+    metrics = models.FileField(upload_to=upload_to)
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""

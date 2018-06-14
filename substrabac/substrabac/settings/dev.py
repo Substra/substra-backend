@@ -2,6 +2,8 @@ import os
 
 from .common import *
 
+from .deps.restframework import *
+
 DEBUG = True
 
 # Database
@@ -17,7 +19,6 @@ DATABASES = {
         'PORT': 5432,
     }
 }
-
 
 LOGGING = {
     'version': 1,
