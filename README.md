@@ -1,7 +1,7 @@
 # Substrabac
 Backend of the Substra platform
 
-## Getting started
+## Getting started 1: Prepare the django app
 
 1. Clone the repo:
  ```
@@ -22,18 +22,36 @@ Backend of the Substra platform
   $ CREATE USER substrabac WITH PASSWORD 'substrabac' CREATEDB CREATEROLE SUPERUSER
   
 ```
-5. Run migrations: `python manage.py migrate`
-6. Create a superuser: `python manage.py createsuperuser`
+5. Run migrations: `python substrabac/manage.py migrate`
+6. Create a superuser: `python substrabac/manage.py createsuperuser`
 
-## Get substra-network conf
+## Getting started 2: Linking the app with Hyperledger Fabric
+
+### Get Fabric binaries
+
+For OSX, run:
+```bash
+curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/darwin-amd64-1.1.0/hyperledger-fabric-darwin-amd64-1.1.0.tar.gz | tar xz
+```
+For Linux, run:
+```bash
+curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/linux-amd64-1.1.0/hyperledger-fabric-linux-amd64-1.1.0.tar.gz | tar xz
+``` 
+Remove then the `conf` folder.
+
+### Get substra-network conf
 
 Run the `get_conf_from_network.py` script for getting generated files from the substra-network and being able to interact with it.  
-:warning: The `substra-network` directory (cloned from [here](https://github.com/SubstraFoundation/substra-network)) should be located at the same level as the `substrabac` directory.
+:warning: The `substra-network` directory (cloned from [here](https://github.com/SubstraFoundation/substra-network)) should be located at the same level as the `substrabac` project directory.
 
 ```
-python get_conf_from_network.py
+python substrabac/get_conf_from_network.py
 ```
-It will populate the `substrapp/conf` folder.
+It will populate the `substrabac/substrapp/conf` folder.
+ 
+### Make the subtra-network available to the app
+
+[See here](https://github.com/SubstraFoundation/substra-network#network).  
 
 ## Launch the server
 
@@ -44,7 +62,11 @@ Run the server locally: `python manage.py runserver`.
 For displaying data in a web browser, you will have to override your headers, especially the Accept header for specifiying the version.
 You can use the modheader extension available [here for Chrome](https://chrome.google.com/webstore/detail/modheader/idgpnmonknjnojddfkpgkljpfnnfcklj) and [here for Firefox](https://addons.mozilla.org/en-US/firefox/addon/modheader-firefox/):
 
-You can then configure it like that:
+You can then configure it like that:  
 ![](assets/modheader_config.png) 
 
 Now you can reach http://localhost:8000/ :tada:
+
+## License
+
+This project is developed under the Apache License, Version 2.0 (Apache-2.0), located in the [LICENSE](./LICENSE) file.

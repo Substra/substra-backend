@@ -43,11 +43,11 @@ class ProblemViewSet(mixins.CreateModelMixin,
                 http://127.0.0.1:8000/substrapp/problem/ \n
             Use double quotes for the json, simple quotes don't work.\n
         - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/problem/',\
-                          #auth=('username', 'password'),\
-                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']}\
+            requests.post('http://127.0.0.1:8000/problem/',
+                          #auth=('username', 'password'),
+                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']},
                           files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
-                          headers={'Accept': 'application/json;version=0.0'})\n
+                          headers={'Accept': 'application/json;version=0.0'}) \n
         ---
         response_serializer: ProblemSerializer
         """
