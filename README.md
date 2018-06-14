@@ -27,7 +27,8 @@ Backend of the Substra platform
 
 ## Get substra-network conf
 
-Run the `get_conf_from_network.py` script for getting generated files from the substra-network and being able to interact with it.
+Run the `get_conf_from_network.py` script for getting generated files from the substra-network and being able to interact with it.  
+:warning: The `substra-network` directory (cloned from [here](https://github.com/SubstraFoundation/substra-network)) should be located at the same level as the `substrabac` directory.
 
 ```
 python get_conf_from_network.py
