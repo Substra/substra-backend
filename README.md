@@ -29,15 +29,7 @@ Backend of the Substra platform
 
 ### Get Fabric binaries
 
-For OSX, run:
-```bash
-curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/darwin-amd64-1.1.0/hyperledger-fabric-darwin-amd64-1.1.0.tar.gz | tar xz
-```
-For Linux, run:
-```bash
-curl https://nexus.hyperledger.org/content/repositories/releases/org/hyperledger/fabric/hyperledger-fabric/linux-amd64-1.1.0/hyperledger-fabric-linux-amd64-1.1.0.tar.gz | tar xz
-``` 
-Remove then the `conf` folder.
+Run `./boostrap.sh`
 
 ### Get substra-network conf
 
@@ -55,7 +47,7 @@ It will populate the `substrabac/substrapp/conf` folder.
 
 ## Launch the server
 
-Run the server locally: `python manage.py runserver`.
+Go in the `substrabac` folder and run the server locally: `python manage.py runserver`.
 
 ## Testing with the browsable API
 
