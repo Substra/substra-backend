@@ -95,7 +95,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryObjects", "problem"]}'
+            'args': '{"Args":["queryAllProblems"]}'
         })
 
         return Response(data, status=st)
