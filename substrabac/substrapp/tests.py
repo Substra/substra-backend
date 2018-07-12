@@ -1,3 +1,4 @@
+import os
 import shutil
 import tempfile
 from io import StringIO
@@ -11,9 +12,10 @@ from django.test import TestCase, override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Problem, DataOpener, Data, Algo
+from substrapp.models import Challenge, Dataset, Data, Algo
 from substrapp.models.utils import compute_hash
-from substrapp.serializers import LedgerProblemSerializer
+from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
+    LedgerDataSerializer, LedgerTrainTupleSerializer
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -37,8 +39,8 @@ def get_temporary_text_file(contents, filename):
 
 # TODO for files?? b64.b64encode(zlib.compress(f.read())) ??
 
-def get_sample_problem():
-    description_content = "Super problem"
+def get_sample_challenge():
+    description_content = "Super challenge"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
     metrics_content = "def metrics():\n\tpass"
@@ -56,19 +58,28 @@ def get_sample_script():
     return script, script_filename
 
 
-def get_sample_data():
-    features_content = "2, 3, 4, 5\n10, 11, 12, 13\n21, 22, 23, 24"
-    features_filename = "features.csv"
-    features = get_temporary_text_file(features_content, features_filename)
-    labels_content = "0\n1\n2"
-    labels_filename = "labels.csv"
-    labels = get_temporary_text_file(labels_content, labels_filename)
+def get_sample_dataset():
+    description_content = "description"
+    description_filename = "description.md"
+    description = get_temporary_text_file(description_content, description_filename)
+    data_opener_content = "import slidelib\n\ndef read():\n\tpass"
+    data_opener_filename = "data_opener.py"
+    data_opener = get_temporary_text_file(data_opener_content, data_opener_filename)
 
-    return features, features_filename, labels, labels_filename
+    return description, description_filename, data_opener, data_opener_filename
+
+
+def get_sample_data():
+    file_content = "0\n1\n2"
+    file_filename = "file.csv"
+    file = get_temporary_text_file(file_content, file_filename)
+
+    return file, file_filename
 
 
 def create(self):
     return {}, status.HTTP_201_CREATED
+
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class ModelTests(TestCase):
@@ -80,30 +91,29 @@ class ModelTests(TestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT)
 
-    def test_create_problem(self):
-        description, _, metrics, _ = get_sample_problem()
-        problem = Problem.objects.create(description=description,
-                                         metrics=metrics)
-        self.assertEqual(problem.pkhash, compute_hash(description))
-        self.assertFalse(problem.validated)
+    def test_create_challenge(self):
+        description, _, metrics, _ = get_sample_challenge()
+        challenge = Challenge.objects.create(description=description,
+                                             metrics=metrics)
+        self.assertEqual(challenge.pkhash, compute_hash(description))
+        self.assertFalse(challenge.validated)
 
-    def test_create_data_opener(self):
-        script, _ = get_sample_script()
-        data_opener = DataOpener.objects.create(script=script, name="slides_opener")
-        self.assertEqual(data_opener.pkhash, compute_hash(script))
+    def test_create_dataset(self):
+        description, _, data_opener, _ = get_sample_dataset()
+        dataset = Dataset.objects.create(description=description, data_opener=data_opener, name="slides_opener")
+        self.assertEqual(dataset.pkhash, compute_hash(description))
 
     def test_create_data(self):
-        features, _, labels, _ = get_sample_data()
-        data = Data.objects.create(features=features, labels=labels)
-        self.assertEqual(data.pkhash, compute_hash(features))
+        file, _ = get_sample_data()
+        data = Data.objects.create(file=file)
+        self.assertEqual(data.pkhash, compute_hash(file))
         self.assertFalse(data.validated)
 
     def test_create_algo(self):
         script, _ = get_sample_script()
-        algo = Algo.objects.create(algo=script)
+        algo = Algo.objects.create(file=script)
         self.assertEqual(algo.pkhash, compute_hash(script))
         self.assertFalse(algo.validated)
-
 
 
 # APITestCase
@@ -111,11 +121,11 @@ class ModelTests(TestCase):
 class QueryTests(APITestCase):
 
     def setUp(self):
-        self.problem_description, self.problem_description_filename,\
-        self.problem_metrics, self.problem_metrics_filename = get_sample_problem()
+        self.challenge_description, self.challenge_description_filename, \
+        self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
         self.script, self.script_filename = get_sample_script()
-        self.data_features, self.data_features_filename, self.data_labels, self.data_labels_filename =\
-            get_sample_data()
+        self.data_file, self.data_file_filename = get_sample_data()
+        self.data_description, self.data_description_filename, self.data_data_opener, self.data_opener_filename = get_sample_dataset()
 
     def tearDown(self):
         try:
@@ -123,61 +133,64 @@ class QueryTests(APITestCase):
         except FileNotFoundError:
             pass
 
-    #@mock.patch('serializers.LedgerProblemSerializer.create', side_effect=create)
-    def test_add_problem_ok(self):
-        url = reverse('substrapp:problem-list')
+    def test_add_challenge_ok(self):
+        url = reverse('substrapp:challenge-list')
 
         data = {
-            'name': 'tough problem',
-            'test_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                          '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
-            'description': self.problem_description,
-            'metrics': self.problem_metrics,
+            'name': 'tough challenge',
+            'test_data_keys': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                               'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'description': self.challenge_description,
+            'metrics': self.challenge_metrics,
+            'permissions': 'all',
+            'metrics_name': 'accuracy'
         }
 
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerProblemSerializer, 'create') as mocked_method:
+        with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
             mocked_method.return_value = {}, status.HTTP_201_CREATED
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], compute_hash(self.problem_description))
+            self.assertEqual(r['pkhash'], compute_hash(self.challenge_description))
             self.assertEqual(r['validated'], False)
-            self.assertEqual(r['description'], 'http://testserver/media/problems/%s/%s' % (r['pkhash'], self.problem_description_filename))
-            self.assertEqual(r['metrics'], 'http://testserver/media/problems/%s/%s' % (r['pkhash'], self.problem_metrics_filename))
+            self.assertEqual(r['description'], 'http://testserver/media/challenges/%s/%s' % (
+                r['pkhash'], self.challenge_description_filename))
+            self.assertEqual(r['metrics'], 'http://testserver/media/challenges/%s/%s' % (
+                r['pkhash'], self.challenge_metrics_filename))
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_add_problem_ko(self):
-        url = reverse('substrapp:problem-list')
+    def test_add_challenge_ko(self):
+        url = reverse('substrapp:challenge-list')
 
-        data = {'name': 'empty problem'}
+        data = {'name': 'empty challenge'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        data = {'metrics': self.problem_metrics, 'description': self.problem_description}
+        data = {'metrics': self.challenge_metrics, 'description': self.challenge_description}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_problem_no_version(self):
-        url = reverse('substrapp:problem-list')
+    def test_add_challenge_no_version(self):
+        url = reverse('substrapp:challenge-list')
 
-        description_content = 'My Super top problem'
+        description_content = 'My Super top challenge'
         metrics_content = 'def metrics():\n\tpass'
 
         description = get_temporary_text_file(description_content, 'description.md')
         metrics = get_temporary_text_file(metrics_content, 'metrics.py')
 
         data = {
-            'name': 'tough problem',
-            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'name': 'tough challenge',
+            'test_data_keys': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                               'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': description,
             'metrics': metrics,
         }
@@ -188,19 +201,19 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_problem_wrong_version(self):
-        url = reverse('substrapp:problem-list')
+    def test_add_challenge_wrong_version(self):
+        url = reverse('substrapp:challenge-list')
 
-        description_content = 'My Super top problem'
+        description_content = 'My Super top challenge'
         metrics_content = 'def metrics():\n\tpass'
 
         description = get_temporary_text_file(description_content, 'description.md')
         metrics = get_temporary_text_file(metrics_content, 'metrics.py')
 
         data = {
-            'name': 'tough problem',
-            'test_data': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                          'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'name': 'tough challenge',
+            'test_data_keys': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                               'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': description,
             'metrics': metrics,
         }
@@ -215,27 +228,34 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_dataopener_ok(self):
-        url = reverse('substrapp:dataopener-list')
+    def test_add_dataset_ok(self):
+        url = reverse('substrapp:dataset-list')
 
         data = {
             'name': 'slide opener',
-            'script': self.script
+            'type': 'images',
+            'permissions': 'all',
+            'problem_keys': '',
+            'description': self.data_description,
+            'data_opener': self.data_data_opener
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
+        with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {}, status.HTTP_201_CREATED
 
-        self.assertEqual(r['pkhash'], compute_hash(self.script))
-        self.assertEqual(r['script'], 'http://testserver/media/dataopeners/%s/%s' % (r['pkhash'], self.script_filename))
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(r['pkhash'], compute_hash(self.data_description))
+            self.assertEqual(r['description'], 'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
 
-    def test_add_dataopener_ko(self):
-        url = reverse('substrapp:dataopener-list')
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_dataset_ko(self):
+        url = reverse('substrapp:dataset-list')
 
         data = {'name': 'toto'}
         extra = {
@@ -244,12 +264,13 @@ class QueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_dataopener_no_version(self):
-        url = reverse('substrapp:dataopener-list')
+    def test_add_dataset_no_version(self):
+        url = reverse('substrapp:dataset-list')
 
         data = {
             'name': 'slide opener',
-            'script': self.script
+            'description': self.data_description,
+            'data_opener': self.data_data_opener
         }
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -257,12 +278,16 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_dataopener_wrong_version(self):
-        url = reverse('substrapp:dataopener-list')
+    def test_add_dataset_wrong_version(self):
+        url = reverse('substrapp:dataset-list')
 
         data = {
             'name': 'slide opener',
-            'script': self.script
+            'type': 'images',
+            'permissions': 'all',
+            'problem_keys': '',
+            'description': self.data_description,
+            'data_opener': self.data_data_opener
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
@@ -276,74 +301,77 @@ class QueryTests(APITestCase):
     def test_add_data_ok(self):
 
         # add associated data opener
-        dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.script)
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
-            'features': self.data_features,
-            'labels': self.data_labels,
-            'name': 'liver slide',
-            'problems': [compute_hash(self.problem_description)],
-            'data_opener': dataopener_name,
-            'permissions': 'all'
+            'file': self.data_file,
+            'dataset_key': compute_hash(self.data_description),
+            'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.data_features))
-        self.assertEqual(r['features'], 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_features_filename))
-        self.assertEqual(r['labels'], 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_labels_filename))
+        with mock.patch.object(os.path, 'getsize') as mocked_method:
+            mocked_method.return_value = 100
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
+                mocked_method.return_value = {}, status.HTTP_201_CREATED
+
+                response = self.client.post(url, data, format='multipart', **extra)
+                r = response.json()
+
+                self.assertEqual(r['pkhash'], compute_hash(self.data_file))
+                self.assertEqual(r['file'],
+                                 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
+
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_ko(self):
         url = reverse('substrapp:data-list')
 
-        # missing data opener
-        data = {'data_opener': 'not existing'}
+        # missing dataset
+        data = {'dataset_key': 'not existing'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r['message'], 'This DataOpener name does not exist.')
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with mock.patch.object(os.path, 'getsize') as mocked_method:
+            mocked_method.return_value = 100
 
-        dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.script)
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(r['message'], 'This Dataset name does not exist.')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # missing local storage field
-        data = {'data_opener': dataopener_name,
-                'name': 'liver slide', 'permissions': 'all',
-                'problems': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379']}
-        response = self.client.post(url, data, format='multipart', **extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            dataset_name = 'slide opener'
+            Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
 
-        # missing ledger field
-        data = {'data_opener': dataopener_name, 'features': self.data_features, 'labels': self.data_labels}
-        response = self.client.post(url, data, format='multipart', **extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            # missing local storage field
+            data = {'dataset_key': compute_hash(self.data_description),
+                    'test_only': True,}
+            response = self.client.post(url, data, format='multipart', **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            # missing ledger field
+            data = {'dataset_key': compute_hash(self.data_description), 'file': self.script,}
+            response = self.client.post(url, data, format='multipart', **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_no_version(self):
 
         # add associated data opener
-        dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.script)
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
-            'features': self.data_features,
-            'labels': self.data_labels,
-            'name': 'liver slide',
-            'problems': [compute_hash(self.problem_description)],
-            'data_opener': dataopener_name,
-            'permissions': 'all'
+            'file': self.data_file,
+            'dataset_key': compute_hash(self.data_description),
+            'test_only': True,
         }
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -354,18 +382,14 @@ class QueryTests(APITestCase):
     def test_add_data_wrong_version(self):
 
         # add associated data opener
-        dataopener_name = 'slide opener'
-        DataOpener.objects.create(name=dataopener_name, script=self.script)
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
-            'features': self.data_features,
-            'labels': self.data_labels,
-            'name': 'liver slide',
-            'problems': [compute_hash(self.problem_description)],
-            'data_opener': dataopener_name,
-            'permissions': 'all'
+            'file': self.script,
+            'dataset_key': dataset_name,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
@@ -378,35 +402,41 @@ class QueryTests(APITestCase):
 
     def test_add_algo_ok(self):
 
-        # add associated problem
-        Problem.objects.create(description=self.problem_description,
-                               metrics=self.problem_metrics)
+        # add associated challenge
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
 
         url = reverse('substrapp:algo-list')
 
         data = {
-            'algo': self.script,
+            'file': self.script,
+            'description': self.data_description,
             'name': 'super top algo',
-            'problem': compute_hash(self.problem_description),
+            'challenge_key': compute_hash(self.challenge_description),
             'permissions': 'all'
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
 
-        self.assertEqual(r['pkhash'], compute_hash(self.script))
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {}, status.HTTP_201_CREATED
+
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+
+            self.assertEqual(r['pkhash'], compute_hash(self.script))
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_algo_ko(self):
         url = reverse('substrapp:algo-list')
 
-        # non existing associated problem
+        # non existing associated challenge
         data = {
-            'algo': self.script,
+            'file': self.script,
+            'description': self.data_description,
             'name': 'super top algo',
-            'problem': 'non existing problem',
+            'challenge_key': 'non existing challenge',
             'permissions': 'all'
         }
         extra = {
@@ -417,13 +447,13 @@ class QueryTests(APITestCase):
         self.assertIn('does not exist', r['message'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Problem.objects.create(description=self.problem_description,
-                               metrics=self.problem_metrics)
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
 
         # missing local storage field
         data = {
             'name': 'super top algo',
-            'problem': compute_hash(self.problem_description),
+            'challenge_key': compute_hash(self.challenge_description),
             'permissions': 'all'
         }
         response = self.client.post(url, data, format='multipart', **extra)
@@ -431,24 +461,26 @@ class QueryTests(APITestCase):
 
         # missing ledger field
         data = {
-            'algo': self.script,
-            'problem': compute_hash(self.problem_description),
+            'file': self.script,
+            'description': self.data_description,
+            'challenge_key': compute_hash(self.challenge_description),
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_algo_no_version(self):
 
-        # add associated problem
-        Problem.objects.create(description=self.problem_description,
-                               metrics=self.problem_metrics)
+        # add associated challenge
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
 
         url = reverse('substrapp:algo-list')
 
         data = {
-            'algo': self.script,
+            'file': self.script,
+            'description': self.data_description,
             'name': 'super top algo',
-            'problem': compute_hash(self.problem_description),
+            'challenge_key': compute_hash(self.challenge_description),
             'permissions': 'all'
         }
         response = self.client.post(url, data, format='multipart')
@@ -459,16 +491,17 @@ class QueryTests(APITestCase):
 
     def test_add_algo_wrong_version(self):
 
-        # add associated problem
-        Problem.objects.create(description=self.problem_description,
-                               metrics=self.problem_metrics)
+        # add associated challenge
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
 
         url = reverse('substrapp:algo-list')
 
         data = {
-            'algo': self.script,
+            'file': self.script,
+            'description': self.data_description,
             'name': 'super top algo',
-            'problem': compute_hash(self.problem_description),
+            'challenge_key': compute_hash(self.challenge_description),
             'permissions': 'all'
         }
         extra = {
@@ -480,30 +513,35 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_learnuplet_ok(self):
-        # Add associated problem
-        description, _, metrics, _ = get_sample_problem()
-        Problem.objects.create(description=description,
-                               metrics=metrics)
+    def test_add_traintuple_ok(self):
+        # Add associated challenge
+        description, _, metrics, _ = get_sample_challenge()
+        Challenge.objects.create(description=description,
+                                 metrics=metrics)
         # post data
-        url = reverse('substrapp:learnuplet-list')
+        url = reverse('substrapp:traintuple-list')
 
-        data = {'problem': compute_hash(description),
-                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {'challenge_key': compute_hash(description),
+                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {}, status.HTTP_201_CREATED
 
-    def test_add_learnuplet_ko(self):
-        url = reverse('substrapp:learnuplet-list')
+            response = self.client.post(url, data, format='multipart', **extra)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-        data = {'problem': 'a' * 64,
-                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+    def test_add_traintuple_ko(self):
+        url = reverse('substrapp:traintuple-list')
+
+        data = {'challenge_key': 'a' * 64,
+                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -514,40 +552,42 @@ class QueryTests(APITestCase):
         self.assertIn('does not exist', r['message'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Problem.objects.create(description=self.problem_description,
-                               metrics=self.problem_metrics)
-        data = {'problem': compute_hash(self.problem_description)}
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
+        data = {'challenge': compute_hash(self.challenge_description)}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_learnuplet_no_version(self):
-        # Add associated problem
-        description, _, metrics, _ = get_sample_problem()
-        Problem.objects.create(description=description,
-                               metrics=metrics)
+    def test_add_traintuple_no_version(self):
+        # Add associated challenge
+        description, _, metrics, _ = get_sample_challenge()
+        Challenge.objects.create(description=description,
+                                 metrics=metrics)
         # post data
-        url = reverse('substrapp:learnuplet-list')
+        url = reverse('substrapp:traintuple-list')
 
-        data = {'problem': compute_hash(description),
-                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {'challenge_key': compute_hash(description),
+                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
         response = self.client.post(url, data, format='multipart')
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_learnuplet_wrong_version(self):
-        # Add associated problem
-        description, _, metrics, _ = get_sample_problem()
-        Problem.objects.create(description=description,
-                               metrics=metrics)
+    def test_add_traintuple_wrong_version(self):
+        # Add associated challenge
+        description, _, metrics, _ = get_sample_challenge()
+        Challenge.objects.create(description=description,
+                                 metrics=metrics)
         # post data
-        url = reverse('substrapp:learnuplet-list')
+        url = reverse('substrapp:traintuple-list')
 
-        data = {'problem': compute_hash(description),
-                'train_data': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {'challenge_key': compute_hash(description),
+                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
@@ -557,38 +597,39 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_get_problem_metrics(self):
-        problem = Problem.objects.create(description=self.problem_description,
-                                         metrics=self.problem_metrics)
+    def test_get_challenge_metrics(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
+        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
-        self.assertEqual(r, 'http://testserver/media/problems/%s/%s' % (problem.pkhash, self.problem_metrics_filename))
+        self.assertEqual(r, 'http://testserver/media/challenges/%s/%s' % (
+            challenge.pkhash, self.challenge_metrics_filename))
 
-    def test_get_problem_metrics_no_version(self):
-        problem = Problem.objects.create(description=self.problem_description,
-                                         metrics=self.problem_metrics)
-        response = self.client.get('/problem/%s/metrics/' % problem.pkhash)
+    def test_get_challenge_metrics_no_version(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
+        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash)
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_get_problem_metrics_wrong_version(self):
-        problem = Problem.objects.create(description=self.problem_description,
-                                         metrics=self.problem_metrics)
+    def test_get_challenge_metrics_wrong_version(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
-        response = self.client.get('/problem/%s/metrics/' % problem.pkhash, **extra)
+        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_get_algo_files(self):
-        algo = Algo.objects.create(algo=self.script)
+        algo = Algo.objects.create(file=self.script)
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -598,14 +639,14 @@ class QueryTests(APITestCase):
         self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
 
     def test_get_algo_files_no_version(self):
-        algo = Algo.objects.create(algo=self.script)
+        algo = Algo.objects.create(file=self.script)
         response = self.client.get('/algo/%s/files/' % algo.pkhash)
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
     def test_get_algo_files_wrong_version(self):
-        algo = Algo.objects.create(algo=self.script)
+        algo = Algo.objects.create(file=self.script)
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
@@ -613,4 +654,3 @@ class QueryTests(APITestCase):
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-

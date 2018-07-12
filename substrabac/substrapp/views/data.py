@@ -1,9 +1,11 @@
+import os
+
 from rest_framework import status
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from substrapp.models import Data, DataOpener
+from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 
 
@@ -19,13 +21,12 @@ class DataViewSet(ModelViewSet):
 
         # get pkhash of data_opener from name
         try:
-            data_opener = DataOpener.objects.get(name=data['data_opener'])
+            dataset = Dataset.objects.get(pkhash=data['dataset_key'])
         except:
-            return Response({'message': 'This DataOpener name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'This Dataset name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
 
-            serializer = self.get_serializer(data={'features': data.get('features'),
-                                                   'labels': data.get('labels')})
+            serializer = self.get_serializer(data={'file': data.get('file')})
 
             serializer.is_valid(raise_exception=True)
 
@@ -33,11 +34,10 @@ class DataViewSet(ModelViewSet):
             instance = self.perform_create(serializer)
 
             # init ledger serializer
-            ledger_serializer = LedgerDataSerializer(data={'problems': data.getlist('problems'),
-                                                           'name': data.get('name'),
-                                                           'permissions': data.get('permissions', 'all'),
-                                                           'data_opener': data_opener.pkhash,
-                                                           'instance_pkhash': instance.pkhash})
+            ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                                                           'size': os.path.getsize(data.get('file')),
+                                                           'dataset_key': dataset.pkhash,
+                                                           'instance': instance})
 
             if not ledger_serializer.is_valid():
                 # delete instance
@@ -45,7 +45,11 @@ class DataViewSet(ModelViewSet):
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            ledger_serializer.create(serializer.validated_data)
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            headers = {}
+            if st == status.HTTP_201_CREATED:
+                headers = self.get_success_headers(serializer.data)
+
+            data.update(serializer.data)
+            return Response(data, status=st, headers=headers)

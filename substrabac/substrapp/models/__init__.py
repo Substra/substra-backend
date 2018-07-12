@@ -1,8 +1,9 @@
 # encoding: utf-8
 
 from .data import Data
-from .problem import Problem
-from .dataOpener import DataOpener
+from .challenge import Challenge
+from .dataset import Dataset
 from .algo import Algo
+from .model import Model
 
-__all__ = ['Data', 'Problem', 'DataOpener', 'Algo']
+__all__ = ['Data', 'Challenge', 'Dataset', 'Algo', 'Model']

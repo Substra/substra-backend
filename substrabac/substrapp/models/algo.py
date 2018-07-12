@@ -9,13 +9,14 @@ def upload_to(instance, filename):
 class Algo(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
+    file = models.FileField(upload_to=upload_to)
+    description = models.FileField(upload_to=upload_to)
     validated = models.BooleanField(default=False)
-    algo = models.FileField(upload_to=upload_to)
 
     def save(self, *args, **kwargs):
-        """Use hash of description file as primary key"""
+        """Use hash of file as primary key"""
         if not self.pkhash:
-            self.pkhash = compute_hash(self.algo)
+            self.pkhash = compute_hash(self.file)
         super(Algo, self).save(*args, **kwargs)
 
     def __str__(self):

@@ -1,9 +1,10 @@
 # encoding: utf-8
 
 from .data import DataViewSet
-from .dataOpener import DataOpenerViewSet
-from .problem import ProblemViewSet
+from .dataset import DatasetViewSet
+from .challenge import ChallengeViewSet
+from .model import ModelViewSet
 from .algo import AlgoViewSet
-from .learnuplet import LearnupletViewSet
+from .traintuple import TrainTupleViewSet
 
-__all__ = ['DataViewSet', 'DataOpenerViewSet', 'ProblemViewSet', 'AlgoViewSet', 'LearnupletViewSet']
+__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet', 'AlgoViewSet', 'TrainTupleViewSet']

@@ -42,6 +42,8 @@ def queryLedger(options):
         try:
             data = data.split(': ')[1].replace('\n', '')
             data = json.loads(data)
+            if data is None:
+                data = {}
         except:
             st = status.HTTP_400_BAD_REQUEST
         else:
