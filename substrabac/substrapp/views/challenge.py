@@ -7,21 +7,19 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.conf import conf
-from substrapp.models import Problem
-from substrapp.serializers import ProblemSerializer, LedgerProblemSerializer
+from substrapp.models import Challenge
+from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
 
-"""List all problems saved on local storage or submit a new one"""
 
-
-class ProblemViewSet(mixins.CreateModelMixin,
-                     mixins.ListModelMixin,
-                     GenericViewSet):
-    queryset = Problem.objects.all()
-    serializer_class = ProblemSerializer
+class ChallengeViewSet(mixins.CreateModelMixin,
+                       mixins.ListModelMixin,
+                       GenericViewSet):
+    queryset = Challenge.objects.all()
+    serializer_class = ChallengeSerializer
 
     # permission_classes = (permissions.IsAuthenticated,)
 
@@ -30,26 +28,26 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new Problem \n
+        Create a new Challenge \n
             TODO add info about what has to be posted\n
         - Example with curl (on localhost): \n
             curl -u username:password -H "Content-Type: application/json"\
             -X POST\
-            -d '{"name": "tough problem", "test_data":
+            -d '{"name": "tough challenge", "permissions": "all", "metrics_name": 'accuracy', "test_data":
             ["data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
             "data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389"],\
-                "files": {"description.md": '#My tough problem',\
+                "files": {"description.md": '#My tough challenge',\
                 'metrics.py': 'def AUC_score(y_true, y_pred):\n\treturn 1'}}'\
-                http://127.0.0.1:8000/substrapp/problem/ \n
+                http://127.0.0.1:8000/substrapp/challenge/ \n
             Use double quotes for the json, simple quotes don't work.\n
         - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/problem/',
+            requests.post('http://127.0.0.1:8000/challenge/',
                           #auth=('username', 'password'),
-                          data={'name': 'tough problem', 'test_data': ['0123456789012345678901234567890123456789012345678901234567890123']},
+                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_keys': ['data_da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
                           files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
                           headers={'Accept': 'application/json;version=0.0'}) \n
         ---
-        response_serializer: ProblemSerializer
+        response_serializer: ChallengeSerializer
         """
 
         data = request.data
@@ -62,27 +60,30 @@ class ProblemViewSet(mixins.CreateModelMixin,
         try:
             instance = self.perform_create(serializer)
         except IntegrityError as exc:
-            return Response({'message': 'A problem with this description file already exists.'}, status=status.HTTP_409_CONFLICT)
+            return Response({'message': 'A challenge with this description file already exists.'},
+                            status=status.HTTP_409_CONFLICT)
+        else:
+            # init ledger serializer
+            ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
+                                                                'name': data.get('name'),
+                                                                'permissions': data.get('permissions'),
+                                                                'metrics_name': data.get('metrics_name'),
+                                                                'instance': instance})
 
-        # init ledger serializer
-        ledger_serializer = LedgerProblemSerializer(data={'test_data': data.getlist('test_data'),
-                                                          'name': data.get('name'),
-                                                          'instance_pkhash': instance.pkhash})
+            if not ledger_serializer.is_valid():
+                # delete instance
+                instance.delete()
+                raise ValidationError(ledger_serializer.errors)
 
-        if not ledger_serializer.is_valid():
-            # delete instance
-            instance.delete()
-            raise ValidationError(ledger_serializer.errors)
+            # create on ledger
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-        # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            headers = {}
+            if st == status.HTTP_201_CREATED:
+                headers = self.get_success_headers(serializer.data)
 
-        headers = {}
-        if st == status.HTTP_201_CREATED:
-            headers = self.get_success_headers(serializer.data)
-
-        data.update(serializer.data)
-        return Response(data, status=st, headers=headers)
+            data.update(serializer.data)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
 
@@ -104,7 +105,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
     def metrics(self, request, *args, **kwargs):
         instance = self.get_object()
 
-        # TODO fetch problem from ledger
+        # TODO fetch challenge from ledger
         # if requester has permission, return metrics
 
         serializer = self.get_serializer(instance)
@@ -125,7 +126,7 @@ class ProblemViewSet(mixins.CreateModelMixin,
             instance = self.get_object()
         except Http404:
             # get instance from remote node
-            problem, st = queryLedger({
+            challenge, st = queryLedger({
                 'org': org,
                 'peer': peer,
                 'args': '{"Args":["queryObject","' + pk + '"]}'
@@ -133,8 +134,8 @@ class ProblemViewSet(mixins.CreateModelMixin,
 
             # TODO check hash
 
-            # TODO save problem in local db for later use
-            #instance = Problem.objects.create(description=problem['description'], metrics=problem['metrics'])
+            # TODO save challenge in local db for later use
+            # instance = Challenge.objects.create(description=challenge['description'], metrics=challenge['metrics'])
         finally:
             # TODO query list of algos and models from ledger
             algos, _ = self.queryLedger({
@@ -149,12 +150,12 @@ class ProblemViewSet(mixins.CreateModelMixin,
             })
             # TODO sort algos given the best perfs of their models
 
-            # TODO return success, problem info, sorted algo + models
+            # TODO return success, challenge info, sorted algo + models
 
-            #serializer = self.get_serializer(instance)
+            # serializer = self.get_serializer(instance)
             return Response({
-                'problem': problem,
-                'algos': [x for x in algos if x['problem'] == pk],
+                'challenge': challenge,
+                'algos': [x for x in algos if x['challenge'] == pk],
                 'models': models
             })
 

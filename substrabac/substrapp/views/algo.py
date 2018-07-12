@@ -1,3 +1,4 @@
+import json
 
 from django.http import Http404
 from rest_framework import status, mixins
@@ -7,7 +8,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.conf import conf
-from substrapp.models import Algo, Problem
+from substrapp.models import Algo, Challenge
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger
 
@@ -24,13 +25,13 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        # get pkhash of problem from name
+        # get pkhash of challenge from name
         try:
-            problem = Problem.objects.get(pkhash=data.get('problem'))
+            challenge = Challenge.objects.get(pkhash=data.get('challenge_key'))
         except:
-            return Response({'message': 'This Problem pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'message': 'This Challenge pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            serializer = self.get_serializer(data={'algo': data.get('algo')})
+            serializer = self.get_serializer(data={'file': data.get('file'), 'description': data.get('description')})
             serializer.is_valid(raise_exception=True)
 
             # create on db
@@ -39,18 +40,22 @@ class AlgoViewSet(mixins.CreateModelMixin,
             # init ledger serializer
             ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
                                                            'permissions': data.get('permissions', 'all'),
-                                                           'problem': problem.pkhash,
-                                                           'instance_pkhash': instance.pkhash})
+                                                           'challenge_key': challenge.pkhash,
+                                                           'instance': instance})
             if not ledger_serializer.is_valid():
                 # delete instance
                 instance.delete()
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            ledger_serializer.create(serializer.validated_data)
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = self.get_success_headers(serializer.data)
-            return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+            headers = {}
+            if st == status.HTTP_201_CREATED:
+                headers = self.get_success_headers(serializer.data)
+
+            data.update(serializer.data)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
 
@@ -61,7 +66,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryObjects", "algo"]}'
+            'args': '{"Args":["queryAllAlgo"]}'
         })
 
         return Response(data, status=st)
@@ -90,5 +95,5 @@ class AlgoViewSet(mixins.CreateModelMixin,
             pass
 
         serializer = self.get_serializer(instance)
-        return Response(serializer.data['algo'])
+        return Response(serializer.data['file'])
 

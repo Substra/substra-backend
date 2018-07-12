@@ -3,20 +3,21 @@ from .utils import compute_hash
 
 
 def upload_to(instance, filename):
-    return 'data/{0}/{1}'.format(instance.pk, filename)
+    return 'models/{0}/{1}'.format(instance.pk, filename)
 
 
-class Data(models.Model):
+class Model(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False)
     file = models.FileField(upload_to=upload_to)
 
     def save(self, *args, **kwargs):
+        """Use hash of file as primary key"""
         if not self.pkhash:
             self.pkhash = compute_hash(self.file)
-        super(Data, self).save(*args, **kwargs)
+        super(Model, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "Data with pkhash %(pkhash)s with validated %(validated)s" % {'pkhash': self.pkhash,
-                                                                             'validated': self.validated}
+        return "Model with pkhash %(pkhash)s with validated %(validated)s" % {'pkhash': self.pkhash,
+                                                                              'validated': self.validated}

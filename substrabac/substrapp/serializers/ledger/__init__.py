@@ -1,8 +1,10 @@
 # encoding: utf-8
 
-from .problem import LedgerProblemSerializer
+from .challenge import LedgerChallengeSerializer
+from .model import LedgerModelSerializer
 from .data import LedgerDataSerializer
 from .algo import LedgerAlgoSerializer
-from .learnuplet import LedgerLearnupletSerializer
+from .traintuple import LedgerTrainTupleSerializer
+from .dataset import LedgerDatasetSerializer
 
-__all__ = ['LedgerProblemSerializer', 'LedgerDataSerializer', 'LedgerAlgoSerializer', 'LedgerLearnupletSerializer']
+__all__ = ['LedgerChallengeSerializer', 'LedgerModelSerializer', 'LedgerDataSerializer', 'LedgerAlgoSerializer', 'LedgerTrainTupleSerializer', 'LedgerDatasetSerializer']
