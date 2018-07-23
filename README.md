@@ -45,6 +45,22 @@ It will populate the `substrabac/substrapp/conf` folder.
 
 [See here](https://github.com/SubstraFoundation/substra-network#network).  
 
+### Install rabbitmq
+
+```shell
+sudo apt-get install rabbitmq-server
+```
+
+### Launch celery worker
+
+Execute this command in the `substrabac/substrabac` folder.
+
+Note the use of the development settings. 
+
+```shell
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev celery -E -A substrabac worker -l info
+```
+
 ## Launch the server
 
 Go in the `substrabac` folder and run the server locally: `python manage.py runserver`.

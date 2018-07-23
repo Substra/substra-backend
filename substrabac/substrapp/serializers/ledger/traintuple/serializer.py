@@ -1,7 +1,6 @@
 from rest_framework import serializers
 
-from substrapp.conf import conf
-from substrapp.utils import invokeLedger
+from .tasks import createLedgerTraintuple
 
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
@@ -18,12 +17,6 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         model_key = validated_data.get('model_key')
         train_data_keys = validated_data.get('train_data_keys')
 
-        # TODO use asynchrone task for calling ledger
-
-        # TODO put in settings
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
-
         args = '"%(challengeKey)s", "%(algoKey)s", "%(modelKey)s", "%(trainDataKeys)s""' % {
             'challengeKey': challenge_key,
             'algoKey': algo_key,
@@ -31,11 +24,8 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'trainDataKeys': ','.join([x for x in train_data_keys]),
         }
 
-        options = {
-            'org': org,
-            'peer': peer,
-            'args': '{"Args":["createTraintuple", ' + args + ']}'
-        }
-        data, st = invokeLedger(options)
+        # use a celery task, as we are in an http request transaction
+        createLedgerTraintuple.delay(args)
 
-        return data, st
+        return {
+            'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}

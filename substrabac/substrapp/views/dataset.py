@@ -29,7 +29,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryAllDatasets"]}'
+            'args': '{"Args":["queryDatasets"]}'
         })
 
         return Response(data, status=st)
@@ -59,8 +59,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
             ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
                                                               'permissions': data.get('permissions'),
                                                               'type': data.get('type'),
-                                                              'problem_keys': data.getlist('problem_keys'),
-                                                              'instance': instance})
+                                                              'challenge_keys': data.getlist('challenge_keys'),
+                                                              'instance': instance},
+                                                        context={'request': request})
 
             if not ledger_serializer.is_valid():
                 # delete instance
@@ -68,11 +69,10 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = {}
-            if st == status.HTTP_201_CREATED:
-                headers = self.get_success_headers(serializer.data)
+            st = status.HTTP_201_CREATED
+            headers = self.get_success_headers(serializer.data)
 
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)

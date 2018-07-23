@@ -68,7 +68,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                                                 'name': data.get('name'),
                                                                 'permissions': data.get('permissions'),
                                                                 'metrics_name': data.get('metrics_name'),
-                                                                'instance': instance})
+                                                                'instance': instance},
+                                                          context={'request': request})
 
             if not ledger_serializer.is_valid():
                 # delete instance
@@ -76,11 +77,10 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = {}
-            if st == status.HTTP_201_CREATED:
-                headers = self.get_success_headers(serializer.data)
+            st = status.HTTP_201_CREATED
+            headers = self.get_success_headers(serializer.data)
 
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
@@ -96,7 +96,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryAllProblems"]}'
+            'args': '{"Args":["queryChallenges"]}'
         })
 
         return Response(data, status=st)

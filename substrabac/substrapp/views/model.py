@@ -33,7 +33,7 @@ class ModelViewSet(mixins.ListModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryAllModels"]}'
+            'args': '{"Args":["queryModels"]}'
         })
 
         return Response(data, status=st)
