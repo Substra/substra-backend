@@ -21,7 +21,7 @@ class DataViewSet(ModelViewSet):
 
         # get pkhash of data_opener from name
         try:
-            dataset = Dataset.objects.get(pkhash=data['dataset_key'])
+            dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
         except:
             return Response({'message': 'This Dataset name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -37,7 +37,8 @@ class DataViewSet(ModelViewSet):
             ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
                                                            'size': os.path.getsize(data.get('file')),
                                                            'dataset_key': dataset.pkhash,
-                                                           'instance': instance})
+                                                           'instance': instance},
+                                                     context={'request': request})
 
             if not ledger_serializer.is_valid():
                 # delete instance
@@ -45,11 +46,10 @@ class DataViewSet(ModelViewSet):
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = {}
-            if st == status.HTTP_201_CREATED:
-                headers = self.get_success_headers(serializer.data)
+            st = status.HTTP_201_CREATED
+            headers = self.get_success_headers(serializer.data)
 
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)

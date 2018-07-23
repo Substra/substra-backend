@@ -151,7 +151,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {}, status.HTTP_201_CREATED
+            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -244,7 +244,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {}, status.HTTP_201_CREATED
+            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -319,7 +319,7 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {}, status.HTTP_201_CREATED
+                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
@@ -420,7 +420,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {}, status.HTTP_201_CREATED
+            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -530,7 +530,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {}, status.HTTP_201_CREATED
+            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)

@@ -113,3 +113,8 @@ SECRET
 substrabac/**/conf
 
 medias
+
+
+# test files
+substrabac/substrabac/description.md
+substrabac/substrabac/metrics.py

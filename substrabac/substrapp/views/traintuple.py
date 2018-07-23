@@ -31,18 +31,17 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 'challenge_key': challenge.pkhash,
                 'algo_key': data.get('algo_key'),
                 'model_key': data.get('model_key'),
-                'train_data_keys': data.getlist('train_data_keys'), # list of train data keys (which are stored in the train worker node)
+                'train_data_keys': data.getlist('train_data_keys'),  # list of train data keys (which are stored in the train worker node)
             }
 
             # init ledger serializer
             serializer = self.get_serializer(data=data)
             serializer.is_valid(raise_exception=True)
             # create on ledger
-            data, st = serializer.create(serializer.validated_data)
+            data = serializer.create(serializer.validated_data)
 
-            headers = {}
-            if st == status.HTTP_201_CREATED:
-                headers = self.get_success_headers(serializer.data)
+            st = status.HTTP_201_CREATED
+            headers = self.get_success_headers(serializer.data)
 
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)

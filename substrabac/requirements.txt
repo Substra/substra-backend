@@ -1,6 +1,7 @@
 Django==2.0.5
 PyYAML==3.12
 
+celery == 4.2.1
 django-cors-headers==2.0.2
 django-filter==1.1.0
 django-rest-swagger==2.1.2
