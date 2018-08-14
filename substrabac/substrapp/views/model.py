@@ -13,6 +13,7 @@ from substrapp.serializers import ModelSerializer, LedgerChallengeSerializer
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
+from substrapp.views.utils import get_filters
 
 
 class ModelViewSet(mixins.ListModelMixin,
@@ -23,7 +24,6 @@ class ModelViewSet(mixins.ListModelMixin,
     # permission_classes = (permissions.IsAuthenticated,)
 
     def list(self, request, *args, **kwargs):
-
         # can modify result by interrogating `request.version`
 
         # using chu-nantes as in our testing owkin has been revoked
@@ -36,7 +36,28 @@ class ModelViewSet(mixins.ListModelMixin,
             'args': '{"Args":["queryModels"]}'
         })
 
-        return Response(data, status=st)
+        # parse filters
+        query_params = request.query_params.get('search', None)
+        l = [data]
+        if query_params is not None:
+            try:
+                filters = get_filters(query_params)
+            except Exception as exc:
+                raise Response(
+                    {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
+                    status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # filtering, reinit l to empty array
+                l = []
+                for idx, filter in enumerate(filters):
+                    # init each list iteration to data
+                    l.append(data)
+                    for k, subfilters in filter.items():
+                        if k == 'model':  # filter by own key
+                            for key, val in subfilters.items():
+                                l[idx] = [x for x in l[idx] if x['endModel']['hash'] in val]
+
+        return Response(l, status=st)
 
 
     # TODO create traintuples list related to model
