@@ -35,6 +35,8 @@ class ModelViewSet(mixins.ListModelMixin,
             'peer': peer,
             'args': '{"Args":["queryModels"]}'
         })
+        algoData = None
+        challengeData = None
 
         # parse filters
         query_params = request.query_params.get('search', None)
@@ -56,6 +58,38 @@ class ModelViewSet(mixins.ListModelMixin,
                         if k == 'model':  # filter by own key
                             for key, val in subfilters.items():
                                 l[idx] = [x for x in l[idx] if x['endModel']['hash'] in val]
+                        elif k == 'algo':  # select model used by these algo
+                            if not algoData:
+                                # TODO find a way to put this call in cache
+                                algoData, st = queryLedger({
+                                    'org': org,
+                                    'peer': peer,
+                                    'args': '{"Args":["queryAlgos"]}'
+                                })
+                            for key, val in subfilters.items():
+                                if key == 'key':
+                                    filteredData = [x for x in algoData if x[key] in ['algo_%s' % x for x in val]]
+                                else:
+                                    filteredData = [x for x in algoData if x[key] in val]
+                                algoHashes = [x['key'] for x in filteredData]
+                                l[idx] = [x for x in l[idx] if 'algo_%s' % x['algo']['hash'] in algoHashes]
+                        elif k == 'challenge':  # select challenge used by these datasets
+                            if not challengeData:
+                                # TODO find a way to put this call in cache
+                                challengeData, st = queryLedger({
+                                    'org': org,
+                                    'peer': peer,
+                                    'args': '{"Args":["queryChallenges"]}'
+                                })
+                            for key, val in subfilters.items():
+                                if key == 'metrics':  # specific to nested metrics
+                                    filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                elif key == 'key':
+                                    filteredData = [x for x in challengeData if x[key] in ['challenge_%s' % x for x in val]]
+                                else:
+                                    filteredData = [x for x in challengeData if x[key] in val]
+                                challengeKeys = [x['key'] for x in filteredData]
+                                l[idx] = [x for x in l[idx] if 'challenge_%s' % x['challenge']['hash'] in challengeKeys]
 
         return Response(l, status=st)
 
