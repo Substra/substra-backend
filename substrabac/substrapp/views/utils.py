@@ -3,7 +3,7 @@ from urllib.parse import unquote
 def get_filters(query_params):
 
     filters = []
-    groups = query_params.split('_OR_')
+    groups = query_params.split('-OR-')
     for idx, group in enumerate(groups):
 
         # init
