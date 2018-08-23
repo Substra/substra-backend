@@ -1,4 +1,8 @@
+import hashlib
+
+import requests
 from django.db import IntegrityError
+from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -15,10 +19,90 @@ from substrapp.views.utils import get_filters
 
 
 class DatasetViewSet(mixins.CreateModelMixin,
+                     mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      GenericViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
+
+    def retrieve(self, request, *args, **kwargs):
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        # get pkhash
+        try:
+            pkhash = pk  # TODO test if pk is correct
+        except:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = None
+            try:
+                # try to get it from local db
+                instance = self.get_object()
+            except Http404:
+                # get instance from remote node
+                dataset, st = queryLedger({
+                    'org': org,
+                    'peer': peer,
+                    'args': '{"Args":["queryDatasetData","%s"]}' % pk
+                })
+
+                # check dataopener hash
+                try:
+                    r = requests.get(dataset[pk]['openerStorageAddress'])
+                except:
+                    return Response({'message': 'Failed to check hash due to failed opener fetch file %s' %
+                                                dataset[pk]['openerStorageAddress']}, status.HTTP_400_BAD_REQUEST)
+                else:
+                    if r.status_code == 200:
+                        opener_file = r.content
+
+                        sha256_hash = hashlib.sha256()
+                        if isinstance(opener_file, str):
+                            description_file = opener_file.encode()
+                        sha256_hash.update(opener_file)
+                        computedHash = sha256_hash.hexdigest()
+
+                        if computedHash == pkhash:
+                            # check description hash
+                            try:
+                                r = requests.get(dataset[pk]['description']['storageAddress'])
+                            except:
+                                return Response(
+                                    {'message': 'Failed to check hash due to failed description fetch file %s' %
+                                                dataset[pk]['description']['storageAddress']},
+                                    status.HTTP_400_BAD_REQUEST)
+                            else:
+                                if r.status_code == 200:
+                                    description_file = r.content
+
+                                    sha256_hash = hashlib.sha256()
+                                    if isinstance(description_file, str):
+                                        description_file = description_file.encode()
+                                    sha256_hash.update(description_file)
+                                    computedHash = sha256_hash.hexdigest()
+
+                                    if computedHash == dataset[pk]['description']['hash']:
+                                        # save dataset in local db for later use
+                                        instance = Dataset.objects.create(pkhash=pkhash,
+                                                                          name=dataset[pk]['name'],
+                                                                          description=dataset[pk]['description'][
+                                                                              'storageAddress'],
+                                                                          data_opener=dataset[pk][
+                                                                              'openerStorageAddress'],
+                                                                          validated=True)
+
+                        return Response({
+                            'message': 'computedHash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'},
+                            status.HTTP_400_BAD_REQUEST)
+            finally:
+                if instance is not None:
+                    serializer = self.get_serializer(instance)
+                    return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
@@ -43,7 +127,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             try:
                 filters = get_filters(query_params)
             except Exception as exc:
-                raise Response(
+                return Response(
                     {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
                     status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -55,10 +139,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     for k, subfilters in filter.items():
                         if k == 'dataset':  # filter by own key
                             for key, val in subfilters.items():
-                                if key == 'key':  # specific to nested metrics
-                                    l[idx] = [x for x in l[idx] if x[key] in ['dataset_%s' % x for x in val]]
-                                else:
-                                    l[idx] = [x for x in l[idx] if x[key] in val]
+                                l[idx] = [x for x in l[idx] if x[key] in val]
                         elif k == 'challenge':  # select challenge used by these datasets
                             if not challengeData:
                                 # TODO find a way to put this call in cache
@@ -70,8 +151,6 @@ class DatasetViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 if key == 'metrics':  # specific to nested metrics
                                     filteredData = [x for x in challengeData if x[key]['name'] in val]
-                                elif key == 'key':
-                                    filteredData = [x for x in challengeData if x[key] in ['challenge_%s' % x for x in val]]
                                 else:
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]
@@ -85,10 +164,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     'args': '{"Args":["queryAlgos"]}'
                                 })
                             for key, val in subfilters.items():
-                                if key == 'key':
-                                    filteredData = [x for x in algoData if x[key] in ['algo_%s' % x for x in val]]
-                                else:
-                                    filteredData = [x for x in algoData if x[key] in val]
+                                filteredData = [x for x in algoData if x[key] in val]
                                 challengeKeys = [x['challengeKey'] for x in filteredData]
                                 l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
                         elif k == 'model':  # select challenges used by endModel hash
@@ -102,7 +178,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in modelData if x['endModel'][key] in val]
                                 challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in ['challenge_%s' % x for x in challengeKeys]]]
+                                l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
 
         return Response(l, status=st)
 

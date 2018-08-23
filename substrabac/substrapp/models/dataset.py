@@ -10,8 +10,8 @@ class Dataset(models.Model):
     """Storage Dataset table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     name = models.CharField(blank=True, max_length=24)
-    data_opener = models.FileField(upload_to=upload_to)
-    description = models.FileField(upload_to=upload_to)
+    data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False, blank=True)
 
     def save(self, *args, **kwargs):
