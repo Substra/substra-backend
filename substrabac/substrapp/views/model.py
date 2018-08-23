@@ -37,6 +37,7 @@ class ModelViewSet(mixins.ListModelMixin,
         })
         algoData = None
         challengeData = None
+        datasetData = None
 
         # parse filters
         query_params = request.query_params.get('search', None)
@@ -45,7 +46,7 @@ class ModelViewSet(mixins.ListModelMixin,
             try:
                 filters = get_filters(query_params)
             except Exception as exc:
-                raise Response(
+                return Response(
                     {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
                     status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -67,12 +68,21 @@ class ModelViewSet(mixins.ListModelMixin,
                                     'args': '{"Args":["queryAlgos"]}'
                                 })
                             for key, val in subfilters.items():
-                                if key == 'key':
-                                    filteredData = [x for x in algoData if x[key] in ['algo_%s' % x for x in val]]
-                                else:
-                                    filteredData = [x for x in algoData if x[key] in val]
+                                filteredData = [x for x in algoData if x[key] in val]
                                 algoHashes = [x['key'] for x in filteredData]
                                 l[idx] = [x for x in l[idx] if 'algo_%s' % x['algo']['hash'] in algoHashes]
+                        elif k == 'dataset':  # select model which trainData.openerHash is
+                            if not datasetData:
+                                # TODO find a way to put this call in cache
+                                datasetData, st = queryLedger({
+                                    'org': org,
+                                    'peer': peer,
+                                    'args': '{"Args":["queryDatasets"]}'
+                                })
+                            for key, val in subfilters.items():
+                                filteredData = [x for x in datasetData if x[key] in val]
+                                datasetHashes = [x['key'] for x in filteredData]
+                                l[idx] = [x for x in l[idx] if 'dataset_%s' % x['trainData']['openerHash'] in datasetHashes]
                         elif k == 'challenge':  # select challenge used by these datasets
                             if not challengeData:
                                 # TODO find a way to put this call in cache
@@ -84,8 +94,6 @@ class ModelViewSet(mixins.ListModelMixin,
                             for key, val in subfilters.items():
                                 if key == 'metrics':  # specific to nested metrics
                                     filteredData = [x for x in challengeData if x[key]['name'] in val]
-                                elif key == 'key':
-                                    filteredData = [x for x in challengeData if x[key] in ['challenge_%s' % x for x in val]]
                                 else:
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]

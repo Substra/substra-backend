@@ -9,8 +9,8 @@ def upload_to(instance, filename):
 class Algo(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
-    file = models.FileField(upload_to=upload_to)
-    description = models.FileField(upload_to=upload_to)
+    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):

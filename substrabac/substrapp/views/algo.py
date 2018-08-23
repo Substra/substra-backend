@@ -82,7 +82,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             try:
                 filters = get_filters(query_params)
             except Exception as exc:
-                raise Response(
+                return Response(
                     {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
                     status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -94,10 +94,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     for k, subfilters in filter.items():
                         if k == 'algo':  # filter by own key
                             for key, val in subfilters.items():
-                                if key == 'key':  # specific to nested metrics
-                                    l[idx] = [x for x in l[idx] if x[key] in ['algo_%s' % x for x in val]]
-                                else:
-                                    l[idx] = [x for x in l[idx] if x[key] in val]
+                                l[idx] = [x for x in l[idx] if x[key] in val]
                         elif k == 'challenge':  # select challenge used by these datasets
                             if not challengeData:
                                 # TODO find a way to put this call in cache
@@ -109,8 +106,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 if key == 'metrics':  # specific to nested metrics
                                     filteredData = [x for x in challengeData if x[key]['name'] in val]
-                                elif key == 'key':
-                                    filteredData = [x for x in challengeData if x[key] in ['challenge_%s' % x for x in val]]
                                 else:
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]
@@ -124,10 +119,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                     'args': '{"Args":["queryDatasets"]}'
                                 })
                             for key, val in subfilters.items():
-                                if key == 'key':
-                                    filteredData = [x for x in datasetData if x[key] in ['dataset_%s' % x for x in val]]
-                                else:
-                                    filteredData = [x for x in datasetData if x[key] in val]
+                                filteredData = [x for x in datasetData if x[key] in val]
                                 challengeKeys = list(itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
                                 l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
                         elif k == 'model':  # select challenges used by endModel hash
@@ -141,7 +133,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in modelData if x['endModel'][key] in val]
                                 challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if x['challengeKey'] in ['challenge_%s' % x for x in challengeKeys]]
+                                l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
 
         return Response(l, status=st)
 

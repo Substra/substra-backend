@@ -1,4 +1,9 @@
+from urllib.parse import urlparse
+
 import itertools
+import hashlib
+
+import requests
 
 from django.db import IntegrityError
 from django.http import Http404
@@ -10,6 +15,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.conf import conf
 from substrapp.models import Challenge
+from substrapp.models.utils import compute_hash
 from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 # from hfc.fabric import Client
@@ -20,6 +26,7 @@ from substrapp.views.utils import get_filters
 
 class ChallengeViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
+                       mixins.RetrieveModelMixin,
                        GenericViewSet):
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
@@ -88,6 +95,60 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
 
+    def retrieve(self, request, *args, **kwargs):
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        # get pkhash
+        try:
+            pkhash = pk  # TODO test if pk is correct
+        except:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = None
+            try:
+                # try to get it from local db
+                instance = self.get_object()
+            except Http404:
+                # get instance from remote node
+                challenge, st = queryLedger({
+                    'org': org,
+                    'peer': peer,
+                    'args': '{"Args":["query","%s"]}' % pk
+                })
+
+                # check hash
+                try:
+                    r = requests.get(challenge['descriptionStorageAddress'])
+                except:
+                    return Response({'message': 'Failed to check hash due to failed description fetch file %s' % challenge['descriptionStorageAddress']}, status.HTTP_400_BAD_REQUEST)
+                else:
+                    if r.status_code == 200:
+                        description_file = r.content
+
+                        sha256_hash = hashlib.sha256()
+                        if isinstance(description_file, str):
+                            description_file = description_file.encode()
+                        sha256_hash.update(description_file)
+                        computedHash = sha256_hash.hexdigest()
+
+                        if computedHash == pkhash:
+                            # save challenge in local db for later use
+                            instance = Challenge.objects.create(pkhash=pkhash,
+                                                                description=challenge['descriptionStorageAddress'],
+                                                                metrics=challenge['metrics']['storageAddress'],
+                                                                validated=True)
+
+                        return Response({'message': 'computedHash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'}, status.HTTP_400_BAD_REQUEST)
+            finally:
+                if instance is not None:
+                    serializer = self.get_serializer(instance)
+                    return Response(serializer.data)
+
     def list(self, request, *args, **kwargs):
 
         # can modify result by interrogating `request.version`
@@ -112,7 +173,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             try:
                 filters = get_filters(query_params)
             except Exception as exc:
-                raise Response({'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}}, status=status.HTTP_400_BAD_REQUEST)
             else:
                 # filtering, reset l to an empty array
                 l = []
@@ -124,8 +185,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 if key == 'metrics': # specific to nested metrics
                                     l[idx] = [x for x in l[idx] if x[key]['name'] in val]
-                                elif key == 'key': # specific to nested metrics
-                                    l[idx] = [x for x in l[idx] if x[key] in ['challenge_%s' % x for x in val]]
                                 else:
                                     l[idx] = [x for x in l[idx] if x[key] in val]
                         elif k == 'dataset':  # select challenge used by these datasets
@@ -137,10 +196,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     'args': '{"Args":["queryDatasets"]}'
                                 })
                             for key, val in subfilters.items():
-                                if key == 'key':
-                                    filteredData = [x for x in datasetData if x[key] in ['dataset_%s' % x for x in val]]
-                                else:
-                                    filteredData = [x for x in datasetData if x[key] in val]
+                                filteredData = [x for x in datasetData if x[key] in val]
                                 challengeKeys = list(itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
                                 l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
                         elif k == 'algo':  # select challenge used by these algo
@@ -152,10 +208,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     'args': '{"Args":["queryAlgos"]}'
                                 })
                             for key, val in subfilters.items():
-                                if key == 'key':
-                                    filteredData = [x for x in algoData if x[key] in ['algo_%s' % x for x in val]]
-                                else:
-                                    filteredData = [x for x in algoData if x[key] in val]
+                                filteredData = [x for x in algoData if x[key] in val]
                                 challengeKeys = [x['challengeKey'] for x in filteredData]
                                 l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
                         elif k == 'model':  # select challenges used by endModel hash
@@ -169,7 +222,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in modelData if x['endModel'][key] in val]
                                 challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if x['key'] in ['challenge_%s' % x for x in challengeKeys]]
+                                l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
 
         return Response(l, status=st)
 
