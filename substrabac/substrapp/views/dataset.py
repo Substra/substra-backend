@@ -1,6 +1,3 @@
-import hashlib
-
-import requests
 from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
@@ -15,12 +12,13 @@ from substrapp.conf import conf
 from substrapp.models import Dataset
 from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters
+from substrapp.views.utils import get_filters, computeHashMixin
 
 
 class DatasetViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
+                     computeHashMixin,
                      GenericViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
@@ -33,9 +31,13 @@ class DatasetViewSet(mixins.CreateModelMixin,
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
+        if len(pk) != 64:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+
         # get pkhash
+        pkhash = pk
         try:
-            pkhash = pk  # TODO test if pk is correct
+            int(pk, 16)  # test if pk is correct (hexadecimal)
         except:
             return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
         else:
@@ -50,55 +52,31 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     'peer': peer,
                     'args': '{"Args":["queryDatasetData","%s"]}' % pk
                 })
+                if st != 200:
+                    return Response(dataset, status=st)
 
-                # check dataopener hash
                 try:
-                    r = requests.get(dataset[pk]['openerStorageAddress'])
-                except:
-                    return Response({'message': 'Failed to check hash due to failed opener fetch file %s' %
-                                                dataset[pk]['openerStorageAddress']}, status.HTTP_400_BAD_REQUEST)
+                    computed_hash = self.get_computed_hash(dataset[pk]['openerStorageAddress']) # check dataopener hash
+                except Exception as e:
+                    return e
                 else:
-                    if r.status_code == 200:
-                        opener_file = r.content
+                    if computed_hash == pkhash:
+                        try:
+                            computed_hash = self.get_computed_hash(dataset[pk]['description']['storageAddress'])  # check description hash
+                        except Exception as e:
+                            return e
+                        else:
+                            if computed_hash == dataset[pk]['description']['hash']:
+                                # save dataset in local db for later use
+                                instance = Dataset.objects.create(pkhash=pkhash,
+                                                                  name=dataset[pk]['name'],
+                                                                  description=dataset[pk]['description']['storageAddress'],
+                                                                  data_opener=dataset[pk]['openerStorageAddress'],
+                                                                  validated=True)
 
-                        sha256_hash = hashlib.sha256()
-                        if isinstance(opener_file, str):
-                            description_file = opener_file.encode()
-                        sha256_hash.update(opener_file)
-                        computedHash = sha256_hash.hexdigest()
-
-                        if computedHash == pkhash:
-                            # check description hash
-                            try:
-                                r = requests.get(dataset[pk]['description']['storageAddress'])
-                            except:
-                                return Response(
-                                    {'message': 'Failed to check hash due to failed description fetch file %s' %
-                                                dataset[pk]['description']['storageAddress']},
-                                    status.HTTP_400_BAD_REQUEST)
-                            else:
-                                if r.status_code == 200:
-                                    description_file = r.content
-
-                                    sha256_hash = hashlib.sha256()
-                                    if isinstance(description_file, str):
-                                        description_file = description_file.encode()
-                                    sha256_hash.update(description_file)
-                                    computedHash = sha256_hash.hexdigest()
-
-                                    if computedHash == dataset[pk]['description']['hash']:
-                                        # save dataset in local db for later use
-                                        instance = Dataset.objects.create(pkhash=pkhash,
-                                                                          name=dataset[pk]['name'],
-                                                                          description=dataset[pk]['description'][
-                                                                              'storageAddress'],
-                                                                          data_opener=dataset[pk][
-                                                                              'openerStorageAddress'],
-                                                                          validated=True)
-
-                        return Response({
-                            'message': 'computedHash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'},
-                            status.HTTP_400_BAD_REQUEST)
+                    return Response({
+                        'message': 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'},
+                        status.HTTP_400_BAD_REQUEST)
             finally:
                 if instance is not None:
                     serializer = self.get_serializer(instance)
@@ -148,6 +126,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryChallenges"]}'
                                 })
+                                if st != 200:
+                                    return Response(challengeData, status=st)
+
                             for key, val in subfilters.items():
                                 if key == 'metrics':  # specific to nested metrics
                                     filteredData = [x for x in challengeData if x[key]['name'] in val]
@@ -163,6 +144,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryAlgos"]}'
                                 })
+                                if st != 200:
+                                    return Response(algoData, status=st)
+
                             for key, val in subfilters.items():
                                 filteredData = [x for x in algoData if x[key] in val]
                                 challengeKeys = [x['challengeKey'] for x in filteredData]
@@ -175,6 +159,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryModels"]}'
                                 })
+                                if st != 200:
+                                    return Response(modelData, status=st)
+
                             for key, val in subfilters.items():
                                 filteredData = [x for x in modelData if x['endModel'][key] in val]
                                 challengeKeys = [x['challenge']['hash'] for x in filteredData]

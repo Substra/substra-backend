@@ -1,4 +1,10 @@
+import hashlib
 from urllib.parse import unquote
+
+import requests
+from rest_framework import status
+from rest_framework.response import Response
+
 
 def get_filters(query_params):
 
@@ -38,3 +44,26 @@ def get_filters(query_params):
                     filters[idx].update({parent: filter})
 
     return filters
+
+
+class computeHashMixin(object):
+    def compute_hash(self, file):
+
+        sha256_hash = hashlib.sha256()
+        if isinstance(file, str):
+            file = file.encode()
+        sha256_hash.update(file)
+        computedHash = sha256_hash.hexdigest()
+
+        return computedHash
+
+    def get_computed_hash(self, url):
+        try:
+            r = requests.get(url)
+        except:
+            raise Response({'message': 'Failed to check hash due to failed file fetching %s' % url}, status.HTTP_400_BAD_REQUEST)
+        else:
+            if r.status_code == 200:
+                return self.compute_hash(r.content)
+
+            raise Response({'message': 'Failed to check hash due to wrong returned status code %s' % r.status_code}, status.HTTP_400_BAD_REQUEST)
