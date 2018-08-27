@@ -13,15 +13,66 @@ from substrapp.serializers import ModelSerializer, LedgerChallengeSerializer
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters
+from substrapp.views.utils import get_filters, computeHashMixin
 
 
-class ModelViewSet(mixins.ListModelMixin,
+class ModelViewSet(mixins.RetrieveModelMixin,
+                   mixins.ListModelMixin,
+                   computeHashMixin,
                    GenericViewSet):
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
 
     # permission_classes = (permissions.IsAuthenticated,)
+
+    def retrieve(self, request, *args, **kwargs):
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        if len(pk) != 64:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+
+        # get pkhash
+        pkhash = pk
+        try:
+            int(pk, 16)  # test if pk is correct (hexadecimal)
+        except:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = None
+            try:
+                # try to get it from local db
+                instance = self.get_object()
+            except Http404:
+                # get instance from remote node
+                model, st = queryLedger({
+                    'org': org,
+                    'peer': peer,
+                    'args': '{"Args":["queryModelTraintuples","%s"]}' % pk
+                })
+
+                try:
+                    computed_hash = self.get_computed_hash(model['descriptionStorageAddress'])
+                except Exception as e:
+                    return e
+                else:
+                    if computed_hash == pkhash:
+                        # save challenge in local db for later use
+                        instance = Model.objects.create(pkhash=pkhash,
+                                                        file=model['descriptionStorageAddress'],
+                                                        validated=True)
+
+                    return Response({
+                        'message': 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'},
+                        status.HTTP_400_BAD_REQUEST)
+            finally:
+                if instance is not None:
+                    serializer = self.get_serializer(instance)
+                    return Response(serializer.data)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`

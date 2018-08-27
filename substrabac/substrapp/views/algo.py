@@ -1,6 +1,7 @@
+import hashlib
 import itertools
-import json
 
+import requests
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -12,11 +13,13 @@ from substrapp.conf import conf
 from substrapp.models import Algo, Challenge
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters
+from substrapp.views.utils import get_filters, computeHashMixin
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
+                  mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
+                  computeHashMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
@@ -59,6 +62,57 @@ class AlgoViewSet(mixins.CreateModelMixin,
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
 
+    def retrieve(self, request, *args, **kwargs):
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        if len(pk) != 64:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+
+        # get pkhash
+        # get pkhash
+        pkhash = pk
+        try:
+            int(pk, 16)  # test if pk is correct (hexadecimal)
+        except:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+        else:
+            instance = None
+            try:
+                # try to get it from local db
+                instance = self.get_object()
+            except Http404:
+                # get instance from remote node
+                algo, st = queryLedger({
+                    'org': org,
+                    'peer': peer,
+                    'args': '{"Args":["query","%s"]}' % pk
+                })
+                if st != 200:
+                    return Response(algo, status=st)
+
+                try:
+                    computed_hash = self.get_computed_hash(algo['description']['storageAddress'])
+                except Exception as e:
+                    return e
+                else:
+                    if computed_hash == pkhash:
+                        # save challenge in local db for later use
+                        instance = Algo.objects.create(pkhash=pkhash,
+                                                       description=algo['description']['storageAddress'],
+                                                       file=algo['storageAddress'],
+                                                       validated=True)
+
+                    return Response({'message': 'computedHash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'}, status.HTTP_400_BAD_REQUEST)
+            finally:
+                if instance is not None:
+                    serializer = self.get_serializer(instance)
+                    return Response(serializer.data)
+
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
@@ -96,6 +150,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             for key, val in subfilters.items():
                                 l[idx] = [x for x in l[idx] if x[key] in val]
                         elif k == 'challenge':  # select challenge used by these datasets
+                            st = None
                             if not challengeData:
                                 # TODO find a way to put this call in cache
                                 challengeData, st = queryLedger({
@@ -103,6 +158,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryChallenges"]}'
                                 })
+
+                                if st != 200:
+                                    return Response(challengeData, status=st)
+
                             for key, val in subfilters.items():
                                 if key == 'metrics':  # specific to nested metrics
                                     filteredData = [x for x in challengeData if x[key]['name'] in val]
@@ -118,6 +177,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryDatasets"]}'
                                 })
+                                if st != 200:
+                                    return Response(datasetData, status=st)
+
                             for key, val in subfilters.items():
                                 filteredData = [x for x in datasetData if x[key] in val]
                                 challengeKeys = list(itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
@@ -130,6 +192,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                     'peer': peer,
                                     'args': '{"Args":["queryModels"]}'
                                 })
+                                if st != 200:
+                                    return Response(modelData, status=st)
+
                             for key, val in subfilters.items():
                                 filteredData = [x for x in modelData if x['endModel'][key] in val]
                                 challengeKeys = [x['challenge']['hash'] for x in filteredData]
