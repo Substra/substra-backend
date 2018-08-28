@@ -133,7 +133,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in datasetData if x[key] in val]
                                 datasetHashes = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if 'dataset_%s' % x['trainData']['openerHash'] in datasetHashes]
+                                l[idx] = [x for x in l[idx] if
+                                          'dataset_%s' % x['trainData']['openerHash'] in datasetHashes]
                         elif k == 'challenge':  # select challenge used by these datasets
                             if not challengeData:
                                 # TODO find a way to put this call in cache
@@ -152,5 +153,49 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return Response(l, status=st)
 
+    @action(methods=['post'], detail=False)
+    def create_traintuple(self, request):
+        '''
+        curl -H "Accept: text/html;version=0.0, */*;version=0.0"
+         -d "challenge_key=eb0295d98f37ae9e95102afae792d540137be2dedf6c4b00570ab1d1f355d033&algo_key=082f972d09049fdb7e34659f6fea82c5082be717cc9dab89bb92f620e6517106&startModel_key=082f972d09049fdb7e34659f6fea82c5082be717cc9dab89bb92f620e6517106&train_data[]=aa1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc&train_data[]=aa2bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc"
+          -X POST http://localhost:8000/model/create_traintuple/
 
-    # TODO create traintuples list related to model
+        or
+
+        curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json"
+        -d '{"challenge_key":"eb0295d98f37ae9e95102afae792d540137be2dedf6c4b00570ab1d1f355d033","algo_key":"082f972d09049fdb7e34659f6fea82c5082be717cc9dab89bb92f620e6517106","startModel_key":"082f972d09049fdb7e34659f6fea82c5082be717cc9dab89bb92f620e6517106","train_data":["aa1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc","aa2bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc"]}'
+         -X POST http://localhost:8000/model/create_traintuple/?format=json
+
+        :param request:
+        :return:
+        '''
+
+        # using chu-nantes as in our testing owkin has been revoked
+        org = conf['orgs']['chu-nantes']
+        peer = org['peers'][0]
+
+        try:
+            challenge_key = request.data.get('challenge_key', request.POST.get('challenge_key', None))
+            algo_key = request.data.get('algo_key', request.POST.get('algo_key', None))
+            startModel_key = request.data.get('startModel_key', request.POST.get('startModel_key', None))
+            try:
+                train_data = request.data.getlist('train_data', [])
+            except:
+                train_data = request.data.get('train_data', request.POST.getlist('train_data', []))
+        except:
+            return Response({'message': 'Check the way you pass your parameters'})
+
+        if challenge_key is not None and algo_key is not None and startModel_key is not None:
+            data, st = queryLedger({
+                'org': org,
+                'peer': peer,
+                'args': '{"Args":["createTraintuple","%(challenge_key)s","%(algo_key)s","%(startModel_key)s","%(train_data)s"]}' % {
+                    'challenge_key': challenge_key,
+                    'algo_key': algo_key,
+                    'startModel_key': startModel_key,
+                    'train_data': ','.join(train_data)}
+            })
+
+            return Response({'traintuple': data}, status=st)
+
+        return Response({'message': 'Wrong parameters passed. Please refer to documentation.'})
