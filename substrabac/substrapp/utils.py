@@ -41,12 +41,18 @@ def queryLedger(options):
     if data:
         try:
             data = data.split(': ')[1].replace('\n', '')
-            data = json.loads(data)
-            if data is None:
-                data = {}
         except:
             st = status.HTTP_400_BAD_REQUEST
         else:
+            # json transformation if needed
+            try:
+                data = json.loads(data)
+            except:
+                pass
+            else:
+                if data is None:
+                    data = {}
+
             msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
                 'channel_name': channel_name,
                 'peer_host': peer['host']
