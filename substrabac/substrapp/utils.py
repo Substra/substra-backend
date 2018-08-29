@@ -99,7 +99,7 @@ def invokeLedger(options):
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
-    output = subprocess.run(['../bin/peer',
+    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'invoke',
                              '-C', channel_name,

@@ -8,7 +8,7 @@ from substrapp.models.utils import compute_hash
 class LedgerDatasetSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=256)
     type = serializers.CharField(max_length=256)
-    challenge_keys = serializers.ListField(child=serializers.CharField(min_length=69, max_length=69, allow_blank=True),
+    challenge_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64, allow_blank=True),
                                            max_length=None)
     permissions = serializers.CharField(min_length=1, max_length=60)
 

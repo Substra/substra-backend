@@ -51,7 +51,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         - Example with the python package requests (on localhost): \n
             requests.post('http://127.0.0.1:8000/challenge/',
                           #auth=('username', 'password'),
-                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_keys': ['data_da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
+                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_keys': ['a1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
                           files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
                           headers={'Accept': 'application/json;version=0.0'}) \n
         ---
