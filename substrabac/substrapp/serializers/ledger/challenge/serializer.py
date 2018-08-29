@@ -6,7 +6,7 @@ from .tasks import createLedgerChallenge
 
 
 class LedgerChallengeSerializer(serializers.Serializer):
-    test_data_keys = serializers.ListField(child=serializers.CharField(min_length=69, max_length=69),
+    test_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=1,
                                            max_length=None)
     name = serializers.CharField(min_length=1, max_length=60)
