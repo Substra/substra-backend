@@ -58,7 +58,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                 try:
                     computed_hash = self.get_computed_hash(model['descriptionStorageAddress'])
                 except Exception as e:
-                    return e
+                    return Response({'message': 'Failed to fetch description file'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     if computed_hash == pkhash:
                         # save challenge in local db for later use
@@ -84,7 +84,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         data, st = queryLedger({
             'org': org,
             'peer': peer,
-            'args': '{"Args":["queryModels"]}'
+            'args': '{"Args":["queryTraintuples"]}'
         })
         algoData = None
         challengeData = None
@@ -196,6 +196,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     'train_data': ','.join(train_data)}
             })
 
-            return Response({'traintuple': data}, status=st)
+            if st == 200:
+                return Response({'traintuple': data}, status=st)
+            return Response(data, status=st)
 
         return Response({'message': 'Wrong parameters passed. Please refer to documentation.'})
