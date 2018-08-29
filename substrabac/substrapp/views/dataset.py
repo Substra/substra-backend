@@ -58,13 +58,14 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 try:
                     computed_hash = self.get_computed_hash(dataset[pk]['openerStorageAddress']) # check dataopener hash
                 except Exception as e:
-                    return e
+                    return Response({'message': 'Failed to fetch opener file'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     if computed_hash == pkhash:
                         try:
                             computed_hash = self.get_computed_hash(dataset[pk]['description']['storageAddress'])  # check description hash
                         except Exception as e:
-                            return e
+                            return Response({'message': 'Failed to fetch description file'},
+                                            status=status.HTTP_400_BAD_REQUEST)
                         else:
                             if computed_hash == dataset[pk]['description']['hash']:
                                 # save dataset in local db for later use
@@ -157,7 +158,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 modelData, st = queryLedger({
                                     'org': org,
                                     'peer': peer,
-                                    'args': '{"Args":["queryModels"]}'
+                                    'args': '{"Args":["queryTraintuples"]}'
                                 })
                                 if st != 200:
                                     return Response(modelData, status=st)

@@ -58,7 +58,7 @@ Execute this command in the `substrabac/substrabac` folder.
 Note the use of the development settings. 
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev celery -E -A substrabac worker -l info
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev celery -E -A substrabac worker -l info -B
 ```
 
 ## Launch the server

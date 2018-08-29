@@ -4,6 +4,7 @@ import subprocess
 
 from rest_framework import status
 
+from substrabac.settings.common import PROJECT_ROOT, BASE_DIR
 from substrapp.conf import conf
 
 
@@ -26,7 +27,7 @@ def queryLedger(options):
         'peer_host': peer['host']
     }, flush=True)
 
-    output = subprocess.run(['../bin/peer',
+    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'query',
                              '-r',

@@ -70,6 +70,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         except IntegrityError as exc:
             return Response({'message': 'A challenge with this description file already exists.'},
                             status=status.HTTP_409_CONFLICT)
+        except Exception as exc:
+            raise exc
         else:
             # init ledger serializer
             ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
@@ -128,7 +130,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 try:
                     computed_hash = self.get_computed_hash(challenge['descriptionStorageAddress'])
                 except Exception as e:
-                    return e
+                    return Response({'message': 'Failed to fetch description file'}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     if computed_hash == pkhash:
                         # save challenge in local db for later use
@@ -222,7 +224,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 modelData, st = queryLedger({
                                     'org': org,
                                     'peer': peer,
-                                    'args': '{"Args":["queryModels"]}'
+                                    'args': '{"Args":["queryTraintuples"]}'
                                 })
                                 if st != 200:
                                     return Response(modelData, status=st)
