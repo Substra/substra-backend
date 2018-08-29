@@ -9,8 +9,8 @@ def compute_hash(fileobj):
     """
     sha256_hash = hashlib.sha256()
 
-    with fileobj.open() as openedfile:
-        block = openedfile.read()
+    openedfile = fileobj.open()
+    block = openedfile.read()
 
     if isinstance(block, str):
         block = block.encode()
