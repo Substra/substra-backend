@@ -61,9 +61,14 @@ def create_core_peer_config():
 
 def get_conf_from_network():
     for org in ORGS:
-        # copy msp
+        # copy user msp
         call(['sudo', 'cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user'),
+              os.path.join(dir_path, './substrapp/conf/' + org)])
+
+        # copy msp
+        call(['sudo', 'cp', '-R',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/msp'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy ca-cert.pem

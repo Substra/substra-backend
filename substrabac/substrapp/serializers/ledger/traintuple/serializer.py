@@ -17,7 +17,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         model_key = validated_data.get('model_key')
         train_data_keys = validated_data.get('train_data_keys')
 
-        args = '"%(challengeKey)s", "%(algoKey)s", "%(modelKey)s", "%(trainDataKeys)s""' % {
+        args = '"%(challengeKey)s", "%(algoKey)s", "%(modelKey)s", "%(trainDataKeys)s"' % {
             'challengeKey': challenge_key,
             'algoKey': algo_key,
             'modelKey': model_key,
@@ -28,4 +28,4 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         createLedgerTraintuple.delay(args)
 
         return {
-            'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}
+            'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'}

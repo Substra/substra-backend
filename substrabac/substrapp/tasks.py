@@ -21,8 +21,6 @@ def queryTraintuples():
         todos = [x for x in data if x['status'] == 'todo']
 
         for model in todos:
-
-
             traintuple = ''
             # Log Start TrainTest
             data, st = queryLedger({
