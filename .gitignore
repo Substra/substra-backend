@@ -112,9 +112,7 @@ SECRET
 # conf from substra-network
 substrabac/**/conf
 
-medias_chunantes
-medias_owkin
-
+medias
 
 # test files
 substrabac/substrabac/description.md
