@@ -1,5 +1,5 @@
 from django.db import models
-from .utils import compute_hash
+from .utils import get_hash
 
 
 def upload_to(instance, filename):
@@ -14,7 +14,7 @@ class Data(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pkhash:
-            self.pkhash = compute_hash(self.file)
+            self.pkhash = get_hash(self.file)
         super(Data, self).save(*args, **kwargs)
 
     def __str__(self):

@@ -1,11 +1,18 @@
+import hashlib
 import json
 import os
 import subprocess
 
 from rest_framework import status
 
-from substrabac.settings.common import PROJECT_ROOT, BASE_DIR
+from substrabac.settings.common import PROJECT_ROOT
 from substrapp.conf import conf
+
+#######
+# /!\ #
+#######
+
+# careful, passing invoke parameters to queryLedger will NOT fail
 
 
 def queryLedger(options):
@@ -127,3 +134,10 @@ def invokeLedger(options):
             st = status.HTTP_403_FORBIDDEN
 
     return data, st
+
+
+def compute_hash(bytes):
+    sha256_hash = hashlib.sha256()
+    sha256_hash.update(bytes)
+
+    return sha256_hash.hexdigest()

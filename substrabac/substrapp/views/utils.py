@@ -1,13 +1,15 @@
 import hashlib
 from urllib.parse import unquote
 
-import requests
+from django.conf import settings
+from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 
+from substrapp.utils import queryLedger
+
 
 def get_filters(query_params):
-
     filters = []
     groups = query_params.split('-OR-')
     for idx, group in enumerate(groups):
@@ -46,7 +48,24 @@ def get_filters(query_params):
     return filters
 
 
-class computeHashMixin(object):
+def getObjectFromLedger(pk):
+    # get instance from remote node
+    data, st = queryLedger({
+        'org': settings.LEDGER['org'],
+        'peer': settings.LEDGER['peer'],
+        'args': '{"Args":["query","%s"]}' % pk
+    })
+
+    if st != 200:
+        raise Exception(data)
+
+    if data['permissions'] == 'all':
+        return data
+    else:
+        raise Exception('Not Allowed')
+
+
+class ComputeHashMixin(object):
     def compute_hash(self, file):
 
         sha256_hash = hashlib.sha256()
@@ -57,13 +76,23 @@ class computeHashMixin(object):
 
         return computedHash
 
-    def get_computed_hash(self, url):
-        try:
-            r = requests.get(url)
-        except:
-            raise Response({'message': 'Failed to check hash due to failed file fetching %s' % url}, status.HTTP_400_BAD_REQUEST)
-        else:
-            if r.status_code == 200:
-                return self.compute_hash(r.content)
 
-            raise Response({'message': 'Failed to check hash due to wrong returned status code %s' % r.status_code}, status.HTTP_400_BAD_REQUEST)
+class ManageFileMixin(object):
+    def manage_file(self, field):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        # TODO get cert for permissions check
+
+        try:
+            getObjectFromLedger(pk)
+        except Exception as e:
+            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            object = self.get_object()
+
+            data = getattr(object, field)
+            # return file content
+            fp = data.file.read()
+
+            return HttpResponse(fp)

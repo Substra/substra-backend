@@ -1,5 +1,5 @@
 from django.db import models
-from .utils import compute_hash
+from .utils import get_hash
 
 
 def upload_to(instance, filename):
@@ -15,7 +15,7 @@ class Model(models.Model):
     def save(self, *args, **kwargs):
         """Use hash of file as primary key"""
         if not self.pkhash:
-            self.pkhash = compute_hash(self.file)
+            self.pkhash = get_hash(self.file)
         super(Model, self).save(*args, **kwargs)
 
     def __str__(self):
