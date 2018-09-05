@@ -26,13 +26,17 @@ It will drop the databases if they are already created, then create them and gra
   ```shell
   $> ./substrabac/scripts/recreate_db.sh 
 ```
-6. Do not run django migrations on these database, as we will populate them from psql dump relative to the data already set in the ledger thanks to the run docker instance of the substra-network:
+6. Do not run django migrations on these databases if you used the run container instance from substra-network. We will populate data from psql dumps relative to the data already set in the ledger:
 ```shell
   $> ./substrabac/scripts/load_fixtures.sh 
 ```
 It will populate the databases and create the `owkin` and `chu-nantes` folders in the `medias` folder.
 
-7. Create a superuser: `python substrabac/manage.py createsuperuser`
+7. Optional: Create a superuser in your databases:
+```
+python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.owkin
+python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.chunantes
+```
 
 ## Getting started 2: Linking the app with Hyperledger Fabric
 
@@ -44,7 +48,7 @@ Run `./boostrap.sh`
 
 Run the `get_conf_from_network.py` script for getting generated files from the substra-network and being able to interact with it.  
 :warning: The `substra-network` directory (cloned from [here](https://github.com/SubstraFoundation/substra-network)) should be located at the same level as the `substrabac` project directory.
-
+Be sure to have run the `start.py` command of the substra-network.
 ```
 python substrabac/get_conf_from_network.py
 ```
