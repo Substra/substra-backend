@@ -138,6 +138,10 @@ def invokeLedger(options):
 
 def compute_hash(bytes):
     sha256_hash = hashlib.sha256()
+
+    if isinstance(bytes, str):
+        bytes = bytes.encode()
+
     sha256_hash.update(bytes)
 
     return sha256_hash.hexdigest()

@@ -112,8 +112,8 @@ SECRET
 # conf from substra-network
 substrabac/**/conf
 
-medias/challenges
-medias/traintuple
+medias_chunantes
+medias_owkin
 
 
 # test files

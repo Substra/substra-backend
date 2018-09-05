@@ -8,12 +8,19 @@ import requests
 from django.conf import settings
 
 from substrabac.celery import app
-from substrapp.utils import queryLedger, invokeLedger, compute_hash
+from substrapp.utils import queryLedger, invokeLedger
+from .utils import compute_hash
 
 
 def create_directory(directory):
     if not path.exists(directory):
         os.makedirs(directory)
+
+
+def get_hash(file):
+    with open(file, 'rb') as f:
+        data = f.read()
+        return compute_hash(data)
 
 
 def get_computed_hash(url):
@@ -95,12 +102,11 @@ def fail(key, err_msg):
 def queryTraintuples():
     from shutil import copy
     import zipfile
-    from substrapp.utils import compute_hash
+    from .utils import compute_hash
     from substrapp.models import Challenge, Dataset, Data, Model, Algo
 
     try:
-        with open(settings.LEDGER['signcert']) as cert:
-            train_data_owner = compute_hash(cert.read())
+        train_data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
         pass
     else:
@@ -159,7 +165,7 @@ def queryTraintuples():
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
-                    data_opener_hash = compute_hash(dataset.data_opener)
+                    data_opener_hash = get_hash(dataset.data_opener.path)
                     if data_opener_hash != traintuple['trainData']['openerHash']:
                         return fail(traintuple['key'], 'DataOpener Hash in Traintuple is not the same as in local db')
 
@@ -173,7 +179,7 @@ def queryTraintuples():
                     except Exception as e:
                         return fail(traintuple['key'], e)
                     else:
-                        data_hash = compute_hash(data.file)
+                        data_hash = get_hash(data.file.path)
                         if data_hash != data_key:
                             return fail(traintuple['key'],
                                         'Data Hash in Traintuple is not the same as in local db')
@@ -194,7 +200,7 @@ def queryTraintuples():
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
-                    model_file_hash = compute_hash(model.file)
+                    model_file_hash = get_hash(model.file.path)
                     if model_file_hash != traintuple['startModel']['hash']:
                         return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
 
@@ -207,7 +213,7 @@ def queryTraintuples():
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
-                    algo_file_hash = compute_hash(algo.file)
+                    algo_file_hash = get_hash(algo.file.path)
                     if algo_file_hash != traintuple['algo']['hash']:
                         return fail(traintuple['key'], 'Algo Hash in Traintuple is not the same as in local db')
 

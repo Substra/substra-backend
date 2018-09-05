@@ -94,4 +94,3 @@ if __name__ == "__main__":
     call(['sudo', 'rm', '-Rf', os.path.join(dir_path, 'substrapp/conf')])
     create_core_peer_config()
     get_conf_from_network()
-

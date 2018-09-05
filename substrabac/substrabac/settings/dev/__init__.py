@@ -1,33 +1,9 @@
-import os
+from ..common import *
 
-# load org ledger conf
-from substrabac.settings.conf.owkin import org, peer, signcert
-from .common import *
-
-from .deps.restframework import *
-from .deps.cors import *
-
-LEDGER = {
-    'org': org,
-    'peer': peer,
-    'signcert': signcert
-}
+from ..deps.restframework import *
+from ..deps.cors import *
 
 DEBUG = True
-
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('SUBSTRABAC_DB_NAME', 'substrabac'),
-        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabac'),
-        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabac'),
-        'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
-        'PORT': 5432,
-    }
-}
 
 LOGGING = {
     'version': 1,
