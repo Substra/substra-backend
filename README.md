@@ -119,7 +119,12 @@ Use these configurations for easier debugging and productivity:
 ![](assets/server_chunantes.png) 
 ![](assets/celery_owkin.png) 
 ![](assets/celery_chunantes.png) 
- 
+
+Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
+
+You can even access directly to the databases (password is `substrabac` as described in the beginning of this document):
+![](assets/database_owkin.png) 
+![](assets/database_owkin_challenges.png) 
 
 ## License
 
