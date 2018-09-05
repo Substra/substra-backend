@@ -31,6 +31,7 @@ It will drop the databases if they are already created, then create them and gra
   $> ./substrabac/scripts/load_fixtures.sh 
 ```
 It will populate the databases and create the `owkin` and `chu-nantes` folders in the `medias` folder.
+
 7. Create a superuser: `python substrabac/manage.py createsuperuser`
 
 ## Getting started 2: Linking the app with Hyperledger Fabric
