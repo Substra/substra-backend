@@ -576,50 +576,50 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 1	Can add log entry	1	add_logentry
 2	Can change log entry	1	change_logentry
 3	Can delete log entry	1	delete_logentry
-4	Can add permission	2	add_permission
-5	Can change permission	2	change_permission
-6	Can delete permission	2	delete_permission
-7	Can add group	3	add_group
-8	Can change group	3	change_group
-9	Can delete group	3	delete_group
-10	Can add user	4	add_user
-11	Can change user	4	change_user
-12	Can delete user	4	delete_user
-13	Can add content type	5	add_contenttype
-14	Can change content type	5	change_contenttype
-15	Can delete content type	5	delete_contenttype
-16	Can add session	6	add_session
-17	Can change session	6	change_session
-18	Can delete session	6	delete_session
-19	Can add site	7	add_site
-20	Can change site	7	change_site
-21	Can delete site	7	delete_site
-22	Can add algo	8	add_algo
-23	Can change algo	8	change_algo
-24	Can delete algo	8	delete_algo
-25	Can add challenge	9	add_challenge
-26	Can change challenge	9	change_challenge
-27	Can delete challenge	9	delete_challenge
-28	Can add data	10	add_data
-29	Can change data	10	change_data
-30	Can delete data	10	delete_data
-31	Can add dataset	11	add_dataset
-32	Can change dataset	11	change_dataset
-33	Can delete dataset	11	delete_dataset
-34	Can add model	12	add_model
-35	Can change model	12	change_model
-36	Can delete model	12	delete_model
-37	Can view log entry	1	view_logentry
-38	Can view permission	2	view_permission
-39	Can view group	3	view_group
-40	Can view user	4	view_user
-41	Can view content type	5	view_contenttype
-42	Can view session	6	view_session
-43	Can view site	7	view_site
-44	Can view algo	8	view_algo
-45	Can view challenge	9	view_challenge
-46	Can view data	10	view_data
-47	Can view dataset	11	view_dataset
+4	Can view log entry	1	view_logentry
+5	Can add permission	2	add_permission
+6	Can change permission	2	change_permission
+7	Can delete permission	2	delete_permission
+8	Can view permission	2	view_permission
+9	Can add group	3	add_group
+10	Can change group	3	change_group
+11	Can delete group	3	delete_group
+12	Can view group	3	view_group
+13	Can add user	4	add_user
+14	Can change user	4	change_user
+15	Can delete user	4	delete_user
+16	Can view user	4	view_user
+17	Can add content type	5	add_contenttype
+18	Can change content type	5	change_contenttype
+19	Can delete content type	5	delete_contenttype
+20	Can view content type	5	view_contenttype
+21	Can add session	6	add_session
+22	Can change session	6	change_session
+23	Can delete session	6	delete_session
+24	Can view session	6	view_session
+25	Can add site	7	add_site
+26	Can change site	7	change_site
+27	Can delete site	7	delete_site
+28	Can view site	7	view_site
+29	Can add algo	8	add_algo
+30	Can change algo	8	change_algo
+31	Can delete algo	8	delete_algo
+32	Can view algo	8	view_algo
+33	Can add challenge	9	add_challenge
+34	Can change challenge	9	change_challenge
+35	Can delete challenge	9	delete_challenge
+36	Can view challenge	9	view_challenge
+37	Can add data	10	add_data
+38	Can change data	10	change_data
+39	Can delete data	10	delete_data
+40	Can view data	10	view_data
+41	Can add dataset	11	add_dataset
+42	Can change dataset	11	change_dataset
+43	Can delete dataset	11	delete_dataset
+44	Can view dataset	11	view_dataset
+45	Can add model	12	add_model
+46	Can change model	12	change_model
+47	Can delete model	12	delete_model
 48	Can view model	12	view_model
 \.
 
@@ -681,26 +681,26 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
-1	contenttypes	0001_initial	2018-08-29 18:05:11.121702+02
-2	auth	0001_initial	2018-08-29 18:05:11.339827+02
-3	admin	0001_initial	2018-08-29 18:05:11.409992+02
-4	admin	0002_logentry_remove_auto_add	2018-08-29 18:05:11.441996+02
-5	contenttypes	0002_remove_content_type_name	2018-08-29 18:05:11.468696+02
-6	auth	0002_alter_permission_name_max_length	2018-08-29 18:05:11.476193+02
-7	auth	0003_alter_user_email_max_length	2018-08-29 18:05:11.488054+02
-8	auth	0004_alter_user_username_opts	2018-08-29 18:05:11.4971+02
-9	auth	0005_alter_user_last_login_null	2018-08-29 18:05:11.509746+02
-10	auth	0006_require_contenttypes_0002	2018-08-29 18:05:11.513954+02
-11	auth	0007_alter_validators_add_error_messages	2018-08-29 18:05:11.540434+02
-12	auth	0008_alter_user_username_max_length	2018-08-29 18:05:11.561164+02
-13	auth	0009_alter_user_last_name_max_length	2018-08-29 18:05:11.572269+02
-14	sessions	0001_initial	2018-08-29 18:05:11.605552+02
-15	sites	0001_initial	2018-08-29 18:05:11.629132+02
-16	sites	0002_alter_domain_unique	2018-08-29 18:05:11.657023+02
-17	substrapp	0001_initial	2018-08-29 18:05:11.761932+02
-18	substrapp	0002_auto_20180821_1615	2018-08-29 18:05:11.819214+02
-19	admin	0003_logentry_add_action_flag_choices	2018-08-31 15:39:55.425049+02
-20	substrapp	0003_auto_20180831_1339	2018-08-31 15:39:55.439014+02
+1	contenttypes	0001_initial	2018-08-31 17:36:13.925643+02
+2	auth	0001_initial	2018-08-31 17:36:14.069123+02
+3	admin	0001_initial	2018-08-31 17:36:14.108406+02
+4	admin	0002_logentry_remove_auto_add	2018-08-31 17:36:14.120205+02
+5	admin	0003_logentry_add_action_flag_choices	2018-08-31 17:36:14.131294+02
+6	contenttypes	0002_remove_content_type_name	2018-08-31 17:36:14.153942+02
+7	auth	0002_alter_permission_name_max_length	2018-08-31 17:36:14.162195+02
+8	auth	0003_alter_user_email_max_length	2018-08-31 17:36:14.174268+02
+9	auth	0004_alter_user_username_opts	2018-08-31 17:36:14.186264+02
+10	auth	0005_alter_user_last_login_null	2018-08-31 17:36:14.198326+02
+11	auth	0006_require_contenttypes_0002	2018-08-31 17:36:14.200959+02
+12	auth	0007_alter_validators_add_error_messages	2018-08-31 17:36:14.209938+02
+13	auth	0008_alter_user_username_max_length	2018-08-31 17:36:14.246939+02
+14	auth	0009_alter_user_last_name_max_length	2018-08-31 17:36:14.275172+02
+15	sessions	0001_initial	2018-08-31 17:36:14.311347+02
+16	sites	0001_initial	2018-08-31 17:36:14.325914+02
+17	sites	0002_alter_domain_unique	2018-08-31 17:36:14.34317+02
+18	substrapp	0001_initial	2018-08-31 17:36:14.451427+02
+19	substrapp	0002_auto_20180821_1615	2018-08-31 17:36:14.535811+02
+20	substrapp	0003_auto_20180831_1339	2018-08-31 17:36:14.550762+02
 \.
 
 
@@ -726,6 +726,8 @@ COPY public.django_site (id, domain, name) FROM stdin;
 --
 
 COPY public.substrapp_algo (pkhash, file, description, validated) FROM stdin;
+ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3	algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/algo.py	algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/description.md	t
+4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1	algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/algo.py	algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/description.md	t
 \.
 
 
@@ -734,6 +736,7 @@ COPY public.substrapp_algo (pkhash, file, description, validated) FROM stdin;
 --
 
 COPY public.substrapp_challenge (creation_date, last_modified, pkhash, validated, description, metrics) FROM stdin;
+2018-08-31 20:22:06.295+02	2018-08-31 20:22:08.647+02	d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f	t	challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md	challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py
 \.
 
 
@@ -742,8 +745,8 @@ COPY public.substrapp_challenge (creation_date, last_modified, pkhash, validated
 --
 
 COPY public.substrapp_data (pkhash, validated, file) FROM stdin;
-933cb232ac507f7f89661918e3f1280a330c37a82ba207d30cd94f7d1d95eb0b	t	data/933cb232ac507f7f89661918e3f1280a330c37a82ba207d30cd94f7d1d95eb0b/0024900.zip
-4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010	t	data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip
+42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9	t	data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip
+62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a	t	data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip
 \.
 
 
@@ -752,7 +755,7 @@ COPY public.substrapp_data (pkhash, validated, file) FROM stdin;
 --
 
 COPY public.substrapp_dataset (pkhash, name, data_opener, description, validated) FROM stdin;
-a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0	ISIC 2019	dataset/a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0/opener.py	dataset/a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0/description.md	t
+ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994	ISIC 2018	datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py	datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md	t
 \.
 
 
@@ -761,6 +764,7 @@ a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0	ISIC 2019	datas
 --
 
 COPY public.substrapp_model (pkhash, validated, file) FROM stdin;
+10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568	t	models/10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/model
 \.
 
 
