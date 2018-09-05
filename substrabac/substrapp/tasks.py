@@ -232,15 +232,14 @@ def prepareTask(data_type, status_to_filter, model, status_to_set):
 
                 # TODO log success
 
-                # TODO launch training task
-
-
 
 @app.task
 def prepareTrainingTask():
     prepareTask('trainData', 'todo', 'startModel', 'training')
+    # TODO launch training task
 
 
 @app.task
 def prepareTestingTask():
     prepareTask('testData', 'trained', 'endModel', 'testing')
+    # TODO launch testing task
