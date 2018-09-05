@@ -98,22 +98,20 @@ def fail(key, err_msg):
     return data
 
 
-@app.task
-def queryTraintuples():
+def prepareTask(data_type, status_to_filter, model, status_to_set):
     from shutil import copy
     import zipfile
-    from .utils import compute_hash
     from substrapp.models import Challenge, Dataset, Data, Model, Algo
 
     try:
-        train_data_owner = get_hash(settings.LEDGER['signcert'])
+        data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
         pass
     else:
         traintuples, st = queryLedger({
             'org': settings.LEDGER['org'],
             'peer': settings.LEDGER['peer'],
-            'args': '{"Args":["queryFilter","traintuple~trainWorker~status","%s,todo"]}' % train_data_owner
+            'args': '{"Args":["queryFilter","traintuple~trainWorker~status","%s,%s"]}' % (data_owner, status_to_filter)
         })
 
         if st == 200:
@@ -136,17 +134,16 @@ def queryTraintuples():
                         except Exception as e:
                             return fail(traintuple['key'], e)
 
-                ''' get algo + startModel '''
-
+                ''' get algo + model '''
                 # get algo file
                 try:
                     get_algo_file(traintuple['algo'])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
-                # get startModel file
+                # get model file
                 try:
-                    get_model_file(traintuple['startModel'])
+                    get_model_file(traintuple[model])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
@@ -161,19 +158,19 @@ def queryTraintuples():
 
                 # put opener file in opener folder
                 try:
-                    dataset = Dataset.objects.get(pk=traintuple['trainData']['openerHash'])
+                    dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
                     data_opener_hash = get_hash(dataset.data_opener.path)
-                    if data_opener_hash != traintuple['trainData']['openerHash']:
+                    if data_opener_hash != traintuple[data_type]['openerHash']:
                         return fail(traintuple['key'], 'DataOpener Hash in Traintuple is not the same as in local db')
 
                     copy(dataset.data_opener.path,
                          path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'opener')))
 
-                # same for each train data
-                for data_key in traintuple['trainData']['keys']:
+                # same for each train/test data
+                for data_key in traintuple[data_type]['keys']:
                     try:
                         data = Data.objects.get(pk=data_key)
                     except Exception as e:
@@ -196,12 +193,12 @@ def queryTraintuples():
 
                 # same for model
                 try:
-                    model = Model.objects.get(pk=traintuple['startModel']['hash'])
+                    model = Model.objects.get(pk=traintuple[model]['hash'])
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
                     model_file_hash = get_hash(model.file.path)
-                    if model_file_hash != traintuple['startModel']['hash']:
+                    if model_file_hash != traintuple[model]['hash']:
                         return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
 
                     copy(model.file.path,
@@ -222,11 +219,11 @@ def queryTraintuples():
 
                 # do not put anything in pred folder
 
-                # Log Start TrainTest with training
+                # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
                     'org': settings.LEDGER['org'],
                     'peer': settings.LEDGER['peer'],
-                    'args': '{"Args":["logStartTrainTest","%s","training"]}' % traintuple['key']
+                    'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
                 })
 
                 if st != 201:
@@ -236,3 +233,14 @@ def queryTraintuples():
                 # TODO log success
 
                 # TODO launch training task
+
+
+
+@app.task
+def prepareTrainingTask():
+    prepareTask('trainData', 'todo', 'startModel', 'training')
+
+
+@app.task
+def prepareTestingTask():
+    prepareTask('testData', 'trained', 'endModel', 'testing')
