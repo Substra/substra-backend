@@ -75,6 +75,9 @@ DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac wor
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes
 ```
 
+ Note that you should run them NOT at the same time as we do not set different host and port right now.
+ These celery workers have periodic task with a 10 sec period.
+
 ## Launch the servers
 
 Go in the `substrabac` folder and run the server locally:
@@ -82,8 +85,6 @@ Go in the `substrabac` folder and run the server locally:
  python manage.py runserver 8000 --settings=substrabac.settings.dev.owkin
  python manage.py runserver 8001 --settings=substrabac.settings.dev.chunantes
  ```
- Note that you should run them NOT at the same time as we do not set different host and port right now.
- These celery workers have periodic task with a 10 sec period.
  
 ## Test by creating a traintuple 
 
