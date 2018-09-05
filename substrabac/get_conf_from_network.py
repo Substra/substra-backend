@@ -66,11 +66,6 @@ def get_conf_from_network():
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
-        # copy msp
-        call(['sudo', 'cp', '-R',
-              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/msp'),
-              os.path.join(dir_path, './substrapp/conf/' + org)])
-
         # copy ca-cert.pem
         call(['sudo', 'cp',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem'),
@@ -96,5 +91,7 @@ def get_conf_from_network():
 
 
 if __name__ == "__main__":
-    get_conf_from_network()
+    call(['sudo', 'rm', '-Rf', os.path.join(dir_path, 'substrapp/conf')])
     create_core_peer_config()
+    get_conf_from_network()
+

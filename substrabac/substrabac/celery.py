@@ -26,6 +26,6 @@ def debug_task(self):
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks import queryTraintuples
 
-    period = 10
+    period = 15
     sender.add_periodic_task(period, queryTraintuples.s(), name='query Model to prepare train task on TODO')
 

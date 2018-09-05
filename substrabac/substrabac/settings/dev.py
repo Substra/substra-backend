@@ -1,9 +1,17 @@
 import os
 
+# load org ledger conf
+from substrabac.settings.conf.owkin import org, peer, signcert
 from .common import *
 
 from .deps.restframework import *
 from .deps.cors import *
+
+LEDGER = {
+    'org': org,
+    'peer': peer,
+    'signcert': signcert
+}
 
 DEBUG = True
 

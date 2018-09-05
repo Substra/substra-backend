@@ -1,7 +1,8 @@
-import hashlib
 import itertools
+import tempfile
 
 import requests
+from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -9,17 +10,17 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.conf import conf
 from substrapp.models import Algo, Challenge
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, computeHashMixin
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
-                  computeHashMixin,
+                  ComputeHashMixin,
+                  ManageFileMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
@@ -62,67 +63,82 @@ class AlgoViewSet(mixins.CreateModelMixin,
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
 
-    def retrieve(self, request, *args, **kwargs):
-        # using chu-nantes as in our testing owkin has been revoked
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
+    def create_or_update_algo(self, algo, pk):
+        try:
+            # get challenge description from remote node
+            url = algo['description']['storageAddress']
+            try:
+                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+            except:
+                raise 'Failed to fetch %s' % url
+            else:
+                if r.status_code != 200:
+                    raise Exception('end to end node report %s' % r.text)
 
+                try:
+                    computed_hash = self.compute_hash(r.content)
+                except Exception:
+                    raise Exception('Failed to fetch description file')
+                else:
+                    if computed_hash != pk:
+                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        raise Exception(msg)
+
+                    f = tempfile.TemporaryFile()
+                    f.write(r.content)
+
+                    # save/update challenge in local db for later use
+                    instance, created = Algo.objects.update_or_create(pkhash=pk, validated=True)
+                    instance.description.save('description.md', f)
+        except Exception as e:
+            raise e
+        else:
+            return instance
+
+    def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
         if len(pk) != 64:
             return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
 
-        # get pkhash
-        # get pkhash
-        pkhash = pk
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
         except:
             return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
         else:
-            instance = None
+            # get instance from remote node
             try:
-                # try to get it from local db
-                instance = self.get_object()
-            except Http404:
-                # get instance from remote node
-                algo, st = queryLedger({
-                    'org': org,
-                    'peer': peer,
-                    'args': '{"Args":["query","%s"]}' % pk
-                })
-                if st != 200:
-                    return Response(algo, status=st)
-
+                data = getObjectFromLedger(pk)
+            except Exception as e:
+                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            else:
                 try:
-                    computed_hash = self.get_computed_hash(algo['description']['storageAddress'])
-                except Exception as e:
-                    return Response({'message': 'Failed to fetch description file'}, status=status.HTTP_400_BAD_REQUEST)
+                    # try to get it from local db to check if description exists
+                    instance = self.get_object()
+                except Http404:
+                    try:
+                        instance = self.create_or_update_algo(data, pk)
+                    except Exception as e:
+                        return Response(e, status=status.HTTP_400_BAD_REQUEST)
                 else:
-                    if computed_hash == pkhash:
-                        # save challenge in local db for later use
-                        instance = Algo.objects.create(pkhash=pkhash,
-                                                       description=algo['description']['storageAddress'],
-                                                       file=algo['storageAddress'],
-                                                       validated=True)
-
-                    return Response({'message': 'computedHash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'}, status.HTTP_400_BAD_REQUEST)
-            finally:
-                if instance is not None:
+                    # check if instance has description
+                    if not instance.description:
+                        try:
+                            instance = self.create_or_update_algo(data, pk)
+                        except Exception as e:
+                            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                finally:
                     serializer = self.get_serializer(instance)
-                    return Response(serializer.data)
+                    data.update(serializer.data)
+                    return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        # using chu-nantes as in our testing owkin has been revoked
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
-
         data, st = queryLedger({
-            'org': org,
-            'peer': peer,
+            'org': settings.LEDGER['org'],
+            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryAlgos"]}'
         })
         challengeData = None
@@ -154,8 +170,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             if not challengeData:
                                 # TODO find a way to put this call in cache
                                 challengeData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryChallenges"]}'
                                 })
 
@@ -173,8 +189,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             if not datasetData:
                                 # TODO find a way to put this call in cache
                                 datasetData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryDatasets"]}'
                                 })
                                 if st != 200:
@@ -182,14 +198,15 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
                             for key, val in subfilters.items():
                                 filteredData = [x for x in datasetData if x[key] in val]
-                                challengeKeys = list(itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
+                                challengeKeys = list(
+                                    itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
                                 l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
                         elif k == 'model':  # select challenges used by endModel hash
                             if not modelData:
                                 # TODO find a way to put this call in cache
                                 modelData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryTraintuples"]}'
                                 })
                                 if st != 200:
@@ -203,27 +220,5 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return Response(l, status=st)
 
     @action(detail=True)
-    def files(self, request, *args, **kwargs):
-        # fetch algo from ledger
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
-
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            # try to get it from local db
-            instance = self.get_object()
-        except Http404:
-            # get instance from remote node
-            algo, st = queryLedger({
-                'org': org,
-                'peer': peer,
-                'args': '{"Args":["queryObject","' + pk + '"]}'
-            })
-        finally:
-            # TODO if requester has permission, return instance
-            pass
-
-        serializer = self.get_serializer(instance)
-        return Response(serializer.data['file'])
+    def file(self, request, *args, **kwargs):
+        return self.manage_file('file')

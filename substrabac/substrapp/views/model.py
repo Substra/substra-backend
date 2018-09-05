@@ -1,21 +1,22 @@
-from django.http import Http404
+from django.conf import settings
+from django.http import Http404, HttpResponse
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.conf import conf
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, computeHashMixin
+from substrapp.views.utils import get_filters, ComputeHashMixin
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
-                   computeHashMixin,
+                   ComputeHashMixin,
                    GenericViewSet):
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
@@ -23,10 +24,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     # permission_classes = (permissions.IsAuthenticated,)
 
     def retrieve(self, request, *args, **kwargs):
-        # using chu-nantes as in our testing owkin has been revoked
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
-
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
@@ -47,8 +44,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             except Http404:
                 # get instance from remote node
                 model, st = queryLedger({
-                    'org': org,
-                    'peer': peer,
+                    'org': settings.LEDGER['org'],
+                    'peer': settings.LEDGER['peer'],
                     'args': '{"Args":["queryModelTraintuples","%s"]}' % pk
                 })
 
@@ -74,13 +71,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        # using chu-nantes as in our testing owkin has been revoked
-        org = conf['orgs']['chu-nantes']
-        peer = org['peers'][0]
-
         data, st = queryLedger({
-            'org': org,
-            'peer': peer,
+            'org': settings.LEDGER['org'],
+            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryTraintuples"]}'
         })
         algoData = None
@@ -111,8 +104,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             if not algoData:
                                 # TODO find a way to put this call in cache
                                 algoData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryAlgos"]}'
                                 })
                             for key, val in subfilters.items():
@@ -123,8 +116,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             if not datasetData:
                                 # TODO find a way to put this call in cache
                                 datasetData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryDatasets"]}'
                                 })
                             for key, val in subfilters.items():
@@ -136,8 +129,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             if not challengeData:
                                 # TODO find a way to put this call in cache
                                 challengeData, st = queryLedger({
-                                    'org': org,
-                                    'peer': peer,
+                                    'org': settings.LEDGER['org'],
+                                    'peer': settings.LEDGER['peer'],
                                     'args': '{"Args":["queryChallenges"]}'
                                 })
                             for key, val in subfilters.items():
@@ -149,3 +142,15 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 l[idx] = [x for x in l[idx] if 'challenge_%s' % x['challenge']['hash'] in challengeKeys]
 
         return Response(l, status=st)
+
+    @action(detail=True)
+    def file(self, request, *args, **kwargs):
+        object = self.get_object()
+
+        # TODO query model permissions
+
+        data = getattr(object, 'file')
+        # return file content
+        fp = data.file.read()
+
+        return HttpResponse(fp)
