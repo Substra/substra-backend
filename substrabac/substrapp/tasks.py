@@ -88,7 +88,7 @@ def fail(key, err_msg):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logFailTrainTest","%(key)s","failed","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
+        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
     })
 
     if st != 201:
@@ -98,7 +98,7 @@ def fail(key, err_msg):
     return data
 
 
-def prepareTask(data_type, status_to_filter, model, status_to_set):
+def prepareTask(data_type, status_to_filter, model_type, status_to_set):
     from shutil import copy
     import zipfile
     from substrapp.models import Challenge, Dataset, Data, Model, Algo
@@ -134,7 +134,7 @@ def prepareTask(data_type, status_to_filter, model, status_to_set):
                         except Exception as e:
                             return fail(traintuple['key'], e)
 
-                ''' get algo + model '''
+                ''' get algo + model_type '''
                 # get algo file
                 try:
                     get_algo_file(traintuple['algo'])
@@ -143,7 +143,7 @@ def prepareTask(data_type, status_to_filter, model, status_to_set):
 
                 # get model file
                 try:
-                    get_model_file(traintuple[model])
+                    get_model_file(traintuple[model_type])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
@@ -193,12 +193,12 @@ def prepareTask(data_type, status_to_filter, model, status_to_set):
 
                 # same for model
                 try:
-                    model = Model.objects.get(pk=traintuple[model]['hash'])
+                    model = Model.objects.get(pk=traintuple[model_type]['hash'])
                 except Exception as e:
                     return fail(traintuple['key'], e)
                 else:
                     model_file_hash = get_hash(model.file.path)
-                    if model_file_hash != traintuple[model]['hash']:
+                    if model_file_hash != traintuple[model_type]['hash']:
                         return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
 
                     copy(model.file.path,
