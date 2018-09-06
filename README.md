@@ -26,13 +26,30 @@ It will drop the databases if they are already created, then create them and gra
   ```shell
   $> ./substrabac/scripts/recreate_db.sh 
 ```
-6. Do not run django migrations on these databases if you used the run container instance from substra-network. We will populate data from psql dumps relative to the data already set in the ledger:
+6. We will populate data relative to the data already set in the ledger if the run container instance succeeded:
+
+Two solutions:
+- With django migrations + load data
+```shell
+python substrabac/manage.py migrate --settings=substrabac.settings.dev.owkin
+python substrabac/manage.py migrate --settings=substrabac.settings.dev.chunantes
+python substrabac/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabac.settings.dev.owkin
+python substrabac/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabac.settings.dev.chunantes
+```
+- From dumps:
+```shell
+  $> ./substrabac/scripts/populate_db.sh 
+```
+If you don't want to replicate the data in the ledger, simply run the django migrations.
+
+7. Populate media files
 ```shell
   $> ./substrabac/scripts/load_fixtures.sh 
 ```
-It will populate the databases and create the `owkin` and `chu-nantes` folders in the `medias` folder.
+It will clean the `medias` folders and create the `owkin` and `chu-nantes` folders in the `medias` folder.
 
-7. Optional: Create a superuser in your databases:
+
+8. Optional: Create a superuser in your databases:
 ```
 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.owkin
 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.chunantes
