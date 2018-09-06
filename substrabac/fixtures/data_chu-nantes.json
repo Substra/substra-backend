@@ -1,0 +1,65 @@
+[
+{
+    "model": "substrapp.data",
+    "pk": "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9",
+    "fields": {
+        "validated": true,
+        "file": "data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip"
+    }
+},
+{
+    "model": "substrapp.data",
+    "pk": "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
+    "fields": {
+        "validated": true,
+        "file": "data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip"
+    }
+},
+{
+    "model": "substrapp.challenge",
+    "pk": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+    "fields": {
+        "creation_date": "2018-08-31T18:22:06.295Z",
+        "last_modified": "2018-08-31T18:22:08.647Z",
+        "validated": true,
+        "description": "challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md",
+        "metrics": "challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py"
+    }
+},
+{
+    "model": "substrapp.dataset",
+    "pk": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
+    "fields": {
+        "name": "ISIC 2018",
+        "data_opener": "datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py",
+        "description": "datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md",
+        "validated": true
+    }
+},
+{
+    "model": "substrapp.algo",
+    "pk": "4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1",
+    "fields": {
+        "file": "algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/algo.py",
+        "description": "algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/description.md",
+        "validated": true
+    }
+},
+{
+    "model": "substrapp.algo",
+    "pk": "ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3",
+    "fields": {
+        "file": "algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/algo.py",
+        "description": "algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/description.md",
+        "validated": true
+    }
+},
+{
+    "model": "substrapp.model",
+    "pk": "10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568",
+    "fields": {
+        "validated": true,
+        "file": "models/10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/model"
+    }
+}
+]
