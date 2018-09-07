@@ -23,14 +23,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         '''
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
-             -d "algo_key=381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
+             -d "algo_key=117c27e3504b9e639de4bfea1a15aa9ffa0247c8f240836c93b2dd6974f6abb8&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
              -X POST http://localhost:8001/traintuple/
 
         or
 
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
              -H "Content-Type: application/json"
-             -d '{"algo_key":"381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
+             -d '{"algo_key":"117c27e3504b9e639de4bfea1a15aa9ffa0247c8f240836c93b2dd6974f6abb8","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
              -X POST http://localhost:8001/traintuple/?format=json
 
         :param request:

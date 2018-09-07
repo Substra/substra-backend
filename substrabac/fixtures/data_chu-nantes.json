@@ -38,19 +38,19 @@
 },
 {
     "model": "substrapp.algo",
-    "pk": "f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6",
+    "pk": "3c10196dac4f62d139ccb736e162e7e940522bd24499dcb2cfec2abed7a7271d",
     "fields": {
-        "file": "algos/f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6/algo.tar.gz",
-        "description": "algos/f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6/description.md",
+        "file": "algos/3c10196dac4f62d139ccb736e162e7e940522bd24499dcb2cfec2abed7a7271d/algo.tar.gz",
+        "description": "algos/3c10196dac4f62d139ccb736e162e7e940522bd24499dcb2cfec2abed7a7271d/description.md",
         "validated": true
     }
 },
 {
     "model": "substrapp.algo",
-    "pk": "381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3",
+    "pk": "117c27e3504b9e639de4bfea1a15aa9ffa0247c8f240836c93b2dd6974f6abb8",
     "fields": {
-        "file": "algos/381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3/algo.tar.gz",
-        "description": "algos/381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3/description.md",
+        "file": "algos/117c27e3504b9e639de4bfea1a15aa9ffa0247c8f240836c93b2dd6974f6abb8/algo.tar.gz",
+        "description": "algos/117c27e3504b9e639de4bfea1a15aa9ffa0247c8f240836c93b2dd6974f6abb8/description.md",
         "validated": true
     }
 },
