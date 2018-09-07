@@ -38,19 +38,19 @@
 },
 {
     "model": "substrapp.algo",
-    "pk": "4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1",
+    "pk": "f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6",
     "fields": {
-        "file": "algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/algo.py",
-        "description": "algos/4228a54854f510026db6e89359384007ea1bcf3417b565d4fdd8ddc0638ad6a1/description.md",
+        "file": "algos/f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6/algo.tar.gz",
+        "description": "algos/f2718964e83a98dccb1e14464ec2582cf13b6583b0fc755456b73e7176924ff6/description.md",
         "validated": true
     }
 },
 {
     "model": "substrapp.algo",
-    "pk": "ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3",
+    "pk": "381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3",
     "fields": {
-        "file": "algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/algo.py",
-        "description": "algos/ae5f5c5762e7ffbdfd5bf3a167629a142496195955f6d9a1a8853645dc7e1bf3/description.md",
+        "file": "algos/381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3/algo.tar.gz",
+        "description": "algos/381310d64a0dbeb21272eb432b7a948d841bf7dc20514d00f901c16dec0463c3/description.md",
         "validated": true
     }
 },

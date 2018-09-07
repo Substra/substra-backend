@@ -27,6 +27,6 @@ def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks import prepareTrainingTask, prepareTestingTask
 
     period = 10
-    sender.add_periodic_task(period, prepareTrainingTask.s(), name='query Model to prepare train task on toto traintuples')
-    sender.add_periodic_task(period, prepareTestingTask.s(), name='query Model to prepare train task on trained traintuples')
+    sender.add_periodic_task(period, prepareTrainingTask.s(), name='query Traintuples to prepare train task on todo traintuples')
+    sender.add_periodic_task(period, prepareTestingTask.s(), name='query Traintuples to prepare test task on trained traintuples')
 

@@ -135,6 +135,12 @@ Current is `0.0`.
 
 If you are using pycharm, you can very easily automate your servers and celery workers run configuration.
 
+:warning: You have to specify the sources root of your django project:
+![](assets/sources_root.png)
+
+Enable Django support:
+![](assets/django_enabled.png)
+
 Use these configurations for easier debugging and productivity:
 
 ![](assets/conf.png)
