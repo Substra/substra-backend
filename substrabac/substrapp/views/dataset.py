@@ -27,6 +27,49 @@ class DatasetViewSet(mixins.CreateModelMixin,
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
 
+    def perform_create(self, serializer):
+        return serializer.save()
+
+    def create(self, request, *args, **kwargs):
+        data = request.data
+
+        serializer = self.get_serializer(data={
+            'data_opener': data.get('data_opener'),
+            'description': data.get('description'),
+            'name': data.get('name'),
+        })
+
+        serializer.is_valid(raise_exception=True)
+
+        # create on db
+        try:
+            instance = self.perform_create(serializer)
+        except IntegrityError as exc:
+            return Response({'message': 'A dataset with this description file already exists.'},
+                            status=status.HTTP_409_CONFLICT)
+        else:
+            # init ledger serializer
+            ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
+                                                              'permissions': data.get('permissions'),
+                                                              'type': data.get('type'),
+                                                              'challenge_keys': data.getlist('challenge_keys'),
+                                                              'instance': instance},
+                                                        context={'request': request})
+
+            if not ledger_serializer.is_valid():
+                # delete instance
+                instance.delete()
+                raise ValidationError(ledger_serializer.errors)
+
+            # create on ledger
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+
+            st = status.HTTP_201_CREATED
+            headers = self.get_success_headers(serializer.data)
+
+            data.update(serializer.data)
+            return Response(data, status=st, headers=headers)
+
     def create_or_update_dataset(self, dataset, pk):
         try:
             # get challenge description from remote node
@@ -77,6 +120,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             except Exception as e:
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
             else:
+                error = None
                 try:
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
@@ -84,15 +128,18 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     try:
                         instance = self.create_or_update_dataset(data, pk)
                     except Exception as e:
-                        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                        error = e
                 else:
                     # check if instance has description
                     if not instance.description:
                         try:
                             instance = self.create_or_update_dataset(data, pk)
                         except Exception as e:
-                            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                            error = e
                 finally:
+                    if error is not None:
+                        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
                     serializer = self.get_serializer(instance)
                     data.update(serializer.data)
                     return Response(data, status=status.HTTP_200_OK)
@@ -179,49 +226,6 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
 
         return Response(l, status=st)
-
-    def perform_create(self, serializer):
-        return serializer.save()
-
-    def create(self, request, *args, **kwargs):
-        data = request.data
-
-        serializer = self.get_serializer(data={
-            'data_opener': data.get('data_opener'),
-            'description': data.get('description'),
-            'name': data.get('name'),
-        })
-
-        serializer.is_valid(raise_exception=True)
-
-        # create on db
-        try:
-            instance = self.perform_create(serializer)
-        except IntegrityError as exc:
-            return Response({'message': 'A dataset with this description file already exists.'},
-                            status=status.HTTP_409_CONFLICT)
-        else:
-            # init ledger serializer
-            ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
-                                                              'permissions': data.get('permissions'),
-                                                              'type': data.get('type'),
-                                                              'challenge_keys': data.getlist('challenge_keys'),
-                                                              'instance': instance},
-                                                        context={'request': request})
-
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
-
-            # create on ledger
-            data = ledger_serializer.create(ledger_serializer.validated_data)
-
-            st = status.HTTP_201_CREATED
-            headers = self.get_success_headers(serializer.data)
-
-            data.update(serializer.data)
-            return Response(data, status=st, headers=headers)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

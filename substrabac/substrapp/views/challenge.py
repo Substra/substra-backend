@@ -146,6 +146,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             except Exception as e:
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
             else:
+                error = None
                 try:
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
@@ -153,15 +154,18 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     try:
                         instance = self.create_or_update_challenge(data, pk)
                     except Exception as e:
-                        return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                        error = e
                 else:
                     # check if instance has description
                     if not instance.description:
                         try:
                             instance = self.create_or_update_challenge(data, pk)
                         except Exception as e:
-                            return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                            error = e
                 finally:
+                    if error is not None:
+                        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+
                     serializer = self.get_serializer(instance)
                     data.update(serializer.data)
                     return Response(data, status=status.HTTP_200_OK)
