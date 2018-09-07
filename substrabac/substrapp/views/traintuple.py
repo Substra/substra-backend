@@ -3,9 +3,7 @@ from rest_framework import status, mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.conf import conf
 
-from substrapp.models import Challenge
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.utils import queryLedger
 

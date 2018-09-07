@@ -1,3 +1,6 @@
+import tempfile
+
+import requests
 from django.conf import settings
 from django.http import Http404, HttpResponse
 from rest_framework import status, mixins
@@ -11,7 +14,7 @@ from substrapp.serializers import ModelSerializer
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, ComputeHashMixin
+from substrapp.views.utils import get_filters, ComputeHashMixin, getObjectFromLedger
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
@@ -23,6 +26,38 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     # permission_classes = (permissions.IsAuthenticated,)
 
+    def create_or_update_dataset(self, model, pk):
+        try:
+            # get challenge description from remote node
+            url = model['descriptionStorageAddress']
+            try:
+                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+            except:
+                raise 'Failed to fetch %s' % url
+            else:
+                if r.status_code != 200:
+                    raise Exception('end to end node report %s' % r.text)
+
+                try:
+                    computed_hash = self.compute_hash(r.content)
+                except Exception:
+                    raise Exception('Failed to fetch description file')
+                else:
+                    if computed_hash != pk:
+                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        raise Exception(msg)
+
+                    f = tempfile.TemporaryFile()
+                    f.write(r.content)
+
+                    # save/update challenge in local db for later use
+                    instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
+                    instance.file.save('description.md', f)
+        except Exception as e:
+            raise e
+        else:
+            return instance
+
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -30,43 +65,40 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         if len(pk) != 64:
             return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
 
-        # get pkhash
-        pkhash = pk
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
         except:
             return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
         else:
-            instance = None
+            # get instance from remote node
             try:
-                # try to get it from local db
-                instance = self.get_object()
-            except Http404:
-                # get instance from remote node
-                model, st = queryLedger({
-                    'org': settings.LEDGER['org'],
-                    'peer': settings.LEDGER['peer'],
-                    'args': '{"Args":["queryModelTraintuples","%s"]}' % pk
-                })
-
+                data = getObjectFromLedger(pk)
+            except Exception as e:
+                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                error = None
                 try:
-                    computed_hash = self.get_computed_hash(model['descriptionStorageAddress'])
-                except Exception as e:
-                    return Response({'message': 'Failed to fetch description file'}, status=status.HTTP_400_BAD_REQUEST)
+                    # try to get it from local db to check if description exists
+                    instance = self.get_object()
+                except Http404:
+                    try:
+                        instance = self.create_or_update_dataset(data, pk)
+                    except Exception as e:
+                        error = e
                 else:
-                    if computed_hash == pkhash:
-                        # save challenge in local db for later use
-                        instance = Model.objects.create(pkhash=pkhash,
-                                                        file=model['descriptionStorageAddress'],
-                                                        validated=True)
+                    # check if instance has description
+                    if not instance.description:
+                        try:
+                            instance = self.create_or_update_dataset(data, pk)
+                        except Exception as e:
+                            error = e
+                finally:
+                    if error is not None:
+                        return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-                    return Response({
-                        'message': 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'},
-                        status.HTTP_400_BAD_REQUEST)
-            finally:
-                if instance is not None:
                     serializer = self.get_serializer(instance)
-                    return Response(serializer.data)
+                    data.update(serializer.data)
+                    return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
