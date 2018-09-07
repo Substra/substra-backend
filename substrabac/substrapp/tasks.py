@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import tarfile
 import tempfile
 from os import path
 
@@ -150,7 +151,7 @@ def prepareTask(data_type, status_to_filter, model_type, status_to_set):
                 # create a folder named traintuple['key'] im /medias/traintuple with 4 folders opener, data, model, pred
                 directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
                 create_directory(directory)
-                folders = ['opener', 'data', 'model', 'pred']
+                folders = ['opener', 'data', 'model', 'pred', 'metrics']
                 for folder in folders:
                     directory = path.join(getattr(settings, 'MEDIA_ROOT'),
                                           'traintuple/%s/%s' % (traintuple['key'], folder))
@@ -181,15 +182,18 @@ def prepareTask(data_type, status_to_filter, model_type, status_to_set):
                             return fail(traintuple['key'],
                                         'Data Hash in Traintuple is not the same as in local db')
 
-                        to_directory = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                 'traintuple/%s/%s' % (traintuple['key'], 'data'))
-                        copy(data.file.path, to_directory)
-                        # unzip files
-                        zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
-                        zip_ref = zipfile.ZipFile(zip_file_path, 'r')
-                        zip_ref.extractall(to_directory)
-                        zip_ref.close()
-                        os.remove(zip_file_path)
+                        try:
+                            to_directory = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                                     'traintuple/%s/%s' % (traintuple['key'], 'data'))
+                            copy(data.file.path, to_directory)
+                            # unzip files
+                            zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
+                            zip_ref = zipfile.ZipFile(zip_file_path, 'r')
+                            zip_ref.extractall(to_directory)
+                            zip_ref.close()
+                            os.remove(zip_file_path)
+                        except:
+                            return fail(traintuple['key'], 'Fail to unzip data file')
 
                 # same for model
                 try:
@@ -214,8 +218,30 @@ def prepareTask(data_type, status_to_filter, model_type, status_to_set):
                     if algo_file_hash != traintuple['algo']['hash']:
                         return fail(traintuple['key'], 'Algo Hash in Traintuple is not the same as in local db')
 
-                    copy(algo.file.path,
-                         path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % (traintuple['key'])))
+                    try:
+                        to_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % (traintuple['key']))
+                        copy(algo.file.path, to_directory)
+                        tar_file_path = os.path.join(to_directory, os.path.basename(algo.file.name))
+                        tar = tarfile.open(tar_file_path)
+                        tar.extractall(to_directory)
+                        tar.close()
+                        os.remove(tar_file_path)
+                    except:
+                        return fail(traintuple['key'], 'Fail to untar algo file')
+
+                # same for challenge metrics
+                try:
+                    challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
+                except Exception as e:
+                    return fail(traintuple['key'], e)
+                else:
+                    challenge_metrics_hash = get_hash(challenge.metrics.path)
+                    if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
+                        return fail(traintuple['key'], 'Challenge Hash in Traintuple is not the same as in local db')
+
+                    copy(challenge.metrics.path,
+                         path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+
 
                 # do not put anything in pred folder
 
