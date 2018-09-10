@@ -63,7 +63,7 @@
     }
 },
 {
-    "model": "django.site",
+    "model": "sites.site",
     "pk": "2",
     "fields": {
         "domain": "localhost:8001",
