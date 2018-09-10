@@ -39,41 +39,13 @@ def get_computed_hash(url):
         return r.content, computedHash
 
 
-def get_challenge_metrics(metrics):
-    from substrapp.models import Challenge
-
+def get_remote_file(object):
     try:
-        content, computed_hash = get_computed_hash(metrics['storageAddress'])  # TODO pass cert
+        content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
     except Exception:
         raise Exception('Failed to fetch file')
     else:
-        if computed_hash != metrics['hash']:
-            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-            raise Exception(msg)
-
-        return content, computed_hash
-
-
-def get_algo_file(algo):
-    try:
-        content, computed_hash = get_computed_hash(algo['storageAddress'])  # TODO pass cert
-    except Exception:
-        raise Exception('Failed to fetch file')
-    else:
-        if computed_hash != algo['hash']:
-            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-            raise Exception(msg)
-
-        return content, computed_hash
-
-
-def get_model_file(model):
-    try:
-        content, computed_hash = get_computed_hash(model['storageAddress'])  # TODO pass cert
-    except Exception:
-        raise Exception('Failed to fetch file')
-    else:
-        if computed_hash != model['hash']:
+        if computed_hash != object['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
             raise Exception(msg)
 
@@ -121,7 +93,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 except:
                     # get challenge metrics
                     try:
-                        content, computed_hash = get_challenge_metrics(traintuple['challenge']['metrics'])
+                        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
                     else:
@@ -138,7 +110,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     if not challenge.metrics:
                         # get challenge metrics
                         try:
-                            content, computed_hash = get_challenge_metrics(traintuple['challenge']['metrics'])
+                            content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                         except Exception as e:
                             return fail(traintuple['key'], e)
                         else:
@@ -156,13 +128,13 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 ''' get algo + model_type '''
                 # get algo file
                 try:
-                    get_algo_file(traintuple['algo'])
+                    get_remote_file(traintuple['algo'])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
                 # get model file
                 try:
-                    get_model_file(traintuple[model_type])
+                    get_remote_file(traintuple[model_type])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
@@ -218,7 +190,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     model = Model.objects.get(pk=traintuple[model_type]['hash'])
                 except Exception as e:  # get it from its address
                     try:
-                        content, computed_hash = get_model_file(traintuple[model_type])
+                        content, computed_hash = get_remote_file(traintuple[model_type])
                     except:
                         return fail(traintuple['key'], e)
                     else:
@@ -240,7 +212,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     algo = Algo.objects.get(pk=traintuple['algo']['hash'])
                 except Exception as e:  # get it from its address
                     try:
-                        content, computed_hash = get_algo_file(traintuple[model_type])
+                        content, computed_hash = get_remote_file(traintuple['algo'])
                     except:
                         return fail(traintuple['key'], e)
                     else:
@@ -279,7 +251,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
                 except Exception as e:
                     try:
-                        content, computed_hash = get_challenge_metrics(traintuple[model_type])
+                        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                     except:
                         return fail(traintuple['key'], e)
                     else:
