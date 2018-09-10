@@ -64,9 +64,9 @@
 },
 {
     "model": "sites.site",
-    "pk": "2",
+    "pk": "1",
     "fields": {
-        "domain": "localhost:8001",
+        "domain": "127.0.0.1:8001",
         "name": "chu-nantes"
     }
 }
