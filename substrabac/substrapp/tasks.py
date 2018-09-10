@@ -39,27 +39,19 @@ def get_computed_hash(url):
         return r.content, computedHash
 
 
-def get_challenge_metrics(metrics, pk):
+def get_challenge_metrics(metrics):
     from substrapp.models import Challenge
 
     try:
         content, computed_hash = get_computed_hash(metrics['storageAddress'])  # TODO pass cert
     except Exception:
-        raise Exception('Failed to fetch description file')
+        raise Exception('Failed to fetch file')
     else:
         if computed_hash != metrics['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
             raise Exception(msg)
 
-        try:
-            f = tempfile.TemporaryFile()
-            f.write(content)
-
-            # save/update challenge in local db for later use
-            instance, created = Challenge.objects.update_or_create(pkhash=pk, validated=True)
-            instance.metrics.save('metrics.py', f)
-        except:
-            raise Exception('Failed to save challenge metrics in local db for later use')
+        return content, computed_hash
 
 
 def get_algo_file(algo):
@@ -72,6 +64,8 @@ def get_algo_file(algo):
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
             raise Exception(msg)
 
+        return content, computed_hash
+
 
 def get_model_file(model):
     try:
@@ -82,6 +76,8 @@ def get_model_file(model):
         if computed_hash != model['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
             raise Exception(msg)
+
+        return content, computed_hash
 
 
 def fail(key, err_msg):
@@ -112,7 +108,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
         traintuples, st = queryLedger({
             'org': settings.LEDGER['org'],
             'peer': settings.LEDGER['peer'],
-            'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (worker_to_filter, data_owner, status_to_filter)
+            'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (
+            worker_to_filter, data_owner, status_to_filter)
         })
 
         if st == 200:
@@ -124,16 +121,37 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 except:
                     # get challenge metrics
                     try:
-                        get_challenge_metrics(traintuple['challenge']['metrics'], challengeHash)
+                        content, computed_hash = get_challenge_metrics(traintuple['challenge']['metrics'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
+                    else:
+                        try:
+                            f = tempfile.TemporaryFile()
+                            f.write(content)
+
+                            # save/update challenge in local db for later use
+                            instance, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
+                            instance.metrics.save('metrics.py', f)
+                        except:
+                            raise Exception('Failed to save challenge metrics in local db for later use')
                 else:
                     if not challenge.metrics:
                         # get challenge metrics
                         try:
-                            get_challenge_metrics(traintuple['challenge']['metrics'], challengeHash)
+                            content, computed_hash = get_challenge_metrics(traintuple['challenge']['metrics'])
                         except Exception as e:
                             return fail(traintuple['key'], e)
+                        else:
+                            try:
+                                f = tempfile.TemporaryFile()
+                                f.write(content)
+
+                                # save/update challenge in local db for later use
+                                instance, created = Challenge.objects.update_or_create(pkhash=challengeHash,
+                                                                                       validated=True)
+                                instance.metrics.save('metrics.py', f)
+                            except:
+                                raise Exception('Failed to save challenge metrics in local db for later use')
 
                 ''' get algo + model_type '''
                 # get algo file
@@ -148,7 +166,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
-                # create a folder named traintuple['key'] im /medias/traintuple with 4 folders opener, data, model, pred
+                # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
                 directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
                 create_directory(directory)
                 folders = ['opener', 'data', 'model', 'pred', 'metrics']
@@ -198,8 +216,16 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 # same for model
                 try:
                     model = Model.objects.get(pk=traintuple[model_type]['hash'])
-                except Exception as e:
-                    return fail(traintuple['key'], e)
+                except Exception as e:  # get it from its address
+                    try:
+                        content, computed_hash = get_model_file(traintuple[model_type])
+                    except:
+                        return fail(traintuple['key'], e)
+                    else:
+                        f = tempfile.TemporaryFile()
+                        f.write(content)
+                        copy(f.name, path.join(getattr(settings, 'MEDIA_ROOT'),
+                                               'traintuple/%s/%s' % (traintuple['key'], 'model')))
                 else:
                     model_file_hash = get_hash(model.file.path)
                     if model_file_hash != traintuple[model_type]['hash']:
@@ -211,8 +237,25 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 # put algo to root
                 try:
                     algo = Algo.objects.get(pk=traintuple['algo']['hash'])
-                except Exception as e:
-                    return fail(traintuple['key'], e)
+                except Exception as e:  # get it from its address
+                    try:
+                        content, computed_hash = get_algo_file(traintuple[model_type])
+                    except:
+                        return fail(traintuple['key'], e)
+                    else:
+                        f = tempfile.TemporaryFile()
+                        f.write(content)
+                        try:
+                            to_directory = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                                     'traintuple/%s' % (traintuple['key']))
+                            copy(f.name, to_directory)
+                            tar_file_path = os.path.join(to_directory, os.path.basename(f.name))
+                            tar = tarfile.open(tar_file_path)
+                            tar.extractall(to_directory)
+                            tar.close()
+                            os.remove(tar_file_path)
+                        except:
+                            return fail(traintuple['key'], 'Fail to untar algo file')
                 else:
                     algo_file_hash = get_hash(algo.file.path)
                     if algo_file_hash != traintuple['algo']['hash']:
@@ -233,15 +276,23 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
                 except Exception as e:
-                    return fail(traintuple['key'], e)
+                    try:
+                        content, computed_hash = get_challenge_metrics(traintuple[model_type])
+                    except:
+                        return fail(traintuple['key'], e)
+                    else:
+                        f = tempfile.TemporaryFile()
+                        f.write(content)
+                        copy(f.name, path.join(getattr(settings, 'MEDIA_ROOT'),
+                                               'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
                 else:
                     challenge_metrics_hash = get_hash(challenge.metrics.path)
                     if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
                         return fail(traintuple['key'], 'Challenge Hash in Traintuple is not the same as in local db')
 
                     copy(challenge.metrics.path,
-                         path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
-
+                         path.join(getattr(settings, 'MEDIA_ROOT'),
+                                   'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
 
                 # do not put anything in pred folder
 
