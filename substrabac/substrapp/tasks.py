@@ -245,16 +245,17 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         return fail(traintuple['key'], e)
                     else:
                         try:
-                            to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                'traintuple/%s/%s' % (traintuple['key'], 'algo.tar.gz'))
-                            os.makedirs(os.path.dirname(to_path), exist_ok=True)
-                            with open(to_path, 'wb') as f:
+                            to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                                          'traintuple/%s' % (traintuple['key']))
+                            to_file_path = '%s/%s' % (to_directory_path, 'algo.tar.gz')
+                            os.makedirs(os.path.dirname(to_file_path), exist_ok=True)
+                            with open(to_file_path, 'wb') as f:
                                 f.write(content)
 
-                            tar = tarfile.open(to_path)
-                            tar.extractall(to_path)
+                            tar = tarfile.open(to_file_path)
+                            tar.extractall(to_directory_path)
                             tar.close()
-                            os.remove(to_path)
+                            os.remove(to_file_path)
                         except:
                             return fail(traintuple['key'], 'Fail to untar algo file')
                 else:
