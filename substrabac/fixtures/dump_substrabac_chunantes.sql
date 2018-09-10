@@ -717,7 +717,7 @@ COPY public.django_session (session_key, session_data, expire_date) FROM stdin;
 --
 
 COPY public.django_site (id, domain, name) FROM stdin;
-1	example.com	example.com
+2	localhost:8001	chu-nantes
 \.
 
 

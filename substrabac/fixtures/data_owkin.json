@@ -35,5 +35,13 @@
         "description": "dataset/a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0/description.md",
         "validated": true
     }
+},
+{
+    "model": "django.site",
+    "pk": "1",
+    "fields": {
+        "domain": "localhost:8000",
+        "name": "owkin"
+    }
 }
 ]
