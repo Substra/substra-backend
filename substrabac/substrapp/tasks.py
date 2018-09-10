@@ -223,7 +223,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         return fail(traintuple['key'], e)
                     else:
                         to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                            'traintuple/%s/%s' % (traintuple['key'], 'model'))
+                                            'traintuple/%s/%s/%s' % (traintuple['key'], 'model', 'model'))
                         os.makedirs(os.path.dirname(to_path), exist_ok=True)
                         with open(to_path, 'wb') as f:
                             f.write(content)
@@ -246,7 +246,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     else:
                         try:
                             to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                'traintuple/%s' % (traintuple['key']))
+                                                'traintuple/%s/%s' % (traintuple['key'], 'algo.tar.gz'))
                             os.makedirs(os.path.dirname(to_path), exist_ok=True)
                             with open(to_path, 'wb') as f:
                                 f.write(content)
@@ -284,7 +284,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         return fail(traintuple['key'], e)
                     else:
                         to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                            'traintuple/%s/%s' % (traintuple['key'], 'metrics'))
+                                            'traintuple/%s/%s/%s' % (traintuple['key'], 'metrics', 'metrics.py'))
                         os.makedirs(os.path.dirname(to_path), exist_ok=True)
                         with open(to_path, 'wb') as f:
                             f.write(content)
