@@ -61,5 +61,13 @@
         "validated": true,
         "file": "models/10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/model"
     }
+},
+{
+    "model": "django.site",
+    "pk": "2",
+    "fields": {
+        "domain": "localhost:8001",
+        "name": "chu-nantes"
+    }
 }
 ]

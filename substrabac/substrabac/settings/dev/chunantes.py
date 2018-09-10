@@ -26,3 +26,5 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/chunantes')
+
+SITE_ID = 2
