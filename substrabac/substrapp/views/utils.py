@@ -1,6 +1,7 @@
 import hashlib
 from urllib.parse import unquote
 
+from django.http import FileResponse
 from django.conf import settings
 from django.http import HttpResponse
 from rest_framework import status
@@ -92,7 +93,4 @@ class ManageFileMixin(object):
             object = self.get_object()
 
             data = getattr(object, field)
-            # return file content
-            fp = data.file.read()
-
-            return HttpResponse(fp)
+            return FileResponse(open(data.path, 'rb'), as_attachment=True)
