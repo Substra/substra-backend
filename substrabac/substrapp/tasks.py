@@ -66,7 +66,7 @@ def get_algo_file(algo):
     try:
         content, computed_hash = get_computed_hash(algo['storageAddress'])  # TODO pass cert
     except Exception:
-        raise Exception('Failed to fetch description file')
+        raise Exception('Failed to fetch file')
     else:
         if computed_hash != algo['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -77,7 +77,7 @@ def get_model_file(model):
     try:
         content, computed_hash = get_computed_hash(model['storageAddress'])  # TODO pass cert
     except Exception:
-        raise Exception('Failed to fetch description file')
+        raise Exception('Failed to fetch file')
     else:
         if computed_hash != model['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -99,7 +99,7 @@ def fail(key, err_msg):
     return data
 
 
-def prepareTask(data_type, status_to_filter, model_type, status_to_set):
+def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
     from shutil import copy
     import zipfile
     from substrapp.models import Challenge, Dataset, Data, Model, Algo
@@ -112,7 +112,7 @@ def prepareTask(data_type, status_to_filter, model_type, status_to_set):
         traintuples, st = queryLedger({
             'org': settings.LEDGER['org'],
             'peer': settings.LEDGER['peer'],
-            'args': '{"Args":["queryFilter","traintuple~trainWorker~status","%s,%s"]}' % (data_owner, status_to_filter)
+            'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (worker_to_filter, data_owner, status_to_filter)
         })
 
         if st == 200:
@@ -261,11 +261,11 @@ def prepareTask(data_type, status_to_filter, model_type, status_to_set):
 
 @app.task
 def prepareTrainingTask():
-    prepareTask('trainData', 'todo', 'startModel', 'training')
+    prepareTask('trainData', 'trainWorker', 'todo', 'startModel', 'training')
     # TODO launch training task
 
 
 @app.task
 def prepareTestingTask():
-    prepareTask('testData', 'trained', 'endModel', 'testing')
+    prepareTask('testData', 'testWorker', 'trained', 'endModel', 'testing')
     # TODO launch testing task

@@ -128,6 +128,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
             return instance
 
+
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
