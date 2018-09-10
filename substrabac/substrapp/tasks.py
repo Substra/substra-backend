@@ -251,11 +251,10 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             with open(to_path, 'wb') as f:
                                 f.write(content)
 
-                            tar_file_path = os.path.join(to_path, os.path.basename(f.name))
-                            tar = tarfile.open(tar_file_path)
+                            tar = tarfile.open(to_path)
                             tar.extractall(to_path)
                             tar.close()
-                            os.remove(tar_file_path)
+                            os.remove(to_path)
                         except:
                             return fail(traintuple['key'], 'Fail to untar algo file')
                 else:
