@@ -2,7 +2,7 @@ import tempfile
 
 import requests
 from django.conf import settings
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, FileResponse
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -182,7 +182,4 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # TODO query model permissions
 
         data = getattr(object, 'file')
-        # return file content
-        fp = data.file.read()
-
-        return HttpResponse(fp)
+        return FileResponse(open(data.path, 'rb'), as_attachment=True)
