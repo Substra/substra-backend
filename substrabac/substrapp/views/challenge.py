@@ -167,7 +167,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     if error is not None:
                         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-                    serializer = self.get_serializer(instance)
+                    # do not give access to local files address
+                    serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                     data.update(serializer.data)
                     return Response(data, status=status.HTTP_200_OK)
 
