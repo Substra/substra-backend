@@ -109,7 +109,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
             'org': settings.LEDGER['org'],
             'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (
-            worker_to_filter, data_owner, status_to_filter)
+                worker_to_filter, data_owner, status_to_filter)
         })
 
         if st == 200:
@@ -222,10 +222,11 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     except:
                         return fail(traintuple['key'], e)
                     else:
-                        f = tempfile.TemporaryFile()
-                        f.write(content)
-                        copy(f.name, path.join(getattr(settings, 'MEDIA_ROOT'),
-                                               'traintuple/%s/%s' % (traintuple['key'], 'model')))
+                        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                            'traintuple/%s/%s' % (traintuple['key'], 'model'))
+                        os.makedirs(os.path.dirname(to_path), exist_ok=True)
+                        with open(to_path, 'wb') as f:
+                            f.write(content)
                 else:
                     model_file_hash = get_hash(model.file.path)
                     if model_file_hash != traintuple[model_type]['hash']:
@@ -243,15 +244,16 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     except:
                         return fail(traintuple['key'], e)
                     else:
-                        f = tempfile.TemporaryFile()
-                        f.write(content)
                         try:
-                            to_directory = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                     'traintuple/%s' % (traintuple['key']))
-                            copy(f.name, to_directory)
-                            tar_file_path = os.path.join(to_directory, os.path.basename(f.name))
+                            to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                                'traintuple/%s' % (traintuple['key']))
+                            os.makedirs(os.path.dirname(to_path), exist_ok=True)
+                            with open(to_path, 'wb') as f:
+                                f.write(content)
+
+                            tar_file_path = os.path.join(to_path, os.path.basename(f.name))
                             tar = tarfile.open(tar_file_path)
-                            tar.extractall(to_directory)
+                            tar.extractall(to_path)
                             tar.close()
                             os.remove(tar_file_path)
                         except:
@@ -281,10 +283,11 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     except:
                         return fail(traintuple['key'], e)
                     else:
-                        f = tempfile.TemporaryFile()
-                        f.write(content)
-                        copy(f.name, path.join(getattr(settings, 'MEDIA_ROOT'),
-                                               'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+                        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                            'traintuple/%s/%s' % (traintuple['key'], 'metrics'))
+                        os.makedirs(os.path.dirname(to_path), exist_ok=True)
+                        with open(to_path, 'wb') as f:
+                            f.write(content)
                 else:
                     challenge_metrics_hash = get_hash(challenge.metrics.path)
                     if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
