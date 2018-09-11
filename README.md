@@ -94,8 +94,8 @@ Execute this command in the `substrabac/substrabac` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,celery
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -W chu-nantes,celery
 ```
 
  Note that you should run them NOT at the same time as we do not set different host and port right now.
