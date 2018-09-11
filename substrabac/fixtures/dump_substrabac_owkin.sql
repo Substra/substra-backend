@@ -743,7 +743,7 @@ COPY public.substrapp_challenge (creation_date, last_modified, pkhash, validated
 --
 
 COPY public.substrapp_data (pkhash, validated, file) FROM stdin;
-933cb232ac507f7f89661918e3f1280a330c37a82ba207d30cd94f7d1d95eb0b	t	data/933cb232ac507f7f89661918e3f1280a330c37a82ba207d30cd94f7d1d95eb0b/0024900.zip
+e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1	t	data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip
 4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010	t	data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip
 \.
 
