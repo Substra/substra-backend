@@ -476,7 +476,7 @@ ALTER TABLE public.substrapp_dataset OWNER TO substrabac;
 CREATE TABLE public.substrapp_model (
     pkhash character varying(64) NOT NULL,
     validated boolean NOT NULL,
-    file character varying(500) NOT NULL
+    file character varying(500)
 );
 
 
@@ -681,26 +681,27 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
-1	contenttypes	0001_initial	2018-08-31 17:36:13.925643+02
-2	auth	0001_initial	2018-08-31 17:36:14.069123+02
-3	admin	0001_initial	2018-08-31 17:36:14.108406+02
-4	admin	0002_logentry_remove_auto_add	2018-08-31 17:36:14.120205+02
-5	admin	0003_logentry_add_action_flag_choices	2018-08-31 17:36:14.131294+02
-6	contenttypes	0002_remove_content_type_name	2018-08-31 17:36:14.153942+02
-7	auth	0002_alter_permission_name_max_length	2018-08-31 17:36:14.162195+02
-8	auth	0003_alter_user_email_max_length	2018-08-31 17:36:14.174268+02
-9	auth	0004_alter_user_username_opts	2018-08-31 17:36:14.186264+02
-10	auth	0005_alter_user_last_login_null	2018-08-31 17:36:14.198326+02
-11	auth	0006_require_contenttypes_0002	2018-08-31 17:36:14.200959+02
-12	auth	0007_alter_validators_add_error_messages	2018-08-31 17:36:14.209938+02
-13	auth	0008_alter_user_username_max_length	2018-08-31 17:36:14.246939+02
-14	auth	0009_alter_user_last_name_max_length	2018-08-31 17:36:14.275172+02
-15	sessions	0001_initial	2018-08-31 17:36:14.311347+02
-16	sites	0001_initial	2018-08-31 17:36:14.325914+02
-17	sites	0002_alter_domain_unique	2018-08-31 17:36:14.34317+02
-18	substrapp	0001_initial	2018-08-31 17:36:14.451427+02
-19	substrapp	0002_auto_20180821_1615	2018-08-31 17:36:14.535811+02
-20	substrapp	0003_auto_20180831_1339	2018-08-31 17:36:14.550762+02
+1	contenttypes	0001_initial	2018-09-11 15:34:21.786507+02
+2	auth	0001_initial	2018-09-11 15:34:22.032496+02
+3	admin	0001_initial	2018-09-11 15:34:22.120134+02
+4	admin	0002_logentry_remove_auto_add	2018-09-11 15:34:22.141719+02
+5	admin	0003_logentry_add_action_flag_choices	2018-09-11 15:34:22.160202+02
+6	contenttypes	0002_remove_content_type_name	2018-09-11 15:34:22.193599+02
+7	auth	0002_alter_permission_name_max_length	2018-09-11 15:34:22.202194+02
+8	auth	0003_alter_user_email_max_length	2018-09-11 15:34:22.214765+02
+9	auth	0004_alter_user_username_opts	2018-09-11 15:34:22.226934+02
+10	auth	0005_alter_user_last_login_null	2018-09-11 15:34:22.241566+02
+11	auth	0006_require_contenttypes_0002	2018-09-11 15:34:22.2446+02
+12	auth	0007_alter_validators_add_error_messages	2018-09-11 15:34:22.254706+02
+13	auth	0008_alter_user_username_max_length	2018-09-11 15:34:22.286681+02
+14	auth	0009_alter_user_last_name_max_length	2018-09-11 15:34:22.300702+02
+15	sessions	0001_initial	2018-09-11 15:34:22.3499+02
+16	sites	0001_initial	2018-09-11 15:34:22.376668+02
+17	sites	0002_alter_domain_unique	2018-09-11 15:34:22.410132+02
+18	substrapp	0001_initial	2018-09-11 15:34:22.547128+02
+19	substrapp	0002_auto_20180821_1615	2018-09-11 15:34:22.682456+02
+20	substrapp	0003_auto_20180831_1339	2018-09-11 15:34:22.70633+02
+21	substrapp	0004_auto_20180911_1334	2018-09-11 15:34:22.714463+02
 \.
 
 
@@ -726,8 +727,8 @@ COPY public.django_site (id, domain, name) FROM stdin;
 --
 
 COPY public.substrapp_algo (pkhash, file, description, validated) FROM stdin;
-6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f	algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/algo.tar.gz	algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/description.md	t
 094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4	algos/094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/algo.tar.gz	algos/094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/description.md	t
+6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f	algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/algo.tar.gz	algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/description.md	t
 \.
 
 
@@ -828,7 +829,7 @@ SELECT pg_catalog.setval('public.django_content_type_id_seq', 12, true);
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: substrabac
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 20, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 21, true);
 
 
 --
