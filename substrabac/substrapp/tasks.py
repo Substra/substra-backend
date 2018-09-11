@@ -105,7 +105,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             instance, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
                             instance.metrics.save('metrics.py', f)
                         except:
-                            raise Exception('Failed to save challenge metrics in local db for later use')
+                            return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
                 else:
                     if not challenge.metrics:
                         # get challenge metrics
@@ -123,7 +123,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                                                                                        validated=True)
                                 instance.metrics.save('metrics.py', f)
                             except:
-                                raise Exception('Failed to save challenge metrics in local db for later use')
+                                return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
 
                 ''' get algo + model_type '''
                 # get algo file
