@@ -7,10 +7,13 @@ from os import path
 
 import requests
 from django.conf import settings
+from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
 from .utils import compute_hash
+
+import docker
 
 
 def create_directory(directory):
@@ -134,7 +137,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # get model file
                 try:
-                    get_remote_file(traintuple[model_type])
+                    if traintuple[model_type] is not None:
+                        get_remote_file(traintuple[model_type])
                 except Exception as e:
                     return fail(traintuple['key'], e)
 
@@ -187,7 +191,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # same for model
                 try:
-                    model = Model.objects.get(pk=traintuple[model_type]['hash'])
+                    if traintuple[model_type] is not None:
+                        model = Model.objects.get(pk=traintuple[model_type]['hash'])
                 except Exception as e:  # get it from its address
                     try:
                         content, computed_hash = get_remote_file(traintuple[model_type])
@@ -200,12 +205,13 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         with open(to_path, 'wb') as f:
                             f.write(content)
                 else:
-                    model_file_hash = get_hash(model.file.path)
-                    if model_file_hash != traintuple[model_type]['hash']:
-                        return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
+                    if traintuple[model_type] is not None:
+                        model_file_hash = get_hash(model.file.path)
+                        if model_file_hash != traintuple[model_type]['hash']:
+                            return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
 
-                    copy(model.file.path,
-                         path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'model')))
+                        copy(model.file.path,
+                             path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'model')))
 
                 # put algo to root
                 try:
@@ -228,7 +234,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             tar.extractall(to_directory_path)
                             tar.close()
                             os.remove(to_file_path)
-                        except:
+                        except Exception as e_:
                             return fail(traintuple['key'], 'Fail to untar algo file')
                 else:
                     algo_file_hash = get_hash(algo.file.path)
@@ -284,14 +290,182 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # TODO log success
 
+                if data_type == 'trainData':
+                    try:
+                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                    except Exception as e:
+                        return fail(traintuple['key'], e)
+                elif data_type == 'testData':
+                    try:
+                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                    except Exception as e:
+                        return fail(traintuple['key'], e)
+
 
 @app.task
 def prepareTrainingTask():
     prepareTask('trainData', 'trainWorker', 'todo', 'startModel', 'training')
-    # TODO launch training task
 
 
 @app.task
 def prepareTestingTask():
     prepareTask('testData', 'testWorker', 'trained', 'endModel', 'testing')
-    # TODO launch testing task
+
+
+@app.task
+def doTrainingTask(traintuple):
+    from django.contrib.sites.models import Site
+    from substrapp.models import Model
+
+    # Setup Docker Client
+    client = docker.from_env()
+
+    # Docker variables
+    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                     'traintuple/%s/' % (traintuple['key']))
+    algo_path = path.join(traintuple_root_path)
+    algo_docker = 'algo_train'
+    algo_docker_name = 'algo_train_%s' % (traintuple['key'])
+    metrics_docker = 'metrics_train'
+    metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
+    model_path = os.path.join(traintuple_root_path, 'model')
+    train_data_path = os.path.join(traintuple_root_path, 'data')
+    train_pred_path = os.path.join(traintuple_root_path, 'pred')
+    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+    # Build algo
+    client.images.build(path=algo_path,
+                        tag=algo_docker,
+                        rm=True)
+
+    # Run algo, train and make train predictions
+    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+    client.containers.run(algo_docker,
+                          name=algo_docker_name,
+                          command='train',
+                          volumes=volumes,
+                          detach=False,
+                          auto_remove=False,
+                          remove=True)
+
+    # Build metrics
+    client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
+                        tag=metrics_docker,
+                        rm=True)
+
+    # Compute metrics on train predictions
+    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+    client.containers.run(metrics_docker,
+                          name=metrics_docker_name,
+                          volumes=volumes,
+                          detach=False,
+                          auto_remove=False,
+                          remove=True)
+
+    # Compute end model information
+    end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                               'traintuple/%s/model/model' % (traintuple['key']))
+    end_model_file_hash = get_hash(end_model_path)
+    instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+    with open(end_model_path, 'rb') as f:
+        instance.file.save('model', f)
+
+    url_http = 'http' if settings.DEBUG else 'https'
+    current_site = Site.objects.get_current()
+    end_model_file = '%s://%s%s' % (url_http, current_site.domain,
+                                    reverse('substrapp:model-file', args=[end_model_file_hash]))
+
+    # TO DO
+    # Need to load real perf
+    fake_perf = 0.99
+    train_data_list = ', '.join(['%s:%s' % (train_data_hash, fake_perf) for train_data_hash in traintuple['trainData']['keys']])
+
+    # Log Success Train
+    data, st = invokeLedger({
+        'org': settings.LEDGER['org'],
+        'peer': settings.LEDGER['peer'],
+        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Trained !"]}' % (traintuple['key'],
+                                                                                 end_model_file_hash,
+                                                                                 end_model_file,
+                                                                                 train_data_list)
+    })
+
+    return
+
+
+@app.task
+def doTestingTask(traintuple):
+    # Setup Docker Client
+    client = docker.from_env()
+
+    # Docker variables
+    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                     'traintuple/%s/' % (traintuple['key']))
+    algo_path = path.join(traintuple_root_path)
+    algo_docker = 'algo_test'
+    algo_docker_name = 'algo_test_%s' % (traintuple['key'])
+    metrics_docker = 'metrics_test'
+    metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
+    model_path = os.path.join(traintuple_root_path, 'model')
+    test_data_path = os.path.join(traintuple_root_path, 'data')
+    test_pred_path = os.path.join(traintuple_root_path, 'pred')
+    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+    # Build algo
+    client.images.build(path=algo_path,
+                        tag=algo_docker,
+                        rm=True)
+
+    # Run algo and make test predictions
+    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+    client.containers.run(algo_docker,
+                          name=algo_docker_name,
+                          command='predict',
+                          volumes=volumes,
+                          detach=False,
+                          auto_remove=False,
+                          remove=True)
+
+    # Build metrics
+    client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
+                        tag=metrics_docker,
+                        rm=True)
+
+    # Compute metrics on train predictions
+    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+    client.containers.run(metrics_docker,
+                          name=metrics_docker_name,
+                          volumes=volumes,
+                          detach=False,
+                          auto_remove=False,
+                          remove=True)
+
+    # TO DO
+    # Need to load real perf
+    fake_perf = 0.90
+    test_data_list = ', '.join(['%s:%s' % (test_data_hash, fake_perf) for test_data_hash in traintuple['testData']['keys']])
+
+    # Log Success Test
+    data, st = invokeLedger({
+        'org': settings.LEDGER['org'],
+        'peer': settings.LEDGER['peer'],
+        'args': '{"Args":["logSuccessTest","%s","%s","%s","Tested !"]}' % (traintuple['key'],
+                                                                           test_data_list,
+                                                                           fake_perf)
+    })
+
+    return
