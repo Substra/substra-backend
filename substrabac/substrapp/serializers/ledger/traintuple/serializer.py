@@ -5,7 +5,7 @@ from .tasks import createLedgerTraintuple
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
-    model_key = serializers.CharField(min_length=64, max_length=64)
+    model_key = serializers.CharField(min_length=64, max_length=64, allow_null=True, allow_blank=True)
     train_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                             min_length=1,
                                             max_length=None)
