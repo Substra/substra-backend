@@ -8,7 +8,7 @@ def calc_perf(folder_true="./data", folder_pred="./pred"):
     # get true and pred values
     y_true = opener.get_y(folder_true)
     y_pred = opener.get_pred(folder_pred)
-    return metrics.score(y_true, y_pred)
+    return {'all': metrics.score(y_true, y_pred)}
 
 
 if __name__ == "__main__":
