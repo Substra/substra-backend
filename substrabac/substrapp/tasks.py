@@ -14,6 +14,7 @@ from substrapp.utils import queryLedger, invokeLedger
 from .utils import compute_hash
 
 import docker
+import json
 
 
 def create_directory(directory):
@@ -235,7 +236,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             tar.extractall(to_directory_path)
                             tar.close()
                             os.remove(to_file_path)
-                        except Exception as e_:
+                        except:
                             return fail(traintuple['key'], 'Fail to untar algo file')
                 else:
                     algo_file_hash = get_hash(algo.file.path)
@@ -336,57 +337,78 @@ def doTrainingTask(traintuple):
     metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
 
     # Build algo
-    client.images.build(path=algo_path,
-                        tag=algo_docker,
-                        rm=True)
+    try:
+        client.images.build(path=algo_path,
+                            tag=algo_docker,
+                            rm=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Run algo, train and make train predictions
     volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    client.containers.run(algo_docker,
-                          name=algo_docker_name,
-                          command='train',
-                          volumes=volumes,
-                          detach=False,
-                          auto_remove=False,
-                          remove=True)
+    try:
+        client.containers.run(algo_docker,
+                              name=algo_docker_name,
+                              command='train',
+                              volumes=volumes,
+                              detach=False,
+                              auto_remove=False,
+                              remove=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Build metrics
-    client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
-                        tag=metrics_docker,
-                        rm=True)
+    try:
+        client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
+                            tag=metrics_docker,
+                            rm=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Compute metrics on train predictions
     volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    client.containers.run(metrics_docker,
-                          name=metrics_docker_name,
-                          volumes=volumes,
-                          detach=False,
-                          auto_remove=False,
-                          remove=True)
+    try:
+        client.containers.run(metrics_docker,
+                              name=metrics_docker_name,
+                              volumes=volumes,
+                              detach=False,
+                              auto_remove=False,
+                              remove=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Compute end model information
     end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                'traintuple/%s/model/model' % (traintuple['key']))
     end_model_file_hash = get_hash(end_model_path)
-    instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
-    with open(end_model_path, 'rb') as f:
-        instance.file.save('model', f)
+
+    try:
+        instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+        with open(end_model_path, 'rb') as f:
+            instance.file.save('model', f)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     url_http = 'http' if settings.DEBUG else 'https'
     current_site = Site.objects.get_current()
     end_model_file = '%s://%s%s' % (url_http, current_site.domain,
                                     reverse('substrapp:model-file', args=[end_model_file_hash]))
 
-    # TO DO
-    # Need to load real perf
-    fake_perf = 0.99
-    train_data_list = ', '.join(['%s:%s' % (train_data_hash, fake_perf) for train_data_hash in traintuple['trainData']['keys']])
+    # Load performance
+    try:
+        with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:
+            perf = json.load(perf_file)
+        global_perf = perf['all']
+        train_data_list = ', '.join(['%s:%s' % (train_data_hash, perf.get(train_data_hash, global_perf))
+                                     for train_data_hash in traintuple['trainData']['keys']])
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Log Success Train
     data, st = invokeLedger({
@@ -421,44 +443,61 @@ def doTestingTask(traintuple):
     metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
 
     # Build algo
-    client.images.build(path=algo_path,
-                        tag=algo_docker,
-                        rm=True)
+    try:
+        client.images.build(path=algo_path,
+                            tag=algo_docker,
+                            rm=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Run algo and make test predictions
     volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    client.containers.run(algo_docker,
-                          name=algo_docker_name,
-                          command='predict',
-                          volumes=volumes,
-                          detach=False,
-                          auto_remove=False,
-                          remove=True)
+    try:
+        client.containers.run(algo_docker,
+                              name=algo_docker_name,
+                              command='predict',
+                              volumes=volumes,
+                              detach=False,
+                              auto_remove=False,
+                              remove=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Build metrics
-    client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
-                        tag=metrics_docker,
-                        rm=True)
+    try:
+        client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
+                            tag=metrics_docker,
+                            rm=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Compute metrics on train predictions
     volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    client.containers.run(metrics_docker,
-                          name=metrics_docker_name,
-                          volumes=volumes,
-                          detach=False,
-                          auto_remove=False,
-                          remove=True)
+    try:
+        client.containers.run(metrics_docker,
+                              name=metrics_docker_name,
+                              volumes=volumes,
+                              detach=False,
+                              auto_remove=False,
+                              remove=True)
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
-    # TO DO
-    # Need to load real perf
-    fake_perf = 0.90
-    test_data_list = ', '.join(['%s:%s' % (test_data_hash, fake_perf) for test_data_hash in traintuple['testData']['keys']])
+    # Load performance
+    try:
+        with open(os.path.join(test_pred_path, 'perf.json'), 'r') as perf_file:
+            perf = json.load(perf_file)
+        global_perf = perf['all']
+        test_data_list = ', '.join(['%s:%s' % (test_data_hash, perf.get(test_data_hash, global_perf))
+                                    for test_data_hash in traintuple['testData']['keys']])
+    except Exception as e:
+        return fail(traintuple['key'], e)
 
     # Log Success Test
     data, st = invokeLedger({
@@ -466,7 +505,7 @@ def doTestingTask(traintuple):
         'peer': settings.LEDGER['peer'],
         'args': '{"Args":["logSuccessTest","%s","%s","%s","Tested !"]}' % (traintuple['key'],
                                                                            test_data_list,
-                                                                           fake_perf)
+                                                                           global_perf)
     })
 
     return
