@@ -189,7 +189,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         except:
                             return fail(traintuple['key'], 'Fail to unzip data file')
 
-                # same for model
+                # same for model (can be null)
+                model = None
                 try:
                     if traintuple[model_type] is not None:
                         model = Model.objects.get(pk=traintuple[model_type]['hash'])
@@ -205,7 +206,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         with open(to_path, 'wb') as f:
                             f.write(content)
                 else:
-                    if traintuple[model_type] is not None:
+                    if model is not None:
                         model_file_hash = get_hash(model.file.path)
                         if model_file_hash != traintuple[model_type]['hash']:
                             return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')

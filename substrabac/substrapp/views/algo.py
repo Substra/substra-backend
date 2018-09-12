@@ -80,7 +80,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                 except Exception:
                     raise Exception('Failed to fetch description file')
                 else:
-                    if computed_hash != pk:
+                    if computed_hash != algo['description']['hash']:
                         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
@@ -109,6 +109,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             error = None
+            instance = None
             try:
                 data = getObjectFromLedger(pk)
             except Exception as e:
@@ -133,8 +134,13 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     if error is not None:
                         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-                    serializer = self.get_serializer(instance)
-                    data.update(serializer.data)
+                    # do not give access to local files address
+                    if instance is not None:
+                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        data.update(serializer.data)
+                    else:
+                        data = {'message': 'Fail to get instance'}
+
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):

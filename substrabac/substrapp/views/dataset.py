@@ -45,7 +45,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
         try:
             instance = self.perform_create(serializer)
         except IntegrityError as exc:
-            return Response({'message': 'A dataset with this description file already exists.'},
+            return Response({'message': 'A dataset with this opener file already exists.'},
                             status=status.HTTP_409_CONFLICT)
         else:
             # init ledger serializer
@@ -70,10 +70,45 @@ class DatasetViewSet(mixins.CreateModelMixin,
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_dataset(self, dataset, pk):
-        try:
-            # get challenge description from remote node
-            url = dataset[pk]['description']['storageAddress']
+    # TODO refacto
+    def create_or_update_dataset(self, instance, dataset, pk):
+
+        # create instance if does not exist
+        if not instance:
+            instance, created = Dataset.objects.update_or_create(pkhash=pk, name=dataset['name'], validated=True)
+
+        if not instance.data_opener:
+            try:
+                url = dataset['openerStorageAddress']
+                try:
+                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+                except:
+                    raise 'Failed to fetch %s' % url
+                else:
+                    if r.status_code != 200:
+                        raise Exception('end to end node report %s' % r.text)
+
+                    try:
+                        computed_hash = self.compute_hash(r.content)
+                    except Exception:
+                        raise Exception('Failed to fetch opener file')
+                    else:
+                        if computed_hash != pk:
+                            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                            raise Exception(msg)
+
+                        f = tempfile.TemporaryFile()
+                        f.write(r.content)
+
+                        # save/update data_opener in local db for later use
+                        instance.data_opener.save('opener.py', f)
+
+            except Exception as e:
+                raise e
+
+        if not instance.description:
+            # do the same for description
+            url = dataset['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
@@ -87,20 +122,17 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 except Exception:
                     raise Exception('Failed to fetch description file')
                 else:
-                    if computed_hash != pk:
+                    if computed_hash != dataset['description']['hash']:
                         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
                     f = tempfile.TemporaryFile()
                     f.write(r.content)
 
-                    # save/update challenge in local db for later use
-                    instance, created = Dataset.objects.update_or_create(pkhash=pk, validated=True)
+                    # save/update description in local db for later use
                     instance.description.save('description.md', f)
-        except Exception as e:
-            raise e
-        else:
-            return instance
+
+        return instance
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -121,27 +153,33 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error = None
+                instance = None
                 try:
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
                 except Http404:
                     try:
-                        instance = self.create_or_update_dataset(data, pk)
+                        instance = self.create_or_update_dataset(instance, data, pk)
                     except Exception as e:
                         error = e
                 else:
                     # check if instance has description
-                    if not instance.description:
+                    if not instance.description or not instance.data_opener:
                         try:
-                            instance = self.create_or_update_dataset(data, pk)
+                            instance = self.create_or_update_dataset(instance, data, pk)
                         except Exception as e:
                             error = e
                 finally:
                     if error is not None:
                         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-                    serializer = self.get_serializer(instance)
-                    data.update(serializer.data)
+                    # do not give access to local files address
+                    if instance is not None:
+                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        data.update(serializer.data)
+                    else:
+                        data = {'message': 'Fail to get instance'}
+
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
@@ -233,5 +271,5 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
     @action(detail=True)
     def opener(self, request, *args, **kwargs):
-        return self.manage_file('opener')
+        return self.manage_file('data_opener')
 

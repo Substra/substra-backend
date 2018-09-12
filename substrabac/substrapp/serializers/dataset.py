@@ -1,9 +1,8 @@
-from rest_framework import serializers
-
+from libs.serializers import DynamicFieldsModelSerializer
 from substrapp.models import Dataset
 
 
-class DatasetSerializer(serializers.ModelSerializer):
+class DatasetSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Dataset

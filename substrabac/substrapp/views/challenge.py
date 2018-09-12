@@ -148,6 +148,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 return Response(e, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error = None
+                instance = None
                 try:
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
@@ -168,8 +169,12 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
                     # do not give access to local files address
-                    serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-                    data.update(serializer.data)
+                    if instance is not None:
+                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        data.update(serializer.data)
+                    else:
+                        data = {'message': 'Fail to get instance'}
+
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
