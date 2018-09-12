@@ -4,7 +4,7 @@ import tempfile
 import requests
 from django.conf import settings
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse
+from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
