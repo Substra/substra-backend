@@ -1,9 +1,9 @@
 import hashlib
+import os
 from urllib.parse import unquote
 
 from django.http import FileResponse
 from django.conf import settings
-from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -78,6 +78,13 @@ class ComputeHashMixin(object):
         return computedHash
 
 
+class CustomFileResponse(FileResponse):
+    def set_headers(self, filelike):
+        super(CustomFileResponse, self).set_headers(filelike)
+
+        self['Access-Control-Expose-Headers'] = 'Content-Disposition'
+
+
 class ManageFileMixin(object):
     def manage_file(self, field):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -93,4 +100,4 @@ class ManageFileMixin(object):
             object = self.get_object()
 
             data = getattr(object, field)
-            return FileResponse(open(data.path, 'rb'), as_attachment=True)
+            return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
