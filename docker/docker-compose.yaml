@@ -1,0 +1,139 @@
+version: '2'
+
+networks:
+  default:
+    external:
+      name: net_substra
+
+services:
+
+  substrabacowkin:
+    container_name: substrabac_owkin
+    hostname: substrabacowkin
+    build:
+        context: ./
+        dockerfile: ./docker/substrabac/Dockerfile
+    command: /bin/bash -c "sleep 10; python3 manage.py runserver 0.0.0.0:8000"
+    # volumes:
+      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+    links:
+      - postgresql
+      - rabbit
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgresql
+      - rabbit
+    environment:
+      - DATABASE_HOST=postgresql
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
+      - PYTHONUNBUFFERED=1
+
+  substrabacchunantes:
+    container_name: substrabac_chunantes
+    hostname: substrabacchunantes
+    build:
+        context: ./
+        dockerfile: ./docker/substrabac/Dockerfile
+    command: /bin/bash -c "sleep 10; python3 manage.py runserver 0.0.0.0:8001"
+    # volumes:
+      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+    links:
+      - postgresql
+      - rabbit
+    ports:
+      - "8001:8001"
+    depends_on:
+      - postgresql
+      - rabbit
+    environment:
+      - DATABASE_HOST=postgresql
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
+      - PYTHONUNBUFFERED=1
+
+  # Celery worker
+
+  celerybeat:
+    container_name: celerybeat
+    hostname: celerybeat
+    build:
+      context: ./
+      dockerfile: ./docker/celery/Dockerfile
+    command: celery -A substrabac beat -l info -b rabbit
+    links:
+      - rabbit
+    depends_on:
+      - rabbit
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
+
+  worker_owkin:
+    container_name: worker_owkin
+    hostname: worker_owkin
+    build:
+      context: ./
+      dockerfile: ./docker/celery/Dockerfile
+    command: celery -A substrabac worker -l info -n owkin -Q owkin,celery -b rabbit
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./substrabac/medias:/usr/src/app/medias
+    links:
+      - rabbit
+      - substrabacowkin
+    depends_on:
+      - rabbit
+    environment:
+      - ORG=owkin
+      - PYTHONUNBUFFERED=1
+      - DATABASE_HOST=postgresql
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
+
+  worker_chunantes:
+    container_name: worker_chunantes
+    hostname: worker_chunantes
+    build:
+      context: ./
+      dockerfile: ./docker/celery/Dockerfile
+    command: celery -A substrabac worker -l info -n chunantes -Q chu-nantes,celery -b rabbit
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./substrabac/medias:/usr/src/app/medias
+    links:
+      - rabbit
+    depends_on:
+      - rabbit
+      - substrabacchunantes
+    environment:
+      - ORG=chu-nantes
+      - PYTHONUNBUFFERED=1
+      - DATABASE_HOST=postgresql
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
+
+  rabbit:
+    container_name: rabbit
+    hostname: rabbit
+    image: rabbitmq:3
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+      - HOSTNAME=rabbitmq
+      - RABBITMQ_NODENAME=rabbitmq
+    ports:
+      - "5672:5672"
+
+  postgresql:
+    container_name: postgresql
+    hostname: postgresql
+    build:
+      context: ./
+      dockerfile: ./docker/postgresql/Dockerfile
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - USER=postgres
+      - POSTGRES_PASSWORD=postgrespwd
+      - POSTGRES_DB=substrabac
