@@ -405,8 +405,6 @@ def doTrainingTask(traintuple):
         with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
-        train_data_list = ', '.join(['%s:%s' % (train_data_hash, perf.get(train_data_hash, global_perf))
-                                     for train_data_hash in traintuple['trainData']['keys']])
     except Exception as e:
         return fail(traintuple['key'], e)
 
@@ -417,7 +415,7 @@ def doTrainingTask(traintuple):
         'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Trained !"]}' % (traintuple['key'],
                                                                                  end_model_file_hash,
                                                                                  end_model_file,
-                                                                                 train_data_list)
+                                                                                 global_perf)
     })
 
     return
@@ -494,8 +492,6 @@ def doTestingTask(traintuple):
         with open(os.path.join(test_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
-        test_data_list = ', '.join(['%s:%s' % (test_data_hash, perf.get(test_data_hash, global_perf))
-                                    for test_data_hash in traintuple['testData']['keys']])
     except Exception as e:
         return fail(traintuple['key'], e)
 
@@ -503,9 +499,8 @@ def doTestingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s","%s","Tested !"]}' % (traintuple['key'],
-                                                                           test_data_list,
-                                                                           global_perf)
+        'args': '{"Args":["logSuccessTest","%s","%s","Tested !"]}' % (traintuple['key'],
+                                                                      global_perf)
     })
 
     return
