@@ -231,7 +231,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 else:
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                                l[idx] = [x for x in l[idx] if [x for x in (x['challengeKeys'] or []) if x in challengeKeys]]
                         elif k == 'algo':  # select challenge used by these algo
                             if not algoData:
                                 # TODO find a way to put this call in cache
