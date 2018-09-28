@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Algo, Challenge
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -70,7 +70,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
-                raise 'Failed to fetch %s' % url
+                raise Exception('Failed to fetch %s' % url)
             else:
                 if r.status_code != 200:
                     raise Exception('end to end node report %s' % r.text)
@@ -112,8 +112,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
             instance = None
             try:
                 data = getObjectFromLedger(pk)
-            except Exception as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            except JsonException as e:
+                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
                 try:
                     # try to get it from local db to check if description exists

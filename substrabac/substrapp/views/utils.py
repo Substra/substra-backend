@@ -9,6 +9,11 @@ from rest_framework.response import Response
 
 from substrapp.utils import queryLedger
 
+class JsonException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+        super(JsonException, self).__init__()
+
 
 def get_filters(query_params):
     filters = []
@@ -48,7 +53,6 @@ def get_filters(query_params):
 
     return filters
 
-
 def getObjectFromLedger(pk):
     # get instance from remote node
     data, st = queryLedger({
@@ -58,7 +62,7 @@ def getObjectFromLedger(pk):
     })
 
     if st != 200:
-        raise Exception(data)
+        raise JsonException(data)
 
     if data['permissions'] == 'all':
         return data

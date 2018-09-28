@@ -1,3 +1,4 @@
+import os
 import tempfile
 
 import requests
@@ -14,8 +15,7 @@ from substrapp.serializers import ModelSerializer
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, ComputeHashMixin, getObjectFromLedger
-
+from substrapp.views.utils import get_filters, ComputeHashMixin, getObjectFromLedger, CustomFileResponse, JsonException
 
 class ModelViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
@@ -26,14 +26,14 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     # permission_classes = (permissions.IsAuthenticated,)
 
-    def create_or_update_dataset(self, model, pk):
+    def create_or_update_model(self, model, pk):
         try:
             # get challenge description from remote node
-            url = model['descriptionStorageAddress']
+            url = model['endModel']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
-                raise 'Failed to fetch %s' % url
+                raise Exception('Failed to fetch %s' % url)
             else:
                 if r.status_code != 200:
                     raise Exception('end to end node report %s' % r.text)
@@ -41,7 +41,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                 try:
                     computed_hash = self.compute_hash(r.content)
                 except Exception:
-                    raise Exception('Failed to fetch description file')
+                    raise Exception('Failed to fetch endModel file')
                 else:
                     if computed_hash != pk:
                         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -52,7 +52,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
                     # save/update challenge in local db for later use
                     instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
-                    instance.file.save('description.md', f)
+                    instance.file.save('model', f)
         except Exception as e:
             raise e
         else:
@@ -73,31 +73,37 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             # get instance from remote node
             try:
                 data = getObjectFromLedger(pk)
-            except Exception as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            except JsonException as e:
+                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error = None
+                instance = None
                 try:
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
                 except Http404:
                     try:
-                        instance = self.create_or_update_dataset(data, pk)
+                        instance = self.create_or_update_model(data, pk)
                     except Exception as e:
                         error = e
                 else:
-                    # check if instance has description
-                    if not instance.description:
+                    # check if instance has file
+                    if not instance.file:
                         try:
-                            instance = self.create_or_update_dataset(data, pk)
+                            instance = self.create_or_update_model(data, pk)
                         except Exception as e:
                             error = e
                 finally:
                     if error is not None:
                         return Response(error, status=status.HTTP_400_BAD_REQUEST)
 
-                    serializer = self.get_serializer(instance)
-                    data.update(serializer.data)
+                    # do not give access to local files address
+                    if instance is not None:
+                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        data.update(serializer.data)
+                    else:
+                        data = {'message': 'Fail to get instance'}
+
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
@@ -143,7 +149,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in algoData if x[key] in val]
                                 algoHashes = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if 'algo_%s' % x['algo']['hash'] in algoHashes]
+                                l[idx] = [x for x in l[idx] if x['algo']['hash'] in algoHashes]
                         elif k == 'dataset':  # select model which trainData.openerHash is
                             if not datasetData:
                                 # TODO find a way to put this call in cache
@@ -155,8 +161,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             for key, val in subfilters.items():
                                 filteredData = [x for x in datasetData if x[key] in val]
                                 datasetHashes = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if
-                                          'dataset_%s' % x['trainData']['openerHash'] in datasetHashes]
+                                l[idx] = [x for x in l[idx] if x['trainData']['openerHash'] in datasetHashes]
                         elif k == 'challenge':  # select challenge used by these datasets
                             if not challengeData:
                                 # TODO find a way to put this call in cache
@@ -171,7 +176,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 else:
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if 'challenge_%s' % x['challenge']['hash'] in challengeKeys]
+                                l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
 
         return Response(l, status=st)
 
@@ -182,4 +187,4 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # TODO query model permissions
 
         data = getattr(object, 'file')
-        return FileResponse(open(data.path, 'rb'), as_attachment=True)
+        return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
