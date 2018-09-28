@@ -16,6 +16,8 @@ from .utils import compute_hash
 import docker
 import json
 
+import logging
+
 
 def create_directory(directory):
     if not path.exists(directory):
@@ -99,6 +101,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     try:
                         content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                     except Exception as e:
+                        logging.error(e)
                         return fail(traintuple['key'], e)
                     else:
                         try:

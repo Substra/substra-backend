@@ -17,7 +17,7 @@ from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 
 
 class ChallengeViewSet(mixins.CreateModelMixin,
@@ -102,7 +102,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
-                raise 'Failed to fetch %s' % url
+                raise Exception('Failed to fetch %s' % url)
             else:
                 if r.status_code != 200:
                     raise Exception('end to end node report %s' % r.text)
@@ -128,7 +128,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
             return instance
 
-
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -144,8 +143,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             # get instance from remote node
             try:
                 data = getObjectFromLedger(pk)
-            except Exception as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+            except JsonException as e:
+                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error = None
                 instance = None

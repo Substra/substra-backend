@@ -15,7 +15,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Dataset
 from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, getObjectFromLedger, ManageFileMixin, ComputeHashMixin
+from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
 
 
 class DatasetViewSet(mixins.CreateModelMixin,
@@ -70,7 +70,6 @@ class DatasetViewSet(mixins.CreateModelMixin,
             data.update(serializer.data)
             return Response(data, status=st, headers=headers)
 
-    # TODO refacto
     def create_or_update_dataset(self, instance, dataset, pk):
 
         # create instance if does not exist
@@ -83,7 +82,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 try:
                     r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
                 except:
-                    raise 'Failed to fetch %s' % url
+                    raise Exception('Failed to fetch %s' % url)
                 else:
                     if r.status_code != 200:
                         raise Exception('end to end node report %s' % r.text)
@@ -134,6 +133,22 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
         return instance
 
+    def getObjectFromLedger(self, pk):
+        # get instance from remote node
+        data, st = queryLedger({
+            'org': settings.LEDGER['org'],
+            'peer': settings.LEDGER['peer'],
+            'args': '{"Args":["queryDatasetData", "%s"]}' % pk
+        })
+
+        if st != 200:
+            raise JsonException(data)
+
+        if data['permissions'] == 'all':
+            return data
+        else:
+            raise Exception('Not Allowed')
+
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -148,9 +163,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
-            except Exception as e:
-                return Response(e, status=status.HTTP_400_BAD_REQUEST)
+                data = self.getObjectFromLedger(pk) # dataset use particular query to ledger
+            except JsonException as e:
+                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
                 error = None
                 instance = None
@@ -163,7 +178,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     except Exception as e:
                         error = e
                 else:
-                    # check if instance has description
+                    # check if instance has description or data_opener
                     if not instance.description or not instance.data_opener:
                         try:
                             instance = self.create_or_update_dataset(instance, data, pk)
@@ -272,4 +287,3 @@ class DatasetViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def opener(self, request, *args, **kwargs):
         return self.manage_file('data_opener')
-
