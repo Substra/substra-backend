@@ -12,6 +12,7 @@ from rest_framework.reverse import reverse
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
 from .utils import compute_hash, update_statistics, get_cpu_sets, get_gpu_sets, ExceptionThread
+from .exception_handler import compute_error_code
 
 import docker
 import json
@@ -64,7 +65,7 @@ def get_remote_file(object):
 
 
 def fail(key, err_msg):
-    # Log Fail
+    # Log Fail TrainTest
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
@@ -488,43 +489,41 @@ def prepareTestingTask():
 
 @app.task
 def doTrainingTask(traintuple):
-    from django.contrib.sites.models import Site
-    from substrapp.models import Model
-
-    # Log
-    training_task_log = ''
-
-    # Setup Docker Client
-    client = docker.from_env()
-
-    # Docker variables
-    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                     'traintuple/%s/' % (traintuple['key']))
-    algo_path = path.join(traintuple_root_path)
-    algo_docker = 'algo_train'
-    algo_docker_name = 'algo_train_%s' % (traintuple['key'])
-    metrics_docker = 'metrics_train'
-    metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
-    model_path = os.path.join(traintuple_root_path, 'model')
-    train_data_path = os.path.join(traintuple_root_path, 'data')
-    train_pred_path = os.path.join(traintuple_root_path, 'pred')
-    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-    # Build algo
     try:
+        from django.contrib.sites.models import Site
+        from substrapp.models import Model
+
+        # Log
+        training_task_log = ''
+
+        # Setup Docker Client
+        client = docker.from_env()
+
+        # Docker variables
+        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                         'traintuple/%s/' % (traintuple['key']))
+        algo_path = path.join(traintuple_root_path)
+        algo_docker = 'algo_train'
+        algo_docker_name = 'algo_train_%s' % (traintuple['key'])
+        metrics_docker = 'metrics_train'
+        metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
+        model_path = os.path.join(traintuple_root_path, 'model')
+        train_data_path = os.path.join(traintuple_root_path, 'data')
+        train_pred_path = os.path.join(traintuple_root_path, 'pred')
+        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+        # Build algo
         client.images.build(path=algo_path,
                             tag=algo_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Run algo, train and make train predictions
-    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
+        # Run algo, train and make train predictions
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
         gpu_set = None
@@ -562,33 +561,27 @@ def doTrainingTask(traintuple):
 
         training_task_log = monitoring._result
 
-        if hasattr(training, "_exception"):
-            raise training._exception
-
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        # Remove only if container exit without exception
-        container = client.containers.get(algo_docker_name)
-        container.remove()
-    finally:
+        # Return ressources
         ressource_manager.return_cpu_set(cpu_set)
         ressource_manager.return_gpu_set(gpu_set)
 
-    # Build metrics
-    try:
+        if hasattr(training, "_exception"):
+            raise training._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+
+        # Build metrics
         client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
                             tag=metrics_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Compute metrics on train predictions
-    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
+        # Compute metrics on train predictions
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
@@ -623,43 +616,41 @@ def doTrainingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        if hasattr(metric, "_exception"):
-            raise metric._exception
-
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        # Remove only if container exit without exception
-        container = client.containers.get(metrics_docker_name)
-        container.remove()
-    finally:
         ressource_manager.return_cpu_set(cpu_set)
         ressource_manager.return_gpu_set(gpu_set)
 
-    # Compute end model information
-    end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                               'traintuple/%s/model/model' % (traintuple['key']))
-    end_model_file_hash = get_hash(end_model_path)
+        if hasattr(metric, "_exception"):
+            raise metric._exception
 
-    try:
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+
+        # Compute end model information
+        end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                   'traintuple/%s/model/model' % (traintuple['key']))
+        end_model_file_hash = get_hash(end_model_path)
+
         instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
         with open(end_model_path, 'rb') as f:
             instance.file.save('model', f)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    url_http = 'http' if settings.DEBUG else 'https'
-    current_site = Site.objects.get_current()
-    end_model_file = '%s://%s%s' % (url_http, current_site.domain,
-                                    reverse('substrapp:model-file', args=[end_model_file_hash]))
+        url_http = 'http' if settings.DEBUG else 'https'
+        current_site = Site.objects.get_current()
+        end_model_file = '%s://%s%s' % (url_http, current_site.domain,
+                                        reverse('substrapp:model-file', args=[end_model_file_hash]))
 
-    # Load performance
-    try:
+        # Load performance
         with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
+
     except Exception as e:
-        return fail(traintuple['key'], e)
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        return fail(traintuple['key'], error_code)
 
     # Log Success Train
     data, st = invokeLedger({
@@ -677,39 +668,37 @@ def doTrainingTask(traintuple):
 
 @app.task
 def doTestingTask(traintuple):
-    # Log
-    testing_task_log = ''
-
-    # Setup Docker Client
-    client = docker.from_env()
-    # Docker variables
-    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                     'traintuple/%s/' % (traintuple['key']))
-    algo_path = path.join(traintuple_root_path)
-    algo_docker = 'algo_test'
-    algo_docker_name = 'algo_test_%s' % (traintuple['key'])
-    metrics_docker = 'metrics_test'
-    metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
-    model_path = os.path.join(traintuple_root_path, 'model')
-    test_data_path = os.path.join(traintuple_root_path, 'data')
-    test_pred_path = os.path.join(traintuple_root_path, 'pred')
-    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-    # Build algo
     try:
+        # Log
+        testing_task_log = ''
+
+        # Setup Docker Client
+        client = docker.from_env()
+        # Docker variables
+        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                         'traintuple/%s/' % (traintuple['key']))
+        algo_path = path.join(traintuple_root_path)
+        algo_docker = 'algo_test'
+        algo_docker_name = 'algo_test_%s' % (traintuple['key'])
+        metrics_docker = 'metrics_test'
+        metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
+        model_path = os.path.join(traintuple_root_path, 'model')
+        test_data_path = os.path.join(traintuple_root_path, 'data')
+        test_pred_path = os.path.join(traintuple_root_path, 'pred')
+        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+        # Build algo
         client.images.build(path=algo_path,
                             tag=algo_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Run algo and make test predictions
-    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
+        # Run algo and make test predictions
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
         gpu_set = None
@@ -746,33 +735,27 @@ def doTestingTask(traintuple):
 
         testing_task_log = monitoring._result
 
-        if hasattr(testing, "_exception"):
-            raise testing._exception
-
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        # Remove only if container exit without exception
-        container = client.containers.get(algo_docker_name)
-        container.remove()
-    finally:
         ressource_manager.return_cpu_set(cpu_set)
         ressource_manager.return_gpu_set(gpu_set)
 
-    # Build metrics
-    try:
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+
+        # Build metrics
         client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
                             tag=metrics_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Compute metrics on train predictions
-    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
+        # Compute metrics on train predictions
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
         gpu_set = None
@@ -806,26 +789,27 @@ def doTestingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        if hasattr(testing, "_exception"):
-            raise testing._exception
-
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        # Remove only if container exit without exception
-        container = client.containers.get(metrics_docker_name)
-        container.remove()
-    finally:
         ressource_manager.return_cpu_set(cpu_set)
         ressource_manager.return_gpu_set(gpu_set)
 
-    # Load performance
-    try:
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+
+        # Load performance
         with open(os.path.join(test_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
+
     except Exception as e:
-        return fail(traintuple['key'], e)
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        return fail(traintuple['key'], error_code)
 
     # Log Success Test
     data, st = invokeLedger({
