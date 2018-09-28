@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Challenge, Dataset, Data, Algo
-from substrapp.models.utils import compute_hash
+from substrapp.models.utils import get_hash, get_hash
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
 
@@ -95,24 +95,25 @@ class ModelTests(TestCase):
         description, _, metrics, _ = get_sample_challenge()
         challenge = Challenge.objects.create(description=description,
                                              metrics=metrics)
-        self.assertEqual(challenge.pkhash, compute_hash(description))
+
+        self.assertEqual(challenge.pkhash, get_hash(description))
         self.assertFalse(challenge.validated)
 
     def test_create_dataset(self):
         description, _, data_opener, _ = get_sample_dataset()
         dataset = Dataset.objects.create(description=description, data_opener=data_opener, name="slides_opener")
-        self.assertEqual(dataset.pkhash, compute_hash(description))
+        self.assertEqual(dataset.pkhash, get_hash(data_opener))
 
     def test_create_data(self):
         file, _ = get_sample_data()
         data = Data.objects.create(file=file)
-        self.assertEqual(data.pkhash, compute_hash(file))
+        self.assertEqual(data.pkhash, get_hash(file))
         self.assertFalse(data.validated)
 
     def test_create_algo(self):
         script, _ = get_sample_script()
         algo = Algo.objects.create(file=script)
-        self.assertEqual(algo.pkhash, compute_hash(script))
+        self.assertEqual(algo.pkhash, get_hash(script))
         self.assertFalse(algo.validated)
 
 
@@ -138,8 +139,8 @@ class QueryTests(APITestCase):
 
         data = {
             'name': 'tough challenge',
-            'test_data_keys': ['data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                               'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                               '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.challenge_description,
             'metrics': self.challenge_metrics,
             'permissions': 'all',
@@ -155,7 +156,7 @@ class QueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], compute_hash(self.challenge_description))
+            self.assertEqual(r['pkhash'], get_hash(self.challenge_description))
             self.assertEqual(r['validated'], False)
             self.assertEqual(r['description'], 'http://testserver/media/challenges/%s/%s' % (
                 r['pkhash'], self.challenge_description_filename))
@@ -249,7 +250,7 @@ class QueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], compute_hash(self.data_description))
+            self.assertEqual(r['pkhash'], get_hash(self.data_data_opener))
             self.assertEqual(r['description'], 'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -308,7 +309,7 @@ class QueryTests(APITestCase):
 
         data = {
             'file': self.data_file,
-            'dataset_key': compute_hash(self.data_description),
+            'dataset_key': get_hash(self.data_data_opener),
             'test_only': True,
         }
         extra = {
@@ -323,8 +324,7 @@ class QueryTests(APITestCase):
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
-
-                self.assertEqual(r['pkhash'], compute_hash(self.data_file))
+                self.assertEqual(r['pkhash'], get_hash(self.data_file))
                 self.assertEqual(r['file'],
                                  'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
 
@@ -350,13 +350,13 @@ class QueryTests(APITestCase):
             Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
 
             # missing local storage field
-            data = {'dataset_key': compute_hash(self.data_description),
+            data = {'dataset_key': get_hash(self.data_description),
                     'test_only': True,}
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             # missing ledger field
-            data = {'dataset_key': compute_hash(self.data_description), 'file': self.script,}
+            data = {'dataset_key': get_hash(self.data_description), 'file': self.script,}
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -370,7 +370,7 @@ class QueryTests(APITestCase):
 
         data = {
             'file': self.data_file,
-            'dataset_key': compute_hash(self.data_description),
+            'dataset_key': get_hash(self.data_description),
             'test_only': True,
         }
         response = self.client.post(url, data, format='multipart')
@@ -412,7 +412,7 @@ class QueryTests(APITestCase):
             'file': self.script,
             'description': self.data_description,
             'name': 'super top algo',
-            'challenge_key': compute_hash(self.challenge_description),
+            'challenge_key': get_hash(self.challenge_description),
             'permissions': 'all'
         }
         extra = {
@@ -425,7 +425,7 @@ class QueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], compute_hash(self.script))
+            self.assertEqual(r['pkhash'], get_hash(self.script))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_algo_ko(self):
@@ -453,7 +453,7 @@ class QueryTests(APITestCase):
         # missing local storage field
         data = {
             'name': 'super top algo',
-            'challenge_key': compute_hash(self.challenge_description),
+            'challenge_key': get_hash(self.challenge_description),
             'permissions': 'all'
         }
         response = self.client.post(url, data, format='multipart', **extra)
@@ -463,7 +463,7 @@ class QueryTests(APITestCase):
         data = {
             'file': self.script,
             'description': self.data_description,
-            'challenge_key': compute_hash(self.challenge_description),
+            'challenge_key': get_hash(self.challenge_description),
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -480,7 +480,7 @@ class QueryTests(APITestCase):
             'file': self.script,
             'description': self.data_description,
             'name': 'super top algo',
-            'challenge_key': compute_hash(self.challenge_description),
+            'challenge_key': get_hash(self.challenge_description),
             'permissions': 'all'
         }
         response = self.client.post(url, data, format='multipart')
@@ -501,7 +501,7 @@ class QueryTests(APITestCase):
             'file': self.script,
             'description': self.data_description,
             'name': 'super top algo',
-            'challenge_key': compute_hash(self.challenge_description),
+            'challenge_key': get_hash(self.challenge_description),
             'permissions': 'all'
         }
         extra = {
@@ -521,8 +521,7 @@ class QueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'challenge_key': compute_hash(description),
-                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+        data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
@@ -533,15 +532,13 @@ class QueryTests(APITestCase):
             mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}
 
             response = self.client.post(url, data, format='multipart', **extra)
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_traintuple_ko(self):
         url = reverse('substrapp:traintuple-list')
 
-        data = {'challenge_key': 'a' * 64,
-                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -549,12 +546,12 @@ class QueryTests(APITestCase):
 
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
-        self.assertIn('does not exist', r['message'])
+        self.assertIn('This field may not be null.', r['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         Challenge.objects.create(description=self.challenge_description,
                                  metrics=self.challenge_metrics)
-        data = {'challenge': compute_hash(self.challenge_description)}
+        data = {'challenge': get_hash(self.challenge_description)}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -566,8 +563,7 @@ class QueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'challenge_key': compute_hash(description),
-                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+        data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
@@ -584,8 +580,7 @@ class QueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'challenge_key': compute_hash(description),
-                'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+        data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
@@ -633,14 +628,14 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
+        response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         r = response.json()
         self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
 
     def test_get_algo_files_no_version(self):
         algo = Algo.objects.create(file=self.script)
-        response = self.client.get('/algo/%s/files/' % algo.pkhash)
+        response = self.client.get('/algo/%s/file/' % algo.pkhash)
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
@@ -650,7 +645,7 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
-        response = self.client.get('/algo/%s/files/' % algo.pkhash, **extra)
+        response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
