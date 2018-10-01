@@ -13,7 +13,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Challenge, Dataset, Data, Algo
-from substrapp.models.utils import get_hash, get_hash
+from substrapp.models.utils import compute_hash, get_hash
+from substrapp.views.utils import getObjectFromLedger
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
 
@@ -595,14 +596,17 @@ class QueryTests(APITestCase):
     def test_get_challenge_metrics(self):
         challenge = Challenge.objects.create(description=self.challenge_description,
                                              metrics=self.challenge_metrics)
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        r = response.json()
-        self.assertEqual(r, 'http://testserver/media/challenges/%s/%s' % (
-            challenge.pkhash, self.challenge_metrics_filename))
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mocked_function:
+            mocked_function.return_value = self.challenge_metrics
+            extra = {
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertNotEqual(challenge.pkhash, compute_hash(response.getvalue()))
+            self.assertEqual(self.challenge_metrics_filename, response.filename)
+            # self.assertEqual(r, 'http://testserver/media/challenges/%s/%s' % (
+            #    challenge.pkhash, self.challenge_metrics_filename))
 
     def test_get_challenge_metrics_no_version(self):
         challenge = Challenge.objects.create(description=self.challenge_description,
@@ -625,13 +629,15 @@ class QueryTests(APITestCase):
 
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.script)
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-        response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        r = response.json()
-        self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mocked_function:
+            mocked_function.return_value = self.script
+            extra = {
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
+            # self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
 
     def test_get_algo_files_no_version(self):
         algo = Algo.objects.create(file=self.script)

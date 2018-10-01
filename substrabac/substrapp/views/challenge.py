@@ -71,7 +71,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             return Response({'message': 'A challenge with this description file already exists.'},
                             status=status.HTTP_409_CONFLICT)
         except Exception as exc:
-            raise exc
+            return Response({'message': exc.args},
+                            status=status.HTTP_400_BAD_REQUEST)
         else:
             # init ledger serializer
             ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
