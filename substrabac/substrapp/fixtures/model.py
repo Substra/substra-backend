@@ -2,7 +2,7 @@ fake_models = [
             {
                 'algo': {
                     'hash': '194f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4',
-                    'name': 'toto',
+                    'name': 'Naive Bayes',
                     'storageAddress': 'http://127.0.0.1:8001/algo/194f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/file',
                 },
                 'challenge': {
@@ -41,7 +41,7 @@ fake_models = [
             {
                 'algo': {
                     'hash': '294f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4',
-                    'name': 'tutu',
+                    'name': 'Decision Tree',
                     'storageAddress': 'http://127.0.0.1:8001/algo/294f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/file',
                 },
                 'challenge': {
