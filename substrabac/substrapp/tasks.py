@@ -59,11 +59,11 @@ def get_remote_file(object):
 
 
 def fail(key, err_msg):
-    # Log Start TrainTest
+    # Log Fail
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
+        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]}
     })
 
     if st != 201:
