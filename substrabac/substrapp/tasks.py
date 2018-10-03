@@ -73,6 +73,73 @@ def fail(key, err_msg):
     return data
 
 
+def untar_algo(traintuple):
+    try:
+        content, computed_hash = get_remote_file(traintuple['algo'])
+    except Exception as e:
+        return fail(traintuple['key'], e)
+    else:
+        try:
+            to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                          'traintuple/%s' % (traintuple['key']))
+            to_file_path = '%s/%s' % (to_directory_path, 'algo.tar.gz')
+            os.makedirs(os.path.dirname(to_file_path), exist_ok=True)
+            with open(to_file_path, 'wb') as f:
+                f.write(content)
+
+            tar = tarfile.open(to_file_path)
+            tar.extractall(to_directory_path)
+            tar.close()
+            os.remove(to_file_path)
+        except:
+            return fail(traintuple['key'], 'Fail to untar algo file')
+
+
+def untar_algo_from_local(algo, traintuple):
+    from shutil import copy
+
+    algo_file_hash = get_hash(algo.file.path)
+    if algo_file_hash != traintuple['algo']['hash']:
+        return fail(traintuple['key'], 'Algo Hash in Traintuple is not the same as in local db')
+
+    try:
+        to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % (traintuple['key']))
+
+        # TODO update copy for supporting url
+        copy(algo.file.path, to_directory_path)
+        tar_file_path = os.path.join(to_directory_path, os.path.basename(algo.file.name))
+        tar = tarfile.open(tar_file_path)
+        tar.extractall(to_directory_path)
+        tar.close()
+        os.remove(tar_file_path)
+    except:
+        return fail(traintuple['key'], 'Fail to untar algo file')
+
+
+def save_challenge(traintuple):
+    try:
+        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
+    except Exception as e:
+        return fail(traintuple['key'], e)
+    else:
+        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                            'traintuple/%s/%s/%s' % (traintuple['key'], 'metrics', 'metrics.py'))
+        os.makedirs(os.path.dirname(to_path), exist_ok=True)
+        with open(to_path, 'wb') as f:
+            f.write(content)
+
+
+def save_challenge_from_local(challenge, traintuple):
+    from shutil import copy
+    challenge_metrics_hash = get_hash(challenge.metrics.path)
+    if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
+        return fail(traintuple['key'], 'Challenge Hash in Traintuple is not the same as in local db')
+
+    copy(challenge.metrics.path,
+         path.join(getattr(settings, 'MEDIA_ROOT'),
+                   'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+
+
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
     from shutil import copy
     import zipfile
@@ -222,63 +289,23 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     algo = Algo.objects.get(pk=traintuple['algo']['hash'])
                 except Exception as e:  # get it from its address
-                    try:
-                        content, computed_hash = get_remote_file(traintuple['algo'])
-                    except:
-                        return fail(traintuple['key'], e)
-                    else:
-                        try:
-                            to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                          'traintuple/%s' % (traintuple['key']))
-                            to_file_path = '%s/%s' % (to_directory_path, 'algo.tar.gz')
-                            os.makedirs(os.path.dirname(to_file_path), exist_ok=True)
-                            with open(to_file_path, 'wb') as f:
-                                f.write(content)
-
-                            tar = tarfile.open(to_file_path)
-                            tar.extractall(to_directory_path)
-                            tar.close()
-                            os.remove(to_file_path)
-                        except:
-                            return fail(traintuple['key'], 'Fail to untar algo file')
+                    untar_algo(traintuple)
                 else:
-                    algo_file_hash = get_hash(algo.file.path)
-                    if algo_file_hash != traintuple['algo']['hash']:
-                        return fail(traintuple['key'], 'Algo Hash in Traintuple is not the same as in local db')
-
-                    try:
-                        to_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % (traintuple['key']))
-                        copy(algo.file.path, to_directory)
-                        tar_file_path = os.path.join(to_directory, os.path.basename(algo.file.name))
-                        tar = tarfile.open(tar_file_path)
-                        tar.extractall(to_directory)
-                        tar.close()
-                        os.remove(tar_file_path)
-                    except:
-                        return fail(traintuple['key'], 'Fail to untar algo file')
+                    if algo.file:
+                        untar_algo_from_local(algo, traintuple)
+                    else:  # fallback get it from its address
+                        untar_algo(traintuple)
 
                 # same for challenge metrics
                 try:
                     challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
                 except Exception as e:
-                    try:
-                        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
-                    except:
-                        return fail(traintuple['key'], e)
-                    else:
-                        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                            'traintuple/%s/%s/%s' % (traintuple['key'], 'metrics', 'metrics.py'))
-                        os.makedirs(os.path.dirname(to_path), exist_ok=True)
-                        with open(to_path, 'wb') as f:
-                            f.write(content)
+                    save_challenge(traintuple)
                 else:
-                    challenge_metrics_hash = get_hash(challenge.metrics.path)
-                    if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
-                        return fail(traintuple['key'], 'Challenge Hash in Traintuple is not the same as in local db')
-
-                    copy(challenge.metrics.path,
-                         path.join(getattr(settings, 'MEDIA_ROOT'),
-                                   'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+                    if challenge.metrics:
+                        save_challenge_from_local(challenge, traintuple)
+                    else:
+                        save_challenge(traintuple)
 
                 # do not put anything in pred folder
 
