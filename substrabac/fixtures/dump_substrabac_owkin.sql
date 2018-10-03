@@ -734,7 +734,7 @@ COPY public.substrapp_algo (pkhash, file, description, validated) FROM stdin;
 --
 
 COPY public.substrapp_challenge (creation_date, last_modified, pkhash, validated, description, metrics) FROM stdin;
-2018-08-31 19:36:58.196+02	2018-08-31 19:37:01.256+02	eb0295d98f37ae9e95102afae792d540137be2dedf6c4b00570ab1d1f355d033	t	challenges/eb0295d98f37ae9e95102afae792d540137be2dedf6c4b00570ab1d1f355d033/description.md	challenges/eb0295d98f37ae9e95102afae792d540137be2dedf6c4b00570ab1d1f355d033/metrics.py
+2018-08-31 19:36:58.196+02	2018-08-31 19:37:01.256+02	6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c	t	challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md	challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py
 \.
 
 
@@ -745,6 +745,10 @@ COPY public.substrapp_challenge (creation_date, last_modified, pkhash, validated
 COPY public.substrapp_data (pkhash, validated, file) FROM stdin;
 e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1	t	data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip
 4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010	t	data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip
+eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb	t	data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.tar.gz
+2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e	t	data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.tar.gz
+93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060	t	data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.tar.gz
+533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1	t	data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.tar.gz
 \.
 
 
@@ -753,7 +757,7 @@ e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1	t	data/e11aeec2
 --
 
 COPY public.substrapp_dataset (pkhash, name, data_opener, description, validated) FROM stdin;
-a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0	ISIC 2019	datasets/a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0/opener.py	datasets/a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0/description.md	t
+b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0	ISIC 2019	datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py	datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md	t
 \.
 
 
