@@ -119,6 +119,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         challengeData = None
         datasetData = None
 
+        # only for demo purpose
+        data.extend(fake_models)
+
         # parse filters
         query_params = request.query_params.get('search', None)
         l = [data]
@@ -179,8 +182,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 challengeKeys = [x['key'] for x in filteredData]
                                 l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
 
-        # only for demo purpose
-        l.append(fake_models)
 
         return Response(l, status=st)
 

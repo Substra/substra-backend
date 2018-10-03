@@ -38,10 +38,10 @@
 },
 {
     "model": "substrapp.algo",
-    "pk": "094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4",
+    "pk": "7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0",
     "fields": {
-        "file": "algos/094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/algo.tar.gz",
-        "description": "algos/094f479d77a2c71e643fe3efefe3fb1ee371e3100912379b70ad2eea2295bca4/description.md",
+        "file": "algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/algo.tar.gz",
+        "description": "algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/description.md",
         "validated": true
     }
 },
@@ -51,6 +51,24 @@
     "fields": {
         "file": "algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/algo.tar.gz",
         "description": "algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/description.md",
+        "validated": true
+    }
+},
+    {
+    "model": "substrapp.algo",
+    "pk": "f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284",
+    "fields": {
+        "file": "algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz",
+        "description": "algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md",
+        "validated": true
+    }
+},
+    {
+    "model": "substrapp.algo",
+    "pk": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f",
+    "fields": {
+        "file": "algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz",
+        "description": "algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description.md",
         "validated": true
     }
 },
