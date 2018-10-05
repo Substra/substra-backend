@@ -1,4 +1,4 @@
-# ISIC 2019
+# Simplified ISIC 2018
 
 
 The dataset consists of 10015:
@@ -6,11 +6,7 @@ The dataset consists of 10015:
 - ground truth response one line CSV files, with 7 columns corresponding to diagnosis confidence for:
   -  Melanoma (MEL)
   -  Melanocytic nevus (NV)
-  -  Basal cell carcinoma (BCC)
-  -  Actinic keratosis / Bowen’s disease (intraepithelial carcinoma) (AKIEC)
   -  Benign keratosis (solar lentigo / seborrheic keratosis / lichen planus-like keratosis) (BKL)
-  -  Dermatofibroma (DF)
-  -  Vascular lesion (VASC).
 
 
 The dataset was extracted from the “[ISIC 2018](https://challenge2018.isic-archive.com/task3/training/): Skin Lesion Analysis Towards Melanoma Detection” grand challenge datasets [\[1\]](#ref1)[[2]](#ref2).
@@ -23,7 +19,7 @@ Data is provided by ISIC 2018 under the terms of the Creative Commons Attributio
 import opener
 
 X = opener.get_X(folder)  # numpy array with shape (n_samples, 450, 600, 3)
-y = opener.get_y(folder)  # numpy array with shape (n_samples,7)
+y = opener.get_y(folder)  # numpy array with shape (n_samples,3)
 ```
 
 
