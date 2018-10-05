@@ -1,0 +1,79 @@
+[
+  {
+    "model": "substrapp.data",
+    "pk": "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
+    "fields": {
+      "validated": true,
+      "file": "data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip"
+    }
+  },
+  {
+    "model": "substrapp.data",
+    "pk": "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1",
+    "fields": {
+      "validated": true,
+      "file": "data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip"
+    }
+  },
+  {
+    "model": "substrapp.data",
+    "pk": "eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb",
+    "fields": {
+      "validated": true,
+      "file": "data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.zip"
+    }
+  },
+  {
+    "model": "substrapp.data",
+    "pk": "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
+    "fields": {
+      "validated": true,
+      "file": "data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.zip"
+    }
+  },
+  {
+    "model": "substrapp.data",
+    "pk": "93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060",
+    "fields": {
+      "validated": true,
+      "file": "data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.zip"
+    }
+  },
+  {
+    "model": "substrapp.data",
+    "pk": "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1",
+    "fields": {
+      "validated": true,
+      "file": "data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip"
+    }
+  },
+  {
+    "model": "substrapp.challenge",
+    "pk": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
+    "fields": {
+      "creation_date": "2018-08-31T17:36:58.196Z",
+      "last_modified": "2018-08-31T17:37:01.256Z",
+      "validated": true,
+      "description": "challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md",
+      "metrics": "challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py"
+    }
+  },
+  {
+    "model": "substrapp.dataset",
+    "pk": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
+    "fields": {
+      "name": "ISIC 2019",
+      "data_opener": "datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py",
+      "description": "datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md",
+      "validated": true
+    }
+  },
+  {
+    "model": "sites.site",
+    "pk": "1",
+    "fields": {
+      "domain": "127.0.0.1:8000",
+      "name": "owkin"
+    }
+  }
+]

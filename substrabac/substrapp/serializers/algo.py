@@ -1,9 +1,8 @@
-from rest_framework import serializers
-
+from libs.serializers import DynamicFieldsModelSerializer
 from substrapp.models import Algo
 
 
-class AlgoSerializer(serializers.ModelSerializer):
+class AlgoSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Algo

@@ -1,5 +1,5 @@
 from django.db import models
-from .utils import compute_hash
+from .utils import get_hash
 
 
 def upload_to(instance, filename):
@@ -10,13 +10,11 @@ class Data(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False)
-    features = models.FileField(upload_to=upload_to)
-    labels = models.FileField(upload_to=upload_to)
+    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
 
     def save(self, *args, **kwargs):
-        """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = compute_hash(self.features)
+            self.pkhash = get_hash(self.file)
         super(Data, self).save(*args, **kwargs)
 
     def __str__(self):

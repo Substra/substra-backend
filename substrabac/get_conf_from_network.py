@@ -61,9 +61,14 @@ def create_core_peer_config():
 
 def get_conf_from_network():
     for org in ORGS:
-        # copy msp
+        # copy user msp
         call(['sudo', 'cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user'),
+              os.path.join(dir_path, './substrapp/conf/' + org)])
+
+        # copy user msp
+        call(['sudo', 'cp', '-R',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/admin'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy ca-cert.pem
@@ -81,9 +86,9 @@ def get_conf_from_network():
         org_dir = os.path.join(dir_path, 'substrapp/conf/' + org)
         if not os.path.exists(org_dir):
             os.makedirs(org_dir)
-        call(['sudo', 'cp',
-              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem'),
-              os.path.join(dir_path, 'substrapp/conf/' + org + '/.')])
+        call(['sudo', 'cp', '-R',
+              os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org),
+              os.path.join(dir_path, 'substrapp/conf/')])
 
     # modify rights
     call(['sudo', 'chown', '-R', current_user + ':' + current_group,
@@ -91,5 +96,6 @@ def get_conf_from_network():
 
 
 if __name__ == "__main__":
-    get_conf_from_network()
+    call(['sudo', 'rm', '-Rf', os.path.join(dir_path, 'substrapp/conf')])
     create_core_peer_config()
+    get_conf_from_network()
