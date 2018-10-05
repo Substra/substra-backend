@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp.fixtures.model import fake_models
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
@@ -118,6 +119,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         challengeData = None
         datasetData = None
 
+        # only for demo purpose
+        data.extend(fake_models)
+
         # parse filters
         query_params = request.query_params.get('search', None)
         l = [data]
@@ -177,6 +181,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     filteredData = [x for x in challengeData if x[key] in val]
                                 challengeKeys = [x['key'] for x in filteredData]
                                 l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
+
 
         return Response(l, status=st)
 
