@@ -1,23 +1,8 @@
-import hashlib
-
-CHUNKSIZE = 4096
+from substrapp.utils import compute_hash
 
 
-def compute_hash(fileobj):
-    """
-    Returns the hash of a file
-    """
-    openedfile = fileobj.open()
-    sha256_hash = hashlib.sha256()
+def get_hash(fileobj):
+    openedfile = fileobj.open()  # do not autoclose file, otherwise, you won't be able to register the models.FileField
     block = openedfile.read()
-    if isinstance(block, str):
-        block = block.encode()
-    sha256_hash.update(block)
-    # Read and update hash string value in blocks of 4K
-    # for block in iter(lambda: openedfile.read(CHUNKSIZE), ""):
-    #     print('yo')
-    #     # if isinstance(block, str):
-    #     #     print('yo')
-    #     #    block = block.encode()
-    #     sha256_hash.update(block.encode())
-    return sha256_hash.hexdigest()
+
+    return compute_hash(block)

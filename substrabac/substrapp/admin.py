@@ -1,8 +1,9 @@
 from django.contrib import admin
 
-from substrapp.models import Problem, Data, DataOpener, Algo
+from substrapp.models import Challenge, Model, Data, Dataset, Algo
 
-admin.site.register(Problem)
+admin.site.register(Challenge)
+admin.site.register(Model)
 admin.site.register(Data)
-admin.site.register(DataOpener)
+admin.site.register(Dataset)
 admin.site.register(Algo)

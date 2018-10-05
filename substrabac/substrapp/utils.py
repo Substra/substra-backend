@@ -1,10 +1,18 @@
+import hashlib
 import json
 import os
 import subprocess
 
 from rest_framework import status
 
+from substrabac.settings.common import PROJECT_ROOT
 from substrapp.conf import conf
+
+#######
+# /!\ #
+#######
+
+# careful, passing invoke parameters to queryLedger will NOT fail
 
 
 def queryLedger(options):
@@ -26,7 +34,7 @@ def queryLedger(options):
         'peer_host': peer['host']
     }, flush=True)
 
-    output = subprocess.run(['../bin/peer',
+    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'query',
                              '-r',
@@ -41,10 +49,18 @@ def queryLedger(options):
     if data:
         try:
             data = data.split(': ')[1].replace('\n', '')
-            data = json.loads(data)
         except:
             st = status.HTTP_400_BAD_REQUEST
         else:
+            # json transformation if needed
+            try:
+                data = json.loads(data)
+            except:
+                pass
+            else:
+                if data is None:
+                    data = {}
+
             msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
                 'channel_name': channel_name,
                 'peer_host': peer['host']
@@ -90,7 +106,7 @@ def invokeLedger(options):
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
-    output = subprocess.run(['../bin/peer',
+    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'invoke',
                              '-C', channel_name,
@@ -118,3 +134,14 @@ def invokeLedger(options):
             st = status.HTTP_403_FORBIDDEN
 
     return data, st
+
+
+def compute_hash(bytes):
+    sha256_hash = hashlib.sha256()
+
+    if isinstance(bytes, str):
+        bytes = bytes.encode()
+
+    sha256_hash.update(bytes)
+
+    return sha256_hash.hexdigest()
