@@ -41,3 +41,5 @@ RUN sed -i 's/9051/7051/g' /usr/src/app/substrapp/conf.py
 RUN sed -i 's/9051/7051/g' /usr/src/app/substrapp/conf/chu-nantes/peer1/core.yaml
 RUN sed -i 's/10051/7051/g' /usr/src/app/substrapp/conf.py
 RUN sed -i 's/10051/7051/g' /usr/src/app/substrapp/conf/chu-nantes/peer1/core.yaml
+
+RUN apt-get install -y netcat
