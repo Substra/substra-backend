@@ -37,7 +37,6 @@ def queryLedger(options):
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'query',
-                             '-r',
                              '-C', channel_name,
                              '-n', chaincode_name,
                              '-c', args],
@@ -47,25 +46,20 @@ def queryLedger(options):
     st = status.HTTP_200_OK
     data = output.stdout.decode('utf-8')
     if data:
+        # json transformation if needed
         try:
-            data = data.split(': ')[1].replace('\n', '')
+            data = json.loads(data)
         except:
-            st = status.HTTP_400_BAD_REQUEST
+            pass
         else:
-            # json transformation if needed
-            try:
-                data = json.loads(data)
-            except:
-                pass
-            else:
-                if data is None:
-                    data = {}
+            if data is None:
+                data = {}
 
-            msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
-                'channel_name': channel_name,
-                'peer_host': peer['host']
-            }
-            print(msg, flush=True)
+        msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
+            'channel_name': channel_name,
+            'peer_host': peer['host']
+        }
+        print(msg, flush=True)
     else:
         try:
             msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
