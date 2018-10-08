@@ -13,7 +13,7 @@ services:
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
-    command: /bin/bash -c "sleep 10; python3 manage.py runserver 0.0.0.0:8000"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8000"
     # volumes:
       # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
@@ -35,7 +35,7 @@ services:
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
-    command: /bin/bash -c "sleep 10; python3 manage.py runserver 0.0.0.0:8001"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8001"
     # volumes:
       # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
