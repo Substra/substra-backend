@@ -37,6 +37,7 @@ def queryLedger(options):
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'query',
+                             '-x',
                              '-C', channel_name,
                              '-n', chaincode_name,
                              '-c', args],
@@ -48,7 +49,7 @@ def queryLedger(options):
     if data:
         # json transformation if needed
         try:
-            data = json.loads(data)
+            data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
         except:
             pass
         else:
