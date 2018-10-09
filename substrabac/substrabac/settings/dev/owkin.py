@@ -28,5 +28,6 @@ DATABASES = {
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/owkin')
 
 SITE_ID = 1
-SITE_HOST = '127.0.0.1'
+
+SITE_HOST = 'owkin.substrabac'
 SITE_PORT = '8000'
