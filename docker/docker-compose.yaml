@@ -8,14 +8,15 @@ networks:
 services:
 
   substrabacowkin:
-    container_name: substrabac_owkin
+    container_name: owkin.substrabac
     hostname: substrabacowkin
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8000"
-    # volumes:
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+    volumes:
+      - ./substrabac/medias:/usr/src/app/medias
+    #   - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - postgresql
       - rabbit
@@ -30,14 +31,15 @@ services:
       - PYTHONUNBUFFERED=1
 
   substrabacchunantes:
-    container_name: substrabac_chunantes
+    container_name: chunantes.substrabac
     hostname: substrabacchunantes
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8001"
-    # volumes:
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+    volumes:
+      - ./substrabac/medias:/usr/src/app/medias
+    #   - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - postgresql
       - rabbit
@@ -89,6 +91,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
+      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
 
   worker_chunantes:
     container_name: worker_chunantes
@@ -111,6 +114,8 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
+      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
+
 
   rabbit:
     container_name: rabbit
@@ -139,3 +144,13 @@ services:
       - USER=postgres
       - POSTGRES_PASSWORD=postgrespwd
       - POSTGRES_DB=substrabac
+
+  flower:
+    container_name: flower
+    image: mher/flower
+    ports:
+      - "5555:5555"
+    depends_on:
+      - rabbit
+    environment:
+      - CELERY_BROKER_URL=amqp://rabbit:5672
