@@ -16,7 +16,7 @@ services:
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./substrabac/medias:/usr/src/app/medias
-    #   - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - postgresql
       - rabbit
@@ -39,7 +39,7 @@ services:
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8001"
     volumes:
       - ./substrabac/medias:/usr/src/app/medias
-    #   - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - postgresql
       - rabbit
@@ -81,6 +81,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./substrabac/medias:/usr/src/app/medias
+      - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - rabbit
       - substrabacowkin
@@ -104,6 +105,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./substrabac/medias:/usr/src/app/medias
+      - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
     links:
       - rabbit
     depends_on:
