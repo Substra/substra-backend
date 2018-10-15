@@ -84,7 +84,7 @@
     "model": "sites.site",
     "pk": "1",
     "fields": {
-        "domain": "127.0.0.1:8001",
+        "domain": "chunantes.substrabac:8001",
         "name": "chu-nantes"
     }
 }
