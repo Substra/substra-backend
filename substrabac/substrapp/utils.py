@@ -49,8 +49,10 @@ def queryLedger(options):
     if data:
         # json transformation if needed
         try:
+            data.rstrip()
             data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
-        except:
+        except Exception as e:
+            # TODO : Handle error
             pass
         else:
             if data is None:
@@ -112,13 +114,15 @@ def invokeLedger(options):
                              '--tls',
                              '--clientauth',
                              '--keyfile', orderer_key_file,
-                             '--certfile', orderer_cert_file
+                             '--certfile', orderer_cert_file,
+                             '--waitForEvent'
                              ],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
     st = status.HTTP_201_CREATED
     data = output.stdout.decode('utf-8')
+
     if not data:
         msg = output.stderr.decode('utf-8')
         data = {'message': msg}
@@ -127,6 +131,10 @@ def invokeLedger(options):
             st = status.HTTP_400_BAD_REQUEST
         elif 'access denied' in msg:
             st = status.HTTP_403_FORBIDDEN
+        elif 'Chaincode invoke successful' in msg:
+            st = status.HTTP_200_OK
+            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].replace(' ', '')
+            data = {'message': msg}
 
     return data, st
 

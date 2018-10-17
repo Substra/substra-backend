@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .tasks import createLedgerTraintuple
+from .util import createLedgerTraintuple
 
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
@@ -22,7 +22,6 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         }
 
         # use a celery task, as we are in an http request transaction
-        createLedgerTraintuple.delay(args)
+        data, st = createLedgerTraintuple(args)
 
-        return {
-            'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'}
+        return data, st
