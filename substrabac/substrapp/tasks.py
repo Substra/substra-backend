@@ -11,10 +11,13 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash
+from .utils import compute_hash, update_statistics, get_cpu_sets
 
 import docker
 import json
+import time
+import threading
+from multiprocessing.managers import BaseManager
 
 import logging
 
@@ -138,6 +141,89 @@ def save_challenge_from_local(challenge, traintuple):
     copy(challenge.metrics.path,
          path.join(getattr(settings, 'MEDIA_ROOT'),
                    'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+
+
+def monitoring_job(client, job_name):
+    """thread worker function"""
+
+    start = time.time()
+    t = threading.currentThread()
+
+    # Statistics
+    job_statistics = {'memory': {'max': 0,
+                                 'current': [0]},
+                      'cpu': {'max': 0,
+                              'current': [0]},
+                      'gpu': {'max': 0,
+                              'current': []},
+                      'io': {'max': 0,
+                             'current': []},
+                      'netio': {'rx': 0,
+                                'tx': 0},
+                      'time': 0}
+
+    logging.info("[JOB %s] Monitoring started" % job_name)
+
+    while getattr(t, "do_run", True):
+        try:
+            container = client.containers.get(job_name)
+            stats = container.stats(decode=True, stream=False)
+            update_statistics(job_statistics, stats)
+        except:
+            pass
+
+    job_statistics['time'] = time.time() - start
+
+    t._result = 'CPU:%.2f %% - Memory:%.2f GB' % (job_statistics['cpu']['max'],
+                                                  job_statistics['memory']['max'])
+
+    t._stats = job_statistics
+
+    logging.info("[JOB %s] Monitoring stopped" % job_name)
+
+
+class RessourceManager():
+    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 2))
+    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**2))
+
+    __cpu_count = os.cpu_count()
+    __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
+
+    __used_cpu_sets = []
+    __lock = threading.Lock()
+
+    @classmethod
+    def memory_limit_mb(cls):
+        return '%sM' % (cls.__memory_gb // cls.__concurrency)
+
+    @classmethod
+    def acquire_cpu_set(cls):
+        cpu_set = None
+        cls.__lock.acquire()
+        try:
+            cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
+            if len(cpu_set_available) > 0:
+                cpu_set = cpu_set_available.pop()
+                cls.__used_cpu_sets.append(cpu_set)
+        finally:
+            cls.__lock.release()
+
+        return cpu_set
+
+    @classmethod
+    def return_cpu_set(cls, cpu_set):
+        cls.__lock.acquire()
+        try:
+            cls.__used_cpu_sets.remove(cpu_set)
+        finally:
+            cls.__lock.release()
+
+
+# Instatiate Ressource Manager
+BaseManager.register('RessourceManager', RessourceManager)
+manager = BaseManager()
+manager.start()
+ressource_manager = manager.RessourceManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
@@ -349,6 +435,9 @@ def doTrainingTask(traintuple):
     from django.contrib.sites.models import Site
     from substrapp.models import Model
 
+    # Log
+    training_task_log = ''
+
     # Setup Docker Client
     client = docker.from_env()
 
@@ -380,15 +469,43 @@ def doTrainingTask(traintuple):
                model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
     try:
-        client.containers.run(algo_docker,
-                              name=algo_docker_name,
-                              command='train',
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        while cpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            time.sleep(2)
+
+        logging.info('[JOB %s] Training started with %s - %s' % (algo_docker_name, cpu_set, mem_limit))
+
+        training = threading.Thread(target=client.containers.run,
+                                    kwargs={'image': algo_docker,
+                                            'name': algo_docker_name,
+                                            'cpuset_cpus': cpu_set,
+                                            'mem_limit': mem_limit,
+                                            'command': 'train',
+                                            'volumes': volumes,
+                                            'detach': False,
+                                            'auto_remove': False,
+                                            'remove': False})
+        monitoring = threading.Thread(target=monitoring_job, args=(client, algo_docker_name))
+
+        training.start()
+        monitoring.start()
+
+        training.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        logging.info('[TRAINING TASK][JOB %s] %s' % (algo_docker_name, monitoring._result))
+        training_task_log = monitoring._result
     except Exception as e:
         return fail(traintuple['key'], e)
+    else:
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+    finally:
+        ressource_manager.return_cpu_set(cpu_set)
 
     # Build metrics
     try:
@@ -404,14 +521,41 @@ def doTrainingTask(traintuple):
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
     try:
-        client.containers.run(metrics_docker,
-                              name=metrics_docker_name,
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        while cpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            time.sleep(2)
+
+        logging.info('[JOB %s] Metric started with %s - %s' % (metrics_docker_name, cpu_set, mem_limit))
+
+        metric = threading.Thread(target=client.containers.run,
+                                  kwargs={'image': metrics_docker,
+                                          'name': metrics_docker_name,
+                                          'cpuset_cpus': cpu_set,
+                                          'mem_limit': mem_limit,
+                                          'volumes': volumes,
+                                          'detach': False,
+                                          'auto_remove': False,
+                                          'remove': False})
+        monitoring = threading.Thread(target=monitoring_job, args=(client, metrics_docker_name))
+
+        metric.start()
+        monitoring.start()
+
+        metric.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        logging.info('[METRIC TASK][JOB %s] %s' % (metrics_docker_name, monitoring._result))
     except Exception as e:
         return fail(traintuple['key'], e)
+    else:
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+    finally:
+        ressource_manager.return_cpu_set(cpu_set)
 
     # Compute end model information
     end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
@@ -442,10 +586,11 @@ def doTrainingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Trained !"]}' % (traintuple['key'],
-                                                                                 end_model_file_hash,
-                                                                                 end_model_file,
-                                                                                 global_perf)
+        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s"]}' % (traintuple['key'],
+                                                                                  end_model_file_hash,
+                                                                                  end_model_file,
+                                                                                  global_perf,
+                                                                                  training_task_log)
     })
 
     return
@@ -453,9 +598,11 @@ def doTrainingTask(traintuple):
 
 @app.task
 def doTestingTask(traintuple):
+    # Log
+    testing_task_log = ''
+
     # Setup Docker Client
     client = docker.from_env()
-
     # Docker variables
     traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                      'traintuple/%s/' % (traintuple['key']))
@@ -484,15 +631,43 @@ def doTestingTask(traintuple):
                model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
     try:
-        client.containers.run(algo_docker,
-                              name=algo_docker_name,
-                              command='predict',
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        while cpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            time.sleep(2)
+
+        logging.info('[JOB %s] Testing started with %s - %s' % (algo_docker_name, cpu_set, mem_limit))
+
+        testing = threading.Thread(target=client.containers.run,
+                                   kwargs={'image': algo_docker,
+                                           'name': algo_docker_name,
+                                           'cpuset_cpus': cpu_set,
+                                           'mem_limit': mem_limit,
+                                           'command': 'predict',
+                                           'volumes': volumes,
+                                           'detach': False,
+                                           'auto_remove': False,
+                                           'remove': False})
+        monitoring = threading.Thread(target=monitoring_job, args=(client, algo_docker_name))
+
+        testing.start()
+        monitoring.start()
+
+        testing.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        logging.info('[TESTING TASK][JOB %s] %s' % (algo_docker_name, monitoring._result))
+        testing_task_log = monitoring._result
     except Exception as e:
         return fail(traintuple['key'], e)
+    else:
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+    finally:
+        ressource_manager.return_cpu_set(cpu_set)
 
     # Build metrics
     try:
@@ -508,14 +683,40 @@ def doTestingTask(traintuple):
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
     try:
-        client.containers.run(metrics_docker,
-                              name=metrics_docker_name,
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        while cpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            time.sleep(2)
+
+        logging.info('[JOB %s] Metric started with %s - %s' % (metrics_docker_name, cpu_set, mem_limit))
+
+        metric = threading.Thread(target=client.containers.run,
+                                  kwargs={'image': metrics_docker,
+                                          'name': metrics_docker_name,
+                                          'cpuset_cpus': cpu_set,
+                                          'mem_limit': mem_limit,
+                                          'volumes': volumes,
+                                          'detach': False,
+                                          'auto_remove': False,
+                                          'remove': False})
+        monitoring = threading.Thread(target=monitoring_job, args=(client, metrics_docker_name))
+        metric.start()
+        monitoring.start()
+
+        metric.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        logging.info('[METRIC TASK][JOB %s] %s' % (metrics_docker_name, monitoring._result))
     except Exception as e:
         return fail(traintuple['key'], e)
+    else:
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+    finally:
+        ressource_manager.return_cpu_set(cpu_set)
 
     # Load performance
     try:
@@ -529,8 +730,9 @@ def doTestingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s","Tested !"]}' % (traintuple['key'],
-                                                                      global_perf)
+        'args': '{"Args":["logSuccessTest","%s","%s","; Test - %s"]}' % (traintuple['key'],
+                                                                         global_perf,
+                                                                         testing_task_log)
     })
 
     return
