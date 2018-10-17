@@ -50,7 +50,7 @@ def queryLedger(options):
         # json transformation if needed
         try:
             data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
-        except Exception as e:
+        except:
             # TODO : Handle error
             pass
         else:
@@ -158,3 +158,66 @@ def compute_hash(bytes):
     sha256_hash.update(bytes)
 
     return sha256_hash.hexdigest()
+
+
+def get_cpu_sets(cpu_count, concurrency):
+    cpu_step = max(1, cpu_count // concurrency)
+    cpu_sets = []
+
+    for cpu_start in range(0, cpu_count, cpu_step):
+        cpu_set = '%s-%s' % (cpu_start, cpu_start + cpu_step - 1)
+        cpu_sets.append(cpu_set)
+
+    return cpu_sets
+
+
+def update_statistics(job_statistics, stats):
+
+    # CPU
+    if stats['cpu_stats']['cpu_usage'].get('total_usage', None):
+        # Compute CPU usage in %
+        delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage'])
+        delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
+        total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
+
+        job_statistics['cpu']['current'].append(total_usage)
+        job_statistics['cpu']['max'] = max(job_statistics['cpu']['max'],
+                                           max(job_statistics['cpu']['current']))
+
+    # MEMORY in GB
+    current_usage = stats['memory_stats'].get('usage', None)
+    max_usage = stats['memory_stats'].get('max_usage', None)
+
+    if current_usage:
+        job_statistics['memory']['current'].append(current_usage / 1024**3)
+    if max_usage:
+        job_statistics['memory']['max'] = max(job_statistics['memory']['max'],
+                                              max_usage / 1024**3,
+                                              max(job_statistics['memory']['current']))
+
+    # Network in kB
+    job_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
+    job_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
+
+    # IO DISK
+    # "blkio_stats": {
+    #   "io_service_bytes_recursive": [],
+    #   "io_serviced_recursive": [],
+    #   "io_queue_recursive": [],
+    #   "io_service_time_recursive": [],
+    #   "io_wait_time_recursive": [],
+    #   "io_merged_recursive": [],
+    #   "io_time_recursive": [],
+    #   "sectors_recursive": []
+    # }
+
+    # LOGGING
+    # printable_stats = 'CPU - now : %d %% / max : %d %% | MEM - now : %.2f GB / max : %.2f GB' % \
+    #     (job_statistics['cpu']['current'][-1],
+    #      job_statistics['cpu']['max'],
+    #      job_statistics['memory']['current'][-1],
+    #      job_statistics['memory']['max'])
+
+    # logging.info('[JOB] Monitoring : %s' % (printable_stats, ))
+
+    return
