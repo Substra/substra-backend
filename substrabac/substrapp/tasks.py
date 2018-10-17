@@ -11,7 +11,7 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash, update_statistics, get_cpu_sets
+from .utils import compute_hash, update_statistics, get_cpu_sets, ExceptionThread
 
 import docker
 import json
@@ -162,8 +162,6 @@ def monitoring_job(client, job_name):
                                 'tx': 0},
                       'time': 0}
 
-    logging.info("[JOB %s] Monitoring started" % job_name)
-
     while getattr(t, "do_run", True):
         try:
             container = client.containers.get(job_name)
@@ -178,8 +176,6 @@ def monitoring_job(client, job_name):
                                                   job_statistics['memory']['max'])
 
     t._stats = job_statistics
-
-    logging.info("[JOB %s] Monitoring stopped" % job_name)
 
 
 class RessourceManager():
@@ -475,19 +471,17 @@ def doTrainingTask(traintuple):
             cpu_set = ressource_manager.acquire_cpu_set()
             time.sleep(2)
 
-        logging.info('[JOB %s] Training started with %s - %s' % (algo_docker_name, cpu_set, mem_limit))
-
-        training = threading.Thread(target=client.containers.run,
-                                    kwargs={'image': algo_docker,
-                                            'name': algo_docker_name,
-                                            'cpuset_cpus': cpu_set,
-                                            'mem_limit': mem_limit,
-                                            'command': 'train',
-                                            'volumes': volumes,
-                                            'detach': False,
-                                            'auto_remove': False,
-                                            'remove': False})
-        monitoring = threading.Thread(target=monitoring_job, args=(client, algo_docker_name))
+        training = ExceptionThread(target=client.containers.run,
+                                   kwargs={'image': algo_docker,
+                                           'name': algo_docker_name,
+                                           'cpuset_cpus': cpu_set,
+                                           'mem_limit': mem_limit,
+                                           'command': 'train',
+                                           'volumes': volumes,
+                                           'detach': False,
+                                           'auto_remove': False,
+                                           'remove': False})
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, algo_docker_name))
 
         training.start()
         monitoring.start()
@@ -496,8 +490,11 @@ def doTrainingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        logging.info('[TRAINING TASK][JOB %s] %s' % (algo_docker_name, monitoring._result))
         training_task_log = monitoring._result
+
+        if hasattr(training, "_exception"):
+            raise training._exception
+
     except Exception as e:
         return fail(traintuple['key'], e)
     else:
@@ -527,18 +524,16 @@ def doTrainingTask(traintuple):
             cpu_set = ressource_manager.acquire_cpu_set()
             time.sleep(2)
 
-        logging.info('[JOB %s] Metric started with %s - %s' % (metrics_docker_name, cpu_set, mem_limit))
-
-        metric = threading.Thread(target=client.containers.run,
-                                  kwargs={'image': metrics_docker,
-                                          'name': metrics_docker_name,
-                                          'cpuset_cpus': cpu_set,
-                                          'mem_limit': mem_limit,
-                                          'volumes': volumes,
-                                          'detach': False,
-                                          'auto_remove': False,
-                                          'remove': False})
-        monitoring = threading.Thread(target=monitoring_job, args=(client, metrics_docker_name))
+        metric = ExceptionThread(target=client.containers.run,
+                                 kwargs={'image': metrics_docker,
+                                         'name': metrics_docker_name,
+                                         'cpuset_cpus': cpu_set,
+                                         'mem_limit': mem_limit,
+                                         'volumes': volumes,
+                                         'detach': False,
+                                         'auto_remove': False,
+                                         'remove': False})
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_docker_name))
 
         metric.start()
         monitoring.start()
@@ -547,7 +542,9 @@ def doTrainingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        logging.info('[METRIC TASK][JOB %s] %s' % (metrics_docker_name, monitoring._result))
+        if hasattr(metric, "_exception"):
+            raise metric._exception
+
     except Exception as e:
         return fail(traintuple['key'], e)
     else:
@@ -637,19 +634,17 @@ def doTestingTask(traintuple):
             cpu_set = ressource_manager.acquire_cpu_set()
             time.sleep(2)
 
-        logging.info('[JOB %s] Testing started with %s - %s' % (algo_docker_name, cpu_set, mem_limit))
-
-        testing = threading.Thread(target=client.containers.run,
-                                   kwargs={'image': algo_docker,
-                                           'name': algo_docker_name,
-                                           'cpuset_cpus': cpu_set,
-                                           'mem_limit': mem_limit,
-                                           'command': 'predict',
-                                           'volumes': volumes,
-                                           'detach': False,
-                                           'auto_remove': False,
-                                           'remove': False})
-        monitoring = threading.Thread(target=monitoring_job, args=(client, algo_docker_name))
+        testing = ExceptionThread(target=client.containers.run,
+                                  kwargs={'image': algo_docker,
+                                          'name': algo_docker_name,
+                                          'cpuset_cpus': cpu_set,
+                                          'mem_limit': mem_limit,
+                                          'command': 'predict',
+                                          'volumes': volumes,
+                                          'detach': False,
+                                          'auto_remove': False,
+                                          'remove': False})
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, algo_docker_name))
 
         testing.start()
         monitoring.start()
@@ -658,8 +653,11 @@ def doTestingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        logging.info('[TESTING TASK][JOB %s] %s' % (algo_docker_name, monitoring._result))
         testing_task_log = monitoring._result
+
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
     except Exception as e:
         return fail(traintuple['key'], e)
     else:
@@ -689,18 +687,16 @@ def doTestingTask(traintuple):
             cpu_set = ressource_manager.acquire_cpu_set()
             time.sleep(2)
 
-        logging.info('[JOB %s] Metric started with %s - %s' % (metrics_docker_name, cpu_set, mem_limit))
-
-        metric = threading.Thread(target=client.containers.run,
-                                  kwargs={'image': metrics_docker,
-                                          'name': metrics_docker_name,
-                                          'cpuset_cpus': cpu_set,
-                                          'mem_limit': mem_limit,
-                                          'volumes': volumes,
-                                          'detach': False,
-                                          'auto_remove': False,
-                                          'remove': False})
-        monitoring = threading.Thread(target=monitoring_job, args=(client, metrics_docker_name))
+        metric = ExceptionThread(target=client.containers.run,
+                                 kwargs={'image': metrics_docker,
+                                         'name': metrics_docker_name,
+                                         'cpuset_cpus': cpu_set,
+                                         'mem_limit': mem_limit,
+                                         'volumes': volumes,
+                                         'detach': False,
+                                         'auto_remove': False,
+                                         'remove': False})
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_docker_name))
         metric.start()
         monitoring.start()
 
@@ -708,7 +704,9 @@ def doTestingTask(traintuple):
         monitoring.do_run = False
         monitoring.join()
 
-        logging.info('[METRIC TASK][JOB %s] %s' % (metrics_docker_name, monitoring._result))
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
     except Exception as e:
         return fail(traintuple['key'], e)
     else:
@@ -730,7 +728,7 @@ def doTestingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s","; Test - %s"]}' % (traintuple['key'],
+        'args': '{"Args":["logSuccessTest","%s","%s"," ; Test - %s"]}' % (traintuple['key'],
                                                                          global_perf,
                                                                          testing_task_log)
     })

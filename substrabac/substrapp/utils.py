@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import subprocess
+import threading
 
 from rest_framework import status
 
@@ -221,3 +222,29 @@ def update_statistics(job_statistics, stats):
     # logging.info('[JOB] Monitoring : %s' % (printable_stats, ))
 
     return
+
+
+class ExceptionThread(threading.Thread):
+
+    def __init__(self, *args, **kwargs):
+        """
+        Redirect exceptions of thread to an exception handler.
+
+        :param args: arguments for threading.Thread()
+        :type args: tuple
+        :param kwargs: keyword arguments for threading.Thread()
+        :type kwargs: dict
+        """
+        super().__init__(*args, **kwargs)
+
+    def run(self):
+        try:
+            if self._target:
+                self._target(*self._args, **self._kwargs)
+        except BaseException as e:
+            self._exception = e
+            raise e
+        finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self._target, self._args, self._kwargs
