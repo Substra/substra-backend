@@ -7,7 +7,6 @@ from django.conf import settings
 from substrapp.utils import invokeLedger
 
 
-@shared_task
 def createLedgerTraintuple(args):
     options = {
         'org': settings.LEDGER['org'],
