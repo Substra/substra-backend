@@ -11,7 +11,7 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash, update_statistics, get_cpu_sets, ExceptionThread
+from .utils import compute_hash, update_statistics, get_cpu_sets, get_gpu_sets, ExceptionThread
 
 import docker
 import json
@@ -20,6 +20,8 @@ import threading
 from multiprocessing.managers import BaseManager
 
 import logging
+
+import GPUtil as gputil
 
 
 def create_directory(directory):
@@ -143,8 +145,15 @@ def save_challenge_from_local(challenge, traintuple):
                    'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
 
 
-def monitoring_job(client, job_name):
+def monitoring_job(client, train_args):
     """thread worker function"""
+
+    job_name = train_args['name']
+
+    if 'environment' in train_args:
+        gpu_set = train_args['environment']['NVIDIA_VISIBLE_DEVICES']
+    else:
+        gpu_set = None
 
     start = time.time()
     t = threading.currentThread()
@@ -152,6 +161,8 @@ def monitoring_job(client, job_name):
     # Statistics
     job_statistics = {'memory': {'max': 0,
                                  'current': [0]},
+                      'gpu_memory': {'max': 0,
+                                     'current': [0]},
                       'cpu': {'max': 0,
                               'current': [0]},
                       'gpu': {'max': 0,
@@ -166,14 +177,21 @@ def monitoring_job(client, job_name):
         try:
             container = client.containers.get(job_name)
             stats = container.stats(decode=True, stream=False)
+            if gpu_set is None:
+                gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
+            else:
+                gpu_stats = None
+            update_statistics(job_statistics, stats, gpu_stats)
             update_statistics(job_statistics, stats)
         except:
             pass
 
     job_statistics['time'] = time.time() - start
 
-    t._result = 'CPU:%.2f %% - Memory:%.2f GB' % (job_statistics['cpu']['max'],
-                                                  job_statistics['memory']['max'])
+    t._result = 'CPU:%.2f %% - Mem:%.2f GB - GPU:%.2f %% - GPU Mem:%.2f GB' % (job_statistics['cpu']['max'],
+                                                                               job_statistics['memory']['max'],
+                                                                               job_statistics['gpu']['max'],
+                                                                               job_statistics['gpu_memory']['max'])
 
     t._stats = job_statistics
 
@@ -185,7 +203,17 @@ class RessourceManager():
     __cpu_count = os.cpu_count()
     __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
 
+    # Set CUDA_DEVICE_ORDER so the IDs assigned by CUDA match those from nvidia-smi
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
+
+    if __gpu_list:
+        __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)
+    else:
+        __gpu_sets = 'no_gpu'
+
     __used_cpu_sets = []
+    __used_gpu_sets = []
     __lock = threading.Lock()
 
     @classmethod
@@ -211,6 +239,38 @@ class RessourceManager():
         cls.__lock.acquire()
         try:
             cls.__used_cpu_sets.remove(cpu_set)
+        finally:
+            cls.__lock.release()
+
+    @classmethod
+    def acquire_gpu_set(cls):
+        gpu_set = None
+        cls.__lock.acquire()
+
+        if cls.__gpu_sets == 'no_gpu':
+            cls.__lock.release()
+            return 'no_gpu'
+
+        try:
+            gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
+            if len(gpu_set_available) > 0:
+                gpu_set = gpu_set_available.pop()
+                cls.__used_gpu_sets.append(gpu_set)
+        finally:
+            cls.__lock.release()
+
+        return gpu_set
+
+    @classmethod
+    def return_gpu_set(cls, gpu_set):
+        cls.__lock.acquire()
+
+        if gpu_set == 'no_gpu':
+            cls.__lock.release()
+            return
+
+        try:
+            cls.__used_gpu_sets.remove(gpu_set)
         finally:
             cls.__lock.release()
 
@@ -467,21 +527,31 @@ def doTrainingTask(traintuple):
     try:
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
-        while cpu_set is None:
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
             cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
             time.sleep(2)
 
+        train_args = {'image': algo_docker,
+                      'name': algo_docker_name,
+                      'cpuset_cpus': cpu_set,
+                      'mem_limit': mem_limit,
+                      'command': 'train',
+                      'volumes': volumes,
+                      'detach': False,
+                      'auto_remove': False,
+                      'remove': False}
+
+        if gpu_set != 'no_gpu':
+            train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            train_args['runtime'] = 'nvidia',
+
         training = ExceptionThread(target=client.containers.run,
-                                   kwargs={'image': algo_docker,
-                                           'name': algo_docker_name,
-                                           'cpuset_cpus': cpu_set,
-                                           'mem_limit': mem_limit,
-                                           'command': 'train',
-                                           'volumes': volumes,
-                                           'detach': False,
-                                           'auto_remove': False,
-                                           'remove': False})
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, algo_docker_name))
+                                   kwargs=train_args)
+
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, train_args))
 
         training.start()
         monitoring.start()
@@ -503,6 +573,7 @@ def doTrainingTask(traintuple):
         container.remove()
     finally:
         ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
 
     # Build metrics
     try:
@@ -518,22 +589,32 @@ def doTrainingTask(traintuple):
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
     try:
+
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
-        while cpu_set is None:
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
             cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
             time.sleep(2)
 
+        metrics_args = {'image': metrics_docker,
+                        'name': metrics_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            metrics_args['runtime'] = 'nvidia',
+
         metric = ExceptionThread(target=client.containers.run,
-                                 kwargs={'image': metrics_docker,
-                                         'name': metrics_docker_name,
-                                         'cpuset_cpus': cpu_set,
-                                         'mem_limit': mem_limit,
-                                         'volumes': volumes,
-                                         'detach': False,
-                                         'auto_remove': False,
-                                         'remove': False})
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_docker_name))
+                                 kwargs=metrics_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
 
         metric.start()
         monitoring.start()
@@ -553,6 +634,7 @@ def doTrainingTask(traintuple):
         container.remove()
     finally:
         ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
 
     # Compute end model information
     end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
@@ -630,21 +712,30 @@ def doTestingTask(traintuple):
     try:
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
-        while cpu_set is None:
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
             cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
             time.sleep(2)
 
+        testing_args = {'image': algo_docker,
+                        'name': algo_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'command': 'predict',
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            testing_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            testing_args['runtime'] = 'nvidia',
+
         testing = ExceptionThread(target=client.containers.run,
-                                  kwargs={'image': algo_docker,
-                                          'name': algo_docker_name,
-                                          'cpuset_cpus': cpu_set,
-                                          'mem_limit': mem_limit,
-                                          'command': 'predict',
-                                          'volumes': volumes,
-                                          'detach': False,
-                                          'auto_remove': False,
-                                          'remove': False})
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, algo_docker_name))
+                                  kwargs=testing_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, testing_args))
 
         testing.start()
         monitoring.start()
@@ -666,6 +757,7 @@ def doTestingTask(traintuple):
         container.remove()
     finally:
         ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
 
     # Build metrics
     try:
@@ -683,20 +775,30 @@ def doTestingTask(traintuple):
     try:
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
-        while cpu_set is None:
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
             cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
             time.sleep(2)
 
+        metrics_args = {'image': metrics_docker,
+                        'name': metrics_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            metrics_args['runtime'] = 'nvidia',
+
         metric = ExceptionThread(target=client.containers.run,
-                                 kwargs={'image': metrics_docker,
-                                         'name': metrics_docker_name,
-                                         'cpuset_cpus': cpu_set,
-                                         'mem_limit': mem_limit,
-                                         'volumes': volumes,
-                                         'detach': False,
-                                         'auto_remove': False,
-                                         'remove': False})
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_docker_name))
+                                 kwargs=metrics_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
+
         metric.start()
         monitoring.start()
 
@@ -715,6 +817,7 @@ def doTestingTask(traintuple):
         container.remove()
     finally:
         ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
 
     # Load performance
     try:
@@ -729,8 +832,8 @@ def doTestingTask(traintuple):
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
         'args': '{"Args":["logSuccessTest","%s","%s"," ; Test - %s"]}' % (traintuple['key'],
-                                                                         global_perf,
-                                                                         testing_task_log)
+                                                                          global_perf,
+                                                                          testing_task_log)
     })
 
     return
