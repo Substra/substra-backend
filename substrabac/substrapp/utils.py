@@ -172,7 +172,18 @@ def get_cpu_sets(cpu_count, concurrency):
     return cpu_sets
 
 
-def update_statistics(job_statistics, stats):
+def get_gpu_sets(gpu_list, concurrency):
+    gpu_count = len(gpu_list)
+    gpu_step = max(1, gpu_count // concurrency)
+    gpu_sets = []
+
+    for igpu_start in range(0, gpu_count, gpu_step):
+        gpu_sets.append(','.join(gpu_list[igpu_start: igpu_start + gpu_step]))
+
+    return gpu_sets
+
+
+def update_statistics(job_statistics, stats, gpu_stats):
 
     # CPU
     if stats['cpu_stats']['cpu_usage'].get('total_usage', None):
@@ -199,6 +210,19 @@ def update_statistics(job_statistics, stats):
     # Network in kB
     job_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
     job_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
+
+    # GPU
+
+    if gpu_stats is not None:
+        total_usage = sum([100 * gpu.load for gpu in gpu_stats])
+        job_statistics['gpu']['current'].append(total_usage)
+        job_statistics['gpu']['max'] = max(job_statistics['gpu']['max'],
+                                           max(job_statistics['gpu']['current']))
+
+        total_usage = sum([gpu.memoryUsed for gpu in gpu_stats]) / 1024
+        job_statistics['gpu_memory']['current'].append(total_usage)
+        job_statistics['gpu_memory']['max'] = max(job_statistics['gpu_memory']['max'],
+                                                  max(job_statistics['gpu_memory']['current']))
 
     # IO DISK
     # "blkio_stats": {

@@ -1,4 +1,4 @@
-version: '2'
+version: '2.3'
 
 networks:
   default:
@@ -71,6 +71,7 @@ services:
   worker_owkin:
     container_name: worker_owkin
     hostname: worker_owkin
+    # runtime: nvidia
     build:
       context: ./
       dockerfile: ./docker/celery/Dockerfile
@@ -92,6 +93,7 @@ services:
   worker_chunantes:
     container_name: worker_chunantes
     hostname: worker_chunantes
+    # runtime: nvidia
     build:
       context: ./
       dockerfile: ./docker/celery/Dockerfile
