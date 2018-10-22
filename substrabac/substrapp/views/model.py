@@ -119,6 +119,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         challengeData = None
         datasetData = None
 
+        # TODO check st is 200
+
         # only for demo purpose
         data.extend(fake_models)
 

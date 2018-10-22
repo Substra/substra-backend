@@ -27,10 +27,10 @@ class LedgerDatasetSerializer(serializers.Serializer):
 
         args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKeys)s", "%(permissions)s"' % {
             'name': name,
-            'openerHash': compute_hash(instance.data_opener),
+            'openerHash': compute_hash(instance.data_opener.path),
             'openerStorageAddress': protocol + host + instance.data_opener.url,
             'type': type,
-            'descriptionHash': compute_hash(instance.description),
+            'descriptionHash': compute_hash(instance.description.path),
             'descriptionStorageAddress': protocol + host + instance.description.url,
             'challengeKeys': ','.join([x for x in challenge_keys]),
             'permissions': permissions
