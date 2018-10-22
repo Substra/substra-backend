@@ -23,9 +23,9 @@ class LedgerAlgoSerializer(serializers.Serializer):
 
         args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(associatedChallenge)s", "%(permissions)s"' % {
             'name': name,
-            'algoHash': compute_hash(instance.file),
+            'algoHash': compute_hash(instance.file.path),
             'storageAddress': protocol + host + instance.file.url,
-            'descriptionHash': compute_hash(instance.description),
+            'descriptionHash': compute_hash(instance.description.path),
             'descriptionStorageAddress': protocol + host + instance.description.url,
             'associatedChallenge': challenge_key,
             'permissions': permissions
