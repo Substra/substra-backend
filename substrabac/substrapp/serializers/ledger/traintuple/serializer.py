@@ -1,6 +1,9 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
+
+from django.conf import settings
 
 from .util import createLedgerTraintuple
+from .tasks import createLedgerTraintupleAsync
 
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
@@ -21,7 +24,14 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'trainDataKeys': ','.join([x for x in train_data_keys]),
         }
 
-        # use a celery task, as we are in an http request transaction
-        data, st = createLedgerTraintuple(args)
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            data, st = createLedgerTraintuple(args, sync=True)
 
-        return data, st
+            return data, st
+
+        else:
+            # use a celery task, as we are in an http request transaction
+            createLedgerTraintupleAsync.delay(args)
+            st = status.HTTP_201_CREATED
+            return {
+                'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'}, st

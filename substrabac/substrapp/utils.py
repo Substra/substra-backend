@@ -78,7 +78,7 @@ def queryLedger(options):
     return data, st
 
 
-def invokeLedger(options):
+def invokeLedger(options, sync=False):
     org = options['org']
     peer = options['peer']
     args = options['args']
@@ -103,24 +103,31 @@ def invokeLedger(options):
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
-    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
-                             '--logging-level=debug',
-                             'chaincode', 'invoke',
-                             '-C', channel_name,
-                             '-n', chaincode_name,
-                             '-c', args,
-                             '-o', '%(host)s:%(port)s' % {'host': orderer['host'], 'port': orderer['port']},
-                             '--cafile', orderer_ca_file,
-                             '--tls',
-                             '--clientauth',
-                             '--keyfile', orderer_key_file,
-                             '--certfile', orderer_cert_file,
-                             '--waitForEvent'
-                             ],
+    cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
+           '--logging-level=debug',
+           'chaincode', 'invoke',
+           '-C', channel_name,
+           '-n', chaincode_name,
+           '-c', args,
+           '-o', '%(host)s:%(port)s' % {'host': orderer['host'], 'port': orderer['port']},
+           '--cafile', orderer_ca_file,
+           '--tls',
+           '--clientauth',
+           '--keyfile', orderer_key_file,
+           '--certfile', orderer_cert_file]
+
+    if sync:
+        cmd.append('--waitForEvent')
+
+    output = subprocess.run(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
-    st = status.HTTP_201_CREATED
+    if sync:
+        st = status.HTTP_200_OK
+    else:
+        st = status.HTTP_201_CREATED
+
     data = output.stdout.decode('utf-8')
 
     if not data:
@@ -132,8 +139,8 @@ def invokeLedger(options):
         elif 'access denied' in msg:
             st = status.HTTP_403_FORBIDDEN
         elif 'Chaincode invoke successful' in msg:
-            st = status.HTTP_200_OK
-            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].replace(' ', '')
+            st = status.HTTP_201_CREATED
+            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
             data = {'message': msg}
 
     return data, st

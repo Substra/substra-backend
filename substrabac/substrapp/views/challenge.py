@@ -88,9 +88,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            st = status.HTTP_201_CREATED
             headers = self.get_success_headers(serializer.data)
 
             data.update(serializer.data)
