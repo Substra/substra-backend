@@ -1,6 +1,9 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
-from .tasks import createLedgerDataset
+from django.conf import settings
+
+from .util import createLedgerDataset
+from .tasks import createLedgerDatasetAsync
 
 from substrapp.models.utils import compute_hash
 
@@ -36,8 +39,14 @@ class LedgerDatasetSerializer(serializers.Serializer):
             'permissions': permissions
         }
 
-        # use a celery task, as we are in an http request transaction
-        createLedgerDataset.delay(args, instance.pkhash)
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            data, st = createLedgerDataset(args, instance.pkhash, sync=True)
 
-        return {
-            'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}
+            return data, st
+
+        else:
+            # use a celery task, as we are in an http request transaction
+            createLedgerDatasetAsync.delay(args, instance.pkhash)
+            st = status.HTTP_201_CREATED
+            return {
+                'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}, st
