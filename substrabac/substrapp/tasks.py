@@ -240,6 +240,8 @@ class RessourceManager():
         cls.__lock.acquire()
         try:
             cls.__used_cpu_sets.remove(cpu_set)
+        except:
+            pass
         finally:
             cls.__lock.release()
 
@@ -272,6 +274,8 @@ class RessourceManager():
 
         try:
             cls.__used_gpu_sets.remove(gpu_set)
+        except:
+            pass
         finally:
             cls.__lock.release()
 
