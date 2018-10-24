@@ -1,6 +1,9 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
-from .tasks import createLedgerData
+from django.conf import settings
+
+from .util import createLedgerData
+from .tasks import createLedgerDataAsync
 
 
 class LedgerDataSerializer(serializers.Serializer):
@@ -21,8 +24,13 @@ class LedgerDataSerializer(serializers.Serializer):
             'testOnly': test_only,
         }
 
-        # use a celery task, as we are in an http request transaction
-        createLedgerData.delay(args, instance.pkhash)
-
-        return {
-            'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            return createLedgerData(args, instance.pkhash, sync=True)
+        else:
+            # use a celery task, as we are in an http request transaction
+            createLedgerDataAsync.delay(args, instance.pkhash)
+            data = {
+                'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'
+            }
+            st = status.HTTP_200_OK
+            return data, st
