@@ -3,7 +3,6 @@ from __future__ import absolute_import, unicode_literals
 from django.conf import settings
 from rest_framework import status
 
-from substrapp.conf import conf
 from substrapp.models import Algo
 from substrapp.utils import invokeLedger
 

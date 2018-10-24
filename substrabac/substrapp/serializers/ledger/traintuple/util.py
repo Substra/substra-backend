@@ -12,6 +12,4 @@ def createLedgerTraintuple(args, sync=False):
         'peer': settings.LEDGER['peer'],
         'args': '{"Args":["createTraintuple", ' + args + ']}'
     }
-    data, st = invokeLedger(options, sync)
-
-    return data, st
+    return invokeLedger(options, sync)

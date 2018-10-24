@@ -25,13 +25,13 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = createLedgerTraintuple(args, sync=True)
-
-            return data, st
-
+            return createLedgerTraintuple(args, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerTraintupleAsync.delay(args)
-            st = status.HTTP_201_CREATED
-            return {
-                'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'}, st
+
+            data = {
+                'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'
+            }
+            st = status.HTTP_200_OK
+            return data, st
