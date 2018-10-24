@@ -11,12 +11,18 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash
+from .utils import compute_hash, update_statistics, get_cpu_sets, get_gpu_sets, ExceptionThread
+from .exception_handler import compute_error_code
 
 import docker
 import json
+import time
+import threading
+from multiprocessing.managers import BaseManager
 
 import logging
+
+import GPUtil as gputil
 
 
 def create_directory(directory):
@@ -59,7 +65,7 @@ def get_remote_file(object):
 
 
 def fail(key, err_msg):
-    # Log Fail
+    # Log Fail TrainTest
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
@@ -138,6 +144,145 @@ def save_challenge_from_local(challenge, traintuple):
     copy(challenge.metrics.path,
          path.join(getattr(settings, 'MEDIA_ROOT'),
                    'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
+
+
+def monitoring_job(client, train_args):
+    """thread worker function"""
+
+    job_name = train_args['name']
+
+    gpu_set = None
+    if 'environment' in train_args:
+        gpu_set = train_args['environment']['NVIDIA_VISIBLE_DEVICES']
+
+    start = time.time()
+    t = threading.currentThread()
+
+    # Statistics
+    job_statistics = {'memory': {'max': 0,
+                                 'current': [0]},
+                      'gpu_memory': {'max': 0,
+                                     'current': [0]},
+                      'cpu': {'max': 0,
+                              'current': [0]},
+                      'gpu': {'max': 0,
+                              'current': []},
+                      'io': {'max': 0,
+                             'current': []},
+                      'netio': {'rx': 0,
+                                'tx': 0},
+                      'time': 0}
+
+    while getattr(t, "do_run", True):
+        stats = None
+        try:
+            container = client.containers.get(job_name)
+            stats = container.stats(decode=True, stream=False)
+        except:
+            pass
+
+        gpu_stats = None
+        if gpu_set is not None:
+            gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
+
+        update_statistics(job_statistics, stats, gpu_stats)
+
+    job_statistics['time'] = time.time() - start
+
+    t._result = 'CPU:%.2f %% - Mem:%.2f GB - GPU:%.2f %% - GPU Mem:%.2f GB' % (job_statistics['cpu']['max'],
+                                                                               job_statistics['memory']['max'],
+                                                                               job_statistics['gpu']['max'],
+                                                                               job_statistics['gpu_memory']['max'])
+
+    t._stats = job_statistics
+
+
+class RessourceManager():
+    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 2))
+    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**2))
+
+    __cpu_count = os.cpu_count()
+    __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
+
+    # Set CUDA_DEVICE_ORDER so the IDs assigned by CUDA match those from nvidia-smi
+    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+    __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
+
+    __gpu_sets = 'no_gpu'
+    if __gpu_list:
+        __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)
+
+    __used_cpu_sets = []
+    __used_gpu_sets = []
+    __lock = threading.Lock()
+
+    @classmethod
+    def memory_limit_mb(cls):
+        return '%sM' % (cls.__memory_gb // cls.__concurrency)
+
+    @classmethod
+    def acquire_cpu_set(cls):
+        cpu_set = None
+        cls.__lock.acquire()
+
+        try:
+            cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
+            if len(cpu_set_available) > 0:
+                cpu_set = cpu_set_available.pop()
+                cls.__used_cpu_sets.append(cpu_set)
+        except:
+            pass
+
+        cls.__lock.release()
+        return cpu_set
+
+    @classmethod
+    def return_cpu_set(cls, cpu_set):
+        cls.__lock.acquire()
+
+        try:
+            cls.__used_cpu_sets.remove(cpu_set)
+        except:
+            pass
+
+        cls.__lock.release()
+
+    @classmethod
+    def acquire_gpu_set(cls):
+        gpu_set = 'no_gpu'
+        cls.__lock.acquire()
+
+        if cls.__gpu_sets != 'no_gpu':
+            gpu_set = None
+            try:
+                gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
+                if len(gpu_set_available) > 0:
+                    gpu_set = gpu_set_available.pop()
+                    cls.__used_gpu_sets.append(gpu_set)
+            except:
+                pass
+
+        cls.__lock.release()
+        return gpu_set
+
+    @classmethod
+    def return_gpu_set(cls, gpu_set):
+        cls.__lock.acquire()
+
+        if gpu_set != 'no_gpu':
+            try:
+                cls.__used_gpu_sets.remove(gpu_set)
+            except:
+                pass
+
+        cls.__lock.release()
+
+
+# Instatiate Ressource Manager
+BaseManager.register('RessourceManager', RessourceManager)
+manager = BaseManager()
+manager.start()
+ressource_manager = manager.RessourceManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
@@ -346,106 +491,178 @@ def prepareTestingTask():
 
 @app.task
 def doTrainingTask(traintuple):
-    from django.contrib.sites.models import Site
-    from substrapp.models import Model
-
-    # Setup Docker Client
-    client = docker.from_env()
-
-    # Docker variables
-    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                     'traintuple/%s/' % (traintuple['key']))
-    algo_path = path.join(traintuple_root_path)
-    algo_docker = 'algo_train'
-    algo_docker_name = 'algo_train_%s' % (traintuple['key'])
-    metrics_docker = 'metrics_train'
-    metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
-    model_path = os.path.join(traintuple_root_path, 'model')
-    train_data_path = os.path.join(traintuple_root_path, 'data')
-    train_pred_path = os.path.join(traintuple_root_path, 'pred')
-    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-    # Build algo
     try:
+        from django.contrib.sites.models import Site
+        from substrapp.models import Model
+
+        # Log
+        training_task_log = ''
+
+        # Setup Docker Client
+        client = docker.from_env()
+
+        # Docker variables
+        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                         'traintuple/%s/' % (traintuple['key']))
+        algo_path = path.join(traintuple_root_path)
+        algo_docker = 'algo_train'
+        algo_docker_name = 'algo_train_%s' % (traintuple['key'])
+        metrics_docker = 'metrics_train'
+        metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
+        model_path = os.path.join(traintuple_root_path, 'model')
+        train_data_path = os.path.join(traintuple_root_path, 'data')
+        train_pred_path = os.path.join(traintuple_root_path, 'pred')
+        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+        # Build algo
         client.images.build(path=algo_path,
                             tag=algo_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Run algo, train and make train predictions
-    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
-        client.containers.run(algo_docker,
-                              name=algo_docker_name,
-                              command='train',
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
+        # Run algo, train and make train predictions
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-    # Build metrics
-    try:
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
+            time.sleep(2)
+
+        train_args = {'image': algo_docker,
+                      'name': algo_docker_name,
+                      'cpuset_cpus': cpu_set,
+                      'mem_limit': mem_limit,
+                      'command': 'train',
+                      'volumes': volumes,
+                      'detach': False,
+                      'auto_remove': False,
+                      'remove': False}
+
+        if gpu_set != 'no_gpu':
+            train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            train_args['runtime'] = 'nvidia',
+
+        training = ExceptionThread(target=client.containers.run,
+                                   kwargs=train_args)
+
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, train_args))
+
+        training.start()
+        monitoring.start()
+
+        training.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        training_task_log = monitoring._result
+
+        # Return ressources
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+
+        if hasattr(training, "_exception"):
+            raise training._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+
+        # Build metrics
         client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
                             tag=metrics_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Compute metrics on train predictions
-    volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
-        client.containers.run(metrics_docker,
-                              name=metrics_docker_name,
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
+        # Compute metrics on train predictions
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-    # Compute end model information
-    end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                               'traintuple/%s/model/model' % (traintuple['key']))
-    end_model_file_hash = get_hash(end_model_path)
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        gpu_set = None
 
-    try:
+        while cpu_set is None or gpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
+            time.sleep(2)
+
+        metrics_args = {'image': metrics_docker,
+                        'name': metrics_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            metrics_args['runtime'] = 'nvidia',
+
+        metric = ExceptionThread(target=client.containers.run,
+                                 kwargs=metrics_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
+
+        metric.start()
+        monitoring.start()
+
+        metric.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+
+        if hasattr(metric, "_exception"):
+            raise metric._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+
+        # Compute end model information
+        end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                   'traintuple/%s/model/model' % (traintuple['key']))
+        end_model_file_hash = get_hash(end_model_path)
+
         instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
         with open(end_model_path, 'rb') as f:
             instance.file.save('model', f)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    url_http = 'http' if settings.DEBUG else 'https'
-    current_site = Site.objects.get_current()
-    end_model_file = '%s://%s%s' % (url_http, current_site.domain,
-                                    reverse('substrapp:model-file', args=[end_model_file_hash]))
+        url_http = 'http' if settings.DEBUG else 'https'
+        current_site = Site.objects.get_current()
+        end_model_file = '%s://%s%s' % (url_http, current_site.domain,
+                                        reverse('substrapp:model-file', args=[end_model_file_hash]))
 
-    # Load performance
-    try:
+        # Load performance
         with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
+
     except Exception as e:
-        return fail(traintuple['key'], e)
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        return fail(traintuple['key'], error_code)
 
     # Log Success Train
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Trained !"]}' % (traintuple['key'],
-                                                                                 end_model_file_hash,
-                                                                                 end_model_file,
-                                                                                 global_perf)
+        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
+                                                                                    end_model_file_hash,
+                                                                                    end_model_file,
+                                                                                    global_perf,
+                                                                                    training_task_log)
     })
 
     return
@@ -453,84 +670,156 @@ def doTrainingTask(traintuple):
 
 @app.task
 def doTestingTask(traintuple):
-    # Setup Docker Client
-    client = docker.from_env()
-
-    # Docker variables
-    traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                     'traintuple/%s/' % (traintuple['key']))
-    algo_path = path.join(traintuple_root_path)
-    algo_docker = 'algo_test'
-    algo_docker_name = 'algo_test_%s' % (traintuple['key'])
-    metrics_docker = 'metrics_test'
-    metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
-    model_path = os.path.join(traintuple_root_path, 'model')
-    test_data_path = os.path.join(traintuple_root_path, 'data')
-    test_pred_path = os.path.join(traintuple_root_path, 'pred')
-    opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-    metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-    # Build algo
     try:
+        # Log
+        testing_task_log = ''
+
+        # Setup Docker Client
+        client = docker.from_env()
+        # Docker variables
+        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                         'traintuple/%s/' % (traintuple['key']))
+        algo_path = path.join(traintuple_root_path)
+        algo_docker = 'algo_test'
+        algo_docker_name = 'algo_test_%s' % (traintuple['key'])
+        metrics_docker = 'metrics_test'
+        metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
+        model_path = os.path.join(traintuple_root_path, 'model')
+        test_data_path = os.path.join(traintuple_root_path, 'data')
+        test_pred_path = os.path.join(traintuple_root_path, 'pred')
+        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
+
+        # Build algo
         client.images.build(path=algo_path,
                             tag=algo_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Run algo and make test predictions
-    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
-        client.containers.run(algo_docker,
-                              name=algo_docker_name,
-                              command='predict',
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
+        # Run algo and make test predictions
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-    # Build metrics
-    try:
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
+            time.sleep(2)
+
+        testing_args = {'image': algo_docker,
+                        'name': algo_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'command': 'predict',
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            testing_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            testing_args['runtime'] = 'nvidia',
+
+        testing = ExceptionThread(target=client.containers.run,
+                                  kwargs=testing_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, testing_args))
+
+        testing.start()
+        monitoring.start()
+
+        testing.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        testing_task_log = monitoring._result
+
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(algo_docker_name)
+        container.remove()
+
+        # Build metrics
         client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
                             tag=metrics_docker,
                             rm=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
 
-    # Compute metrics on train predictions
-    volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-    try:
-        client.containers.run(metrics_docker,
-                              name=metrics_docker_name,
-                              volumes=volumes,
-                              detach=False,
-                              auto_remove=False,
-                              remove=True)
-    except Exception as e:
-        return fail(traintuple['key'], e)
+        # Compute metrics on train predictions
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-    # Load performance
-    try:
+        mem_limit = ressource_manager.memory_limit_mb()
+        cpu_set = None
+        gpu_set = None
+
+        while cpu_set is None or gpu_set is None:
+            cpu_set = ressource_manager.acquire_cpu_set()
+            gpu_set = ressource_manager.acquire_gpu_set()
+            time.sleep(2)
+
+        metrics_args = {'image': metrics_docker,
+                        'name': metrics_docker_name,
+                        'cpuset_cpus': cpu_set,
+                        'mem_limit': mem_limit,
+                        'volumes': volumes,
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+        if gpu_set != 'no_gpu':
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
+            metrics_args['runtime'] = 'nvidia',
+
+        metric = ExceptionThread(target=client.containers.run,
+                                 kwargs=metrics_args)
+        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
+
+        metric.start()
+        monitoring.start()
+
+        metric.join()
+        monitoring.do_run = False
+        monitoring.join()
+
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+
+        if hasattr(testing, "_exception"):
+            raise testing._exception
+
+        # Remove only if container exit without exception
+        container = client.containers.get(metrics_docker_name)
+        container.remove()
+
+        # Load performance
         with open(os.path.join(test_pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
+
     except Exception as e:
-        return fail(traintuple['key'], e)
+        ressource_manager.return_cpu_set(cpu_set)
+        ressource_manager.return_gpu_set(gpu_set)
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        return fail(traintuple['key'], error_code)
 
     # Log Success Test
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s","Tested !"]}' % (traintuple['key'],
-                                                                      global_perf)
+        'args': '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
+                                                                         global_perf,
+                                                                         testing_task_log)
     })
 
     return

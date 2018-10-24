@@ -1,10 +1,12 @@
-FROM python:3.6
+# FROM python:3.6
+FROM nvidia/cuda:9.0-base
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
+RUN apt-get update; apt-get install -y git python3 python3-pip
 COPY ./substrabac/requirements.txt /usr/src/app/.
-RUN pip install -r requirements.txt
+RUN pip3 install -r requirements.txt
 
 COPY ./assets /usr/src/assets
 COPY ./bootstrap.sh /usr/src/
