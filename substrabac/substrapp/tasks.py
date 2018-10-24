@@ -151,10 +151,9 @@ def monitoring_job(client, train_args):
 
     job_name = train_args['name']
 
+    gpu_set = None
     if 'environment' in train_args:
         gpu_set = train_args['environment']['NVIDIA_VISIBLE_DEVICES']
-    else:
-        gpu_set = None
 
     start = time.time()
     t = threading.currentThread()
@@ -175,17 +174,18 @@ def monitoring_job(client, train_args):
                       'time': 0}
 
     while getattr(t, "do_run", True):
+        stats = None
         try:
             container = client.containers.get(job_name)
             stats = container.stats(decode=True, stream=False)
-            if gpu_set is None:
-                gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
-            else:
-                gpu_stats = None
-            update_statistics(job_statistics, stats, gpu_stats)
-            update_statistics(job_statistics, stats)
         except:
             pass
+
+        gpu_stats = None
+        if gpu_set is not None:
+            gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
+
+        update_statistics(job_statistics, stats, gpu_stats)
 
     job_statistics['time'] = time.time() - start
 
@@ -208,10 +208,9 @@ class RessourceManager():
     os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
     __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
 
+    __gpu_sets = 'no_gpu'
     if __gpu_list:
         __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)
-    else:
-        __gpu_sets = 'no_gpu'
 
     __used_cpu_sets = []
     __used_gpu_sets = []
@@ -225,59 +224,58 @@ class RessourceManager():
     def acquire_cpu_set(cls):
         cpu_set = None
         cls.__lock.acquire()
+
         try:
             cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
             if len(cpu_set_available) > 0:
                 cpu_set = cpu_set_available.pop()
                 cls.__used_cpu_sets.append(cpu_set)
-        finally:
-            cls.__lock.release()
+        except:
+            pass
 
+        cls.__lock.release()
         return cpu_set
 
     @classmethod
     def return_cpu_set(cls, cpu_set):
         cls.__lock.acquire()
+
         try:
             cls.__used_cpu_sets.remove(cpu_set)
         except:
             pass
-        finally:
-            cls.__lock.release()
+
+        cls.__lock.release()
 
     @classmethod
     def acquire_gpu_set(cls):
-        gpu_set = None
+        gpu_set = 'no_gpu'
         cls.__lock.acquire()
 
-        if cls.__gpu_sets == 'no_gpu':
-            cls.__lock.release()
-            return 'no_gpu'
+        if cls.__gpu_sets != 'no_gpu':
+            gpu_set = None
+            try:
+                gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
+                if len(gpu_set_available) > 0:
+                    gpu_set = gpu_set_available.pop()
+                    cls.__used_gpu_sets.append(gpu_set)
+            except:
+                pass
 
-        try:
-            gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
-            if len(gpu_set_available) > 0:
-                gpu_set = gpu_set_available.pop()
-                cls.__used_gpu_sets.append(gpu_set)
-        finally:
-            cls.__lock.release()
-
+        cls.__lock.release()
         return gpu_set
 
     @classmethod
     def return_gpu_set(cls, gpu_set):
         cls.__lock.acquire()
 
-        if gpu_set == 'no_gpu':
-            cls.__lock.release()
-            return
+        if gpu_set != 'no_gpu':
+            try:
+                cls.__used_gpu_sets.remove(gpu_set)
+            except:
+                pass
 
-        try:
-            cls.__used_gpu_sets.remove(gpu_set)
-        except:
-            pass
-        finally:
-            cls.__lock.release()
+        cls.__lock.release()
 
 
 # Instatiate Ressource Manager
@@ -660,11 +658,11 @@ def doTrainingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s"]}' % (traintuple['key'],
-                                                                                  end_model_file_hash,
-                                                                                  end_model_file,
-                                                                                  global_perf,
-                                                                                  training_task_log)
+        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
+                                                                                    end_model_file_hash,
+                                                                                    end_model_file,
+                                                                                    global_perf,
+                                                                                    training_task_log)
     })
 
     return
@@ -819,9 +817,9 @@ def doTestingTask(traintuple):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s"," ; Test - %s"]}' % (traintuple['key'],
-                                                                          global_perf,
-                                                                          testing_task_log)
+        'args': '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
+                                                                         global_perf,
+                                                                         testing_task_log)
     })
 
     return
