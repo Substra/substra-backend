@@ -37,7 +37,7 @@ def queryLedger(options):
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level=debug',
                              'chaincode', 'query',
-                             '-r',
+                             '-x',
                              '-C', channel_name,
                              '-n', chaincode_name,
                              '-c', args],
@@ -47,25 +47,21 @@ def queryLedger(options):
     st = status.HTTP_200_OK
     data = output.stdout.decode('utf-8')
     if data:
+        # json transformation if needed
         try:
-            data = data.split(': ')[1].replace('\n', '')
-        except:
-            st = status.HTTP_400_BAD_REQUEST
+            data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
+        except Exception as e:
+            # TODO : Handle error
+            pass
         else:
-            # json transformation if needed
-            try:
-                data = json.loads(data)
-            except:
-                pass
-            else:
-                if data is None:
-                    data = {}
+            if data is None:
+                data = {}
 
-            msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
-                'channel_name': channel_name,
-                'peer_host': peer['host']
-            }
-            print(msg, flush=True)
+        msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
+            'channel_name': channel_name,
+            'peer_host': peer['host']
+        }
+        print(msg, flush=True)
     else:
         try:
             msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
@@ -81,7 +77,7 @@ def queryLedger(options):
     return data, st
 
 
-def invokeLedger(options):
+def invokeLedger(options, sync=False):
     org = options['org']
     peer = options['peer']
     args = options['args']
@@ -106,24 +102,33 @@ def invokeLedger(options):
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
-    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
-                             '--logging-level=debug',
-                             'chaincode', 'invoke',
-                             '-C', channel_name,
-                             '-n', chaincode_name,
-                             '-c', args,
-                             '-o', '%(host)s:%(port)s' % {'host': orderer['host'], 'port': orderer['port']},
-                             '--cafile', orderer_ca_file,
-                             '--tls',
-                             '--clientauth',
-                             '--keyfile', orderer_key_file,
-                             '--certfile', orderer_cert_file
-                             ],
+    cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
+           '--logging-level=debug',
+           'chaincode', 'invoke',
+           '-C', channel_name,
+           '-n', chaincode_name,
+           '-c', args,
+           '-o', '%(host)s:%(port)s' % {'host': orderer['host'], 'port': orderer['port']},
+           '--cafile', orderer_ca_file,
+           '--tls',
+           '--clientauth',
+           '--keyfile', orderer_key_file,
+           '--certfile', orderer_cert_file]
+
+    if sync:
+        cmd.append('--waitForEvent')
+
+    output = subprocess.run(cmd,
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
-    st = status.HTTP_201_CREATED
+    if sync:
+        st = status.HTTP_200_OK
+    else:
+        st = status.HTTP_201_CREATED
+
     data = output.stdout.decode('utf-8')
+
     if not data:
         msg = output.stderr.decode('utf-8')
         data = {'message': msg}
@@ -132,6 +137,14 @@ def invokeLedger(options):
             st = status.HTTP_400_BAD_REQUEST
         elif 'access denied' in msg:
             st = status.HTTP_403_FORBIDDEN
+        elif 'Chaincode invoke successful' in msg:
+            st = status.HTTP_201_CREATED
+            try:
+                msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
+            except:
+                pass
+            finally:
+                data = {'message': msg}
 
     return data, st
 
