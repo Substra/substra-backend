@@ -186,30 +186,35 @@ def get_gpu_sets(gpu_list, concurrency):
 def update_statistics(job_statistics, stats, gpu_stats):
 
     # CPU
-    if stats['cpu_stats']['cpu_usage'].get('total_usage', None):
-        # Compute CPU usage in %
-        delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage'])
-        delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
-        total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
 
-        job_statistics['cpu']['current'].append(total_usage)
-        job_statistics['cpu']['max'] = max(job_statistics['cpu']['max'],
-                                           max(job_statistics['cpu']['current']))
+    if stats is not None:
 
-    # MEMORY in GB
-    current_usage = stats['memory_stats'].get('usage', None)
-    max_usage = stats['memory_stats'].get('max_usage', None)
+        if 'cpu_stats' in stats and stats['cpu_stats']['cpu_usage'].get('total_usage', None):
+            # Compute CPU usage in %
+            delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage'])
+            delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
+            total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
 
-    if current_usage:
-        job_statistics['memory']['current'].append(current_usage / 1024**3)
-    if max_usage:
-        job_statistics['memory']['max'] = max(job_statistics['memory']['max'],
-                                              max_usage / 1024**3,
-                                              max(job_statistics['memory']['current']))
+            job_statistics['cpu']['current'].append(total_usage)
+            job_statistics['cpu']['max'] = max(job_statistics['cpu']['max'],
+                                               max(job_statistics['cpu']['current']))
 
-    # Network in kB
-    job_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
-    job_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
+        # MEMORY in GB
+        if 'memory_stats' in stats:
+            current_usage = stats['memory_stats'].get('usage', None)
+            max_usage = stats['memory_stats'].get('max_usage', None)
+
+            if current_usage:
+                job_statistics['memory']['current'].append(current_usage / 1024**3)
+            if max_usage:
+                job_statistics['memory']['max'] = max(job_statistics['memory']['max'],
+                                                      max_usage / 1024**3,
+                                                      max(job_statistics['memory']['current']))
+
+        # Network in kB
+        if 'networks' in stats:
+            job_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
+            job_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
 
     # GPU
 
@@ -245,21 +250,8 @@ def update_statistics(job_statistics, stats, gpu_stats):
 
     # logging.info('[JOB] Monitoring : %s' % (printable_stats, ))
 
-    return
-
 
 class ExceptionThread(threading.Thread):
-
-    def __init__(self, *args, **kwargs):
-        """
-        Redirect exceptions of thread to an exception handler.
-
-        :param args: arguments for threading.Thread()
-        :type args: tuple
-        :param kwargs: keyword arguments for threading.Thread()
-        :type kwargs: dict
-        """
-        super().__init__(*args, **kwargs)
 
     def run(self):
         try:
