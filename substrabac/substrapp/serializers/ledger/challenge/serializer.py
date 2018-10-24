@@ -1,8 +1,10 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 # from django.contrib.sites.models import Site
+from django.conf import settings
 
 from substrapp.models.utils import compute_hash
-from .tasks import createLedgerChallenge
+from .util import createLedgerChallenge
+from .tasks import createLedgerChallengeAsync
 
 
 class LedgerChallengeSerializer(serializers.Serializer):
@@ -37,8 +39,13 @@ class LedgerChallengeSerializer(serializers.Serializer):
             'permissions': permissions
         }
 
-        # use a celery task, as we are in an http request transaction
-        createLedgerChallenge.delay(args, instance.pkhash)
-
-        return {
-            'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            return createLedgerChallenge(args, instance.pkhash, sync=True)
+        else:
+            # use a celery task, as we are in an http request transaction
+            createLedgerChallengeAsync.delay(args, instance.pkhash)
+            data = {
+                'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'
+            }
+            st = status.HTTP_200_OK
+            return data, st

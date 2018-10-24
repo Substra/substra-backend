@@ -152,7 +152,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}
+            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}, status.HTTP_200_OK
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -163,7 +163,7 @@ class QueryTests(APITestCase):
             self.assertEqual(r['metrics'], 'http://testserver/media/challenges/%s/%s' % (
                 r['pkhash'], self.challenge_metrics_filename))
 
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_challenge_ko(self):
         url = reverse('substrapp:challenge-list')
@@ -245,7 +245,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}
+            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -253,7 +253,7 @@ class QueryTests(APITestCase):
             self.assertEqual(r['pkhash'], get_hash(self.data_data_opener))
             self.assertEqual(r['description'], 'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
 
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_dataset_ko(self):
         url = reverse('substrapp:dataset-list')
@@ -320,7 +320,7 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}
+                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}, status.HTTP_200_OK
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
@@ -328,7 +328,7 @@ class QueryTests(APITestCase):
                 self.assertEqual(r['file'],
                                  'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
 
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_data_ko(self):
         url = reverse('substrapp:data-list')
@@ -420,13 +420,13 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}
+            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(r['pkhash'], get_hash(self.script))
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_algo_ko(self):
         url = reverse('substrapp:algo-list')
@@ -529,7 +529,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}
+            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
