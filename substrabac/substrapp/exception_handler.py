@@ -6,7 +6,7 @@ import json
 import re
 
 LANGUAGES = {
-    'System': '00',
+    'ShellScript': '00',
     'Python': '01'
 }
 
