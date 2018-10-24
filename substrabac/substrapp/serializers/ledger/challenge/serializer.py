@@ -40,13 +40,12 @@ class LedgerChallengeSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = createLedgerChallenge(args, instance.pkhash, sync=True)
-
-            return data, st
-
+            return createLedgerChallenge(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerChallengeAsync.delay(args, instance.pkhash)
-            st = status.HTTP_201_CREATED
-            return {
-                'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}, st
+            data = {
+                'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'
+            }
+            st = status.HTTP_200_OK
+            return data, st

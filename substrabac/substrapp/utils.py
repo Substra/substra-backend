@@ -49,7 +49,6 @@ def queryLedger(options):
     if data:
         # json transformation if needed
         try:
-            data.rstrip()
             data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
         except Exception as e:
             # TODO : Handle error
@@ -140,8 +139,12 @@ def invokeLedger(options, sync=False):
             st = status.HTTP_403_FORBIDDEN
         elif 'Chaincode invoke successful' in msg:
             st = status.HTTP_201_CREATED
-            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
-            data = {'message': msg}
+            try:
+                msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
+            except:
+                pass
+            finally:
+                data = {'message': msg}
 
     return data, st
 

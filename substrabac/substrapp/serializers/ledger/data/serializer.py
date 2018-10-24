@@ -25,15 +25,12 @@ class LedgerDataSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = createLedgerData(args, instance.pkhash, sync=True)
-
-            return data, st
-
+            return createLedgerData(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerDataAsync.delay(args, instance.pkhash)
-
-            st = status.HTTP_201_CREATED
-
-            return {
-                'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}, st
+            data = {
+                'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'
+            }
+            st = status.HTTP_200_OK
+            return data, st

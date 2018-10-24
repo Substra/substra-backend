@@ -2,7 +2,6 @@ from rest_framework import serializers, status
 
 from django.conf import settings
 
-
 from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
 
@@ -37,12 +36,12 @@ class LedgerAlgoSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = createLedgerAlgo(args, instance.pkhash, sync=True)
-            return data, st
-
+            return createLedgerAlgo(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
-            createLedgerAlgo.delay(args, instance.pkhash)
-            st = status.HTTP_201_CREATED
-            return {
-                'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}, st
+            createLedgerAlgoAsync.delay(args, instance.pkhash)
+            data = {
+                'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'
+            }
+            st = status.HTTP_200_OK
+            return data, st
