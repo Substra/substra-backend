@@ -44,7 +44,6 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         except:
             train_data_keys = request.data.get('train_data_keys', request.POST.getlist('train_data_keys', []))
 
-
         data = {
             'algo_key': algo_key,
             'model_key': model_key,
@@ -55,9 +54,8 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         # create on ledger
-        data = serializer.create(serializer.validated_data)
+        data, st = serializer.create(serializer.validated_data)
 
-        st = status.HTTP_200_OK
         headers = self.get_success_headers(serializer.data)
 
         return Response(data, status=st, headers=headers)

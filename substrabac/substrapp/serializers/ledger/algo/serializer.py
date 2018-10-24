@@ -1,6 +1,10 @@
-from rest_framework import serializers
+from rest_framework import serializers, status
 
-from .tasks import createLedgerAlgo
+from django.conf import settings
+
+from .util import createLedgerAlgo
+from .tasks import createLedgerAlgoAsync
+
 from substrapp.models.utils import compute_hash
 
 
@@ -31,8 +35,13 @@ class LedgerAlgoSerializer(serializers.Serializer):
             'permissions': permissions
         }
 
-        # use a celery task, as we are in an http request transaction
-        createLedgerAlgo.delay(args, instance.pkhash)
-
-        return {
-            'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            return createLedgerAlgo(args, instance.pkhash, sync=True)
+        else:
+            # use a celery task, as we are in an http request transaction
+            createLedgerAlgoAsync.delay(args, instance.pkhash)
+            data = {
+                'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'
+            }
+            st = status.HTTP_200_OK
+            return data, st
