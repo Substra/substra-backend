@@ -154,9 +154,16 @@ class AlgoViewSet(mixins.CreateModelMixin,
         datasetData = None
         modelData = None
 
+        # TODO handle st if error
+
         # parse filters
         query_params = request.query_params.get('search', None)
-        l = [data]
+
+        # init list to return
+        l = []
+        if data is not None:
+            l = [data]
+
         if query_params is not None:
             try:
                 filters = get_filters(query_params)

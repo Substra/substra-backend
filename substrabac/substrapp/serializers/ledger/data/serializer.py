@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import serializers, status
 
 from django.conf import settings
@@ -17,11 +19,11 @@ class LedgerDataSerializer(serializers.Serializer):
         size = validated_data.get('size')
         test_only = validated_data.get('test_only')
 
-        args = '"%(hashes)s", "%(datasetKey)s", "%(size)s", "%(testOnly)s""' % {
-            'hashes': [instance.pkhash],
+        args = '"%(hashes)s", "%(datasetKey)s", "%(size)s", "%(testOnly)s"' % {
+            'hashes': ','.join([instance.pkhash]),
             'datasetKey': dataset_key,
             'size': size,
-            'testOnly': test_only,
+            'testOnly': json.dumps(test_only),
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

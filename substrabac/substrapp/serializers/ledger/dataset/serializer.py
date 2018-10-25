@@ -5,7 +5,7 @@ from django.conf import settings
 from .util import createLedgerDataset
 from .tasks import createLedgerDatasetAsync
 
-from substrapp.models.utils import compute_hash
+from substrapp.models.utils import compute_hash, get_hash
 
 
 class LedgerDatasetSerializer(serializers.Serializer):
@@ -30,10 +30,10 @@ class LedgerDatasetSerializer(serializers.Serializer):
 
         args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKeys)s", "%(permissions)s"' % {
             'name': name,
-            'openerHash': compute_hash(instance.data_opener.path),
+            'openerHash': get_hash(instance.data_opener),
             'openerStorageAddress': protocol + host + instance.data_opener.url,
             'type': type,
-            'descriptionHash': compute_hash(instance.description.path),
+            'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + instance.description.url,
             'challengeKeys': ','.join([x for x in challenge_keys]),
             'permissions': permissions

@@ -5,7 +5,7 @@ from django.conf import settings
 from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
 
-from substrapp.models.utils import compute_hash
+from substrapp.models.utils import compute_hash, get_hash
 
 
 class LedgerAlgoSerializer(serializers.Serializer):
@@ -27,9 +27,9 @@ class LedgerAlgoSerializer(serializers.Serializer):
 
         args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(associatedChallenge)s", "%(permissions)s"' % {
             'name': name,
-            'algoHash': compute_hash(instance.file.path),
+            'algoHash': get_hash(instance.file),
             'storageAddress': protocol + host + instance.file.url,
-            'descriptionHash': compute_hash(instance.description.path),
+            'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + instance.description.url,
             'associatedChallenge': challenge_key,
             'permissions': permissions
