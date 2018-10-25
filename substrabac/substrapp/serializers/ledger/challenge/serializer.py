@@ -2,7 +2,7 @@ from rest_framework import serializers, status
 # from django.contrib.sites.models import Site
 from django.conf import settings
 
-from substrapp.models.utils import compute_hash
+from substrapp.models.utils import compute_hash, get_hash
 from .util import createLedgerChallenge
 from .tasks import createLedgerChallengeAsync
 
@@ -30,10 +30,10 @@ class LedgerChallengeSerializer(serializers.Serializer):
 
         args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataKeys)s", "%(permissions)s"' % {
             'name': name,
-            'descriptionHash': compute_hash(instance.description.path),
+            'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + instance.description.url,
             'metricsName': metrics_name,
-            'metricsHash': compute_hash(instance.metrics.path),
+            'metricsHash': get_hash(instance.metrics),
             'metricsStorageAddress': protocol + host + instance.metrics.url,
             'testDataKeys': ','.join([x for x in test_data_keys]),
             'permissions': permissions

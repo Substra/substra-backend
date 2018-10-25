@@ -1,5 +1,5 @@
 from django.conf import settings
-from rest_framework import status, mixins
+from rest_framework import mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 

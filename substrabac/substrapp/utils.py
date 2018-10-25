@@ -54,9 +54,6 @@ def queryLedger(options):
         except:
             # TODO : Handle error
             pass
-        else:
-            if data is None:
-                data = {}
 
         msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
             'channel_name': channel_name,
@@ -136,7 +133,7 @@ def invokeLedger(options, sync=False):
 
         if 'Error' in msg:
             st = status.HTTP_400_BAD_REQUEST
-        elif 'access denied' in msg:
+        elif 'access denied' in msg or 'authentication handshake failed' in msg:
             st = status.HTTP_403_FORBIDDEN
         elif 'Chaincode invoke successful' in msg:
             st = status.HTTP_201_CREATED
@@ -145,7 +142,7 @@ def invokeLedger(options, sync=False):
             except:
                 pass
             finally:
-                data = {'message': msg}
+                data = {'pkhash': msg}
 
     return data, st
 

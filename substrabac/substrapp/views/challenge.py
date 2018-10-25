@@ -60,7 +60,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
         data = request.data
         serializer = self.get_serializer(data={'metrics': data.get('metrics'),
-                                               'description': data.get('description')})
+                                               'description': data.get('description')},)
 
         serializer.is_valid(raise_exception=True)
 
@@ -190,7 +190,12 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
         # parse filters
         query_params = request.query_params.get('search', None)
-        l = [data]
+
+        # init list to return
+        l = []
+        if data is not None:
+            l = [data]
+
         if query_params is not None:
             try:
                 filters = get_filters(query_params)

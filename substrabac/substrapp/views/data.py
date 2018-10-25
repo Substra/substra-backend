@@ -9,6 +9,8 @@ from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 
 
+# TODO method to bulk_create data
+
 class DataViewSet(ModelViewSet):
     queryset = Data.objects.all()
     serializer_class = DataSerializer
@@ -34,8 +36,14 @@ class DataViewSet(ModelViewSet):
             instance = self.perform_create(serializer)
 
             # init ledger serializer
+            file_size = 0
+            try:
+                file_size = os.path.getsize(data.get('file'))
+            except:
+                file_size = data.get('file').size
+
             ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                           'size': os.path.getsize(data.get('file')),
+                                                           'size': file_size,
                                                            'dataset_key': dataset.pkhash,
                                                            'instance': instance},
                                                      context={'request': request})
