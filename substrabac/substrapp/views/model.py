@@ -120,76 +120,80 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         challengeData = None
         datasetData = None
 
-        # TODO check st is 200
-
-        # only for demo purpose
-        # data.extend(fake_models)
-
-        # parse filters
-        query_params = request.query_params.get('search', None)
-
         # init list to return
-        l = []
-        if data is not None:
-            l = [data]
+        if data is None:
+            data = []
+        l = [data]
 
-        if query_params is not None:
-            try:
-                filters = get_filters(query_params)
-            except Exception as exc:
-                return Response(
-                    {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
-                    status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # filtering, reinit l to empty array
-                l = []
-                for idx, filter in enumerate(filters):
-                    # init each list iteration to data
-                    l.append(data)
-                    for k, subfilters in filter.items():
-                        if k == 'model':  # filter by own key
-                            for key, val in subfilters.items():
-                                l[idx] = [x for x in l[idx] if x['endModel']['hash'] in val]
-                        elif k == 'algo':  # select model used by these algo
-                            if not algoData:
-                                # TODO find a way to put this call in cache
-                                algoData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryAlgos"]}'
-                                })
-                            for key, val in subfilters.items():
-                                filteredData = [x for x in algoData if x[key] in val]
-                                algoHashes = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if x['algo']['hash'] in algoHashes]
-                        elif k == 'dataset':  # select model which trainData.openerHash is
-                            if not datasetData:
-                                # TODO find a way to put this call in cache
-                                datasetData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryDatasets"]}'
-                                })
-                            for key, val in subfilters.items():
-                                filteredData = [x for x in datasetData if x[key] in val]
-                                datasetHashes = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if x['trainData']['openerHash'] in datasetHashes]
-                        elif k == 'challenge':  # select challenge used by these datasets
-                            if not challengeData:
-                                # TODO find a way to put this call in cache
-                                challengeData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryChallenges"]}'
-                                })
-                            for key, val in subfilters.items():
-                                if key == 'metrics':  # specific to nested metrics
-                                    filteredData = [x for x in challengeData if x[key]['name'] in val]
-                                else:
-                                    filteredData = [x for x in challengeData if x[key] in val]
-                                challengeKeys = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
+        if st == 200:
+            # TODO check st is 200
 
+            # only for demo purpose
+            # data.extend(fake_models)
+
+            # parse filters
+            query_params = request.query_params.get('search', None)
+
+            if query_params is not None:
+                try:
+                    filters = get_filters(query_params)
+                except Exception as exc:
+                    return Response(
+                        {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
+                        status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # filtering, reinit l to empty array
+                    l = []
+                    for idx, filter in enumerate(filters):
+                        # init each list iteration to data
+                        if data is None:
+                            data = []
+                        l.append(data)
+                        for k, subfilters in filter.items():
+                            if k == 'model':  # filter by own key
+                                for key, val in subfilters.items():
+                                    l[idx] = [x for x in l[idx] if x['endModel']['hash'] in val]
+                            elif k == 'algo':  # select model used by these algo
+                                if not algoData:
+                                    # TODO find a way to put this call in cache
+                                    algoData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryAlgos"]}'
+                                    })
+                                for key, val in subfilters.items():
+                                    filteredData = [x for x in algoData if x[key] in val]
+                                    algoHashes = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['algo']['hash'] in algoHashes]
+                            elif k == 'dataset':  # select model which trainData.openerHash is
+                                if not datasetData:
+                                    # TODO find a way to put this call in cache
+                                    datasetData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryDatasets"]}'
+                                    })
+                                for key, val in subfilters.items():
+                                    filteredData = [x for x in datasetData if x[key] in val]
+                                    datasetHashes = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['trainData']['openerHash'] in datasetHashes]
+                            elif k == 'challenge':  # select challenge used by these datasets
+                                if not challengeData:
+                                    # TODO find a way to put this call in cache
+                                    challengeData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryChallenges"]}'
+                                    })
+                                    if challengeData is None:
+                                        challengeData = []
+                                for key, val in subfilters.items():
+                                    if key == 'metrics':  # specific to nested metrics
+                                        filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                    else:
+                                        filteredData = [x for x in challengeData if x[key] in val]
+                                    challengeKeys = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
 
         return Response(l, status=st)
 
