@@ -26,5 +26,7 @@ def createLedgerDataset(args, pkhash, sync=False):
         else:
             instance.validated = True
             instance.save()
+            # update data to return
+            data['validated'] = True
 
     return data, st

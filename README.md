@@ -72,15 +72,15 @@ It will drop the databases if they are already created, then create them and gra
 
 ###### Clean environment (recommanded)
 
-- With django migrations + load data
+- With django migrations
 ```shell
 python substrabac/manage.py migrate --settings=substrabac.settings.dev.owkin
 python substrabac/manage.py migrate --settings=substrabac.settings.dev.chunantes```
 ```
 
-###### With fixtures (run container has been run from substra-network, old behavior for testing)
+###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
 
-data in fixtures are relative to the data already set in the ledger if the run container instance succeeded
+data in fixtures are relative to the data already set in the ledger if the fixtures container instance succeeded
 
 Two solutions:
 - With django migrations + load data
@@ -176,11 +176,11 @@ When you want to re-run the testing process:
 - Stop all your services and containers.
 - Rerun `recreate_db.sh` and `clean_media.sh` scripts.
 - Run the django migrations.
-- Launch your substra-network.
+- Relaunch your substra-network.
 - Get the credentials with `python substrabac/get_conf_from_network.py`
-- Run the owkin and chunantes servers
-- Run celery beat and celery owkin and chu-nantes
-- Run the `populate.py` python scripts
+- Run the owkin and chunantes substrabac servers.
+- Run celery beat and celery owkin and chu-nantes.
+- Run the `populate.py` python script.
 
 ###### With fixtures
 

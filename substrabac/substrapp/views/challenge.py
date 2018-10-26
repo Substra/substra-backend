@@ -92,8 +92,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
             headers = self.get_success_headers(serializer.data)
 
-            data.update(serializer.data)
-            return Response(data, status=st, headers=headers)
+            d = dict(serializer.data)
+            d.update(data)
+            return Response(d, status=st, headers=headers)
 
     def create_or_update_challenge(self, challenge, pk):
         try:
