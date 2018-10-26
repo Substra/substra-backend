@@ -13,7 +13,7 @@ services:
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
-    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8000"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.owkin; python3 manage.py runserver 0.0.0.0:8000"
     volumes:
       - ./substrabac/medias:/usr/src/app/medias
       # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
@@ -37,7 +37,7 @@ services:
     build:
         context: ./
         dockerfile: ./docker/substrabac/Dockerfile
-    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python3 manage.py runserver 0.0.0.0:8001"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.chunantes; python3 manage.py runserver 0.0.0.0:8001"
     volumes:
       - ./substrabac/medias:/usr/src/app/medias
       # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
