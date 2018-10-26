@@ -3,10 +3,10 @@ from subprocess import PIPE, Popen as popen
 
 # Use substra shell SDK
 
-output = popen(['substra', 'config', 'http://127.0.0.1:8000', '0.0'], stdout=PIPE).communicate()[0]
-res = output.decode('utf-8')
+res = popen(['substra', 'config', 'http://127.0.0.1:8000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+res = popen(['substra', 'config', 'http://127.0.0.1:8001', '0.0', '--profile=chunantes', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
 
-# register dataset
+# create dataset with chu-nantes org
 data = json.dumps({
     "name": "ISIC 2018",
     "data_opener": "./tests/assets/fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py",
@@ -16,36 +16,31 @@ data = json.dumps({
     "challenge_keys": []
 })
 
-output = popen(['substra', 'add', 'dataset', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'dataset', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
-# readd it
-output = popen(['substra', 'add', 'dataset', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
-
-# register train data
+# register train data on dataset chu nantes (will take dataset creator as worker)
 data = json.dumps({
     "file": "./tests/assets/fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
     "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
     "test_only": False,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
-# register train data
 data = json.dumps({
     "file": "./tests/assets/fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
     "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
     "test_only": False,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 ###############################
 
-# register second dataset
+# create dataset, test data and challenge on owkin
 data = json.dumps({
     "name": "Simplified ISIC 2018",
     "data_opener": "./tests/assets/fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py",
@@ -55,8 +50,8 @@ data = json.dumps({
     "challenge_keys": []
 })
 
-output = popen(['substra', 'add', 'dataset', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 #########################
 
@@ -67,8 +62,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register test data
 data = json.dumps({
@@ -77,8 +72,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 #########################
 
@@ -89,8 +84,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register test data
 data = json.dumps({
@@ -99,8 +94,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 #########################
 
@@ -111,8 +106,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register test data
 data = json.dumps({
@@ -121,8 +116,8 @@ data = json.dumps({
     "test_only": True,
 })
 
-output = popen(['substra', 'add', 'data', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # #########################
 
@@ -137,8 +132,8 @@ data = json.dumps({
                        "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"]
 })
 
-output = popen(['substra', 'add', 'challenge', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register challenge
 data = json.dumps({
@@ -150,8 +145,8 @@ data = json.dumps({
     "test_data_keys": ["e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"]
 })
 
-output = popen(['substra', 'add', 'challenge', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'challenge', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 ############################
 
@@ -164,8 +159,8 @@ data = json.dumps({
     "permissions": "all",
 })
 
-output = popen(['substra', 'add', 'algo', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register second algo on challenge Simplified skin lesion classification
 data = json.dumps({
@@ -176,8 +171,8 @@ data = json.dumps({
     "permissions": "all",
 })
 
-output = popen(['substra', 'add', 'algo', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 
 # register third algo
 data = json.dumps({
@@ -188,9 +183,8 @@ data = json.dumps({
     "permissions": "all",
 })
 
-output = popen(['substra', 'add', 'algo', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
-
+res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 # register fourth algo
 data = json.dumps({
     "name": "Random Forest",
@@ -200,17 +194,19 @@ data = json.dumps({
     "permissions": "all",
 })
 
-output = popen(['substra', 'add', 'algo', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
-
+res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
 ####################################
 
 # create traintuple
 data = json.dumps({
     "algo_key": "6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f",
     "model_key": "",
-    "train_data_keys": ["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]
+    "train_data_keys": ["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
+                        "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]
 })
 
-output = popen(['substra', 'add', 'traintuple', data], stdout=PIPE).communicate()[0]
-print(output.decode('utf-8'))
+res = popen(['substra', 'add', 'traintuple', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+               stdout=PIPE).communicate()[0]
+
+print(res)
