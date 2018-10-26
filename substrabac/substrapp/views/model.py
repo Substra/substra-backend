@@ -126,8 +126,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         l = [data]
 
         if st == 200:
-            # TODO check st is 200
-
             # only for demo purpose
             # data.extend(fake_models)
 
@@ -161,6 +159,11 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                         'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
+                                    if st != 200:
+                                        return Response(algoData, status=st)
+
+                                    if algoData is None:
+                                        algoData = []
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
                                     algoHashes = [x['key'] for x in filteredData]
@@ -173,6 +176,11 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                         'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
+                                    if st != 200:
+                                        return Response(datasetData, status=st)
+
+                                    if datasetData is None:
+                                        datasetData = []
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     datasetHashes = [x['key'] for x in filteredData]
@@ -185,6 +193,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                         'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryChallenges"]}'
                                     })
+                                    if st != 200:
+                                        return Response(challengeData, status=st)
+
                                     if challengeData is None:
                                         challengeData = []
                                 for key, val in subfilters.items():
