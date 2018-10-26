@@ -31,12 +31,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        # # get pkhash of challenge from name
-        # try:
-        #     challenge = Challenge.objects.get(pkhash=data.get('challenge_key'))
-        # except:
-        #     return Response({'message': 'This Challenge pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
-        # else:
         serializer = self.get_serializer(data={'file': data.get('file'), 'description': data.get('description')})
         serializer.is_valid(raise_exception=True)
 
@@ -59,8 +53,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         headers = self.get_success_headers(serializer.data)
 
-        data.update(serializer.data)
-        return Response(data, status=st, headers=headers)
+        d = dict(serializer.data)
+        d.update(data)
+        return Response(d, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
         try:
