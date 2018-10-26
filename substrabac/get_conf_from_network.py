@@ -62,22 +62,22 @@ def create_core_peer_config():
 def get_conf_from_network():
     for org in ORGS:
         # copy user msp
-        call(['sudo', 'cp', '-R',
+        call(['cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/user'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy user msp
-        call(['sudo', 'cp', '-R',
+        call(['cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/admin'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy ca-cert.pem
-        call(['sudo', 'cp',
+        call(['cp',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/ca-cert.pem'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
         # copy tls cli-client
-        call(['sudo', 'cp', '-R',
+        call(['cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org + '/tls'),
               os.path.join(dir_path, './substrapp/conf/' + org)])
 
@@ -86,16 +86,12 @@ def get_conf_from_network():
         org_dir = os.path.join(dir_path, 'substrapp/conf/' + org)
         if not os.path.exists(org_dir):
             os.makedirs(org_dir)
-        call(['sudo', 'cp', '-R',
+        call(['cp', '-R',
               os.path.join(SUBSTRA_NETWORK_PATH, 'data/orgs/' + org),
               os.path.join(dir_path, 'substrapp/conf/')])
 
-    # modify rights
-    call(['sudo', 'chown', '-R', current_user + ':' + current_group,
-          os.path.join(dir_path, 'substrapp/conf/')])
-
 
 if __name__ == "__main__":
-    call(['sudo', 'rm', '-Rf', os.path.join(dir_path, 'substrapp/conf')])
+    call(['rm', '-Rf', os.path.join(dir_path, 'substrapp/conf')])
     create_core_peer_config()
     get_conf_from_network()
