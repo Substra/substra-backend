@@ -31,36 +31,31 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        # get pkhash of challenge from name
-        try:
-            challenge = Challenge.objects.get(pkhash=data.get('challenge_key'))
-        except:
-            return Response({'message': 'This Challenge pkhash does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            serializer = self.get_serializer(data={'file': data.get('file'), 'description': data.get('description')})
-            serializer.is_valid(raise_exception=True)
+        serializer = self.get_serializer(data={'file': data.get('file'), 'description': data.get('description')})
+        serializer.is_valid(raise_exception=True)
 
-            # create on db
-            instance = self.perform_create(serializer)
+        # create on db
+        instance = self.perform_create(serializer)
 
-            # init ledger serializer
-            ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
-                                                           'permissions': data.get('permissions', 'all'),
-                                                           'challenge_key': challenge.pkhash,
-                                                           'instance': instance},
-                                                     context={'request': request})
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+        # init ledger serializer
+        ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
+                                                       'permissions': data.get('permissions', 'all'),
+                                                       'challenge_key': data.get('challenge_key'),
+                                                       'instance': instance},
+                                                 context={'request': request})
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        # create on ledger
+        data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = self.get_success_headers(serializer.data)
+        headers = self.get_success_headers(serializer.data)
 
-            data.update(serializer.data)
-            return Response(data, status=st, headers=headers)
+        d = dict(serializer.data)
+        d.update(data)
+        return Response(d, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
         try:

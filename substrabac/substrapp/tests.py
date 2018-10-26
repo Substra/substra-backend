@@ -152,7 +152,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}, status.HTTP_200_OK
+            mocked_method.return_value = {
+                                             'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}, status.HTTP_200_OK
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -245,13 +246,15 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}, status.HTTP_200_OK
+            mocked_method.return_value = {
+                                             'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(r['pkhash'], get_hash(self.data_data_opener))
-            self.assertEqual(r['description'], 'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
+            self.assertEqual(r['description'],
+                             'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
@@ -320,7 +323,8 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}, status.HTTP_200_OK
+                mocked_method.return_value = {
+                                                 'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}, status.HTTP_200_OK
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
@@ -347,16 +351,17 @@ class QueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             dataset_name = 'slide opener'
-            Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
+            Dataset.objects.create(name=dataset_name, description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
             # missing local storage field
             data = {'dataset_key': get_hash(self.data_description),
-                    'test_only': True,}
+                    'test_only': True, }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             # missing ledger field
-            data = {'dataset_key': get_hash(self.data_description), 'file': self.script,}
+            data = {'dataset_key': get_hash(self.data_description), 'file': self.script, }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -420,7 +425,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}, status.HTTP_200_OK
+            mocked_method.return_value = {
+                                             'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -442,31 +448,37 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertIn('does not exist', r['message'])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Challenge.objects.create(description=self.challenge_description,
-                                 metrics=self.challenge_metrics)
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {
+                                             'message': 'Fail to add algo. Challenge does not exist'
+                                         }, status.HTTP_400_BAD_REQUEST
 
-        # missing local storage field
-        data = {
-            'name': 'super top algo',
-            'challenge_key': get_hash(self.challenge_description),
-            'permissions': 'all'
-        }
-        response = self.client.post(url, data, format='multipart', **extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertIn('does not exist', r['message'])
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # missing ledger field
-        data = {
-            'file': self.script,
-            'description': self.data_description,
-            'challenge_key': get_hash(self.challenge_description),
-        }
-        response = self.client.post(url, data, format='multipart', **extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            Challenge.objects.create(description=self.challenge_description,
+                                     metrics=self.challenge_metrics)
+
+            # missing local storage field
+            data = {
+                'name': 'super top algo',
+                'challenge_key': get_hash(self.challenge_description),
+                'permissions': 'all'
+            }
+            response = self.client.post(url, data, format='multipart', **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            # missing ledger field
+            data = {
+                'file': self.script,
+                'description': self.data_description,
+                'challenge_key': get_hash(self.challenge_description),
+            }
+            response = self.client.post(url, data, format='multipart', **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_algo_no_version(self):
 
@@ -529,7 +541,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}, status.HTTP_200_OK
+            mocked_method.return_value = {
+                                             'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
