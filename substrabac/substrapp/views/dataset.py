@@ -209,79 +209,87 @@ class DatasetViewSet(mixins.CreateModelMixin,
         algoData = None
         modelData = None
 
-        # parse filters
-        query_params = request.query_params.get('search', None)
-
         # init list to return
-        l = []
-        if data is not None:
-            l = [data]
+        if data is None:
+            data = []
+        l = [data]
 
-        if query_params is not None:
-            try:
-                filters = get_filters(query_params)
-            except Exception as exc:
-                return Response(
-                    {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
-                    status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # filtering, reinit l to empty array
-                l = []
-                for idx, filter in enumerate(filters):
-                    # init each list iteration to data
-                    l.append(data)
-                    for k, subfilters in filter.items():
-                        if k == 'dataset':  # filter by own key
-                            for key, val in subfilters.items():
-                                l[idx] = [x for x in l[idx] if x[key] in val]
-                        elif k == 'challenge':  # select challenge used by these datasets
-                            if not challengeData:
-                                # TODO find a way to put this call in cache
-                                challengeData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryChallenges"]}'
-                                })
-                                if st != 200:
-                                    return Response(challengeData, status=st)
+        if st == 200:
 
-                            for key, val in subfilters.items():
-                                if key == 'metrics':  # specific to nested metrics
-                                    filteredData = [x for x in challengeData if x[key]['name'] in val]
-                                else:
-                                    filteredData = [x for x in challengeData if x[key] in val]
-                                challengeKeys = [x['key'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if [x for x in (x['challengeKeys'] or []) if x in challengeKeys]]
-                        elif k == 'algo':  # select challenge used by these algo
-                            if not algoData:
-                                # TODO find a way to put this call in cache
-                                algoData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryAlgos"]}'
-                                })
-                                if st != 200:
-                                    return Response(algoData, status=st)
+            # parse filters
+            query_params = request.query_params.get('search', None)
 
-                            for key, val in subfilters.items():
-                                filteredData = [x for x in algoData if x[key] in val]
-                                challengeKeys = [x['challengeKey'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
-                        elif k == 'model':  # select challenges used by endModel hash
-                            if not modelData:
-                                # TODO find a way to put this call in cache
-                                modelData, st = queryLedger({
-                                    'org': settings.LEDGER['org'],
-                                    'peer': settings.LEDGER['peer'],
-                                    'args': '{"Args":["queryTraintuples"]}'
-                                })
-                                if st != 200:
-                                    return Response(modelData, status=st)
+            if query_params is not None:
+                try:
+                    filters = get_filters(query_params)
+                except Exception as exc:
+                    return Response(
+                        {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
+                        status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # filtering, reinit l to empty array
+                    l = []
+                    for idx, filter in enumerate(filters):
+                        # init each list iteration to data
+                        l.append(data)
+                        for k, subfilters in filter.items():
+                            if k == 'dataset':  # filter by own key
+                                for key, val in subfilters.items():
+                                    l[idx] = [x for x in l[idx] if x[key] in val]
+                            elif k == 'challenge':  # select challenge used by these datasets
+                                if not challengeData:
+                                    # TODO find a way to put this call in cache
+                                    challengeData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryChallenges"]}'
+                                    })
+                                    if st != 200:
+                                        return Response(challengeData, status=st)
+                                    if challengeData is None:
+                                        challengeData = []
 
-                            for key, val in subfilters.items():
-                                filteredData = [x for x in modelData if x['endModel'][key] in val]
-                                challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                                for key, val in subfilters.items():
+                                    if key == 'metrics':  # specific to nested metrics
+                                        filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                    else:
+                                        filteredData = [x for x in challengeData if x[key] in val]
+                                    challengeKeys = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if [x for x in (x['challengeKeys'] or []) if x in challengeKeys]]
+                            elif k == 'algo':  # select challenge used by these algo
+                                if not algoData:
+                                    # TODO find a way to put this call in cache
+                                    algoData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryAlgos"]}'
+                                    })
+                                    if st != 200:
+                                        return Response(algoData, status=st)
+                                    if algoData is None:
+                                        algoData = []
+
+                                for key, val in subfilters.items():
+                                    filteredData = [x for x in algoData if x[key] in val]
+                                    challengeKeys = [x['challengeKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                            elif k == 'model':  # select challenges used by endModel hash
+                                if not modelData:
+                                    # TODO find a way to put this call in cache
+                                    modelData, st = queryLedger({
+                                        'org': settings.LEDGER['org'],
+                                        'peer': settings.LEDGER['peer'],
+                                        'args': '{"Args":["queryTraintuples"]}'
+                                    })
+                                    if st != 200:
+                                        return Response(modelData, status=st)
+                                    if modelData is None:
+                                        modelData = []
+
+                                for key, val in subfilters.items():
+                                    filteredData = [x for x in modelData if x['endModel'][key] in val]
+                                    challengeKeys = [x['challenge']['hash'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
 
         return Response(l, status=st)
 
