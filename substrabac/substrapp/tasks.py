@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+import getpass
 import os
 import tarfile
 import tempfile
@@ -302,7 +303,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 worker_to_filter, data_owner, status_to_filter)
         })
 
-        if st == 200:
+        if st == 200 and traintuples is not None:
             for traintuple in traintuples:
                 # check if challenge exists and its metrics is not null
                 challengeHash = traintuple['challenge']['hash']
@@ -491,6 +492,9 @@ def prepareTestingTask():
 
 @app.task
 def doTrainingTask(traintuple):
+    cpu_set = None
+    gpu_set = None
+
     try:
         from django.contrib.sites.models import Site
         from substrapp.models import Model
@@ -527,8 +531,6 @@ def doTrainingTask(traintuple):
                    opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
-        cpu_set = None
-        gpu_set = None
 
         while cpu_set is None or gpu_set is None:
             cpu_set = ressource_manager.acquire_cpu_set()
@@ -543,7 +545,8 @@ def doTrainingTask(traintuple):
                       'volumes': volumes,
                       'detach': False,
                       'auto_remove': False,
-                      'remove': False}
+                      'remove': False,
+                      }
 
         if gpu_set != 'no_gpu':
             train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
@@ -638,9 +641,8 @@ def doTrainingTask(traintuple):
             instance.file.save('model', f)
 
         url_http = 'http' if settings.DEBUG else 'https'
-        current_site = Site.objects.get_current()
-        end_model_file = '%s://%s%s' % (url_http, current_site.domain,
-                                        reverse('substrapp:model-file', args=[end_model_file_hash]))
+        current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
+        end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
         # Load performance
         with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:

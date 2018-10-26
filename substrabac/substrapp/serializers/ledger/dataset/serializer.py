@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 
 from django.conf import settings
+from rest_framework.reverse import reverse
 
 from .util import createLedgerDataset
 from .tasks import createLedgerDatasetAsync
@@ -31,10 +32,10 @@ class LedgerDatasetSerializer(serializers.Serializer):
         args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKeys)s", "%(permissions)s"' % {
             'name': name,
             'openerHash': get_hash(instance.data_opener),
-            'openerStorageAddress': protocol + host + instance.data_opener.url,
+            'openerStorageAddress': protocol + host + reverse('substrapp:dataset-opener', args=[instance.pk]),
             'type': type,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + instance.description.url,
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:dataset-description', args=[instance.pk]),
             'challengeKeys': ','.join([x for x in challenge_keys]),
             'permissions': permissions
         }

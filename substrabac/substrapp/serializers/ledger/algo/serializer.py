@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 
 from django.conf import settings
+from rest_framework.reverse import reverse
 
 from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
@@ -28,9 +29,9 @@ class LedgerAlgoSerializer(serializers.Serializer):
         args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(associatedChallenge)s", "%(permissions)s"' % {
             'name': name,
             'algoHash': get_hash(instance.file),
-            'storageAddress': protocol + host + instance.file.url,
+            'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + instance.description.url,
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
             'associatedChallenge': challenge_key,
             'permissions': permissions
         }

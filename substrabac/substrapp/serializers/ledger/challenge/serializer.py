@@ -1,6 +1,7 @@
 from rest_framework import serializers, status
 # from django.contrib.sites.models import Site
 from django.conf import settings
+from rest_framework.reverse import reverse
 
 from substrapp.models.utils import compute_hash, get_hash
 from .util import createLedgerChallenge
@@ -31,10 +32,10 @@ class LedgerChallengeSerializer(serializers.Serializer):
         args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataKeys)s", "%(permissions)s"' % {
             'name': name,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + instance.description.url,
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:challenge-description', args=[instance.pk]),
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
-            'metricsStorageAddress': protocol + host + instance.metrics.url,
+            'metricsStorageAddress': protocol + host + reverse('substrapp:challenge-metrics', args=[instance.pk]),
             'testDataKeys': ','.join([x for x in test_data_keys]),
             'permissions': permissions
         }
