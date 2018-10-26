@@ -3,8 +3,8 @@ from subprocess import PIPE, Popen as popen
 
 # Use substra shell SDK
 
-res = popen(['substra', 'config', 'http://127.0.0.1:8000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-res = popen(['substra', 'config', 'http://127.0.0.1:8001', '0.0', '--profile=chunantes', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+res = popen(['substra', 'config', 'http://owkin.substrabac:8000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+res = popen(['substra', 'config', 'http://chunantes.substrabac:8001', '0.0', '--profile=chunantes', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
 
 # create dataset with chu-nantes org
 data = json.dumps({
