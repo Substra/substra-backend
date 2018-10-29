@@ -44,5 +44,5 @@ class LedgerAlgoSerializer(serializers.Serializer):
             data = {
                 'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'
             }
-            st = status.HTTP_200_OK
+            st = status.HTTP_202_ACCEPTED
             return data, st

@@ -1,17 +1,24 @@
 import os
 
-from rest_framework import status
+from rest_framework import status, mixins
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet
+from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 
-
 # TODO method to bulk_create data
+from substrapp.views.utils import CreateListMixin
 
-class DataViewSet(ModelViewSet):
+
+class DataViewSet(CreateListMixin,
+                  mixins.CreateModelMixin,
+                  mixins.RetrieveModelMixin,
+                  # mixins.UpdateModelMixin,
+                  # mixins.DestroyModelMixin,
+                  mixins.ListModelMixin,
+                  GenericViewSet):
     queryset = Data.objects.all()
     serializer_class = DataSerializer
 
