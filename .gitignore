@@ -120,3 +120,6 @@ bin
 # test files
 substrabac/substrabac/description.md
 substrabac/substrabac/metrics.py
+
+# docker database dir
+postgres-data

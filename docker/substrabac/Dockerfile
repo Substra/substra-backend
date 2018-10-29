@@ -25,6 +25,7 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 COPY ./substrabac/requirements.txt /usr/src/app/.
+RUN sed -i '/substrabacSDK/d' /usr/src/app/requirements.txt
 RUN pip install -r requirements.txt
 
 COPY ./bootstrap.sh /usr/src/

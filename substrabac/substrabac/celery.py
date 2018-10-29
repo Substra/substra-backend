@@ -6,7 +6,7 @@ from celery import Celery
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'substrabac.settings.prod')
 
-app = Celery('substrabac')
+app = Celery('substrabac', broker='amqp://localhost:5672//')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.
