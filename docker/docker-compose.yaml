@@ -132,8 +132,8 @@ services:
       - RABBITMQ_DEFAULT_PASS=guest
       - HOSTNAME=rabbitmq
       - RABBITMQ_NODENAME=rabbitmq
-    ports:
-      - "5672:5672"
+#    ports:
+#      - "5672:5672"
 
   postgresql:
     container_name: postgresql
@@ -143,20 +143,20 @@ services:
       dockerfile: ./docker/postgresql/Dockerfile
     volumes:
       - ./postgres-data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
+#    ports:
+#      - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
       - USER=postgres
       - POSTGRES_PASSWORD=postgrespwd
       - POSTGRES_DB=substrabac
 
-  flower:
-    container_name: flower
-    image: mher/flower
-    ports:
-      - "5555:5555"
-    depends_on:
-      - rabbit
-    environment:
-      - CELERY_BROKER_URL=amqp://rabbit:5672
+#  flower:
+#    container_name: flower
+#    image: mher/flower
+#    ports:
+#      - "5555:5555"
+#    depends_on:
+#      - rabbit
+#    environment:
+#      - CELERY_BROKER_URL=amqp://rabbit:5672
