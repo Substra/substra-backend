@@ -33,5 +33,5 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             data = {
                 'message': 'The susbtra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'
             }
-            st = status.HTTP_200_OK
+            st = status.HTTP_202_ACCEPTED
             return data, st

@@ -34,5 +34,5 @@ class LedgerDataSerializer(serializers.Serializer):
             data = {
                 'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'
             }
-            st = status.HTTP_200_OK
+            st = status.HTTP_202_ACCEPTED
             return data, st

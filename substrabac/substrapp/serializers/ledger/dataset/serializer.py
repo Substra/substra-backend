@@ -49,5 +49,5 @@ class LedgerDatasetSerializer(serializers.Serializer):
             data = {
                 'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'
             }
-            st = status.HTTP_200_OK
+            st = status.HTTP_202_ACCEPTED
             return data, st
