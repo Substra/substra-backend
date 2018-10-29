@@ -28,5 +28,5 @@ DATABASES = {
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/chunantes')
 
 SITE_ID = 1
-SITE_HOST = '127.0.0.1'
+SITE_HOST = 'chunantes.substrabac'
 SITE_PORT = '8001'
