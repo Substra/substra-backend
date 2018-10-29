@@ -5,5 +5,5 @@ from .util import createLedgerData
 
 
 @shared_task
-def createLedgerDataAsync(args, pkhash):
-    return createLedgerData(args, pkhash)
+def createLedgerDataAsync(args, pkhashes):
+    return createLedgerData(args, pkhashes)
