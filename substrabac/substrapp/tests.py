@@ -153,7 +153,7 @@ class QueryTests(APITestCase):
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
             mocked_method.return_value = {
-                                             'message': 'Challenge added in local db waiting for validation. The susbtra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+                                             'message': 'Challenge added in local db waiting for validation. The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -247,7 +247,7 @@ class QueryTests(APITestCase):
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
             mocked_method.return_value = {
-                                             'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+                                             'message': 'Dataset added in local db waiting for validation. The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -324,10 +324,11 @@ class QueryTests(APITestCase):
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
                 mocked_method.return_value = {
-                                                 'message': 'Data added in local db waiting for validation. The susbtra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+                                                 'message': 'Data added in local db waiting for validation. The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
+                print(r)
                 self.assertEqual(r['pkhash'], get_hash(self.data_file))
                 self.assertEqual(r['file'],
                                  'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
@@ -338,7 +339,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:data-list')
 
         # missing dataset
-        data = {'dataset_key': 'not existing'}
+        data = {'dataset_key': 'toto'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -347,7 +348,7 @@ class QueryTests(APITestCase):
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['message'], 'This Dataset name does not exist.')
+            self.assertEqual(r['message'], 'This Dataset key: toto does not exist in local substrabac database.')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             dataset_name = 'slide opener'
@@ -426,7 +427,7 @@ class QueryTests(APITestCase):
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
             mocked_method.return_value = {
-                                             'message': 'Algo added in local db waiting for validation. The susbtra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+                                             'message': 'Algo added in local db waiting for validation. The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -542,7 +543,7 @@ class QueryTests(APITestCase):
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
             mocked_method.return_value = {
-                                             'message': 'Traintuple added in local db waiting for validation. The susbtra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
+                                             'message': 'Traintuple added in local db waiting for validation. The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)

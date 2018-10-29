@@ -1,3 +1,4 @@
+import ntpath
 import os
 
 from rest_framework import status, mixins
@@ -8,12 +9,12 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 
-# TODO method to bulk_create data
-from substrapp.views.utils import CreateListMixin
 
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
 
-class DataViewSet(CreateListMixin,
-                  mixins.CreateModelMixin,
+class DataViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   # mixins.UpdateModelMixin,
                   # mixins.DestroyModelMixin,
@@ -28,43 +29,81 @@ class DataViewSet(CreateListMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
+        # check if bulk create
+        files = request.data.getlist('files', None)
         # get pkhash of data_opener from name
         try:
             dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
         except:
-            return Response({'message': 'This Dataset name does not exist.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'This Dataset key: %s does not exist in local substrabac database.' % data.get(
+                    'dataset_key')},
+                status=status.HTTP_400_BAD_REQUEST)
         else:
+            if files:
+                serializer = self.get_serializer(data=[{'file': request.FILES[path_leaf(x)]} for x in files], many=True)
+                serializer.is_valid(raise_exception=True)
+                # create on db
+                instances = self.perform_create(serializer)
 
-            serializer = self.get_serializer(data={'file': data.get('file')})
+                # init ledger serializer
+                file_size = 0
+                for file in files:
+                    try:
+                        file_size += os.path.getsize(file)
+                    except:
+                        file_size += request.FILES[path_leaf(file)].size
 
-            serializer.is_valid(raise_exception=True)
+                ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                                                               'size': file_size,
+                                                               'dataset_key': dataset.pk,
+                                                               'instances': instances},
+                                                         context={'request': request})
 
-            # create on db
-            instance = self.perform_create(serializer)
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    for instance in instances:
+                        instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
 
-            # init ledger serializer
-            file_size = 0
-            try:
-                file_size = os.path.getsize(data.get('file'))
-            except:
-                file_size = data.get('file').size
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                headers = self.get_success_headers(serializer.data)
 
-            ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                           'size': file_size,
-                                                           'dataset_key': dataset.pkhash,
-                                                           'instance': instance},
-                                                     context={'request': request})
+                for d in serializer.data:
+                    if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
+                        d['validated'] = data['validated']
+                return Response(serializer.data, status=st, headers=headers)
+            else:
+                # get pkhash of data_opener from name
+                serializer = self.get_serializer(data={'file': data.get('file')})
+                serializer.is_valid(raise_exception=True)
 
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+                # create on db
+                instance = self.perform_create(serializer)
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                # init ledger serializer
+                file_size = 0
+                try:
+                    file_size = os.path.getsize(data.get('file'))
+                except:
+                    file_size = data.get('file').size
 
-            headers = self.get_success_headers(serializer.data)
+                ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                                                               'size': file_size,
+                                                               'dataset_key': dataset.pk,
+                                                               'instances': [instance]},
+                                                         context={'request': request})
 
-            d = dict(serializer.data)
-            d.update(data)
-            return Response(d, status=st, headers=headers)
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
+
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                headers = self.get_success_headers(serializer.data)
+
+                d = dict(serializer.data)
+                d.update(data)
+                return Response(d, status=st, headers=headers)
