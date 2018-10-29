@@ -328,7 +328,6 @@ class QueryTests(APITestCase):
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
-                print(r)
                 self.assertEqual(r['pkhash'], get_hash(self.data_file))
                 self.assertEqual(r['file'],
                                  'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
