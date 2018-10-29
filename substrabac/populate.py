@@ -21,21 +21,15 @@ res = popen(['substra', 'add', 'dataset', '--profile=chunantes', '--config=/tmp/
 
 # register train data on dataset chu nantes (will take dataset creator as worker)
 data = json.dumps({
-    "file": "./fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
+    "files": [
+        "./fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
+        "./fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip"
+    ],
     "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
     "test_only": False,
 })
 
-res = popen(['substra', 'add', 'data', '--profile=chunantes', '--config=/tmp/.substrabac', data],
-               stdout=PIPE).communicate()[0]
-
-data = json.dumps({
-    "file": "./fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
-    "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
-    "test_only": False,
-})
-
-res = popen(['substra', 'add', 'data', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+res = popen(['substra', 'add', 'data', data, '--profile=chunantes', '--config=/tmp/.substrabac'],
                stdout=PIPE).communicate()[0]
 
 ###############################
@@ -206,7 +200,5 @@ data = json.dumps({
                         "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]
 })
 
-res = popen(['substra', 'add', 'traintuple', '--profile=chunantes', '--config=/tmp/.substrabac', data],
-               stdout=PIPE).communicate()[0]
-
-print(res)
+res = popen(['substra', 'add', 'traintuple', '--profile=chunantes', '--config=/tmp/.substrabac', data], stdout=PIPE).communicate()[0]
+print(res.decode('utf-8'))

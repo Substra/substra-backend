@@ -7,7 +7,7 @@ from substrapp.models import Data
 from substrapp.utils import invokeLedger
 
 
-def createLedgerData(args, pkhash, sync=False):
+def createLedgerData(args, pkhashes, sync=False):
     options = {
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
@@ -17,15 +17,14 @@ def createLedgerData(args, pkhash, sync=False):
 
     #  if not created on ledger, delete from local db, else pass to validated true
     try:
-        instance = Data.objects.get(pk=pkhash)
+        instances = Data.objects.filter(pk__in=pkhashes)
     except:
         pass
     else:
         if st != status.HTTP_201_CREATED:
-            instance.delete()
+            instances.delete()
         else:
-            instance.validated = True
-            instance.save()
+            instances.update(validated=True)
             # update data to return
             data['validated'] = True
 

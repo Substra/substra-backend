@@ -47,7 +47,7 @@ class LedgerDatasetSerializer(serializers.Serializer):
             createLedgerDatasetAsync.delay(args, instance.pkhash)
 
             data = {
-                'message': 'Dataset added in local db waiting for validation. The susbtra network has been notified for adding this Dataset'
+                'message': 'Dataset added in local db waiting for validation. The substra network has been notified for adding this Dataset'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st
