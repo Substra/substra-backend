@@ -121,16 +121,6 @@ docker build -t substra-model .
 
 Run `./boostrap.sh`
 
-### Get substra-network conf
-
-Run the `get_conf_from_network.py` script for getting generated files from the substra-network and being able to interact with it.
-:warning: The `substra-network` directory (cloned from [here](https://github.com/SubstraFoundation/substra-network)) should be located at the same level as the `substrabac` project directory.
-Be sure to have run the `start.py` command of the substra-network.
-```
-python substrabac/get_conf_from_network.py
-```
-It will populate the `substrabac/substrapp/conf` folder.
-
 ### Make the subtra-network available to the app
 
 [See here](https://github.com/SubstraFoundation/substra-network#network).
@@ -177,7 +167,6 @@ When you want to re-run the testing process:
 - Rerun `recreate_db.sh` and `clean_media.sh` scripts.
 - Run the django migrations.
 - Relaunch your substra-network.
-- Get the credentials with `python substrabac/get_conf_from_network.py`
 - Run the owkin and chunantes substrabac servers.
 - Run celery beat and celery owkin and chu-nantes.
 - Run the `populate.py` python script.

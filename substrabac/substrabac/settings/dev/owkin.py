@@ -2,8 +2,11 @@ from .__init__ import *
 
 import os
 
-# load org ledger conf
-from .conf.owkin import org, peer, signcert
+org = LEDGER_CONF['orgs']['owkin']
+peer = org['peers'][0]
+
+# get owner which is the worker of the trainData
+signcert = '/substra/data/orgs/owkin/user/msp/signcerts/cert.pem'
 
 LEDGER = {
     'org': org,
@@ -25,9 +28,8 @@ DATABASES = {
     }
 }
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/owkin')
+MEDIA_ROOT = '/substra/medias/owkin'
 
 SITE_ID = 1
-
 SITE_HOST = 'owkin.substrabac'
 SITE_PORT = '8000'

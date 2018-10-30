@@ -2,8 +2,11 @@ from .__init__ import *
 
 import os
 
-# load org ledger conf
-from .conf.chunantes import org, peer, signcert
+org = LEDGER_CONF['orgs']['chu-nantes']
+peer = org['peers'][0]
+
+# get owner which is the worker of the trainData
+signcert = '/substra/data/orgs/chu-nantes/user/msp/signcerts/cert.pem'
 
 LEDGER = {
     'org': org,
@@ -25,7 +28,7 @@ DATABASES = {
     }
 }
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/chunantes')
+MEDIA_ROOT = '/substra/medias/chunantes'
 
 SITE_ID = 1
 SITE_HOST = 'chunantes.substrabac'
