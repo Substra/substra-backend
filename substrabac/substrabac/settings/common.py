@@ -10,7 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.0/ref/settings/
 """
 
-import os, sys
+import os, sys, json
 from libs.gen_secret_key import write_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -148,5 +148,7 @@ REST_FRAMEWORK = {
 }
 
 SITE_ID = 1
+
+LEDGER_CONF = json.load(open('/substra/conf/conf.json', 'r'))
 
 LEDGER_SYNC_ENABLED = True

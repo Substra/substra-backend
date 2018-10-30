@@ -95,7 +95,6 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
-      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
 
   worker_chunantes:
     container_name: worker_chunantes
@@ -120,7 +119,6 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
-      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
 
 
   rabbit:
