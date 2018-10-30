@@ -5,13 +5,14 @@ django-cors-headers==2.0.2
 django-filter==1.1.0
 django-rest-swagger==2.1.2
 djangorestframework==3.8.2
+docker == 3.5.0
 grpcio >= 1.0.1
 git+https://github.com/anderskm/gputil.git@7e32706a2674935ae45f2fcf389ae1ea463b0b6b
 ipython==6.4.0
 ipython-genutils==0.2.0
 mock==2.0.0
 psycopg2-binary==2.7.4
-requests == 2.18.4
+requests == 2.20.0
 protobuf==3.5.2post1
 cryptography >= 1.9
 hkdf >= 0.0.3
@@ -19,8 +20,3 @@ pycryptodomex >= 3.4.2
 pysha3 == 1.0b1
 rx >= 1.5.3
 six >= 1.4.0
-git+https://github.com/SubstraFoundation/substrabacSDK.git@master
-docker == 3.5.0
-
-
-
