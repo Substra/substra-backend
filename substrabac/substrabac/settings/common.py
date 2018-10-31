@@ -150,5 +150,4 @@ REST_FRAMEWORK = {
 SITE_ID = 1
 
 LEDGER_CONF = json.load(open('/substra/conf/conf.json', 'r'))
-
 LEDGER_SYNC_ENABLED = True
