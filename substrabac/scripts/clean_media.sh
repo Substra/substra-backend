@@ -1,5 +1,5 @@
 #!/bin/bash
 
-BASEDIR=$(dirname "$0")
+BASEDIR='/substra'
 # clean medias
-rm -rf ${BASEDIR}/../medias/*
+rm -rf ${BASEDIR}/medias/*

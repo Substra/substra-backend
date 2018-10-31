@@ -5,8 +5,4 @@ ENV POSTGRES_PASSWORD substrabac
 ENV POSTGRES_DB substrabac
 
 COPY ./substrabac/scripts /usr/src/scripts
-COPY ./substrabac/fixtures /usr/src/fixtures
 COPY ./docker/postgresql/init.sh /docker-entrypoint-initdb.d/
-
-
-WORKDIR /usr/src
