@@ -26,7 +26,7 @@ def queryLedger(options):
     # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
     # careful, directory is <peer>-host not <peer>
     cfg_path = '/substra/conf/' + org_name + '/' + peer['name'] + '-host'
-    os.environ['FABRIC_CFG_PATH'] = cfg_path
+    os.environ.set(os.environ.get('FABRIC_CFG_PATH', cfg_path))
 
     channel_name = LEDGER_CONF['misc']['channel_name']
     chaincode_name = LEDGER_CONF['misc']['chaincode_name']
@@ -83,16 +83,15 @@ def invokeLedger(options, sync=False):
 
     org_name = org['org_name']
 
-    # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
-    # careful, directory is <peer>-host not <peer>
-    cfg_path = '/substra/conf/' + org_name + '/' + peer['name'] + '-host'
-
     orderer = LEDGER_CONF['orderers']['orderer']
     orderer_ca_file = '/substra/data/orgs/orderer/ca-cert.pem'
     orderer_key_file = '/substra/data/orgs/' + org_name + '/tls/' + peer['name'] + '/cli-client.key'
     orderer_cert_file = '/substra/data/orgs/' + org_name + '/tls/' + peer['name'] + '/cli-client.crt'
 
-    os.environ['FABRIC_CFG_PATH'] = cfg_path
+    # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
+    # careful, directory is <peer>-host not <peer>
+    cfg_path = '/substra/conf/' + org_name + '/' + peer['name'] + '-host'
+    os.environ.set(os.environ.get('FABRIC_CFG_PATH', cfg_path))
 
     channel_name = LEDGER_CONF['misc']['channel_name']
     chaincode_name = LEDGER_CONF['misc']['chaincode_name']
