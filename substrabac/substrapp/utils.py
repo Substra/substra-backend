@@ -21,7 +21,7 @@ def queryLedger(options):
     peer = options['peer']
     args = options['args']
 
-    org_name = org['org_name']
+    org_name = org['name']
 
     # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
     # careful, directory is <peer>-host not <peer>
@@ -81,7 +81,7 @@ def invokeLedger(options, sync=False):
     peer = options['peer']
     args = options['args']
 
-    org_name = org['org_name']
+    org_name = org['name']
 
     orderer = LEDGER_CONF['orderers']['orderer']
     orderer_ca_file = '/substra/data/orgs/orderer/ca-cert.pem'

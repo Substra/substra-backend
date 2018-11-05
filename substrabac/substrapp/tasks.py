@@ -470,12 +470,12 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 if data_type == 'trainData':
                     try:
-                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
                 elif data_type == 'testData':
                     try:
-                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
 
