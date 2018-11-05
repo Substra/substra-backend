@@ -161,8 +161,10 @@ def get_cpu_sets(cpu_count, concurrency):
     cpu_sets = []
 
     for cpu_start in range(0, cpu_count, cpu_step):
-        cpu_set = '%s-%s' % (cpu_start, cpu_start + cpu_step - 1)
+        cpu_set = '%s-%s' % (cpu_start, min(cpu_start + cpu_step - 1, cpu_count - 1))
         cpu_sets.append(cpu_set)
+        if len(cpu_sets) == concurrency:
+            break
 
     return cpu_sets
 
