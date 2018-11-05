@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from subprocess import PIPE, Popen as popen
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -10,7 +11,6 @@ try:
 except:
     print('Substrabac SDK is not installed, please run pip install git+https://github.com/SubstraFoundation/substrabacSDK.git@master')
 else:
-
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     res = popen(['substra', 'config', 'http://owkin.substrabac:8000', '0.0', '--profile=owkin',
                  '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
@@ -218,4 +218,17 @@ else:
 
     res = popen(['substra', 'add', 'traintuple', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    res = json.loads(res.decode('utf-8'))
+    print(json.dumps(res, indent=2))
+    trainuple_key = res['pkhash']
+
+    res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+                stdout=PIPE).communicate()[0]
+    res = json.loads(res.decode('utf-8'))
+    print(json.dumps(res, indent=2))
+    while res['status'] != 'done':
+        res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+              stdout=PIPE).communicate()[0]
+        res = json.loads(res.decode('utf-8'))
+        print(json.dumps(res, indent=2))
+        time.sleep(3)
