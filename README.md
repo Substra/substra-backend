@@ -153,6 +153,16 @@ Go in the `substrabac` folder and run the server locally:
  python manage.py runserver 8001 --settings=substrabac.settings.dev.chunantes
  ```
 
+
+## Test with unit and functionnal tests
+
+```
+    coverage run manage.py test
+    coverage report    # For shell report
+    coverage html      # For HTML report
+```
+
+
 ## Test by creating a traintuple
 
 ###### Clean environment
