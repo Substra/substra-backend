@@ -10,13 +10,12 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Challenge, Dataset, Data, Algo
+from substrapp.models import Challenge, Dataset, Algo
 from substrapp.models.utils import compute_hash, get_hash
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, \
-    get_sample_model, get_temporary_text_file
+from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_temporary_text_file
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -27,7 +26,7 @@ class QueryTests(APITestCase):
 
     def setUp(self):
         self.challenge_description, self.challenge_description_filename, \
-        self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
+            self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
         self.script, self.script_filename = get_sample_script()
         self.data_file, self.data_file_filename = get_sample_data()
         self.data_description, self.data_description_filename, self.data_data_opener, self.data_opener_filename = get_sample_dataset()
@@ -56,8 +55,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Challenge added in local db waiting for validation. The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -150,8 +149,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Dataset added in local db waiting for validation. The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -227,8 +226,8 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {
-                                                 'message': 'Data added in local db waiting for validation. The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. \
+                                                The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
@@ -329,8 +328,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Algo added in local db waiting for validation. The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -354,9 +353,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Fail to add algo. Challenge does not exist'
-                                         }, status.HTTP_400_BAD_REQUEST
+            mocked_method.return_value = {'message': 'Fail to add algo. Challenge does not exist'}, status.HTTP_400_BAD_REQUEST
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -445,8 +442,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Traintuple added in local db waiting for validation. The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)

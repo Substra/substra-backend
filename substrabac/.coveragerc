@@ -5,6 +5,7 @@ source =
 
 omit =
     ./substrapp/apps.py
+    ./substrapp/serializers/ledger/*
 
 [report]
 # Regexes for lines to exclude from consideration
