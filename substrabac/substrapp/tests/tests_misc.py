@@ -14,7 +14,79 @@ class Stats():
     @classmethod
     def get_stats(cls):
         """ Docker stats"""
-        return {'read': '2018-11-05T13:44:07.1782391Z', 'preread': '2018-11-05T13:44:06.1746531Z', 'pids_stats': {'current': 8}, 'blkio_stats': {'io_service_bytes_recursive': [{'major': 8, 'minor': 0, 'op': 'Read', 'value': 11776000}, {'major': 8, 'minor': 0, 'op': 'Write', 'value': 0}, {'major': 8, 'minor': 0, 'op': 'Sync', 'value': 0}, {'major': 8, 'minor': 0, 'op': 'Async', 'value': 11776000}, {'major': 8, 'minor': 0, 'op': 'Total', 'value': 11776000}], 'io_serviced_recursive': [{'major': 8, 'minor': 0, 'op': 'Read', 'value': 403}, {'major': 8, 'minor': 0, 'op': 'Write', 'value': 0}, {'major': 8, 'minor': 0, 'op': 'Sync', 'value': 0}, {'major': 8, 'minor': 0, 'op': 'Async', 'value': 403}, {'major': 8, 'minor': 0, 'op': 'Total', 'value': 403}], 'io_queue_recursive': [], 'io_service_time_recursive': [], 'io_wait_time_recursive': [], 'io_merged_recursive': [], 'io_time_recursive': [], 'sectors_recursive': []}, 'num_procs': 0, 'storage_stats': {}, 'cpu_stats': {'cpu_usage': {'total_usage': 22900421851, 'percpu_usage': [4944824970, 4964929089, 8163433379, 4827234413, 0, 0, 0, 0], 'usage_in_kernelmode': 5520000000, 'usage_in_usermode': 17350000000}, 'system_cpu_usage': 185691120000000, 'online_cpus': 8, 'throttling_data': {'periods': 0, 'throttled_periods': 0, 'throttled_time': 0}}, 'precpu_stats': {'cpu_usage': {'total_usage': 18898246805, 'percpu_usage': [3938977859, 3966955357, 7165817747, 3826495842, 0, 0, 0, 0], 'usage_in_kernelmode': 5470000000, 'usage_in_usermode': 13390000000}, 'system_cpu_usage': 185683050000000, 'online_cpus': 8, 'throttling_data': {'periods': 0, 'throttled_periods': 0, 'throttled_time': 0}}, 'memory_stats': {'usage': 1404354560, 'max_usage': 1404616704, 'stats': {'active_anon': 1387876352, 'active_file': 708608, 'cache': 11849728, 'dirty': 241664, 'hierarchical_memory_limit': 8589934592, 'hierarchical_memsw_limit': 17179869184, 'inactive_anon': 0, 'inactive_file': 11141120, 'mapped_file': 4927488, 'pgfault': 341053, 'pgmajfault': 53, 'pgpgin': 343366, 'pgpgout': 1605, 'rss': 1388003328, 'rss_huge': 0, 'total_active_anon': 1387876352, 'total_active_file': 708608, 'total_cache': 11849728, 'total_dirty': 241664, 'total_inactive_anon': 0, 'total_inactive_file': 11141120, 'total_mapped_file': 4927488, 'total_pgfault': 341053, 'total_pgmajfault': 53, 'total_pgpgin': 343366, 'total_pgpgout': 1605, 'total_rss': 1388003328, 'total_rss_huge': 0, 'total_unevictable': 0, 'total_writeback': 0, 'unevictable': 0, 'writeback': 0}, 'limit': 8589934592}, 'name': '/job_c9868', 'id': '60fa7ab1c6dafdaa08ec3e2b95b16120757ac5cb7ebd512b3526b2d521623776', 'networks': {'eth0': {'rx_bytes': 758, 'rx_packets': 9, 'rx_errors': 0, 'rx_dropped': 0, 'tx_bytes': 0, 'tx_packets': 0, 'tx_errors': 0, 'tx_dropped': 0}}}
+        return {"read": "2018-11-05T13:44:07.1782391Z",
+                "preread": "2018-11-05T13:44:06.1746531Z",
+                "pids_stats": {
+                    "current": 8
+                },
+                "num_procs": 0,
+                "storage_stats": {},
+                "cpu_stats": {
+                    "cpu_usage": {
+                        "total_usage": 22900421851,
+                        "percpu_usage": [
+                            4944824970,
+                            4964929089,
+                            8163433379,
+                            4827234413,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "usage_in_kernelmode": 5520000000,
+                        "usage_in_usermode": 17350000000
+                    },
+                    "system_cpu_usage": 185691120000000,
+                    "online_cpus": 8,
+                    "throttling_data": {
+                        "periods": 0,
+                        "throttled_periods": 0,
+                        "throttled_time": 0
+                    }},
+                "precpu_stats": {
+                    "cpu_usage": {
+                        "total_usage": 18898246805,
+                        "percpu_usage": [
+                            3938977859,
+                            3966955357,
+                            7165817747,
+                            3826495842,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "usage_in_kernelmode": 5470000000,
+                        "usage_in_usermode": 13390000000
+                    },
+                    "system_cpu_usage": 185683050000000,
+                    "online_cpus": 8,
+                    "throttling_data": {
+                        "periods": 0,
+                        "throttled_periods": 0,
+                        "throttled_time": 0
+                    }
+                },
+                "memory_stats": {
+                    "usage": 1404354560,
+                    "max_usage": 1404616704,
+                    "limit": 8589934592
+                },
+                "name": "/job_c9868",
+                "id": "60fa7ab1c6dafdaa08ec3e2b95b16120757ac5cb7ebd512b3526b2d521623776",
+                "networks": {
+                    "eth0": {
+                        "rx_bytes": 758,
+                        "rx_packets": 9,
+                        "rx_errors": 0,
+                        "rx_dropped": 0,
+                        "tx_bytes": 0,
+                        "tx_packets": 0,
+                        "tx_errors": 0,
+                        "tx_dropped": 0
+                    }
+                }}
 
 
 class JobStats():
