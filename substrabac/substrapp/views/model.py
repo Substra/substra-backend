@@ -97,7 +97,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             error = e
                 finally:
                     if error is not None:
-                        return Response(error, status=status.HTTP_400_BAD_REQUEST)
+                        return Response({'message': str(error)}, status=status.HTTP_400_BAD_REQUEST)
 
                     # do not give access to local files address
                     if instance is not None:
