@@ -10,14 +10,11 @@ services:
   substrabacowkin:
     container_name: owkin.substrabac
     hostname: substrabacowkin
-    build:
-        context: ./
-        dockerfile: ./docker/substrabac/Dockerfile
+    image: substra/substrabac
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.owkin; python3 manage.py runserver 0.0.0.0:8000"
     volumes:
-      - ./substrabac/medias:/usr/src/app/medias
-      # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - /substra:/substra
+      - /substra/data/orgs/owkin/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
     links:
       - postgresql
       - rabbit
@@ -30,18 +27,16 @@ services:
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
       - PYTHONUNBUFFERED=1
+      - FABRIC_CFG_PATH=/substra/conf/owkin/peer1/
 
   substrabacchunantes:
     container_name: chunantes.substrabac
     hostname: substrabacchunantes
-    build:
-        context: ./
-        dockerfile: ./docker/substrabac/Dockerfile
+    image: substra/substrabac
     command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.chunantes; python3 manage.py runserver 0.0.0.0:8001"
     volumes:
-      - ./substrabac/medias:/usr/src/app/medias
-      # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - /substra:/substra
+      - /substra/data/orgs/chu-nantes/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
     links:
       - postgresql
       - rabbit
@@ -54,16 +49,17 @@ services:
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
       - PYTHONUNBUFFERED=1
+      - FABRIC_CFG_PATH=/substra/conf/chu-nantes/peer1/
 
   # Celery worker
 
   celerybeat:
     container_name: celerybeat
     hostname: celerybeat
-    build:
-      context: ./
-      dockerfile: ./docker/celery/Dockerfile
-    command: celery -A substrabac beat -l info -b rabbit
+    image: substra/celerybeat
+    command: /bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"
+    volumes:
+      - /substra:/substra
     links:
       - rabbit
     depends_on:
@@ -76,15 +72,12 @@ services:
     container_name: worker_owkin
     hostname: worker_owkin
     # runtime: nvidia
-    build:
-      context: ./
-      dockerfile: ./docker/celery/Dockerfile
-    command: celery -A substrabac worker -l info -n owkin -Q owkin,celery -b rabbit
+    image: substra/celeryworker
+    command: /bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n owkin -Q owkin,celery -b rabbit"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./substrabac/medias:/usr/src/app/medias
-      # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - /substra:/substra
+      - /substra/data/orgs/owkin/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
     links:
       - rabbit
       - substrabacowkin
@@ -95,21 +88,18 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
-      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
+      - FABRIC_CFG_PATH=/substra/conf/owkin/peer1/
 
   worker_chunantes:
     container_name: worker_chunantes
     hostname: worker_chunantes
     # runtime: nvidia
-    build:
-      context: ./
-      dockerfile: ./docker/celery/Dockerfile
-    command: celery -A substrabac worker -l info -n chunantes -Q chu-nantes,celery -b rabbit
+    image: substra/celeryworker
+    command: /bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n chunantes -Q chu-nantes,celery -b rabbit"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./substrabac/medias:/usr/src/app/medias
-      # /!\ DO NOT MOUNT WITH CURRENT PORT SETUP
-      # - ./substrabac/substrapp/conf:/usr/src/app/substrapp/conf
+      - /substra:/substra
+      - /substra/data/orgs/chu-nantes/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
     links:
       - rabbit
     depends_on:
@@ -120,7 +110,7 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
       - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
-      - DOCKER_MEDIA_ROOT=${PWD}/substrabac
+      - FABRIC_CFG_PATH=/substra/conf/chu-nantes/peer1/
 
 
   rabbit:
@@ -138,11 +128,9 @@ services:
   postgresql:
     container_name: postgresql
     hostname: postgresql
-    build:
-      context: ./
-      dockerfile: ./docker/postgresql/Dockerfile
+    image: substra/postgresql
     volumes:
-      - ./postgres-data:/var/lib/postgresql/data
+      - /substra/postgres-data:/var/lib/postgresql/data
 #    ports:
 #      - "5432:5432"
     environment:

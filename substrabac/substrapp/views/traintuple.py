@@ -1,14 +1,17 @@
 from django.conf import settings
-from rest_framework import mixins
+from django.http import Http404
+from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.utils import queryLedger
+from substrapp.views.utils import getObjectFromLedger, JsonException
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin,
                         mixins.ListModelMixin,
                         GenericViewSet):
     serializer_class = LedgerTrainTupleSerializer
@@ -70,3 +73,23 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         })
 
         return Response(data, status=st)
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        if len(pk) != 64:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+
+        try:
+            int(pk, 16)  # test if pk is correct (hexadecimal)
+        except:
+            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+        else:
+            # get instance from remote node
+            try:
+                data = getObjectFromLedger(pk)
+            except JsonException as e:
+                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return Response(data, status=status.HTTP_200_OK)

@@ -1,6 +1,5 @@
 from __future__ import absolute_import, unicode_literals
 
-import getpass
 import os
 import tarfile
 import tempfile
@@ -471,12 +470,12 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 if data_type == 'trainData':
                     try:
-                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
                 elif data_type == 'testData':
                     try:
-                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['org_name'])
+                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
 
@@ -510,8 +509,6 @@ def doTrainingTask(traintuple):
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
         media_root_path = getattr(settings, 'MEDIA_ROOT')
         project_root_path = getattr(settings, 'PROJECT_ROOT')
-        outside_media_root_path = media_root_path.replace(project_root_path,
-                                                          os.environ.get('DOCKER_MEDIA_ROOT', project_root_path))
 
         traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                          'traintuple/%s/' % (traintuple['key']))
@@ -533,14 +530,10 @@ def doTrainingTask(traintuple):
 
         # Run algo, train and make train predictions
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {train_data_path.replace(media_root_path,
-                                           outside_media_root_path): {'bind': '/sandbox/data', 'mode': 'ro'},
-                   train_pred_path.replace(media_root_path,
-                                           outside_media_root_path): {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   model_path.replace(media_root_path,
-                                      outside_media_root_path): {'bind': '/sandbox/model', 'mode': 'rw'},
-                   opener_file.replace(media_root_path,
-                                       outside_media_root_path): {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
 
@@ -596,14 +589,10 @@ def doTrainingTask(traintuple):
 
         # Compute metrics on train predictions
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {train_data_path.replace(media_root_path,
-                                           outside_media_root_path): {'bind': '/sandbox/data', 'mode': 'ro'},
-                   train_pred_path.replace(media_root_path,
-                                           outside_media_root_path): {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file.replace(media_root_path,
-                                        outside_media_root_path): {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file.replace(media_root_path,
-                                       outside_media_root_path): {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
@@ -700,8 +689,6 @@ def doTestingTask(traintuple):
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
         media_root_path = getattr(settings, 'MEDIA_ROOT')
         project_root_path = getattr(settings, 'PROJECT_ROOT')
-        outside_media_root_path = media_root_path.replace(project_root_path,
-                                                          os.environ.get('DOCKER_MEDIA_ROOT', project_root_path))
         traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                          'traintuple/%s/' % (traintuple['key']))
         algo_path = path.join(traintuple_root_path)
@@ -722,14 +709,10 @@ def doTestingTask(traintuple):
 
         # Run algo and make test predictions
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {test_data_path.replace(media_root_path,
-                                          outside_media_root_path): {'bind': '/sandbox/data', 'mode': 'ro'},
-                   test_pred_path.replace(media_root_path,
-                                          outside_media_root_path): {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   model_path.replace(media_root_path,
-                                      outside_media_root_path): {'bind': '/sandbox/model', 'mode': 'rw'},
-                   opener_file.replace(media_root_path,
-                                       outside_media_root_path): {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None
@@ -784,14 +767,10 @@ def doTestingTask(traintuple):
 
         # Compute metrics on train predictions
         # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {test_data_path.replace(media_root_path,
-                                          outside_media_root_path): {'bind': '/sandbox/data', 'mode': 'ro'},
-                   test_pred_path.replace(media_root_path,
-                                          outside_media_root_path): {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file.replace(media_root_path,
-                                        outside_media_root_path): {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file.replace(media_root_path,
-                                       outside_media_root_path): {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
         mem_limit = ressource_manager.memory_limit_mb()
         cpu_set = None

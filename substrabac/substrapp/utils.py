@@ -6,8 +6,8 @@ import threading
 
 from rest_framework import status
 
-from substrabac.settings.common import PROJECT_ROOT
-from substrapp.conf import conf
+from substrabac.settings.common import PROJECT_ROOT, LEDGER_CONF
+
 
 #######
 # /!\ #
@@ -21,14 +21,15 @@ def queryLedger(options):
     peer = options['peer']
     args = options['args']
 
-    org_name = org['org_name']
+    org_name = org['name']
 
-    # update config path for using right core.yaml
-    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './conf/' + org_name + '/' + peer['name'])
-    os.environ['FABRIC_CFG_PATH'] = cfg_path
+    # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
+    # careful, directory is <peer>-host not <peer>
+    cfg_path = '/substra/conf/' + org_name + '/' + peer['name'] + '-host'
+    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH', cfg_path)
 
-    channel_name = conf['misc']['channel_name']
-    chaincode_name = conf['misc']['chaincode_name']
+    channel_name = LEDGER_CONF['misc']['channel_name']
+    chaincode_name = LEDGER_CONF['misc']['chaincode_name']
 
     print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
         'channel_name': channel_name,
@@ -80,23 +81,20 @@ def invokeLedger(options, sync=False):
     peer = options['peer']
     args = options['args']
 
-    org_name = org['org_name']
+    org_name = org['name']
 
-    # update config path for using right core.yaml
-    cfg_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './conf/' + org_name + '/' + peer['name'])
+    orderer = LEDGER_CONF['orderers']['orderer']
+    orderer_ca_file = '/substra/data/orgs/orderer/ca-cert.pem'
+    orderer_key_file = '/substra/data/orgs/' + org_name + '/tls/' + peer['name'] + '/cli-client.key'
+    orderer_cert_file = '/substra/data/orgs/' + org_name + '/tls/' + peer['name'] + '/cli-client.crt'
 
-    orderer = conf['orderers']['orderer']
-    orderer_ca_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   'conf/orderer/ca-cert.pem')
-    orderer_key_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                    'conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.key')
-    orderer_cert_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                     'conf/' + org_name + '/tls/' + peer['name'] + '/cli-client.crt')
+    # update config path for using right core.yaml in /substra/conf/<org>/<peer>-host
+    # careful, directory is <peer>-host not <peer>
+    cfg_path = '/substra/conf/' + org_name + '/' + peer['name'] + '-host'
+    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH', cfg_path)
 
-    os.environ['FABRIC_CFG_PATH'] = cfg_path
-
-    channel_name = conf['misc']['channel_name']
-    chaincode_name = conf['misc']['chaincode_name']
+    channel_name = LEDGER_CONF['misc']['channel_name']
+    chaincode_name = LEDGER_CONF['misc']['chaincode_name']
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
@@ -131,7 +129,7 @@ def invokeLedger(options, sync=False):
         msg = output.stderr.decode('utf-8')
         data = {'message': msg}
 
-        if 'Error' in msg:
+        if 'Error' in msg or 'ERRO' in msg:
             st = status.HTTP_400_BAD_REQUEST
         elif 'access denied' in msg or 'authentication handshake failed' in msg:
             st = status.HTTP_403_FORBIDDEN
