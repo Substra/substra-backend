@@ -1,120 +1,23 @@
 import os
 import shutil
 import tempfile
-from io import StringIO
 
 import mock
 
 from django.urls import reverse
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.test import TestCase, override_settings
+from django.test import override_settings
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Challenge, Dataset, Data, Algo
+from substrapp.models import Challenge, Dataset, Algo
 from substrapp.models.utils import compute_hash, get_hash
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
 
+from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_temporary_text_file
+
 MEDIA_ROOT = tempfile.mkdtemp()
-
-
-def get_temporary_text_file(contents, filename):
-    """
-    Creates a temporary text file
-
-    :param contents: contents of the file
-    :param filename: name of the file
-    :type contents: str
-    :type filename: str
-    """
-    f = StringIO()
-    flength = f.write(contents)
-    text_file = InMemoryUploadedFile(f, None, filename, 'text', flength, None)
-    # Setting the file to its start
-    text_file.seek(0)
-    return text_file
-
-
-# TODO for files?? b64.b64encode(zlib.compress(f.read())) ??
-
-def get_sample_challenge():
-    description_content = "Super challenge"
-    description_filename = "description.md"
-    description = get_temporary_text_file(description_content, description_filename)
-    metrics_content = "def metrics():\n\tpass"
-    metrics_filename = "metrics.py"
-    metrics = get_temporary_text_file(metrics_content, metrics_filename)
-
-    return description, description_filename, metrics, metrics_filename
-
-
-def get_sample_script():
-    script_content = "import slidelib\n\ndef read():\n\tpass"
-    script_filename = "script.py"
-    script = get_temporary_text_file(script_content, script_filename)
-
-    return script, script_filename
-
-
-def get_sample_dataset():
-    description_content = "description"
-    description_filename = "description.md"
-    description = get_temporary_text_file(description_content, description_filename)
-    data_opener_content = "import slidelib\n\ndef read():\n\tpass"
-    data_opener_filename = "data_opener.py"
-    data_opener = get_temporary_text_file(data_opener_content, data_opener_filename)
-
-    return description, description_filename, data_opener, data_opener_filename
-
-
-def get_sample_data():
-    file_content = "0\n1\n2"
-    file_filename = "file.csv"
-    file = get_temporary_text_file(file_content, file_filename)
-
-    return file, file_filename
-
-
-def create(self):
-    return {}, status.HTTP_201_CREATED
-
-
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
-class ModelTests(TestCase):
-    """Model tests"""
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        shutil.rmtree(MEDIA_ROOT)
-
-    def test_create_challenge(self):
-        description, _, metrics, _ = get_sample_challenge()
-        challenge = Challenge.objects.create(description=description,
-                                             metrics=metrics)
-
-        self.assertEqual(challenge.pkhash, get_hash(description))
-        self.assertFalse(challenge.validated)
-
-    def test_create_dataset(self):
-        description, _, data_opener, _ = get_sample_dataset()
-        dataset = Dataset.objects.create(description=description, data_opener=data_opener, name="slides_opener")
-        self.assertEqual(dataset.pkhash, get_hash(data_opener))
-
-    def test_create_data(self):
-        file, _ = get_sample_data()
-        data = Data.objects.create(file=file)
-        self.assertEqual(data.pkhash, get_hash(file))
-        self.assertFalse(data.validated)
-
-    def test_create_algo(self):
-        script, _ = get_sample_script()
-        algo = Algo.objects.create(file=script)
-        self.assertEqual(algo.pkhash, get_hash(script))
-        self.assertFalse(algo.validated)
 
 
 # APITestCase
@@ -123,7 +26,7 @@ class QueryTests(APITestCase):
 
     def setUp(self):
         self.challenge_description, self.challenge_description_filename, \
-        self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
+            self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
         self.script, self.script_filename = get_sample_script()
         self.data_file, self.data_file_filename = get_sample_data()
         self.data_description, self.data_description_filename, self.data_data_opener, self.data_opener_filename = get_sample_dataset()
@@ -152,8 +55,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Challenge added in local db waiting for validation. The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -246,8 +149,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Dataset added in local db waiting for validation. The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -323,8 +226,8 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {
-                                                 'message': 'Data added in local db waiting for validation. The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. \
+                                                The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
@@ -425,8 +328,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Algo added in local db waiting for validation. The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -450,9 +353,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Fail to add algo. Challenge does not exist'
-                                         }, status.HTTP_400_BAD_REQUEST
+            mocked_method.return_value = {'message': 'Fail to add algo. Challenge does not exist'}, status.HTTP_400_BAD_REQUEST
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -541,8 +442,8 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {
-                                             'message': 'Traintuple added in local db waiting for validation. The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
