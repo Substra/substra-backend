@@ -7,7 +7,7 @@ from subprocess import call
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-def generate_docker_compose_file(conff):
+def generate_docker_compose_file(conf):
     try:
         from ruamel import yaml
     except ImportError:
@@ -54,23 +54,23 @@ def generate_docker_compose_file(conff):
                    'environment': ['DATABASE_HOST=postgresql',
                                    'DJANGO_SETTINGS_MODULE=substrabac.settings.dev.%s' % org_name,
                                    'PYTHONUNBUFFERED=1',
-                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['org_name']],
+                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
                    'volumes': ['/substra:/substra',
-                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['org_name']],
+                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['name']],
                    'depends_on': ['postgresql', 'rabbit']}
 
         worker = {'container_name': '%s.worker' % org_name,
                   'image': 'substra/celeryworker',
                   # 'runtime': 'nvidia',
-                  'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (org_name, org_conf['org_name']),
-                  'environment': ['ORG=%s' % org_conf['org_name'],
+                  'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (org_name, org_conf['name']),
+                  'environment': ['ORG=%s' % org_conf['name'],
                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.dev.%s' % org_name,
                                   'PYTHONUNBUFFERED=1',
                                   'DATABASE_HOST=postgresql',
-                                  'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['org_name']],
+                                  'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
-                              '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['org_name']],
+                              '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['name']],
                   'depends_on': ['substrabac%s' % org_name, 'rabbit']}
 
         docker_compose['substrabac_services']['substrabac' + org_name] = backend

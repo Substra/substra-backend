@@ -1,6 +1,11 @@
 # Substrabac
 Backend of the Substra platform
 
+## Version
+
+You will note substrabac use a versioned REST API with the header protocol.
+Current is `0.0`.
+
 ## Getting started 1: Prepare the django app
 
 1. Clone the repo:
@@ -12,7 +17,7 @@ On linux systems, all the docker isntances create files with `root` permissions.
 For working correctly in a dev environment, we need the files created by our dockers have the same rights as the one we use to launch our celery tasks.
 The celery tasks run dockers containers, these containers create files (models), the celery tasks manipulate these files.
 
-For being able to make dockers instance create files qith the rights as the current linux user, we need to modify some files as described here:
+For being able to make dockers instance create files with the rights as the current linux user, we need to modify some files as described here:
 https://www.jujens.eu/posts/en/2017/Jul/02/docker-userns-remap/
 
 :warning: Modifying these files will override your global system configuration. Keep in mind it will apply to all the launched dockers from your machine.
@@ -50,7 +55,7 @@ Final step is to redownload all the dockers image, go in the substra-network pro
 Do not forget to build the substra-model image as described in the step 9 of this tutorial.
 
 3. Install dependencies (might be useful to create a virtual environment before, eg using virtualenv and virtualenvwrapper):
-  - For numpy, scipy, and pandas (for Unbuntu & Debian users): `sudo apt-get install python-numpy python-scipy python-pandas`
+  - For numpy, scipy, and pandas (for Ubuntu & Debian users): `sudo apt-get install python-numpy python-scipy python-pandas`
   - `pip install -r requirements.txt`
 4. Setup the database:
   - Install [PostgreSQL](https://www.postgresql.org/download/) if needed
@@ -194,10 +199,19 @@ You can then configure it like that:
 
 Now you can reach `http://localhost:8000/` and `http://localhost:8001/` :tada:
 
-## Version
+## Launching with docker
 
-You will note substrabac use a versioned REST API with the header protocol.
-Current is `0.0`.
+As for substra-network, you can launch all the services in docker containers.|
+First, build the images:
+```bash
+$> sh build-docker-images.sh
+```
+Then, go to the`docker` dir and run `start.py`:
+```bash
+$> python3 start.py
+```
+
+Check your services are correctly started with `docker ps -a`.
 
 ## Miscelaneous
 
