@@ -220,15 +220,17 @@ else:
                 stdout=PIPE).communicate()[0]
     res = json.loads(res.decode('utf-8'))
     print(json.dumps(res, indent=2))
-    trainuple_key = res['pkhash']
 
-    res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
-                stdout=PIPE).communicate()[0]
-    res = json.loads(res.decode('utf-8'))
-    print(json.dumps(res, indent=2))
-    while res['status'] != 'done':
+    if 'pkhash' in res:
+        trainuple_key = res['pkhash']
+
         res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
-              stdout=PIPE).communicate()[0]
+                    stdout=PIPE).communicate()[0]
         res = json.loads(res.decode('utf-8'))
         print(json.dumps(res, indent=2))
-        time.sleep(3)
+        while res['status'] != 'done':
+            res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+                  stdout=PIPE).communicate()[0]
+            res = json.loads(res.decode('utf-8'))
+            print(json.dumps(res, indent=2))
+            time.sleep(3)

@@ -3,6 +3,7 @@ import tempfile
 
 import requests
 from django.conf import settings
+from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -35,27 +36,35 @@ class AlgoViewSet(mixins.CreateModelMixin,
         serializer.is_valid(raise_exception=True)
 
         # create on db
-        instance = self.perform_create(serializer)
+        try:
+            instance = self.perform_create(serializer)
+        except IntegrityError as exc:
+            return Response({
+                'message': 'An Algo with these data values already exists.'},
+                status=status.HTTP_409_CONFLICT)
+        except Exception as exc:
+            return Response({'message': exc.args},
+                            status=status.HTTP_400_BAD_REQUEST)
+        else:
+            # init ledger serializer
+            ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
+                                                           'permissions': data.get('permissions', 'all'),
+                                                           'challenge_key': data.get('challenge_key'),
+                                                           'instance': instance},
+                                                     context={'request': request})
+            if not ledger_serializer.is_valid():
+                # delete instance
+                instance.delete()
+                raise ValidationError(ledger_serializer.errors)
 
-        # init ledger serializer
-        ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
-                                                       'permissions': data.get('permissions', 'all'),
-                                                       'challenge_key': data.get('challenge_key'),
-                                                       'instance': instance},
-                                                 context={'request': request})
-        if not ledger_serializer.is_valid():
-            # delete instance
-            instance.delete()
-            raise ValidationError(ledger_serializer.errors)
+            # create on ledger
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-        # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            headers = self.get_success_headers(serializer.data)
 
-        headers = self.get_success_headers(serializer.data)
-
-        d = dict(serializer.data)
-        d.update(data)
-        return Response(d, status=st, headers=headers)
+            d = dict(serializer.data)
+            d.update(data)
+            return Response(d, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
         try:
