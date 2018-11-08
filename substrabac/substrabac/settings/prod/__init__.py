@@ -1,30 +1,17 @@
-from .common import *
+from ..common import *
 
-from .deps.restframework import *
+from ..deps.restframework import *
+from ..deps.cors import *
+from ..deps.raven import *
 
-DEBUG = False
-
-# Database
-# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get('SUBSTRABAC_DB_NAME', ''),
-        'USER': os.environ.get('SUBSTRABAC_DB_USER', ''),
-        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', ''),
-        'HOST': os.environ.get('DATABASE_HOST', ''),
-        'PORT': 5432,
-    }
-}
-
+DEBUG = True
 
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'root': {
         'level': 'WARNING',
-        #'handlers': ['sentry'],
+        'handlers': ['sentry'],
     },
     'formatters': {
         'verbose': {
@@ -37,11 +24,11 @@ LOGGING = {
         },
     },
     'handlers': {
-        # 'sentry': {
-        #     'level': 'ERROR',
-        #     'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-        #     'tags': {'custom-tag': 'x'},
-        # },
+        'sentry': {
+            'level': 'ERROR',
+            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
+            'tags': {'custom-tag': 'x'},
+        },
         'console': {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',
@@ -64,16 +51,15 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': True,
         },
-        # 'raven': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console'],
-        #     'propagate': False,
-        # },
-        # 'sentry.errors': {
-        #     'level': 'DEBUG',
-        #     'handlers': ['console'],
-        #     'propagate': False,
-        # }
+        'raven': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'sentry.errors': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        }
     },
 }
-
