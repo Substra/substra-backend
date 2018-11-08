@@ -5,6 +5,9 @@ REST_FRAMEWORK = {
         #'rest_framework.renderers.AdminRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.SessionAuthentication',
+    ),
     'UNICODE_JSON': False,
     'DEFAULT_VERSIONING_CLASS': 'libs.versioning.AcceptHeaderVersioningRequired',
     'ALLOWED_VERSIONS': ('0.0',),
