@@ -30,6 +30,9 @@ DATABASES = {
 
 MEDIA_ROOT = '/substra/medias/chunantes'
 
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(PROJECT_ROOT, 'statics')
+
 SITE_ID = 1
 SITE_HOST = os.environ.get('SITE_HOST', 'chunantes.substrabac')
 SITE_PORT = os.environ.get('SITE_PORT', '8001')
