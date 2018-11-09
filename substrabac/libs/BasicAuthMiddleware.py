@@ -31,6 +31,8 @@ class BasicAuthMiddleware:
 
     def __call__(self, request):
         if request.method != 'OPTIONS':
+            response = self.get_response(request)
+
             if 'HTTP_AUTHORIZATION' not in request.META:
                 return self.unauthed()
             else:
@@ -41,7 +43,6 @@ class BasicAuthMiddleware:
                 auth = base64.b64decode(auth.strip()).decode('utf-8')
                 username, password = auth.split(':', 1)
                 if username == settings.BASICAUTH_USERNAME and password == settings.BASICAUTH_PASSWORD:
-                    del request.META['HTTP_AUTHORIZATION']
-                    return None
+                    return response
 
-            return self.get_response(request)
+                return self.unauthed()
