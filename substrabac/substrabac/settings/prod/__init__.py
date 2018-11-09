@@ -69,7 +69,7 @@ LOGGING = {
 }
 
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(PROJECT_ROOT, 'statics')
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 # deactivate when public
 BASICAUTH_USERNAME = os.environ.get('AUTH_USER', '')
