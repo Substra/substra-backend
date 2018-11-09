@@ -4,7 +4,11 @@ from ..deps.restframework import *
 from ..deps.cors import *
 from ..deps.raven import *
 
-DEBUG = True
+DEBUG = False
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+os.environ['HTTPS'] = "on"
+os.environ['wsgi.url_scheme'] = 'https'  # safer
 
 LOGGING = {
     'version': 1,
