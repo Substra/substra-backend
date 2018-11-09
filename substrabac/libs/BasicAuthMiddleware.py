@@ -1,3 +1,4 @@
+from django.core.exceptions import MiddlewareNotUsed
 from django.http import HttpResponse
 from django.conf import settings
 
@@ -14,14 +15,21 @@ html_template = """
 """
 
 
-class BasicAuthMiddleware(object):
+class BasicAuthMiddleware:
     def unauthed(self):
         response = HttpResponse(html_template, content_type="text/html")
         response['WWW-Authenticate'] = 'Basic realm="Administrator area"'
         response.status_code = 401
         return response
 
-    def process_request(self, request):
+    def __init__(self, get_response):
+        if not settings.DEBUG:
+            raise MiddlewareNotUsed
+
+        self.get_response = get_response
+        # One-time configuration and initialization.
+
+    def __call__(self, request):
         if request.method != 'OPTIONS':
             if 'HTTP_AUTHORIZATION' not in request.META:
                 return self.unauthed()
@@ -36,4 +44,4 @@ class BasicAuthMiddleware(object):
                     del request.META['HTTP_AUTHORIZATION']
                     return None
 
-                return self.unauthed()
+            return self.get_response(request)
