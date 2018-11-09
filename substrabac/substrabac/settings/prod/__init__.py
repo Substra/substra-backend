@@ -63,3 +63,9 @@ LOGGING = {
         }
     },
 }
+
+
+# deactivate when public
+BASICAUTH_USERNAME = os.environ.get('AUTH_USER', '')
+BASICAUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', '')
+MIDDLEWARE = ['utils.BasicAuthMiddleware.BasicAuthMiddleware'] + MIDDLEWARE
