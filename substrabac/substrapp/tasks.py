@@ -39,7 +39,7 @@ def get_hash(file):
 def get_computed_hash(url):
 
     try:
-        kwargs = {'auth': (getattr(settings, 'AUTH_USER'), getattr(settings, 'AUTH_PASSWORD')), 'verify': False}
+        kwargs = {'auth': (getattr(settings, 'BASICAUTH_USERNAME'), getattr(settings, 'BASICAUTH_USERNAME')), 'verify': False}
         r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
     except:
         raise Exception('Failed to check hash due to failed file fetching %s' % url)
