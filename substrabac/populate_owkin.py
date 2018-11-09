@@ -14,7 +14,7 @@ except:
 else:
 
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-    res = popen(['substra', 'config', 'https://35.187.120.182:9000', '0.0', getattr(settings, 'BASICAUTH_USERNAME'), getattr(settings, 'BASICAUTH_USERNAME'), '--profile=owkin',
+    res = popen(['substra', 'config', 'https://35.187.120.182:9000', '0.0', getattr(settings, 'BASICAUTH_USERNAME'), getattr(settings, 'BASICAUTH_PASSWORD'), '--profile=owkin',
                  '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
 
     print('create dataset with owkin org')
