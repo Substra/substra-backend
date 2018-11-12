@@ -1,3 +1,4 @@
+import re
 import tempfile
 
 import requests
@@ -45,7 +46,11 @@ class DatasetViewSet(mixins.CreateModelMixin,
         try:
             instance = self.perform_create(serializer)
         except IntegrityError as exc:
-            return Response({'message': 'A dataset with this opener file already exists.'},
+            try:
+                pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+            except:
+                pkhash = ''
+            return Response({'message': 'A dataset with this opener file already exists.', 'pkhash': pkhash},
                             status=status.HTTP_409_CONFLICT)
         else:
             # init ledger serializer
