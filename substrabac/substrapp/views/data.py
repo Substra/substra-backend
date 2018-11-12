@@ -1,5 +1,6 @@
 import ntpath
 import os
+import re
 
 from django.db import IntegrityError
 from rest_framework import status, mixins
@@ -50,7 +51,12 @@ class DataViewSet(mixins.CreateModelMixin,
                 try:
                     instances = self.perform_create(serializer)
                 except IntegrityError as exc:
-                    return Response({'message': 'One of the Data you passed already exists in the substrabac local database. Please review your args.'},
+                    try:
+                        pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+                    except:
+                        pkhash = ''
+                    return Response({'message': 'One of the Data you passed already exists in the substrabac local database. Please review your args.',
+                                     'pkhash': pkhash},
                                     status=status.HTTP_409_CONFLICT)
                 except Exception as exc:
                     return Response({'message': exc.args},

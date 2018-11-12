@@ -1,4 +1,5 @@
 import itertools
+import re
 import tempfile
 
 import requests
@@ -39,8 +40,14 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             instance = self.perform_create(serializer)
         except IntegrityError as exc:
+            try:
+                pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+            except:
+                pkhash = ''
             return Response({
-                'message': 'An Algo with these data values already exists.'},
+                'message': 'An Algo with these data values already exists.',
+                'pkhash': pkhash
+            },
                 status=status.HTTP_409_CONFLICT)
         except Exception as exc:
             return Response({'message': exc.args},
