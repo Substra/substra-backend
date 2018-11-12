@@ -38,16 +38,16 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
-        # 'error_file': {
-        #     'class': 'logging.FileHandler',
-        #     'formatter': 'generic',
-        #     'filename': '/var/log/substrabac.error.log',
-        # },
-        # 'access_file': {
-        #     'class': 'logging.FileHandler',
-        #     'formatter': 'generic',
-        #     'filename': '/var/log/substrabac.access.log',
-        # },
+        'error_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'generic',
+            'filename': '/var/log/substrabac.error.log',
+        },
+        'access_file': {
+            'class': 'logging.FileHandler',
+            'formatter': 'generic',
+            'filename': '/var/log/substrabac.access.log',
+        },
     },
     'loggers': {
         'django': {
