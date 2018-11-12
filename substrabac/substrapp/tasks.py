@@ -37,10 +37,15 @@ def get_hash(file):
 
 
 def get_computed_hash(url):
-    kwargs = {
-        'auth': (getattr(settings, 'BASICAUTH_USERNAME', None), getattr(settings, 'BASICAUTH_PASSWORD', None)),
-        'verify': False
-    }
+    kwargs = {}
+    username = getattr(settings, 'BASICAUTH_USERNAME', None)
+    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+
+    if username is not None and password is not None:
+        kwargs = {
+            'auth': (username, password),
+            'verify': False
+        }
 
     try:
         r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)

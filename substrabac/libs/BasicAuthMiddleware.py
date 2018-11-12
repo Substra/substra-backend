@@ -23,26 +23,30 @@ class BasicAuthMiddleware:
         return response
 
     def __init__(self, get_response):
-        if not settings.DEBUG:
+        if settings.DEBUG:
             raise MiddlewareNotUsed
 
         self.get_response = get_response
         # One-time configuration and initialization.
 
     def __call__(self, request):
-        if request.method != 'OPTIONS':
-            response = self.get_response(request)
+        username = getattr(settings, 'BASICAUTH_USERNAME', None)
+        password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
-            if 'HTTP_AUTHORIZATION' not in request.META:
-                return self.unauthed()
-            else:
-                authentication = request.META['HTTP_AUTHORIZATION']
-                (authmeth, auth) = authentication.split(' ', 1)
-                if 'basic' != authmeth.lower():
+        response = self.get_response(request)
+
+        if username is not None and password is not None:
+            if request.method != 'OPTIONS':
+                if 'HTTP_AUTHORIZATION' not in request.META:
                     return self.unauthed()
-                auth = base64.b64decode(auth.strip()).decode('utf-8')
-                username, password = auth.split(':', 1)
-                if username == settings.BASICAUTH_USERNAME and password == settings.BASICAUTH_PASSWORD:
-                    return response
+                else:
+                    authentication = request.META['HTTP_AUTHORIZATION']
+                    (authmeth, auth) = authentication.split(' ', 1)
+                    if 'basic' != authmeth.lower():
+                        return self.unauthed()
+                    auth = base64.b64decode(auth.strip()).decode('utf-8')
+                    username, password = auth.split(':', 1)
+                    if username != settings.BASICAUTH_USERNAME or password != settings.BASICAUTH_PASSWORD:
+                        return self.unauthed()
 
-                return self.unauthed()
+        return response

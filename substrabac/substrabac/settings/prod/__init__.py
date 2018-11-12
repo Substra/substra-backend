@@ -38,16 +38,16 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose'
         },
-        'error_file': {
-            'class': 'logging.FileHandler',
-            'formatter': 'generic',
-            'filename': '/var/log/substrabac.error.log',
-        },
-        'access_file': {
-            'class': 'logging.FileHandler',
-            'formatter': 'generic',
-            'filename': '/var/log/substrabac.access.log',
-        },
+        # 'error_file': {
+        #     'class': 'logging.FileHandler',
+        #     'formatter': 'generic',
+        #     'filename': '/var/log/substrabac.error.log',
+        # },
+        # 'access_file': {
+        #     'class': 'logging.FileHandler',
+        #     'formatter': 'generic',
+        #     'filename': '/var/log/substrabac.access.log',
+        # },
     },
     'loggers': {
         'django': {
@@ -72,6 +72,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 # deactivate when public
-BASICAUTH_USERNAME = os.environ.get('AUTH_USER', '')
-BASICAUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', '')
+BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
+BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
 MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
