@@ -2,7 +2,7 @@ import os
 import json
 
 from subprocess import call
-
+from urllib.request import urlopen
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -21,7 +21,8 @@ def generate_docker_compose_file(conf):
                                                                           'USER=postgres',
                                                                           'POSTGRES_PASSWORD=postgrespwd',
                                                                           'POSTGRES_DB=substrabac'],
-                                                          'volumes': ['/substra/postgres-data:/var/lib/postgresql/data'],
+                                                          'volumes': [
+                                                              '/substra/postgres-data:/var/lib/postgresql/data'],
                                                           },
                                            'celerybeat': {'container_name': 'celerybeat',
                                                           'image': 'substra/celerybeat',
@@ -50,27 +51,38 @@ def generate_docker_compose_file(conf):
         backend = {'container_name': '%s.substrabac' % org_name,
                    'image': 'substra/substrabac',
                    'ports': ['%s:%s' % (port, port)],
-                   'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.prod.%s; python3 manage.py runserver 0.0.0.0:%s"' % (org_name, port),
+                   'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.prod.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
+                   org_name, port),
                    'environment': ['DATABASE_HOST=postgresql',
                                    'DJANGO_SETTINGS_MODULE=substrabac.settings.prod.%s' % org_name,
                                    'PYTHONUNBUFFERED=1',
+                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', None),
+                                   'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', None),
                                    'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
                    'volumes': ['/substra:/substra',
-                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['name']],
+                               '/substra/static:/usr/src/app/substrabac/statics',
+                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
+                               org_conf['name']],
                    'depends_on': ['postgresql', 'rabbit']}
 
         worker = {'container_name': '%s.worker' % org_name,
                   'image': 'substra/celeryworker',
                   # 'runtime': 'nvidia',
-                  'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (org_name, org_conf['name']),
+                  'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
+                  org_name, org_conf['name']),
                   'environment': ['ORG=%s' % org_conf['name'],
                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.prod.%s' % org_name,
                                   'PYTHONUNBUFFERED=1',
+                                  'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', None),
+                                  'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', None),
+                                  'SITE_HOST=%s' % urlopen('http://ip.42.pl/raw').read(),
+                                  'SITE_PORT=9000',
                                   'DATABASE_HOST=postgresql',
                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
-                              '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' % org_conf['name']],
+                              '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
+                              org_conf['name']],
                   'depends_on': ['substrabac%s' % org_name, 'rabbit']}
 
         docker_compose['substrabac_services']['substrabac' + org_name] = backend
@@ -86,7 +98,7 @@ def generate_docker_compose_file(conf):
         COMPOSITION['services'][name] = dconfig
 
     with open(docker_compose['path'], 'w+') as f:
-            f.write(yaml.dump(COMPOSITION, default_flow_style=False, indent=4, line_break=None))
+        f.write(yaml.dump(COMPOSITION, default_flow_style=False, indent=4, line_break=None))
 
     return docker_compose
 
@@ -103,7 +115,6 @@ def stop(docker_compose=None):
 
 
 def start(conf):
-
     print('Generate docker-compose file\n')
     docker_compose = generate_docker_compose_file(conf)
 
