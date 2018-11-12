@@ -4,7 +4,11 @@ from ..deps.restframework import *
 from ..deps.cors import *
 from ..deps.raven import *
 
-DEBUG = True
+DEBUG = False
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+os.environ['HTTPS'] = "on"
+os.environ['wsgi.url_scheme'] = 'https'  # safer
 
 LOGGING = {
     'version': 1,
@@ -63,3 +67,11 @@ LOGGING = {
         }
     },
 }
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
+
+# deactivate when public
+BASICAUTH_USERNAME = os.environ.get('AUTH_USER', '')
+BASICAUTH_PASSWORD = os.environ.get('AUTH_PASSWORD', '')
+MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
