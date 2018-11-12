@@ -38,7 +38,7 @@ def get_hash(file):
 
 def get_computed_hash(url):
     kwargs = {
-        'auth': (getattr(settings, 'BASICAUTH_USERNAME'), getattr(settings, 'BASICAUTH_PASSWORD')),
+        'auth': (getattr(settings, 'BASICAUTH_USERNAME', None), getattr(settings, 'BASICAUTH_PASSWORD', None)),
         'verify': False
     }
 
