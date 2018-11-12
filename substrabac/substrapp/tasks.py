@@ -37,9 +37,13 @@ def get_hash(file):
 
 
 def get_computed_hash(url):
+    kwargs = {
+        'auth': (getattr(settings, 'BASICAUTH_USERNAME'), getattr(settings, 'BASICAUTH_PASSWORD')),
+        'verify': False
+    }
 
     try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
+        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
     except:
         raise Exception('Failed to check hash due to failed file fetching %s' % url)
     else:
@@ -55,8 +59,8 @@ def get_computed_hash(url):
 def get_remote_file(object):
     try:
         content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
-    except Exception:
-        raise Exception('Failed to fetch file')
+    except Exception as e:
+        raise e
     else:
         if computed_hash != object['hash']:
             msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -70,7 +74,10 @@ def fail(key, err_msg):
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]}
+        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key,
+                                                                           'err_msg': str(err_msg).replace('"',
+                                                                                                           "'").replace(
+                                                                               '\\', "").replace('\\n', "")[:200]}
     })
 
     if st != 201:
@@ -200,7 +207,7 @@ def monitoring_job(client, train_args):
 
 class RessourceManager():
     __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 2))
-    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024.**2))
+    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
 
     __cpu_count = os.cpu_count()
     __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
@@ -343,7 +350,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                                                                                        validated=True)
                                 instance.metrics.save('metrics.py', f)
                             except:
-                                return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
+                                return fail(traintuple['key'],
+                                            'Failed to save challenge metrics in local db for later use')
 
                 ''' get algo + model_type '''
                 # get algo file
@@ -429,7 +437,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
 
                         copy(model.file.path,
-                             path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'model')))
+                             path.join(getattr(settings, 'MEDIA_ROOT'),
+                                       'traintuple/%s/%s' % (traintuple['key'], 'model')))
 
                 # put algo to root
                 try:
@@ -470,12 +479,12 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 if data_type == 'trainData':
                     try:
-                        doTrainingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
+                        doTrainingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
                 elif data_type == 'testData':
                     try:
-                        doTestingTask.apply_async((traintuple, ), queue=settings.LEDGER['org']['name'])
+                        doTestingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
                         return fail(traintuple['key'], e)
 
@@ -648,7 +657,8 @@ def doTrainingTask(traintuple):
 
         url_http = 'http' if settings.DEBUG else 'https'
         current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
-        end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
+        end_model_file = '%s://%s%s' % (
+        url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
         # Load performance
         with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:

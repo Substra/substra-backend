@@ -31,5 +31,5 @@ DATABASES = {
 MEDIA_ROOT = '/substra/medias/chunantes'
 
 SITE_ID = 1
-SITE_HOST = 'chunantes.substrabac'
-SITE_PORT = '8001'
+SITE_HOST = os.environ.get('SITE_HOST', 'chunantes.substrabac')
+SITE_PORT = os.environ.get('SITE_PORT', '8001')
