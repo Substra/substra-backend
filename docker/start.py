@@ -75,9 +75,9 @@ def generate_docker_compose_file(conf):
                                   'PYTHONUNBUFFERED=1',
                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', None),
                                   'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', None),
-                                  'SITE_HOST=%s' % urlopen('http://ip.42.pl/raw').read(),
-                                  'SITE_PORT=9000',
-                                  'DATABASE_HOST=postgresql',
+                                  'SITE_HOST=%s' % os.environ.get('SITE_HOST', 'localhost'),
+                                  'SITE_PORT=%s' % os.environ.get('BACK_PORT', 9000),
+                                  'DATABASE_HOST=postgresql'
                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
