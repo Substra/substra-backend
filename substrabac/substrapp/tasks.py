@@ -306,7 +306,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
-        pass
+        logging.error(e, exc_info=True)
     else:
         traintuples, st = queryLedger({
             'org': settings.LEDGER['org'],
@@ -326,7 +326,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     try:
                         content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                     except Exception as e:
-                        logging.error(e)
+                        logging.error(e, exc_info=True)
                         return fail(traintuple['key'], e)
                     else:
                         try:
@@ -336,7 +336,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             # save/update challenge in local db for later use
                             instance, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
                             instance.metrics.save('metrics.py', f)
-                        except:
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
                             return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
                 else:
                     if not challenge.metrics:
@@ -344,6 +345,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         try:
                             content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                         except Exception as e:
+                            logging.error(e, exc_info=True)
                             return fail(traintuple['key'], e)
                         else:
                             try:
@@ -354,7 +356,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                                 instance, created = Challenge.objects.update_or_create(pkhash=challengeHash,
                                                                                        validated=True)
                                 instance.metrics.save('metrics.py', f)
-                            except:
+                            except Exception as e:
+                                logging.error(e, exc_info=True)
                                 return fail(traintuple['key'],
                                             'Failed to save challenge metrics in local db for later use')
 
@@ -363,6 +366,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     get_remote_file(traintuple['algo'])
                 except Exception as e:
+                    logging.error(e, exc_info=True)
                     return fail(traintuple['key'], e)
 
                 # get model file
@@ -370,6 +374,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     if traintuple[model_type] is not None:
                         get_remote_file(traintuple[model_type])
                 except Exception as e:
+                    logging.error(e, exc_info=True)
                     return fail(traintuple['key'], e)
 
                 # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
@@ -385,6 +390,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
                 except Exception as e:
+                    logging.error(e, exc_info=True)
                     return fail(traintuple['key'], e)
                 else:
                     data_opener_hash = get_hash(dataset.data_opener.path)
@@ -399,6 +405,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     try:
                         data = Data.objects.get(pk=data_key)
                     except Exception as e:
+                        logging.error(e, exc_info=True)
                         return fail(traintuple['key'], e)
                     else:
                         data_hash = get_hash(data.file.path)
@@ -416,7 +423,8 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             zip_ref.extractall(to_directory)
                             zip_ref.close()
                             os.remove(zip_file_path)
-                        except:
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
                             return fail(traintuple['key'], 'Fail to unzip data file')
 
                 # same for model (can be null)
@@ -424,10 +432,11 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     if traintuple[model_type] is not None:
                         model = Model.objects.get(pk=traintuple[model_type]['hash'])
-                except Exception as e:  # get it from its address
+                except:  # get it from its address
                     try:
                         content, computed_hash = get_remote_file(traintuple[model_type])
-                    except:
+                    except Exception as e:
+                        logging.error(e, exc_info=True)
                         return fail(traintuple['key'], e)
                     else:
                         to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
@@ -448,7 +457,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 # put algo to root
                 try:
                     algo = Algo.objects.get(pk=traintuple['algo']['hash'])
-                except Exception as e:  # get it from its address
+                except:  # get it from its address
                     untar_algo(traintuple)
                 else:
                     if algo.file:
@@ -459,7 +468,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 # same for challenge metrics
                 try:
                     challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
-                except Exception as e:
+                except:
                     save_challenge(traintuple)
                 else:
                     if challenge.metrics:
@@ -477,21 +486,22 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 })
 
                 if st != 201:
-                    # TODO log error
-                    pass
+                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type, exc_info=True)
+                else:
+                    logging.info('Prepare Task success %s' % data_type)
 
-                # TODO log success
-
-                if data_type == 'trainData':
-                    try:
-                        doTrainingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
-                    except Exception as e:
-                        return fail(traintuple['key'], e)
-                elif data_type == 'testData':
-                    try:
-                        doTestingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
-                    except Exception as e:
-                        return fail(traintuple['key'], e)
+                    if data_type == 'trainData':
+                        try:
+                            doTrainingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
+                            return fail(traintuple['key'], e)
+                    elif data_type == 'testData':
+                        try:
+                            doTestingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
+                        except Exception as e:
+                            logging.error(e, exc_info=True)
+                            return fail(traintuple['key'], e)
 
 
 @app.task
