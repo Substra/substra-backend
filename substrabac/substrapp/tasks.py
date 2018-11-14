@@ -759,8 +759,8 @@ def doTestingTask(traintuple):
                         'remove': False}
 
         if gpu_set != 'no_gpu':
-            testing_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
-            testing_args['runtime'] = 'nvidia',
+            testing_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+            testing_args['runtime'] = 'nvidia'
 
         testing = ExceptionThread(target=client.containers.run,
                                   kwargs=testing_args)
@@ -816,8 +816,8 @@ def doTestingTask(traintuple):
                         'remove': False}
 
         if gpu_set != 'no_gpu':
-            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
-            metrics_args['runtime'] = 'nvidia',
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+            metrics_args['runtime'] = 'nvidia'
 
         metric = ExceptionThread(target=client.containers.run,
                                  kwargs=metrics_args)
