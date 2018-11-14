@@ -211,7 +211,7 @@ def monitoring_job(client, train_args):
 
 
 class RessourceManager():
-    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 2))
+    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
     __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
 
     __cpu_count = os.cpu_count()
