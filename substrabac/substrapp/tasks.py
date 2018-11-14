@@ -578,8 +578,8 @@ def doTrainingTask(traintuple):
                       }
 
         if gpu_set != 'no_gpu':
-            train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
-            train_args['runtime'] = 'nvidia',
+            train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+            train_args['runtime'] = 'nvidia'
 
         training = ExceptionThread(target=client.containers.run,
                                    kwargs=train_args)
@@ -637,8 +637,8 @@ def doTrainingTask(traintuple):
                         'remove': False}
 
         if gpu_set != 'no_gpu':
-            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set},
-            metrics_args['runtime'] = 'nvidia',
+            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+            metrics_args['runtime'] = 'nvidia'
 
         metric = ExceptionThread(target=client.containers.run,
                                  kwargs=metrics_args)
