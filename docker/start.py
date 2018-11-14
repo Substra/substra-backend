@@ -1,7 +1,7 @@
 import os
 import json
 
-from subprocess import call
+from subprocess import call, check_output
 from urllib.request import urlopen
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -67,7 +67,6 @@ def generate_docker_compose_file(conf):
 
         worker = {'container_name': '%s.worker' % org_name,
                   'image': 'substra/celeryworker',
-                  # 'runtime': 'nvidia',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
                   org_name, org_conf['name']),
                   'environment': ['ORG=%s' % org_conf['name'],
@@ -84,6 +83,10 @@ def generate_docker_compose_file(conf):
                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
                               org_conf['name']],
                   'depends_on': ['substrabac%s' % org_name, 'rabbit']}
+
+        # Check if we have nvidia docker
+        if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
+            worker['runtime'] = 'nvidia'
 
         docker_compose['substrabac_services']['substrabac' + org_name] = backend
         docker_compose['substrabac_services']['worker' + org_name] = worker
