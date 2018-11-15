@@ -224,6 +224,16 @@ class DataViewSet(mixins.CreateModelMixin,
                     else:
                         return Response({'id': task.id, 'message': msg},
                                         status=status.HTTP_202_ACCEPTED)
+
+                # Tweak, put the file in the path key temporarily
+                if many:
+                    for d in serializer.validated_data:
+                        d['path'] = d['file']
+                        del (d['file'])  # del file
+                else:
+                    serializer.validated_data['path'] = serializer.validated_data['file']
+                    del (serializer.validated_data['file']) # del file
+
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
                                'dataset_keys': dataset_keys}
