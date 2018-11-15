@@ -36,7 +36,10 @@ class FileValidator(object):
 
 
 class DataSerializer(serializers.ModelSerializer):
-    file = serializers.FileField(validators=[FileValidator()])
+    path = serializers.HiddenField(default='')
+    pkhash = serializers.CharField(default='', min_length=64, max_length=64, read_only=True)
+    validated = serializers.HiddenField(default=False)
+    file = serializers.FileField(validators=[FileValidator()], required=False)
 
     class Meta:
         model = Data
