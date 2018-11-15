@@ -31,6 +31,7 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('data', type=str)
 
+    # TODO rework with path
     def handle(self, *args, **options):
 
         # load args

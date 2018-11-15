@@ -27,6 +27,7 @@ def create_asset(data, profile, asset, dryrun=False):
     if dryrun:
         print('dry-run')
 
+
         res = client.add(asset, data, dryrun=True)
         try:
             print(colored(json.dumps(res, indent=2), 'magenta'))

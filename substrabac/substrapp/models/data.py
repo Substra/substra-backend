@@ -1,6 +1,7 @@
+import logging
 import shutil
 import zipfile
-from os import path
+from os import path, rename
 
 from django.conf import settings
 from django.db import models
@@ -44,9 +45,13 @@ def my_handler(sender, instance, **kwargs):
 
     # calculate new hash
     sha256hash = dirhash(directory, 'sha256')
-    # mv directory to new hash
+    # rename directory to new hash if does not exist
     new_directory = 'data/{0}'.format(sha256hash)
-    shutil.move(directory, path.join(getattr(settings, 'MEDIA_ROOT'), new_directory))
+    try:
+        rename(directory, path.join(getattr(settings, 'MEDIA_ROOT'), new_directory))
+    except Exception as e:
+        shutil.rmtree(directory)
+        logging.error(e, exc_info=True)
 
     instance.pkhash = sha256hash
     instance.path = new_directory

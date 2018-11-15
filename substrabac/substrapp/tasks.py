@@ -5,6 +5,9 @@ import shutil
 import tempfile
 from os import path
 
+
+import requests
+from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -154,12 +157,18 @@ def put_data(subtuple, subtuple_directory):
             if data_hash != data_key:
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
-            try:
-                to_directory = path.join(subtuple_directory, 'data')
-                uncompress_path(data.file.path, to_directory)
-            except Exception as e:
-                logging.error('Fail to uncompress data file')
-                raise e
+            # for all data files in folder create an hard link
+            src = path.join(getattr(settings, 'MEDIA_ROOT'), data.path)
+            for f in os.listdir(src):
+                try:
+                    link_name = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                          'subtuple', subtuple['key'],
+                                          'data', f)
+                    os.link(path.join(src, f), link_name)
+                except Exception as e:
+                    logging.error(e, exc_info=True)
+                    raise Exception(
+                        'Failed to create hard link for subtuple data')
 
 
 def put_metric(subtuple_directory, challenge):
@@ -235,11 +244,14 @@ def prepareTask(tuple_type, model_type):
 
                 if 'fltask' in subtuple and subtuple['fltask']:
                     fltask = subtuple['fltask']
-                    flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
-                                                          result__icontains=f'"fltask": "{fltask}"')
+                    flresults = TaskResult.objects.filter(
+                        task_name='substrapp.tasks.computeTask',
+                        result__icontains=f'"fltask": "{fltask}"')
 
                     if flresults and flresults.count() > 0:
-                        worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
+                        worker_queue = \
+                        json.loads(flresults.first().as_dict()['result'])[
+                            'worker']
 
                 try:
                     # Log Start of the Subtuple
@@ -248,11 +260,14 @@ def prepareTask(tuple_type, model_type):
                         'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
                     }, sync=True)
 
-                    if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-                        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+                    if st not in (
+                    status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+                        logging.error(
+                            f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
                     else:
-                        computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
-                                                queue=worker_queue)
+                        computeTask.apply_async(
+                            (tuple_type, subtuple, model_type, fltask),
+                            queue=worker_queue)
 
                 except Exception as e:
                     error_code = compute_error_code(e)
