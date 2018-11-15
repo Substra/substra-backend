@@ -2,10 +2,12 @@ import json
 import ntpath
 import os
 
+from checksumdir import dirhash
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
+from substrapp.serializers.data import AdminDataSerializer
 from substrapp.views import DataViewSet
 from substrapp.serializers import DataSerializer
 from substrapp.utils import get_hash
@@ -20,10 +22,8 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     Bulk create data
-
     python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}'
     python ./manage.py bulkcreatedata data.json
-
     # data.json:
     # {"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}
     '''
@@ -31,7 +31,6 @@ class Command(BaseCommand):
     def add_arguments(self, parser):
         parser.add_argument('data', type=str)
 
-    # TODO rework with path
     def handle(self, *args, **options):
 
         # load args
@@ -54,6 +53,7 @@ class Command(BaseCommand):
 
         test_only = data.get('test_only', False)
         data_files = data.get('files', None)
+        paths = data.get('paths', [])
 
         try:
             DataViewSet.check_datasets(dataset_keys)
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                     })
 
                 many = True
-                serializer = DataSerializer(data=l, many=many)
+                serializer = AdminDataSerializer(data=[{'path': x, 'pkhash': dirhash(x, 'sha256')} for x in paths], many=many)
                 try:
                     serializer.is_valid(raise_exception=True)
                 except Exception as e:

@@ -44,3 +44,12 @@ class DataSerializer(serializers.ModelSerializer):
     class Meta:
         model = Data
         fields = '__all__'
+
+
+class AdminDataSerializer(DataSerializer):
+    path = serializers.CharField(default='', max_length=2048)
+    pkhash = serializers.CharField(default='', min_length=64, max_length=64)
+
+    class Meta:
+        model = Data
+        fields = '__all__'
