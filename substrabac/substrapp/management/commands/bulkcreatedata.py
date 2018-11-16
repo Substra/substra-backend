@@ -9,7 +9,6 @@ from rest_framework import status
 
 from substrapp.serializers.data import AdminDataSerializer
 from substrapp.views import DataViewSet
-from substrapp.serializers import DataSerializer
 from substrapp.utils import get_hash
 from substrapp.views.data import LedgerException
 
@@ -54,6 +53,7 @@ class Command(BaseCommand):
         test_only = data.get('test_only', False)
         data_files = data.get('files', None)
         paths = data.get('paths', [])
+        dataset_keys = data.get('dataset_keys')
 
         try:
             DataViewSet.check_datasets(dataset_keys)
