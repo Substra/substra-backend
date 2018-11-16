@@ -212,6 +212,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 d.update(data)
                 return Response(d, status=st, headers=headers)
 
+
     def create_or_update_challenge(self, challenge, pk):
         try:
             # get challenge description from remote node
