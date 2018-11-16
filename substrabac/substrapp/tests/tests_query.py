@@ -97,6 +97,7 @@ class ChallengeQueryTests(APITestCase):
                                data_opener=self.data_data_opener)
 
         url = reverse('substrapp:challenge-list')
+
         data = {
             'name': 'tough challenge',
             'test_dataset_key': get_hash(self.data_data_opener),
@@ -108,6 +109,7 @@ class ChallengeQueryTests(APITestCase):
             'permissions': 'all',
             'metrics_name': 'accuracy'
         }
+
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -387,8 +389,6 @@ class DataQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(r['pkhash'], get_hash(self.data_file))
-            self.assertEqual(r['file'],
-                             f'http://testserver/media/data/{r["pkhash"]}/{self.data_file_filename}')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -446,7 +446,6 @@ class DataQueryTests(APITestCase):
             'dataset_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
-
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -844,7 +843,6 @@ class AlgoQueryTests(APITestCase):
 
             self.assertEqual(r['pkhash'], get_hash(self.algo))
 
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_algo_no_sync_ok(self):
         # add associated challenge
