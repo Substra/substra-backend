@@ -15,9 +15,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 class ModelTests(TestCase):
     """Model tests"""
 
-    def setUp(self):
-        pass
-
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
@@ -44,7 +41,7 @@ class ModelTests(TestCase):
 
     def test_create_data(self):
         file, _ = get_sample_data()
-        data = Data.objects.create(file=file)
+        data = Data.objects.create(path=file)
         self.assertEqual(data.pkhash, get_hash(file))
         self.assertFalse(data.validated)
         self.assertIn(f'pkhash {data.pkhash}', str(data))

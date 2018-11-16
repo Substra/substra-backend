@@ -60,3 +60,4 @@ def data_pre_save(sender, instance, **kwargs):
 
             instance.pkhash = sha256hash
             instance.path = new_directory
+
