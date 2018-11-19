@@ -5,7 +5,11 @@ BASEDIR=$(dirname "$0")
 createCustomDockerImages() {
     for dir in $BASEDIR/docker/*/; do
         dir=`basename $dir`
-        docker build -t substra/$dir -f $BASEDIR/docker/$dir/Dockerfile .
+        DOCKERFILE=$BASEDIR/docker/$dir/Dockerfile
+
+        if [ -f $DOCKERFILE ]; then
+            docker build -t substra/$dir -f $DOCKERFILE .
+        fi
     done
 }
 
