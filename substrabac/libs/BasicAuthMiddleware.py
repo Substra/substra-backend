@@ -35,7 +35,7 @@ class BasicAuthMiddleware:
 
         response = self.get_response(request)
 
-        if username is not None and password is not None:
+        if username not in (None, '') and password not in (None, ''):
             if request.method != 'OPTIONS':
                 if 'HTTP_AUTHORIZATION' not in request.META:
                     return self.unauthed()
