@@ -130,7 +130,7 @@ services:
     hostname: postgresql
     image: substra/postgresql
     volumes:
-      - /substra/postgres-data:/var/lib/postgresql/data
+      - /substra/backup/postgres-data:/var/lib/postgresql/data
 #    ports:
 #      - "5432:5432"
     environment:
