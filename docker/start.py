@@ -22,7 +22,7 @@ def generate_docker_compose_file(conf):
                                                                           'POSTGRES_PASSWORD=substrabac',
                                                                           'POSTGRES_DB=substrabac'],
                                                           'volumes': [
-                                                              '/substra/postgres-data:/var/lib/postgresql/data',
+                                                              '/substra/backup/postgres-data:/var/lib/postgresql/data',
                                                               f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
                                                           },
                                            'celerybeat': {'container_name': 'celerybeat',
@@ -135,7 +135,7 @@ def start(conf):
 
 if __name__ == "__main__":
 
-    call(['rm', '-rf', '/substra/postgres-data'])
+    call(['rm', '-rf', '/substra/backup/postgres-data'])
     conf = json.load(open('/substra/conf/conf.json', 'r'))
 
     print('Build substrabac for : ', flush=True)

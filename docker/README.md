@@ -7,4 +7,4 @@ For instance, `up -d`:
 
 ``` docker-compose -f docker/docker-compose.yaml --project-directory . up -d ```
 
-To test from scratch, you may have to remove the `/substra/postgres-data/` directory in the root directory of this repository.
+To test from scratch, you may have to remove the `/substra/backup/postgres-data/` directory in the root directory of this repository.
