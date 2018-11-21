@@ -230,6 +230,7 @@ def doTask(traintuple, data_type):
 
     cpu_set = None
     gpu_set = None
+
     command = {'trainData': 'train',
                'testData': 'predict'}
 
@@ -248,6 +249,7 @@ def doTask(traintuple, data_type):
         algo_path = path.join(traintuple_root_path)
         algo_docker = ('algo_%s' % data_type).lower()    # tag must be lowercase for docker
         algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')
         metrics_docker = ('metrics_%s' % data_type).lower()    # tag must be lowercase for docker
         metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
         model_path = os.path.join(traintuple_root_path, 'model')
@@ -256,119 +258,29 @@ def doTask(traintuple, data_type):
         opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
         metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
 
-        # Build algo
-        client.images.build(path=algo_path,
-                            tag=algo_docker,
-                            rm=True)
-
-        # Run algo
+        # volume algo
         volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                    pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
                    opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-        mem_limit = ressource_manager.memory_limit_mb()
+        # Run algo
+        job_task_log = compute_docker(client, ressource_manager, algo_path, algo_docker, algo_docker_name,
+                                      volumes, command[data_type], cpu_set, gpu_set)
 
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
-
-        job_args = {'image': algo_docker,
-                    'name': algo_docker_name,
-                    'cpuset_cpus': cpu_set,
-                    'mem_limit': mem_limit,
-                    'command': command[data_type],
-                    'volumes': volumes,
-                    'detach': False,
-                    'auto_remove': False,
-                    'remove': False}
-
-        if gpu_set != 'no_gpu':
-            job_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            job_args['runtime'] = 'nvidia'
-
-        job = ExceptionThread(target=client.containers.run,
-                              kwargs=job_args)
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, job_args))
-
-        job.start()
-        monitoring.start()
-
-        job.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        job_task_log = monitoring._result
-
-        # Return ressources
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(job, "_exception"):
-            raise job._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(algo_docker_name)
-        container.remove()
-
-        # Build metrics
-        client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
-                            tag=metrics_docker,
-                            rm=True)
-
-        # Compute metrics on train predictions
+        # volume metrics
         volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                    pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                    opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-        cpu_set = None
-        gpu_set = None
-        mem_limit = ressource_manager.memory_limit_mb()
-
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
-
-        metrics_args = {'image': metrics_docker,
-                        'name': metrics_docker_name,
-                        'cpuset_cpus': cpu_set,
-                        'mem_limit': mem_limit,
-                        'volumes': volumes,
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-        if gpu_set != 'no_gpu':
-            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            metrics_args['runtime'] = 'nvidia'
-
-        metric = ExceptionThread(target=client.containers.run,
-                                 kwargs=metrics_args)
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
-
-        metric.start()
-        monitoring.start()
-
-        metric.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        # Return ressources
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(metric, "_exception"):
-            raise metric._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(metrics_docker_name)
-        container.remove()
+        # Run metrics
+        compute_docker(client, ressource_manager, metrics_path, metrics_docker, metrics_docker_name, volumes, '',
+                       cpu_set, gpu_set)
 
         if data_type == 'trainData':
             # Compute end model information
+            # TO DO : check end model existance
             end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                        'traintuple/%s/model/model' % (traintuple['key']))
             end_model_file_hash = get_hash(end_model_path)
@@ -416,3 +328,61 @@ def doTask(traintuple, data_type):
         })
 
     return
+
+
+def compute_docker(client, ressource_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
+
+    # Build metrics
+    client.images.build(path=dockerfile_path,
+                        tag=image_name,
+                        rm=True)
+    cpu_set = None
+    gpu_set = None
+
+    mem_limit = ressource_manager.memory_limit_mb()
+
+    while cpu_set is None or gpu_set is None:
+        cpu_set = ressource_manager.acquire_cpu_set()
+        gpu_set = ressource_manager.acquire_gpu_set()
+        time.sleep(2)
+
+    job_args = {'image': image_name,
+                'name': container_name,
+                'cpuset_cpus': cpu_set,
+                'mem_limit': mem_limit,
+                'command': command,
+                'volumes': volumes,
+                'detach': False,
+                'auto_remove': False,
+                'remove': False}
+
+    if gpu_set != 'no_gpu':
+        job_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+        job_args['runtime'] = 'nvidia'
+
+    job = ExceptionThread(target=client.containers.run,
+                          kwargs=job_args)
+    monitoring = ExceptionThread(target=monitoring_job, args=(client, job_args))
+
+    job.start()
+    monitoring.start()
+
+    job.join()
+    monitoring.do_run = False
+    monitoring.join()
+
+    # Return ressources
+    ressource_manager.return_cpu_set(cpu_set)
+    ressource_manager.return_gpu_set(gpu_set)
+
+    cpu_set = None
+    gpu_set = None
+
+    if hasattr(job, "_exception"):
+        raise job._exception
+
+    # Remove only if container exit without exception
+    container = client.containers.get(container_name)
+    container.remove()
+
+    return monitoring._result
