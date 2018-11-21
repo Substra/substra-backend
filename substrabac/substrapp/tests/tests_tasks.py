@@ -12,8 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.utils import compute_hash
-from substrapp.tasks import create_directory, get_computed_hash, get_remote_file, RessourceManager, monitoring_job, \
-    save_challenge, save_challenge_from_local, untar_algo, untar_algo_from_local, get_hash
+from substrapp.tasks import create_directory, get_computed_hash, get_remote_file, RessourceManager, monitoring_job, untar_algo, get_hash
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
 
@@ -35,7 +34,6 @@ class QueryTests(APITestCase):
         self.data_description, self.data_description_filename, self.data_data_opener, self.data_opener_filename = get_sample_dataset()
 
         self.RessourceManager = RessourceManager()
-
 
     def tearDown(self):
         try:
@@ -121,35 +119,6 @@ class QueryTests(APITestCase):
         self.assertNotEqual(monitoring._stats['cpu']['max'], 0)
         self.assertNotEqual(monitoring._stats['netio']['rx'], 0)
 
-    def test_save_challenge(self):
-
-        with mock.patch('substrapp.tasks.get_remote_file') as mocked_function:
-            content = str(self.script.read())
-            pkhash = compute_hash(content)
-            mocked_function.return_value = content.encode("utf-8"), pkhash
-            save_challenge({'key': 'testkey', 'challenge': {'metrics': 'testmetrics'}})
-
-        metric_path = os.path.join(MEDIA_ROOT, 'traintuple/testkey/metrics/metrics.py')
-        self.assertTrue(os.path.exists(metric_path))
-
-        class FakeMetric(object):
-            """docstring for Metric"""
-            def __init__(self):
-                self.path = metric_path
-
-        class FakeChallenge(object):
-            """docstring for Challenge"""
-            def __init__(self):
-                self.metrics = FakeMetric()
-
-        with mock.patch('substrapp.tasks.get_hash') as mocked_function:
-            pkhash = compute_hash(content)
-            mocked_function.return_value = pkhash
-            os.makedirs(os.path.dirname(os.path.join(MEDIA_ROOT, 'traintuple/testkey2/metrics/')), exist_ok=True)
-            save_challenge_from_local(FakeChallenge(), {'key': 'testkey2', 'challenge': {'metrics': {'hash': pkhash}}})
-
-        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'traintuple/testkey2/metrics/metrics.py')))
-
     def test_untar_algo(self):
 
         file = open('sample_metrics.py', 'w')
@@ -160,30 +129,11 @@ class QueryTests(APITestCase):
         tf.add('sample_metrics.py')
         tf.close()
 
-        with mock.patch('substrapp.tasks.get_remote_file') as mocked_function:
+        with mock.patch('substrapp.tasks.get_hash') as mocked_function:
             with open('sample.tar.gz', 'rb') as content:
                 pkhash = get_hash('sample.tar.gz')
-                mocked_function.return_value = content.read(), pkhash
-                untar_algo({'key': 'testkey', 'algo': 'testalgo'})
+                mocked_function.return_value = pkhash
+                untar_algo(content.read(), os.path.join(MEDIA_ROOT, 'traintuple/testkey/'), {'key': 'testkey', 'algo': 'testalgo'})
 
         metric_path = os.path.join(MEDIA_ROOT, 'traintuple/testkey/sample_metrics.py')
         self.assertTrue(os.path.exists(metric_path))
-
-        class FakeFile(object):
-            """docstring for file"""
-            def __init__(self):
-                self.path = 'sample.tar.gz'
-                self.name = 'sample.tar.gz'
-
-        class FakeAlgo(object):
-            """docstring for Challenge"""
-            def __init__(self):
-                self.file = FakeFile()
-
-        with mock.patch('substrapp.tasks.get_hash') as mocked_function:
-            pkhash = get_hash('sample.tar.gz')
-            mocked_function.return_value = pkhash
-            os.makedirs(os.path.dirname(os.path.join(MEDIA_ROOT, 'traintuple/testkey2/metrics/')), exist_ok=True)
-            untar_algo_from_local(FakeAlgo(), {'key': 'testkey2', 'algo': {'hash': pkhash}})
-
-        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'traintuple/testkey2/sample_metrics.py')))
