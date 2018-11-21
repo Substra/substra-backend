@@ -11,8 +11,8 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.utils import compute_hash
-from substrapp.tasks import create_directory, get_computed_hash, get_remote_file, RessourceManager, monitoring_job, untar_algo, get_hash
+from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, untar_algo, get_hash, create_directory
+from substrapp.job_utils import RessourceManager, monitoring_job
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
 
@@ -24,7 +24,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-class QueryTests(APITestCase):
+class TasksTests(APITestCase):
 
     def setUp(self):
         self.challenge_description, self.challenge_description_filename, \
@@ -50,12 +50,12 @@ class QueryTests(APITestCase):
         shutil.rmtree(directory)
 
     def test_get_computed_hash(self):
-        with mock.patch('substrapp.tasks.requests.get') as mocked_function:
+        with mock.patch('substrapp.utils.requests.get') as mocked_function:
             mocked_function.return_value = HttpResponse(str(self.script.read()))
             _, pkhash = get_computed_hash('test')
             self.assertEqual(pkhash, 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02')
 
-        with mock.patch('substrapp.tasks.requests.get') as mocked_function:
+        with mock.patch('substrapp.utils.requests.get') as mocked_function:
             response = HttpResponse()
             response.status_code = status.HTTP_400_BAD_REQUEST
             mocked_function.return_value = response
@@ -65,7 +65,7 @@ class QueryTests(APITestCase):
         obj = {'storageAddress': 'test',
                'hash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}
 
-        with mock.patch('substrapp.tasks.get_computed_hash') as mocked_function:
+        with mock.patch('substrapp.utils.get_computed_hash') as mocked_function:
             content = str(self.script.read())
             pkhash = compute_hash(content)
             mocked_function.return_value = content, pkhash
@@ -73,7 +73,7 @@ class QueryTests(APITestCase):
             self.assertEqual(pkhash_remote, 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02')
             self.assertEqual(content_remote, content)
 
-        with mock.patch('substrapp.tasks.get_computed_hash') as mocked_function:
+        with mock.patch('substrapp.utils.get_computed_hash') as mocked_function:
             content = str(self.script.read()) + ' FAIL'
             pkhash = compute_hash(content)
             mocked_function.return_value = content, pkhash
