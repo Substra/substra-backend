@@ -1,13 +1,14 @@
+import io
 import hashlib
 import json
 import os
+import requests
 import subprocess
-import threading
-
+import tarfile
 from rest_framework import status
 
+from django.conf import settings
 from substrabac.settings.common import PROJECT_ROOT, LEDGER_CONF
-
 
 #######
 # /!\ #
@@ -145,6 +146,12 @@ def invokeLedger(options, sync=False):
     return data, st
 
 
+def get_hash(file):
+    with open(file, 'rb') as f:
+        data = f.read()
+        return compute_hash(data)
+
+
 def compute_hash(bytes):
     sha256_hash = hashlib.sha256()
 
@@ -156,108 +163,49 @@ def compute_hash(bytes):
     return sha256_hash.hexdigest()
 
 
-def get_cpu_sets(cpu_count, concurrency):
-    cpu_step = max(1, cpu_count // concurrency)
-    cpu_sets = []
+def get_computed_hash(url):
+    kwargs = {}
+    username = getattr(settings, 'BASICAUTH_USERNAME', None)
+    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
-    for cpu_start in range(0, cpu_count, cpu_step):
-        cpu_set = '%s-%s' % (cpu_start, min(cpu_start + cpu_step - 1, cpu_count - 1))
-        cpu_sets.append(cpu_set)
-        if len(cpu_sets) == concurrency:
-            break
+    kwargs = {}
 
-    return cpu_sets
+    if username is not None and password is not None:
+        kwargs.update({'auth': (username, password)})
 
+    if settings.DEBUG:
+        kwargs.update({'verify': False})
 
-def get_gpu_sets(gpu_list, concurrency):
-    gpu_count = len(gpu_list)
-    gpu_step = max(1, gpu_count // concurrency)
-    gpu_sets = []
+    try:
+        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
+    except:
+        raise Exception('Failed to check hash due to failed file fetching %s' % url)
+    else:
+        if r.status_code != 200:
+            raise Exception(
+                'Url: %(url)s to fetch file returned status code: %(st)s' % {'url': url, 'st': r.status_code})
 
-    for igpu_start in range(0, gpu_count, gpu_step):
-        gpu_sets.append(','.join(gpu_list[igpu_start: igpu_start + gpu_step]))
+        computedHash = compute_hash(r.content)
 
-    return gpu_sets
-
-
-def update_statistics(job_statistics, stats, gpu_stats):
-
-    # CPU
-
-    if stats is not None:
-
-        if 'cpu_stats' in stats and stats['cpu_stats']['cpu_usage'].get('total_usage', None):
-            # Compute CPU usage in %
-            delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage'])
-            delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
-            total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
-
-            job_statistics['cpu']['current'].append(total_usage)
-            job_statistics['cpu']['max'] = max(job_statistics['cpu']['max'],
-                                               max(job_statistics['cpu']['current']))
-
-        # MEMORY in GB
-        if 'memory_stats' in stats:
-            current_usage = stats['memory_stats'].get('usage', None)
-            max_usage = stats['memory_stats'].get('max_usage', None)
-
-            if current_usage:
-                job_statistics['memory']['current'].append(current_usage / 1024**3)
-            if max_usage:
-                job_statistics['memory']['max'] = max(job_statistics['memory']['max'],
-                                                      max_usage / 1024**3,
-                                                      max(job_statistics['memory']['current']))
-
-        # Network in kB
-        if 'networks' in stats:
-            job_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
-            job_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
-
-    # GPU
-
-    if gpu_stats is not None:
-        total_usage = sum([100 * gpu.load for gpu in gpu_stats])
-        job_statistics['gpu']['current'].append(total_usage)
-        job_statistics['gpu']['max'] = max(job_statistics['gpu']['max'],
-                                           max(job_statistics['gpu']['current']))
-
-        total_usage = sum([gpu.memoryUsed for gpu in gpu_stats]) / 1024
-        job_statistics['gpu_memory']['current'].append(total_usage)
-        job_statistics['gpu_memory']['max'] = max(job_statistics['gpu_memory']['max'],
-                                                  max(job_statistics['gpu_memory']['current']))
-
-    # IO DISK
-    # "blkio_stats": {
-    #   "io_service_bytes_recursive": [],
-    #   "io_serviced_recursive": [],
-    #   "io_queue_recursive": [],
-    #   "io_service_time_recursive": [],
-    #   "io_wait_time_recursive": [],
-    #   "io_merged_recursive": [],
-    #   "io_time_recursive": [],
-    #   "sectors_recursive": []
-    # }
-
-    # LOGGING
-    # printable_stats = 'CPU - now : %d %% / max : %d %% | MEM - now : %.2f GB / max : %.2f GB' % \
-    #     (job_statistics['cpu']['current'][-1],
-    #      job_statistics['cpu']['max'],
-    #      job_statistics['memory']['current'][-1],
-    #      job_statistics['memory']['max'])
-
-    # logging.info('[JOB] Monitoring : %s' % (printable_stats, ))
+        return r.content, computedHash
 
 
-class ExceptionThread(threading.Thread):
+def get_remote_file(object):
+    content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
 
-    def run(self):
-        try:
-            if self._target:
-                self._target(*self._args, **self._kwargs)
-        except BaseException as e:
-            self._exception = e
-            raise e
-        finally:
-            # Avoid a refcycle if the thread is running a function with
-            # an argument that has a member that points to the thread.
-            del self._target, self._args, self._kwargs
+    if computed_hash != object['hash']:
+        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+        raise Exception(msg)
+
+    return content, computed_hash
+
+
+def create_directory(directory):
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+
+
+def untar_algo(content, directory, traintuple):
+    tar = tarfile.open(fileobj=io.BytesIO(content))
+    tar.extractall(directory)
+    tar.close()

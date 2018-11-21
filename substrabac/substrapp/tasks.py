@@ -1,75 +1,24 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
-import io
-import tarfile
 import tempfile
 from os import path
 
-import requests
 from django.conf import settings
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash, update_statistics, get_cpu_sets, get_gpu_sets, ExceptionThread
-from .exception_handler import compute_error_code
+from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
+from substrapp.job_utils import ExceptionThread, RessourceManager, monitoring_job
+from substrapp.exception_handler import compute_error_code
 
 import docker
 import json
 import time
-import threading
 from multiprocessing.managers import BaseManager
 
 import logging
-
-import GPUtil as gputil
-
-
-def create_directory(directory):
-    if not path.exists(directory):
-        os.makedirs(directory)
-
-
-def get_hash(file):
-    with open(file, 'rb') as f:
-        data = f.read()
-        return compute_hash(data)
-
-
-def get_computed_hash(url):
-    kwargs = {}
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-
-    if username is not None and password is not None:
-        kwargs = {
-            'auth': (username, password),
-            'verify': False
-        }
-
-    try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
-    except:
-        raise Exception('Failed to check hash due to failed file fetching %s' % url)
-    else:
-        if r.status_code != 200:
-            raise Exception(
-                'Url: %(url)s to fetch file returned status code: %(st)s' % {'url': url, 'st': r.status_code})
-
-        computedHash = compute_hash(r.content)
-
-        return r.content, computedHash
-
-
-def get_remote_file(object):
-    content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
-
-    if computed_hash != object['hash']:
-        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-        raise Exception(msg)
-
-    return content, computed_hash
 
 
 def fail(key, err_msg):
@@ -90,148 +39,7 @@ def fail(key, err_msg):
     return data
 
 
-def untar_algo(content, directory, traintuple):
-    try:
-        tar = tarfile.open(fileobj=io.BytesIO(content))
-        tar.extractall(directory)
-        tar.close()
-    except:
-        return fail(traintuple['key'], 'Fail to untar algo file')
-
-
-def monitoring_job(client, job_args):
-    """thread worker function"""
-
-    job_name = job_args['name']
-
-    gpu_set = None
-    if 'environment' in job_args:
-        gpu_set = job_args['environment']['NVIDIA_VISIBLE_DEVICES']
-
-    start = time.time()
-    t = threading.currentThread()
-
-    # Statistics
-    job_statistics = {'memory': {'max': 0,
-                                 'current': [0]},
-                      'gpu_memory': {'max': 0,
-                                     'current': [0]},
-                      'cpu': {'max': 0,
-                              'current': [0]},
-                      'gpu': {'max': 0,
-                              'current': []},
-                      'io': {'max': 0,
-                             'current': []},
-                      'netio': {'rx': 0,
-                                'tx': 0},
-                      'time': 0}
-
-    while getattr(t, "do_run", True):
-        stats = None
-        try:
-            container = client.containers.get(job_name)
-            stats = container.stats(decode=True, stream=False)
-        except:
-            pass
-
-        gpu_stats = None
-        if gpu_set is not None:
-            gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
-
-        update_statistics(job_statistics, stats, gpu_stats)
-
-    job_statistics['time'] = time.time() - start
-
-    t._result = 'CPU:%.2f %% - Mem:%.2f GB - GPU:%.2f %% - GPU Mem:%.2f GB' % (job_statistics['cpu']['max'],
-                                                                               job_statistics['memory']['max'],
-                                                                               job_statistics['gpu']['max'],
-                                                                               job_statistics['gpu_memory']['max'])
-
-    t._stats = job_statistics
-
-
-class RessourceManager():
-    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
-    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
-
-    __cpu_count = os.cpu_count()
-    __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
-
-    # Set CUDA_DEVICE_ORDER so the IDs assigned by CUDA match those from nvidia-smi
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
-
-    __gpu_sets = 'no_gpu'
-    if __gpu_list:
-        __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)
-
-    __used_cpu_sets = []
-    __used_gpu_sets = []
-    __lock = threading.Lock()
-
-    @classmethod
-    def memory_limit_mb(cls):
-        return '%sM' % (cls.__memory_gb // cls.__concurrency)
-
-    @classmethod
-    def acquire_cpu_set(cls):
-        cpu_set = None
-        cls.__lock.acquire()
-
-        try:
-            cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
-            if len(cpu_set_available) > 0:
-                cpu_set = cpu_set_available.pop()
-                cls.__used_cpu_sets.append(cpu_set)
-        except:
-            pass
-
-        cls.__lock.release()
-        return cpu_set
-
-    @classmethod
-    def return_cpu_set(cls, cpu_set):
-        cls.__lock.acquire()
-
-        try:
-            cls.__used_cpu_sets.remove(cpu_set)
-        except:
-            pass
-
-        cls.__lock.release()
-
-    @classmethod
-    def acquire_gpu_set(cls):
-        gpu_set = 'no_gpu'
-        cls.__lock.acquire()
-
-        if cls.__gpu_sets != 'no_gpu':
-            gpu_set = None
-            try:
-                gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
-                if len(gpu_set_available) > 0:
-                    gpu_set = gpu_set_available.pop()
-                    cls.__used_gpu_sets.append(gpu_set)
-            except:
-                pass
-
-        cls.__lock.release()
-        return gpu_set
-
-    @classmethod
-    def return_gpu_set(cls, gpu_set):
-        cls.__lock.acquire()
-
-        if gpu_set != 'no_gpu':
-            try:
-                cls.__used_gpu_sets.remove(gpu_set)
-            except:
-                pass
-
-        cls.__lock.release()
-
-
-# Instatiate Ressource Manager
+# Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
 BaseManager.register('RessourceManager', RessourceManager)
 manager = BaseManager()
 manager.start()
@@ -241,7 +49,7 @@ ressource_manager = manager.RessourceManager()
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
     from shutil import copy
     import zipfile
-    from substrapp.models import Challenge, Dataset, Data, Model, Algo
+    from substrapp.models import Challenge, Dataset, Data, Model
 
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
@@ -271,8 +79,9 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                         try:
                             content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
                         except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], e)
+                            error_code = compute_error_code(e)
+                            logging.error(error_code, exc_info=True)
+                            return fail(traintuple['key'], error_code)
 
                         challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
 
@@ -282,24 +91,28 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             # update challenge in local db for later use
                             challenge.metrics.save('metrics.py', f)
                         except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
+                            error_code = compute_error_code(e)
+                            logging.error(error_code, exc_info=True)
+                            logging.error('Failed to save challenge metrics in local db for later use')
+                            return fail(traintuple['key'], error_code)
 
                 ''' get algo + model_type '''
                 # get algo file
                 try:
                     algo_content, algo_computed_hash = get_remote_file(traintuple['algo'])
                 except Exception as e:
-                    logging.error(e, exc_info=True)
-                    return fail(traintuple['key'], e)
+                    error_code = compute_error_code(e)
+                    logging.error(error_code, exc_info=True)
+                    return fail(traintuple['key'], error_code)
 
                 # get model file
                 if traintuple.get(model_type, None) is not None:
                     try:
                         model_content, model_computed_hash = get_remote_file(traintuple[model_type])
                     except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
+                        error_code = compute_error_code(e)
+                        logging.error(error_code, exc_info=True)
+                        return fail(traintuple['key'], error_code)
 
                 # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
                 traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
@@ -311,12 +124,15 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 try:
                     dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
                 except Exception as e:
-                    logging.error(e, exc_info=True)
-                    return fail(traintuple['key'], e)
+                    error_code = compute_error_code(e)
+                    logging.error(error_code, exc_info=True)
+                    return fail(traintuple['key'], error_code)
 
                 data_opener_hash = get_hash(dataset.data_opener.path)
                 if data_opener_hash != traintuple[data_type]['openerHash']:
-                    return fail(traintuple['key'], 'DataOpener Hash in Traintuple is not the same as in local db')
+                    error_code = 'DataOpener Hash in Traintuple is not the same as in local db'
+                    logging.error(error_code, exc_info=True)
+                    return fail(traintuple['key'], error_code)
                 copy(dataset.data_opener.path, path.join(traintuple_directory, 'opener'))
 
                 # same for each train/test data
@@ -324,12 +140,15 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     try:
                         data = Data.objects.get(pk=data_key)
                     except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
+                        error_code = compute_error_code(e)
+                        logging.error(error_code, exc_info=True)
+                        return fail(traintuple['key'], error_code)
                     else:
                         data_hash = get_hash(data.file.path)
                         if data_hash != data_key:
-                            return fail(traintuple['key'], 'Data Hash in Traintuple is not the same as in local db')
+                            error_code = 'Data Hash in Traintuple is not the same as in local db'
+                            logging.error(error_code, exc_info=True)
+                            return fail(traintuple['key'], error_code)
 
                         try:
                             to_directory = path.join(traintuple_directory, 'data')
@@ -341,8 +160,10 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             zip_ref.close()
                             os.remove(zip_file_path)
                         except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], 'Fail to unzip data file')
+                            error_code = compute_error_code(e)
+                            logging.error(error_code, exc_info=True)
+                            logging.error('Fail to unzip data file')
+                            return fail(traintuple['key'], error_code)
 
                 # same for model (can be null)
                 if traintuple.get(model_type, None) is not None:
@@ -354,11 +175,19 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                             f.write(model_content)
                     else:
                         if get_hash(model.file.path) != traintuple[model_type]['hash']:
-                            return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
+                            error_code = 'Model Hash in Traintuple is not the same as in local db'
+                            logging.error(error_code, exc_info=True)
+                            return fail(traintuple['key'], error_code)
                         os.link(model.file.path, path.join(traintuple_directory, 'model/model'))
 
                 # put algo to root
-                untar_algo(algo_content, traintuple_directory, traintuple)
+                try:
+                    untar_algo(algo_content, traintuple_directory, traintuple)
+                except Exception as e:
+                    error_code = compute_error_code(e)
+                    logging.error(error_code, exc_info=True)
+                    logging.error('Fail to untar algo file')
+                    return fail(traintuple['key'], error_code)
 
                 # same for challenge metrics
                 os.link(challenge.metrics.path, path.join(traintuple_directory, 'metrics/metrics.py'))
@@ -380,8 +209,9 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     try:
                         doTask.apply_async((traintuple, data_type), queue=settings.LEDGER['org']['name'])
                     except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
+                        error_code = compute_error_code(e)
+                        logging.error(error_code, exc_info=True)
+                        return fail(traintuple['key'], error_code)
 
 
 @app.task
