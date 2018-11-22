@@ -5,20 +5,20 @@ import tempfile
 import mock
 import time
 
-from django.urls import reverse
 from django.test import override_settings
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, untar_algo, get_hash, create_directory
-from substrapp.job_utils import RessourceManager, monitoring_job
+from substrapp.job_utils import RessourceManager, monitoring_job, compute_docker
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
 
 import tarfile
 from threading import Thread
 from .tests_misc import Stats
+import docker
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
@@ -27,6 +27,9 @@ MEDIA_ROOT = tempfile.mkdtemp()
 class TasksTests(APITestCase):
 
     def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
         self.challenge_description, self.challenge_description_filename, \
             self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
         self.script, self.script_filename = get_sample_script()
@@ -38,8 +41,6 @@ class TasksTests(APITestCase):
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
-            os.remove('./sample_metrics.py')
-            os.remove('./sample.tar.gz')
         except FileNotFoundError:
             pass
 
@@ -121,19 +122,39 @@ class TasksTests(APITestCase):
 
     def test_untar_algo(self):
 
-        file = open('sample_metrics.py', 'w')
+        file = open(os.path.join(MEDIA_ROOT, 'sample_metrics.py'), 'w')
         file.write('Hello World')
         file.close()
+        self.assertTrue(os.path.join(MEDIA_ROOT, 'sample_metrics.py'))
 
-        tf = tarfile.open('sample.tar.gz', mode='w:gz')
-        tf.add('sample_metrics.py')
+        tf = tarfile.open(os.path.join(MEDIA_ROOT, 'sample.tar.gz'), mode='w:gz')
+        tf.add(os.path.join(MEDIA_ROOT, 'sample_metrics.py'), arcname='sample_metrics.py')
         tf.close()
+        self.assertTrue(os.path.join(MEDIA_ROOT, 'sample.tar.gz'))
 
         with mock.patch('substrapp.tasks.get_hash') as mocked_function:
-            with open('sample.tar.gz', 'rb') as content:
-                pkhash = get_hash('sample.tar.gz')
+            with open(os.path.join(MEDIA_ROOT, 'sample.tar.gz'), 'rb') as content:
+                pkhash = get_hash(os.path.join(MEDIA_ROOT, 'sample.tar.gz'))
                 mocked_function.return_value = pkhash
                 untar_algo(content.read(), os.path.join(MEDIA_ROOT, 'traintuple/testkey/'), {'key': 'testkey', 'algo': 'testalgo'})
 
         metric_path = os.path.join(MEDIA_ROOT, 'traintuple/testkey/sample_metrics.py')
         self.assertTrue(os.path.exists(metric_path))
+
+    def test_compute_docker(self):
+        cpu_set, gpu_set = None, None
+        client = docker.from_env()
+
+        dockerfile_path = os.path.join(MEDIA_ROOT, 'Dockerfile')
+        file = open(dockerfile_path, 'w')
+        file.write('FROM library/hello-world')
+        file.close()
+        result = compute_docker(client, self.RessourceManager,
+                                MEDIA_ROOT, 'test_compute_docker',
+                                'test_compute_docker_name', None, None, cpu_set, gpu_set)
+        self.RessourceManager.return_cpu_set(cpu_set)
+        self.RessourceManager.return_gpu_set(gpu_set)
+        self.assertIn('CPU', result)
+        self.assertIn('GPU', result)
+        self.assertIn('Mem', result)
+        self.assertIn('GPU Mem', result)

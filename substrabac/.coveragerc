@@ -28,5 +28,4 @@ exclude_lines =
     def prepareTask
     def prepareTrainingTask
     def prepareTestingTask
-    def doTrainingTask
-    def doTestingTask
+    def doTask
