@@ -20,6 +20,140 @@ from multiprocessing.managers import BaseManager
 import logging
 
 
+def get_challenge(traintuple):
+    from substrapp.models import Challenge
+
+    # check if challenge exists and its metrics is not null
+    challengeHash = traintuple['challenge']['hash']
+
+    try:
+        # get challenge from local db
+        challenge = Challenge.objects.get(pk=challengeHash)
+    except:
+        challenge = None
+    finally:
+        if challenge is None or not challenge.metrics:
+            # get challenge metrics
+            try:
+                content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
+            except Exception as e:
+                raise e
+
+            challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
+
+            try:
+                f = tempfile.TemporaryFile()
+                f.write(content)
+                challenge.metrics.save('metrics.py', f)    # update challenge in local db for later use
+            except Exception as e:
+                logging.error('Failed to save challenge metrics in local db for later use')
+                raise e
+
+    return challenge
+
+
+def get_algo(traintuple):
+    algo_content, algo_computed_hash = get_remote_file(traintuple['algo'])
+    return algo_content, algo_computed_hash
+
+
+def get_model(traintuple, model_type):
+    model_content, model_computed_hash = None, None
+
+    if traintuple.get(model_type, None) is not None:
+        model_content, model_computed_hash = get_remote_file(traintuple[model_type])
+
+    return model_content, model_computed_hash
+
+
+def put_model(traintuple, traintuple_directory, model_content, model_type):
+
+    if model_content is not None:
+        from substrapp.models import Model
+
+        try:
+            model = Model.objects.get(pk=traintuple[model_type]['hash'])
+        except:  # get it from its address
+            model_path = path.join(traintuple_directory, 'model/model')
+            with open(model_path, 'wb') as f:
+                f.write(model_content)
+        else:
+            if get_hash(model.file.path) != traintuple[model_type]['hash']:
+                e = Exception('Model Hash in Traintuple is not the same as in local db')
+                raise e
+
+            os.link(model.file.path, path.join(traintuple_directory, 'model/model'))
+
+
+def put_opener(traintuple, traintuple_directory, data_type):
+    from shutil import copy
+    from substrapp.models import Dataset
+
+    try:
+        dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
+    except Exception as e:
+        raise e
+
+    data_opener_hash = get_hash(dataset.data_opener.path)
+    if data_opener_hash != traintuple[data_type]['openerHash']:
+        e = Exception('DataOpener Hash in Traintuple is not the same as in local db')
+        raise e
+
+    copy(dataset.data_opener.path, path.join(traintuple_directory, 'opener'))
+
+
+def put_data(traintuple, traintuple_directory, data_type):
+    from shutil import copy
+    from substrapp.models import Data
+    import zipfile
+
+    for data_key in traintuple[data_type]['keys']:
+        try:
+            data = Data.objects.get(pk=data_key)
+        except Exception as e:
+            raise e
+        else:
+            data_hash = get_hash(data.file.path)
+            if data_hash != data_key:
+                e = Exception('Data Hash in Traintuple is not the same as in local db')
+                raise e
+
+            try:
+                to_directory = path.join(traintuple_directory, 'data')
+                copy(data.file.path, to_directory)
+                # unzip files
+                zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
+                zip_ref = zipfile.ZipFile(zip_file_path, 'r')
+                zip_ref.extractall(to_directory)
+                zip_ref.close()
+                os.remove(zip_file_path)
+            except Exception as e:
+                logging.error('Fail to unzip data file')
+                raise e
+
+
+def put_metric(traintuple_directory, challenge):
+    os.link(challenge.metrics.path, path.join(traintuple_directory, 'metrics/metrics.py'))
+
+
+def put_algo(traintuple, traintuple_directory, algo_content):
+    try:
+        untar_algo(algo_content, traintuple_directory, traintuple)
+    except Exception as e:
+        logging.error('Fail to untar algo file')
+        raise e
+
+
+def build_traintuple_folders(traintuple):
+    # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
+    create_directory(traintuple_directory)
+    for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
+        create_directory(path.join(traintuple_directory, folder))
+
+    return traintuple_directory
+
+
 def fail(key, err_msg):
     # Log Fail TrainTest
     data, st = invokeLedger({
@@ -46,9 +180,6 @@ ressource_manager = manager.RessourceManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
-    from shutil import copy
-    import zipfile
-    from substrapp.models import Challenge, Dataset, Data, Model
 
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
@@ -64,134 +195,29 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
         if st == 200 and traintuples is not None:
             for traintuple in traintuples:
-                # check if challenge exists and its metrics is not null
-                challengeHash = traintuple['challenge']['hash']
 
+                # get traintuple components
                 try:
-                    # get challenge from local db
-                    challenge = Challenge.objects.get(pk=challengeHash)
-                except:
-                    challenge = None
-                finally:
-                    if challenge is None or not challenge.metrics:
-                        # get challenge metrics
-                        try:
-                            content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
-                        except Exception as e:
-                            error_code = compute_error_code(e)
-                            logging.error(error_code, exc_info=True)
-                            return fail(traintuple['key'], error_code)
-
-                        challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
-
-                        try:
-                            f = tempfile.TemporaryFile()
-                            f.write(content)
-                            # update challenge in local db for later use
-                            challenge.metrics.save('metrics.py', f)
-                        except Exception as e:
-                            error_code = compute_error_code(e)
-                            logging.error(error_code, exc_info=True)
-                            logging.error('Failed to save challenge metrics in local db for later use')
-                            return fail(traintuple['key'], error_code)
-
-                ''' get algo + model_type '''
-                # get algo file
-                try:
-                    algo_content, algo_computed_hash = get_remote_file(traintuple['algo'])
+                    challenge = get_challenge(traintuple)
+                    algo_content, algo_computed_hash = get_algo(traintuple)
+                    model_content, model_computed_hash = get_model(traintuple, model_type)  # can return None, None
                 except Exception as e:
                     error_code = compute_error_code(e)
                     logging.error(error_code, exc_info=True)
                     return fail(traintuple['key'], error_code)
 
-                # get model file
-                if traintuple.get(model_type, None) is not None:
-                    try:
-                        model_content, model_computed_hash = get_remote_file(traintuple[model_type])
-                    except Exception as e:
-                        error_code = compute_error_code(e)
-                        logging.error(error_code, exc_info=True)
-                        return fail(traintuple['key'], error_code)
-
-                # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
-                traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
-                create_directory(traintuple_directory)
-                for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
-                    create_directory(path.join(traintuple_directory, folder))
-
-                # put opener file in opener folder
+                # create traintuple
                 try:
-                    dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
+                    traintuple_directory = build_traintuple_folders(traintuple)  # do not put anything in pred folder
+                    put_opener(traintuple, traintuple_directory, data_type)
+                    put_data(traintuple, traintuple_directory, data_type)
+                    put_metric(traintuple_directory, challenge)
+                    put_algo(traintuple, traintuple_directory, algo_content)
+                    put_model(traintuple, traintuple_directory, model_content, model_type)
                 except Exception as e:
                     error_code = compute_error_code(e)
                     logging.error(error_code, exc_info=True)
                     return fail(traintuple['key'], error_code)
-
-                data_opener_hash = get_hash(dataset.data_opener.path)
-                if data_opener_hash != traintuple[data_type]['openerHash']:
-                    error_code = 'DataOpener Hash in Traintuple is not the same as in local db'
-                    logging.error(error_code, exc_info=True)
-                    return fail(traintuple['key'], error_code)
-                copy(dataset.data_opener.path, path.join(traintuple_directory, 'opener'))
-
-                # same for each train/test data
-                for data_key in traintuple[data_type]['keys']:
-                    try:
-                        data = Data.objects.get(pk=data_key)
-                    except Exception as e:
-                        error_code = compute_error_code(e)
-                        logging.error(error_code, exc_info=True)
-                        return fail(traintuple['key'], error_code)
-                    else:
-                        data_hash = get_hash(data.file.path)
-                        if data_hash != data_key:
-                            error_code = 'Data Hash in Traintuple is not the same as in local db'
-                            logging.error(error_code, exc_info=True)
-                            return fail(traintuple['key'], error_code)
-
-                        try:
-                            to_directory = path.join(traintuple_directory, 'data')
-                            copy(data.file.path, to_directory)
-                            # unzip files
-                            zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
-                            zip_ref = zipfile.ZipFile(zip_file_path, 'r')
-                            zip_ref.extractall(to_directory)
-                            zip_ref.close()
-                            os.remove(zip_file_path)
-                        except Exception as e:
-                            error_code = compute_error_code(e)
-                            logging.error(error_code, exc_info=True)
-                            logging.error('Fail to unzip data file')
-                            return fail(traintuple['key'], error_code)
-
-                # same for model (can be null)
-                if traintuple.get(model_type, None) is not None:
-                    try:
-                        model = Model.objects.get(pk=traintuple[model_type]['hash'])
-                    except:  # get it from its address
-                        model_path = path.join(traintuple_directory, 'model/model')
-                        with open(model_path, 'wb') as f:
-                            f.write(model_content)
-                    else:
-                        if get_hash(model.file.path) != traintuple[model_type]['hash']:
-                            error_code = 'Model Hash in Traintuple is not the same as in local db'
-                            logging.error(error_code, exc_info=True)
-                            return fail(traintuple['key'], error_code)
-                        os.link(model.file.path, path.join(traintuple_directory, 'model/model'))
-
-                # put algo to root
-                try:
-                    untar_algo(algo_content, traintuple_directory, traintuple)
-                except Exception as e:
-                    error_code = compute_error_code(e)
-                    logging.error(error_code, exc_info=True)
-                    logging.error('Fail to untar algo file')
-                    return fail(traintuple['key'], error_code)
-
-                # same for challenge metrics
-                os.link(challenge.metrics.path, path.join(traintuple_directory, 'metrics/metrics.py'))
-
-                # do not put anything in pred folder
 
                 # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
