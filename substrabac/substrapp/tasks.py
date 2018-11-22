@@ -10,12 +10,11 @@ from rest_framework.reverse import reverse
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
 from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
-from substrapp.job_utils import ExceptionThread, RessourceManager, monitoring_job
+from substrapp.job_utils import RessourceManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
 import docker
 import json
-import time
 from multiprocessing.managers import BaseManager
 
 import logging
@@ -202,7 +201,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                 })
 
                 if st != 201:
-                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type, exc_info=True)
+                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
                 else:
                     logging.info('Prepare Task success %s' % data_type)
 
@@ -226,74 +225,73 @@ def prepareTestingTask():
 
 @app.task
 def doTask(traintuple, data_type):
-    # data_type in ['trainData', 'testData']
 
+    # Must be defined before to return ressource in case of failure
     cpu_set = None
     gpu_set = None
 
-    command = {'trainData': 'train',
-               'testData': 'predict'}
-
-    # compute
     try:
-        from substrapp.models import Model
         # Log
         job_task_log = ''
 
         # Setup Docker Client
         client = docker.from_env()
 
-        # Docker variables
-        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                         'traintuple/%s/' % (traintuple['key']))
-        algo_path = path.join(traintuple_root_path)
-        algo_docker = ('algo_%s' % data_type).lower()    # tag must be lowercase for docker
-        algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')
-        metrics_docker = ('metrics_%s' % data_type).lower()    # tag must be lowercase for docker
-        metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
-        model_path = os.path.join(traintuple_root_path, 'model')
-        data_path = os.path.join(traintuple_root_path, 'data')
-        pred_path = os.path.join(traintuple_root_path, 'pred')
-        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-        # volume algo
-        volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        # Run algo
-        job_task_log = compute_docker(client, ressource_manager, algo_path, algo_docker, algo_docker_name,
-                                      volumes, command[data_type], cpu_set, gpu_set)
-
-        # volume metrics
+        # traintuple setup
+        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/' % (traintuple['key']))
+        model_path = os.path.join(traintuple_directory, 'model')
+        data_path = os.path.join(traintuple_directory, 'data')
+        pred_path = os.path.join(traintuple_directory, 'pred')
+        opener_file = os.path.join(traintuple_directory, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_directory, 'metrics/metrics.py')
         volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                    pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                    opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-        # Run metrics
-        compute_docker(client, ressource_manager, metrics_path, metrics_docker, metrics_docker_name, volumes, '',
-                       cpu_set, gpu_set)
-
+        # compute algo task
+        algo_path = path.join(traintuple_directory)
+        algo_docker = ('algo_%s' % data_type).lower()    # tag must be lowercase for docker
+        algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
+        model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
+        algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
+        job_task_log = compute_docker(client=client,
+                                      ressource_manager=ressource_manager,
+                                      dockerfile_path=algo_path,
+                                      image_name=algo_docker,
+                                      container_name=algo_docker_name,
+                                      volumes={**volumes, **model_volume},
+                                      command=algo_command,
+                                      cpu_set=cpu_set,
+                                      gpu_set=gpu_set)
+        # save model in database
         if data_type == 'trainData':
-            # Compute end model information
-            # TO DO : check end model existance
-            end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                       'traintuple/%s/model/model' % (traintuple['key']))
+            from substrapp.models import Model
+            end_model_path = path.join(traintuple_directory, 'model/model')
             end_model_file_hash = get_hash(end_model_path)
-
             instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
-
             url_http = 'http' if settings.DEBUG else 'https'
             current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
             end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
-        # Load performance
+        # compute metric task
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')    # base metrics comes with substrabac
+        metrics_docker = ('metrics_%s' % data_type).lower()    # tag must be lowercase for docker
+        metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
+        metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
+        compute_docker(client=client,
+                       ressource_manager=ressource_manager,
+                       dockerfile_path=metrics_path,
+                       image_name=metrics_docker,
+                       container_name=metrics_docker_name,
+                       volumes={**volumes, **metric_volume},
+                       command=None,
+                       cpu_set=cpu_set,
+                       gpu_set=gpu_set)
+
+        # load performance
         with open(os.path.join(pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
@@ -305,84 +303,20 @@ def doTask(traintuple, data_type):
         logging.error(error_code, exc_info=True)
         return fail(traintuple['key'], error_code)
 
-    # Put results in the Ledger
+    # Invoke ledger to log success
     if data_type == 'trainData':
-        # Log Success Train
-        data, st = invokeLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
-            'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
-                                                                                        end_model_file_hash,
-                                                                                        end_model_file,
-                                                                                        global_perf,
-                                                                                        job_task_log)
-        })
+        invoke_args = '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
+                                                                                          end_model_file_hash,
+                                                                                          end_model_file,
+                                                                                          global_perf,
+                                                                                          job_task_log)
     elif data_type == 'testData':
-        # Log Success Test
-        data, st = invokeLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
-            'args': '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
-                                                                             global_perf,
-                                                                             job_task_log)
-        })
+        invoke_args = '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
+                                                                               global_perf,
+                                                                               job_task_log)
 
-    return
-
-
-def compute_docker(client, ressource_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
-
-    # Build metrics
-    client.images.build(path=dockerfile_path,
-                        tag=image_name,
-                        rm=True)
-    cpu_set = None
-    gpu_set = None
-
-    mem_limit = ressource_manager.memory_limit_mb()
-
-    while cpu_set is None or gpu_set is None:
-        cpu_set = ressource_manager.acquire_cpu_set()
-        gpu_set = ressource_manager.acquire_gpu_set()
-        time.sleep(2)
-
-    job_args = {'image': image_name,
-                'name': container_name,
-                'cpuset_cpus': cpu_set,
-                'mem_limit': mem_limit,
-                'command': command,
-                'volumes': volumes,
-                'detach': False,
-                'auto_remove': False,
-                'remove': False}
-
-    if gpu_set != 'no_gpu':
-        job_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-        job_args['runtime'] = 'nvidia'
-
-    job = ExceptionThread(target=client.containers.run,
-                          kwargs=job_args)
-    monitoring = ExceptionThread(target=monitoring_job, args=(client, job_args))
-
-    job.start()
-    monitoring.start()
-
-    job.join()
-    monitoring.do_run = False
-    monitoring.join()
-
-    # Return ressources
-    ressource_manager.return_cpu_set(cpu_set)
-    ressource_manager.return_gpu_set(gpu_set)
-
-    cpu_set = None
-    gpu_set = None
-
-    if hasattr(job, "_exception"):
-        raise job._exception
-
-    # Remove only if container exit without exception
-    container = client.containers.get(container_name)
-    container.remove()
-
-    return monitoring._result
+    data, st = invokeLedger({
+        'org': settings.LEDGER['org'],
+        'peer': settings.LEDGER['peer'],
+        'args': invoke_args
+    })

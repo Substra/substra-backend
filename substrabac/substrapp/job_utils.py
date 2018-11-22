@@ -147,6 +147,64 @@ def monitoring_job(client, job_args):
     t._stats = job_statistics
 
 
+def compute_docker(client, ressource_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
+
+    # Build metrics
+    client.images.build(path=dockerfile_path,
+                        tag=image_name,
+                        rm=True)
+    cpu_set = None
+    gpu_set = None
+
+    mem_limit = ressource_manager.memory_limit_mb()
+
+    while cpu_set is None or gpu_set is None:
+        cpu_set = ressource_manager.acquire_cpu_set()
+        gpu_set = ressource_manager.acquire_gpu_set()
+        time.sleep(2)
+
+    job_args = {'image': image_name,
+                'name': container_name,
+                'cpuset_cpus': cpu_set,
+                'mem_limit': mem_limit,
+                'command': command,
+                'volumes': volumes,
+                'detach': False,
+                'auto_remove': False,
+                'remove': False}
+
+    if gpu_set != 'no_gpu':
+        job_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+        job_args['runtime'] = 'nvidia'
+
+    job = ExceptionThread(target=client.containers.run,
+                          kwargs=job_args)
+    monitoring = ExceptionThread(target=monitoring_job, args=(client, job_args))
+
+    job.start()
+    monitoring.start()
+
+    job.join()
+    monitoring.do_run = False
+    monitoring.join()
+
+    # Return ressources
+    ressource_manager.return_cpu_set(cpu_set)
+    ressource_manager.return_gpu_set(gpu_set)
+
+    cpu_set = None
+    gpu_set = None
+
+    if hasattr(job, "_exception"):
+        raise job._exception
+
+    # Remove only if container exit without exception
+    container = client.containers.get(container_name)
+    container.remove()
+
+    return monitoring._result
+
+
 class ExceptionThread(threading.Thread):
 
     def run(self):
