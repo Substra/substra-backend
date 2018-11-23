@@ -18,14 +18,14 @@ exclude_lines =
     if self\.debug
 
     # Don't complain if tests don't hit defensive assertion code:
-    raise AssertionError
-    raise NotImplementedError
+    raise
 
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
+    except
 
-    def prepareTask
+    #def doTask
+    #def prepareTask
     def prepareTrainingTask
     def prepareTestingTask
-    def doTask
