@@ -28,6 +28,7 @@ exclude_lines =
     except FileNotFoundError
     raise
     EXCEPTIONS_MAP = dict()
+    logging
 
     # Don't complain if no gpu during test
     if gpu_set
@@ -35,7 +36,10 @@ exclude_lines =
     if cls.__gpu_sets
     if 'environment' in job_args
 
+    # Ignore functions
     #def doTask
     #def prepareTask
     def prepareTrainingTask
     def prepareTestingTask
+    queryLedger
+    invokeLedger
