@@ -2,6 +2,10 @@ import os
 import inspect
 import json
 
+
+# Modules to inspect
+os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.dev'
+
 import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
     django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
     rest_framework.exceptions
@@ -11,9 +15,6 @@ MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
            rest_framework.exceptions]
 
 EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exceptions.json')
-
-# Modules to inspect
-os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.dev'
 
 
 def exception_tree(cls, exceptions_classes):
