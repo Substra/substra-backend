@@ -10,17 +10,19 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, untar_algo, get_hash, create_directory
+from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.job_utils import RessourceManager, monitoring_job, compute_docker
-from substrapp.tasks import build_traintuple_folders, get_algo, get_model, get_challenge, put_opener, put_model, put_algo, put_metric, put_data
+from substrapp.tasks import build_traintuple_folders, get_algo, get_model, get_challenge, put_opener, put_model, put_algo, put_metric, put_data, prepareTask, doTask
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
 
 import tarfile
+import zipfile
 from threading import Thread
 from .tests_misc import Stats
 import docker
-MEDIA_ROOT = tempfile.mkdtemp()
+MEDIA_ROOT = "/tmp/unittests_tasks/"
+# MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # APITestCase
@@ -123,13 +125,13 @@ class TasksTests(APITestCase):
 
     def test_put_algo(self):
 
-        file = open(os.path.join(MEDIA_ROOT, 'sample_metrics.py'), 'w')
+        file = open(os.path.join(MEDIA_ROOT, 'algo.py'), 'w')
         file.write('Hello World')
         file.close()
-        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'sample_metrics.py')))
+        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'algo.py')))
 
         tf = tarfile.open(os.path.join(MEDIA_ROOT, 'sample.tar.gz'), mode='w:gz')
-        tf.add(os.path.join(MEDIA_ROOT, 'sample_metrics.py'), arcname='sample_metrics.py')
+        tf.add(os.path.join(MEDIA_ROOT, 'algo.py'), arcname='algo.py')
         tf.close()
         self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'sample.tar.gz')))
 
@@ -139,7 +141,7 @@ class TasksTests(APITestCase):
                 mocked_function.return_value = pkhash
                 put_algo({'key': 'testkey', 'algo': 'testalgo'}, os.path.join(MEDIA_ROOT, 'traintuple/testkey/'), content.read())
 
-        metric_path = os.path.join(MEDIA_ROOT, 'traintuple/testkey/sample_metrics.py')
+        metric_path = os.path.join(MEDIA_ROOT, 'traintuple/testkey/algo.py')
         self.assertTrue(os.path.exists(metric_path))
 
     def test_put_metric(self):
@@ -195,7 +197,33 @@ class TasksTests(APITestCase):
         self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'opener/opener.py')))
 
     def test_put_data(self):
-        pass
+
+        create_directory(os.path.join(MEDIA_ROOT, 'data/'))
+        file = open(os.path.join(MEDIA_ROOT, 'data.csv'), 'w')
+        file.write('Hello World')
+        file.close()
+        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'data.csv')))
+
+        with zipfile.ZipFile(os.path.join(MEDIA_ROOT, 'sample.zip'), 'w') as myzip:
+            myzip.write(os.path.join(MEDIA_ROOT, 'data.csv'))
+        self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'sample.zip')))
+
+        data_type = 'trainData'
+        data_hash = get_hash(os.path.join(MEDIA_ROOT, 'sample.zip'))
+        traintuple = {data_type: {'keys': [data_hash]}}
+
+        class FakeFile(object):
+            def __init__(self):
+                self.path = os.path.join(MEDIA_ROOT, 'sample.zip')
+                self.name = self.path
+
+        class FakeData(object):
+            def __init__(self):
+                self.file = FakeFile()
+
+        with mock.patch('substrapp.models.Data.objects.get') as mocked_get_method:
+            mocked_get_method.return_value = FakeData()
+            put_data(traintuple, MEDIA_ROOT, data_type)
 
     def test_put_model(self):
 
@@ -247,7 +275,34 @@ class TasksTests(APITestCase):
             self.assertEqual((algo_content, algo_hash), get_algo(traintuple))
 
     def test_get_challenge(self):
-        pass
+        metrics_content = b'Metric 1 2 3'
+        challenge_hash = compute_hash(metrics_content)
+        traintuple = {'challenge': {'hash': challenge_hash,
+                                    'metrics': 'metrics.py'}}
+
+        class FakeMetrics(object):
+            def __init__(self):
+                self.path = 'path'
+
+            def save(self, p, f):
+                return 'ok'
+
+        class FakeChallenge(object):
+            def __init__(self, metrics=FakeMetrics()):
+                self.metrics = metrics
+
+        with mock.patch('substrapp.models.Challenge.objects.get') as mocked_get_method:
+            mocked_get_method.return_value = FakeChallenge()
+
+        with mock.patch('substrapp.models.Challenge.objects.get') as mocked_get_method:
+            mocked_get_method.return_value = FakeChallenge(False)
+
+            with mock.patch('substrapp.tasks.get_remote_file') as mocked_get_function:
+                mocked_get_function.return_value = metrics_content, challenge_hash
+
+                with mock.patch('substrapp.models.Challenge.objects.update_or_create') as mocked_u_or_c_method:
+                    mocked_u_or_c_method.return_value = FakeChallenge(), True
+                    get_challenge(traintuple)
 
     def test_compute_docker(self):
         cpu_set, gpu_set = None, None
@@ -279,3 +334,92 @@ class TasksTests(APITestCase):
                 nb_subfolders = len(dirs)
 
             self.assertTrue(5, nb_subfolders)
+
+    def test_prepareTasks(self):
+
+        class FakeSettings(object):
+            def __init__(self):
+                self.LEDGER = {'signcert': 'signcert',
+                               'org': 'owkin',
+                               'peer': 'peer'}
+
+                self.MEDIA_ROOT = MEDIA_ROOT
+
+        traintuple = [{'key': 'traintuple_test'
+                       }]
+
+        with mock.patch('substrapp.tasks.settings') as mocked_settings:
+            mocked_settings.return_value = FakeSettings()
+            with mock.patch('substrapp.tasks.get_hash') as signcert_hash:
+                signcert_hash.return_value = 'owkinhash'
+                with mock.patch('substrapp.tasks.queryLedger') as mocked_query_ledger:
+                    mocked_query_ledger.return_value = traintuple, 200
+                    with mock.patch('substrapp.tasks.get_challenge') as mock_get_challenge, \
+                            mock.patch('substrapp.tasks.get_algo') as mock_get_algo, \
+                            mock.patch('substrapp.tasks.get_challenge') as mock_get_model, \
+                            mock.patch('substrapp.tasks.build_traintuple_folders') as mock_build, \
+                            mock.patch('substrapp.tasks.put_opener') as mock_put_opener, \
+                            mock.patch('substrapp.tasks.put_data') as mock_put_data, \
+                            mock.patch('substrapp.tasks.put_metric') as mock_put_metric, \
+                            mock.patch('substrapp.tasks.put_algo') as mock_put_algo, \
+                            mock.patch('substrapp.tasks.put_model') as mock_put_model:
+
+                        mock_get_challenge.return_value = 'challenge'
+                        mock_get_algo.return_value = 'algo', 'algo_hash'
+                        mock_get_model.return_value = 'model', 'model_hash'
+                        mock_build.return_value = MEDIA_ROOT
+                        mock_put_opener.return_value = 'opener'
+                        mock_put_data.return_value = 'data'
+                        mock_put_metric.return_value = 'metric'
+                        mock_put_algo.return_value = 'algo'
+                        mock_put_model.return_value = 'model'
+
+                        with mock.patch('substrapp.tasks.invokeLedger') as mocked_invoke_ledger:
+                            mocked_invoke_ledger.return_value = 'data', 404
+                            prepareTask('trainData', 'trainWorker', 'todo', 'startModel', 'training')
+
+                        with mock.patch('substrapp.tasks.invokeLedger') as mocked_invoke_ledger:
+                            mocked_invoke_ledger.return_value = 'data', 201
+                            with mock.patch('substrapp.tasks.doTask.apply_async') as mocked_doTask:
+                                mocked_doTask.return_value = 'doTask'
+                                prepareTask('trainData', 'trainWorker', 'todo', 'startModel', 'training')
+
+    def test_doTask(self):
+
+        class FakeSettings(object):
+            def __init__(self):
+                self.LEDGER = {'signcert': 'signcert',
+                               'org': 'owkin',
+                               'peer': 'peer'}
+
+                self.MEDIA_ROOT = MEDIA_ROOT
+
+        traintuple_key = 'test'
+        traintuple = {'key': traintuple_key}
+        with mock.patch('substrapp.tasks.settings') as mocked_settings, \
+                mock.patch('substrapp.tasks.getattr') as mocked_function, \
+                mock.patch('substrapp.tasks.invokeLedger') as mocked_invoke_ledger:
+            mocked_settings.return_value = FakeSettings()
+            mocked_function.return_value = MEDIA_ROOT
+            mocked_invoke_ledger.return_value = 'data', 200
+            traintuple_directory = build_traintuple_folders(traintuple)
+
+            for name in ['opener', 'metrics']:
+                file = open(os.path.join(traintuple_directory, '%s/%s.py' % (name, name)), 'w')
+                file.write('Hello World')
+                file.close()
+
+            file = open(os.path.join(traintuple_directory, 'pred/perf.json'), 'w')
+            file.write('{"all": 0.99}')
+            file.close()
+
+            file = open(os.path.join(traintuple_directory, 'model/model'), 'w')
+            file.write("MODEL")
+            file.close()
+
+            with mock.patch('substrapp.tasks.compute_docker') as mocked_compute:
+                mocked_compute.return_value = 'TRAINED'
+                doTask(traintuple, 'trainData')
+
+
+        return
