@@ -2,6 +2,13 @@ import os
 import inspect
 import json
 
+import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
+    django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
+    rest_framework.exceptions
+
+MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
+           django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
+           rest_framework.exceptions]
 
 EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exceptions.json')
 
@@ -30,14 +37,6 @@ def find_exception(module):
 
 
 if __name__ == '__main__':
-
-    import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
-        django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
-        rest_framework.exceptions
-
-    MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
-               django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
-               rest_framework.exceptions]
 
     exceptions_classes = set()
 
