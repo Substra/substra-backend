@@ -164,7 +164,6 @@ def compute_hash(bytes):
 
 
 def get_computed_hash(url):
-    kwargs = {}
     username = getattr(settings, 'BASICAUTH_USERNAME', None)
     password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
