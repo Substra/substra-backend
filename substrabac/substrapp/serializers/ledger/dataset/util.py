@@ -1,6 +1,5 @@
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
-from django.conf import settings
 from rest_framework import status
 
 from substrapp.models import Dataset
@@ -9,8 +8,6 @@ from substrapp.utils import invokeLedger
 
 def createLedgerDataset(args, pkhash, sync=False):
     options = {
-        'org': settings.LEDGER['org'],
-        'peer': settings.LEDGER['peer'],
         'args': '{"Args":["registerDataset", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)

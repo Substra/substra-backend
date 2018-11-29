@@ -45,7 +45,7 @@ def get_challenge(traintuple):
             try:
                 f = tempfile.TemporaryFile()
                 f.write(content)
-                challenge.metrics.save('metrics.py', f)    # update challenge in local db for later use
+                challenge.metrics.save('metrics.py', f)  # update challenge in local db for later use
             except Exception as e:
                 logging.error('Failed to save challenge metrics in local db for later use')
                 raise e
@@ -68,7 +68,6 @@ def get_model(traintuple, model_type):
 
 
 def put_model(traintuple, traintuple_directory, model_content, model_type):
-
     if model_content is not None:
         from substrapp.models import Model
 
@@ -162,16 +161,12 @@ def build_traintuple_folders(traintuple):
 
 def fail(key, err_msg):
     # Log Fail TrainTest
+    err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     data, st = invokeLedger({
-        'org': settings.LEDGER['org'],
-        'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key,
-                                                                           'err_msg': str(err_msg).replace('"',
-                                                                                                           "'").replace(
-                                                                               '\\', "").replace('\\n', "")[:200]}
+        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
     })
 
-    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
         logging.error(data, exc_info=True)
 
     logging.info('Successfully passed the traintuple to failed')
@@ -186,15 +181,12 @@ ressource_manager = manager.RessourceManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
-
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
         logging.error(e, exc_info=True)
     else:
         traintuples, st = queryLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (
                 worker_to_filter, data_owner, status_to_filter)
         })
@@ -227,8 +219,6 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
-                    'org': settings.LEDGER['org'],
-                    'peer': settings.LEDGER['peer'],
                     'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
                 })
 
@@ -257,7 +247,6 @@ def prepareTestingTask():
 
 @app.task
 def doTask(traintuple, data_type):
-
     # Must be defined before to return ressource in case of failure
     cpu_set = None
     gpu_set = None
@@ -283,7 +272,7 @@ def doTask(traintuple, data_type):
 
         # compute algo task
         algo_path = path.join(traintuple_directory)
-        algo_docker = ('algo_%s' % data_type).lower()    # tag must be lowercase for docker
+        algo_docker = ('algo_%s' % data_type).lower()  # tag must be lowercase for docker
         algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
         algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
@@ -309,8 +298,9 @@ def doTask(traintuple, data_type):
             end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
         # compute metric task
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')    # base metrics comes with substrabac
-        metrics_docker = ('metrics_%s' % data_type).lower()    # tag must be lowercase for docker
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'),
+                                 'base_metrics')  # base metrics comes with substrabac
+        metrics_docker = ('metrics_%s' % data_type).lower()  # tag must be lowercase for docker
         metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
         metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
@@ -348,11 +338,9 @@ def doTask(traintuple, data_type):
                                                                                job_task_log)
 
     data, st = invokeLedger({
-        'org': settings.LEDGER['org'],
-        'peer': settings.LEDGER['peer'],
         'args': invoke_args
     })
 
-    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
         logging.error('Failed to invoke ledger on logSuccess')
         logging.error(data)

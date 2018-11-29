@@ -3,7 +3,6 @@ import re
 import tempfile
 
 import requests
-from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
@@ -159,8 +158,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryAlgos"]}'
         })
         challengeData = None
@@ -199,8 +196,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                 if not challengeData:
                                     # TODO find a way to put this call in cache
                                     challengeData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryChallenges"]}'
                                     })
 
@@ -220,8 +215,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
                                     datasetData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
                                     if st != 200:
@@ -238,8 +231,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryTraintuples"]}'
                                     })
                                     if st != 200:
