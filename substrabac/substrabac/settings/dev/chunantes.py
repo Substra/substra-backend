@@ -3,14 +3,14 @@ from .__init__ import *
 import os
 
 org = LEDGER_CONF['orgs']['chu-nantes']
+orderer = LEDGER_CONF['orderers']['orderer']
 peer = org['peers'][0]
-
-# get owner which is the worker of the trainData
-signcert = '/substra/data/orgs/chu-nantes/user/msp/signcerts/cert.pem'
+signcert = org['users']['user']['home'] + '/msp/signcerts/cert.pem'  # get owner which is the worker of the trainData
 
 LEDGER = {
     'org': org,
     'peer': peer,
+    'orderer': orderer,
     'signcert': signcert
 }
 
