@@ -37,7 +37,7 @@ class QueryTests(APITestCase):
         except FileNotFoundError:
             pass
 
-    def test_add_challenge_ok(self):
+    def test_add_challenge_sync_ok(self):
         url = reverse('substrapp:challenge-list')
 
         data = {
@@ -55,8 +55,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. \
-                                            The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'pkhash': '27593c659ecceb0c15739d55b7504b5ee8aef28c353e17fe1d107543efd99536'}, status.HTTP_201_CREATED
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -67,6 +66,26 @@ class QueryTests(APITestCase):
             self.assertEqual(r['metrics'], 'http://testserver/media/challenges/%s/%s' % (
                 r['pkhash'], self.challenge_metrics_filename))
 
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_challenge_no_sync_ok(self):
+        url = reverse('substrapp:challenge-list')
+        data = {
+            'name': 'tough challenge',
+            'test_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+                               '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'description': self.challenge_description,
+            'metrics': self.challenge_metrics,
+            'permissions': 'all',
+            'metrics_name': 'accuracy'
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. \
+                                            The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+            response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_challenge_ko(self):
@@ -133,7 +152,7 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_dataset_ok(self):
+    def test_add_dataset_sync_ok(self):
         url = reverse('substrapp:dataset-list')
 
         data = {
@@ -149,8 +168,7 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. \
-                                            The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -158,6 +176,27 @@ class QueryTests(APITestCase):
             self.assertEqual(r['pkhash'], get_hash(self.data_data_opener))
             self.assertEqual(r['description'],
                              'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_dataset_no_sync_ok(self):
+        url = reverse('substrapp:dataset-list')
+        data = {
+            'name': 'slide opener',
+            'type': 'images',
+            'permissions': 'all',
+            'problem_keys': '',
+            'description': self.data_description,
+            'data_opener': self.data_data_opener
+        }
+
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. \
+                                                    The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+            response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -205,7 +244,7 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_data_ok(self):
+    def test_add_data_sync_ok(self):
 
         # add associated data opener
         dataset_name = 'slide opener'
@@ -226,14 +265,37 @@ class QueryTests(APITestCase):
             mocked_method.return_value = 100
 
             with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. \
-                                                The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+                mocked_method.return_value = {'pkhash': 'c4276dce1d5952cafea6aebd872c389f0945e4a2400859fa3998138d2e006f34'}, status.HTTP_201_CREATED
 
                 response = self.client.post(url, data, format='multipart', **extra)
                 r = response.json()
                 self.assertEqual(r['pkhash'], get_hash(self.data_file))
                 self.assertEqual(r['file'],
                                  'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
+
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_data_no_sync_ok(self):
+        # add associated data opener
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description,
+                               data_opener=self.data_data_opener)
+        url = reverse('substrapp:data-list')
+        data = {
+            'file': self.data_file,
+            'dataset_key': get_hash(self.data_data_opener),
+            'test_only': True,
+        }
+
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        with mock.patch.object(os.path, 'getsize') as mocked_method:
+            mocked_method.return_value = 100
+            with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
+                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. \
+                                                        The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+                response = self.client.post(url, data, format='multipart', **extra)
 
                 self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -308,7 +370,7 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_algo_ok(self):
+    def test_add_algo_sync_ok(self):
 
         # add associated challenge
         Challenge.objects.create(description=self.challenge_description,
@@ -328,13 +390,36 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. \
-                                            The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+            mocked_method.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(r['pkhash'], get_hash(self.script))
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_algo_no_sync_ok(self):
+        # add associated challenge
+        Challenge.objects.create(description=self.challenge_description,
+                                 metrics=self.challenge_metrics)
+        url = reverse('substrapp:algo-list')
+        data = {
+            'file': self.script,
+            'description': self.data_description,
+            'name': 'super top algo',
+            'challenge_key': get_hash(self.challenge_description),
+            'permissions': 'all'
+        }
+
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
+            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. \
+                                                    The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+            response = self.client.post(url, data, format='multipart', **extra)
+
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_algo_ko(self):

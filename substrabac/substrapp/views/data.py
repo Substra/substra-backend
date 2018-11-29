@@ -70,7 +70,7 @@ class DataViewSet(mixins.CreateModelMixin,
                         except:
                             file_size += request.FILES[path_leaf(file)].size
 
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
                                                                    'size': file_size,
                                                                    'dataset_key': dataset.pk,
                                                                    'instances': instances},
@@ -84,8 +84,11 @@ class DataViewSet(mixins.CreateModelMixin,
 
                     # create on ledger
                     data, st = ledger_serializer.create(ledger_serializer.validated_data)
-                    headers = self.get_success_headers(serializer.data)
 
+                    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                        return Response(data, status=st)
+
+                    headers = self.get_success_headers(serializer.data)
                     for d in serializer.data:
                         if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
                             d['validated'] = data['validated']
@@ -113,7 +116,7 @@ class DataViewSet(mixins.CreateModelMixin,
                     except:
                         file_size = data.get('file').size
 
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
                                                                    'size': file_size,
                                                                    'dataset_key': dataset.pk,
                                                                    'instances': [instance]},
@@ -126,8 +129,11 @@ class DataViewSet(mixins.CreateModelMixin,
 
                     # create on ledger
                     data, st = ledger_serializer.create(ledger_serializer.validated_data)
-                    headers = self.get_success_headers(serializer.data)
 
+                    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                        return Response(data, status=st)
+
+                    headers = self.get_success_headers(serializer.data)
                     d = dict(serializer.data)
                     d.update(data)
                     return Response(d, status=st, headers=headers)

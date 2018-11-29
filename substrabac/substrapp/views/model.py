@@ -3,7 +3,7 @@ import tempfile
 
 import requests
 from django.conf import settings
-from django.http import Http404, HttpResponse, FileResponse
+from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response

@@ -1,5 +1,4 @@
 from django.conf import settings
-from django.http import Http404
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -59,8 +58,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
 
-        headers = self.get_success_headers(serializer.data)
+        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+            return Response(data, status=st)
 
+        headers = self.get_success_headers(serializer.data)
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
