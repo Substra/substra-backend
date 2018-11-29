@@ -2,8 +2,8 @@ from .__init__ import *
 
 import os
 
-org = LEDGER_CONF['orgs']['chu-nantes']
-orderer = LEDGER_CONF['orderers']['orderer']
+org = [x for x in LEDGER_CONF['orgs'] if x['name'] == 'chu-nantes'][0]
+orderer = LEDGER_CONF['orderers'][0]
 peer = org['peers'][0]
 signcert = org['users']['user']['home'] + '/msp/signcerts/cert.pem' # get owner which is the worker of the trainData
 
