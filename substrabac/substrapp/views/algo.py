@@ -12,7 +12,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.models import Algo, Challenge
+from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
@@ -67,8 +67,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
             # create on ledger
             data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            headers = self.get_success_headers(serializer.data)
+            if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                return Response(data, status=st)
 
+            headers = self.get_success_headers(serializer.data)
             d = dict(serializer.data)
             d.update(data)
             return Response(d, status=st, headers=headers)

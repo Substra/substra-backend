@@ -86,9 +86,9 @@ def fail(key, err_msg):
     })
 
     if st != 201:
-        # TODO log error
-        pass
+        logging.error(data, exc_info=True)
 
+    logging.info('Successfully passed the traintuple to failed')
     return data
 
 

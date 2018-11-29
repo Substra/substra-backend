@@ -9,6 +9,7 @@ from rest_framework.response import Response
 
 from substrapp.utils import queryLedger
 
+
 class JsonException(Exception):
     def __init__(self, msg):
         self.msg = msg
@@ -52,6 +53,7 @@ def get_filters(query_params):
                     filters[idx].update({parent: filter})
 
     return filters
+
 
 def getObjectFromLedger(pk):
     # get instance from remote node
