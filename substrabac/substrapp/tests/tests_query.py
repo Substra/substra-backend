@@ -25,11 +25,17 @@ MEDIA_ROOT = tempfile.mkdtemp()
 class QueryTests(APITestCase):
 
     def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
         self.challenge_description, self.challenge_description_filename, \
             self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
+
         self.script, self.script_filename = get_sample_script()
         self.data_file, self.data_file_filename = get_sample_data()
-        self.data_description, self.data_description_filename, self.data_data_opener, self.data_opener_filename = get_sample_dataset()
+
+        self.data_description, self.data_description_filename, self.data_data_opener, \
+            self.data_opener_filename = get_sample_dataset()
 
     def tearDown(self):
         try:
@@ -54,8 +60,9 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'pkhash': '27593c659ecceb0c15739d55b7504b5ee8aef28c353e17fe1d107543efd99536'}, status.HTTP_201_CREATED
+        with mock.patch.object(LedgerChallengeSerializer, 'create') as mcreate:
+            mcreate.return_value = {'pkhash': '27593c659ecceb0c15739d55b7504b5ee8aef28c353e17fe1d107543efd99536'}, status.HTTP_201_CREATED
+
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -82,9 +89,9 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(LedgerChallengeSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Challenge added in local db waiting for validation. \
-                                            The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
+        with mock.patch.object(LedgerChallengeSerializer, 'create') as mcreate:
+            mcreate.return_value = {'message': 'Challenge added in local db waiting for validation. \
+                                     The substra network has been notified for adding this Challenge'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -167,8 +174,8 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
+        with mock.patch.object(LedgerDatasetSerializer, 'create') as mcreate:
+            mcreate.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -193,9 +200,9 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(LedgerDatasetSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Dataset added in local db waiting for validation. \
-                                                    The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
+        with mock.patch.object(LedgerDatasetSerializer, 'create') as mcreate:
+            mcreate.return_value = {'message': 'Dataset added in local db waiting for validation. \
+                                     The substra network has been notified for adding this Dataset'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -261,19 +268,19 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(os.path, 'getsize') as mocked_method:
-            mocked_method.return_value = 100
+        with mock.patch.object(os.path, 'getsize') as mgetsize, \
+                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
 
-            with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {'pkhash': 'c4276dce1d5952cafea6aebd872c389f0945e4a2400859fa3998138d2e006f34'}, status.HTTP_201_CREATED
+            mgetsize.return_value = 100
+            mcreate.return_value = {'pkhash': 'c4276dce1d5952cafea6aebd872c389f0945e4a2400859fa3998138d2e006f34'}, status.HTTP_201_CREATED
 
-                response = self.client.post(url, data, format='multipart', **extra)
-                r = response.json()
-                self.assertEqual(r['pkhash'], get_hash(self.data_file))
-                self.assertEqual(r['file'],
-                                 'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(r['pkhash'], get_hash(self.data_file))
+            self.assertEqual(r['file'],
+                             'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
 
-                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_no_sync_ok(self):
         # add associated data opener
@@ -290,14 +297,15 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(os.path, 'getsize') as mocked_method:
-            mocked_method.return_value = 100
-            with mock.patch.object(LedgerDataSerializer, 'create') as mocked_method:
-                mocked_method.return_value = {'message': 'Data added in local db waiting for validation. \
-                                                        The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
-                response = self.client.post(url, data, format='multipart', **extra)
+        with mock.patch.object(os.path, 'getsize') as mgetsize, \
+                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
 
-                self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+            mgetsize.return_value = 100
+            mcreate.return_value = {'message': 'Data added in local db waiting for validation. \
+                                     The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+            response = self.client.post(url, data, format='multipart', **extra)
+
+            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_data_ko(self):
         url = reverse('substrapp:data-list')
@@ -307,8 +315,8 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(os.path, 'getsize') as mocked_method:
-            mocked_method.return_value = 100
+        with mock.patch.object(os.path, 'getsize') as mgetsize:
+            mgetsize.return_value = 100
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -389,8 +397,8 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
+            mcreate.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -415,9 +423,9 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Algo added in local db waiting for validation. \
-                                                    The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
+            mcreate.return_value = {'message': 'Algo added in local db waiting for validation. \
+                                     The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -437,8 +445,8 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerAlgoSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Fail to add algo. Challenge does not exist'}, status.HTTP_400_BAD_REQUEST
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
+            mcreate.return_value = {'message': 'Fail to add algo. Challenge does not exist'}, status.HTTP_400_BAD_REQUEST
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -526,9 +534,9 @@ class QueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mocked_method:
-            mocked_method.return_value = {'message': 'Traintuple added in local db waiting for validation. \
-                                            The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
+        with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mcreate:
+            mcreate.return_value = {'message': 'Traintuple added in local db waiting for validation. \
+                                     The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -594,8 +602,8 @@ class QueryTests(APITestCase):
     def test_get_challenge_metrics(self):
         challenge = Challenge.objects.create(description=self.challenge_description,
                                              metrics=self.challenge_metrics)
-        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mocked_function:
-            mocked_function.return_value = self.challenge_metrics
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = self.challenge_metrics
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
@@ -627,8 +635,8 @@ class QueryTests(APITestCase):
 
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.script)
-        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mocked_function:
-            mocked_function.return_value = self.script
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = self.script
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
