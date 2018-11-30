@@ -19,7 +19,7 @@ else:
     auth = []
     if username is not None and password is not None:
         auth = [username, password]
-    res = popen(['substra', 'config', 'https://substra.owkin.com:9000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
+    res = popen(['substra', 'config', 'http://owkin.substrabac:8000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
 
     print('create dataset with owkin org')
     # create dataset with owkin org
