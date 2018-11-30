@@ -17,5 +17,6 @@ def stop():
 
     call(['rm', '-rf', '/substra/backup/postgres-data'])
 
+
 if __name__ == "__main__":
     stop()

@@ -3,7 +3,6 @@ import json
 import argparse
 
 from subprocess import call, check_output
-from urllib.request import urlopen
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -43,8 +42,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                            },
                       'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
-    for org_name, org_conf in conf['orgs'].items():
-        org_name = org_name.replace('-', '')
+    for org in conf['orgs']:
+        org_name = org['name'].replace('-', '')
 
         port = 8000
         if org_name == 'chunantes':
@@ -60,18 +59,18 @@ def generate_docker_compose_file(conf, launch_settings):
                                    'PYTHONUNBUFFERED=1',
                                    'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                    'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
-                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
+                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_name],
                    'volumes': ['/substra:/substra',
                                '/substra/static:/usr/src/app/substrabac/statics',
                                '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
-                               org_conf['name']],
+                               org_name],
                    'depends_on': ['postgresql', 'rabbit']}
 
         worker = {'container_name': '%s.worker' % org_name,
                   'image': 'substra/celeryworker',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
-                    org_name, org_conf['name']),
-                  'environment': ['ORG=%s' % org_conf['name'],
+                  org_name, org_name),
+                  'environment': ['ORG=%s' % org_name,
                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name),
                                   'PYTHONUNBUFFERED=1',
                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
@@ -79,11 +78,11 @@ def generate_docker_compose_file(conf, launch_settings):
                                   'SITE_HOST=%s' % os.environ.get('SITE_HOST', 'localhost'),
                                   'SITE_PORT=%s' % os.environ.get('BACK_PORT', 9000),
                                   'DATABASE_HOST=postgresql',
-                                  'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_conf['name']],
+                                  'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_name],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
-                              org_conf['name']],
+                              org_name],
                   'depends_on': ['substrabac%s' % org_name, 'rabbit']}
 
         # Check if we have nvidia docker
@@ -160,8 +159,8 @@ if __name__ == "__main__":
 
     print('Build substrabac for : ', flush=True)
     print('  Organizations :', flush=True)
-    for org_name in conf['orgs'].keys():
-        print('   -', org_name, flush=True)
+    for org in conf['orgs']:
+        print('   -', org['name'], flush=True)
 
     print('', flush=True)
 
