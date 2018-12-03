@@ -18,15 +18,30 @@ exclude_lines =
     if self\.debug
 
     # Don't complain if tests don't hit defensive assertion code:
-    raise AssertionError
-    raise NotImplementedError
+    # raise
 
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
 
-    def prepareTask
+    # Don't complain if exception code isn't run:
+    logging
+    # except:
+    # except Exception
+    # except FileNotFoundError
+    EXCEPTIONS_MAP = dict()
+
+    # Don't complain if no gpu during test
+    if gpu_set
+    if __gpu_list
+    if cls.__gpu_sets
+    if 'environment' in job_args
+
+    # Ignore functions
+    # def queryLedger
+    # def invokeLedger
+    # def getObjectFromLedger
     def prepareTrainingTask
     def prepareTestingTask
-    def doTrainingTask
-    def doTestingTask
+    # class CustomFileResponse
+    # class ManageFileMixin

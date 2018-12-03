@@ -3,10 +3,9 @@ import inspect
 import json
 
 
-EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exceptions.json')
-
 # Modules to inspect
-os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.dev'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.prod'
+
 import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
     django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
     rest_framework.exceptions
@@ -14,6 +13,8 @@ import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
 MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
            django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
            rest_framework.exceptions]
+
+EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exceptions.json')
 
 
 def exception_tree(cls, exceptions_classes):
@@ -23,26 +24,39 @@ def exception_tree(cls, exceptions_classes):
 
 
 def find_exception(module):
-    exceptions_classes = [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
-                          if issubclass(eclass, BaseException)]
+    # Exception classes in module
+    exceptions = [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
+                  if issubclass(eclass, BaseException)]
 
+    # Exception classes in submodule
     for submodule in inspect.getmembers(module, inspect.ismodule):
-        exceptions_classes += [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
-                               if issubclass(eclass, BaseException)]
-    return exceptions_classes
+        exceptions += [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
+                       if issubclass(eclass, BaseException)]
+
+    return set(exceptions)
+
 
 if __name__ == '__main__':
 
     exceptions_classes = set()
+
+    # Add exceptions from modules
     for errors_module in MODULES:
         exceptions_classes.update(find_exception(errors_module))
+
+    # Add exceptions from python
     exception_tree(BaseException, exceptions_classes)
+
+    exceptions_classes = sorted(exceptions_classes)
 
     if os.path.exists(EXCEPTION_PATH):
         # Append values to it
         json_exceptions = json.load(open(EXCEPTION_PATH))
 
-        exceptions_classes = exceptions_classes.difference(set(json_exceptions.keys()))
+        # get all new exceptions
+        exceptions_classes = [e for e in exceptions_classes if e not in json_exceptions.keys()]
+
+        # get the last value
         start_value = max(map(int, json_exceptions.values()))
 
         for code_exception, exception_name in enumerate(exceptions_classes, start=start_value + 1):

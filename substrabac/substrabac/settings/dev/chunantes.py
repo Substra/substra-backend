@@ -28,7 +28,7 @@ DATABASES = {
     }
 }
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/chunantes')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, 'medias/chunantes'))
 
 SITE_ID = 1
 SITE_HOST = 'chunantes.substrabac'
