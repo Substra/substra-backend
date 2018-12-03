@@ -3,7 +3,6 @@ import re
 import tempfile
 
 import requests
-from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
@@ -188,8 +187,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryChallenges"]}'
         })
         datasetData = None
@@ -230,8 +227,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
                                     datasetData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
                                     if st != 200:
@@ -248,8 +243,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
                                     if st != 200:
@@ -265,8 +258,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryTraintuples"]}'
                                     })
                                     if st != 200:
@@ -300,8 +291,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         except Http404:
             # get instance from remote node
             challenge, st = queryLedger({
-                'org': settings.LEDGER['org'],
-                'peer': settings.LEDGER['peer'],
                 'args': '{"Args":["queryObject","' + pk + '"]}'
             })
 
@@ -312,13 +301,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         finally:
             # TODO query list of algos and models from ledger
             algos, _ = queryLedger({
-                'org': settings.LEDGER['org'],
-                'peer': settings.LEDGER['peer'],
                 'args': '{"Args":["queryObjects", "algo"]}'
             })
             models, _ = queryLedger({
-                'org': settings.LEDGER['org'],
-                'peer': settings.LEDGER['peer'],
                 'args': '{"Args":["queryObjects", "model"]}'
             })
             # TODO sort algos given the best perfs of their models

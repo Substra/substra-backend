@@ -3,7 +3,6 @@ import os
 from urllib.parse import unquote
 
 from django.http import FileResponse
-from django.conf import settings
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -58,8 +57,6 @@ def get_filters(query_params):
 def getObjectFromLedger(pk):
     # get instance from remote node
     data, st = queryLedger({
-        'org': settings.LEDGER['org'],
-        'peer': settings.LEDGER['peer'],
         'args': '{"Args":["query","%s"]}' % pk
     })
 

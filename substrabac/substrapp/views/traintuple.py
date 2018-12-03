@@ -1,4 +1,3 @@
-from django.conf import settings
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -68,8 +67,6 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryTraintuples"]}'
         })
 
