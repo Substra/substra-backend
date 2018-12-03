@@ -25,7 +25,6 @@ def exception_tree(cls, exceptions_classes):
 
 def find_exception(module):
     # Exception classes in module
-    exceptions = []
     exceptions = [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
                   if issubclass(eclass, BaseException)]
 
