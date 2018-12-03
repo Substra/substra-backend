@@ -90,7 +90,6 @@ def put_model(traintuple, traintuple_directory, model_content, model_type):
 
 
 def put_opener(traintuple, traintuple_directory, data_type):
-    from shutil import copy
     from substrapp.models import Dataset
 
     try:
@@ -102,7 +101,7 @@ def put_opener(traintuple, traintuple_directory, data_type):
     if data_opener_hash != traintuple[data_type]['openerHash']:
         raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
 
-    opener_dst_path = path.join(traintuple_directory, 'opener')
+    opener_dst_path = path.join(traintuple_directory, 'opener/%s' % os.path.basename(dataset.data_opener.name))
     if not os.path.exists(opener_dst_path):
         os.link(dataset.data_opener.path, opener_dst_path)
 
