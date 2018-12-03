@@ -180,6 +180,7 @@ class TasksTests(APITestCase):
         class FakeOpener(object):
             def __init__(self, filepath):
                 self.path = filepath
+                self.name = self.path
 
         class FakeDataset(object):
             def __init__(self, filepath):
