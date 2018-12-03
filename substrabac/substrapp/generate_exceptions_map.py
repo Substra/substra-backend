@@ -4,7 +4,7 @@ import json
 
 
 # Modules to inspect
-os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.dev'
+os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.prod'
 
 import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
     django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
