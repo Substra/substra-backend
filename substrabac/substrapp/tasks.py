@@ -69,13 +69,14 @@ def get_model(traintuple, model_type):
 
 def put_model(traintuple, traintuple_directory, model_content, model_type):
 
-    model_dst_path = path.join(traintuple_directory, 'model/model')
     if model_content is not None:
         from substrapp.models import Model
 
+        model_dst_path = path.join(traintuple_directory, 'model/model')
+
         try:
             model = Model.objects.get(pk=traintuple[model_type]['hash'])
-        except:  # get it from its address
+        except:  # write it to local disk
             with open(model_dst_path, 'wb') as f:
                 f.write(model_content)
         else:
