@@ -222,7 +222,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
                 })
 
-                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
                     logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
                 else:
                     logging.info('Prepare Task success %s' % data_type)

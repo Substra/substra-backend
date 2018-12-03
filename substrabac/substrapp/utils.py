@@ -33,9 +33,9 @@ def queryLedger(options):
     chaincode_name = LEDGER_CONF['misc']['chaincode_name']
 
     # update config path for using right core.yaml and override msp config path
-    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS', '%s:%s' % (peer['host'], peer['host_port']))
+    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
+    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', '%s:%s' % (peer['host'], peer['host_port']))
 
 
     print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
@@ -97,9 +97,9 @@ def invokeLedger(options, sync=False):
     orderer_cert_file = peer['tls']['clientCert']
 
     # update config path for using right core.yaml and override msp config path
-    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS', '%s:%s' % (peer['host'], peer['host_port']))
+    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
+    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', '%s:%s' % (peer['host'], peer['host_port']))
 
     print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
 
