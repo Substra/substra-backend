@@ -298,8 +298,7 @@ def doTask(traintuple, data_type):
             end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
         # compute metric task
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'),
-                                 'base_metrics')  # base metrics comes with substrabac
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics') # base metrics comes with substrabac
         metrics_docker = ('metrics_%s' % data_type).lower()  # tag must be lowercase for docker
         metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
         metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
