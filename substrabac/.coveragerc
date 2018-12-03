@@ -18,7 +18,7 @@ exclude_lines =
     if self\.debug
 
     # Don't complain if tests don't hit defensive assertion code:
-    raise
+    # raise
 
     # Don't complain if non-runnable code isn't run:
     if 0:
@@ -26,9 +26,9 @@ exclude_lines =
 
     # Don't complain if exception code isn't run:
     logging
-    except:
-    except Exception
-    except FileNotFoundError
+    # except:
+    # except Exception
+    # except FileNotFoundError
     EXCEPTIONS_MAP = dict()
 
     # Don't complain if no gpu during test
@@ -38,10 +38,10 @@ exclude_lines =
     if 'environment' in job_args
 
     # Ignore functions
-    def queryLedger
-    def invokeLedger
-    def getObjectFromLedger
+    # def queryLedger
+    # def invokeLedger
+    # def getObjectFromLedger
     def prepareTrainingTask
     def prepareTestingTask
-    class CustomFileResponse
-    class ManageFileMixin
+    # class CustomFileResponse
+    # class ManageFileMixin

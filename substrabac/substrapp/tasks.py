@@ -5,6 +5,7 @@ import tempfile
 from os import path
 
 from django.conf import settings
+from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
@@ -79,15 +80,13 @@ def put_model(traintuple, traintuple_directory, model_content, model_type):
                 f.write(model_content)
         else:
             if get_hash(model.file.path) != traintuple[model_type]['hash']:
-                e = Exception('Model Hash in Traintuple is not the same as in local db')
-                raise e
+                raise Exception('Model Hash in Traintuple is not the same as in local db')
 
             if not os.path.exists(model_dst_path):
                 os.link(model.file.path, model_dst_path)
             else:
                 if get_hash(model_dst_path) != traintuple[model_type]['hash']:
-                    e = Exception('Model Hash in Traintuple is not the same as in local medias')
-                    raise e
+                    raise Exception('Model Hash in Traintuple is not the same as in local medias')
 
 
 def put_opener(traintuple, traintuple_directory, data_type):
@@ -101,10 +100,11 @@ def put_opener(traintuple, traintuple_directory, data_type):
 
     data_opener_hash = get_hash(dataset.data_opener.path)
     if data_opener_hash != traintuple[data_type]['openerHash']:
-        e = Exception('DataOpener Hash in Traintuple is not the same as in local db')
-        raise e
+        raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
 
-    copy(dataset.data_opener.path, path.join(traintuple_directory, 'opener'))
+    opener_dst_path = path.join(traintuple_directory, 'opener')
+    if not os.path.exists(opener_dst_path):
+        os.link(dataset.data_opener.path, opener_dst_path)
 
 
 def put_data(traintuple, traintuple_directory, data_type):
@@ -120,8 +120,7 @@ def put_data(traintuple, traintuple_directory, data_type):
         else:
             data_hash = get_hash(data.file.path)
             if data_hash != data_key:
-                e = Exception('Data Hash in Traintuple is not the same as in local db')
-                raise e
+                raise Exception('Data Hash in Traintuple is not the same as in local db')
 
             try:
                 to_directory = path.join(traintuple_directory, 'data')
@@ -172,7 +171,7 @@ def fail(key, err_msg):
                                                                                '\\', "").replace('\\n', "")[:200]}
     })
 
-    if st != 201:
+    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
         logging.error(data, exc_info=True)
 
     logging.info('Successfully passed the traintuple to failed')
@@ -233,7 +232,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
                 })
 
-                if st != 201:
+                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
                     logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
                 else:
                     logging.info('Prepare Task success %s' % data_type)
@@ -353,3 +352,7 @@ def doTask(traintuple, data_type):
         'peer': settings.LEDGER['peer'],
         'args': invoke_args
     })
+
+    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+        logging.error('Failed to invoke ledger on logSuccess')
+        logging.error(data)

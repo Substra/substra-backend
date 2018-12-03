@@ -190,7 +190,7 @@ def get_computed_hash(url):
 
 
 def get_remote_file(object):
-    content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
+    content, computed_hash = get_computed_hash(object['storageAddress'])
 
     if computed_hash != object['hash']:
         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
