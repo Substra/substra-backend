@@ -43,47 +43,48 @@ def generate_docker_compose_file(conf, launch_settings):
                       'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
     for org in conf['orgs']:
-        org_name = org['name'].replace('-', '')
+        org_name = org['name']
+        org_name_stripped = org_name.replace('-', '')
 
         port = 8000
-        if org_name == 'chunantes':
+        if org_name_stripped == 'chunantes':
             port = 8001
 
-        backend = {'container_name': '%s.substrabac' % org_name,
+        backend = {'container_name': '%s.substrabac' % org_name_stripped,
                    'image': 'substra/substrabac',
                    'ports': ['%s:%s' % (port, port)],
                    'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.%s.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
-                     launch_settings, org_name, port),
+                     launch_settings, org_name_stripped, port),
                    'environment': ['DATABASE_HOST=postgresql',
-                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name),
+                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
                                    'PYTHONUNBUFFERED=1',
                                    'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                    'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
-                                   'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_name],
+                                   'FABRIC_CFG_PATH=%s' % org['peers'][0]['docker_core_dir']],
                    'volumes': ['/substra:/substra',
                                '/substra/static:/usr/src/app/substrabac/statics',
                                '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
                                org_name],
                    'depends_on': ['postgresql', 'rabbit']}
 
-        worker = {'container_name': '%s.worker' % org_name,
+        worker = {'container_name': '%s.worker' % org_name_stripped,
                   'image': 'substra/celeryworker',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
-                  org_name, org_name),
-                  'environment': ['ORG=%s' % org_name,
-                                  'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name),
+                      org_name_stripped, org_name_stripped),
+                  'environment': ['ORG=%s' % org_name_stripped,
+                                  'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
                                   'PYTHONUNBUFFERED=1',
                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                   'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
                                   'SITE_HOST=%s' % os.environ.get('SITE_HOST', 'localhost'),
                                   'SITE_PORT=%s' % os.environ.get('BACK_PORT', 9000),
                                   'DATABASE_HOST=postgresql',
-                                  'FABRIC_CFG_PATH=/substra/conf/%s/peer1/' % org_name],
+                                  'FABRIC_CFG_PATH=%s' % org['peers'][0]['docker_core_dir']],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
                               org_name],
-                  'depends_on': ['substrabac%s' % org_name, 'rabbit']}
+                  'depends_on': ['substrabac%s' % org_name_stripped, 'rabbit']}
 
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
