@@ -60,7 +60,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                    'PYTHONUNBUFFERED=1',
                                    'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                    'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
-                                   'FABRIC_CFG_PATH=%s' % org['peers'][0]['docker_core_dir']],
+                                   'FABRIC_CFG_PATH_ENV=%s' % org['peers'][0]['docker_core_dir'],
+                                   'CORE_PEER_ADDRESS_ENV=%s:%s' % (org['peers'][0]['host'], org['peers'][0]['port'])],
                    'volumes': ['/substra:/substra',
                                '/substra/static:/usr/src/app/substrabac/statics',
                                '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
@@ -70,7 +71,7 @@ def generate_docker_compose_file(conf, launch_settings):
         worker = {'container_name': '%s.worker' % org_name_stripped,
                   'image': 'substra/celeryworker',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
-                      org_name_stripped, org_name_stripped),
+                      org_name_stripped, org_name),
                   'environment': ['ORG=%s' % org_name_stripped,
                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
                                   'PYTHONUNBUFFERED=1',
@@ -79,7 +80,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                   'SITE_HOST=%s' % os.environ.get('SITE_HOST', 'localhost'),
                                   'SITE_PORT=%s' % os.environ.get('BACK_PORT', 9000),
                                   'DATABASE_HOST=postgresql',
-                                  'FABRIC_CFG_PATH=%s' % org['peers'][0]['docker_core_dir']],
+                                  'FABRIC_CFG_PATH_ENV=%s' % org['peers'][0]['docker_core_dir'],
+                                  'CORE_PEER_ADDRESS_ENV=%s:%s' % (org['peers'][0]['host'], org['peers'][0]['port'])],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
@@ -91,16 +93,12 @@ def generate_docker_compose_file(conf, launch_settings):
             worker['runtime'] = 'nvidia'
 
         if launch_settings == 'dev':
-            medias_volume = '%s:/usr/src/app/medias/%s' % ('/substra/medias/%s' % org_name, org_name)
-            worker['volumes'].append(medias_volume)
-            backend['volumes'].append(medias_volume)
-
-            media_root = 'MEDIA_ROOT=/substra/medias/%s' % org_name
+            media_root = 'MEDIA_ROOT=/substra/medias/%s' % org_name_stripped
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
 
-        docker_compose['substrabac_services']['substrabac' + org_name] = backend
-        docker_compose['substrabac_services']['worker' + org_name] = worker
+        docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
+        docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}
