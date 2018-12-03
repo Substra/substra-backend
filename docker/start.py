@@ -1,5 +1,6 @@
 import os
 import json
+import argparse
 
 from subprocess import call, check_output
 from urllib.request import urlopen
@@ -7,7 +8,7 @@ from urllib.request import urlopen
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 
-def generate_docker_compose_file(conf):
+def generate_docker_compose_file(conf, launch_settings):
     try:
         from ruamel import yaml
     except ImportError:
@@ -29,7 +30,7 @@ def generate_docker_compose_file(conf):
                                                           'image': 'substra/celerybeat',
                                                           'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
                                                           'environment': ['PYTHONUNBUFFERED=1',
-                                                                          'DJANGO_SETTINGS_MODULE=substrabac.settings.prod'],
+                                                                          'DJANGO_SETTINGS_MODULE=substrabac.settings.%s' % launch_settings],
                                                           'volumes': ['/substra:/substra'],
                                                           'depends_on': ['rabbit']
                                                           },
@@ -52,10 +53,10 @@ def generate_docker_compose_file(conf):
         backend = {'container_name': '%s.substrabac' % org_name,
                    'image': 'substra/substrabac',
                    'ports': ['%s:%s' % (port, port)],
-                   'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.prod.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
-                   org_name, port),
+                   'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.%s.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
+                     launch_settings, org_name, port),
                    'environment': ['DATABASE_HOST=postgresql',
-                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.prod.%s' % org_name,
+                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name),
                                    'PYTHONUNBUFFERED=1',
                                    'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                    'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
@@ -69,9 +70,9 @@ def generate_docker_compose_file(conf):
         worker = {'container_name': '%s.worker' % org_name,
                   'image': 'substra/celeryworker',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
-                  org_name, org_conf['name']),
+                    org_name, org_conf['name']),
                   'environment': ['ORG=%s' % org_conf['name'],
-                                  'DJANGO_SETTINGS_MODULE=substrabac.settings.prod.%s' % org_name,
+                                  'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name),
                                   'PYTHONUNBUFFERED=1',
                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
                                   'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
@@ -88,6 +89,15 @@ def generate_docker_compose_file(conf):
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
             worker['runtime'] = 'nvidia'
+
+        if launch_settings == 'dev':
+            medias_volume = '%s:/usr/src/app/medias/%s' % ('/substra/medias/%s' % org_name, org_name)
+            worker['volumes'].append(medias_volume)
+            backend['volumes'].append(medias_volume)
+
+            media_root = 'MEDIA_ROOT=/substra/medias/%s' % org_name
+            worker['environment'].append(media_root)
+            backend['environment'].append(media_root)
 
         docker_compose['substrabac_services']['substrabac' + org_name] = backend
         docker_compose['substrabac_services']['worker' + org_name] = worker
@@ -118,9 +128,9 @@ def stop(docker_compose=None):
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
 
-def start(conf):
+def start(conf, launch_settings):
     print('Generate docker-compose file\n')
-    docker_compose = generate_docker_compose_file(conf)
+    docker_compose = generate_docker_compose_file(conf, launch_settings)
 
     stop(docker_compose)
 
@@ -135,6 +145,16 @@ def start(conf):
 
 if __name__ == "__main__":
 
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-d', '--dev', action='store_true', default=False,
+                        help="use dev settings")
+    args = vars(parser.parse_args())
+
+    if args['dev']:
+        launch_settings = 'dev'
+    else:
+        launch_settings = 'prod'
+
     call(['rm', '-rf', '/substra/backup/postgres-data'])
     conf = json.load(open('/substra/conf/conf.json', 'r'))
 
@@ -145,4 +165,4 @@ if __name__ == "__main__":
 
     print('', flush=True)
 
-    start(conf)
+    start(conf, launch_settings)

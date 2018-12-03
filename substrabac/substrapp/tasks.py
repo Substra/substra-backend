@@ -1,77 +1,163 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
-import tarfile
 import tempfile
 from os import path
 
-import requests
 from django.conf import settings
+from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
-from .utils import compute_hash, update_statistics, get_cpu_sets, get_gpu_sets, ExceptionThread
-from .exception_handler import compute_error_code
+from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
+from substrapp.job_utils import RessourceManager, compute_docker
+from substrapp.exception_handler import compute_error_code
 
 import docker
 import json
-import time
-import threading
 from multiprocessing.managers import BaseManager
 
 import logging
 
-import GPUtil as gputil
 
+def get_challenge(traintuple):
+    from substrapp.models import Challenge
 
-def create_directory(directory):
-    if not path.exists(directory):
-        os.makedirs(directory)
-
-
-def get_hash(file):
-    with open(file, 'rb') as f:
-        data = f.read()
-        return compute_hash(data)
-
-
-def get_computed_hash(url):
-    kwargs = {}
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-
-    if username is not None and password is not None:
-        kwargs = {
-            'auth': (username, password),
-            'verify': False
-        }
+    # check if challenge exists and its metrics is not null
+    challengeHash = traintuple['challenge']['hash']
 
     try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
+        # get challenge from local db
+        challenge = Challenge.objects.get(pk=challengeHash)
     except:
-        raise Exception('Failed to check hash due to failed file fetching %s' % url)
-    else:
-        if r.status_code != 200:
-            raise Exception(
-                'Url: %(url)s to fetch file returned status code: %(st)s' % {'url': url, 'st': r.status_code})
+        challenge = None
+    finally:
+        if challenge is None or not challenge.metrics:
+            # get challenge metrics
+            try:
+                content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
+            except Exception as e:
+                raise e
 
-        computedHash = compute_hash(r.content)
+            challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
 
-        return r.content, computedHash
+            try:
+                f = tempfile.TemporaryFile()
+                f.write(content)
+                challenge.metrics.save('metrics.py', f)    # update challenge in local db for later use
+            except Exception as e:
+                logging.error('Failed to save challenge metrics in local db for later use')
+                raise e
+
+    return challenge
 
 
-def get_remote_file(object):
+def get_algo(traintuple):
+    algo_content, algo_computed_hash = get_remote_file(traintuple['algo'])
+    return algo_content, algo_computed_hash
+
+
+def get_model(traintuple, model_type):
+    model_content, model_computed_hash = None, None
+
+    if traintuple.get(model_type, None) is not None:
+        model_content, model_computed_hash = get_remote_file(traintuple[model_type])
+
+    return model_content, model_computed_hash
+
+
+def put_model(traintuple, traintuple_directory, model_content, model_type):
+
+    if model_content is not None:
+        from substrapp.models import Model
+
+        model_dst_path = path.join(traintuple_directory, 'model/model')
+
+        try:
+            model = Model.objects.get(pk=traintuple[model_type]['hash'])
+        except:  # write it to local disk
+            with open(model_dst_path, 'wb') as f:
+                f.write(model_content)
+        else:
+            if get_hash(model.file.path) != traintuple[model_type]['hash']:
+                raise Exception('Model Hash in Traintuple is not the same as in local db')
+
+            if not os.path.exists(model_dst_path):
+                os.link(model.file.path, model_dst_path)
+            else:
+                if get_hash(model_dst_path) != traintuple[model_type]['hash']:
+                    raise Exception('Model Hash in Traintuple is not the same as in local medias')
+
+
+def put_opener(traintuple, traintuple_directory, data_type):
+    from substrapp.models import Dataset
+
     try:
-        content, computed_hash = get_computed_hash(object['storageAddress'])  # TODO pass cert
+        dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
     except Exception as e:
         raise e
-    else:
-        if computed_hash != object['hash']:
-            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-            raise Exception(msg)
 
-        return content, computed_hash
+    data_opener_hash = get_hash(dataset.data_opener.path)
+    if data_opener_hash != traintuple[data_type]['openerHash']:
+        raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
+
+    opener_dst_path = path.join(traintuple_directory, 'opener/%s' % os.path.basename(dataset.data_opener.name))
+    if not os.path.exists(opener_dst_path):
+        os.link(dataset.data_opener.path, opener_dst_path)
+
+
+def put_data(traintuple, traintuple_directory, data_type):
+    from shutil import copy
+    from substrapp.models import Data
+    import zipfile
+
+    for data_key in traintuple[data_type]['keys']:
+        try:
+            data = Data.objects.get(pk=data_key)
+        except Exception as e:
+            raise e
+        else:
+            data_hash = get_hash(data.file.path)
+            if data_hash != data_key:
+                raise Exception('Data Hash in Traintuple is not the same as in local db')
+
+            try:
+                to_directory = path.join(traintuple_directory, 'data')
+                copy(data.file.path, to_directory)
+                # unzip files
+                zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
+                zip_ref = zipfile.ZipFile(zip_file_path, 'r')
+                zip_ref.extractall(to_directory)
+                zip_ref.close()
+                os.remove(zip_file_path)
+            except Exception as e:
+                logging.error('Fail to unzip data file')
+                raise e
+
+
+def put_metric(traintuple_directory, challenge):
+    metrics_dst_path = path.join(traintuple_directory, 'metrics/metrics.py')
+    if not os.path.exists(metrics_dst_path):
+        os.link(challenge.metrics.path, metrics_dst_path)
+
+
+def put_algo(traintuple, traintuple_directory, algo_content):
+    try:
+        untar_algo(algo_content, traintuple_directory, traintuple)
+    except Exception as e:
+        logging.error('Fail to untar algo file')
+        raise e
+
+
+def build_traintuple_folders(traintuple):
+    # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
+    create_directory(traintuple_directory)
+    for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
+        create_directory(path.join(traintuple_directory, folder))
+
+    return traintuple_directory
 
 
 def fail(key, err_msg):
@@ -85,213 +171,14 @@ def fail(key, err_msg):
                                                                                '\\', "").replace('\\n', "")[:200]}
     })
 
-    if st != 201:
+    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
         logging.error(data, exc_info=True)
 
     logging.info('Successfully passed the traintuple to failed')
     return data
 
 
-def untar_algo(traintuple):
-    try:
-        content, computed_hash = get_remote_file(traintuple['algo'])
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        try:
-            to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                          'traintuple/%s' % (traintuple['key']))
-            to_file_path = '%s/%s' % (to_directory_path, 'algo.tar.gz')
-            os.makedirs(os.path.dirname(to_file_path), exist_ok=True)
-            with open(to_file_path, 'wb') as f:
-                f.write(content)
-
-            tar = tarfile.open(to_file_path)
-            tar.extractall(to_directory_path)
-            tar.close()
-            os.remove(to_file_path)
-        except:
-            return fail(traintuple['key'], 'Fail to untar algo file')
-
-
-def untar_algo_from_local(algo, traintuple):
-    from shutil import copy
-
-    algo_file_hash = get_hash(algo.file.path)
-    if algo_file_hash != traintuple['algo']['hash']:
-        return fail(traintuple['key'], 'Algo Hash in Traintuple is not the same as in local db')
-
-    try:
-        to_directory_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % (traintuple['key']))
-
-        # TODO update copy for supporting url
-        copy(algo.file.path, to_directory_path)
-        tar_file_path = os.path.join(to_directory_path, os.path.basename(algo.file.name))
-        tar = tarfile.open(tar_file_path)
-        tar.extractall(to_directory_path)
-        tar.close()
-        os.remove(tar_file_path)
-    except:
-        return fail(traintuple['key'], 'Fail to untar algo file')
-
-
-def save_challenge(traintuple):
-    try:
-        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
-    except Exception as e:
-        return fail(traintuple['key'], e)
-    else:
-        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                            'traintuple/%s/%s/%s' % (traintuple['key'], 'metrics', 'metrics.py'))
-        os.makedirs(os.path.dirname(to_path), exist_ok=True)
-        with open(to_path, 'wb') as f:
-            f.write(content)
-
-
-def save_challenge_from_local(challenge, traintuple):
-    from shutil import copy
-    challenge_metrics_hash = get_hash(challenge.metrics.path)
-    if challenge_metrics_hash != traintuple['challenge']['metrics']['hash']:
-        return fail(traintuple['key'], 'Challenge Hash in Traintuple is not the same as in local db')
-
-    copy(challenge.metrics.path,
-         path.join(getattr(settings, 'MEDIA_ROOT'),
-                   'traintuple/%s/%s' % (traintuple['key'], 'metrics')))
-
-
-def monitoring_job(client, train_args):
-    """thread worker function"""
-
-    job_name = train_args['name']
-
-    gpu_set = None
-    if 'environment' in train_args:
-        gpu_set = train_args['environment']['NVIDIA_VISIBLE_DEVICES']
-
-    start = time.time()
-    t = threading.currentThread()
-
-    # Statistics
-    job_statistics = {'memory': {'max': 0,
-                                 'current': [0]},
-                      'gpu_memory': {'max': 0,
-                                     'current': [0]},
-                      'cpu': {'max': 0,
-                              'current': [0]},
-                      'gpu': {'max': 0,
-                              'current': []},
-                      'io': {'max': 0,
-                             'current': []},
-                      'netio': {'rx': 0,
-                                'tx': 0},
-                      'time': 0}
-
-    while getattr(t, "do_run", True):
-        stats = None
-        try:
-            container = client.containers.get(job_name)
-            stats = container.stats(decode=True, stream=False)
-        except:
-            pass
-
-        gpu_stats = None
-        if gpu_set is not None:
-            gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
-
-        update_statistics(job_statistics, stats, gpu_stats)
-
-    job_statistics['time'] = time.time() - start
-
-    t._result = 'CPU:%.2f %% - Mem:%.2f GB - GPU:%.2f %% - GPU Mem:%.2f GB' % (job_statistics['cpu']['max'],
-                                                                               job_statistics['memory']['max'],
-                                                                               job_statistics['gpu']['max'],
-                                                                               job_statistics['gpu_memory']['max'])
-
-    t._stats = job_statistics
-
-
-class RessourceManager():
-    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
-    __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
-
-    __cpu_count = os.cpu_count()
-    __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
-
-    # Set CUDA_DEVICE_ORDER so the IDs assigned by CUDA match those from nvidia-smi
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
-
-    __gpu_sets = 'no_gpu'
-    if __gpu_list:
-        __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)
-
-    __used_cpu_sets = []
-    __used_gpu_sets = []
-    __lock = threading.Lock()
-
-    @classmethod
-    def memory_limit_mb(cls):
-        return '%sM' % (cls.__memory_gb // cls.__concurrency)
-
-    @classmethod
-    def acquire_cpu_set(cls):
-        cpu_set = None
-        cls.__lock.acquire()
-
-        try:
-            cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
-            if len(cpu_set_available) > 0:
-                cpu_set = cpu_set_available.pop()
-                cls.__used_cpu_sets.append(cpu_set)
-        except:
-            pass
-
-        cls.__lock.release()
-        return cpu_set
-
-    @classmethod
-    def return_cpu_set(cls, cpu_set):
-        cls.__lock.acquire()
-
-        try:
-            cls.__used_cpu_sets.remove(cpu_set)
-        except:
-            pass
-
-        cls.__lock.release()
-
-    @classmethod
-    def acquire_gpu_set(cls):
-        gpu_set = 'no_gpu'
-        cls.__lock.acquire()
-
-        if cls.__gpu_sets != 'no_gpu':
-            gpu_set = None
-            try:
-                gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
-                if len(gpu_set_available) > 0:
-                    gpu_set = gpu_set_available.pop()
-                    cls.__used_gpu_sets.append(gpu_set)
-            except:
-                pass
-
-        cls.__lock.release()
-        return gpu_set
-
-    @classmethod
-    def return_gpu_set(cls, gpu_set):
-        cls.__lock.acquire()
-
-        if gpu_set != 'no_gpu':
-            try:
-                cls.__used_gpu_sets.remove(gpu_set)
-            except:
-                pass
-
-        cls.__lock.release()
-
-
-# Instatiate Ressource Manager
+# Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
 BaseManager.register('RessourceManager', RessourceManager)
 manager = BaseManager()
 manager.start()
@@ -299,9 +186,6 @@ ressource_manager = manager.RessourceManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
-    from shutil import copy
-    import zipfile
-    from substrapp.models import Challenge, Dataset, Data, Model, Algo
 
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
@@ -317,166 +201,29 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
         if st == 200 and traintuples is not None:
             for traintuple in traintuples:
-                # check if challenge exists and its metrics is not null
-                challengeHash = traintuple['challenge']['hash']
+
+                # get traintuple components
                 try:
-                    challenge = Challenge.objects.get(pk=challengeHash)
-                except:
-                    # get challenge metrics
-                    try:
-                        content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
-                    except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
-                    else:
-                        try:
-                            f = tempfile.TemporaryFile()
-                            f.write(content)
-
-                            # save/update challenge in local db for later use
-                            instance, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
-                            instance.metrics.save('metrics.py', f)
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], 'Failed to save challenge metrics in local db for later use')
-                else:
-                    if not challenge.metrics:
-                        # get challenge metrics
-                        try:
-                            content, computed_hash = get_remote_file(traintuple['challenge']['metrics'])
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], e)
-                        else:
-                            try:
-                                f = tempfile.TemporaryFile()
-                                f.write(content)
-
-                                # save/update challenge in local db for later use
-                                instance, created = Challenge.objects.update_or_create(pkhash=challengeHash,
-                                                                                       validated=True)
-                                instance.metrics.save('metrics.py', f)
-                            except Exception as e:
-                                logging.error(e, exc_info=True)
-                                return fail(traintuple['key'],
-                                            'Failed to save challenge metrics in local db for later use')
-
-                ''' get algo + model_type '''
-                # get algo file
-                try:
-                    get_remote_file(traintuple['algo'])
+                    challenge = get_challenge(traintuple)
+                    algo_content, algo_computed_hash = get_algo(traintuple)
+                    model_content, model_computed_hash = get_model(traintuple, model_type)  # can return None, None
                 except Exception as e:
-                    logging.error(e, exc_info=True)
-                    return fail(traintuple['key'], e)
+                    error_code = compute_error_code(e)
+                    logging.error(error_code, exc_info=True)
+                    return fail(traintuple['key'], error_code)
 
-                # get model file
+                # create traintuple
                 try:
-                    if traintuple[model_type] is not None:
-                        get_remote_file(traintuple[model_type])
+                    traintuple_directory = build_traintuple_folders(traintuple)  # do not put anything in pred folder
+                    put_opener(traintuple, traintuple_directory, data_type)
+                    put_data(traintuple, traintuple_directory, data_type)
+                    put_metric(traintuple_directory, challenge)
+                    put_algo(traintuple, traintuple_directory, algo_content)
+                    put_model(traintuple, traintuple_directory, model_content, model_type)
                 except Exception as e:
-                    logging.error(e, exc_info=True)
-                    return fail(traintuple['key'], e)
-
-                # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
-                directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
-                create_directory(directory)
-                folders = ['opener', 'data', 'model', 'pred', 'metrics']
-                for folder in folders:
-                    directory = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                          'traintuple/%s/%s' % (traintuple['key'], folder))
-                    create_directory(directory)
-
-                # put opener file in opener folder
-                try:
-                    dataset = Dataset.objects.get(pk=traintuple[data_type]['openerHash'])
-                except Exception as e:
-                    logging.error(e, exc_info=True)
-                    return fail(traintuple['key'], e)
-                else:
-                    data_opener_hash = get_hash(dataset.data_opener.path)
-                    if data_opener_hash != traintuple[data_type]['openerHash']:
-                        return fail(traintuple['key'], 'DataOpener Hash in Traintuple is not the same as in local db')
-
-                    copy(dataset.data_opener.path,
-                         path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/%s' % (traintuple['key'], 'opener')))
-
-                # same for each train/test data
-                for data_key in traintuple[data_type]['keys']:
-                    try:
-                        data = Data.objects.get(pk=data_key)
-                    except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
-                    else:
-                        data_hash = get_hash(data.file.path)
-                        if data_hash != data_key:
-                            return fail(traintuple['key'],
-                                        'Data Hash in Traintuple is not the same as in local db')
-
-                        try:
-                            to_directory = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                                     'traintuple/%s/%s' % (traintuple['key'], 'data'))
-                            copy(data.file.path, to_directory)
-                            # unzip files
-                            zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
-                            zip_ref = zipfile.ZipFile(zip_file_path, 'r')
-                            zip_ref.extractall(to_directory)
-                            zip_ref.close()
-                            os.remove(zip_file_path)
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], 'Fail to unzip data file')
-
-                # same for model (can be null)
-                model = None
-                try:
-                    if traintuple[model_type] is not None:
-                        model = Model.objects.get(pk=traintuple[model_type]['hash'])
-                except:  # get it from its address
-                    try:
-                        content, computed_hash = get_remote_file(traintuple[model_type])
-                    except Exception as e:
-                        logging.error(e, exc_info=True)
-                        return fail(traintuple['key'], e)
-                    else:
-                        to_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                            'traintuple/%s/%s/%s' % (traintuple['key'], 'model', 'model'))
-                        os.makedirs(os.path.dirname(to_path), exist_ok=True)
-                        with open(to_path, 'wb') as f:
-                            f.write(content)
-                else:
-                    if model is not None:
-                        model_file_hash = get_hash(model.file.path)
-                        if model_file_hash != traintuple[model_type]['hash']:
-                            return fail(traintuple['key'], 'Model Hash in Traintuple is not the same as in local db')
-
-                        copy(model.file.path,
-                             path.join(getattr(settings, 'MEDIA_ROOT'),
-                                       'traintuple/%s/%s' % (traintuple['key'], 'model')))
-
-                # put algo to root
-                try:
-                    algo = Algo.objects.get(pk=traintuple['algo']['hash'])
-                except:  # get it from its address
-                    untar_algo(traintuple)
-                else:
-                    if algo.file:
-                        untar_algo_from_local(algo, traintuple)
-                    else:  # fallback get it from its address
-                        untar_algo(traintuple)
-
-                # same for challenge metrics
-                try:
-                    challenge = Challenge.objects.get(pk=traintuple['challenge']['hash'])
-                except:
-                    save_challenge(traintuple)
-                else:
-                    if challenge.metrics:
-                        save_challenge_from_local(challenge, traintuple)
-                    else:
-                        save_challenge(traintuple)
-
-                # do not put anything in pred folder
+                    error_code = compute_error_code(e)
+                    logging.error(error_code, exc_info=True)
+                    return fail(traintuple['key'], error_code)
 
                 # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
@@ -485,23 +232,17 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
                     'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
                 })
 
-                if st != 201:
-                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type, exc_info=True)
+                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
                 else:
                     logging.info('Prepare Task success %s' % data_type)
 
-                    if data_type == 'trainData':
-                        try:
-                            doTrainingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], e)
-                    elif data_type == 'testData':
-                        try:
-                            doTestingTask.apply_async((traintuple,), queue=settings.LEDGER['org']['name'])
-                        except Exception as e:
-                            logging.error(e, exc_info=True)
-                            return fail(traintuple['key'], e)
+                    try:
+                        doTask.apply_async((traintuple, data_type), queue=settings.LEDGER['org']['name'])
+                    except Exception as e:
+                        error_code = compute_error_code(e)
+                        logging.error(error_code, exc_info=True)
+                        return fail(traintuple['key'], error_code)
 
 
 @app.task
@@ -515,168 +256,75 @@ def prepareTestingTask():
 
 
 @app.task
-def doTrainingTask(traintuple):
+def doTask(traintuple, data_type):
+
+    # Must be defined before to return ressource in case of failure
     cpu_set = None
     gpu_set = None
 
     try:
-        from django.contrib.sites.models import Site
-        from substrapp.models import Model
-
         # Log
-        training_task_log = ''
+        job_task_log = ''
 
         # Setup Docker Client
         client = docker.from_env()
 
-        # Docker variables
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        media_root_path = getattr(settings, 'MEDIA_ROOT')
-        project_root_path = getattr(settings, 'PROJECT_ROOT')
-
-        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                         'traintuple/%s/' % (traintuple['key']))
-        algo_path = path.join(traintuple_root_path)
-        algo_docker = 'algo_train'
-        algo_docker_name = 'algo_train_%s' % (traintuple['key'])
-        metrics_docker = 'metrics_train'
-        metrics_docker_name = 'metrics_train_%s' % (traintuple['key'])
-        model_path = os.path.join(traintuple_root_path, 'model')
-        train_data_path = os.path.join(traintuple_root_path, 'data')
-        train_pred_path = os.path.join(traintuple_root_path, 'pred')
-        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-        # Build algo
-        client.images.build(path=algo_path,
-                            tag=algo_docker,
-                            rm=True)
-
-        # Run algo, train and make train predictions
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        mem_limit = ressource_manager.memory_limit_mb()
-
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
-
-        train_args = {'image': algo_docker,
-                      'name': algo_docker_name,
-                      'cpuset_cpus': cpu_set,
-                      'mem_limit': mem_limit,
-                      'command': 'train',
-                      'volumes': volumes,
-                      'detach': False,
-                      'auto_remove': False,
-                      'remove': False,
-                      }
-
-        if gpu_set != 'no_gpu':
-            train_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            train_args['runtime'] = 'nvidia'
-
-        training = ExceptionThread(target=client.containers.run,
-                                   kwargs=train_args)
-
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, train_args))
-
-        training.start()
-        monitoring.start()
-
-        training.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        training_task_log = monitoring._result
-
-        # Return ressources
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(training, "_exception"):
-            raise training._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(algo_docker_name)
-        container.remove()
-
-        # Build metrics
-        client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
-                            tag=metrics_docker,
-                            rm=True)
-
-        # Compute metrics on train predictions
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {train_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   train_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+        # traintuple setup
+        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/' % (traintuple['key']))
+        model_path = os.path.join(traintuple_directory, 'model')
+        data_path = os.path.join(traintuple_directory, 'data')
+        pred_path = os.path.join(traintuple_directory, 'pred')
+        opener_file = os.path.join(traintuple_directory, 'opener/opener.py')
+        metrics_file = os.path.join(traintuple_directory, 'metrics/metrics.py')
+        volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+                   pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                    opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-        mem_limit = ressource_manager.memory_limit_mb()
-        cpu_set = None
-        gpu_set = None
+        # compute algo task
+        algo_path = path.join(traintuple_directory)
+        algo_docker = ('algo_%s' % data_type).lower()    # tag must be lowercase for docker
+        algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
+        model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
+        algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
+        job_task_log = compute_docker(client=client,
+                                      ressource_manager=ressource_manager,
+                                      dockerfile_path=algo_path,
+                                      image_name=algo_docker,
+                                      container_name=algo_docker_name,
+                                      volumes={**volumes, **model_volume},
+                                      command=algo_command,
+                                      cpu_set=cpu_set,
+                                      gpu_set=gpu_set)
+        # save model in database
+        if data_type == 'trainData':
+            from substrapp.models import Model
+            end_model_path = path.join(traintuple_directory, 'model/model')
+            end_model_file_hash = get_hash(end_model_path)
+            instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+            with open(end_model_path, 'rb') as f:
+                instance.file.save('model', f)
+            url_http = 'http' if settings.DEBUG else 'https'
+            current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
+            end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
 
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
+        # compute metric task
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')    # base metrics comes with substrabac
+        metrics_docker = ('metrics_%s' % data_type).lower()    # tag must be lowercase for docker
+        metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
+        metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
+        compute_docker(client=client,
+                       ressource_manager=ressource_manager,
+                       dockerfile_path=metrics_path,
+                       image_name=metrics_docker,
+                       container_name=metrics_docker_name,
+                       volumes={**volumes, **metric_volume},
+                       command=None,
+                       cpu_set=cpu_set,
+                       gpu_set=gpu_set)
 
-        metrics_args = {'image': metrics_docker,
-                        'name': metrics_docker_name,
-                        'cpuset_cpus': cpu_set,
-                        'mem_limit': mem_limit,
-                        'volumes': volumes,
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-        if gpu_set != 'no_gpu':
-            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            metrics_args['runtime'] = 'nvidia'
-
-        metric = ExceptionThread(target=client.containers.run,
-                                 kwargs=metrics_args)
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
-
-        metric.start()
-        monitoring.start()
-
-        metric.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(metric, "_exception"):
-            raise metric._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(metrics_docker_name)
-        container.remove()
-
-        # Compute end model information
-        end_model_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                   'traintuple/%s/model/model' % (traintuple['key']))
-        end_model_file_hash = get_hash(end_model_path)
-
-        instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
-        with open(end_model_path, 'rb') as f:
-            instance.file.save('model', f)
-
-        url_http = 'http' if settings.DEBUG else 'https'
-        current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
-        end_model_file = '%s://%s%s' % (
-        url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
-
-        # Load performance
-        with open(os.path.join(train_pred_path, 'perf.json'), 'r') as perf_file:
+        # load performance
+        with open(os.path.join(pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
 
@@ -687,178 +335,24 @@ def doTrainingTask(traintuple):
         logging.error(error_code, exc_info=True)
         return fail(traintuple['key'], error_code)
 
-    # Log Success Train
+    # Invoke ledger to log success
+    if data_type == 'trainData':
+        invoke_args = '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
+                                                                                          end_model_file_hash,
+                                                                                          end_model_file,
+                                                                                          global_perf,
+                                                                                          job_task_log)
+    elif data_type == 'testData':
+        invoke_args = '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
+                                                                               global_perf,
+                                                                               job_task_log)
+
     data, st = invokeLedger({
         'org': settings.LEDGER['org'],
         'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
-                                                                                    end_model_file_hash,
-                                                                                    end_model_file,
-                                                                                    global_perf,
-                                                                                    training_task_log)
+        'args': invoke_args
     })
 
-    return
-
-
-@app.task
-def doTestingTask(traintuple):
-    try:
-        # Log
-        testing_task_log = ''
-
-        # Setup Docker Client
-        client = docker.from_env()
-
-        # Docker variables
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        media_root_path = getattr(settings, 'MEDIA_ROOT')
-        project_root_path = getattr(settings, 'PROJECT_ROOT')
-        traintuple_root_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                         'traintuple/%s/' % (traintuple['key']))
-        algo_path = path.join(traintuple_root_path)
-        algo_docker = 'algo_test'
-        algo_docker_name = 'algo_test_%s' % (traintuple['key'])
-        metrics_docker = 'metrics_test'
-        metrics_docker_name = 'metrics_test_%s' % (traintuple['key'])
-        model_path = os.path.join(traintuple_root_path, 'model')
-        test_data_path = os.path.join(traintuple_root_path, 'data')
-        test_pred_path = os.path.join(traintuple_root_path, 'pred')
-        opener_file = os.path.join(traintuple_root_path, 'opener/opener.py')
-        metrics_file = os.path.join(traintuple_root_path, 'metrics/metrics.py')
-
-        # Build algo
-        client.images.build(path=algo_path,
-                            tag=algo_docker,
-                            rm=True)
-
-        # Run algo and make test predictions
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   model_path: {'bind': '/sandbox/model', 'mode': 'rw'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        mem_limit = ressource_manager.memory_limit_mb()
-        cpu_set = None
-        gpu_set = None
-
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
-
-        testing_args = {'image': algo_docker,
-                        'name': algo_docker_name,
-                        'cpuset_cpus': cpu_set,
-                        'mem_limit': mem_limit,
-                        'command': 'predict',
-                        'volumes': volumes,
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-        if gpu_set != 'no_gpu':
-            testing_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            testing_args['runtime'] = 'nvidia'
-
-        testing = ExceptionThread(target=client.containers.run,
-                                  kwargs=testing_args)
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, testing_args))
-
-        testing.start()
-        monitoring.start()
-
-        testing.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        testing_task_log = monitoring._result
-
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(testing, "_exception"):
-            raise testing._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(algo_docker_name)
-        container.remove()
-
-        # Build metrics
-        client.images.build(path=path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics'),
-                            tag=metrics_docker,
-                            rm=True)
-
-        # Compute metrics on train predictions
-        # Need to replace media root path if we have substrabac and celery worker in containers to refer to the host path
-        volumes = {test_data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   test_pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        mem_limit = ressource_manager.memory_limit_mb()
-        cpu_set = None
-        gpu_set = None
-
-        while cpu_set is None or gpu_set is None:
-            cpu_set = ressource_manager.acquire_cpu_set()
-            gpu_set = ressource_manager.acquire_gpu_set()
-            time.sleep(2)
-
-        metrics_args = {'image': metrics_docker,
-                        'name': metrics_docker_name,
-                        'cpuset_cpus': cpu_set,
-                        'mem_limit': mem_limit,
-                        'volumes': volumes,
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-        if gpu_set != 'no_gpu':
-            metrics_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
-            metrics_args['runtime'] = 'nvidia'
-
-        metric = ExceptionThread(target=client.containers.run,
-                                 kwargs=metrics_args)
-        monitoring = ExceptionThread(target=monitoring_job, args=(client, metrics_args))
-
-        metric.start()
-        monitoring.start()
-
-        metric.join()
-        monitoring.do_run = False
-        monitoring.join()
-
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-
-        if hasattr(testing, "_exception"):
-            raise testing._exception
-
-        # Remove only if container exit without exception
-        container = client.containers.get(metrics_docker_name)
-        container.remove()
-
-        # Load performance
-        with open(os.path.join(test_pred_path, 'perf.json'), 'r') as perf_file:
-            perf = json.load(perf_file)
-        global_perf = perf['all']
-
-    except Exception as e:
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-        return fail(traintuple['key'], error_code)
-
-    # Log Success Test
-    data, st = invokeLedger({
-        'org': settings.LEDGER['org'],
-        'peer': settings.LEDGER['peer'],
-        'args': '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
-                                                                         global_perf,
-                                                                         testing_task_log)
-    })
-
-    return
+    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+        logging.error('Failed to invoke ledger on logSuccess')
+        logging.error(data)
