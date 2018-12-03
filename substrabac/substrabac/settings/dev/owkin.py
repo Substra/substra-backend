@@ -28,7 +28,7 @@ DATABASES = {
     }
 }
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias/owkin')
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, 'medias/owkin'))
 
 SITE_ID = 1
 SITE_HOST = 'owkin.substrabac'
