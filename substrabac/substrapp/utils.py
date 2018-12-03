@@ -8,7 +8,6 @@ import subprocess
 import tarfile
 from rest_framework import status
 
-from django.conf import settings
 from substrabac.settings.common import PROJECT_ROOT, LEDGER_CONF
 from django.conf import settings
 
@@ -124,11 +123,7 @@ def invokeLedger(options, sync=False):
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
 
-    if sync:
-        st = status.HTTP_200_OK
-    else:
-        st = status.HTTP_201_CREATED
-
+    st = status.HTTP_201_CREATED
     data = output.stdout.decode('utf-8')
 
     if not data:
