@@ -2,14 +2,12 @@ import os
 import tempfile
 
 import requests
-from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.fixtures.model import fake_models
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
@@ -112,8 +110,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'org': settings.LEDGER['org'],
-            'peer': settings.LEDGER['peer'],
             'args': '{"Args":["queryTraintuples"]}'
         })
         algoData = None
@@ -126,9 +122,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         l = [data]
 
         if st == 200:
-            # only for demo purpose
-            # data.extend(fake_models)
-
             # parse filters
             query_params = request.query_params.get('search', None)
 
@@ -155,8 +148,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
                                     if st != 200:
@@ -172,8 +163,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
                                     datasetData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
                                     if st != 200:
@@ -189,8 +178,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 if not challengeData:
                                     # TODO find a way to put this call in cache
                                     challengeData, st = queryLedger({
-                                        'org': settings.LEDGER['org'],
-                                        'peer': settings.LEDGER['peer'],
                                         'args': '{"Args":["queryChallenges"]}'
                                     })
                                     if st != 200:
