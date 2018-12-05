@@ -28,6 +28,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                            'celerybeat': {'container_name': 'celerybeat',
                                                           'image': 'substra/celerybeat',
                                                           'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
+                                                          'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
                                                                           'DJANGO_SETTINGS_MODULE=substrabac.settings.%s' % launch_settings],
                                                           'volumes': ['/substra:/substra'],
@@ -55,6 +56,7 @@ def generate_docker_compose_file(conf, launch_settings):
                    'ports': ['%s:%s' % (port, port)],
                    'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.%s.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
                      launch_settings, org_name_stripped, port),
+                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                    'environment': ['DATABASE_HOST=postgresql',
                                    'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
                                    'PYTHONUNBUFFERED=1',
@@ -72,6 +74,7 @@ def generate_docker_compose_file(conf, launch_settings):
                   'image': 'substra/celeryworker',
                   'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
                       org_name_stripped, org_name),
+                  'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': ['ORG=%s' % org_name_stripped,
                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
                                   'PYTHONUNBUFFERED=1',
