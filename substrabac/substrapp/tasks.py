@@ -164,9 +164,9 @@ def fail(key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     data, st = invokeLedger({
         'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
-    })
+    }, sync=True)
 
-    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+    if st is not status.HTTP_201_CREATED:
         logging.error(data, exc_info=True)
 
     logging.info('Successfully passed the traintuple to failed')
@@ -219,10 +219,10 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
-                    'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set)
-                })
+                    'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set),
+                }, sync=True)
 
-                if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+                if st is not status.HTTP_201_CREATED:
                     logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
                 else:
                     logging.info('Prepare Task success %s' % data_type)
@@ -322,24 +322,24 @@ def doTask(traintuple, data_type):
         ressource_manager.return_gpu_set(gpu_set)
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        return fail(traintuple['key'], error_code)
+        fail(traintuple['key'], error_code)
+    else:
+        # Invoke ledger to log success
+        if data_type == 'trainData':
+            invoke_args = '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
+                                                                                              end_model_file_hash,
+                                                                                              end_model_file,
+                                                                                              global_perf,
+                                                                                              job_task_log)
+        elif data_type == 'testData':
+            invoke_args = '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
+                                                                                   global_perf,
+                                                                                   job_task_log)
 
-    # Invoke ledger to log success
-    if data_type == 'trainData':
-        invoke_args = '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
-                                                                                          end_model_file_hash,
-                                                                                          end_model_file,
-                                                                                          global_perf,
-                                                                                          job_task_log)
-    elif data_type == 'testData':
-        invoke_args = '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
-                                                                               global_perf,
-                                                                               job_task_log)
+        data, st = invokeLedger({
+            'args': invoke_args
+        }, sync=True)
 
-    data, st = invokeLedger({
-        'args': invoke_args
-    })
-
-    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-        logging.error('Failed to invoke ledger on logSuccess')
-        logging.error(data)
+        if st is not status.HTTP_201_CREATED:
+            logging.error('Failed to invoke ledger on logSuccess')
+            logging.error(data)
