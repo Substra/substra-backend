@@ -13,7 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import queryLedger
+from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 
 
@@ -32,47 +32,51 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        serializer = self.get_serializer(data={'file': data.get('file'), 'description': data.get('description')})
-        serializer.is_valid(raise_exception=True)
+        file = data.get('file')
+        pkhash = get_hash(file)
+        serializer = self.get_serializer(data={
+            'pkhash': pkhash,
+            'file': file,
+            'description': data.get('description')
+        })
 
-        # create on db
         try:
-            instance = self.perform_create(serializer)
-        except IntegrityError as exc:
-            try:
-                pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-            except:
-                pkhash = ''
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
             return Response({
-                'message': 'An Algo with these data values already exists.',
+                'message': e.args,
                 'pkhash': pkhash
             },
-                status=status.HTTP_409_CONFLICT)
-        except Exception as exc:
-            return Response({'message': exc.args},
-                            status=status.HTTP_400_BAD_REQUEST)
+                status=status.HTTP_400_BAD_REQUEST)
         else:
-            # init ledger serializer
-            ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
-                                                           'permissions': data.get('permissions', 'all'),
-                                                           'challenge_key': data.get('challenge_key'),
-                                                           'instance': instance},
-                                                     context={'request': request})
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+            # create on db
+            try:
+                instance = self.perform_create(serializer)
+            except Exception as exc:
+                return Response({'message': exc.args},
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # init ledger serializer
+                ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
+                                                               'permissions': data.get('permissions', 'all'),
+                                                               'challenge_key': data.get('challenge_key'),
+                                                               'instance': instance},
+                                                         context={'request': request})
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                return Response(data, status=st)
+                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                    return Response(data, status=st)
 
-            headers = self.get_success_headers(serializer.data)
-            d = dict(serializer.data)
-            d.update(data)
-            return Response(d, status=st, headers=headers)
+                headers = self.get_success_headers(serializer.data)
+                d = dict(serializer.data)
+                d.update(data)
+                return Response(d, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
         try:

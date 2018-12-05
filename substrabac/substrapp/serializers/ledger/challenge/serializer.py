@@ -3,7 +3,7 @@ from rest_framework import serializers, status
 from django.conf import settings
 from rest_framework.reverse import reverse
 
-from substrapp.models.utils import compute_hash, get_hash
+from substrapp.utils import get_hash
 from .util import createLedgerChallenge
 from .tasks import createLedgerChallengeAsync
 
