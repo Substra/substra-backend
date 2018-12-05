@@ -14,7 +14,7 @@ from rest_framework.viewsets import GenericViewSet
 # cli = Client(net_profile="../network.json")
 from substrapp.models import Dataset
 from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
-from substrapp.utils import queryLedger
+from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
 
 
@@ -33,24 +33,28 @@ class DatasetViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
+        data_opener = data.get('data_opener')
+        pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
-            'data_opener': data.get('data_opener'),
+            'pkhash': pkhash,
+            'data_opener': data_opener,
             'description': data.get('description'),
             'name': data.get('name'),
         })
 
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except:
+            return Response({'message': 'A dataset with this opener file already exists.',
+                             'pkhash': pkhash},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         # create on db
         try:
             instance = self.perform_create(serializer)
-        except IntegrityError as exc:
-            try:
-                pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-            except:
-                pkhash = ''
-            return Response({'message': 'A dataset with this opener file already exists.', 'pkhash': pkhash},
-                            status=status.HTTP_409_CONFLICT)
+        except Exception as e:
+            return Response({'message': e.args},
+                            status=status.HTTP_400_BAD_REQUEST)
         else:
             # init ledger serializer
             ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),

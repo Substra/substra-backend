@@ -3,10 +3,10 @@ from rest_framework import serializers, status
 from django.conf import settings
 from rest_framework.reverse import reverse
 
+from substrapp.utils import get_hash
 from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
 
-from substrapp.models.utils import compute_hash, get_hash
 
 
 class LedgerAlgoSerializer(serializers.Serializer):
