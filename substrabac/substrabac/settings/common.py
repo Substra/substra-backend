@@ -36,7 +36,7 @@ except IOError:
     try:
         SECRET_KEY = write_secret_key(SECRET_FILE)
     except IOError:
-        raise Exception('Cannot open file `%s` for writing.' % SECRET_FILE)
+        raise Exception(f'Cannot open file `{SECRET_FILE}` for writing.')
 # END KEY CONFIGURATION
 
 # SECURITY WARNING: don't run with debug turned on in production!

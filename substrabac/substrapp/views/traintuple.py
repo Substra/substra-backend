@@ -77,12 +77,12 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         if len(pk) != 64:
-            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
         except:
-            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
         else:
             # get instance from remote node
             try:

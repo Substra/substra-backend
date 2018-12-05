@@ -29,7 +29,7 @@ class ExceptionTests(TestCase):
         # Build the exception map
         exception_map = dict()
         for code_exception, exception_name in enumerate(exceptions_classes, start=1):
-            exception_map[exception_name] = '%04d' % code_exception
+            exception_map[exception_name] = f'{code_exception:04d}'
 
         # Exception map reference
         EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../exceptions.json')
@@ -45,7 +45,7 @@ class ExceptionTests(TestCase):
         except Exception as e:
             error_code = compute_error_code(e)
             value_error_code, _ = get_exception_code(ZeroDivisionError)
-            self.assertIn("00-01-%s" % value_error_code, error_code)
+            self.assertIn(f'00-01-{value_error_code}', error_code)
 
         # Python exception in docker
         try:
@@ -54,4 +54,4 @@ class ExceptionTests(TestCase):
         except Exception as e:
             error_code = compute_error_code(e)
             container_error_code, _ = get_exception_code(NameError)
-            self.assertIn("01-01-%s" % container_error_code, error_code)
+            self.assertIn(f'01-01-{container_error_code}', error_code)

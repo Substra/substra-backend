@@ -19,10 +19,10 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     Bulk create data
-    
+
     python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0", "test_only": false}'
     python ./manage.py bulkcreatedata data.json
-    
+
     # data.json:
     # {"files": ["./data1.zip", "./data2.zip"], "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0", "test_only": false}
     '''
@@ -54,7 +54,7 @@ class Command(BaseCommand):
         try:
             dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
         except:
-            self.stderr.write('This Dataset key: %s does not exist in local substrabac database.' % data.get('dataset_key'))
+            self.stderr.write(f'This Dataset key: {data.get("dataset_key")} does not exist in local substrabac database.')
         else:
             # bulk
             if files:
@@ -91,4 +91,4 @@ class Command(BaseCommand):
                         if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
                             d['validated'] = data['validated']
 
-                    self.stdout.write(self.style.SUCCESS('Succesfully added data via bulk with status code %s and data: %s') % (st, json.dumps(serializer.data, indent=4)))
+                    self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
