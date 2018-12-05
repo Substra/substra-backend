@@ -21,5 +21,4 @@ class Algo(models.Model):
         super(Algo, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "Algo with pkhash %(pkhash)s with validated %(validated)s" % {'pkhash': self.pkhash,
-                                                                             'validated': self.validated}
+        return f"Algo with pkhash {self.pkhash} with validated {self.validated}"

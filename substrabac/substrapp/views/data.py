@@ -40,8 +40,7 @@ class DataViewSet(mixins.CreateModelMixin,
             dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
         except:
             return Response({
-                'message': 'This Dataset key: %s does not exist in local substrabac database.' % data.get(
-                    'dataset_key')},
+                'message': f'This Dataset key: {data.get("dataset_key")} does not exist in local substrabac database.'},
                 status=status.HTTP_400_BAD_REQUEST)
         else:
             # bulk

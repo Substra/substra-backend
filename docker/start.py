@@ -30,7 +30,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
                                                           'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
-                                                                          'DJANGO_SETTINGS_MODULE=substrabac.settings.%s' % launch_settings],
+                                                                          f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}'],
                                                           'volumes': ['/substra:/substra'],
                                                           'depends_on': ['rabbit']
                                                           },
@@ -51,52 +51,48 @@ def generate_docker_compose_file(conf, launch_settings):
         if org_name_stripped == 'chunantes':
             port = 8001
 
-        backend = {'container_name': '%s.substrabac' % org_name_stripped,
+        backend = {'container_name': f'{org_name_stripped}.substrabac',
                    'image': 'substra/substrabac',
-                   'ports': ['%s:%s' % (port, port)],
-                   'command': '/bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.%s.%s; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:%s"' % (
-                     launch_settings, org_name_stripped, port),
+                   'ports': [f'{port}:{port}'],
+                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}.{org_name_stripped}; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                    'environment': ['DATABASE_HOST=postgresql',
-                                   'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
+                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                    'PYTHONUNBUFFERED=1',
-                                   'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
-                                   'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
-                                   'FABRIC_CFG_PATH_ENV=%s' % org['peers'][0]['docker_core_dir'],
-                                   'CORE_PEER_ADDRESS_ENV=%s:%s' % (org['peers'][0]['host'], org['peers'][0]['port'])],
+                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+                                   f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+                                   f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
+                                   f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
                    'volumes': ['/substra:/substra',
                                '/substra/static:/usr/src/app/substrabac/statics',
-                               '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
-                               org_name],
+                               f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                    'depends_on': ['postgresql', 'rabbit']}
 
-        worker = {'container_name': '%s.worker' % org_name_stripped,
+        worker = {'container_name': f'{org_name_stripped}.worker',
                   'image': 'substra/celeryworker',
-                  'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac worker -l info -n %s -Q %s,celery -b rabbit"' % (
-                      org_name_stripped, org_name),
+                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},celery -b rabbit"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                  'environment': ['ORG=%s' % org_name_stripped,
-                                  'DJANGO_SETTINGS_MODULE=substrabac.settings.%s.%s' % (launch_settings, org_name_stripped),
+                  'environment': [f'ORG={org_name_stripped}',
+                                  f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                   'PYTHONUNBUFFERED=1',
-                                  'BACK_AUTH_USER=%s' % os.environ.get('BACK_AUTH_USER', ''),
-                                  'BACK_AUTH_PASSWORD=%s' % os.environ.get('BACK_AUTH_PASSWORD', ''),
-                                  'SITE_HOST=%s' % os.environ.get('SITE_HOST', 'localhost'),
-                                  'SITE_PORT=%s' % os.environ.get('BACK_PORT', 9000),
+                                  f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+                                  f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+                                  f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+                                  f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                   'DATABASE_HOST=postgresql',
-                                  'FABRIC_CFG_PATH_ENV=%s' % org['peers'][0]['docker_core_dir'],
-                                  'CORE_PEER_ADDRESS_ENV=%s:%s' % (org['peers'][0]['host'], org['peers'][0]['port'])],
+                                  f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
+                                  f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
                   'volumes': ['/substra:/substra',
                               '/var/run/docker.sock:/var/run/docker.sock',
-                              '/substra/data/orgs/%s/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp' %
-                              org_name],
-                  'depends_on': ['substrabac%s' % org_name_stripped, 'rabbit']}
+                              f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                  'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
             worker['runtime'] = 'nvidia'
 
         if launch_settings == 'dev':
-            media_root = 'MEDIA_ROOT=/substra/medias/%s' % org_name_stripped
+            media_root = f'MEDIA_ROOT=/substra/medias/{org_name_stripped}'
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
 

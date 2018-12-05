@@ -68,10 +68,8 @@ class QueryTests(APITestCase):
 
             self.assertEqual(r['pkhash'], get_hash(self.challenge_description))
             self.assertEqual(r['validated'], False)
-            self.assertEqual(r['description'], 'http://testserver/media/challenges/%s/%s' % (
-                r['pkhash'], self.challenge_description_filename))
-            self.assertEqual(r['metrics'], 'http://testserver/media/challenges/%s/%s' % (
-                r['pkhash'], self.challenge_metrics_filename))
+            self.assertEqual(r['description'], f'http://testserver/media/challenges/{r["pkhash"]}/{ self.challenge_description_filename}')
+            self.assertEqual(r['metrics'], f'http://testserver/media/challenges/{r["pkhash"]}/{ self.challenge_metrics_filename}')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -182,7 +180,7 @@ class QueryTests(APITestCase):
 
             self.assertEqual(r['pkhash'], get_hash(self.data_data_opener))
             self.assertEqual(r['description'],
-                             'http://testserver/media/datasets/%s/%s' % (r['pkhash'], self.data_description_filename))
+                             f'http://testserver/media/datasets/{r["pkhash"]}/{self.data_description_filename}')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -278,7 +276,7 @@ class QueryTests(APITestCase):
             r = response.json()
             self.assertEqual(r['pkhash'], get_hash(self.data_file))
             self.assertEqual(r['file'],
-                             'http://testserver/media/data/%s/%s' % (r['pkhash'], self.data_file_filename))
+                             f'http://testserver/media/data/{r["pkhash"]}/{self.data_file_filename}')
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -607,17 +605,16 @@ class QueryTests(APITestCase):
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
+            response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertNotEqual(challenge.pkhash, compute_hash(response.getvalue()))
             self.assertEqual(self.challenge_metrics_filename, response.filename)
-            # self.assertEqual(r, 'http://testserver/media/challenges/%s/%s' % (
-            #    challenge.pkhash, self.challenge_metrics_filename))
+            # self.assertEqual(r, f'http://testserver/media/challenges/{challenge.pkhash}/{self.challenge_metrics_filename}')
 
     def test_get_challenge_metrics_no_version(self):
         challenge = Challenge.objects.create(description=self.challenge_description,
                                              metrics=self.challenge_metrics)
-        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash)
+        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/')
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
@@ -628,7 +625,7 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
-        response = self.client.get('/challenge/%s/metrics/' % challenge.pkhash, **extra)
+        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
@@ -640,14 +637,14 @@ class QueryTests(APITestCase):
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
+            response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
-            # self.assertEqual(r, 'http://testserver/media/algos/%s/%s' % (algo.pkhash, self.script_filename))
+            # self.assertEqual(r, f'http://testserver/media/algos/{algo.pkhash}/{self.script_filename}')
 
     def test_get_algo_files_no_version(self):
         algo = Algo.objects.create(file=self.script)
-        response = self.client.get('/algo/%s/file/' % algo.pkhash)
+        response = self.client.get(f'/algo/{algo.pkhash}/file/')
         r = response.json()
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
@@ -657,7 +654,7 @@ class QueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }
-        response = self.client.get('/algo/%s/file/' % algo.pkhash, **extra)
+        response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)

@@ -149,9 +149,9 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.get_hash') as mget_hash:
             with open(tarpath, 'rb') as content:
                 mget_hash.return_value = get_hash(tarpath)
-                put_algo(traintuple, os.path.join(self.traintuple_path, 'traintuple/%s/' % traintuple['key']), content.read())
+                put_algo(traintuple, os.path.join(self.traintuple_path, f'traintuple/{traintuple["key"]}/'), content.read())
 
-        self.assertTrue(os.path.exists(os.path.join(self.traintuple_path, 'traintuple/%s/%s' % (traintuple['key'], filename))))
+        self.assertTrue(os.path.exists(os.path.join(self.traintuple_path, f'traintuple/{traintuple["key"]}/{filename}')))
 
     def test_put_metric(self):
 
@@ -357,7 +357,7 @@ class TasksTests(APITestCase):
             traintuple_directory = build_traintuple_folders(traintuple)
 
             self.assertTrue(os.path.exists(traintuple_directory))
-            self.assertEqual(os.path.join(self.traintuple_path, 'traintuple/%s' % traintuple['key']), traintuple_directory)
+            self.assertEqual(os.path.join(self.traintuple_path, f'traintuple/{traintuple["key"]}'), traintuple_directory)
 
             for root, dirs, files in os.walk(traintuple_directory):
                 nb_subfolders = len(dirs)
@@ -440,12 +440,12 @@ class TasksTests(APITestCase):
             minvokeLedger.return_value = 'data', 200
 
             for name in ['opener', 'metrics']:
-                with open(os.path.join(traintuple_directory, '%s/%s.py' % (name, name)), 'w') as f:
+                with open(os.path.join(traintuple_directory, f'{name}/{name}.py'), 'w') as f:
                     f.write('Hello World')
 
             perf = 0.3141592
             with open(os.path.join(traintuple_directory, 'pred/perf.json'), 'w') as f:
-                f.write('{"all": %s}' % perf)
+                f.write(f'{{"all": {perf}}}')
 
             with open(os.path.join(traintuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")

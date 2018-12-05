@@ -60,7 +60,7 @@ if __name__ == '__main__':
         start_value = max(map(int, json_exceptions.values()))
 
         for code_exception, exception_name in enumerate(exceptions_classes, start=start_value + 1):
-            json_exceptions[exception_name] = '%04d' % code_exception
+            json_exceptions[exception_name] = f'{code_exception:04d}'
 
         with open(EXCEPTION_PATH, 'w') as outfile:
             json.dump(json_exceptions, outfile, indent=4)
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         # Generate the json exceptions
         json_exceptions = dict()
         for code_exception, exception_name in enumerate(exceptions_classes, start=1):
-            json_exceptions[exception_name] = '%04d' % code_exception
+            json_exceptions[exception_name] = f'{code_exception:04d}'
 
         with open(EXCEPTION_PATH, 'w') as outfile:
             json.dump(json_exceptions, outfile, indent=4)

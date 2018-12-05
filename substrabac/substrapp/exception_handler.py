@@ -64,5 +64,5 @@ def get_exception_code(exception_type):
 def compute_error_code(exception):
     exception_uuid = str(uuid.uuid4())[:EXCEPTIONS_UUID_LENGTH]
     exception_code, service_code = get_exception_code(exception.__class__)
-    error_code = '[%s-%s-%s-%s]' % (service_code, LANGUAGES['Python'], exception_code, exception_uuid)
+    error_code = f'[{service_code}-{LANGUAGES["Python"]}-{exception_code}-{exception_uuid}]'
     return error_code
