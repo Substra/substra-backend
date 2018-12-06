@@ -13,9 +13,9 @@ from django.conf import settings
 
 
 def clean_env_variables():
-    del os.environ['FABRIC_CFG_PATH']
-    del os.environ['CORE_PEER_MSPCONFIGPATH']
-    del os.environ['CORE_PEER_ADDRESS']
+    os.environ.pop('FABRIC_CFG_PATH', None)
+    os.environ.pop('CORE_PEER_MSPCONFIGPATH', None)
+    os.environ.pop('CORE_PEER_ADDRESS', None)
 
 #######
 # /!\ #
