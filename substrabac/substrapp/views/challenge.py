@@ -16,7 +16,7 @@ from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
-from substrapp.utils import queryLedger
+from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 
 
@@ -59,48 +59,56 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         """
 
         data = request.data
-        serializer = self.get_serializer(data={'metrics': data.get('metrics'),
-                                               'description': data.get('description')},)
+        description = data.get('description')
+        pkhash = get_hash(description)
+        serializer = self.get_serializer(data={'pkhash': pkhash,
+                                               'metrics': data.get('metrics'),
+                                               'description': description})
 
-        serializer.is_valid(raise_exception=True)
-
-        # create on db
         try:
-            instance = self.perform_create(serializer)
-        except IntegrityError as exc:
-            try:
-                pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-            except:
-                pkhash = ''
-            return Response({'message': 'A challenge with this description file already exists.', 'pkhash': pkhash},
-                            status=status.HTTP_409_CONFLICT)
-        except Exception as exc:
-            return Response({'message': exc.args},
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response({'message': e.args,
+                             'pkhash': pkhash},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
-            # init ledger serializer
-            ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
-                                                                'name': data.get('name'),
-                                                                'permissions': data.get('permissions'),
-                                                                'metrics_name': data.get('metrics_name'),
-                                                                'instance': instance},
-                                                          context={'request': request})
+            # create on db
+            try:
+                instance = self.perform_create(serializer)
+            except IntegrityError as exc:
+                try:
+                    pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+                except:
+                    pkhash = ''
+                return Response({'message': 'A challenge with this description file already exists.', 'pkhash': pkhash},
+                                status=status.HTTP_409_CONFLICT)
+            except Exception as exc:
+                return Response({'message': exc.args},
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # init ledger serializer
+                ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
+                                                                    'name': data.get('name'),
+                                                                    'permissions': data.get('permissions'),
+                                                                    'metrics_name': data.get('metrics_name'),
+                                                                    'instance': instance},
+                                                              context={'request': request})
 
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                return Response(data, status=st)
+                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                    return Response(data, status=st)
 
-            headers = self.get_success_headers(serializer.data)
-            d = dict(serializer.data)
-            d.update(data)
-            return Response(d, status=st, headers=headers)
+                headers = self.get_success_headers(serializer.data)
+                d = dict(serializer.data)
+                d.update(data)
+                return Response(d, status=st, headers=headers)
 
     def create_or_update_challenge(self, challenge, pk):
         try:
@@ -176,7 +184,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
                     # do not give access to local files address
                     if instance is not None:
-                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        serializer = self.get_serializer(instance,
+                                                         fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                         data.update(serializer.data)
                     else:
                         data = {'message': 'Fail to get instance'}

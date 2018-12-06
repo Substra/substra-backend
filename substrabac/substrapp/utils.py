@@ -37,7 +37,6 @@ def queryLedger(options):
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
     os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', '%s:%s' % (peer['host'], peer['host_port']))
 
-
     print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
         'channel_name': channel_name,
         'peer_host': peer['host']
@@ -149,8 +148,16 @@ def invokeLedger(options, sync=False):
 
 
 def get_hash(file):
-    with open(file, 'rb') as f:
-        data = f.read()
+    if file is None:
+        return ''
+    else:
+        if isinstance(file, (str, bytes, os.PathLike)):
+            with open(file, 'rb') as f:
+                data = f.read()
+        else:
+            openedfile = file.open()
+            data = openedfile.read()
+
         return compute_hash(data)
 
 

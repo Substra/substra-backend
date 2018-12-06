@@ -10,6 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.utils import get_hash
 
 
 def path_leaf(path):
@@ -45,95 +46,111 @@ class DataViewSet(mixins.CreateModelMixin,
         else:
             # bulk
             if files:
-                serializer = self.get_serializer(data=[{'file': request.FILES[path_leaf(x)]} for x in files], many=True)
-                serializer.is_valid(raise_exception=True)
-                # create on db
+
+                l = []
+                for x in files:
+                    file = request.FILES[path_leaf(x)]
+                    l.append({
+                        'pkhash': get_hash(file),
+                        'file': file
+                    })
+
+                serializer = self.get_serializer(data=l, many=True)
                 try:
-                    instances = self.perform_create(serializer)
-                except IntegrityError as exc:
-                    try:
-                        pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-                    except:
-                        pkhash = ''
-                    return Response({'message': 'One of the Data you passed already exists in the substrabac local database. Please review your args.',
-                                     'pkhash': pkhash},
-                                    status=status.HTTP_409_CONFLICT)
-                except Exception as exc:
-                    return Response({'message': exc.args},
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # init ledger serializer
-                    file_size = 0
-                    for file in files:
-                        try:
-                            file_size += os.path.getsize(file)
-                        except:
-                            file_size += request.FILES[path_leaf(file)].size
-
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                   'size': file_size,
-                                                                   'dataset_key': dataset.pk,
-                                                                   'instances': instances},
-                                                             context={'request': request})
-
-                    if not ledger_serializer.is_valid():
-                        # delete instance
-                        for instance in instances:
-                            instance.delete()
-                        raise ValidationError(ledger_serializer.errors)
-
-                    # create on ledger
-                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-                    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                        return Response(data, status=st)
-
-                    headers = self.get_success_headers(serializer.data)
-                    for d in serializer.data:
-                        if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
-                            d['validated'] = data['validated']
-                    return Response(serializer.data, status=st, headers=headers)
-            else:
-                # get pkhash of data_opener from name
-                serializer = self.get_serializer(data={'file': data.get('file')})
-                serializer.is_valid(raise_exception=True)
-
-                # create on db
-                try:
-                    instance = self.perform_create(serializer)
-                except IntegrityError as exc:
+                    serializer.is_valid(raise_exception=True)
+                except Exception as e:
                     return Response({
-                                        'message': 'A Data with these data values already exists.'},
-                                    status=status.HTTP_409_CONFLICT)
-                except Exception as exc:
-                    return Response({'message': exc.args},
-                                    status=status.HTTP_400_BAD_REQUEST)
+                        'message': e.args,
+                        'pkhash': [x['pkhash'] for x in l]},
+                        status=status.HTTP_409_CONFLICT)
                 else:
-                    # init ledger serializer
-                    file_size = 0
+                    # create on db
                     try:
-                        file_size = os.path.getsize(data.get('file'))
-                    except:
-                        file_size = data.get('file').size
+                        instances = self.perform_create(serializer)
+                    except Exception as exc:
+                        return Response({'message': exc.args},
+                                        status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        # init ledger serializer
+                        file_size = 0
+                        for file in files:
+                            try:
+                                file_size += os.path.getsize(file)
+                            except:
+                                file_size += request.FILES[path_leaf(file)].size
 
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                   'size': file_size,
-                                                                   'dataset_key': dataset.pk,
-                                                                   'instances': [instance]},
-                                                             context={'request': request})
+                        ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
+                                                                       'size': file_size,
+                                                                       'dataset_key': dataset.pk,
+                                                                       'instances': instances},
+                                                                 context={'request': request})
 
-                    if not ledger_serializer.is_valid():
-                        # delete instance
-                        instance.delete()
-                        raise ValidationError(ledger_serializer.errors)
+                        if not ledger_serializer.is_valid():
+                            # delete instance
+                            for instance in instances:
+                                instance.delete()
+                            raise ValidationError(ledger_serializer.errors)
 
-                    # create on ledger
-                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                        # create on ledger
+                        data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                        return Response(data, status=st)
+                        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                            return Response(data, status=st)
 
-                    headers = self.get_success_headers(serializer.data)
-                    d = dict(serializer.data)
-                    d.update(data)
-                    return Response(d, status=st, headers=headers)
+                        headers = self.get_success_headers(serializer.data)
+                        for d in serializer.data:
+                            if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
+                                d['validated'] = data['validated']
+                        return Response(serializer.data, status=st, headers=headers)
+            else:
+                file = data.get('file')
+                pkhash = get_hash(file)
+                d = {
+                    'pkhash': pkhash,
+                    'file': file
+                }
+                serializer = self.get_serializer(data=d)
+
+                try:
+                    serializer.is_valid(raise_exception=True)
+                except Exception as e:
+                    return Response({
+                        'message': e.args,
+                        'pkhash': pkhash},
+                        status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # create on db
+                    try:
+                        instance = self.perform_create(serializer)
+                    except Exception as exc:
+                        return Response({'message': exc.args},
+                                        status=status.HTTP_400_BAD_REQUEST)
+                    else:
+                        # init ledger serializer
+                        file_size = 0
+                        try:
+                            file_size = os.path.getsize(data.get('file'))
+                        except:
+                            file_size = data.get('file').size
+
+                        ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
+                                                                       'size': file_size,
+                                                                       'dataset_key': dataset.pk,
+                                                                       'instances': [instance]},
+                                                                 context={'request': request})
+
+                        if not ledger_serializer.is_valid():
+                            # delete instance
+                            instance.delete()
+                            raise ValidationError(ledger_serializer.errors)
+
+                        # create on ledger
+                        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+
+                        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                            return Response(data, status=st)
+
+                        headers = self.get_success_headers(serializer.data)
+                        d = dict(serializer.data)
+                        d.update(data)
+                        return Response(d, status=st, headers=headers)

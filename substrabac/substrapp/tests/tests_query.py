@@ -11,9 +11,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Challenge, Dataset, Algo
-from substrapp.models.utils import compute_hash, get_hash
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
+from substrapp.utils import get_hash, compute_hash
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_temporary_text_file
 
