@@ -1,9 +1,9 @@
-FROM nvidia/cuda:9.0-base
+FROM nvidia/cuda:9.2-base-ubuntu18.04
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-RUN apt-get update; apt-get install -y git python3 python3-pip \
+RUN apt-get update; apt-get install -y git python3.6 python3-pip \
     python3-dev build-essential libssl-dev libffi-dev libxml2-dev libxslt1-dev zlib1g-dev curl netcat
 
 COPY ./substrabac/requirements.txt /usr/src/app/.

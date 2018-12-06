@@ -1,5 +1,6 @@
 from django.db import models
-from .utils import get_hash
+
+from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):

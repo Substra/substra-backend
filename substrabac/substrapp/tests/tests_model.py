@@ -4,7 +4,7 @@ import tempfile
 from django.test import TestCase, override_settings
 
 from substrapp.models import Challenge, Dataset, Data, Algo, Model
-from substrapp.models.utils import get_hash
+from substrapp.utils import get_hash
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_sample_model
 
