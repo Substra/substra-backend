@@ -30,7 +30,10 @@ else:
 
     res = popen(['substra', 'add', 'dataset', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     print('register train data on dataset chu nantes (will take dataset creator as worker)')
     # register train data on dataset chu nantes (will take dataset creator as worker)
@@ -45,7 +48,10 @@ else:
 
     res = popen(['substra', 'add', 'data', data, '--profile=chunantes', '--config=/tmp/.substrabac'],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     ###############################
 
@@ -62,7 +68,10 @@ else:
 
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     #########################
 
@@ -79,7 +88,10 @@ else:
 
     res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     #########################
 
@@ -96,7 +108,10 @@ else:
 
     res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     #########################
 
@@ -113,7 +128,10 @@ else:
 
     res = popen(['substra', 'add', 'data', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     # #########################
 
@@ -131,7 +149,10 @@ else:
 
     res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     # register challenge
     print('register challenge')
@@ -146,7 +167,10 @@ else:
 
     res = popen(['substra', 'add', 'challenge', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     ############################
 
@@ -162,7 +186,10 @@ else:
 
     res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     # register second algo on challenge Simplified skin lesion classification
     print('register second algo on challenge Simplified skin lesion classification')
@@ -176,7 +203,10 @@ else:
 
     res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     # register third algo
     print('register third algo')
@@ -190,7 +220,10 @@ else:
 
     res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     # register fourth algo
     print('register fourth algo')
@@ -204,7 +237,10 @@ else:
 
     res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
-    print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
     ####################################
 
     # create traintuple
