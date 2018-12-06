@@ -101,7 +101,7 @@ def put_opener(traintuple, traintuple_directory, data_type):
     if data_opener_hash != traintuple[data_type]['openerHash']:
         raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
 
-    opener_dst_path = path.join(traintuple_directory, f'opener/{os.path.basename(dataset.data_opener.name)}')
+    opener_dst_path = path.join(traintuple_directory, 'opener', os.path.basename(dataset.data_opener.name))
     if not os.path.exists(opener_dst_path):
         os.link(dataset.data_opener.path, opener_dst_path)
 
@@ -125,7 +125,7 @@ def put_data(traintuple, traintuple_directory, data_type):
                 to_directory = path.join(traintuple_directory, 'data')
                 copy(data.file.path, to_directory)
                 # unzip files
-                zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
+                zip_file_path = path.join(to_directory, os.path.basename(data.file.name))
                 zip_ref = zipfile.ZipFile(zip_file_path, 'r')
                 zip_ref.extractall(to_directory)
                 zip_ref.close()
@@ -151,7 +151,7 @@ def put_algo(traintuple, traintuple_directory, algo_content):
 
 def build_traintuple_folders(traintuple):
     # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
-    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), f"traintuple/{traintuple['key']}")
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
     create_directory(traintuple_directory)
     for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
         create_directory(path.join(traintuple_directory, folder))
@@ -258,12 +258,12 @@ def doTask(traintuple, data_type):
         client = docker.from_env()
 
         # traintuple setup
-        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), f'traintuple/{traintuple["key"]}/')
-        model_path = os.path.join(traintuple_directory, 'model')
-        data_path = os.path.join(traintuple_directory, 'data')
-        pred_path = os.path.join(traintuple_directory, 'pred')
-        opener_file = os.path.join(traintuple_directory, 'opener/opener.py')
-        metrics_file = os.path.join(traintuple_directory, 'metrics/metrics.py')
+        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
+        model_path = path.join(traintuple_directory, 'model')
+        data_path = path.join(traintuple_directory, 'data')
+        pred_path = path.join(traintuple_directory, 'pred')
+        opener_file = path.join(traintuple_directory, 'opener/opener.py')
+        metrics_file = path.join(traintuple_directory, 'metrics/metrics.py')
         volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                    pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
@@ -312,7 +312,7 @@ def doTask(traintuple, data_type):
                        gpu_set=gpu_set)
 
         # load performance
-        with open(os.path.join(pred_path, 'perf.json'), 'r') as perf_file:
+        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
 
