@@ -1,5 +1,6 @@
 import os
 import json
+import time
 from subprocess import PIPE, Popen as popen
 
 from django.conf import settings
@@ -8,17 +9,24 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # Use substra shell SDK
 try:
-    popen(['substra'], stdout=PIPE).communicate()[0]
+    with open(os.devnull, 'w') as FNULL:
+        popen(['substra'], stdout=FNULL, stderr=FNULL).communicate()[0]
 except:
     print('Substrabac SDK is not installed, please run pip install git+https://github.com/SubstraFoundation/substrabacSDK.git@master')
 else:
 
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+    try:
+        username = getattr(settings, 'BASICAUTH_USERNAME', None)
+        password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+
+    except:
+        username = None
+        password = None
     auth = []
     if username is not None and password is not None:
-        auth = [username, password]
+            auth = [username, password]
+
     res = popen(['substra', 'config', 'http://owkin.substrabac:8000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
 
     print('create dataset with owkin org')
@@ -275,3 +283,18 @@ else:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     except:
         print(res.decode('utf-8'))
+    else:
+        res = json.loads(res.decode('utf-8'))
+        if 'pkhash' in res:
+            trainuple_key = res['pkhash']
+
+            res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                        stdout=PIPE).communicate()[0]
+            res = json.loads(res.decode('utf-8'))
+            print(json.dumps(res, indent=2))
+            while res['status'] not in ('done', 'failed'):
+                res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                            stdout=PIPE).communicate()[0]
+                res = json.loads(res.decode('utf-8'))
+                print(json.dumps(res, indent=2))
+                time.sleep(3)

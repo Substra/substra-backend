@@ -7,7 +7,8 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # Use substra shell SDK
 try:
-    popen(['substra'], stdout=PIPE).communicate()[0]
+    with open(os.devnull, 'w') as FNULL:
+        popen(['substra'], stdout=FNULL, stderr=FNULL).communicate()[0]
 except:
     print('Substrabac SDK is not installed, please run pip install git+https://github.com/SubstraFoundation/substrabacSDK.git@master')
 else:
