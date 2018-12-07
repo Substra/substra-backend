@@ -31,37 +31,37 @@ class ModelTests(TestCase):
 
         self.assertEqual(challenge.pkhash, get_hash(description))
         self.assertFalse(challenge.validated)
-        self.assertIn('pkhash %s' % challenge.pkhash, str(challenge))
-        self.assertIn('validated %s' % challenge.validated, str(challenge))
+        self.assertIn(f'pkhash {challenge.pkhash}', str(challenge))
+        self.assertIn(f'validated {challenge.validated}', str(challenge))
 
     def test_create_dataset(self):
         description, _, data_opener, _ = get_sample_dataset()
         dataset = Dataset.objects.create(description=description, data_opener=data_opener, name="slides_opener")
         self.assertEqual(dataset.pkhash, get_hash(data_opener))
         self.assertFalse(dataset.validated)
-        self.assertIn('pkhash %s' % dataset.pkhash, str(dataset))
-        self.assertIn('name %s' % dataset.name, str(dataset))
+        self.assertIn(f'pkhash {dataset.pkhash}', str(dataset))
+        self.assertIn(f'name {dataset.name}', str(dataset))
 
     def test_create_data(self):
         file, _ = get_sample_data()
         data = Data.objects.create(file=file)
         self.assertEqual(data.pkhash, get_hash(file))
         self.assertFalse(data.validated)
-        self.assertIn('pkhash %s' % data.pkhash, str(data))
-        self.assertIn('validated %s' % data.validated, str(data))
+        self.assertIn(f'pkhash {data.pkhash}', str(data))
+        self.assertIn(f'validated {data.validated}', str(data))
 
     def test_create_algo(self):
         script, _ = get_sample_script()
         algo = Algo.objects.create(file=script)
         self.assertEqual(algo.pkhash, get_hash(script))
         self.assertFalse(algo.validated)
-        self.assertIn('pkhash %s' % algo.pkhash, str(algo))
-        self.assertIn('validated %s' % algo.validated, str(algo))
+        self.assertIn(f'pkhash {algo.pkhash}', str(algo))
+        self.assertIn(f'validated {algo.validated}', str(algo))
 
     def test_create_model(self):
         modelfile, _ = get_sample_model()
         model = Model.objects.create(file=modelfile)
         self.assertEqual(model.pkhash, get_hash(modelfile))
         self.assertFalse(model.validated)
-        self.assertIn('pkhash %s' % model.pkhash, str(model))
-        self.assertIn('validated %s' % model.validated, str(model))
+        self.assertIn(f'pkhash {model.pkhash}', str(model))
+        self.assertIn(f'validated {model.validated}', str(model))

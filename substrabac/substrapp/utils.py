@@ -35,12 +35,9 @@ def queryLedger(options):
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', '%s:%s' % (peer['host'], peer['host_port']))
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["host_port"]}')
 
-    print('Querying chaincode in the channel \'%(channel_name)s\' on the peer \'%(peer_host)s\' ...' % {
-        'channel_name': channel_name,
-        'peer_host': peer['host']
-    }, flush=True)
+    print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
 
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
                              '--logging-level', 'DEBUG',
@@ -61,10 +58,7 @@ def queryLedger(options):
         except:
             logging.error('Failed to json parse hexadecimal response in query')
 
-        msg = 'Query of channel \'%(channel_name)s\' on peer \'%(peer_host)s\' was successful\n' % {
-            'channel_name': channel_name,
-            'peer_host': peer['host']
-        }
+        msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
         print(msg, flush=True)
     else:
         try:
@@ -98,9 +92,9 @@ def invokeLedger(options, sync=False):
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', '%s:%s' % (peer['host'], peer['host_port']))
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["host_port"]}')
 
-    print('Sending invoke transaction to %(PEER_HOST)s ...' % {'PEER_HOST': peer['host']}, flush=True)
+    print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
 
     cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
            '--logging-level', 'DEBUG',
@@ -108,7 +102,7 @@ def invokeLedger(options, sync=False):
            '-C', channel_name,
            '-n', chaincode_name,
            '-c', args,
-           '-o', '%(host)s:%(port)s' % {'host': orderer['host'], 'port': orderer['port']},
+           '-o', f'{orderer["host"]}:{orderer["port"]}',
            '--cafile', orderer_ca_file,
            '--tls',
            '--clientauth',
@@ -187,11 +181,11 @@ def get_computed_hash(url):
     try:
         r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
     except:
-        raise Exception('Failed to check hash due to failed file fetching %s' % url)
+        raise Exception(f'Failed to check hash due to failed file fetching {url}')
     else:
         if r.status_code != 200:
             raise Exception(
-                'Url: %(url)s to fetch file returned status code: %(st)s' % {'url': url, 'st': r.status_code})
+                f'Url: {url} to fetch file returned status code: {r.status_code}')
 
         computedHash = compute_hash(r.content)
 

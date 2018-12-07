@@ -101,7 +101,7 @@ def put_opener(traintuple, traintuple_directory, data_type):
     if data_opener_hash != traintuple[data_type]['openerHash']:
         raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
 
-    opener_dst_path = path.join(traintuple_directory, 'opener/%s' % os.path.basename(dataset.data_opener.name))
+    opener_dst_path = path.join(traintuple_directory, 'opener', os.path.basename(dataset.data_opener.name))
     if not os.path.exists(opener_dst_path):
         os.link(dataset.data_opener.path, opener_dst_path)
 
@@ -125,7 +125,7 @@ def put_data(traintuple, traintuple_directory, data_type):
                 to_directory = path.join(traintuple_directory, 'data')
                 copy(data.file.path, to_directory)
                 # unzip files
-                zip_file_path = os.path.join(to_directory, os.path.basename(data.file.name))
+                zip_file_path = path.join(to_directory, os.path.basename(data.file.name))
                 zip_ref = zipfile.ZipFile(zip_file_path, 'r')
                 zip_ref.extractall(to_directory)
                 zip_ref.close()
@@ -151,7 +151,7 @@ def put_algo(traintuple, traintuple_directory, algo_content):
 
 def build_traintuple_folders(traintuple):
     # create a folder named traintuple['key'] im /medias/traintuple with 5 folders opener, data, model, pred, metrics
-    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s' % traintuple['key'])
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
     create_directory(traintuple_directory)
     for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
         create_directory(path.join(traintuple_directory, folder))
@@ -163,7 +163,7 @@ def fail(key, err_msg):
     # Log Fail TrainTest
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     data, st = invokeLedger({
-        'args': '{"Args":["logFailTrainTest","%(key)s","%(err_msg)s"]}' % {'key': key, 'err_msg': err_msg}
+        'args': f'{{"Args":["logFailTrainTest","{key}","{err_msg}"]}}'
     }, sync=True)
 
     if st is not status.HTTP_201_CREATED:
@@ -187,8 +187,7 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
         logging.error(e, exc_info=True)
     else:
         traintuples, st = queryLedger({
-            'args': '{"Args":["queryFilter","traintuple~%s~status","%s,%s"]}' % (
-                worker_to_filter, data_owner, status_to_filter)
+            'args': f'{{"Args":["queryFilter","traintuple~{worker_to_filter}~status","{data_owner},{status_to_filter}"]}}'
         })
 
         if st == 200 and traintuples is not None:
@@ -219,13 +218,13 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
 
                 # Log Start TrainTest with status_to_set
                 data, st = invokeLedger({
-                    'args': '{"Args":["logStartTrainTest","%s","%s"]}' % (traintuple['key'], status_to_set),
+                    'args': f'{{"Args":["logStartTrainTest","{traintuple["key"]}","{status_to_set}"]}}'
                 }, sync=True)
 
                 if st is not status.HTTP_201_CREATED:
-                    logging.error('Failed to invoke ledger on prepareTask %s' % data_type)
+                    logging.error(f'Failed to invoke ledger on prepareTask {data_type}')
                 else:
-                    logging.info('Prepare Task success %s' % data_type)
+                    logging.info(f'Prepare Task success {data_type}')
 
                     try:
                         doTask.apply_async((traintuple, data_type), queue=settings.LEDGER['org']['name'])
@@ -259,12 +258,12 @@ def doTask(traintuple, data_type):
         client = docker.from_env()
 
         # traintuple setup
-        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple/%s/' % (traintuple['key']))
-        model_path = os.path.join(traintuple_directory, 'model')
-        data_path = os.path.join(traintuple_directory, 'data')
-        pred_path = os.path.join(traintuple_directory, 'pred')
-        opener_file = os.path.join(traintuple_directory, 'opener/opener.py')
-        metrics_file = os.path.join(traintuple_directory, 'metrics/metrics.py')
+        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
+        model_path = path.join(traintuple_directory, 'model')
+        data_path = path.join(traintuple_directory, 'data')
+        pred_path = path.join(traintuple_directory, 'pred')
+        opener_file = path.join(traintuple_directory, 'opener/opener.py')
+        metrics_file = path.join(traintuple_directory, 'metrics/metrics.py')
         volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                    pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                    metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
@@ -272,8 +271,8 @@ def doTask(traintuple, data_type):
 
         # compute algo task
         algo_path = path.join(traintuple_directory)
-        algo_docker = ('algo_%s' % data_type).lower()  # tag must be lowercase for docker
-        algo_docker_name = '%s_%s' % (algo_docker, traintuple['key'])
+        algo_docker = f'algo_{data_type}'.lower()  # tag must be lowercase for docker
+        algo_docker_name = f'{algo_docker}_{traintuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
         algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
         job_task_log = compute_docker(client=client,
@@ -294,13 +293,13 @@ def doTask(traintuple, data_type):
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
             url_http = 'http' if settings.DEBUG else 'https'
-            current_site = '%s:%s' % (getattr(settings, 'SITE_HOST'), getattr(settings, 'SITE_PORT'))
-            end_model_file = '%s://%s%s' % (url_http, current_site, reverse('substrapp:model-file', args=[end_model_file_hash]))
+            current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+            end_model_file = f'{url_http}://{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
         # compute metric task
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics') # base metrics comes with substrabac
-        metrics_docker = ('metrics_%s' % data_type).lower()  # tag must be lowercase for docker
-        metrics_docker_name = '%s_%s' % (metrics_docker, traintuple['key'])
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac
+        metrics_docker = f'metrics_{data_type}'.lower()  # tag must be lowercase for docker
+        metrics_docker_name = f'{metrics_docker}_{traintuple["key"]}'
         metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
                        ressource_manager=ressource_manager,
@@ -313,7 +312,7 @@ def doTask(traintuple, data_type):
                        gpu_set=gpu_set)
 
         # load performance
-        with open(os.path.join(pred_path, 'perf.json'), 'r') as perf_file:
+        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
         global_perf = perf['all']
 
@@ -326,15 +325,9 @@ def doTask(traintuple, data_type):
     else:
         # Invoke ledger to log success
         if data_type == 'trainData':
-            invoke_args = '{"Args":["logSuccessTrain","%s","%s, %s","%s","Train - %s; "]}' % (traintuple['key'],
-                                                                                              end_model_file_hash,
-                                                                                              end_model_file,
-                                                                                              global_perf,
-                                                                                              job_task_log)
+            invoke_args = f'{{"Args":["logSuccessTrain","{traintuple["key"]}","{end_model_file_hash}, {end_model_file}","{global_perf}","Train - {job_task_log}; "]}}'
         elif data_type == 'testData':
-            invoke_args = '{"Args":["logSuccessTest","%s","%s","Test - %s; "]}' % (traintuple['key'],
-                                                                                   global_perf,
-                                                                                   job_task_log)
+            invoke_args = f'{{"Args":["logSuccessTest","{traintuple["key"]}","{global_perf}","Test - {job_task_log}; "]}}'
 
         data, st = invokeLedger({
             'args': invoke_args

@@ -85,10 +85,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
-                raise Exception('Failed to fetch %s' % url)
+                raise Exception(f'Failed to fetch {url}')
             else:
                 if r.status_code != 200:
-                    raise Exception('end to end node report %s' % r.text)
+                    raise Exception(f'end to end node report {r.text}')
 
                 try:
                     computed_hash = self.compute_hash(r.content)
@@ -115,12 +115,12 @@ class AlgoViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         if len(pk) != 64:
-            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
         except:
-            return Response({'message': 'Wrong pk %s' % pk}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
         else:
             # get instance from remote node
             error = None
@@ -183,7 +183,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     filters = get_filters(query_params)
                 except Exception as exc:
                     return Response(
-                        {'message': 'Malformed search filters %(query_params)s' % {'query_params': query_params}},
+                        {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
                 else:
                     # filtering, reinit l to empty array

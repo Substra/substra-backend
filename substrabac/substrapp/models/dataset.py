@@ -22,5 +22,4 @@ class Dataset(models.Model):
         super(Dataset, self).save(*args, **kwargs)
 
     def __str__(self):
-        return "Dataset with pkhash %(pkhash)s with name %(name)s" % {'pkhash': self.pkhash,
-                                                                      'name': self.name}
+        return f"Dataset with pkhash {self.pkhash} with name {self.name}"
