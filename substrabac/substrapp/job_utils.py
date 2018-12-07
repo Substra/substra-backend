@@ -9,7 +9,7 @@ def get_cpu_sets(cpu_count, concurrency):
     cpu_sets = []
 
     for cpu_start in range(0, cpu_count, cpu_step):
-        cpu_set = '%s-%s' % (cpu_start, min(cpu_start + cpu_step - 1, cpu_count - 1))
+        cpu_set = f'{cpu_start}-{min(cpu_start + cpu_step - 1, cpu_count - 1)}'
         cpu_sets.append(cpu_set)
         if len(cpu_sets) == concurrency:
             break
@@ -139,10 +139,7 @@ def monitoring_job(client, job_args):
 
     job_statistics['time'] = time.time() - start
 
-    t._result = 'CPU:%.2f %% - Mem:%.2f GB - GPU:%.2f %% - GPU Mem:%.2f GB' % (job_statistics['cpu']['max'],
-                                                                               job_statistics['memory']['max'],
-                                                                               job_statistics['gpu']['max'],
-                                                                               job_statistics['gpu_memory']['max'])
+    t._result = f"CPU:{job_statistics['cpu']['max']:.2f} % - Mem:{job_statistics['memory']['max']:.2f} GB - GPU:{job_statistics['gpu']['max']:.2f} % - GPU Mem:{job_statistics['gpu_memory']['max']:.2f} GB"
 
     t._stats = job_statistics
 
@@ -241,7 +238,7 @@ class RessourceManager():
 
     @classmethod
     def memory_limit_mb(cls):
-        return '%sM' % (cls.__memory_gb // cls.__concurrency)
+        return f'{cls.__memory_gb // cls.__concurrency}M'
 
     @classmethod
     def acquire_cpu_set(cls):

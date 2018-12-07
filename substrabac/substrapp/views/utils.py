@@ -57,7 +57,7 @@ def get_filters(query_params):
 def getObjectFromLedger(pk):
     # get instance from remote node
     data, st = queryLedger({
-        'args': '{"Args":["query","%s"]}' % pk
+        'args': f'{{"Args":["query","{pk}"]}}'
     })
 
     if st != 200:
