@@ -3,7 +3,7 @@
 BASEDIR=$(dirname "$0")
 
 # if version not passed in, default to latest released version
-export VERSION=1.2.1
+export VERSION=1.3.0
 # if ca version not passed in, default to latest released version
 export CA_VERSION=$VERSION
 # current version of thirdparty images (couchdb, kafka and zookeeper) released
