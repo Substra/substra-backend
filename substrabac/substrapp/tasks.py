@@ -101,7 +101,7 @@ def put_opener(traintuple, traintuple_directory, data_type):
     if data_opener_hash != traintuple[data_type]['openerHash']:
         raise Exception('DataOpener Hash in Traintuple is not the same as in local db')
 
-    opener_dst_path = path.join(traintuple_directory, 'opener', os.path.basename(dataset.data_opener.name))
+    opener_dst_path = path.join(traintuple_directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
         os.link(dataset.data_opener.path, opener_dst_path)
 
