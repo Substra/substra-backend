@@ -1,4 +1,5 @@
 import os
+import docker
 import GPUtil as gputil
 import threading
 import time
@@ -144,7 +145,7 @@ def monitoring_job(client, job_args):
     t._stats = job_statistics
 
 
-def compute_docker(client, ressource_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
+def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
 
     # Build metrics
     client.images.build(path=dockerfile_path,
@@ -153,11 +154,12 @@ def compute_docker(client, ressource_manager, dockerfile_path, image_name, conta
     cpu_set = None
     gpu_set = None
 
-    mem_limit = ressource_manager.memory_limit_mb()
+    mem_limit = resources_manager.memory_limit_mb()
 
     while cpu_set is None or gpu_set is None:
-        cpu_set = ressource_manager.acquire_cpu_set()
-        gpu_set = ressource_manager.acquire_gpu_set()
+        resources_manager.sync()
+        cpu_set = resources_manager.acquire_cpu_set()
+        gpu_set = resources_manager.acquire_gpu_set()
         time.sleep(2)
 
     job_args = {'image': image_name,
@@ -185,9 +187,9 @@ def compute_docker(client, ressource_manager, dockerfile_path, image_name, conta
     monitoring.do_run = False
     monitoring.join()
 
-    # Return ressources
-    ressource_manager.return_cpu_set(cpu_set)
-    ressource_manager.return_gpu_set(gpu_set)
+    # Return resources
+    resources_manager.return_cpu_set(cpu_set)
+    resources_manager.return_gpu_set(gpu_set)
 
     cpu_set = None
     gpu_set = None
@@ -217,7 +219,7 @@ class ExceptionThread(threading.Thread):
             del self._target, self._args, self._kwargs
 
 
-class RessourceManager():
+class ResourcesManager():
     __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
     __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
 
@@ -235,6 +237,7 @@ class RessourceManager():
     __used_cpu_sets = []
     __used_gpu_sets = []
     __lock = threading.Lock()
+    __docker = docker.from_env()
 
     @classmethod
     def memory_limit_mb(cls):
@@ -295,4 +298,29 @@ class RessourceManager():
             except:
                 pass
 
+        cls.__lock.release()
+
+    @classmethod
+    def sync(cls):
+        cls.__lock.acquire()
+        try:
+            containers = [container.attrs for container in cls.__docker.containers.list()]
+
+            # cpu
+            used_cpu_sets = [container['HostConfig']['CpusetCpus'] for container in containers]
+            used_cpu_sets = [cpu_set for cpu_set in used_cpu_sets if len(cpu_set) > 0]
+            cls.__used_cpu_sets = used_cpu_sets
+
+            # gpu
+            if cls.__gpu_sets != 'no_gpu':
+                env_containers = [container['Config']['Env'] for container in containers]
+                used_gpu_sets = []
+                for env_list in env_containers:
+                    for env_var in env_list:
+                        if 'NVIDIA_VISIBLE_DEVICES' in env_var:
+                            used_gpu_sets.append(env_var.split('=')[1])
+
+            cls.__used_gpu_sets = used_gpu_sets
+        except:
+            pass
         cls.__lock.release()

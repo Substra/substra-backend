@@ -11,7 +11,7 @@ from rest_framework.reverse import reverse
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
 from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
-from substrapp.job_utils import RessourceManager, compute_docker
+from substrapp.job_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
 import docker
@@ -174,10 +174,10 @@ def fail(key, err_msg):
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
-BaseManager.register('RessourceManager', RessourceManager)
+BaseManager.register('ResourcesManager', ResourcesManager)
 manager = BaseManager()
 manager.start()
-ressource_manager = manager.RessourceManager()
+resources_manager = manager.ResourcesManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
@@ -276,7 +276,7 @@ def doTask(traintuple, data_type):
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
         algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
         job_task_log = compute_docker(client=client,
-                                      ressource_manager=ressource_manager,
+                                      resources_manager=resources_manager,
                                       dockerfile_path=algo_path,
                                       image_name=algo_docker,
                                       container_name=algo_docker_name,
@@ -302,7 +302,7 @@ def doTask(traintuple, data_type):
         metrics_docker_name = f'{metrics_docker}_{traintuple["key"]}'
         metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
-                       ressource_manager=ressource_manager,
+                       resources_manager=resources_manager,
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
@@ -317,8 +317,8 @@ def doTask(traintuple, data_type):
         global_perf = perf['all']
 
     except Exception as e:
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
+        resources_manager.return_cpu_set(cpu_set)
+        resources_manager.return_gpu_set(gpu_set)
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
         fail(traintuple['key'], error_code)
