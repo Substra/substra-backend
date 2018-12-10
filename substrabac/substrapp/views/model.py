@@ -143,7 +143,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                         for k, subfilters in filter.items():
                             if k == 'model':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x['endModel']['hash'] in val]
+                                    l[idx] = [x for x in l[idx] if x['endModel'] is not None and x['endModel']['hash'] in val]
                             elif k == 'algo':  # select model used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
