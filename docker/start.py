@@ -35,11 +35,14 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           'depends_on': ['rabbit']
                                                           },
                                            'rabbit': {'container_name': 'rabbit',
+                                                      'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
                                                       'image': 'rabbitmq:3',
                                                       'environment': ['RABBITMQ_DEFAULT_USER=guest',
                                                                       'RABBITMQ_DEFAULT_PASS=guest',
                                                                       'HOSTNAME=rabbitmq',
-                                                                      'RABBITMQ_NODENAME=rabbitmq']},
+                                                                      'RABBITMQ_NODENAME=rabbitmq'],
+                                                      'volumes': ['/substra/backup/rabbit-data:/var/lib/rabbitmq']
+                                                      },
                                            },
                       'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
