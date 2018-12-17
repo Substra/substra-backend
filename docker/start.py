@@ -128,18 +128,23 @@ def stop(docker_compose=None):
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
 
-def start(conf, launch_settings):
+def start(conf, launch_settings, no_backup):
     print('Generate docker-compose file\n')
     docker_compose = generate_docker_compose_file(conf, launch_settings)
 
     stop(docker_compose)
 
-    print('Clean medias directory\n')
-    call(['sh', os.path.join(dir_path, '../substrabac/scripts/clean_media.sh')])
+    if no_backup:
+        print('Clean medias directory\n')
+        call(['sh', os.path.join(dir_path, '../substrabac/scripts/clean_media.sh')])
+        print('Remove postgresql database\n')
+        call(['rm', '-rf', '/substra/backup/postgres-data'])
+        print('Remove rabbit database\n')
+        call(['rm', '-rf', '/substra/backup/rabbit-data'])
 
     print('start docker-compose', flush=True)
     call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
-          os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans'])
+          os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
     call(['docker', 'ps', '-a'])
 
 
@@ -148,6 +153,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dev', action='store_true', default=False,
                         help="use dev settings")
+    parser.add_argument('--no-backup', action='store_true', default=False,
+                        help="Remove backup binded volume, medias and db data. Launch from scratch")
     args = vars(parser.parse_args())
 
     if args['dev']:
@@ -155,7 +162,8 @@ if __name__ == "__main__":
     else:
         launch_settings = 'prod'
 
-    call(['rm', '-rf', '/substra/backup/postgres-data'])
+    no_backup = args['no_backup']
+
     conf = json.load(open('/substra/conf/conf.json', 'r'))
 
     print('Build substrabac for : ', flush=True)
@@ -165,4 +173,4 @@ if __name__ == "__main__":
 
     print('', flush=True)
 
-    start(conf, launch_settings)
+    start(conf, launch_settings, no_backup)
