@@ -17,6 +17,7 @@ def generate_docker_compose_file(conf, launch_settings):
     docker_compose = {'substrabac_services': {},
                       'substrabac_tools': {'postgresql': {'container_name': 'postgresql',
                                                           'image': 'library/postgres:10.5',
+                                                          'restart': 'unless-stopped',
                                                           'environment': ['POSTGRES_USER=substrabac',
                                                                           'USER=substrabac',
                                                                           'POSTGRES_PASSWORD=substrabac',
@@ -27,6 +28,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           },
                                            'celerybeat': {'container_name': 'celerybeat',
                                                           'image': 'substra/celerybeat',
+                                                          'restart': 'unless-stopped',
                                                           'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
                                                           'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
@@ -56,6 +58,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         backend = {'container_name': f'{org_name_stripped}.substrabac',
                    'image': 'substra/substrabac',
+                   'restart': 'unless-stopped',
                    'ports': [f'{port}:{port}'],
                    'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}.{org_name_stripped}; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
@@ -73,6 +76,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         worker = {'container_name': f'{org_name_stripped}.worker',
                   'image': 'substra/celeryworker',
+                  'restart': 'unless-stopped',
                   'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},celery -b rabbit"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': [f'ORG={org_name_stripped}',
