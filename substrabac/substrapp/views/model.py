@@ -26,10 +26,13 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     # permission_classes = (permissions.IsAuthenticated,)
 
-    def create_or_update_model(self, model, pk):
+    def create_or_update_model(self, traintuple, pk):
+        if traintuple['endModel'] is None:
+            raise Exception(f'This traintuple key {pk} does not have a related endModel')
+
         try:
             # get challenge description from remote node
-            url = model['endModel']['storageAddress']
+            url = traintuple['endModel']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
@@ -82,13 +85,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
                 except Http404:
-                    if data['endModel'] is None:
-                        error = f'This traintuple key {pk} does not have a related endModel'
-                    else:
-                        try:
-                            instance = self.create_or_update_model(data, pk)
-                        except Exception as e:
-                            error = e
+                    try:
+                        instance = self.create_or_update_model(data, pk)
+                    except Exception as e:
+                        error = e
                 else:
                     # check if instance has file
                     if not instance.file:
