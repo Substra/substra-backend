@@ -82,10 +82,13 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     # try to get it from local db to check if description exists
                     instance = self.get_object()
                 except Http404:
-                    try:
-                        instance = self.create_or_update_model(data, pk)
-                    except Exception as e:
-                        error = e
+                    if data['endModel'] is None:
+                        error = f'This traintuple key {pk} does not have a related endModel'
+                    else:
+                        try:
+                            instance = self.create_or_update_model(data, pk)
+                        except Exception as e:
+                            error = e
                 else:
                     # check if instance has file
                     if not instance.file:
