@@ -161,18 +161,10 @@ def build_traintuple_folders(traintuple):
 
 
 def remove_traintuple_materials(traintuple_directory):
-
-    # Remove algo files
-    for root, dirs, materials in os.walk(traintuple_directory):
-        for material in materials:
-            os.unlink(os.path.join(root, material))
-
-    # Remove materials
-    for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
-        try:
-            shutil.rmtree(path.join(traintuple_directory, folder))
-        except Exception as e:
-            logging.error(e)
+    try:
+        shutil.rmtree(traintuple_directory)
+    except Exception as e:
+        logging.error(e)
 
 
 def fail(key, err_msg):
