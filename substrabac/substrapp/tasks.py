@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import shutil
 import tempfile
 from os import path
 
@@ -159,6 +160,21 @@ def build_traintuple_folders(traintuple):
     return traintuple_directory
 
 
+def remove_traintuple_materials(traintuple_directory):
+
+    # Remove algo files
+    for root, dirs, materials in os.walk(traintuple_directory):
+        for material in materials:
+            os.unlink(os.path.join(root, material))
+
+    # Remove materials
+    for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
+        try:
+            shutil.rmtree(path.join(traintuple_directory, folder))
+        except Exception as e:
+            logging.error(e)
+
+
 def fail(key, err_msg):
     # Log Fail TrainTest
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
@@ -249,6 +265,7 @@ def doTask(traintuple, data_type):
     # Must be defined before to return ressource in case of failure
     cpu_set = None
     gpu_set = None
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
 
     try:
         # Log
@@ -258,7 +275,6 @@ def doTask(traintuple, data_type):
         client = docker.from_env()
 
         # traintuple setup
-        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
         model_path = path.join(traintuple_directory, 'model')
         data_path = path.join(traintuple_directory, 'data')
         pred_path = path.join(traintuple_directory, 'pred')
@@ -336,3 +352,6 @@ def doTask(traintuple, data_type):
         if st is not status.HTTP_201_CREATED:
             logging.error('Failed to invoke ledger on logSuccess')
             logging.error(data)
+    finally:
+        # Clean traintuple materials
+        remove_traintuple_materials(traintuple_directory)
