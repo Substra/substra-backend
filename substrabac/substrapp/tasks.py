@@ -189,6 +189,8 @@ resources_manager = manager.ResourcesManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
+    from django_celery_results.models import TaskResult
+
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
@@ -201,58 +203,94 @@ def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, statu
         if st == 200 and traintuples is not None:
             for traintuple in traintuples:
 
-                # get traintuple components
+                fltask = None
+                worker_queue = f"{settings.LEDGER['org']['name']}.worker"
+
+                if 'FLtask' in traintuple:
+                    fltask = traintuple['FLtask']
+                    flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
+                                                          result__icontains=f'"FLtask": "{fltask}"')
+
+                    if flresults and flresults.count() > 0:
+                        worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
+
                 try:
-                    challenge = get_challenge(traintuple)
-                    algo_content, algo_computed_hash = get_algo(traintuple)
-                    model_content, model_computed_hash = get_model(traintuple, model_type)  # can return None, None
+                    computeTask.apply_async((traintuple, data_type, model_type, status_to_set, fltask),
+                                            queue=worker_queue)
                 except Exception as e:
                     error_code = compute_error_code(e)
                     logging.error(error_code, exc_info=True)
                     return fail(traintuple['key'], error_code)
 
-                # create traintuple
-                try:
-                    traintuple_directory = build_traintuple_folders(traintuple)  # do not put anything in pred folder
-                    put_opener(traintuple, traintuple_directory, data_type)
-                    put_data(traintuple, traintuple_directory, data_type)
-                    put_metric(traintuple_directory, challenge)
-                    put_algo(traintuple, traintuple_directory, algo_content)
-                    put_model(traintuple, traintuple_directory, model_content, model_type)
-                except Exception as e:
-                    error_code = compute_error_code(e)
-                    logging.error(error_code, exc_info=True)
-                    return fail(traintuple['key'], error_code)
 
-                # Log Start TrainTest with status_to_set
-                data, st = invokeLedger({
-                    'args': f'{{"Args":["logStartTrainTest","{traintuple["key"]}","{status_to_set}"]}}'
-                }, sync=True)
-
-                if st is not status.HTTP_201_CREATED:
-                    logging.error(f'Failed to invoke ledger on prepareTask {data_type}')
-                else:
-                    logging.info(f'Prepare Task success {data_type}')
-
-                    try:
-                        doTask.apply_async((traintuple, data_type), queue=settings.LEDGER['org']['name'])
-                    except Exception as e:
-                        error_code = compute_error_code(e)
-                        logging.error(error_code, exc_info=True)
-                        return fail(traintuple['key'], error_code)
-
-
-@app.task
-def prepareTrainingTask():
+@app.task(bind=True, ignore_result=True)
+def prepareTrainingTask(self):
     prepareTask('trainData', 'trainWorker', 'todo', 'startModel', 'training')
 
 
-@app.task
+@app.task(ignore_result=True)
 def prepareTestingTask():
     prepareTask('testData', 'testWorker', 'trained', 'endModel', 'testing')
 
 
-@app.task
+@app.task(bind=True, ignore_result=False)
+def computeTask(self, traintuple, data_type, model_type, status_to_set, fltask):
+
+    worker = self.request.hostname.split('@')[1]
+    queue = self.request.delivery_info['routing_key']
+    result = {'worker': worker, 'queue': queue, 'FLtask': fltask}
+
+    # Get materials
+    try:
+        prepareMaterials(traintuple, data_type, model_type)
+    except Exception as e:
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        fail(traintuple['key'], error_code)
+        return result
+
+    # Log Start TrainTest with status_to_set
+    data, st = invokeLedger({
+        'args': f'{{"Args":["logStartTrainTest","{traintuple["key"]}","{status_to_set}"]}}'
+    }, sync=True)
+
+    if st is not status.HTTP_201_CREATED:
+        logging.error(f'Failed to invoke ledger on prepareTask {data_type}')
+    else:
+        logging.info(f'Prepare Task success {data_type}')
+
+        try:
+            doTask(traintuple, data_type)
+        except Exception as e:
+            error_code = compute_error_code(e)
+            logging.error(error_code, exc_info=True)
+            fail(traintuple['key'], error_code)
+            return result
+
+    return result
+
+
+def prepareMaterials(traintuple, data_type, model_type):
+    # get traintuple components
+    try:
+        challenge = get_challenge(traintuple)
+        algo_content, algo_computed_hash = get_algo(traintuple)
+        model_content, model_computed_hash = get_model(traintuple, model_type)  # can return None, None
+    except Exception as e:
+        raise e
+
+    # create traintuple
+    try:
+        traintuple_directory = build_traintuple_folders(traintuple)  # do not put anything in pred folder
+        put_opener(traintuple, traintuple_directory, data_type)
+        put_data(traintuple, traintuple_directory, data_type)
+        put_metric(traintuple_directory, challenge)
+        put_algo(traintuple, traintuple_directory, algo_content)
+        put_model(traintuple, traintuple_directory, model_content, model_type)
+    except Exception as e:
+        raise e
+
+
 def doTask(traintuple, data_type):
     # Must be defined before to return ressource in case of failure
     cpu_set = None
