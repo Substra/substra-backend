@@ -38,6 +38,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           },
                                            'rabbit': {'container_name': 'rabbit',
                                                       'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
+                                                      'restart': 'unless-stopped',
                                                       'image': 'rabbitmq:3',
                                                       'environment': ['RABBITMQ_DEFAULT_USER=guest',
                                                                       'RABBITMQ_DEFAULT_PASS=guest',
