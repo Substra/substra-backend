@@ -4,6 +4,7 @@ import GPUtil as gputil
 import threading
 import time
 
+import logging
 
 DOCKER_LABEL = 'substrabac_job'
 
@@ -301,8 +302,8 @@ class ResourcesManager():
             if cpu_set_available:
                 cpu_set = cpu_set_available.pop()
                 cls.__used_cpu_sets.append(cpu_set)
-        except:
-            pass
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
         return cpu_set
@@ -313,8 +314,8 @@ class ResourcesManager():
 
         try:
             cls.__used_cpu_sets.remove(cpu_set)
-        except:
-            pass
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
 
@@ -330,8 +331,8 @@ class ResourcesManager():
                 if gpu_set_available:
                     gpu_set = gpu_set_available.pop()
                     cls.__used_gpu_sets.append(gpu_set)
-            except:
-                pass
+            except Exception as e:
+                logging.error(e, exc_info=True)
 
         cls.__lock.release()
         return gpu_set
@@ -343,8 +344,8 @@ class ResourcesManager():
         if gpu_set != 'no_gpu':
             try:
                 cls.__used_gpu_sets.remove(gpu_set)
-            except:
-                pass
+            except Exception as e:
+                logging.error(e, exc_info=True)
 
         cls.__lock.release()
 
@@ -373,7 +374,7 @@ class ResourcesManager():
 
                 cls.__used_gpu_sets = filter_gpu_sets(used_gpu_sets, cls.__gpu_sets)
 
-        except:
-            pass
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
