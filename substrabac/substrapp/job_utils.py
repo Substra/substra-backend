@@ -1,7 +1,12 @@
 import os
+import docker
 import GPUtil as gputil
 import threading
 import time
+
+import logging
+
+DOCKER_LABEL = 'substrabac_job'
 
 
 def get_cpu_sets(cpu_count, concurrency):
@@ -26,6 +31,49 @@ def get_gpu_sets(gpu_list, concurrency):
         gpu_sets.append(','.join(gpu_list[igpu_start: igpu_start + gpu_step]))
 
     return gpu_sets
+
+
+def expand_cpu_set(cpu_set):
+    cpu_set_start, cpu_set_stop = map(int, cpu_set.split('-'))
+    return set(range(cpu_set_start, cpu_set_stop + 1))
+
+
+def reduce_cpu_set(expanded_cpu_set):
+    return f'{min(expanded_cpu_set)}-{max(expanded_cpu_set)}'
+
+
+def expand_gpu_set(gpu_set):
+    return set(gpu_set.split(','))
+
+
+def reduce_gpu_set(expanded_gpu_set):
+    return ','.join(sorted(expanded_gpu_set))
+
+
+def filter_resources_sets(used_resources_sets, resources_sets, expand_resources_set, reduce_resources_set):
+    """ Filter resources_set used with resources_sets defined.
+        It will block a resources_set from resources_sets if an used_resources_set in a subset of a resources_set"""
+
+    resources_expand = [expand_resources_set(resources_set) for resources_set in resources_sets]
+    used_resources_expand = [expand_resources_set(used_resources_set) for used_resources_set in used_resources_sets]
+
+    real_used_resources_sets = []
+
+    for resources_set in resources_expand:
+        for used_resources_set in used_resources_expand:
+            if resources_set.intersection(used_resources_set):
+                real_used_resources_sets.append(reduce_resources_set(resources_set))
+                break
+
+    return list(set(real_used_resources_sets))
+
+
+def filter_cpu_sets(used_cpu_sets, cpu_sets):
+    return filter_resources_sets(used_cpu_sets, cpu_sets, expand_cpu_set, reduce_cpu_set)
+
+
+def filter_gpu_sets(used_gpu_sets, gpu_sets):
+    return filter_resources_sets(used_gpu_sets, gpu_sets, expand_gpu_set, reduce_gpu_set)
 
 
 def update_statistics(job_statistics, stats, gpu_stats):
@@ -144,7 +192,7 @@ def monitoring_job(client, job_args):
     t._stats = job_statistics
 
 
-def compute_docker(client, ressource_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
+def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
 
     # Build metrics
     client.images.build(path=dockerfile_path,
@@ -153,11 +201,12 @@ def compute_docker(client, ressource_manager, dockerfile_path, image_name, conta
     cpu_set = None
     gpu_set = None
 
-    mem_limit = ressource_manager.memory_limit_mb()
+    mem_limit = resources_manager.memory_limit_mb()
 
     while cpu_set is None or gpu_set is None:
-        cpu_set = ressource_manager.acquire_cpu_set()
-        gpu_set = ressource_manager.acquire_gpu_set()
+        resources_manager.sync()
+        cpu_set = resources_manager.acquire_cpu_set()
+        gpu_set = resources_manager.acquire_gpu_set()
         time.sleep(2)
 
     job_args = {'image': image_name,
@@ -166,6 +215,8 @@ def compute_docker(client, ressource_manager, dockerfile_path, image_name, conta
                 'mem_limit': mem_limit,
                 'command': command,
                 'volumes': volumes,
+                'ipc_mode': 'host',    # Need to check if it safe to do that, we need it for torch
+                'labels': [DOCKER_LABEL],
                 'detach': False,
                 'auto_remove': False,
                 'remove': False}
@@ -185,9 +236,9 @@ def compute_docker(client, ressource_manager, dockerfile_path, image_name, conta
     monitoring.do_run = False
     monitoring.join()
 
-    # Return ressources
-    ressource_manager.return_cpu_set(cpu_set)
-    ressource_manager.return_gpu_set(gpu_set)
+    # Return resources
+    resources_manager.return_cpu_set(cpu_set)
+    resources_manager.return_gpu_set(gpu_set)
 
     cpu_set = None
     gpu_set = None
@@ -217,7 +268,7 @@ class ExceptionThread(threading.Thread):
             del self._target, self._args, self._kwargs
 
 
-class RessourceManager():
+class ResourcesManager():
     __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
     __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
 
@@ -235,6 +286,7 @@ class RessourceManager():
     __used_cpu_sets = []
     __used_gpu_sets = []
     __lock = threading.Lock()
+    __docker = docker.from_env()
 
     @classmethod
     def memory_limit_mb(cls):
@@ -247,11 +299,11 @@ class RessourceManager():
 
         try:
             cpu_set_available = set(cls.__cpu_sets).difference(set(cls.__used_cpu_sets))
-            if len(cpu_set_available) > 0:
+            if cpu_set_available:
                 cpu_set = cpu_set_available.pop()
                 cls.__used_cpu_sets.append(cpu_set)
-        except:
-            pass
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
         return cpu_set
@@ -262,8 +314,8 @@ class RessourceManager():
 
         try:
             cls.__used_cpu_sets.remove(cpu_set)
-        except:
-            pass
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
 
@@ -276,11 +328,11 @@ class RessourceManager():
             gpu_set = None
             try:
                 gpu_set_available = set(cls.__gpu_sets).difference(set(cls.__used_gpu_sets))
-                if len(gpu_set_available) > 0:
+                if gpu_set_available:
                     gpu_set = gpu_set_available.pop()
                     cls.__used_gpu_sets.append(gpu_set)
-            except:
-                pass
+            except Exception as e:
+                logging.error(e, exc_info=True)
 
         cls.__lock.release()
         return gpu_set
@@ -292,7 +344,37 @@ class RessourceManager():
         if gpu_set != 'no_gpu':
             try:
                 cls.__used_gpu_sets.remove(gpu_set)
-            except:
-                pass
+            except Exception as e:
+                logging.error(e, exc_info=True)
+
+        cls.__lock.release()
+
+    @classmethod
+    def sync(cls):
+        """ Synchronise resources manager with running job
+        """
+        cls.__lock.acquire()
+
+        try:
+            filters = {'status': 'running', 'label': [DOCKER_LABEL]}
+            containers = [container.attrs for container in cls.__docker.containers.list(filters=filters)]
+
+            # cpu
+            used_cpu_sets = [container['HostConfig']['CpusetCpus'] for container in containers if container['HostConfig']['CpusetCpus']]
+            cls.__used_cpu_sets = filter_cpu_sets(used_cpu_sets, cls.__cpu_sets)
+
+            # gpu
+            if cls.__gpu_sets != 'no_gpu':
+                env_containers = [container['Config']['Env'] for container in containers]
+
+                used_gpu_sets = []
+                for env_list in env_containers:
+                    nvidia_env_var = [s.split('=')[1] for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
+                    used_gpu_sets.extend(nvidia_env_var)
+
+                cls.__used_gpu_sets = filter_gpu_sets(used_gpu_sets, cls.__gpu_sets)
+
+        except Exception as e:
+            logging.error(e, exc_info=True)
 
         cls.__lock.release()
