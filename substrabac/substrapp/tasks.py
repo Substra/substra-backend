@@ -297,6 +297,13 @@ def doTask(traintuple, data_type):
     gpu_set = None
     traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
 
+    fltask = 'test-fltask'
+    flrank = 0
+
+    if 'FLtask' in traintuple:
+        fltask = traintuple['FLtask']
+        flrank = int(traintuple['rank'])
+
     try:
         # Log
         job_task_log = ''
@@ -321,6 +328,17 @@ def doTask(traintuple, data_type):
         algo_docker_name = f'{algo_docker}_{traintuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
         algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
+
+        # local volume for fltask
+        if fltask is not None and data_type == 'trainData':
+            flvolume = f'local-{fltask}'
+            if flrank == 0:
+                client.volumes.create(name=flvolume)
+            else:
+                client.volumes.get(volume_id=flvolume)
+
+            model_volume[flvolume] = {'bind': '/sandbox/local', 'mode': 'rw'}
+
         job_task_log = compute_docker(client=client,
                                       resources_manager=resources_manager,
                                       dockerfile_path=algo_path,
@@ -368,6 +386,14 @@ def doTask(traintuple, data_type):
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
         fail(traintuple['key'], error_code)
+
+        if fltask is not None:
+            local_volume = client.volumes.get(volume_id=f'local-{fltask}')
+            try:
+                local_volume.remove(force=True)
+            except:
+                logging.error('Cannot remove local volume local-{fltask}', exc_info=True)
+
     else:
         # Invoke ledger to log success
         if data_type == 'trainData':
@@ -385,3 +411,11 @@ def doTask(traintuple, data_type):
     finally:
         # Clean traintuple materials
         remove_traintuple_materials(traintuple_directory)
+
+        # Last fl traintuple is the one with rank -1
+        if flrank == -1:
+            local_volume = client.volumes.get(volume_id=f'local-{fltask}')
+            try:
+                local_volume.remove(force=True)
+            except:
+                logging.error('Cannot remove local volume local-{fltask}', exc_info=True)
