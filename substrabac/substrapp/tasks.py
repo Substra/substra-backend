@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 import os
+import shutil
 import tempfile
 from os import path
 
@@ -11,7 +12,7 @@ from rest_framework.reverse import reverse
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger
 from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
-from substrapp.job_utils import RessourceManager, compute_docker
+from substrapp.job_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
 import docker
@@ -159,6 +160,13 @@ def build_traintuple_folders(traintuple):
     return traintuple_directory
 
 
+def remove_traintuple_materials(traintuple_directory):
+    try:
+        shutil.rmtree(traintuple_directory)
+    except Exception as e:
+        logging.error(e)
+
+
 def fail(key, err_msg):
     # Log Fail TrainTest
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
@@ -174,10 +182,10 @@ def fail(key, err_msg):
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
-BaseManager.register('RessourceManager', RessourceManager)
+BaseManager.register('ResourcesManager', ResourcesManager)
 manager = BaseManager()
 manager.start()
-ressource_manager = manager.RessourceManager()
+resources_manager = manager.ResourcesManager()
 
 
 def prepareTask(data_type, worker_to_filter, status_to_filter, model_type, status_to_set):
@@ -249,6 +257,7 @@ def doTask(traintuple, data_type):
     # Must be defined before to return ressource in case of failure
     cpu_set = None
     gpu_set = None
+    traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
 
     try:
         # Log
@@ -258,7 +267,6 @@ def doTask(traintuple, data_type):
         client = docker.from_env()
 
         # traintuple setup
-        traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
         model_path = path.join(traintuple_directory, 'model')
         data_path = path.join(traintuple_directory, 'data')
         pred_path = path.join(traintuple_directory, 'pred')
@@ -276,7 +284,7 @@ def doTask(traintuple, data_type):
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
         algo_command = 'train' if data_type == 'trainData' else 'predict' if data_type == 'testData' else None
         job_task_log = compute_docker(client=client,
-                                      ressource_manager=ressource_manager,
+                                      resources_manager=resources_manager,
                                       dockerfile_path=algo_path,
                                       image_name=algo_docker,
                                       container_name=algo_docker_name,
@@ -302,7 +310,7 @@ def doTask(traintuple, data_type):
         metrics_docker_name = f'{metrics_docker}_{traintuple["key"]}'
         metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
-                       ressource_manager=ressource_manager,
+                       resources_manager=resources_manager,
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
@@ -317,8 +325,8 @@ def doTask(traintuple, data_type):
         global_perf = perf['all']
 
     except Exception as e:
-        ressource_manager.return_cpu_set(cpu_set)
-        ressource_manager.return_gpu_set(gpu_set)
+        resources_manager.return_cpu_set(cpu_set)
+        resources_manager.return_gpu_set(gpu_set)
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
         fail(traintuple['key'], error_code)
@@ -336,3 +344,6 @@ def doTask(traintuple, data_type):
         if st is not status.HTTP_201_CREATED:
             logging.error('Failed to invoke ledger on logSuccess')
             logging.error(data)
+    finally:
+        # Clean traintuple materials
+        remove_traintuple_materials(traintuple_directory)

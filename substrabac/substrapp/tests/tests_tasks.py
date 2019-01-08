@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
-from substrapp.job_utils import RessourceManager, monitoring_job, compute_docker
+from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
 from substrapp.tasks import build_traintuple_folders, get_algo, get_model, get_challenge, put_opener, put_model, put_algo, put_metric, put_data, prepareTask, doTask
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
@@ -44,7 +44,7 @@ class TasksTests(APITestCase):
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_dataset()
 
-        self.RessourceManager = RessourceManager()
+        self.ResourcesManager = ResourcesManager()
 
     def tearDown(self):
         try:
@@ -93,18 +93,18 @@ class TasksTests(APITestCase):
 
     def test_Ressource_Manager(self):
 
-        self.assertIn('M', self.RessourceManager.memory_limit_mb())
+        self.assertIn('M', self.ResourcesManager.memory_limit_mb())
 
-        cpu_set = self.RessourceManager.acquire_cpu_set()
-        self.assertIn(cpu_set, self.RessourceManager._RessourceManager__used_cpu_sets)
-        self.RessourceManager.return_cpu_set(cpu_set)
-        self.assertNotIn(cpu_set, self.RessourceManager._RessourceManager__used_cpu_sets)
+        cpu_set = self.ResourcesManager.acquire_cpu_set()
+        self.assertIn(cpu_set, self.ResourcesManager._ResourcesManager__used_cpu_sets)
+        self.ResourcesManager.return_cpu_set(cpu_set)
+        self.assertNotIn(cpu_set, self.ResourcesManager._ResourcesManager__used_cpu_sets)
 
-        gpu_set = self.RessourceManager.acquire_gpu_set()
+        gpu_set = self.ResourcesManager.acquire_gpu_set()
         if gpu_set != 'no_gpu':
-            self.assertIn(gpu_set, self.RessourceManager._RessourceManager__used_gpu_sets)
-        self.RessourceManager.return_gpu_set(gpu_set)
-        self.assertNotIn(gpu_set, self.RessourceManager._RessourceManager__used_gpu_sets)
+            self.assertIn(gpu_set, self.ResourcesManager._ResourcesManager__used_gpu_sets)
+        self.ResourcesManager.return_gpu_set(gpu_set)
+        self.assertNotIn(gpu_set, self.ResourcesManager._ResourcesManager__used_gpu_sets)
 
     def test_monitoring_job(self):
 
@@ -336,7 +336,7 @@ class TasksTests(APITestCase):
         with open(dockerfile_path, 'w') as f:
             f.write('FROM library/hello-world')
 
-        result = compute_docker(client, self.RessourceManager,
+        result = compute_docker(client, self.ResourcesManager,
                                 self.traintuple_path, 'test_compute_docker',
                                 'test_compute_docker_name', None, None, cpu_set, gpu_set)
 
