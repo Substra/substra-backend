@@ -260,12 +260,26 @@ def computeTask(self, traintuple, data_type, model_type, status_to_set, fltask):
         logging.info(f'Prepare Task success {data_type}')
 
         try:
-            doTask(traintuple, data_type)
+            res = doTask(traintuple, data_type)
         except Exception as e:
             error_code = compute_error_code(e)
             logging.error(error_code, exc_info=True)
             fail(traintuple['key'], error_code)
             return result
+        else:
+            # Invoke ledger to log success
+            if data_type == 'trainData':
+                invoke_args = f'{{"Args":["logSuccessTrain","{traintuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
+            elif data_type == 'testData':
+                invoke_args = f'{{"Args":["logSuccessTest","{traintuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
+
+            data, st = invokeLedger({
+                'args': invoke_args
+            }, sync=True)
+
+            if st is not status.HTTP_201_CREATED:
+                logging.error('Failed to invoke ledger on logSuccess')
+                logging.error(data)
 
     return result
 
@@ -297,6 +311,7 @@ def doTask(traintuple, data_type):
     gpu_set = None
     traintuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'traintuple', traintuple['key'])
 
+    # Federated learning variables
     fltask = 'test-fltask'
     flrank = 0
 
@@ -304,8 +319,9 @@ def doTask(traintuple, data_type):
         fltask = traintuple['FLtask']
         flrank = int(traintuple['rank'])
 
+    # Computation
     try:
-        # Log
+        # Job log
         job_task_log = ''
 
         # Setup Docker Client
@@ -383,39 +399,30 @@ def doTask(traintuple, data_type):
     except Exception as e:
         resources_manager.return_cpu_set(cpu_set)
         resources_manager.return_gpu_set(gpu_set)
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-        fail(traintuple['key'], error_code)
 
+        # If an exception is thrown set flrank == -1 (we stop the fl training)
         if fltask is not None:
-            local_volume = client.volumes.get(volume_id=f'local-{fltask}')
-            try:
-                local_volume.remove(force=True)
-            except:
-                logging.error('Cannot remove local volume local-{fltask}', exc_info=True)
+            flrank = -1
 
+        raise e
     else:
-        # Invoke ledger to log success
+        result = {'global_perf': global_perf,
+                  'job_task_log': job_task_log}
+
         if data_type == 'trainData':
-            invoke_args = f'{{"Args":["logSuccessTrain","{traintuple["key"]}","{end_model_file_hash}, {end_model_file}","{global_perf}","Train - {job_task_log}; "]}}'
-        elif data_type == 'testData':
-            invoke_args = f'{{"Args":["logSuccessTest","{traintuple["key"]}","{global_perf}","Test - {job_task_log}; "]}}'
+            result['end_model_file_hash'] = end_model_file_hash
+            result['end_model_file'] = end_model_file
 
-        data, st = invokeLedger({
-            'args': invoke_args
-        }, sync=True)
-
-        if st is not status.HTTP_201_CREATED:
-            logging.error('Failed to invoke ledger on logSuccess')
-            logging.error(data)
     finally:
         # Clean traintuple materials
         remove_traintuple_materials(traintuple_directory)
 
-        # Last fl traintuple is the one with rank -1
+        # Rank == -1 -> Last fl traintuple or fl throws an exception
         if flrank == -1:
             local_volume = client.volumes.get(volume_id=f'local-{fltask}')
             try:
                 local_volume.remove(force=True)
             except:
                 logging.error('Cannot remove local volume local-{fltask}', exc_info=True)
+
+    return result
