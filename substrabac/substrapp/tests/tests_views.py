@@ -26,6 +26,7 @@ challenge = [
     {
         "descriptionStorageAddress": "http://testserver/challenge/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description/",
         "key": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
+        "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
         "metrics": {
             "hash": "0bc732c26bafdc41321c2bffd35b6835aa35f7371a4eb02994642c2c3a688f60",
             "name": "macro-average recall",
@@ -42,6 +43,7 @@ challenge = [
     {
         "descriptionStorageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description/",
         "key": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
         "metrics": {
             "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
             "name": "macro-average recall",
@@ -64,7 +66,7 @@ model = [
             "storageAddress": "http://testserver/algo/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/file/"
         },
         "challenge": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
@@ -160,7 +162,7 @@ dataset = [
         "type": "Images"
     },
     {
-        "challengeKey": "",
+        "challengeKey": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
         "description": {
             "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb09",
             "storageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description/"
@@ -169,6 +171,21 @@ dataset = [
         "name": "ISIC 2018",
         "nbData": 2,
         "openerStorageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener/",
+        "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
+        "permissions": "all",
+        "size": 553113,
+        "type": "Images"
+    },
+    {
+        "challengeKey": "",
+        "description": {
+            "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb08",
+            "storageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea995/description/"
+        },
+        "key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea995",
+        "name": "ISIC 2019",
+        "nbData": 2,
+        "openerStorageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea995/opener/",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
         "size": 553113,
@@ -362,7 +379,7 @@ class ViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 2)
+            self.assertEqual(len(r[0]), 1)
 
     def test_challenge_list_filter_algo(self):
         url = reverse('substrapp:challenge-list')
@@ -470,7 +487,7 @@ class ViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 4)
+            self.assertEqual(len(r[0]), 1)
 
     def test_algo_list_filter_challenge(self):
         url = reverse('substrapp:algo-list')
@@ -494,7 +511,7 @@ class ViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 3)
+            self.assertEqual(len(r[0]), 1)
 
     def test_algo_retrieve(self):
         url = reverse('substrapp:algo-list')
@@ -584,7 +601,7 @@ class ViewTests(APITestCase):
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
                                         (challenge, status.HTTP_200_OK)]
 
-            search_params = '?search=challenge%253Aname%253ASkin%2520Lesion%2520Classification%2520Challenge'
+            search_params = '?search=challenge%253Aname%253ASimplified%2520skin%2520lesion%2520classification'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -684,7 +701,7 @@ class ViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_dataset_list_filter_challenge(self):
         url = reverse('substrapp:dataset-list')
@@ -692,11 +709,11 @@ class ViewTests(APITestCase):
             mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
                                         (challenge, status.HTTP_200_OK)]
 
-            search_params = '?search=challenge%253Aname%253ASkin%2520Lesion%2520Classification%2520Challenge'
+            search_params = '?search=challenge%253Aname%253ASimplified%2520skin%2520lesion%2520classification'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_dataset_list_filter_model(self):
         url = reverse('substrapp:dataset-list')
@@ -708,7 +725,7 @@ class ViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_dataset_retrieve(self):
         url = reverse('substrapp:dataset-list')

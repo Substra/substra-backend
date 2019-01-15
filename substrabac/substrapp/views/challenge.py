@@ -256,9 +256,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
-                                    challengeKeys = list(
-                                        itertools.chain.from_iterable([x['challengeKey'] for x in filteredData]))
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
+                                    datasetKeys = [x['key'] for x in filteredData]
+                                    challengeKeys = [x['challengeKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['dataset_key'] in datasetKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache

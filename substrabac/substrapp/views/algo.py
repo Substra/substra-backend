@@ -228,8 +228,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
-                                    challengeKeys = list(
-                                        itertools.chain.from_iterable([x['challengeKey'] for x in filteredData]))
+                                    challengeKeys = [x['challengeKey'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
                             elif k == 'model':  # select challenges used by endModel hash
                                 if not modelData:
