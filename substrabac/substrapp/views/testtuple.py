@@ -3,16 +3,16 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 
-from substrapp.serializers import LedgerTrainTupleSerializer
+from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.utils import queryLedger
 from substrapp.views.utils import getObjectFromLedger, JsonException
 
 
-class TrainTupleViewSet(mixins.CreateModelMixin,
+class TestTupleViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin,
                         GenericViewSet):
-    serializer_class = LedgerTrainTupleSerializer
+    serializer_class = LedgerTestTupleSerializer
 
     def get_queryset(self):
         queryset = []
@@ -39,28 +39,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         :return:
         '''
 
-        algo_key = request.data.get('algo_key', request.POST.get('algo_key', None))
-        dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
-        rank = request.data.get('rank', request.POST.get('rank', None))
-        FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', None))
-
-        try:
-            input_models_keys = request.data.getlist('input_models_keys', [])
-        except:
-            input_models_keys = request.data.get('input_models_keys', request.POST.getlist('input_models_keys', []))
-
-        try:
-            train_data_keys = request.data.getlist('train_data_keys', [])
-        except:
-            train_data_keys = request.data.get('train_data_keys', request.POST.getlist('train_data_keys', []))
+        traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
 
         data = {
-            'algo_key': algo_key,
-            'dataset_key': dataset_key,
-            'rank': rank,
-            'FLtask_key': FLtask_key,
-            'input_models_keys': input_models_keys,
-            'train_data_keys': train_data_keys,  # list of train data keys (which are stored in the train worker node)
+            'traintuple_key': traintuple_key,
         }
 
         # init ledger serializer
@@ -79,7 +61,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'args': '{"Args":["queryTraintuples"]}'
+            'args': '{"Args":["queryTesttuples"]}'
         })
 
         return Response(data, status=st)

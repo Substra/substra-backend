@@ -44,10 +44,15 @@ class QueryTests(APITestCase):
             pass
 
     def test_add_challenge_sync_ok(self):
+        # add associated data opener
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
+
         url = reverse('substrapp:challenge-list')
 
         data = {
             'name': 'tough challenge',
+            'test_dataset_key': get_hash(self.data_data_opener),
             'test_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.challenge_description,
@@ -74,9 +79,14 @@ class QueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_challenge_no_sync_ok(self):
+        # add associated data opener
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name, description=self.data_description, data_opener=self.data_data_opener)
+
         url = reverse('substrapp:challenge-list')
         data = {
             'name': 'tough challenge',
+            'test_dataset_key': get_hash(self.data_data_opener),
             'test_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.challenge_description,
@@ -164,7 +174,7 @@ class QueryTests(APITestCase):
             'name': 'slide opener',
             'type': 'images',
             'permissions': 'all',
-            'problem_keys': '',
+            'challenge_key': '',
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }
@@ -190,7 +200,7 @@ class QueryTests(APITestCase):
             'name': 'slide opener',
             'type': 'images',
             'permissions': 'all',
-            'problem_keys': '',
+            'challenge_key': '',
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }
@@ -236,7 +246,7 @@ class QueryTests(APITestCase):
             'name': 'slide opener',
             'type': 'images',
             'permissions': 'all',
-            'problem_keys': '',
+            'challenge_key': '',
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }
@@ -259,7 +269,7 @@ class QueryTests(APITestCase):
 
         data = {
             'file': self.data_file,
-            'dataset_key': get_hash(self.data_data_opener),
+            'dataset_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -288,7 +298,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:data-list')
         data = {
             'file': self.data_file,
-            'dataset_key': get_hash(self.data_data_opener),
+            'dataset_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
 
@@ -309,7 +319,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:data-list')
 
         # missing dataset
-        data = {'dataset_key': 'toto'}
+        data = {'dataset_keys': ['toto']}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -318,7 +328,7 @@ class QueryTests(APITestCase):
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['message'], 'This Dataset key: toto does not exist in local substrabac database.')
+            self.assertEqual(r['message'], "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['toto']")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             dataset_name = 'slide opener'
@@ -326,13 +336,13 @@ class QueryTests(APITestCase):
                                    data_opener=self.data_data_opener)
 
             # missing local storage field
-            data = {'dataset_key': get_hash(self.data_description),
+            data = {'dataset_keys': [get_hash(self.data_description)],
                     'test_only': True, }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             # missing ledger field
-            data = {'dataset_key': get_hash(self.data_description), 'file': self.script, }
+            data = {'dataset_keys': [get_hash(self.data_description)], 'file': self.script, }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -346,7 +356,7 @@ class QueryTests(APITestCase):
 
         data = {
             'file': self.data_file,
-            'dataset_key': get_hash(self.data_description),
+            'dataset_keys': [get_hash(self.data_description)],
             'test_only': True,
         }
         response = self.client.post(url, data, format='multipart')
@@ -365,7 +375,7 @@ class QueryTests(APITestCase):
 
         data = {
             'file': self.script,
-            'dataset_key': dataset_name,
+            'dataset_keys': [dataset_name],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
