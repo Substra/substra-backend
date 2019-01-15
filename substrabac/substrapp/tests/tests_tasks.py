@@ -357,7 +357,7 @@ class TasksTests(APITestCase):
             traintuple_directory = build_subtuple_folders(traintuple)
 
             self.assertTrue(os.path.exists(traintuple_directory))
-            self.assertEqual(os.path.join(self.traintuple_path, f'traintuple/{traintuple["key"]}'), traintuple_directory)
+            self.assertEqual(os.path.join(self.traintuple_path, f'subtuple/{traintuple["key"]}'), traintuple_directory)
 
             for root, dirs, files in os.walk(traintuple_directory):
                 nb_subfolders = len(dirs)
@@ -383,7 +383,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.get_challenge') as mget_challenge, \
                 mock.patch('substrapp.tasks.get_algo') as mget_algo, \
                 mock.patch('substrapp.tasks.get_model') as mget_model, \
-                mock.patch('substrapp.tasks.build_traintuple_folders') as mbuild_traintuple_folders, \
+                mock.patch('substrapp.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
                 mock.patch('substrapp.tasks.put_opener') as mput_opener, \
                 mock.patch('substrapp.tasks.put_data') as mput_data, \
                 mock.patch('substrapp.tasks.put_metric') as mput_metric, \
@@ -396,7 +396,7 @@ class TasksTests(APITestCase):
                 mget_challenge.return_value = 'challenge'
                 mget_algo.return_value = 'algo', 'algo_hash'
                 mget_model.return_value = 'model', 'model_hash'
-                mbuild_traintuple_folders.return_value = MEDIA_ROOT
+                mbuild_subtuple_folders.return_value = MEDIA_ROOT
                 mput_opener.return_value = 'opener'
                 mput_data.return_value = 'data'
                 mput_metric.return_value = 'metric'
