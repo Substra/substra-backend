@@ -68,10 +68,10 @@ def get_model(subtuple):
     return model_content, model_computed_hash
 
 
-def get_models(subtuple, model_type):
+def get_models(subtuple):
     models_content, models_computed_hash = [], []
 
-    if subtuple.get(model_type, None) is not None:
+    if subtuple.get('inModels', None) is not None:
         for subtuple_model in subtuple['inModels']:
             model_content, model_computed_hash = get_remote_file(subtuple_model)
             models_content.append(model_content)
@@ -80,34 +80,33 @@ def get_models(subtuple, model_type):
     return models_content, models_computed_hash
 
 
-def put_model(subtuple, subtuple_directory, models_content):
-    if models_content is not None:
+def put_model(subtuple, subtuple_directory, model_content):
+    if model_content is not None:
         from substrapp.models import Model
 
-        for model_index, model_content in enumerate(models_content):
-            model_dst_path = path.join(subtuple_directory, f'model/model_{model_index}')
+        model_dst_path = path.join(subtuple_directory, f'model/model')
 
-            try:
-                model = Model.objects.get(pk=subtuple['model']['hash'])
-            except:  # write it to local disk
-                with open(model_dst_path, 'wb') as f:
-                    f.write(model_content)
+        try:
+            model = Model.objects.get(pk=subtuple['model']['hash'])
+        except:  # write it to local disk
+            with open(model_dst_path, 'wb') as f:
+                f.write(model_content)
+        else:
+            if get_hash(model.file.path) != subtuple['model']['hash']:
+                raise Exception('Model Hash in Subtuple is not the same as in local db')
+
+            if not os.path.exists(model_dst_path):
+                os.link(model.file.path, model_dst_path)
             else:
-                if get_hash(model.file.path) != subtuple['model']['hash']:
-                    raise Exception('Model Hash in Subtuple is not the same as in local db')
-
-                if not os.path.exists(model_dst_path):
-                    os.link(model.file.path, model_dst_path)
-                else:
-                    if get_hash(model_dst_path) != subtuple['model']['hash']:
-                        raise Exception('Model Hash in Subtuple is not the same as in local medias')
+                if get_hash(model_dst_path) != subtuple['model']['hash']:
+                    raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
 def put_models(subtuple, subtuple_directory, models_content):
     if models_content is not None:
         from substrapp.models import Model
 
-        for model_index, model_content, subtuple_model in enumerate(zip(models_content, subtuple['inModels'])):
+        for model_index, (model_content, subtuple_model) in enumerate(zip(models_content, subtuple['inModels'])):
             model_dst_path = path.join(subtuple_directory, f'model/model_{model_index}')
 
             try:
@@ -273,8 +272,13 @@ def prepareTestingTask():
 @app.task(bind=True, ignore_result=False)
 def computeTask(self, tuple_type, subtuple, model_type, fltask):
 
-    worker = self.request.hostname.split('@')[1]
-    queue = self.request.delivery_info['routing_key']
+    try:
+        worker = self.request.hostname.split('@')[1]
+        queue = self.request.delivery_info['routing_key']
+    except:
+        worker = f"{settings.LEDGER['org']['name']}.worker"
+        queue = f"{settings.LEDGER['org']['name']}"
+
     result = {'worker': worker, 'queue': queue, 'FLtask': fltask}
 
     # Get materials
