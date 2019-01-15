@@ -1,8 +1,6 @@
 import ntpath
-import os
-import re
 
-from django.db import IntegrityError
+from django.conf import settings
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -11,6 +9,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.serializers.ledger.data.util import updateLedgerData
+from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
 from substrapp.utils import get_hash
 
 
@@ -142,13 +142,37 @@ class DataViewSet(mixins.CreateModelMixin,
                         d.update(data)
                         return Response(d, status=st, headers=headers)
 
-    @action(list=True)
-    def update(self, request, *args, **kwargs):
+    @action(methods=['post'], detail=False)
+    def bulk_update(self, request):
 
         data = request.data
         dataset_keys = data.getlist('dataset_keys')
         data_keys = data.getlist('data_keys')
 
-        serializer = self.get_serializer(Data.objects.filter(pkhash__in=data_keys), many=True)
-        serializer.update()
-        return Response(serializer.data)
+        if Data.objects.filter(pkhash__in=data_keys).count() != len(data_keys):
+            return Response({
+                'message': f'One or more data keys provided do not exist in local substrabac database. Please create them before. Data keys: {data_keys}'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        if Dataset.objects.filter(pkhash__in=dataset_keys).count() != len(dataset_keys):
+            return Response({
+                'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
+                status=status.HTTP_400_BAD_REQUEST)
+
+        args = '"%(hashes)s", "%(datasetKeys)s"' % {
+            'hashes': ','.join(data_keys),
+            'datasetKeys': ','.join(dataset_keys),
+        }
+
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            data, st = updateLedgerData(args, sync=True)
+            return Response(data, status=st)
+        else:
+            # use a celery task, as we are in an http request transaction
+            updateLedgerDataAsync.delay(args)
+            data = {
+                'message': 'The substra network has been notified for updating these Data'
+            }
+            st = status.HTTP_202_ACCEPTED
+            return Response(data, status=st)
+

@@ -10,12 +10,14 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Challenge, Dataset, Algo
+from substrapp.models import Challenge, Dataset, Algo, Data
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
+from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.utils import get_hash, compute_hash
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_temporary_text_file
+from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, \
+    get_temporary_text_file, get_sample_dataset2
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -36,6 +38,9 @@ class QueryTests(APITestCase):
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_dataset()
+
+        self.data_description2, self.data_description_filename2, self.data_data_opener2, \
+        self.data_opener_filename2 = get_sample_dataset2()
 
     def tearDown(self):
         try:
@@ -385,6 +390,34 @@ class QueryTests(APITestCase):
 
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_bulk_update_data(self):
+
+        # add associated data opener
+        dataset = Dataset.objects.create(name='slide opener', description=self.data_description,
+                                         data_opener=self.data_data_opener)
+        dataset2 = Dataset.objects.create(name='slide opener 2', description=self.data_description2,
+                                         data_opener=self.data_data_opener2)
+
+        d = Data.objects.create(file=self.data_file)
+
+        url = reverse('substrapp:data-bulk-update')
+
+        data = {
+            'dataset_keys': [dataset.pkhash, dataset2.pkhash],
+            'data_keys': [d.pkhash],
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch('substrapp.serializers.ledger.data.util.invokeLedger') as minvokeLedger:
+            minvokeLedger.return_value = {'keys': [d.pkhash]}, status.HTTP_200_OK
+
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(r['keys'], [d.pkhash])
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_add_algo_sync_ok(self):
 
