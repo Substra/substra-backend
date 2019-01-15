@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
-from substrapp.tasks import build_traintuple_folders, get_algo, get_model, get_challenge, put_opener, put_model, put_algo, put_metric, put_data, prepareTask, doTask
+from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_challenge, put_opener, put_model, put_algo, put_metric, put_data, prepareTask, doTask
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script
 
@@ -354,7 +354,7 @@ class TasksTests(APITestCase):
 
             traintuple_key = 'test1234'
             traintuple = {'key': traintuple_key}
-            traintuple_directory = build_traintuple_folders(traintuple)
+            traintuple_directory = build_subtuple_folders(traintuple)
 
             self.assertTrue(os.path.exists(traintuple_directory))
             self.assertEqual(os.path.join(self.traintuple_path, f'traintuple/{traintuple["key"]}'), traintuple_directory)
@@ -430,7 +430,7 @@ class TasksTests(APITestCase):
 
         traintuple_key = 'test_owkin'
         traintuple = {'key': traintuple_key}
-        traintuple_directory = build_traintuple_folders(traintuple)
+        traintuple_directory = build_subtuple_folders(traintuple)
 
         with mock.patch('substrapp.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.getattr') as mgetattr, \
