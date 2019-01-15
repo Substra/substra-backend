@@ -35,14 +35,16 @@ class DataViewSet(mixins.CreateModelMixin,
 
         # check if bulk create
         files = request.data.getlist('files', None)
-        # get pkhash of data_opener from name
-        try:
-            dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
-        except:
+        dataset_keys = data.getlist('dataset_keys')
+        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
+
+        # check all dataset exists
+        if dataset_count != len(dataset_keys):
             return Response({
-                'message': f'This Dataset key: {data.get("dataset_key")} does not exist in local substrabac database.'},
+                'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
                 status=status.HTTP_400_BAD_REQUEST)
         else:
+
             # bulk
             if files:
 
@@ -71,16 +73,8 @@ class DataViewSet(mixins.CreateModelMixin,
                                         status=status.HTTP_400_BAD_REQUEST)
                     else:
                         # init ledger serializer
-                        file_size = 0
-                        for file in files:
-                            try:
-                                file_size += os.path.getsize(file)
-                            except:
-                                file_size += request.FILES[path_leaf(file)].size
-
                         ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                       'size': file_size,
-                                                                       'dataset_key': dataset.pk,
+                                                                       'dataset_keys': dataset_keys,
                                                                        'instances': instances},
                                                                  context={'request': request})
 
@@ -126,15 +120,8 @@ class DataViewSet(mixins.CreateModelMixin,
                                         status=status.HTTP_400_BAD_REQUEST)
                     else:
                         # init ledger serializer
-                        file_size = 0
-                        try:
-                            file_size = os.path.getsize(data.get('file'))
-                        except:
-                            file_size = data.get('file').size
-
                         ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                       'size': file_size,
-                                                                       'dataset_key': dataset.pk,
+                                                                       'dataset_keys': dataset_keys,
                                                                        'instances': [instance]},
                                                                  context={'request': request})
 

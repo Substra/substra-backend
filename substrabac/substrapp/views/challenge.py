@@ -11,7 +11,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.models import Challenge
+from substrapp.models import Challenge, Dataset
 from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 # from hfc.fabric import Client
@@ -60,55 +60,66 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
         data = request.data
         description = data.get('description')
-        pkhash = get_hash(description)
-        serializer = self.get_serializer(data={'pkhash': pkhash,
-                                               'metrics': data.get('metrics'),
-                                               'description': description})
+        test_dataset_key = data.get('test_dataset_key')
 
+        # Test if dataset exists in local database
         try:
-            serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            return Response({'message': e.args,
-                             'pkhash': pkhash},
-                            status=status.HTTP_400_BAD_REQUEST)
+            Dataset.objects.get(pkhash=test_dataset_key)
+        except:
+            return Response({
+                'message': f'This Dataset key: {test_dataset_key} does not exist in local substrabac database.'},
+                status=status.HTTP_400_BAD_REQUEST)
         else:
-            # create on db
+            pkhash = get_hash(description)
+            serializer = self.get_serializer(data={'pkhash': pkhash,
+                                                   'metrics': data.get('metrics'),
+                                                   'description': description})
+
             try:
-                instance = self.perform_create(serializer)
-            except IntegrityError as exc:
-                try:
-                    pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-                except:
-                    pkhash = ''
-                return Response({'message': 'A challenge with this description file already exists.', 'pkhash': pkhash},
-                                status=status.HTTP_409_CONFLICT)
-            except Exception as exc:
-                return Response({'message': exc.args},
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                return Response({'message': e.args,
+                                 'pkhash': pkhash},
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
-                # init ledger serializer
-                ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
-                                                                    'name': data.get('name'),
-                                                                    'permissions': data.get('permissions'),
-                                                                    'metrics_name': data.get('metrics_name'),
-                                                                    'instance': instance},
-                                                              context={'request': request})
+                # create on db
+                try:
+                    instance = self.perform_create(serializer)
+                except IntegrityError as exc:
+                    try:
+                        pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+                    except:
+                        pkhash = ''
+                    return Response({'message': 'A challenge with this description file already exists.', 'pkhash': pkhash},
+                                    status=status.HTTP_409_CONFLICT)
+                except Exception as exc:
+                    return Response({'message': exc.args},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # init ledger serializer
+                    ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
+                                                                        'test_dataset_key': test_dataset_key,
+                                                                        'name': data.get('name'),
+                                                                        'permissions': data.get('permissions'),
+                                                                        'metrics_name': data.get('metrics_name'),
+                                                                        'instance': instance},
+                                                                  context={'request': request})
 
-                if not ledger_serializer.is_valid():
-                    # delete instance
-                    instance.delete()
-                    raise ValidationError(ledger_serializer.errors)
+                    if not ledger_serializer.is_valid():
+                        # delete instance
+                        instance.delete()
+                        raise ValidationError(ledger_serializer.errors)
 
-                # create on ledger
-                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                    # create on ledger
+                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                    return Response(data, status=st)
+                    if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                        return Response(data, status=st)
 
-                headers = self.get_success_headers(serializer.data)
-                d = dict(serializer.data)
-                d.update(data)
-                return Response(d, status=st, headers=headers)
+                    headers = self.get_success_headers(serializer.data)
+                    d = dict(serializer.data)
+                    d.update(data)
+                    return Response(d, status=st, headers=headers)
 
     def create_or_update_challenge(self, challenge, pk):
         try:
@@ -246,7 +257,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     challengeKeys = list(
-                                        itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
+                                        itertools.chain.from_iterable([x['challengeKey'] for x in filteredData]))
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:

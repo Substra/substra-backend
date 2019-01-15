@@ -90,7 +90,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             try:
                 url = dataset['openerStorageAddress']
                 try:
-                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
                 except:
                     raise Exception(f'Failed to fetch {url}')
                 else:
@@ -121,7 +121,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
-                raise f'Failed to fetch {url}'
+                raise Exception(f'Failed to fetch {url}')
             else:
                 if r.status_code != 200:
                     raise Exception(f'end to end node report {r.text}')
@@ -259,7 +259,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     else:
                                         filteredData = [x for x in challengeData if x[key] in val]
                                     challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in (x['challengeKeys'] or []) if x in challengeKeys]]
+                                    l[idx] = [x for x in l[idx] if [x for x in (x['challengeKey'] or []) if x in challengeKeys]]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
@@ -274,7 +274,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKey'] if x in challengeKeys]]
                             elif k == 'model':  # select challenges used by endModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
@@ -289,7 +289,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in modelData if x['endModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKey'] if x in challengeKeys]]
 
         return Response(l, status=st)
 
