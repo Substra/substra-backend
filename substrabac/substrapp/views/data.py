@@ -4,6 +4,7 @@ import re
 
 from django.db import IntegrityError
 from rest_framework import status, mixins
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -140,3 +141,14 @@ class DataViewSet(mixins.CreateModelMixin,
                         d = dict(serializer.data)
                         d.update(data)
                         return Response(d, status=st, headers=headers)
+
+    @action(list=True)
+    def update(self, request, *args, **kwargs):
+
+        data = request.data
+        dataset_keys = data.getlist('dataset_keys')
+        data_keys = data.getlist('data_keys')
+
+        serializer = self.get_serializer(Data.objects.filter(pkhash__in=data_keys), many=True)
+        serializer.update()
+        return Response(serializer.data)
