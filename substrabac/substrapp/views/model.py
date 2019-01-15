@@ -206,3 +206,17 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         data = getattr(object, 'file')
         return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+
+    @action(detail=True)
+    def details(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        data, st = queryLedger({
+            'args': f'{{"Args":["queryModelTuples", "{pk}"]}}'
+        })
+
+        if st != 200:
+            raise JsonException(data)
+
+        return Response(data, st)
