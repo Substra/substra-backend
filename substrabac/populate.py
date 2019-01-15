@@ -273,3 +273,23 @@ else:
             res = json.loads(res.decode('utf-8'))
             print(json.dumps(res, indent=2))
             time.sleep(3)
+
+        if res['status'] == 'done':
+            # create testtuple
+            print('create testtuple')
+            data = json.dumps({
+                'traintuple_key': trainuple_key
+            })
+
+            res = popen(['substra', 'add', 'testtuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
+                        stdout=PIPE).communicate()[0]
+            res = json.loads(res.decode('utf-8'))
+            testtuple_key = res['pkhash']
+            print(json.dumps(res, indent=2))
+
+            while res['status'] not in ('done', 'failed'):
+                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+                      stdout=PIPE).communicate()[0]
+                res = json.loads(res.decode('utf-8'))
+                print(json.dumps(res, indent=2))
+                time.sleep(3)
