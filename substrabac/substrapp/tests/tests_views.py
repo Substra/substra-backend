@@ -80,7 +80,7 @@ model = [
         "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
         "log": "Train - CPU:75.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
         "permissions": "all",
-        "startModel": None,
+        "inModel": None,
         "status": "done",
         "testData": {
             "keys": [
@@ -267,7 +267,7 @@ traintuple = [
         "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
         "log": "Train - CPU:75.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
         "permissions": "all",
-        "startModel": None,
+        "inModel": None,
         "status": "done",
         "testData": {
             "keys": [
