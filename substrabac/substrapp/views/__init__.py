@@ -6,5 +6,6 @@ from .challenge import ChallengeViewSet
 from .model import ModelViewSet
 from .algo import AlgoViewSet
 from .traintuple import TrainTupleViewSet
+from .testtuple import TestTupleViewSet
 
-__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet', 'AlgoViewSet', 'TrainTupleViewSet']
+__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet', 'AlgoViewSet', 'TrainTupleViewSet', 'TestTupleViewSet']
