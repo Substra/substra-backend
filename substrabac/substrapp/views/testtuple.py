@@ -9,9 +9,9 @@ from substrapp.views.utils import getObjectFromLedger, JsonException
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
-                        mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin,
-                        GenericViewSet):
+                       mixins.RetrieveModelMixin,
+                       mixins.ListModelMixin,
+                       GenericViewSet):
     serializer_class = LedgerTestTupleSerializer
 
     def get_queryset(self):

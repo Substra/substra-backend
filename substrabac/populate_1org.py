@@ -32,14 +32,13 @@ else:
     print('create dataset with owkin org')
     # create dataset with owkin org
     data = json.dumps({
-        "name": "ISIC 2018",
-        "data_opener": os.path.join(dir_path, "./fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py"),
-        "type": "Images",
-        "description": os.path.join(dir_path, "./fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md"),
-        "permissions": "all",
-        "challenge_key": None
+        'name': 'ISIC 2018',
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py'),
+        'type': 'Images',
+        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md'),
+        'permissions': 'all',
+        'challenge_key': ''
     })
-
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
 
@@ -77,7 +76,7 @@ else:
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md'),
         'permissions': 'all',
-        'challenge_key': None
+        'challenge_key': ''
     })
 
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
@@ -153,25 +152,25 @@ else:
 
     # #########################
 
-    # register challenge
-    print('register challenge')
-    data = json.dumps({
-        'name': 'Simplified skin lesion classification',
-        'description': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md'),
-        'metrics_name': 'macro-average recall',
-        'metrics': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
-        'permissions': 'all',
-        'test_data_keys': ['2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e',
-                           '533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1'],
-        'test_dataset_key': 'b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'
-    })
+    # # register challenge
+    # print('register challenge')
+    # data = json.dumps({
+    #     'name': 'Simplified skin lesion classification',
+    #     'description': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md'),
+    #     'metrics_name': 'macro-average recall',
+    #     'metrics': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
+    #     'permissions': 'all',
+    #     'test_data_keys': ['2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e',
+    #                        '533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1'],
+    #     'test_dataset_key': 'b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'
+    # })
 
-    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
-                stdout=PIPE).communicate()[0]
+    # res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    #             stdout=PIPE).communicate()[0]
 
-    try:
-        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
-    except:
+    # try:
+    #     print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    # except:
         print(res.decode('utf-8'))
 
     # register challenge
@@ -214,23 +213,23 @@ else:
     except:
         print(res.decode('utf-8'))
 
-    # register second algo on challenge Simplified skin lesion classification
-    print('register second algo on challenge Simplified skin lesion classification')
-    data = json.dumps({
-        'name': 'Logistic regression for balanced problem',
-        'file': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/algo.tar.gz'),
-        'description': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/description.md'),
-        'challenge_key': '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c',
-        'permissions': 'all',
-    })
+    # # register second algo on challenge Simplified skin lesion classification
+    # print('register second algo on challenge Simplified skin lesion classification')
+    # data = json.dumps({
+    #     'name': 'Logistic regression for balanced problem',
+    #     'file': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/algo.tar.gz'),
+    #     'description': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/description.md'),
+    #     'challenge_key': '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c',
+    #     'permissions': 'all',
+    # })
 
-    res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data],
-                stdout=PIPE).communicate()[0]
+    # res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    #             stdout=PIPE).communicate()[0]
 
-    try:
-        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
-    except:
-        print(res.decode('utf-8'))
+    # try:
+    #     print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    # except:
+    #     print(res.decode('utf-8'))
 
     # register third algo
     print('register third algo')
@@ -273,7 +272,9 @@ else:
     print('create traintuple')
     data = json.dumps({
         'algo_key': '6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f',
+        'FLtask_key': '',
         'model_key': '',
+        'dataset_key': 'ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994',
         'train_data_keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                             '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9']
     })
@@ -288,14 +289,14 @@ else:
     else:
         res = json.loads(res.decode('utf-8'))
         if 'pkhash' in res:
-            trainuple_key = res['pkhash']
+            traintuple_key = res['pkhash']
 
-            res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+            res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
                         stdout=PIPE).communicate()[0]
             res = json.loads(res.decode('utf-8'))
             print(json.dumps(res, indent=2))
             while res['status'] not in ('done', 'failed'):
-                res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
                 res = json.loads(res.decode('utf-8'))
                 print(json.dumps(res, indent=2))
@@ -305,7 +306,7 @@ else:
                 # create testtuple
                 print('create testtuple')
                 data = json.dumps({
-                    'traintuple_key': trainuple_key
+                    'traintuple_key': traintuple_key
                 })
 
                 res = popen(['substra', 'add', 'testtuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
@@ -313,6 +314,9 @@ else:
                 res = json.loads(res.decode('utf-8'))
                 testtuple_key = res['pkhash']
                 print(json.dumps(res, indent=2))
+
+                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+                res = json.loads(res.decode('utf-8'))
 
                 while res['status'] not in ('done', 'failed'):
                     res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],

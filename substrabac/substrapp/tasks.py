@@ -71,8 +71,8 @@ def get_model(subtuple):
 def get_models(subtuple):
     models_content, models_computed_hash = [], []
 
-    if subtuple.get('inModels', None) is not None:
-        for subtuple_model in subtuple['inModels']:
+    if subtuple.get('inModel', None) is not None:
+        for subtuple_model in subtuple['inModel']:
             model_content, model_computed_hash = get_remote_file(subtuple_model)
             models_content.append(model_content)
             models_computed_hash.append(model_computed_hash)
@@ -103,10 +103,10 @@ def put_model(subtuple, subtuple_directory, model_content):
 
 
 def put_models(subtuple, subtuple_directory, models_content):
-    if models_content is not None:
+    if models_content:
         from substrapp.models import Model
 
-        for model_index, (model_content, subtuple_model) in enumerate(zip(models_content, subtuple['inModels'])):
+        for model_index, (model_content, subtuple_model) in enumerate(zip(models_content, subtuple['inModel'])):
             model_dst_path = path.join(subtuple_directory, f'model/model_{model_index}')
 
             try:
@@ -242,7 +242,7 @@ def prepareTask(tuple_type, model_type):
                 fltask = None
                 worker_queue = f"{settings.LEDGER['org']['name']}.worker"
 
-                if 'FLtask' in subtuple:
+                if 'FLtask' in subtuple and subtuple['FLtask']:
                     fltask = subtuple['FLtask']
                     flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
                                                           result__icontains=f'"FLtask": "{fltask}"')
@@ -256,17 +256,17 @@ def prepareTask(tuple_type, model_type):
                 except Exception as e:
                     error_code = compute_error_code(e)
                     logging.error(error_code, exc_info=True)
-                    return fail(subtuple['key'], error_code)
+                    return fail(subtuple['key'], error_code, tuple_type)
 
 
 @app.task(bind=True, ignore_result=True)
 def prepareTrainingTask(self):
-    prepareTask('traintuple', 'inModels')
+    prepareTask('traintuple', 'inModel')
 
 
 @app.task(ignore_result=True)
 def prepareTestingTask():
-    prepareTask('testuple', 'model')
+    prepareTask('testtuple', 'model')
 
 
 @app.task(bind=True, ignore_result=False)
@@ -287,11 +287,11 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        fail(subtuple['key'], error_code)
+        fail(subtuple['key'], error_code, tuple_type)
         return result
 
     # Log Start of the Subtuple
-    start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testuple' else None
+    start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
 
     data, st = invokeLedger({
         'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
@@ -307,13 +307,13 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
         except Exception as e:
             error_code = compute_error_code(e)
             logging.error(error_code, exc_info=True)
-            fail(subtuple['key'], error_code)
+            fail(subtuple['key'], error_code, tuple_type)
             return result
         else:
             # Invoke ledger to log success
             if tuple_type == 'traintuple':
                 invoke_args = f'{{"Args":["logSuccessTrain","{subtuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
-            elif tuple_type == 'testuple':
+            elif tuple_type == 'testtuple':
                 invoke_args = f'{{"Args":["logSuccessTest","{subtuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
 
             data, st = invokeLedger({
@@ -334,7 +334,7 @@ def prepareMaterials(subtuple, model_type):
         algo_content, algo_computed_hash = get_algo(subtuple)
         if model_type == 'model':
             model_content, model_computed_hash = get_model(subtuple)  # can return None, None
-        if model_type == 'inModels':
+        if model_type == 'inModel':
             models_content, models_computed_hash = get_models(subtuple)  # can return [], []
 
     except Exception as e:
@@ -347,9 +347,9 @@ def prepareMaterials(subtuple, model_type):
         put_data(subtuple, subtuple_directory)
         put_metric(subtuple_directory, challenge)
         put_algo(subtuple, subtuple_directory, algo_content)
-        if model_type == 'model':  # testuple
+        if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)
-        if model_type == 'inModels':  # traintuple
+        if model_type == 'inModel':  # traintuple
             put_models(subtuple, subtuple_directory, models_content)
 
     except Exception as e:
@@ -394,7 +394,7 @@ def doTask(subtuple, tuple_type):
         algo_docker = f'algo_{tuple_type}'.lower()  # tag must be lowercase for docker
         algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
-        algo_command = 'train' if tuple_type == 'traintuple' else 'predict' if tuple_type == 'testuple' else None
+        algo_command = 'train' if tuple_type == 'traintuple' else 'predict' if tuple_type == 'testtuple' else None
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':

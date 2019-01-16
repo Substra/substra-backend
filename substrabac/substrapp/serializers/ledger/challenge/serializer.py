@@ -31,15 +31,14 @@ class LedgerChallengeSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(datasetKey)s", "%(dataKeys)s", "%(permissions)s"' % {
+        args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testData)s", "%(permissions)s"' % {
             'name': name,
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:challenge-description', args=[instance.pk]),
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
             'metricsStorageAddress': protocol + host + reverse('substrapp:challenge-metrics', args=[instance.pk]),
-            'datasetKey': test_dataset_key,
-            'dataKeys': ','.join([x for x in test_data_keys]),
+            'testData': f'{test_dataset_key}:{",".join([x for x in test_data_keys])}',
             'permissions': permissions
         }
 
