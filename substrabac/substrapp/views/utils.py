@@ -60,7 +60,7 @@ def getObjectFromLedger(pk):
         'args': f'{{"Args":["query","{pk}"]}}'
     })
 
-    if st != 200:
+    if st != status.HTTP_200_OK:
         raise JsonException(data)
 
     if data['permissions'] == 'all':

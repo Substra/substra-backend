@@ -149,15 +149,15 @@ class DataViewSet(mixins.CreateModelMixin,
         dataset_keys = data.getlist('dataset_keys')
         data_keys = data.getlist('data_keys')
 
-        if Data.objects.filter(pkhash__in=data_keys).count() != len(data_keys):
-            return Response({
-                'message': f'One or more data keys provided do not exist in local substrabac database. Please create them before. Data keys: {data_keys}'},
-                status=status.HTTP_400_BAD_REQUEST)
-
-        if Dataset.objects.filter(pkhash__in=dataset_keys).count() != len(dataset_keys):
-            return Response({
-                'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
-                status=status.HTTP_400_BAD_REQUEST)
+        # if Data.objects.filter(pkhash__in=data_keys).count() != len(data_keys):
+        #     return Response({
+        #         'message': f'One or more data keys provided do not exist in local substrabac database. Please create them before. Data keys: {data_keys}'},
+        #         status=status.HTTP_400_BAD_REQUEST)
+        #
+        # if Dataset.objects.filter(pkhash__in=dataset_keys).count() != len(dataset_keys):
+        #     return Response({
+        #         'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
+        #         status=status.HTTP_400_BAD_REQUEST)
 
         args = '"%(hashes)s", "%(datasetKeys)s"' % {
             'hashes': ','.join(data_keys),
@@ -166,6 +166,10 @@ class DataViewSet(mixins.CreateModelMixin,
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             data, st = updateLedgerData(args, sync=True)
+
+            # patch status for update
+            if st == status.HTTP_201_CREATED:
+                st = status.HTTP_200_OK
             return Response(data, status=st)
         else:
             # use a celery task, as we are in an http request transaction

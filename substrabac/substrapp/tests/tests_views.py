@@ -73,7 +73,7 @@ model = [
             }
         },
         "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
-        "endModel": {
+        "outModel": {
             "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
             "storageAddress": "http://testserver/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
         },
@@ -260,7 +260,7 @@ traintuple = [
             }
         },
         "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
-        "endModel": {
+        "outModel": {
             "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
             "storageAddress": "http://testserver/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
         },
