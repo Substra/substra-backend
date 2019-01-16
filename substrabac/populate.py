@@ -168,7 +168,7 @@ else:
         'test_dataset_key': 'b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'
     })
 
-    res = popen(['substra', 'add', 'challenge', '--profile=chunantes', '--config=/tmp/.substrabac', data],
+    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     try:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
@@ -263,14 +263,14 @@ else:
     print(json.dumps(res, indent=2))
 
     if 'pkhash' in res:
-        trainuple_key = res['pkhash']
+        traintuple_key = res['pkhash']
 
-        res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+        res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
                     stdout=PIPE).communicate()[0]
         res = json.loads(res.decode('utf-8'))
         print(json.dumps(res, indent=2))
         while res['status'] not in ('done', 'failed'):
-            res = popen(['substra', 'get', 'traintuple', trainuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
+            res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
                   stdout=PIPE).communicate()[0]
             res = json.loads(res.decode('utf-8'))
             print(json.dumps(res, indent=2))
