@@ -249,7 +249,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     datasetData, st = queryLedger({
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(datasetData, status=st)
                                     if datasetData is None:
                                         datasetData = []
@@ -265,7 +265,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     algoData, st = queryLedger({
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(algoData, status=st)
                                     if algoData is None:
                                         algoData = []
@@ -274,19 +274,19 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     filteredData = [x for x in algoData if x[key] in val]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
-                            elif k == 'model':  # select challenges used by endModel hash
+                            elif k == 'model':  # select challenges used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
                                         'args': '{"Args":["queryTraintuples"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(modelData, status=st)
                                     if modelData is None:
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['endModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
 

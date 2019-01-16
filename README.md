@@ -228,7 +228,7 @@ A directory named `fabric-sdk-py_tests` is available to the root of this project
 If you launch a substra-network setup, you will be able to play with theses tests.  
 For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFile.py` script for producing the network.json file needed.
 
-## Miscelaneous
+## Miscellaneous
 
 If you are using pycharm, you can very easily automate your servers and celery workers run configuration.
 
@@ -243,8 +243,10 @@ Use these configurations for easier debugging and productivity:
 ![](assets/conf.png)
 ![](assets/server_owkin.png)
 ![](assets/server_chunantes.png)
-![](assets/celery_owkin.png)
-![](assets/celery_chunantes.png)
+![](assets/celery owkin worker.png)
+![](assets/celery owkin scheduler.png)
+![](assets/celery chunantes worker.png)
+![](assets/celery chunantes scheduler.png)
 ![](assets/celery_beat.png)
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
@@ -252,6 +254,9 @@ Do not hesitate to put breakpoints in your code. Even with periodic celery tasks
 You can even access directly to the databases (password is `substrabac` as described in the beginning of this document):
 ![](assets/database_owkin.png)
 ![](assets/database_owkin_challenges.png)
+
+And for more convenience you can use the [multirun plugin](https://plugins.jetbrains.com/plugin/7248-multirun) from pycharm and configure it as:
+![](assets/multirun.png)
 
 ## License
 
