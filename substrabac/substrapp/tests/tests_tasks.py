@@ -288,7 +288,7 @@ class TasksTests(APITestCase):
         model_content = b'MODEL 1 2 3'
         models_content = [model_content, model_content]
         model_hash = compute_hash(model_content)
-        model_type = 'inModels'
+        model_type = 'inModel'
         subtuple = {model_type: [{'hash': model_hash}, {'hash': model_hash}]}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
