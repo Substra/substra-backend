@@ -71,8 +71,8 @@ def get_model(subtuple):
 def get_models(subtuple):
     models_content, models_computed_hash = [], []
 
-    if subtuple.get('inModel', None) is not None:
-        for subtuple_model in subtuple['inModel']:
+    if subtuple.get('inModels', None) is not None:
+        for subtuple_model in subtuple['inModels']:
             model_content, model_computed_hash = get_remote_file(subtuple_model)
             models_content.append(model_content)
             models_computed_hash.append(model_computed_hash)
@@ -84,7 +84,7 @@ def put_model(subtuple, subtuple_directory, model_content):
     if model_content is not None:
         from substrapp.models import Model
 
-        model_dst_path = path.join(subtuple_directory, f'model/model')
+        model_dst_path = path.join(subtuple_directory, f'model/{subtuple["model"]["traintupleKey"]}')
 
         try:
             model = Model.objects.get(pk=subtuple['model']['hash'])
@@ -106,8 +106,8 @@ def put_models(subtuple, subtuple_directory, models_content):
     if models_content:
         from substrapp.models import Model
 
-        for model_index, (model_content, subtuple_model) in enumerate(zip(models_content, subtuple['inModel'])):
-            model_dst_path = path.join(subtuple_directory, f'model/model_{model_index}')
+        for model_content, subtuple_model in zip(models_content, subtuple['inModels']):
+            model_dst_path = path.join(subtuple_directory, f'model/{subtuple_model["traintupleKey"]}')
 
             try:
                 model = Model.objects.get(pk=subtuple_model['hash'])
@@ -261,7 +261,7 @@ def prepareTask(tuple_type, model_type):
 
 @app.task(bind=True, ignore_result=True)
 def prepareTrainingTask(self):
-    prepareTask('traintuple', 'inModel')
+    prepareTask('traintuple', 'inModels')
 
 
 @app.task(ignore_result=True)
@@ -334,7 +334,7 @@ def prepareMaterials(subtuple, model_type):
         algo_content, algo_computed_hash = get_algo(subtuple)
         if model_type == 'model':
             model_content, model_computed_hash = get_model(subtuple)  # can return None, None
-        if model_type == 'inModel':
+        if model_type == 'inModels':
             models_content, models_computed_hash = get_models(subtuple)  # can return [], []
 
     except Exception as e:
@@ -349,7 +349,7 @@ def prepareMaterials(subtuple, model_type):
         put_algo(subtuple, subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)
-        if model_type == 'inModel':  # traintuple
+        if model_type == 'inModels':  # traintuple
             put_models(subtuple, subtuple_directory, models_content)
 
     except Exception as e:
@@ -394,7 +394,19 @@ def doTask(subtuple, tuple_type):
         algo_docker = f'algo_{tuple_type}'.lower()  # tag must be lowercase for docker
         algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
-        algo_command = 'train' if tuple_type == 'traintuple' else 'predict' if tuple_type == 'testtuple' else None
+
+        # create the command option for algo
+        if tuple_type == 'traintuple':
+            algo_command = '--train'
+
+            if subtuple['inModels'] is not None:
+                inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+                algo_command += f' --inmodels {" ".join(inmodels)}'
+
+        elif tuple_type == 'testtuple':
+            algo_command = '--predict'
+            inmodels = subtuple['model']["traintupleKey"]
+            algo_command += f' --inmodels {inmodels}'
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':

@@ -199,8 +199,8 @@ else:
     print('register algo')
     data = json.dumps({
         'name': 'Logistic regression',
-        'file': os.path.join(dir_path, './fixtures/chunantes/algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/algo.tar.gz'),
-        'description': os.path.join(dir_path, './fixtures/chunantes/algos/6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f/description.md'),
+        'file': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/algo.tar.gz'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/description.md'),
         'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
         'permissions': 'all',
     })
@@ -271,7 +271,7 @@ else:
     # create traintuple
     print('create traintuple')
     data = json.dumps({
-        'algo_key': '6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f',
+        'algo_key': '9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a',
         'FLtask_key': '',
         'model_key': '',
         'dataset_key': 'ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994',
