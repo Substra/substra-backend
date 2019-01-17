@@ -255,7 +255,7 @@ class TasksTests(APITestCase):
         model_content = b'MODEL 1 2 3'
         model_hash = compute_hash(model_content)
         model_type = 'model'
-        subtuple = {model_type: {'hash': model_hash}}
+        subtuple = {'key': model_hash, model_type: {'hash': model_hash}}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
@@ -288,8 +288,9 @@ class TasksTests(APITestCase):
         model_content = b'MODEL 1 2 3'
         models_content = [model_content, model_content]
         model_hash = compute_hash(model_content)
-        model_type = 'inModel'
-        subtuple = {model_type: [{'hash': model_hash}, {'hash': model_hash}]}
+        model_type = 'inModels'
+        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': model_hash},
+                                 {'hash': model_hash, 'traintupleKey': model_hash}]}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
@@ -308,7 +309,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(modelpath)
             with self.assertRaises(Exception):
-                put_models({'inModel': [{'hash': 'hash'}]}, self.subtuple_path, model_content)
+                put_models({'inModels': [{'hash': 'hash'}]}, self.subtuple_path, model_content)
 
     def test_get_model(self):
         model_content = b'MODEL 1 2 3'
