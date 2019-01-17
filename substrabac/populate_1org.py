@@ -47,6 +47,9 @@ else:
     except:
         print(res.decode('utf-8'))
 
+    res_data = json.loads(res.decode('utf-8'))
+    dataset_key = res_data['pkhash']
+
     print('register train data on dataset owkin (will take dataset creator as worker)')
     # register train data on dataset owkin (will take dataset creator as worker)
     data = json.dumps({
@@ -54,7 +57,7 @@ else:
             os.path.join(dir_path, './fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'),
             os.path.join(dir_path, './fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
         ],
-        'dataset_keys': ['ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994'],
+        'dataset_keys': [dataset_key],
         'test_only': False,
     })
 
@@ -66,6 +69,8 @@ else:
     except:
         print(res.decode('utf-8'))
 
+    res_data = json.loads(res.decode('utf-8'))
+    data_key = [sub_res_data['pkhash'] for sub_res_data in res_data]
     ###############################
 
     # create dataset, test data and challenge on owkin
@@ -87,6 +92,9 @@ else:
     except:
         print(res.decode('utf-8'))
 
+    res_data = json.loads(res.decode('utf-8'))
+    dataset_key_2 = res_data['pkhash']
+
     #########################
 
     # register test data
@@ -96,7 +104,7 @@ else:
             os.path.join(dir_path, './fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'),
             os.path.join(dir_path, './fixtures/owkin/data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip')
         ],
-        'dataset_keys': ['b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'],
+        'dataset_keys': [dataset_key_2],
         'test_only': True,
     })
 
@@ -107,6 +115,9 @@ else:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     except:
         print(res.decode('utf-8'))
+
+    res_data = json.loads(res.decode('utf-8'))
+    data_key_2_test = [sub_res_data['pkhash'] for sub_res_data in res_data]
 
     #########################
 
@@ -117,7 +128,7 @@ else:
             os.path.join(dir_path, './fixtures/owkin/data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.zip'),
             os.path.join(dir_path, './fixtures/owkin/data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.zip')
         ],
-        'dataset_keys': ['b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'],
+        'dataset_keys': [dataset_key_2],
         'test_only': True,
     })
 
@@ -128,6 +139,9 @@ else:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     except:
         print(res.decode('utf-8'))
+
+    res_data = json.loads(res.decode('utf-8'))
+    data_key_2_test_2 = [sub_res_data['pkhash'] for sub_res_data in res_data]
 
     #########################
 
@@ -138,7 +152,7 @@ else:
             os.path.join(dir_path, './fixtures/owkin/data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.zip'),
             os.path.join(dir_path, './fixtures/owkin/data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip')
         ],
-        'dataset_keys': ['b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'],
+        'dataset_keys': [dataset_key_2],
         'test_only': True,
     })
 
@@ -149,6 +163,9 @@ else:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     except:
         print(res.decode('utf-8'))
+
+    res_data = json.loads(res.decode('utf-8'))
+    data_key_2_test_3 = [sub_res_data['pkhash'] for sub_res_data in res_data]
 
     # #########################
 
@@ -162,7 +179,7 @@ else:
     #     'permissions': 'all',
     #     'test_data_keys': ['2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e',
     #                        '533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1'],
-    #     'test_dataset_key': 'b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'
+    #     'test_dataset_key': dataset_key_2
     # })
 
     # res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
@@ -171,7 +188,7 @@ else:
     # try:
     #     print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     # except:
-        print(res.decode('utf-8'))
+    #     print(res.decode('utf-8'))
 
     # register challenge
     print('register challenge')
@@ -181,8 +198,8 @@ else:
         'metrics_name': 'macro-average recall',
         'metrics': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
         'permissions': 'all',
-        'test_data_keys': ['e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1'],
-        'test_dataset_key': 'b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0'
+        'test_data_keys': [data_key_2_test[0]],
+        'test_dataset_key': dataset_key_2
     })
 
     res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
@@ -193,6 +210,9 @@ else:
     except:
         print(res.decode('utf-8'))
 
+    res_data = json.loads(res.decode('utf-8'))
+    challenge_key = res_data['pkhash']
+
     ############################
 
     # register algo
@@ -201,7 +221,7 @@ else:
         'name': 'Logistic regression',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/description.md'),
-        'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
+        'challenge_key': challenge_key,
         'permissions': 'all',
     })
 
@@ -212,6 +232,9 @@ else:
         print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
     except:
         print(res.decode('utf-8'))
+
+    res_data = json.loads(res.decode('utf-8'))
+    algo_key = res_data['pkhash']
 
     # # register second algo on challenge Simplified skin lesion classification
     # print('register second algo on challenge Simplified skin lesion classification')
@@ -237,7 +260,7 @@ else:
         'name': 'Neural Network',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description.md'),
-        'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
+        'challenge_key': challenge_key,
         'permissions': 'all',
     })
 
@@ -255,7 +278,7 @@ else:
         'name': 'Random Forest',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'),
-        'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
+        'challenge_key': challenge_key,
         'permissions': 'all',
     })
 
@@ -271,12 +294,11 @@ else:
     # create traintuple
     print('create traintuple')
     data = json.dumps({
-        'algo_key': '9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a',
+        'algo_key': algo_key,
         'FLtask_key': '',
         'model_key': '',
-        'dataset_key': 'ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994',
-        'train_data_keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
-                            '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9']
+        'dataset_key': dataset_key,
+        'train_data_keys': data_key,
     })
 
     res = popen(['substra', 'add', 'traintuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
