@@ -242,10 +242,10 @@ def prepareTask(tuple_type, model_type):
                 fltask = None
                 worker_queue = f"{settings.LEDGER['org']['name']}.worker"
 
-                if 'FLtask' in subtuple and subtuple['FLtask']:
-                    fltask = subtuple['FLtask']
+                if 'fltask' in subtuple and subtuple['fltask']:
+                    fltask = subtuple['fltask']
                     flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
-                                                          result__icontains=f'"FLtask": "{fltask}"')
+                                                          result__icontains=f'"fltask": "{fltask}"')
 
                     if flresults and flresults.count() > 0:
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -279,7 +279,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
         worker = f"{settings.LEDGER['org']['name']}.worker"
         queue = f"{settings.LEDGER['org']['name']}"
 
-    result = {'worker': worker, 'queue': queue, 'FLtask': fltask}
+    result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
     # Get materials
     try:
@@ -366,8 +366,8 @@ def doTask(subtuple, tuple_type):
     fltask = 'test-fltask'
     flrank = 0
 
-    if 'FLtask' in subtuple:
-        fltask = subtuple['FLtask']
+    if 'fltask' in subtuple:
+        fltask = subtuple['fltask']
         flrank = int(subtuple['rank'])
 
     # Computation
