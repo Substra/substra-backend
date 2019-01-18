@@ -363,10 +363,10 @@ def doTask(subtuple, tuple_type):
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
 
     # Federated learning variables
-    fltask = 'test-fltask'
-    flrank = 0
+    fltask = None
+    flrank = None
 
-    if 'fltask' in subtuple:
+    if 'fltask' in subtuple and subtuple['fltask']:
         fltask = subtuple['fltask']
         flrank = int(subtuple['rank'])
 
@@ -397,14 +397,20 @@ def doTask(subtuple, tuple_type):
 
         # create the command option for algo
         if tuple_type == 'traintuple':
-            algo_command = '--train'
+            algo_command = '--train'    # main command
 
+            # add list of inmodels
             if subtuple['inModels'] is not None:
                 inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
                 algo_command += f' --inmodels {" ".join(inmodels)}'
 
+            # add fltask rank for training
+            if flrank is not None:
+                algo_command += f' --rank {flrank}'
+
         elif tuple_type == 'testtuple':
-            algo_command = '--predict'
+            algo_command = '--predict'    # main command
+
             inmodels = subtuple['model']["traintupleKey"]
             algo_command += f' --inmodels {inmodels}'
 
@@ -482,10 +488,11 @@ def doTask(subtuple, tuple_type):
 
         # Rank == -1 -> Last fl subtuple or fl throws an exception
         if flrank == -1:
-            local_volume = client.volumes.get(volume_id=f'local-{fltask}')
+            flvolume = f'local-{fltask}'
+            local_volume = client.volumes.get(volume_id=flvolume)
             try:
                 local_volume.remove(force=True)
             except:
-                logging.error('Cannot remove local volume local-{fltask}', exc_info=True)
+                logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
 
     return result
