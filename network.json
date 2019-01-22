@@ -23,8 +23,8 @@
       ],
       "users": {
         "admin": {
-          "cert": "./substrapp/conf/orderer/admin/msp/signcerts/cert.pem",
-          "private_key": "./substrapp/conf/orderer/admin/msp/keystore/0f411d3e798833c8c7193459111b3d249c2257e4d707a1cd0efb181ba7fde6af_sk"
+          "cert": "/substra/data/orgs/orderer/admin/msp/signcerts/cert.pem",
+          "private_key": "/substra/data/orgs/orderer/admin/msp/keystore/1876054aeb50ed6a400aa3a2c9426c292e2044cc45e40229f05b7957a77681da_sk"
         }
       }
     },
@@ -39,12 +39,12 @@
       ],
       "users": {
         "admin": {
-          "cert": "./substrapp/conf/owkin/admin/msp/signcerts/cert.pem",
-          "private_key": "./substrapp/conf/owkin/admin/msp/keystore/bc005035542f0e7d1a8771a6e9736d5ed081cbffb23efc37c7207afd1895a833_sk"
+          "cert": "/substra/data/orgs/owkin/admin/msp/signcerts/cert.pem",
+          "private_key": "/substra/data/orgs/owkin/admin/msp/keystore/c015334dd3cc78993e775a1d42b2f878b23fead7c2c51945843ae67b382f418c_sk"
         },
         "user": {
-          "cert": "./substrapp/conf/owkin/user/msp/signcerts/cert.pem",
-          "private_key": "./substrapp/conf/owkin/user/msp/keystore/ef25bfd07871408f8b525b4ae8c7d107889041248de5fa2c871d5314de6215f1_sk"
+          "cert": "/substra/data/orgs/owkin/user/msp/signcerts/cert.pem",
+          "private_key": "/substra/data/orgs/owkin/user/msp/keystore/f9521df18033fdd0725a06cb590bfc1f9cf20b333fe7e2c2e335cdabe7e716d7_sk"
         }
       }
     },
@@ -59,12 +59,12 @@
       ],
       "users": {
         "admin": {
-          "cert": "./substrapp/conf/chu-nantes/admin/msp/signcerts/cert.pem",
-          "private_key": "./substrapp/conf/chu-nantes/admin/msp/keystore/1b15e06ae4ae1d6ea28f91b373f424250ba9afa17d7eb3f98a6bc07b83066f44_sk"
+          "cert": "/substra/data/orgs/chu-nantes/admin/msp/signcerts/cert.pem",
+          "private_key": "/substra/data/orgs/chu-nantes/admin/msp/keystore/a2c3254242d08e3ddcf1e7d45263071e19b8a18f4481d51cefc0ca09ba355325_sk"
         },
         "useer": {
-          "cert": "./substrapp/conf/chu-nantes/user/msp/signcerts/cert.pem",
-          "private_key": "./substrapp/conf/chu-nantes/user/msp/keystore/b32ebc471279e866e1318bc7f6fe031bdfab0c5f116bad8f367a8b4364362537_sk"
+          "cert": "/substra/data/orgs/chu-nantes/user/msp/signcerts/cert.pem",
+          "private_key": "/substra/data/orgs/chu-nantes/user/msp/keystore/71bcbb7b3613b0f7e2d8c11ffcd002384685a5f1ddccd494c42335276f76a052_sk"
         }
       }
     }
@@ -77,7 +77,7 @@
         "grpc-max-send-message-length": 15
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/orderer/ca-cert.pem"
+        "path": "/substra/data/orgs/orderer/ca-cert.pem"
       }
     }
   },
@@ -90,7 +90,7 @@
         "grpc.http2.keepalive_time": 15
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/owkin/ca-cert.pem"
+        "path": "/substra/data/orgs/owkin/ca-cert.pem"
       }
     },
     "peer2-owkin": {
@@ -101,7 +101,7 @@
         "grpc.http2.keepalive_time": 15
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/owkin/ca-cert.pem"
+        "path": "/substra/data/orgs/owkin/ca-cert.pem"
       }
     },
     "peer1-chu-nantes": {
@@ -112,7 +112,7 @@
         "grpc.http2.keepalive_time": 15
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/chu-nantes/ca-cert.pem"
+        "path": "/substra/data/orgs/chu-nantes/ca-cert.pem"
       }
     },
     "peer2-chu-nantes": {
@@ -123,7 +123,7 @@
         "grpc.http2.keepalive_time": 15
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/chu-nantes/ca-cert.pem"
+        "path": "/substra/data/orgs/chu-nantes/ca-cert.pem"
       }
     }
   },
@@ -134,12 +134,12 @@
         "verify": true
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/owkin/ca-cert.pem"
+        "path": "/substra/data/orgs/owkin/ca-cert.pem"
       },
       "registrar": [
         {
-          "enrollId": "admin",
-          "enrollSecret": "adminpw"
+          "enrollId": "admin-owkin",
+          "enrollSecret": "admin-owkinpw"
         }
       ]
     },
@@ -149,12 +149,12 @@
         "verify": true
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/chu-nantes/ca-cert.pem"
+        "path": "/substra/data/orgs/chu-nantes/ca-cert.pem"
       },
       "registrar": [
         {
-          "enrollId": "admin",
-          "enrollSecret": "adminpw"
+          "enrollId": "admin-chunantes",
+          "enrollSecret": "admin-chunantespw"
         }
       ]
     },
@@ -164,12 +164,12 @@
         "verify": true
       },
       "tlsCACerts": {
-        "path": "./substrapp/conf/orderer/ca-cert.pem"
+        "path": "/substra/data/orgs/orderer/ca-cert.pem"
       },
       "registrar": [
         {
-          "enrollId": "admin",
-          "enrollSecret": "adminpw"
+          "enrollId": "admin-orderer",
+          "enrollSecret": "admin-ordererpw"
         }
       ]
     }
