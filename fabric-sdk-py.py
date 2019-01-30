@@ -1,7 +1,9 @@
 import random
 import string
+from pprint import pprint
 
 from hfc.fabric_ca.caservice import ca_service
+
 # from hfc.fabric import Client
 
 # cli = Client(net_profile="./network.json")
@@ -38,7 +40,9 @@ from hfc.fabric_ca.caservice import ca_service
 # print(response)
 
 
-cacli = ca_service(target="https://rca-owkin:7054", ca_certs_path='/substra/data/orgs/owkin/ca-cert.pem', ca_name='rca-owkin')
+cacli = ca_service(target="https://rca-owkin:7054",
+                   ca_certs_path='/substra/data/orgs/owkin/ca-cert.pem',
+                   ca_name='rca-owkin')
 
 print('Will try to enroll admin')
 try:
@@ -64,7 +68,8 @@ else:
     else:
         print(f'Correctly registered user {username} with secret {secret}')
 
-        print(f'Will try to enroll new registered user {username} with secret {secret}')
+        print(
+            f'Will try to enroll new registered user {username} with secret {secret}')
         try:
             User = cacli.enroll(username, secret)
         except ValueError as e:
@@ -72,11 +77,17 @@ else:
         else:
             print(f'User {username} successfully enrolled')
 
-        print(
-            f'Will try to revoke new registered user {username}')
-        try:
-            RevokedCerts, CRL = admin.revoke(username, reason='unspecified')
-        except ValueError as e:
-            print(e)
-        else:
-            print(f'User {username} successfully revoked')
+            # reenroll
+            # User = cacli.reenroll(User)
+
+            print(
+                f'Will try to revoke new registered user {username}')
+            try:
+                RevokedCerts, CRL = admin.revoke(username, reason='unspecified')
+            except ValueError as e:
+                print(e)
+            else:
+                print(f'User {username} successfully revoked')
+
+                # newCRL = admin.generateCRL()
+                # pass
