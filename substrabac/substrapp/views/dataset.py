@@ -44,41 +44,41 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
         try:
             serializer.is_valid(raise_exception=True)
-        except:
-            return Response({'message': 'A dataset with this opener file already exists.',
+        except Exception as e:
+            return Response({'message': e.args,
                              'pkhash': pkhash},
                             status=status.HTTP_400_BAD_REQUEST)
-
-        # create on db
-        try:
-            instance = self.perform_create(serializer)
-        except Exception as e:
-            return Response({'message': e.args},
-                            status=status.HTTP_400_BAD_REQUEST)
         else:
-            # init ledger serializer
-            ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
-                                                              'permissions': data.get('permissions'),
-                                                              'type': data.get('type'),
-                                                              'challenge_keys': data.getlist('challenge_keys'),
-                                                              'instance': instance},
-                                                        context={'request': request})
+            # create on db
+            try:
+                instance = self.perform_create(serializer)
+            except Exception as e:
+                return Response({'message': e.args},
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                # init ledger serializer
+                ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
+                                                                  'permissions': data.get('permissions'),
+                                                                  'type': data.get('type'),
+                                                                  'challenge_keys': data.getlist('challenge_keys'),
+                                                                  'instance': instance},
+                                                            context={'request': request})
 
-            if not ledger_serializer.is_valid():
-                # delete instance
-                instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-            if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-                return Response(data, status=st)
+                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                    return Response(data, status=st)
 
-            headers = self.get_success_headers(serializer.data)
-            d = dict(serializer.data)
-            d.update(data)
-            return Response(d, status=st, headers=headers)
+                headers = self.get_success_headers(serializer.data)
+                d = dict(serializer.data)
+                d.update(data)
+                return Response(d, status=st, headers=headers)
 
     def create_or_update_dataset(self, instance, dataset, pk):
 
