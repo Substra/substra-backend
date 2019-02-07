@@ -153,8 +153,8 @@
       },
       "registrar": [
         {
-          "enrollId": "admin-chunantes",
-          "enrollSecret": "admin-chunantespw"
+          "enrollId": "admin-chu-nantes",
+          "enrollSecret": "admin-chu-nantespw"
         }
       ]
     },
