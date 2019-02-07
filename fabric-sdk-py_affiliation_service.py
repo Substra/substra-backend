@@ -1,5 +1,3 @@
-import random
-import string
 from pprint import pprint
 
 from hfc.fabric_ca.caservice import ca_service
@@ -8,7 +6,7 @@ cacli = ca_service(target="https://rca-owkin:7054",
                    ca_certs_path='/substra/data/orgs/owkin/ca-cert.pem',
                    ca_name='rca-owkin')
 
-print('Will try to enroll admin')
+print('Will try to enroll bootstrap admin')
 try:
     bootstrap_admin = cacli.enroll('admin', 'adminpw')
 except ValueError as e:
