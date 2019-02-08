@@ -103,14 +103,9 @@ def generate_network_file(conf):
                 'eventUrl': '%s:%s' % (peer['host'], peer['host_event_port']),
                 'grpcOptions': {
                     'grpc.ssl_target_name_override': peer['host'],
-                    'grpc.default_authority': org['ca']['name'],
-                    'grpc-max-send-message-length': 15
+                    'grpc.http2.keepalive_time': 15,
                 },
-                'tlsCACerts': {'path': org['ca']['certfile']}
-                #'tlsCACerts': {'path': org['tls']['certfile']}
-                #'tlsCACerts': {'path': peer['tls']['clientCert']}
-                #'tlsCACerts': {'path': peer['tls']['serverCert']}
-                #'tlsCACerts': {'path': peer['tls']['ca']}
+                'tlsCACerts': {'path': peer['tls']['serverCa']}
 
             }
 
