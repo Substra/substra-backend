@@ -83,11 +83,11 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/chu-nantes/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/chu-nantes/admin/msp/keystore/327008a3c7900a5d18aa271e659acf9b019a30338e389b70da7ccfb20bf9c789_sk"
+                    "private_key": "/substra/data/orgs/chu-nantes/admin/msp/keystore/d4abf15bea0ee13724457e867bfad9604f52629360bfd3765a62dac37ca38fa7_sk"
                 },
                 "user": {
                     "cert": "/substra/data/orgs/chu-nantes/user/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/chu-nantes/user/msp/keystore/12b932b37f0d3e21d03b06b9b885df7176c4ed7fd3bbf260d860f23b0da8ba78_sk"
+                    "private_key": "/substra/data/orgs/chu-nantes/user/msp/keystore/6e77d9292c5149d9b3566a1f4f95e99a4c3a019a98e18617d536b2d7ad2ab9af_sk"
                 }
             }
         },
@@ -102,7 +102,7 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/orderer/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/orderer/admin/msp/keystore/c56846d1e14647b4d6ac4fde8ecd219974c5fa763096813aa02aecdf0eaef8e5_sk"
+                    "private_key": "/substra/data/orgs/orderer/admin/msp/keystore/775e59028de317ba7884e4ffb8168930414d254deb2f63d4e500407292baecd3_sk"
                 }
             }
         },
@@ -118,11 +118,11 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/owkin/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/owkin/admin/msp/keystore/0c2b22dd592f60aeb125bc81753704d6a9ca69697a1f277032227cf35d9c8d58_sk"
+                    "private_key": "/substra/data/orgs/owkin/admin/msp/keystore/6185884849c685726a0060398cf870a5c4a7afc4801f2630c4556b58723c9300_sk"
                 },
                 "user": {
                     "cert": "/substra/data/orgs/owkin/user/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/owkin/user/msp/keystore/c8c850df024414e919e81cb4d1911739399f534fc050734db95ef34f36d82869_sk"
+                    "private_key": "/substra/data/orgs/owkin/user/msp/keystore/6dbb75004c79187225a792ec948595bbae58f03b57a2a4be34faa01cde5e1e21_sk"
                 }
             }
         }
@@ -131,48 +131,44 @@
         "peer1-chu-nantes": {
             "eventUrl": "peer1-chu-nantes:9053",
             "grpcOptions": {
-                "grpc-max-send-message-length": 15,
-                "grpc.default_authority": "rca-chu-nantes",
+                "grpc.http2.keepalive_time": 15,
                 "grpc.ssl_target_name_override": "peer1-chu-nantes"
             },
             "tlsCACerts": {
-                "path": "/substra/data/orgs/chu-nantes/tls-ca-cert.pem"
+                "path": "/substra/data/orgs/chu-nantes/tls/peer1/tls-server-cert.pem"
             },
             "url": "peer1-chu-nantes:9051"
         },
         "peer1-owkin": {
             "eventUrl": "peer1-owkin:7053",
             "grpcOptions": {
-                "grpc-max-send-message-length": 15,
-                "grpc.default_authority": "rca-owkin",
+                "grpc.http2.keepalive_time": 15,
                 "grpc.ssl_target_name_override": "peer1-owkin"
             },
             "tlsCACerts": {
-                "path": "/substra/data/orgs/owkin/tls-ca-cert.pem"
+                "path": "/substra/data/orgs/owkin/tls/peer1/tls-server-cert.pem"
             },
             "url": "peer1-owkin:7051"
         },
         "peer2-chu-nantes": {
             "eventUrl": "peer2-chu-nantes:10053",
             "grpcOptions": {
-                "grpc-max-send-message-length": 15,
-                "grpc.default_authority": "rca-chu-nantes",
+                "grpc.http2.keepalive_time": 15,
                 "grpc.ssl_target_name_override": "peer2-chu-nantes"
             },
             "tlsCACerts": {
-                "path": "/substra/data/orgs/chu-nantes/tls-ca-cert.pem"
+                "path": "/substra/data/orgs/chu-nantes/tls/peer2/tls-server-cert.pem"
             },
             "url": "peer2-chu-nantes:10051"
         },
         "peer2-owkin": {
             "eventUrl": "peer2-owkin:8053",
             "grpcOptions": {
-                "grpc-max-send-message-length": 15,
-                "grpc.default_authority": "rca-owkin",
+                "grpc.http2.keepalive_time": 15,
                 "grpc.ssl_target_name_override": "peer2-owkin"
             },
             "tlsCACerts": {
-                "path": "/substra/data/orgs/owkin/tls-ca-cert.pem"
+                "path": "/substra/data/orgs/owkin/tls/peer2/tls-server-cert.pem"
             },
             "url": "peer2-owkin:8051"
         }
