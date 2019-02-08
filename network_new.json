@@ -83,11 +83,11 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/chu-nantes/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/chu-nantes/admin/msp/keystore/d4abf15bea0ee13724457e867bfad9604f52629360bfd3765a62dac37ca38fa7_sk"
+                    "private_key": "/substra/data/orgs/chu-nantes/admin/msp/keystore/1c000d379aceb65c6d9ee13b28c5cef71b4cce1bf364ecf71d2d14caa3458b90_sk"
                 },
                 "user": {
                     "cert": "/substra/data/orgs/chu-nantes/user/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/chu-nantes/user/msp/keystore/6e77d9292c5149d9b3566a1f4f95e99a4c3a019a98e18617d536b2d7ad2ab9af_sk"
+                    "private_key": "/substra/data/orgs/chu-nantes/user/msp/keystore/86eb3bd489617a44312b5cae7bb540b0dfd04901f9fd939e9509cf791fb72aad_sk"
                 }
             }
         },
@@ -102,7 +102,7 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/orderer/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/orderer/admin/msp/keystore/775e59028de317ba7884e4ffb8168930414d254deb2f63d4e500407292baecd3_sk"
+                    "private_key": "/substra/data/orgs/orderer/admin/msp/keystore/43e3e87f911bf2ac87f0f1c00284517d45bfb255023509bb5aea2305f0cd5da5_sk"
                 }
             }
         },
@@ -118,11 +118,11 @@
             "users": {
                 "admin": {
                     "cert": "/substra/data/orgs/owkin/admin/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/owkin/admin/msp/keystore/6185884849c685726a0060398cf870a5c4a7afc4801f2630c4556b58723c9300_sk"
+                    "private_key": "/substra/data/orgs/owkin/admin/msp/keystore/0dddac3b8813defc448b3d8e77fc95d63a155b0331d9596d4bc7cc55daf038d8_sk"
                 },
                 "user": {
                     "cert": "/substra/data/orgs/owkin/user/msp/signcerts/cert.pem",
-                    "private_key": "/substra/data/orgs/owkin/user/msp/keystore/6dbb75004c79187225a792ec948595bbae58f03b57a2a4be34faa01cde5e1e21_sk"
+                    "private_key": "/substra/data/orgs/owkin/user/msp/keystore/1472b34a4fd17916a4270d12bc82977e0d5d9d608189ff692db8d5f05ca27fcb_sk"
                 }
             }
         }
