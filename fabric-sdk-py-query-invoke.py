@@ -28,9 +28,10 @@ else:
                    requestor=admin_owkin,
                    channel_name='mychannel',
                    peer_names=['peer1-owkin'],
-                   args=['queryChallenges'],
+                   args=[],
                    cc_name='mycc',
-                   cc_version='1.0'
+                   cc_version='1.0',
+                   fcn='queryChallenges'
                    )
     print(response)
     #
