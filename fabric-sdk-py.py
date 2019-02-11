@@ -1,44 +1,7 @@
 import random
 import string
-from pprint import pprint
 
 from hfc.fabric_ca.caservice import ca_service
-
-# from hfc.fabric import Client
-
-# cli = Client(net_profile="./network.json")
-# admin_owkin = cli.get_user('owkin', 'admin')
-
-
-# response = cli.chaincode_invoke(
-#                requestor=admin_owkin,
-#                channel_name='mychannel',
-#                peer_names=['peer1-owkin'],
-#                args=['queryAll'],
-#                cc_name='mycc',
-#                cc_version='v1.0'
-#                )
-# print(response)
-#
-# response = cli.query_installed_chaincodes(
-#                requestor=admin_owkin,
-#                peer_names=['peer1-owkin']
-#                )
-# print(response)
-#
-# response = cli.query_channels(
-#                requestor=admin_owkin,
-#                peer_names=['peer1-owkin']
-#                )
-# print(response)
-#
-# response = cli.query_info(
-#                requestor=admin_owkin,
-#                channel_name='mychannel',
-#                peer_names=['peer1-owkin']
-#                )
-# print(response)
-
 
 cacli = ca_service(target="https://rca-owkin:7054",
                    ca_certs_path='/substra/data/orgs/owkin/ca-cert.pem',
@@ -78,7 +41,7 @@ else:
             print(f'User {username} successfully enrolled')
 
             # reenroll
-            # User = cacli.reenroll(User)
+            User = cacli.reenroll(User)
 
             print(
                 f'Will try to revoke new registered user {username}')
@@ -89,5 +52,14 @@ else:
             else:
                 print(f'User {username} successfully revoked')
 
-                # newCRL = admin.generateCRL()
-                # pass
+                print('Will try to enroll bootstrap admin')
+                try:
+                    bootstrap_admin = cacli.enroll('admin', 'adminpw')
+                except ValueError as e:
+                    print(e)
+                else:
+                    try:
+                        newCRL = bootstrap_admin.generateCRL()
+                    except:
+                        print('Failed to generate CRL')
+

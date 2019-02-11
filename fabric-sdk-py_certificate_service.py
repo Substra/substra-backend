@@ -1,6 +1,5 @@
 import random
 import string
-from pprint import pprint
 
 from hfc.fabric_ca.caservice import ca_service
 
