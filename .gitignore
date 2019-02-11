@@ -124,3 +124,5 @@ substrabac/substrabac/metrics.py
 # docker database dir
 postgres-data
 docker/docker-compose-dynamic.yaml
+
+network.json

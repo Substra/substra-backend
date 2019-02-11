@@ -106,10 +106,9 @@ def generate_network_file(conf):
                     'grpc.http2.keepalive_time': 15,
                 },
                 'tlsCACerts': {'path': peer['tls']['serverCa']}
-
             }
 
-    with open(os.path.join(dir_path, 'network_new.json'), 'w') as outfile:
+    with open(os.path.join(dir_path, 'network.json'), 'w') as outfile:
         json.dump(network_conf, outfile, indent=4, sort_keys=True)
 
     return network_conf
