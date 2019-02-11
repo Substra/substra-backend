@@ -1,14 +1,10 @@
-import json
 import os
-import random
-import string
-from pprint import pprint
-
-from hfc.fabric_ca.caservice import ca_service
 
 from hfc.fabric import Client
 
-cli = Client(net_profile="./network_new.json")
+dir_path = os.path.dirname(os.path.realpath(__file__))
+
+cli = Client(net_profile=os.path.join(dir_path, '../network.json'))
 admin_owkin = cli.get_user('owkin', 'admin')
 
 cli.new_channel('mychannel')
@@ -25,6 +21,7 @@ try:
 except ValueError as e:
     print(e)
 else:
+    print('Admin enrolled')
 
     response = cli.chaincode_query(
         requestor=admin_owkin,
@@ -33,7 +30,7 @@ else:
         args=[],
         cc_name='mycc',
         cc_version='1.0',
-        fcn='queryChallenges'
+        fcn='queryDatasets'
     )
     print(response)
 

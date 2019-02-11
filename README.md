@@ -220,6 +220,12 @@ $> python3 start.py
 
 Check your services are correctly started with `docker ps -a`.
 
+## Testing fabric-sdk-py
+
+A directory named `fabric-sdk-py_tests` is available to the root of this project.  
+If you launch a substra-network setup, you will be able to play with theses tests.  
+For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFile.py` script for producing the network.json file needed.
+
 ## Miscelaneous
 
 If you are using pycharm, you can very easily automate your servers and celery workers run configuration.
