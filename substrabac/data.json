@@ -1,7 +1,0 @@
-{
-  "paths": [
-    "./fixtures/chunantes/data/train/0024308"
-  ],
-  "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
-  "test_only": false
-}

@@ -2,17 +2,7 @@ from .__init__ import *
 
 import os
 
-org = [x for x in LEDGER_CONF['orgs'] if x['name'] == 'chu-nantes'][0]
-orderer = LEDGER_CONF['orderers'][0]
-peer = org['peers'][0]
-signcert = org['users']['user']['home'] + '/msp/signcerts/cert.pem' # get owner which is the worker of the trainData
-
-LEDGER = {
-    'org': org,
-    'peer': peer,
-    'orderer': orderer,
-    'signcert': signcert
-}
+LEDGER = json.load(open('/substra/conf/chu-nantes/substrabac/conf.json', 'r'))
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
