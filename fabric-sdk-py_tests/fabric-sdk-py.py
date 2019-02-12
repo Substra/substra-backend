@@ -60,6 +60,8 @@ else:
                 else:
                     try:
                         newCRL = bootstrap_admin.generateCRL()
-                    except:
-                        print('Failed to generate CRL')
+                    except Exception as e:
+                        print('Failed to generate CRL %s', str(e))
+                    else:
+                        print(newCRL)
 
