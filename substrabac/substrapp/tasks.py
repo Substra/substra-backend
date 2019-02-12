@@ -231,7 +231,7 @@ def prepareTask(tuple_type, model_type):
             for subtuple in subtuples:
 
                 fltask = None
-                worker_queue = f"{settings.LEDGER['org']['name']}.worker"
+                worker_queue = f"{settings.LEDGER['name']}.worker"
 
                 if 'fltask' in subtuple and subtuple['fltask']:
                     fltask = subtuple['fltask']
@@ -268,8 +268,8 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
         worker = self.request.hostname.split('@')[1]
         queue = self.request.delivery_info['routing_key']
     except:
-        worker = f"{settings.LEDGER['org']['name']}.worker"
-        queue = f"{settings.LEDGER['org']['name']}"
+        worker = f"{settings.LEDGER['name']}.worker"
+        queue = f"{settings.LEDGER['name']}"
 
     result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
