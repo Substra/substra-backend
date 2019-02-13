@@ -12,9 +12,9 @@ class LedgerChallengeSerializer(serializers.Serializer):
     test_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=1,
                                            max_length=None)
-    name = serializers.CharField(min_length=1, max_length=60)
+    name = serializers.CharField(min_length=1, max_length=100)
     permissions = serializers.CharField(min_length=1, max_length=60)
-    metrics_name = serializers.CharField(min_length=1, max_length=60)
+    metrics_name = serializers.CharField(min_length=1, max_length=100)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')

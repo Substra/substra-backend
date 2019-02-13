@@ -8,10 +8,9 @@ from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
 
 
-
 class LedgerAlgoSerializer(serializers.Serializer):
-    name = serializers.CharField(min_length=1, max_length=60)
-    challenge_key = serializers.CharField(min_length=1, max_length=256)
+    name = serializers.CharField(min_length=1, max_length=100)
+    challenge_key = serializers.CharField(min_length=64, max_length=64)
     permissions = serializers.CharField(min_length=1, max_length=60)
 
     def create(self, validated_data):
