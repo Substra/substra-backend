@@ -1,4 +1,3 @@
-import itertools
 import re
 import tempfile
 
@@ -11,7 +10,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.models import Challenge, Dataset
+from substrapp.models import Challenge
 from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 # from hfc.fabric import Client

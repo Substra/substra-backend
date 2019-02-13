@@ -9,5 +9,5 @@ def createLedgerDataAsync(args, pkhashes):
     return createLedgerData(args, pkhashes)
 
 @shared_task
-def updateLedgerDataAsync(args, pkhashes):
-    return updateLedgerData(args, pkhashes)\
+def updateLedgerDataAsync(args):
+    return updateLedgerData(args)

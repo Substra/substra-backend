@@ -37,7 +37,6 @@ else:
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md'),
         'permissions': 'all',
-        'challenge_key': ''
     })
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
@@ -70,7 +69,11 @@ else:
         print(res.decode('utf-8'))
 
     res_data = json.loads(res.decode('utf-8'))
-    data_key = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    try:
+        data_key = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    except:
+        data_key = res_data['pkhash']
+
     ###############################
 
     # create dataset, test data and challenge on owkin
@@ -80,8 +83,7 @@ else:
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md'),
-        'permissions': 'all',
-        'challenge_key': ''
+        'permissions': 'all'
     })
 
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
@@ -117,7 +119,11 @@ else:
         print(res.decode('utf-8'))
 
     res_data = json.loads(res.decode('utf-8'))
-    data_key_2_test = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    try:
+        data_key_2_test = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    except:
+        data_key_2_test = res_data['pkhash']
+
 
     #########################
 
@@ -141,7 +147,10 @@ else:
         print(res.decode('utf-8'))
 
     res_data = json.loads(res.decode('utf-8'))
-    data_key_2_test_2 = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    try:
+        data_key_2_test_2 = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    except:
+        data_key_2_test_2 = res_data['pkhash']
 
     #########################
 
@@ -165,30 +174,12 @@ else:
         print(res.decode('utf-8'))
 
     res_data = json.loads(res.decode('utf-8'))
-    data_key_2_test_3 = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    try:
+        data_key_2_test_3 = [sub_res_data['pkhash'] for sub_res_data in res_data]
+    except:
+        data_key_2_test_3 = res_data['pkhash']
 
     # #########################
-
-    # # register challenge
-    # print('register challenge')
-    # data = json.dumps({
-    #     'name': 'Simplified skin lesion classification',
-    #     'description': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md'),
-    #     'metrics_name': 'macro-average recall',
-    #     'metrics': os.path.join(dir_path, './fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
-    #     'permissions': 'all',
-    #     'test_data_keys': ['2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e',
-    #                        '533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1'],
-    #     'test_dataset_key': dataset_key_2
-    # })
-
-    # res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
-    #             stdout=PIPE).communicate()[0]
-
-    # try:
-    #     print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
-    # except:
-    #     print(res.decode('utf-8'))
 
     # register challenge
     print('register challenge')
@@ -236,26 +227,8 @@ else:
     res_data = json.loads(res.decode('utf-8'))
     algo_key = res_data['pkhash']
 
-    # # register second algo on challenge Simplified skin lesion classification
-    # print('register second algo on challenge Simplified skin lesion classification')
-    # data = json.dumps({
-    #     'name': 'Logistic regression for balanced problem',
-    #     'file': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/algo.tar.gz'),
-    #     'description': os.path.join(dir_path, './fixtures/chunantes/algos/7742aea2001ceb40e9ce8a37fa27237d5b2d1f574e06d48677af945cfdf42ec0/description.md'),
-    #     'challenge_key': '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c',
-    #     'permissions': 'all',
-    # })
-
-    # res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data],
-    #             stdout=PIPE).communicate()[0]
-
-    # try:
-    #     print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
-    # except:
-    #     print(res.decode('utf-8'))
-
-    # register third algo
-    print('register third algo')
+    # register second algo
+    print('register second algo')
     data = json.dumps({
         'name': 'Neural Network',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz'),
@@ -272,8 +245,8 @@ else:
     except:
         print(res.decode('utf-8'))
 
-    # register fourth algo
-    print('register fourth algo')
+    # register third algo
+    print('register third algo')
     data = json.dumps({
         'name': 'Random Forest',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz'),
@@ -317,32 +290,32 @@ else:
                         stdout=PIPE).communicate()[0]
             res = json.loads(res.decode('utf-8'))
             print(json.dumps(res, indent=2))
+            # while res['status'] not in ('done', 'failed'):
+            #     res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+            #                 stdout=PIPE).communicate()[0]
+            #     res = json.loads(res.decode('utf-8'))
+            #     print(json.dumps(res, indent=2))
+            #     time.sleep(3)
+            #
+            # if res['status'] == 'done':
+            # create testtuple
+            print('create testtuple')
+            data = json.dumps({
+                'traintuple_key': traintuple_key
+            })
+
+            res = popen(['substra', 'add', 'testtuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
+                        stdout=PIPE).communicate()[0]
+            res = json.loads(res.decode('utf-8'))
+            testtuple_key = res['pkhash']
+            print(json.dumps(res, indent=2))
+
+            res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+            res = json.loads(res.decode('utf-8'))
+
             while res['status'] not in ('done', 'failed'):
-                res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
-                            stdout=PIPE).communicate()[0]
+                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                      stdout=PIPE).communicate()[0]
                 res = json.loads(res.decode('utf-8'))
                 print(json.dumps(res, indent=2))
                 time.sleep(3)
-
-            if res['status'] == 'done':
-                # create testtuple
-                print('create testtuple')
-                data = json.dumps({
-                    'traintuple_key': traintuple_key
-                })
-
-                res = popen(['substra', 'add', 'testtuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
-                            stdout=PIPE).communicate()[0]
-                res = json.loads(res.decode('utf-8'))
-                testtuple_key = res['pkhash']
-                print(json.dumps(res, indent=2))
-
-                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-                res = json.loads(res.decode('utf-8'))
-
-                while res['status'] not in ('done', 'failed'):
-                    res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
-                          stdout=PIPE).communicate()[0]
-                    res = json.loads(res.decode('utf-8'))
-                    print(json.dumps(res, indent=2))
-                    time.sleep(3)

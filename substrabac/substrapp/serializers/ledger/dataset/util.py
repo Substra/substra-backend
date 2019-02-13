@@ -27,3 +27,11 @@ def createLedgerDataset(args, pkhash, sync=False):
             data['validated'] = True
 
     return data, st
+
+def updateLedgerDataset(args, sync=False):
+    options = {
+        'args': '{"Args":["updateDataset", ' + args + ']}'
+    }
+    data, st = invokeLedger(options, sync)
+
+    return data, st
