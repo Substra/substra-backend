@@ -251,11 +251,11 @@ class TasksTests(APITestCase):
             def __init__(self, filepath):
                 self.file = FakePath(filepath)
 
-        modelpath = os.path.join(self.subtuple_path, 'model/model')
         model_content = b'MODEL 1 2 3'
         model_hash = compute_hash(model_content)
         model_type = 'model'
-        subtuple = {'key': model_hash, model_type: {'hash': model_hash}}
+        modelpath = os.path.join(self.subtuple_path, 'model', model_hash)
+        subtuple = {'key': model_hash, model_type: {'hash': model_hash, 'traintupleKey': model_hash}}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
@@ -284,10 +284,10 @@ class TasksTests(APITestCase):
             def __init__(self, filepath):
                 self.file = FakePath(filepath)
 
-        modelpath = os.path.join(self.subtuple_path, 'model/model')
         model_content = b'MODEL 1 2 3'
         models_content = [model_content, model_content]
         model_hash = compute_hash(model_content)
+        modelpath = os.path.join(self.subtuple_path, 'model', model_hash)
         model_type = 'inModels'
         subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': model_hash},
                                  {'hash': model_hash, 'traintupleKey': model_hash}]}
@@ -295,16 +295,14 @@ class TasksTests(APITestCase):
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
         put_models(subtuple, self.subtuple_path, models_content)
-        self.assertTrue(os.path.exists(modelpath + '_0'))
+        self.assertTrue(os.path.exists(modelpath))
 
-        for i in range(2):
-            os.rename(modelpath + '_%s' % i, modelpath + '_%s-tmp' % i)
+        os.rename(modelpath, modelpath + '-tmp')
 
         with mock.patch('substrapp.models.Model.objects.get') as mget:
-            mget.side_effect = [FakeModel(modelpath + '_0-tmp'), FakeModel(modelpath + '_0-tmp')]
+            mget.side_effect = [FakeModel(modelpath + '-tmp'), FakeModel(modelpath + '-tmp')]
             put_models(subtuple, self.subtuple_path, models_content)
-            self.assertTrue(os.path.exists(modelpath + '_0'))
-            self.assertTrue(os.path.exists(modelpath + '_1'))
+            self.assertTrue(os.path.exists(modelpath))
 
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(modelpath)
@@ -473,7 +471,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key}
+        subtuple = {'key': subtuple_key, 'inModels': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.settings') as msettings, \
@@ -509,7 +507,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key}
+        subtuple = {'key': subtuple_key, 'inModels': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.settings') as msettings, \
