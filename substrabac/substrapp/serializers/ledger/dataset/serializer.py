@@ -19,7 +19,7 @@ class LedgerDatasetSerializer(serializers.Serializer):
         name = validated_data.get('name')
         type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        challenge_key = validated_data.get('challenge_key')
+        challenge_key = validated_data.get('challenge_key', '')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
