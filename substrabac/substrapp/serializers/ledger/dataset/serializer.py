@@ -8,10 +8,9 @@ from .util import createLedgerDataset
 from .tasks import createLedgerDatasetAsync
 
 
-
 class LedgerDatasetSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256)
-    type = serializers.CharField(max_length=256)
+    name = serializers.CharField(max_length=100)
+    type = serializers.CharField(max_length=30)
     challenge_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64, allow_blank=True),
                                            max_length=None)
     permissions = serializers.CharField(min_length=1, max_length=60)

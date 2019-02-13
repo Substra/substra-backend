@@ -9,7 +9,7 @@ from .tasks import createLedgerDataAsync
 
 
 class LedgerDataSerializer(serializers.Serializer):
-    dataset_key = serializers.CharField(max_length=256)
+    dataset_key = serializers.CharField(max_length=64, min_length=64)
     size = serializers.IntegerField(min_value=0)
     test_only = serializers.BooleanField()
 
