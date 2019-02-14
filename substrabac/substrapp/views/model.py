@@ -113,7 +113,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'args': '{"Args":["queryTraintuples"]}'
+            'args': '{"Args":["queryModels"]}'
         })
         algoData = None
         challengeData = None
@@ -146,7 +146,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                         for k, subfilters in filter.items():
                             if k == 'model':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x['outModel'] is not None and x['outModel']['hash'] in val]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['outModel'] is not None and x['traintuple']['outModel']['hash'] in val]
                             elif k == 'algo':  # select model used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
@@ -213,7 +213,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         data, st = queryLedger({
-            'args': f'{{"Args":["queryModelTuples", "{pk}"]}}'
+            'args': f'{{"Args":["queryModelDetails", "{pk}"]}}'
         })
 
         if st != status.HTTP_200_OK:
