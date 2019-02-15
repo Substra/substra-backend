@@ -4,6 +4,7 @@ celery == 4.2.1
 cryptography >= 1.9
 coverage == 4.5.1
 django-cors-headers==2.0.2
+django-celery-results==1.0.4
 django-filter==1.1.0
 django-rest-swagger==2.1.2
 djangorestframework==3.8.2
