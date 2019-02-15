@@ -215,7 +215,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                 'mem_limit': mem_limit,
                 'command': command,
                 'volumes': volumes,
-                'ipc_mode': 'host',    # Need to check if it safe to do that, we need it for torch
+                #'ipc_mode': 'host',    # Need to check if it safe to do that, we need it for torch
+                'shm_size': '8G',
                 'labels': [DOCKER_LABEL],
                 'detach': False,
                 'auto_remove': False,

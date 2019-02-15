@@ -143,8 +143,10 @@ Execute this command in the `substrabac/substrabac` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,celery
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,celery
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler, celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
 ```
 
 ## Launch the servers
@@ -187,7 +189,7 @@ When you want to re-run the testing process:
 
 You can test your environment by creating a traintuple:
 ```shell
-curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"6dcbfcf29146acd19c6a2997b2e81d0cd4e88072eea9c90bbac33f0e8573993f","model_key":"","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}' -X POST http://localhost:8001/traintuple/?format=json
+curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a","model_key":"","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}' -X POST http://localhost:8001/traintuple/?format=json
 ```
 It will try to create a traintuple with creator: chu-nantes (localhost:8001).
 The chu-nantes celery worker will try to add the traintuple to the ledger.
@@ -226,7 +228,7 @@ A directory named `fabric-sdk-py_tests` is available to the root of this project
 If you launch a substra-network setup, you will be able to play with theses tests.  
 For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFile.py` script for producing the network.json file needed.
 
-## Miscelaneous
+## Miscellaneous
 
 If you are using pycharm, you can very easily automate your servers and celery workers run configuration.
 
@@ -241,8 +243,10 @@ Use these configurations for easier debugging and productivity:
 ![](assets/conf.png)
 ![](assets/server_owkin.png)
 ![](assets/server_chunantes.png)
-![](assets/celery_owkin.png)
-![](assets/celery_chunantes.png)
+![](assets/celery owkin worker.png)
+![](assets/celery owkin scheduler.png)
+![](assets/celery chunantes worker.png)
+![](assets/celery chunantes scheduler.png)
 ![](assets/celery_beat.png)
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
@@ -250,6 +254,9 @@ Do not hesitate to put breakpoints in your code. Even with periodic celery tasks
 You can even access directly to the databases (password is `substrabac` as described in the beginning of this document):
 ![](assets/database_owkin.png)
 ![](assets/database_owkin_challenges.png)
+
+And for more convenience you can use the [multirun plugin](https://plugins.jetbrains.com/plugin/7248-multirun) from pycharm and configure it as:
+![](assets/multirun.png)
 
 ## License
 

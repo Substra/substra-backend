@@ -1,8 +1,7 @@
-import re
 import tempfile
 
 import requests
-from django.db import IntegrityError
+from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -14,6 +13,8 @@ from rest_framework.viewsets import GenericViewSet
 # cli = Client(net_profile="../network.json")
 from substrapp.models import Dataset
 from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
+from substrapp.serializers.ledger.dataset.util import updateLedgerDataset
+from substrapp.serializers.ledger.dataset.tasks import updateLedgerDatasetAsync
 from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
 
@@ -90,7 +91,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             try:
                 url = dataset['openerStorageAddress']
                 try:
-                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
                 except:
                     raise Exception(f'Failed to fetch {url}')
                 else:
@@ -119,11 +120,11 @@ class DatasetViewSet(mixins.CreateModelMixin,
             # do the same for description
             url = dataset['description']['storageAddress']
             try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
             except:
-                raise f'Failed to fetch {url}'
+                raise Exception(f'Failed to fetch {url}')
             else:
-                if r.status_code != 200:
+                if r.status_code != status.HTTP_200_OK:
                     raise Exception(f'end to end node report {r.text}')
 
                 try:
@@ -149,7 +150,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
             'args': f'{{"Args":["queryDatasetData", "{pk}"]}}'
         })
 
-        if st != 200:
+        if st != status.HTTP_200_OK:
             raise JsonException(data)
 
         if data['permissions'] == 'all':
@@ -248,7 +249,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     challengeData, st = queryLedger({
                                         'args': '{"Args":["queryChallenges"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(challengeData, status=st)
                                     if challengeData is None:
                                         challengeData = []
@@ -259,14 +260,14 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                     else:
                                         filteredData = [x for x in challengeData if x[key] in val]
                                     challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in (x['challengeKeys'] or []) if x in challengeKeys]]
+                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(algoData, status=st)
                                     if algoData is None:
                                         algoData = []
@@ -274,24 +275,75 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
-                            elif k == 'model':  # select challenges used by endModel hash
+                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
+                            elif k == 'model':  # select challenges used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
                                         'args': '{"Args":["queryTraintuples"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(modelData, status=st)
                                     if modelData is None:
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['endModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if [x for x in x['challengeKeys'] if x in challengeKeys]]
+                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
 
         return Response(l, status=st)
+
+    @action(methods=['post'], detail=True)
+    def update_ledger(self, request, *args, **kwargs):
+
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        if len(pk) != 64:
+            return Response({'message': f'Wrong pk {pk}'},
+                            status.HTTP_400_BAD_REQUEST)
+
+        try:
+            int(pk, 16)  # test if pk is correct (hexadecimal)
+        except:
+            return Response({'message': f'Wrong pk {pk}'},
+                            status.HTTP_400_BAD_REQUEST)
+        else:
+
+            data = request.data
+            challenge_key = data.get('challenge_key')
+
+            if len(pk) != 64:
+                return Response({'message': f'Challenge Key is wrong: {pk}'},
+                                status.HTTP_400_BAD_REQUEST)
+
+            try:
+                int(pk, 16)  # test if pk is correct (hexadecimal)
+            except:
+                return Response({'message': f'Challenge Key is wrong: {pk}'},
+                                status.HTTP_400_BAD_REQUEST)
+            else:
+                args = '"%(datasetKey)s", "%(challengeKey)s"' % {
+                    'datasetKey': pk,
+                    'challengeKey': challenge_key,
+                }
+
+                if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+                    data, st = updateLedgerDataset(args, sync=True)
+
+                    # patch status for update
+                    if st == status.HTTP_201_CREATED:
+                        st = status.HTTP_200_OK
+                    return Response(data, status=st)
+                else:
+                    # use a celery task, as we are in an http request transaction
+                    updateLedgerDatasetAsync.delay(args)
+                    data = {
+                        'message': 'The substra network has been notified for updating this Dataset'
+                    }
+                    st = status.HTTP_202_ACCEPTED
+                    return Response(data, status=st)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

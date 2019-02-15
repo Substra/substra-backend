@@ -76,15 +76,19 @@ def generate_docker_compose_file(conf, launch_settings):
                                f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                    'depends_on': ['postgresql', 'rabbit']}
 
+        # Celery worker and scheduler concurrency
+        celeryd_concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
+
         scheduler = {'container_name': f'{org_name_stripped}.scheduler',
                      'hostname': f'{org_name}.scheduler',
                      'image': 'substra/celeryworker',
                      'restart': 'unless-stopped',
-                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery -b rabbit --hostname {org_name}.scheduler"',
+                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -c {celeryd_concurrency} -n {org_name_stripped} -Q {org_name},scheduler,celery -b rabbit --hostname {org_name}.scheduler"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                      'environment': [f'ORG={org_name_stripped}',
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                      'PYTHONUNBUFFERED=1',
+                                     f"CELERYD_CONCURRENCY={celeryd_concurrency}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                      f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -101,11 +105,12 @@ def generate_docker_compose_file(conf, launch_settings):
                   'hostname': f'{org_name}.worker',
                   'image': 'substra/celeryworker',
                   'restart': 'unless-stopped',
-                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery -b rabbit --hostname {org_name}.worker"',
+                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -c {celeryd_concurrency} -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery -b rabbit --hostname {org_name}.worker"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': [f'ORG={org_name_stripped}',
                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                   'PYTHONUNBUFFERED=1',
+                                  f"CELERYD_CONCURRENCY={celeryd_concurrency}",
                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                   f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",

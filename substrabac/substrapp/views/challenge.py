@@ -1,4 +1,3 @@
-import itertools
 import re
 import tempfile
 
@@ -60,6 +59,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
         data = request.data
         description = data.get('description')
+        test_dataset_key = data.get('test_dataset_key')
+
         pkhash = get_hash(description)
         serializer = self.get_serializer(data={'pkhash': pkhash,
                                                'metrics': data.get('metrics'),
@@ -88,6 +89,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
             else:
                 # init ledger serializer
                 ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
+                                                                    'test_dataset_key': test_dataset_key,
                                                                     'name': data.get('name'),
                                                                     'permissions': data.get('permissions'),
                                                                     'metrics_name': data.get('metrics_name'),
@@ -238,23 +240,23 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     datasetData, st = queryLedger({
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(datasetData, status=st)
                                     if datasetData is None:
                                         datasetData = []
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
-                                    challengeKeys = list(
-                                        itertools.chain.from_iterable([x['challengeKeys'] for x in filteredData]))
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
+                                    datasetKeys = [x['key'] for x in filteredData]
+                                    challengeKeys = [x['challengeKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['dataset_key'] in datasetKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(algoData, status=st)
                                     if algoData is None:
                                         algoData = []
@@ -263,19 +265,19 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     filteredData = [x for x in algoData if x[key] in val]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
-                            elif k == 'model':  # select challenges used by endModel hash
+                            elif k == 'model':  # select challenges used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
                                         'args': '{"Args":["queryTraintuples"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(modelData, status=st)
                                     if modelData is None:
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['endModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
 

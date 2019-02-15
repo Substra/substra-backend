@@ -13,14 +13,14 @@ fake_models = [
             },
         },
         'creator': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
-        'endModel': {
+        'outModel': {
             'hash': '30060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/30060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'key': '1bb5c8f42315914909c764545ea44e32b04c773468c439c9eb506176670ee6b8',
         'log': 'no error, ah ah ahstill no error, suprah ah ah',
         'permissions': 'all',
-        'startModel': {
+        'inModel': {
             'hash': '20060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/20060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
@@ -53,14 +53,14 @@ fake_models = [
             },
         },
         'creator': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
-        'endModel': {
+        'outModel': {
             'hash': '40060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/40060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'key': '2bb5c8f42315914909c764545ea44e32b04c773468c439c9eb506176670ee6b8',
         'log': 'no error, ah ah ahstill no error, suprah ah ah',
         'permissions': 'all',
-        'startModel': {
+        'inModel': {
             'hash': '30060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/30060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
@@ -93,14 +93,14 @@ fake_models = [
             },
         },
         'creator': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
-        'endModel': {
+        'outModel': {
             'hash': '50060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/50060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'key': '3bb5c8f42315914909c764545ea44e32b04c773468c439c9eb506176670ee6b8',
         'log': 'no error, ah ah ahstill no error, suprah ah ah',
         'permissions': 'all',
-        'startModel': {
+        'inModel': {
             'hash': '40060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/40060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
@@ -133,14 +133,14 @@ fake_models = [
             },
         },
         'creator': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
-        'endModel': {
+        'outModel': {
             'hash': '70060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/70060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'key': '4bb5c8f42315914909c764545ea44e32b04c773468c439c9eb506176670ee6b8',
         'log': 'no error, ah ah ahstill no error, suprah ah ah',
         'permissions': 'all',
-        'startModel': {
+        'inModel': {
             'hash': '60060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/60060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
@@ -173,14 +173,14 @@ fake_models = [
             },
         },
         'creator': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
-        'endModel': {
+        'outModel': {
             'hash': '80060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/80060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'key': '5bb5c8f42315914909c764545ea44e32b04c773468c439c9eb506176670ee6b8',
         'log': 'no error, ah ah ahstill no error, suprah ah ah',
         'permissions': 'all',
-        'startModel': {
+        'inModel': {
             'hash': '70060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568',
             'storageAddress': 'http://chunantes.substrabac:8001/model/70060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },

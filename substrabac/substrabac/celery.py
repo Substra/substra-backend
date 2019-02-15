@@ -31,4 +31,4 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(period, prepareTrainingTask.s(), queue='scheduler',
                              name='query Traintuples to prepare train task on todo traintuples')
     sender.add_periodic_task(period, prepareTestingTask.s(), queue='scheduler',
-                             name='query Traintuples to prepare test task on trained traintuples')
+                             name='query Testuples to prepare test task on todo testuples')
