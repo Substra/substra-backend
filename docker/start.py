@@ -27,14 +27,15 @@ def generate_docker_compose_file(conf, launch_settings):
                                                               f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
                                                           },
                                            'celerybeat': {'container_name': 'celerybeat',
+                                                          'hostname': 'celerybeat',
                                                           'image': 'substra/celerybeat',
                                                           'restart': 'unless-stopped',
-                                                          'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
+                                                          'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
                                                           'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
                                                                           f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}'],
                                                           'volumes': ['/substra:/substra'],
-                                                          'depends_on': ['rabbit']
+                                                          'depends_on': ['postgresql', 'rabbit']
                                                           },
                                            'rabbit': {'container_name': 'rabbit',
                                                       'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
@@ -75,10 +76,32 @@ def generate_docker_compose_file(conf, launch_settings):
                                f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                    'depends_on': ['postgresql', 'rabbit']}
 
+        scheduler = {'container_name': f'{org_name_stripped}.scheduler',
+                     'hostname': f'{org_name}.scheduler',
+                     'image': 'substra/celeryworker',
+                     'restart': 'unless-stopped',
+                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery -b rabbit --hostname {org_name}.scheduler"',
+                     'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                     'environment': [f'ORG={org_name_stripped}',
+                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
+                                     'PYTHONUNBUFFERED=1',
+                                     f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+                                     f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+                                     f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+                                     f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+                                     'DATABASE_HOST=postgresql',
+                                     f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
+                                     f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
+                     'volumes': ['/substra:/substra',
+                                 '/var/run/docker.sock:/var/run/docker.sock',
+                                 f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                     'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
+
         worker = {'container_name': f'{org_name_stripped}.worker',
+                  'hostname': f'{org_name}.worker',
                   'image': 'substra/celeryworker',
                   'restart': 'unless-stopped',
-                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},celery -b rabbit"',
+                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery -b rabbit --hostname {org_name}.worker"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': [f'ORG={org_name_stripped}',
                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
@@ -105,6 +128,7 @@ def generate_docker_compose_file(conf, launch_settings):
             backend['environment'].append(media_root)
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
+        docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
     # Create all services along to conf
 
