@@ -27,12 +27,12 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     # permission_classes = (permissions.IsAuthenticated,)
 
     def create_or_update_model(self, traintuple, pk):
-        if traintuple['endModel'] is None:
-            raise Exception(f'This traintuple key {pk} does not have a related endModel')
+        if traintuple['outModel'] is None:
+            raise Exception(f'This traintuple key {pk} does not have a related outModel')
 
         try:
             # get challenge description from remote node
-            url = traintuple['endModel']['storageAddress']
+            url = traintuple['outModel']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
@@ -44,7 +44,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                 try:
                     computed_hash = self.compute_hash(r.content)
                 except Exception:
-                    raise Exception('Failed to fetch endModel file')
+                    raise Exception('Failed to fetch outModel file')
                 else:
                     if computed_hash != pk:
                         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -113,7 +113,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'args': '{"Args":["queryTraintuples"]}'
+            'args': '{"Args":["queryModels"]}'
         })
         algoData = None
         challengeData = None
@@ -146,14 +146,14 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                         for k, subfilters in filter.items():
                             if k == 'model':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x['endModel'] is not None and x['endModel']['hash'] in val]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['outModel'] is not None and x['traintuple']['outModel']['hash'] in val]
                             elif k == 'algo':  # select model used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
                                         'args': '{"Args":["queryAlgos"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(algoData, status=st)
 
                                     if algoData is None:
@@ -168,7 +168,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     datasetData, st = queryLedger({
                                         'args': '{"Args":["queryDatasets"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(datasetData, status=st)
 
                                     if datasetData is None:
@@ -183,7 +183,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     challengeData, st = queryLedger({
                                         'args': '{"Args":["queryChallenges"]}'
                                     })
-                                    if st != 200:
+                                    if st != status.HTTP_200_OK:
                                         return Response(challengeData, status=st)
 
                                     if challengeData is None:
@@ -206,3 +206,17 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         data = getattr(object, 'file')
         return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+
+    @action(detail=True)
+    def details(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        data, st = queryLedger({
+            'args': f'{{"Args":["queryModelDetails", "{pk}"]}}'
+        })
+
+        if st != status.HTTP_200_OK:
+            raise JsonException(data)
+
+        return Response(data, st)

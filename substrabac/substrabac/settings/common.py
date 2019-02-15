@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'django_celery_results',
     'rest_framework_swagger',
     'rest_framework',
     'substrapp',
@@ -151,3 +152,8 @@ SITE_ID = 1
 
 LEDGER_CONF = json.load(open('/substra/conf/conf.json', 'r'))
 LEDGER_SYNC_ENABLED = True
+
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'

@@ -8,12 +8,10 @@ from .util import createLedgerDataset
 from .tasks import createLedgerDatasetAsync
 
 
-
 class LedgerDatasetSerializer(serializers.Serializer):
-    name = serializers.CharField(max_length=256)
-    type = serializers.CharField(max_length=256)
-    challenge_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64, allow_blank=True),
-                                           max_length=None)
+    name = serializers.CharField(max_length=100)
+    type = serializers.CharField(max_length=30)
+    challenge_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
     permissions = serializers.CharField(min_length=1, max_length=60)
 
     def create(self, validated_data):
@@ -21,7 +19,7 @@ class LedgerDatasetSerializer(serializers.Serializer):
         name = validated_data.get('name')
         type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        challenge_keys = validated_data.get('challenge_keys')
+        challenge_key = validated_data.get('challenge_key', '')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
@@ -29,14 +27,14 @@ class LedgerDatasetSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKeys)s", "%(permissions)s"' % {
+        args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKey)s", "%(permissions)s"' % {
             'name': name,
             'openerHash': get_hash(instance.data_opener),
             'openerStorageAddress': protocol + host + reverse('substrapp:dataset-opener', args=[instance.pk]),
             'type': type,
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:dataset-description', args=[instance.pk]),
-            'challengeKeys': ','.join([x for x in challenge_keys]),
+            'challengeKey': challenge_key,
             'permissions': permissions
         }
 

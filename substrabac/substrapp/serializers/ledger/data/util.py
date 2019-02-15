@@ -26,3 +26,12 @@ def createLedgerData(args, pkhashes, sync=False):
             data['validated'] = True
 
     return data, st
+
+
+def updateLedgerData(args, sync=False):
+    options = {
+        'args': '{"Args":["updateData", ' + args + ']}'
+    }
+    data, st = invokeLedger(options, sync)
+
+    return data, st

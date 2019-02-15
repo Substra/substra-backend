@@ -22,11 +22,13 @@ app.autodiscover_tasks()
 def debug_task(self):
     print('Request: {0!r}'.format(self.request))
 
+
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks import prepareTrainingTask, prepareTestingTask
 
     period = 10
-    sender.add_periodic_task(period, prepareTrainingTask.s(), name='query Traintuples to prepare train task on todo traintuples')
-    sender.add_periodic_task(period, prepareTestingTask.s(), name='query Traintuples to prepare test task on trained traintuples')
-
+    sender.add_periodic_task(period, prepareTrainingTask.s(), queue='scheduler',
+                             name='query Traintuples to prepare train task on todo traintuples')
+    sender.add_periodic_task(period, prepareTestingTask.s(), queue='scheduler',
+                             name='query Testuples to prepare test task on todo testuples')

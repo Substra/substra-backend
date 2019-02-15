@@ -49,6 +49,16 @@ def get_sample_dataset():
 
     return description, description_filename, data_opener, data_opener_filename
 
+def get_sample_dataset2():
+    description_content = "description 2"
+    description_filename = "description2.md"
+    description = get_temporary_text_file(description_content, description_filename)
+    data_opener_content = "import os\nimport slidelib\n\ndef read():\n\tpass"
+    data_opener_filename = "data_opener2.py"
+    data_opener = get_temporary_text_file(data_opener_content, data_opener_filename)
+
+    return description, description_filename, data_opener, data_opener_filename
+
 
 def get_sample_data():
     file_content = "0\n1\n2"

@@ -215,7 +215,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                 'mem_limit': mem_limit,
                 'command': command,
                 'volumes': volumes,
-                'ipc_mode': 'host',    # Need to check if it safe to do that, we need it for torch
+                #'ipc_mode': 'host',    # Need to check if it safe to do that, we need it for torch
+                'shm_size': '8G',
                 'labels': [DOCKER_LABEL],
                 'detach': False,
                 'auto_remove': False,
@@ -243,12 +244,14 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     cpu_set = None
     gpu_set = None
 
-    if hasattr(job, "_exception"):
-        raise job._exception
-
-    # Remove only if container exit without exception
+    # Remove container in all case (exception thrown or not)
+    # We already get the excetion and we need to remove the containers to be able to remove the local
+    # volume in case of fl task.
     container = client.containers.get(container_name)
     container.remove()
+
+    if hasattr(job, "_exception"):
+        raise job._exception
 
     return monitoring._result
 
