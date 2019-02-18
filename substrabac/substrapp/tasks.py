@@ -395,6 +395,11 @@ def doTask(subtuple, tuple_type):
         algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
+        if fltask is not None and flrank != -1:
+            remove_image = False
+        else:
+            remove_image = True
+
         # create the command option for algo
         if tuple_type == 'traintuple':
             algo_command = '--train'    # main command
@@ -432,7 +437,8 @@ def doTask(subtuple, tuple_type):
                                       volumes={**volumes, **model_volume},
                                       command=algo_command,
                                       cpu_set=cpu_set,
-                                      gpu_set=gpu_set)
+                                      gpu_set=gpu_set,
+                                      remove_image=remove_image)
         # save model in database
         if tuple_type == 'traintuple':
             from substrapp.models import Model
@@ -458,7 +464,8 @@ def doTask(subtuple, tuple_type):
                        volumes={**volumes, **metric_volume},
                        command=None,
                        cpu_set=cpu_set,
-                       gpu_set=gpu_set)
+                       gpu_set=gpu_set,
+                       remove_image=remove_image)
 
         # load performance
         with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
