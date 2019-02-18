@@ -216,7 +216,4 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             'args': f'{{"Args":["queryModelDetails", "{pk}"]}}'
         })
 
-        if st != status.HTTP_200_OK:
-            raise JsonException(data)
-
         return Response(data, st)
