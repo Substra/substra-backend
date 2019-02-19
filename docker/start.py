@@ -59,6 +59,7 @@ def generate_docker_compose_file(conf, launch_settings):
         peer = org['peer']['name']
         org_name_stripped = org_name.replace('-', '')
 
+        # Dirty port assign
         port = 8000
         if org_name_stripped == 'chunantes':
             port = 8001
@@ -67,10 +68,12 @@ def generate_docker_compose_file(conf, launch_settings):
                    'image': 'substra/substrabac',
                    'restart': 'unless-stopped',
                    'ports': [f'{port}:{port}'],
-                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}.{org_name_stripped}; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
+                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}.settings; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                    'environment': ['DATABASE_HOST=postgresql',
-                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
+                                   f'SUBSTRABAC_ORG={org_name}',
+                                   f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.settings',
                                    'PYTHONUNBUFFERED=1',
                                    f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                    f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
@@ -98,7 +101,9 @@ def generate_docker_compose_file(conf, launch_settings):
                      'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -c {celeryd_concurrency} -n {org_name_stripped} -Q {org_name},scheduler,celery -b rabbit --hostname {org_name}.scheduler"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                      'environment': [f'ORG={org_name_stripped}',
-                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
+                                     f'SUBSTRABAC_ORG={org_name}',
+                                     f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.settings',
                                      'PYTHONUNBUFFERED=1',
                                      f"CELERYD_CONCURRENCY={celeryd_concurrency}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
@@ -123,7 +128,9 @@ def generate_docker_compose_file(conf, launch_settings):
                   'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -c {celeryd_concurrency} -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery -b rabbit --hostname {org_name}.worker"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': [f'ORG={org_name_stripped}',
-                                  f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
+                                  f'SUBSTRABAC_ORG={org_name}',
+                                  f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                  f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.settings',
                                   'PYTHONUNBUFFERED=1',
                                   f"CELERYD_CONCURRENCY={celeryd_concurrency}",
                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
