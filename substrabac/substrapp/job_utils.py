@@ -192,12 +192,13 @@ def monitoring_job(client, job_args):
     t._stats = job_statistics
 
 
-def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set):
+def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set,
+                   remove_image=True):
 
     # Build metrics
     client.images.build(path=dockerfile_path,
                         tag=image_name,
-                        rm=True)
+                        rm=remove_image)
     cpu_set = None
     gpu_set = None
 
@@ -249,6 +250,10 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     # volume in case of fl task.
     container = client.containers.get(container_name)
     container.remove()
+
+    # Remove images
+    if remove_image or hasattr(job, "_exception"):
+        client.images.remove(image_name, force=True)
 
     if hasattr(job, "_exception"):
         raise job._exception
@@ -316,7 +321,8 @@ class ResourcesManager():
         cls.__lock.acquire()
 
         try:
-            cls.__used_cpu_sets.remove(cpu_set)
+            if cpu_set in cls.__used_cpu_sets:
+                cls.__used_cpu_sets.remove(cpu_set)
         except Exception as e:
             logging.error(e, exc_info=True)
 
@@ -346,7 +352,8 @@ class ResourcesManager():
 
         if gpu_set != 'no_gpu':
             try:
-                cls.__used_gpu_sets.remove(gpu_set)
+                if gpu_set in cls.__used_gpu_sets:
+                    cls.__used_gpu_sets.remove(gpu_set)
             except Exception as e:
                 logging.error(e, exc_info=True)
 
