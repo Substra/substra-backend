@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 import argparse
 
 from subprocess import call, check_output
@@ -37,7 +38,6 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
                                                                           f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}'],
-                                                          'volumes': ['/substra:/substra'],
                                                           'depends_on': ['postgresql', 'rabbit']
                                                           },
                                            'rabbit': {'container_name': 'rabbit',
@@ -53,8 +53,10 @@ def generate_docker_compose_file(conf, launch_settings):
                                            },
                       'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
-    for org in conf['orgs']:
+    for org in conf:
         org_name = org['name']
+        orderer = org['orderer']['name']
+        peer = org['peer']['name']
         org_name_stripped = org_name.replace('-', '')
 
         port = 8000
@@ -72,12 +74,17 @@ def generate_docker_compose_file(conf, launch_settings):
                                    'PYTHONUNBUFFERED=1',
                                    f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                    f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
-                                   f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
-                                   f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}",
                                    f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",],
-                   'volumes': ['/substra:/substra',
+                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+                                   f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
+                                   f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']}"],
+                   'volumes': ['/substra/medias:/substra/medias',
                                '/substra/static:/usr/src/app/substrabac/statics',
+                               f'/substra/conf/{org_name}:/substra/conf/{org_name}',
+                               f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                               f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
+                               f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                               f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
                                f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                    'depends_on': ['postgresql', 'rabbit']}
 
@@ -99,10 +106,13 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
                                      f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                      'DATABASE_HOST=postgresql',
-                                     f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
-                                     f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
-                     'volumes': ['/substra:/substra',
-                                 '/var/run/docker.sock:/var/run/docker.sock',
+                                     f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
+                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']}"],
+                     'volumes': [f'/substra/conf/{org_name}:/substra/conf/{org_name}',
+                                 f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                                 f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
+                                 f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                                 f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
                                  f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                      'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
 
@@ -121,10 +131,15 @@ def generate_docker_compose_file(conf, launch_settings):
                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                   'DATABASE_HOST=postgresql',
-                                  f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
-                                  f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
-                  'volumes': ['/substra:/substra',
-                              '/var/run/docker.sock:/var/run/docker.sock',
+                                  f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
+                                  f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']}"],
+                  'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
+                              '/substra/medias:/substra/medias',
+                              f'/substra/conf/{org_name}:/substra/conf/{org_name}',
+                              f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                              f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
+                              f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                              f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
                               f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                   'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
@@ -231,11 +246,11 @@ if __name__ == "__main__":
 
     no_backup = args['no_backup']
 
-    conf = json.load(open('/substra/conf/conf.json', 'r'))
+    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob('/substra/conf/*/substrabac/conf.json')]
 
     print('Build substrabac for : ', flush=True)
     print('  Organizations :', flush=True)
-    for org in conf['orgs']:
+    for org in conf:
         print('   -', org['name'], flush=True)
 
     print('', flush=True)
