@@ -1,6 +1,9 @@
 import os
+import subprocess
 
 from hfc.fabric import Client
+
+from substrabac.settings.common import PROJECT_ROOT
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -22,6 +25,34 @@ except ValueError as e:
     print(e)
 else:
     print('Admin enrolled')
+
+    os.environ['FABRIC_CFG_PATH'] = '/substra/conf/owkin/peer1'
+    os.environ['CORE_PEER_MSPCONFIGPATH'] = '/substra/data/orgs/owkin/user/msp'
+
+    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
+                             '--logging-level', 'DEBUG',
+                             'chaincode', 'query',
+                             '-C', 'mychannel',
+                             '-n', 'mycc',
+                             #'--tls',
+                             #'--clientauth',
+                             '-c', '{"Args":["queryDatasets"]}'
+                             ],
+                            stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE)
+
+    data = output.stdout.decode('utf-8')
+    if data:
+        print(data)
+    else:
+        try:
+            msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+            data = {'message': msg}
+        except:
+            msg = output.stderr.decode('utf-8')
+            data = {'message': msg}
+        finally:
+            print(data)
 
     response = cli.chaincode_query(
         requestor=admin_owkin,
