@@ -1,20 +1,28 @@
-import itertools
-import re
 import tempfile
 
 import requests
-from django.db import IntegrityError
+from django.conf import settings
+
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.reverse import reverse
+
+
+from substrabac.celery import app
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
+
+
+@app.task(bind=True, ignore_result=False)
+def dryrun():
+    pass
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -31,6 +39,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         data = request.data
+
+        dryrun = data.get('dryrun', False)
 
         file = data.get('file')
         pkhash = get_hash(file)
@@ -49,6 +59,15 @@ class AlgoViewSet(mixins.CreateModelMixin,
             },
                 status=status.HTTP_400_BAD_REQUEST)
         else:
+
+            if dryrun:
+                task = dryrun.apply_async(queue=settings.LEDGER['org']['name'])
+                url_http = 'http' if settings.DEBUG else 'https'
+                current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
+                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
+
             # create on db
             try:
                 instance = self.perform_create(serializer)

@@ -64,8 +64,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
-        data_opener = data.get('data_opener')
         dryrun = data.get('dryrun', False)
+
+        data_opener = data.get('data_opener')
 
         pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
