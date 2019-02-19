@@ -6,6 +6,7 @@ import os
 import requests
 import subprocess
 import tarfile
+import zipfile
 from rest_framework import status
 
 from substrabac.settings.common import PROJECT_ROOT, LEDGER_CONF
@@ -207,7 +208,29 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
-def untar_algo(content, directory, traintuple):
-    tar = tarfile.open(fileobj=io.BytesIO(content))
-    tar.extractall(directory)
-    tar.close()
+def uncompress_path(archive_path, to_directory):
+    if archive_path[-4:] == '.zip':
+        zip_ref = zipfile.ZipFile(archive_path, 'r')
+        zip_ref.extractall(to_directory)
+        zip_ref.close()
+    elif archive_path[-7:] == '.tar.gz':
+        tar = tarfile.open(archive_path, 'r:gz')
+        tar.extractall(to_directory)
+        tar.close()
+    else:
+        raise Exception('Archive must be zip or tar.gz')
+
+
+def uncompress_content(archive_content, to_directory):
+    try:
+        zip_ref = zipfile.ZipFile(io.BytesIO(archive_content))
+        zip_ref.extractall(to_directory)
+        zip_ref.close()
+    except:
+        try:
+            tar = tarfile.open(fileobj=io.BytesIO(archive_content))
+            tar.extractall(to_directory)
+            tar.close()
+        except:
+            print('failed')
+            raise Exception('Archive must be zip or tar.gz')

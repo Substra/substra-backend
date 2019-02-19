@@ -10,8 +10,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.utils import queryLedger, invokeLedger
-from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
+from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content, uncompress_path
 from substrapp.job_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
@@ -145,7 +144,6 @@ def put_opener(subtuple, subtuple_directory):
 def put_data(subtuple, subtuple_directory):
     from shutil import copy
     from substrapp.models import Data
-    import zipfile
 
     for data_key in subtuple['data']['keys']:
         try:
@@ -158,16 +156,11 @@ def put_data(subtuple, subtuple_directory):
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
             try:
+                archive_path = path.join(data.file.path, data.file.name)
                 to_directory = path.join(subtuple_directory, 'data')
-                copy(data.file.path, to_directory)
-                # unzip files
-                zip_file_path = path.join(to_directory, os.path.basename(data.file.name))
-                zip_ref = zipfile.ZipFile(zip_file_path, 'r')
-                zip_ref.extractall(to_directory)
-                zip_ref.close()
-                os.remove(zip_file_path)
+                uncompress_path(archive_path, to_directory)
             except Exception as e:
-                logging.error('Fail to unzip data file')
+                logging.error('Fail to uncompress data file')
                 raise e
 
 
@@ -179,9 +172,9 @@ def put_metric(subtuple_directory, challenge):
 
 def put_algo(subtuple, subtuple_directory, algo_content):
     try:
-        untar_algo(algo_content, subtuple_directory, subtuple)
+        uncompress_content(algo_content, subtuple_directory)
     except Exception as e:
-        logging.error('Fail to untar algo file')
+        logging.error('Fail to uncompress algo file')
         raise e
 
 
