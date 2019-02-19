@@ -6,6 +6,9 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.reverse import reverse
+
+from substrabac.celery import app
 
 from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
@@ -17,6 +20,11 @@ from substrapp.utils import get_hash
 def path_leaf(path):
     head, tail = ntpath.split(path)
     return tail or ntpath.basename(head)
+
+
+@app.task(bind=True, ignore_result=False)
+def dryrun():
+    pass
 
 
 class DataViewSet(mixins.CreateModelMixin,
@@ -34,6 +42,8 @@ class DataViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         data = request.data
 
+        dryrun = data.get('dryrun', False)
+
         # check if bulk create
         files = request.data.getlist('files', None)
         dataset_keys = data.getlist('dataset_keys')
@@ -45,6 +55,14 @@ class DataViewSet(mixins.CreateModelMixin,
                 'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
                 status=status.HTTP_400_BAD_REQUEST)
         else:
+
+            if dryrun:
+                task = dryrun.apply_async(queue=settings.LEDGER['org']['name'])
+                url_http = 'http' if settings.DEBUG else 'https'
+                current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
+                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
 
             # bulk
             if files:

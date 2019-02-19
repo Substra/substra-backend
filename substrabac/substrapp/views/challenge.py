@@ -2,6 +2,7 @@ import re
 import tempfile
 
 import requests
+from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
 from rest_framework import status, mixins
@@ -9,14 +10,20 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.reverse import reverse
+
+from substrabac.celery import app
 
 from substrapp.models import Challenge
 from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
-# from hfc.fabric import Client
-# cli = Client(net_profile="../network.json")
+
 from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
+
+@app.task(bind=True, ignore_result=False)
+def dryrun():
+    pass
 
 
 class ChallengeViewSet(mixins.CreateModelMixin,
@@ -58,6 +65,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         """
 
         data = request.data
+
+        dryrun = data.get('dryrun', False)
+
         description = data.get('description')
         test_dataset_key = data.get('test_dataset_key')
 
@@ -73,6 +83,15 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                              'pkhash': pkhash},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
+
+            if dryrun:
+                task = dryrun.apply_async(queue=settings.LEDGER['org']['name'])
+                url_http = 'http' if settings.DEBUG else 'https'
+                current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
+                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
+
             # create on db
             try:
                 instance = self.perform_create(serializer)
