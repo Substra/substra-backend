@@ -1,3 +1,4 @@
+import ast
 import tempfile
 
 import requests
@@ -31,10 +32,41 @@ class DatasetViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
+    def dryrun(self, data_opener):
+
+        mandatory_functions = {'get_X': {'folder'},
+                               'get_y': {'folder'},
+                               'save_pred': {'y_pred', 'folder'},
+                               'get_pred': {'folder'},
+                               'fake_X': {'n_sample'},
+                               'fake_y': {'n_sample'}
+                               }
+
+        file = data_opener.open().read()
+        node = ast.parse(file)
+
+        funcs_args = {n.name: {arg.arg for arg in n.args.args} for n in node.body if isinstance(n, ast.FunctionDef)}
+
+        for mfunc, margs in mandatory_functions.items():
+            try:
+                args = funcs_args[mfunc]
+            except:
+                return Response({'message': f'Opener must have a "{mfunc}" function, please review your opener and the documentation.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            else:
+                if not margs.issubset(args):
+                    return Response({'message': f'Opener function "{mfunc}" must have at least {margs} arguments, please review your opener and the documentation.'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
+                        status=status.HTTP_200_OK)
+
     def create(self, request, *args, **kwargs):
         data = request.data
 
         data_opener = data.get('data_opener')
+        dryrun = data.get('dryrun', False)
+
         pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -50,6 +82,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
                              'pkhash': pkhash},
                             status=status.HTTP_400_BAD_REQUEST)
         else:
+            if dryrun:
+                return self.dryrun(data_opener)
+
             # create on db
             try:
                 instance = self.perform_create(serializer)

@@ -757,7 +757,7 @@ COPY public.substrapp_data (pkhash, validated, file) FROM stdin;
 --
 
 COPY public.substrapp_dataset (pkhash, name, data_opener, description, validated) FROM stdin;
-ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994	ISIC 2018	datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py	datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md	t
+6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181	ISIC 2018	datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py	datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md	t
 \.
 
 
