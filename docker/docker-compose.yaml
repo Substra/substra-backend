@@ -11,7 +11,7 @@ services:
     container_name: owkin.substrabac
     hostname: substrabacowkin
     image: substra/substrabac
-    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.owkin; python3 manage.py runserver 0.0.0.0:8000"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev; python3 manage.py runserver 0.0.0.0:8000"
     volumes:
       - /substra:/substra
       - /substra/data/orgs/owkin/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
@@ -25,7 +25,7 @@ services:
       - rabbit
     environment:
       - DATABASE_HOST=postgresql
-      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
       - PYTHONUNBUFFERED=1
       - FABRIC_CFG_PATH=/substra/conf/owkin/peer1/
 
@@ -33,7 +33,7 @@ services:
     container_name: chunantes.substrabac
     hostname: substrabacchunantes
     image: substra/substrabac
-    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev.chunantes; python3 manage.py runserver 0.0.0.0:8001"
+    command: /bin/bash -c "while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; python manage.py migrate --settings=substrabac.settings.dev; python3 manage.py runserver 0.0.0.0:8001"
     volumes:
       - /substra:/substra
       - /substra/data/orgs/chu-nantes/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp
@@ -47,7 +47,7 @@ services:
       - rabbit
     environment:
       - DATABASE_HOST=postgresql
-      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
       - PYTHONUNBUFFERED=1
       - FABRIC_CFG_PATH=/substra/conf/chu-nantes/peer1/
 
@@ -66,7 +66,7 @@ services:
       - rabbit
     environment:
       - PYTHONUNBUFFERED=1
-      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.common
 
   worker_owkin:
     container_name: worker_owkin
@@ -87,7 +87,7 @@ services:
       - ORG=owkin
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
-      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
       - FABRIC_CFG_PATH=/substra/conf/owkin/peer1/
 
   worker_chunantes:
@@ -109,7 +109,7 @@ services:
       - ORG=chu-nantes
       - PYTHONUNBUFFERED=1
       - DATABASE_HOST=postgresql
-      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes
+      - DJANGO_SETTINGS_MODULE=substrabac.settings.dev
       - FABRIC_CFG_PATH=/substra/conf/chu-nantes/peer1/
 
 
