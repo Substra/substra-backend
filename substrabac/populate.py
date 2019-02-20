@@ -56,6 +56,13 @@ else:
         'test_only': False,
     })
 
+    res = popen(['substra', 'add', 'data', data, '--profile=chunantes', '--config=/tmp/.substrabac', '--dry-run'],
+                stdout=PIPE).communicate()[0]
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'data', data, '--profile=chunantes', '--config=/tmp/.substrabac'],
                 stdout=PIPE).communicate()[0]
     try:

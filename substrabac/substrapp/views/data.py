@@ -39,27 +39,21 @@ def compute_dryrun(self, data_files, dataset_keys):
         for data in data_files:
             try:
                 to_directory = os.path.join(subtuple_directory, 'data')
-                data_name = data['filename']
-                copy(data_name, to_directory)
                 # unzip files
-                zip_file_path = os.path.join(to_directory, os.path.basename(data_name))
-                zip_ref = zipfile.ZipFile(BytesIO(data['file']))
+                zip_ref = zipfile.ZipFile(BytesIO(bytearray.fromhex(data['file'])))
                 zip_ref.extractall(to_directory)
                 zip_ref.close()
-                os.remove(zip_file_path)
             except Exception as e:
                 raise e
 
         for dataset_key in dataset_keys:
             dataset = Dataset.objects.get(pk=dataset_key)
-            opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
-            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
-                opener_file.write(opener_content)
+            copy(dataset.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
 
             # Launch verification
             client = docker.from_env()
             opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # base metrics comes with substrabac
+            data_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # base metrics comes with substrabac
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{pkhash}'
@@ -67,7 +61,7 @@ def compute_dryrun(self, data_files, dataset_keys):
             volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-            client.images.build(path=data_path,
+            client.images.build(path=data_docker_path,
                                 tag=data_docker,
                                 rm=False)
 
@@ -133,18 +127,17 @@ class DataViewSet(mixins.CreateModelMixin,
                             file = request.FILES[path_leaf(x)]
                             data_files.append({
                                 'pkhash': get_hash(file),
-                                'file': file.open.read(),
-                                'filename': path_leaf(x)
+                                'file': file.open().read().hex(),
                             })
                     else:
                         file = data.get('file')
                         pkhash = get_hash(file)
                         data_files = [{
                             'pkhash': pkhash,
-                            'file': file.open.read(),
-                            'filename': file.name
+                            'file': file.open().read().hex(),
                         }]
 
+                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
                     task = compute_dryrun.apply_async((data_files, dataset_keys), queue=settings.LEDGER['org']['name'])
                     url_http = 'http' if settings.DEBUG else 'https'
                     current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
