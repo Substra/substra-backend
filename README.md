@@ -145,8 +145,10 @@ Note the use of the development settings.
 ```shell
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler, celery --hostname owkin.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
 ```
 
 ## Launch the servers
