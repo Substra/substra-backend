@@ -7,5 +7,8 @@ from .model import ModelViewSet
 from .algo import AlgoViewSet
 from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
+from .task import TaskViewSet
 
-__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet', 'AlgoViewSet', 'TrainTupleViewSet', 'TestTupleViewSet']
+__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet',
+           'AlgoViewSet', 'TrainTupleViewSet', 'TestTupleViewSet',
+           'TaskViewSet']

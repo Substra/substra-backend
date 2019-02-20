@@ -757,7 +757,7 @@ eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb	t	data/eed4c6ea
 --
 
 COPY public.substrapp_dataset (pkhash, name, data_opener, description, validated) FROM stdin;
-b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0	ISIC 2019	datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py	datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md	t
+bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af	ISIC 2019	datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py	datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description.md	t
 \.
 
 

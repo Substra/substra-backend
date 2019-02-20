@@ -26,7 +26,7 @@ challenge = [
     {
         "descriptionStorageAddress": "http://testserver/challenge/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description/",
         "key": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
-        "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
+        "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
         "metrics": {
             "hash": "0bc732c26bafdc41321c2bffd35b6835aa35f7371a4eb02994642c2c3a688f60",
             "name": "macro-average recall",
@@ -43,7 +43,7 @@ challenge = [
     {
         "descriptionStorageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description/",
         "key": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
-        "dataset_key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
+        "dataset_key": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
         "metrics": {
             "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
             "name": "macro-average recall",
@@ -61,9 +61,9 @@ challenge = [
 model = [
     {
         "algo": {
-            "hash": "9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a",
+            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
             "name": "Logistic regression",
-            "storageAddress": "http://testserver/algo/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/file/"
+            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
         },
         "challenge": {
             "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
@@ -86,7 +86,7 @@ model = [
             "keys": [
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
             ],
-            "openerHash": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
+            "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
             "perf": 1,
             "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
         },
@@ -95,7 +95,7 @@ model = [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
-            "openerHash": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
+            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
             "perf": 1,
             "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
         }
@@ -150,12 +150,12 @@ dataset = [
         "challengeKey": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
-            "storageAddress": "http://testserver/dataset/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description/"
+            "storageAddress": "http://testserver/dataset/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description/"
         },
-        "key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
+        "key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
         "name": "Simplified ISIC 2018",
         "nbData": 6,
-        "openerStorageAddress": "http://testserver/dataset/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener/",
+        "openerStorageAddress": "http://testserver/dataset/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener/",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
         "size": 1415097,
@@ -165,12 +165,12 @@ dataset = [
         "challengeKey": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
         "description": {
             "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb09",
-            "storageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description/"
+            "storageAddress": "http://testserver/dataset/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description/"
         },
-        "key": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
+        "key": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
         "name": "ISIC 2018",
         "nbData": 2,
-        "openerStorageAddress": "http://testserver/dataset/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener/",
+        "openerStorageAddress": "http://testserver/dataset/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener/",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
         "size": 553113,
@@ -222,13 +222,13 @@ algo = [
         "challengeKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
         "description": {
             "hash": "124a0425b746d7072282d167b53cb6aab3a31bf1946dae89135c15b0126ebec3",
-            "storageAddress": "http://testserver/algo/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/description/"
+            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description/"
         },
-        "key": "9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a",
+        "key": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
         "name": "Logistic regression",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
-        "storageAddress": "http://testserver/algo/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/file/"
+        "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
     },
     {
         "challengeKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
@@ -248,9 +248,9 @@ algo = [
 traintuple = [
     {
         "algo": {
-            "hash": "9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a",
+            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
             "name": "Logistic regression",
-            "storageAddress": "http://testserver/algo/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/file/"
+            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
         },
         "challenge": {
             "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
@@ -273,7 +273,7 @@ traintuple = [
             "keys": [
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
             ],
-            "openerHash": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0",
+            "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
             "perf": 1,
             "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
         },
@@ -282,7 +282,7 @@ traintuple = [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
-            "openerHash": "ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994",
+            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
             "perf": 1,
             "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
         }
@@ -736,7 +736,7 @@ class ViewTests(APITestCase):
                                                                             description=self.data_description,
                                                                             data_opener=self.data_data_opener)
 
-            search_params = 'ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/'
+            search_params = '6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
