@@ -209,12 +209,12 @@ def create_directory(directory):
 
 
 def uncompress_path(archive_path, to_directory):
-    if archive_path[-4:] == '.zip':
+    if zipfile.is_zipfile(archive_path):
         zip_ref = zipfile.ZipFile(archive_path, 'r')
         zip_ref.extractall(to_directory)
         zip_ref.close()
-    elif archive_path[-7:] == '.tar.gz':
-        tar = tarfile.open(archive_path, 'r:gz')
+    elif tarfile.is_tarfile(archive_path):
+        tar = tarfile.open(archive_path, 'r:*')
         tar.extractall(to_directory)
         tar.close()
     else:
