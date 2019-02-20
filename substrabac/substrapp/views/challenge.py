@@ -7,12 +7,12 @@ import requests
 from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
+from django.urls import reverse
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 
@@ -26,12 +26,12 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 
 @app.task(bind=True, ignore_result=False)
-def dryrun(metrics, test_dataset_key, pkhash):
+def compute_dryrun(self, metrics, test_dataset_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
         with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'w') as metrics_file:
-            metrics_file.write(metrics.open().read())
+            metrics_file.write(metrics)
 
         try:
             dataset = getObjectFromLedger(test_dataset_key)
@@ -39,7 +39,7 @@ def dryrun(metrics, test_dataset_key, pkhash):
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         else:
             opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
-            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'w') as opener_file:
+            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
                 opener_file.write(opener_content)
 
         # Launch verification
@@ -148,12 +148,17 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
 
             if dryrun:
-                task = dryrun.apply_async((metrics, test_dataset_key, pkhash), queue=settings.LEDGER['org']['name'])
-                url_http = 'http' if settings.DEBUG else 'https'
-                current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
-                task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
-                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
-                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
+                try:
+                    task = compute_dryrun.apply_async((metrics.open().read(), test_dataset_key, pkhash), queue=settings.LEDGER['org']['name'])
+                    url_http = 'http' if settings.DEBUG else 'https'
+                    current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                    task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+                    msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+                except Exception as e:
+                    return Response({'message': f'Could not launch challenge creation with dry-run on this instance: {str(e)}'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
 
             # create on db
             try:
