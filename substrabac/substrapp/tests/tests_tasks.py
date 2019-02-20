@@ -151,7 +151,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.get_hash') as mget_hash:
             with open(tarpath, 'rb') as content:
                 mget_hash.return_value = get_hash(tarpath)
-                put_algo(subtuple, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
+                put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
 
@@ -174,7 +174,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.get_hash') as mget_hash:
             with open(zippath, 'rb') as content:
                 mget_hash.return_value = get_hash(zippath)
-                put_algo(subtuple, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
+                put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
 

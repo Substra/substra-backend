@@ -142,7 +142,6 @@ def put_opener(subtuple, subtuple_directory):
 
 
 def put_data(subtuple, subtuple_directory):
-    from shutil import copy
     from substrapp.models import Data
 
     for data_key in subtuple['data']['keys']:
@@ -156,7 +155,7 @@ def put_data(subtuple, subtuple_directory):
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
             try:
-                archive_path = path.join(data.file.path, data.file.name)
+                archive_path = path.join(data.file.path, os.path.basename(data.file.name))
                 to_directory = path.join(subtuple_directory, 'data')
                 uncompress_path(archive_path, to_directory)
             except Exception as e:
@@ -170,7 +169,7 @@ def put_metric(subtuple_directory, challenge):
         os.link(challenge.metrics.path, metrics_dst_path)
 
 
-def put_algo(subtuple, subtuple_directory, algo_content):
+def put_algo(subtuple_directory, algo_content):
     try:
         uncompress_content(algo_content, subtuple_directory)
     except Exception as e:
@@ -339,7 +338,7 @@ def prepareMaterials(subtuple, model_type):
         put_opener(subtuple, subtuple_directory)
         put_data(subtuple, subtuple_directory)
         put_metric(subtuple_directory, challenge)
-        put_algo(subtuple, subtuple_directory, algo_content)
+        put_algo(subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)
         if model_type == 'inModels':  # traintuple
