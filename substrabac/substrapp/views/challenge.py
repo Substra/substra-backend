@@ -149,6 +149,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
             if dryrun:
                 try:
+                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
                     task = compute_dryrun.apply_async((metrics.open().read(), test_dataset_key, pkhash), queue=settings.LEDGER['org']['name'])
                     url_http = 'http' if settings.DEBUG else 'https'
                     current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
