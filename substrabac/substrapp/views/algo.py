@@ -142,7 +142,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             if dryrun:
                 try:
                     # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
-                    task = compute_dryrun.apply_async((file.open().read().hex(), challenge_key, pkhash), queue=settings.LEDGER['org']['name'])
+                    task = compute_dryrun.apply_async((file.open().read().hex(), challenge_key, pkhash), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
                     current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
