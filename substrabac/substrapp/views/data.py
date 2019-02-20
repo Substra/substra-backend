@@ -4,6 +4,7 @@ import zipfile
 import ntpath
 
 from django.conf import settings
+from docker.errors import ContainerError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -79,6 +80,8 @@ def compute_dryrun(self, data_files, dataset_keys):
 
             client.containers.run(**job_args)
 
+    except ContainerError as e:
+        raise Exception(e.stderr)
     except Exception as e:
         raise e
     finally:
