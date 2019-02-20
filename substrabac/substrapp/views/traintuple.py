@@ -42,7 +42,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         algo_key = request.data.get('algo_key', request.POST.get('algo_key', None))
         dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
         rank = request.data.get('rank', request.POST.get('rank', None))
-        FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', None))
+        FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', ''))
 
         try:
             input_models_keys = request.data.getlist('input_models_keys', [])
