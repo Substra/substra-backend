@@ -1,3 +1,5 @@
+import docker
+import os
 import re
 import tempfile
 
@@ -18,12 +20,71 @@ from substrapp.models import Challenge
 from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
 
 
-from substrapp.utils import queryLedger, get_hash
+from substrapp.utils import queryLedger, get_hash, get_computed_hash
+from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 
+
 @app.task(bind=True, ignore_result=False)
-def dryrun():
-    pass
+def dryrun(metrics, test_dataset_key, pkhash):
+
+    try:
+        subtuple_directory = build_subtuple_folders({'key': pkhash})
+        with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'w') as metrics_file:
+            metrics_file.write(metrics.open().read())
+
+        try:
+            dataset = getObjectFromLedger(test_dataset_key)
+        except JsonException as e:
+            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
+            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'w') as opener_file:
+                opener_file.write(opener_content)
+
+        # Launch verification
+        client = docker.from_env()
+        pred_path = os.path.join(subtuple_directory, 'pred')
+        opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+        metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
+        metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
+
+        metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
+        metrics_docker_name = f'{metrics_docker}_{pkhash}'
+        volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
+        client.images.build(path=metrics_path,
+                            tag=metrics_docker,
+                            rm=False)
+
+        job_args = {'image': metrics_docker,
+                    'name': metrics_docker_name,
+                    'cpuset_cpus': '0-0',
+                    'mem_limit': '1G',
+                    'command': None,
+                    'volumes': volumes,
+                    'shm_size': '8G',
+                    'labels': ['dryrun'],
+                    'detach': False,
+                    'auto_remove': False,
+                    'remove': False}
+
+        client.containers.run(**job_args)
+
+        # Verify that the pred file exist
+        assert os.path.exists(os.path.join(pred_path, 'perf.json'))
+
+    except Exception as e:
+        raise e
+    finally:
+        try:
+            container = client.containers.get(metrics_docker_name)
+            container.remove()
+        except:
+            pass
+        remove_subtuple_materials(subtuple_directory)
 
 
 class ChallengeViewSet(mixins.CreateModelMixin,
@@ -70,10 +131,12 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
         description = data.get('description')
         test_dataset_key = data.get('test_dataset_key')
+        test_data_keys = data.getlist('test_data_keys')
+        metrics = data.get('metrics')
 
         pkhash = get_hash(description)
         serializer = self.get_serializer(data={'pkhash': pkhash,
-                                               'metrics': data.get('metrics'),
+                                               'metrics': metrics,
                                                'description': description})
 
         try:
@@ -85,7 +148,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
 
             if dryrun:
-                task = dryrun.apply_async(queue=settings.LEDGER['org']['name'])
+                task = dryrun.apply_async((metrics, test_dataset_key, pkhash), queue=settings.LEDGER['org']['name'])
                 url_http = 'http' if settings.DEBUG else 'https'
                 current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
                 task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
@@ -107,7 +170,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': data.getlist('test_data_keys'),
+                ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': test_data_keys,
                                                                     'test_dataset_key': test_dataset_key,
                                                                     'name': data.get('name'),
                                                                     'permissions': data.get('permissions'),
