@@ -155,9 +155,8 @@ def put_data(subtuple, subtuple_directory):
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
             try:
-                archive_path = path.join(data.file.path, os.path.basename(data.file.name))
                 to_directory = path.join(subtuple_directory, 'data')
-                uncompress_path(archive_path, to_directory)
+                uncompress_path(data.file.path, to_directory)
             except Exception as e:
                 logging.error('Fail to uncompress data file')
                 raise e
