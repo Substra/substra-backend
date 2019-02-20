@@ -1,3 +1,6 @@
+import docker
+import os
+import zipfile
 import ntpath
 
 from django.conf import settings
@@ -14,7 +17,8 @@ from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
-from substrapp.utils import get_hash
+from substrapp.utils import get_hash, get_computed_hash
+from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
 def path_leaf(path):
@@ -29,6 +33,76 @@ def dryrun():
     # Mount data + opener + a new script to try to open the data in a docker
     # Launch it and send result
     pass
+
+
+@app.task(bind=True, ignore_result=False)
+def compute_dryrun(self, data_files, dataset_keys):
+    from shutil import copy
+    from substrapp.models import Dataset
+    from io import BytesIO
+
+    try:
+        pkhash = data_files[0]['pkhash']
+        subtuple_directory = build_subtuple_folders({'key': pkhash})
+
+        for data in data_files:
+            try:
+                to_directory = os.path.join(subtuple_directory, 'data')
+                data_name = data['filename']
+                copy(data_name, to_directory)
+                # unzip files
+                zip_file_path = os.path.join(to_directory, os.path.basename(data_name))
+                zip_ref = zipfile.ZipFile(BytesIO(data['file']))
+                zip_ref.extractall(to_directory)
+                zip_ref.close()
+                os.remove(zip_file_path)
+            except Exception as e:
+                raise e
+
+        for dataset_key in dataset_keys:
+            dataset = Dataset.objects.get(pk=dataset_key)
+            opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
+            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
+                opener_file.write(opener_content)
+
+            # Launch verification
+            client = docker.from_env()
+            opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+            data_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # base metrics comes with substrabac
+
+            data_docker = 'data_dry_run'  # tag must be lowercase for docker
+            data_docker_name = f'{data_docker}_{pkhash}'
+            data_path = os.path.join(subtuple_directory, 'data')
+            volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                       opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
+            client.images.build(path=data_path,
+                                tag=data_docker,
+                                rm=False)
+
+            job_args = {'image': data_docker,
+                        'name': data_docker_name,
+                        'cpuset_cpus': '0-0',
+                        'mem_limit': '1G',
+                        'command': None,
+                        'volumes': volumes,
+                        'shm_size': '8G',
+                        'labels': ['dryrun'],
+                        'detach': False,
+                        'auto_remove': False,
+                        'remove': False}
+
+            client.containers.run(**job_args)
+
+    except Exception as e:
+        raise e
+    finally:
+        try:
+            container = client.containers.get(data_docker_name)
+            container.remove()
+        except:
+            pass
+        remove_subtuple_materials(subtuple_directory)
 
 
 class DataViewSet(mixins.CreateModelMixin,
@@ -61,12 +135,35 @@ class DataViewSet(mixins.CreateModelMixin,
         else:
 
             if dryrun:
-                task = dryrun.apply_async(queue=settings.LEDGER['org']['name'])
-                url_http = 'http' if settings.DEBUG else 'https'
-                current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
-                task_route = f'{url_http}://{current_site}{reverse("substrapp:task-get", args=[task.id])}'
-                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
-                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
+                try:
+                    if files:
+                        data_files = []
+                        for x in files:
+                            file = request.FILES[path_leaf(x)]
+                            data_files.append({
+                                'pkhash': get_hash(file),
+                                'file': file.open.read(),
+                                'filename': path_leaf(x)
+                            })
+                    else:
+                        file = data.get('file')
+                        pkhash = get_hash(file)
+                        data_files = [{
+                            'pkhash': pkhash,
+                            'file': file.open.read(),
+                            'filename': file.name
+                        }]
+
+                    task = compute_dryrun.apply_async((data_files, dataset_keys), queue=settings.LEDGER['org']['name'])
+                    url_http = 'http' if settings.DEBUG else 'https'
+                    current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                    task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+                    msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+                except Exception as e:
+                    return Response({'message': f'Could not launch challenge creation with dry-run on this instance: {str(e)}'},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
 
             # bulk
             if files:

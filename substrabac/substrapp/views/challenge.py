@@ -36,7 +36,7 @@ def compute_dryrun(self, metrics, test_dataset_key, pkhash):
         try:
             dataset = getObjectFromLedger(test_dataset_key)
         except JsonException as e:
-            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            raise e
         else:
             opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
             with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
