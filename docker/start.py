@@ -123,6 +123,28 @@ def generate_docker_compose_file(conf, launch_settings):
                               f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                   'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
+        dryrunner = {'container_name': f'{org_name_stripped}.dryrunner',
+                     'hostname': f'{org_name}.dryrunner',
+                     'image': 'substra/celeryworker',
+                     'restart': 'unless-stopped',
+                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -c {celeryd_concurrency} -n {org_name_stripped} -Q {org_name},{org_name}.dryrunner,celery -b rabbit --hostname {org_name}.dryrunner"',
+                     'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                     'environment': [f'ORG={org_name_stripped}',
+                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
+                                     'PYTHONUNBUFFERED=1',
+                                     f"CELERYD_CONCURRENCY={celeryd_concurrency}",
+                                     f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+                                     f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+                                     f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+                                     f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+                                     'DATABASE_HOST=postgresql',
+                                     f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
+                                     f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
+                     'volumes': ['/substra:/substra',
+                                 '/var/run/docker.sock:/var/run/docker.sock',
+                                 f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                     'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
+
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
             worker['runtime'] = 'nvidia'
@@ -130,11 +152,13 @@ def generate_docker_compose_file(conf, launch_settings):
         if launch_settings == 'dev':
             media_root = f'MEDIA_ROOT=/substra/medias/{org_name_stripped}'
             worker['environment'].append(media_root)
+            dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
+        docker_compose['substrabac_services']['dryrunner' + org_name_stripped] = dryrunner
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}

@@ -25,14 +25,14 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         # TODO update
         '''
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
-             -d "algo_key=9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
+             -d "algo_key=da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
              -X POST http://localhost:8001/traintuple/
 
         or
 
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
              -H "Content-Type: application/json"
-             -d '{"algo_key":"9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
+             -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
              -X POST http://localhost:8001/traintuple/?format=json
 
         :param request:
@@ -40,9 +40,17 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         '''
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
+        dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
+
+        try:
+            test_data_keys = request.data.getlist('test_data_keys', [])
+        except:
+            test_data_keys = request.data.get('test_data_keys', request.POST.getlist('test_data_keys', []))
 
         data = {
             'traintuple_key': traintuple_key,
+            'dataset_key': dataset_key,
+            'test_data_keys': test_data_keys,  # list of test data keys
         }
 
         # init ledger serializer

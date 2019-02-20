@@ -33,11 +33,20 @@ else:
     # create dataset with owkin org
     data = json.dumps({
         'name': 'ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/ccbaa3372bc74bce39ce3b138f558b3a7558958ef2f244576e18ed75b0cea994/description.md'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
         'permissions': 'all',
     })
+
+    res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
 
@@ -60,6 +69,15 @@ else:
         'test_only': False,
     })
 
+    # dry-run
+    res = popen(['substra', 'add', 'data', data, '--profile=owkin', '--config=/tmp/.substrabac', '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'data', data, '--profile=owkin', '--config=/tmp/.substrabac'],
                 stdout=PIPE).communicate()[0]
 
@@ -80,9 +98,9 @@ else:
     print('create dataset, test data and challenge on owkin')
     data = json.dumps({
         'name': 'Simplified ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/owkin/datasets/b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0/description.md'),
+        'description': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description.md'),
         'permissions': 'all'
     })
 
@@ -193,6 +211,14 @@ else:
         'test_dataset_key': dataset_key_2
     })
 
+    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
 
@@ -210,11 +236,20 @@ else:
     print('register algo')
     data = json.dumps({
         'name': 'Logistic regression',
-        'file': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/algo.tar.gz'),
-        'description': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/description.md'),
+        'file': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md'),
         'challenge_key': challenge_key,
         'permissions': 'all',
     })
+
+    # dry-run
+    res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]

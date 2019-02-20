@@ -8,6 +8,6 @@ RUN mkdir -p /sandbox/metrics
 
 WORKDIR /sandbox
 
-ADD ./calc_metrics.py .
+ADD ./calc_fake_metrics.py .
 
-ENTRYPOINT ["python3", "calc_metrics.py"]
+ENTRYPOINT ["python3", "calc_fake_metrics.py"]

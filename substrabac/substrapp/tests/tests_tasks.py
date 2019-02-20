@@ -129,7 +129,7 @@ class TasksTests(APITestCase):
         self.assertNotEqual(monitoring._stats['cpu']['max'], 0)
         self.assertNotEqual(monitoring._stats['netio']['rx'], 0)
 
-    def test_put_algo(self):
+    def test_put_algo_tar(self):
 
         filename = 'algo.py'
         filepath = os.path.join(self.subtuple_path, filename)
@@ -146,10 +146,35 @@ class TasksTests(APITestCase):
         subtuple_key = 'testkey'
         subtuple = {'key': subtuple_key, 'algo': 'testalgo'}
 
+        self.assertFalse(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
+
         with mock.patch('substrapp.tasks.get_hash') as mget_hash:
             with open(tarpath, 'rb') as content:
                 mget_hash.return_value = get_hash(tarpath)
-                put_algo(subtuple, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
+                put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
+
+        self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
+
+    def test_put_algo_zip(self):
+        filename = 'algo.py'
+        filepath = os.path.join(self.subtuple_path, filename)
+        with open(filepath, 'w') as f:
+            f.write('Hello World')
+        self.assertTrue(os.path.exists(filepath))
+
+        zipname = 'sample.zip'
+        zippath = os.path.join(self.subtuple_path, zipname)
+        with zipfile.ZipFile(zippath, mode='w') as zf:
+            zf.write(filepath, arcname=filename)
+        self.assertTrue(os.path.exists(zippath))
+
+        subtuple_key = 'testkey'
+        subtuple = {'key': subtuple_key, 'algo': 'testalgo'}
+
+        with mock.patch('substrapp.tasks.get_hash') as mget_hash:
+            with open(zippath, 'rb') as content:
+                mget_hash.return_value = get_hash(zippath)
+                put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
 
@@ -209,7 +234,7 @@ class TasksTests(APITestCase):
 
         self.assertTrue(os.path.exists(os.path.join(opener_directory, 'opener.py')))
 
-    def test_put_data(self):
+    def test_put_data_zip(self):
 
         data_directory = os.path.join(self.subtuple_path, 'data/')
         create_directory(data_directory)
@@ -239,6 +264,38 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.models.Data.objects.get') as mget:
             mget.return_value = FakeData(zippath)
+            put_data(subtuple, MEDIA_ROOT)
+
+    def test_put_data_tar(self):
+
+        data_directory = os.path.join(self.subtuple_path, 'data/')
+        create_directory(data_directory)
+
+        filename = 'data.csv'
+        filepath = os.path.join(self.subtuple_path, filename)
+        with open(filepath, 'w') as f:
+            f.write('Hello World')
+        self.assertTrue(os.path.exists(filepath))
+
+        tarpath = os.path.join(self.subtuple_path, 'sample.tar.gz')
+        with tarfile.open(tarpath, 'w:gz') as mytar:
+            mytar.add(filepath, recursive=False)
+        self.assertTrue(os.path.exists(tarpath))
+
+        data_hash = get_hash(tarpath)
+        subtuple = {'data': {'keys': [data_hash]}}
+
+        class FakeFile(object):
+            def __init__(self, filepath):
+                self.path = filepath
+                self.name = self.path
+
+        class FakeData(object):
+            def __init__(self, filepath):
+                self.file = FakeFile(filepath)
+
+        with mock.patch('substrapp.models.Data.objects.get') as mget:
+            mget.return_value = FakeData(tarpath)
             put_data(subtuple, MEDIA_ROOT)
 
     def test_put_model(self):

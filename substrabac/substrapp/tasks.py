@@ -10,8 +10,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.utils import queryLedger, invokeLedger
-from substrapp.utils import get_hash, untar_algo, create_directory, get_remote_file
+from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content, uncompress_path
 from substrapp.job_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
@@ -143,9 +142,7 @@ def put_opener(subtuple, subtuple_directory):
 
 
 def put_data(subtuple, subtuple_directory):
-    from shutil import copy
     from substrapp.models import Data
-    import zipfile
 
     for data_key in subtuple['data']['keys']:
         try:
@@ -159,15 +156,9 @@ def put_data(subtuple, subtuple_directory):
 
             try:
                 to_directory = path.join(subtuple_directory, 'data')
-                copy(data.file.path, to_directory)
-                # unzip files
-                zip_file_path = path.join(to_directory, os.path.basename(data.file.name))
-                zip_ref = zipfile.ZipFile(zip_file_path, 'r')
-                zip_ref.extractall(to_directory)
-                zip_ref.close()
-                os.remove(zip_file_path)
+                uncompress_path(data.file.path, to_directory)
             except Exception as e:
-                logging.error('Fail to unzip data file')
+                logging.error('Fail to uncompress data file')
                 raise e
 
 
@@ -177,11 +168,11 @@ def put_metric(subtuple_directory, challenge):
         os.link(challenge.metrics.path, metrics_dst_path)
 
 
-def put_algo(subtuple, subtuple_directory, algo_content):
+def put_algo(subtuple_directory, algo_content):
     try:
-        untar_algo(algo_content, subtuple_directory, subtuple)
+        uncompress_content(algo_content, subtuple_directory)
     except Exception as e:
-        logging.error('Fail to untar algo file')
+        logging.error('Fail to uncompress algo file')
         raise e
 
 
@@ -346,7 +337,7 @@ def prepareMaterials(subtuple, model_type):
         put_opener(subtuple, subtuple_directory)
         put_data(subtuple, subtuple_directory)
         put_metric(subtuple_directory, challenge)
-        put_algo(subtuple, subtuple_directory, algo_content)
+        put_algo(subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)
         if model_type == 'inModels':  # traintuple
@@ -395,6 +386,11 @@ def doTask(subtuple, tuple_type):
         algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
         model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
+        if fltask is not None and flrank != -1:
+            remove_image = False
+        else:
+            remove_image = True
+
         # create the command option for algo
         if tuple_type == 'traintuple':
             algo_command = '--train'    # main command
@@ -432,7 +428,8 @@ def doTask(subtuple, tuple_type):
                                       volumes={**volumes, **model_volume},
                                       command=algo_command,
                                       cpu_set=cpu_set,
-                                      gpu_set=gpu_set)
+                                      gpu_set=gpu_set,
+                                      remove_image=remove_image)
         # save model in database
         if tuple_type == 'traintuple':
             from substrapp.models import Model
@@ -449,16 +446,16 @@ def doTask(subtuple, tuple_type):
         metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac
         metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
         metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
-        metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
                        resources_manager=resources_manager,
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
-                       volumes={**volumes, **metric_volume},
+                       volumes=volumes,
                        command=None,
                        cpu_set=cpu_set,
-                       gpu_set=gpu_set)
+                       gpu_set=gpu_set,
+                       remove_image=remove_image)
 
         # load performance
         with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:

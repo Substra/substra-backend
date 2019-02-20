@@ -8,6 +8,6 @@ RUN mkdir -p /sandbox/metrics
 
 WORKDIR /sandbox
 
-ADD ./calc_metrics.py .
+ADD ./open_data.py .
 
-ENTRYPOINT ["python3", "calc_metrics.py"]
+ENTRYPOINT ["python3", "open_data.py"]
