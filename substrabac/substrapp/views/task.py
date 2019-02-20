@@ -11,15 +11,19 @@ class TaskViewSet(ViewSet):
 
         res = AsyncResult(pk)
 
-        data = {
-            'status': res.status
-        }
-        if not res.successful():
-            if res.status == 'PENDING':
-                data['message'] = 'Task is either waiting, does not exist in this context or has been removed after 24h'
-            else:
-                data['message'] = res.traceback
+        try:
+            data = {
+                'status': res.status
+            }
+        except:
+            return Response({'message': 'Can\'t get task status'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            data['result'] = res.result
+            if not res.successful():
+                if res.status == 'PENDING':
+                    data['message'] = 'Task is either waiting, does not exist in this context or has been removed after 24h'
+                else:
+                    data['message'] = res.traceback
+            else:
+                data['result'] = res.result
 
-        return Response(data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)

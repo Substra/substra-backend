@@ -242,6 +242,14 @@ else:
         'permissions': 'all',
     })
 
+    # dry-run
+    res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'algo', '--profile=chunantes', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     try:
