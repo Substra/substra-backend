@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
 from django.urls import reverse
+from docker.errors import ContainerError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -76,6 +77,8 @@ def compute_dryrun(self, metrics, test_dataset_key, pkhash):
         # Verify that the pred file exist
         assert os.path.exists(os.path.join(pred_path, 'perf.json'))
 
+    except ContainerError as e:
+        raise Exception(e.stderr)
     except Exception as e:
         raise e
     finally:

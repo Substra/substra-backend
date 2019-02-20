@@ -8,6 +8,7 @@ import requests
 from django.conf import settings
 
 from django.http import Http404
+from docker.errors import ContainerError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -88,6 +89,8 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
 
                 client.containers.run(**job_args)
 
+    except ContainerError as e:
+        raise Exception(e.stderr)
     except Exception as e:
         raise e
     finally:
