@@ -27,15 +27,6 @@ def path_leaf(path):
 
 
 @app.task(bind=True, ignore_result=False)
-def dryrun():
-    # To do
-    # Save data in a dry-run subfolder hash
-    # Mount data + opener + a new script to try to open the data in a docker
-    # Launch it and send result
-    pass
-
-
-@app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, data_files, dataset_keys):
     from shutil import copy
     from substrapp.models import Dataset
