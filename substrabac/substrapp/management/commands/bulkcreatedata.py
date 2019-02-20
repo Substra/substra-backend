@@ -20,11 +20,11 @@ class Command(BaseCommand):
     help = '''
     Bulk create data
 
-    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0", "test_only": false}'
+    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}'
     python ./manage.py bulkcreatedata data.json
 
     # data.json:
-    # {"files": ["./data1.zip", "./data2.zip"], "dataset_key": "b4d2deeb9a59944d608e612abc8595c49186fa24075c4eb6f5e6050e4f9affa0", "test_only": false}
+    # {"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}
     '''
 
     def add_arguments(self, parser):

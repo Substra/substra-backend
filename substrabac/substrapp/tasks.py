@@ -446,13 +446,12 @@ def doTask(subtuple, tuple_type):
         metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac
         metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
         metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
-        metric_volume = {metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'}}
         compute_docker(client=client,
                        resources_manager=resources_manager,
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
-                       volumes={**volumes, **metric_volume},
+                       volumes=volumes,
                        command=None,
                        cpu_set=cpu_set,
                        gpu_set=gpu_set,
