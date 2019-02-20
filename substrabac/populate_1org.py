@@ -227,8 +227,8 @@ else:
     print('register algo')
     data = json.dumps({
         'name': 'Logistic regression',
-        'file': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/algo.tar.gz'),
-        'description': os.path.join(dir_path, './fixtures/chunantes/algos/9ca7ffbdbb55156b0fb44a227c3c305b7f7300113b6008c662460cf0f8f7cc3a/description.md'),
+        'file': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md'),
         'challenge_key': challenge_key,
         'permissions': 'all',
     })
