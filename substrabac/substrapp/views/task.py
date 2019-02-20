@@ -6,6 +6,7 @@ from rest_framework.viewsets import ViewSet
 
 class TaskViewSet(ViewSet):
 
+    # https://stackoverflow.com/questions/9034091/how-to-check-task-status-in-celery
     def retrieve(self, request, pk=None):
 
         res = AsyncResult(pk)
