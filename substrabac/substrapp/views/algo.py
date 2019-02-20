@@ -32,7 +32,7 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
-        tar = tarfile.open(fileobj=BytesIO(algo_file))
+        tar = tarfile.open(fileobj=BytesIO(bytearray.fromhex(algo_file)))
         tar.extractall(subtuple_directory)
         tar.close()
 
@@ -46,45 +46,47 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
                 metrics_file.write(metrics_content)
             dataset_key = challenge['testData']['datasetKey']
 
-        try:
-            dataset = getObjectFromLedger(dataset_key)
-        except JsonException as e:
-            raise e
-        else:
-            opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
-            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
-                opener_file.write(opener_content)
+            try:
+                dataset = getObjectFromLedger(dataset_key)
+            except JsonException as e:
+                raise e
+            else:
+                opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
+                with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
+                    opener_file.write(opener_content)
 
-        # Launch verification
-        client = docker.from_env()
-        opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-        metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
-        pred_path = os.path.join(subtuple_directory, 'pred')
+                # Launch verification
+                client = docker.from_env()
+                opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+                metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
+                pred_path = os.path.join(subtuple_directory, 'pred')
+                model_path = os.path.join(subtuple_directory, 'model')
 
-        algo_docker = 'algo_dry_run'  # tag must be lowercase for docker
-        algo_docker_name = f'{algo_docker}_{pkhash}'
-        algo_path = subtuple_directory
-        volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+                algo_docker = 'algo_dry_run'  # tag must be lowercase for docker
+                algo_docker_name = f'{algo_docker}_{pkhash}'
+                algo_path = subtuple_directory
+                volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+                           metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+                           opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'},
+                           model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
-        client.images.build(path=algo_path,
-                            tag=algo_docker,
-                            rm=False)
+                client.images.build(path=algo_path,
+                                    tag=algo_docker,
+                                    rm=True)
 
-        job_args = {'image': algo_docker,
-                    'name': algo_docker_name,
-                    'cpuset_cpus': '0-1',
-                    'mem_limit': '1G',
-                    'command': '--dry-run',
-                    'volumes': volumes,
-                    'shm_size': '8G',
-                    'labels': ['dryrun'],
-                    'detach': False,
-                    'auto_remove': False,
-                    'remove': False}
+                job_args = {'image': algo_docker,
+                            'name': algo_docker_name,
+                            'cpuset_cpus': '0-1',
+                            'mem_limit': '1G',
+                            'command': '--dry-run',
+                            'volumes': volumes,
+                            'shm_size': '8G',
+                            'labels': ['dryrun'],
+                            'detach': False,
+                            'auto_remove': False,
+                            'remove': False}
 
-        client.containers.run(**job_args)
+                client.containers.run(**job_args)
 
     except Exception as e:
         raise e
@@ -92,6 +94,7 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
         try:
             container = client.containers.get(algo_docker_name)
             container.remove()
+            client.images.remove(algo_docker, force=True)
         except:
             pass
         remove_subtuple_materials(subtuple_directory)
@@ -135,13 +138,14 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
             if dryrun:
                 try:
-                    task = compute_dryrun.apply_async((file.open().read(), challenge_key, pkhash), queue=settings.LEDGER['org']['name'])
+                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
+                    task = compute_dryrun.apply_async((file.open().read().hex(), challenge_key, pkhash), queue=settings.LEDGER['org']['name'])
                     url_http = 'http' if settings.DEBUG else 'https'
                     current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:
-                    return Response({'message': f'Could not launch challenge creation with dry-run on this instance: {str(e)}'},
+                    return Response({'message': f'Could not launch algo creation with dry-run on this instance: {str(e)}'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)

@@ -69,6 +69,15 @@ else:
         'test_only': False,
     })
 
+    # dry-run
+    res = popen(['substra', 'add', 'data', data, '--profile=owkin', '--config=/tmp/.substrabac', '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'data', data, '--profile=owkin', '--config=/tmp/.substrabac'],
                 stdout=PIPE).communicate()[0]
 
@@ -232,6 +241,15 @@ else:
         'challenge_key': challenge_key,
         'permissions': 'all',
     })
+
+    # dry-run
+    res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
 
     res = popen(['substra', 'add', 'algo', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]

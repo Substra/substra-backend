@@ -144,7 +144,7 @@ class DataViewSet(mixins.CreateModelMixin,
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:
-                    return Response({'message': f'Could not launch challenge creation with dry-run on this instance: {str(e)}'},
+                    return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
