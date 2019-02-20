@@ -22,6 +22,9 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 @app.task(bind=True, ignore_result=False)
 def dryrun():
+    # To do
+    # Make a fake traintuple with dry-run entry point
+    # Launch it and send result
     pass
 
 

@@ -184,6 +184,13 @@ else:
         'test_dataset_key': dataset_key_2
     })
 
+    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data, '--dry-run'],
+                stdout=PIPE).communicate()[0]
+    try:
+        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+    except:
+        print(res.decode('utf-8'))
+
     res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     try:
