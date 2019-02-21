@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from substrapp.models import Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.utils import get_hash
 
 
 def path_leaf(path):
@@ -20,11 +21,11 @@ class Command(BaseCommand):
     help = '''
     Bulk create data
 
-    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}'
+    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}'
     python ./manage.py bulkcreatedata data.json
 
     # data.json:
-    # {"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}
+    # {"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}
     '''
 
     def add_arguments(self, parser):
@@ -51,44 +52,50 @@ class Command(BaseCommand):
                     filename = path_leaf(file)
                     files[filename] = ContentFile(f.read(), filename)
 
-        try:
-            dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
-        except:
-            self.stderr.write(f'This Dataset key: {data.get("dataset_key")} does not exist in local substrabac database.')
-        else:
-            # bulk
-            if files:
-                serializer = DataSerializer(data=[{'file': files[x]} for x in files], many=True)
-                serializer.is_valid(raise_exception=True)
-                # create on db
-                try:
-                    instances = serializer.save()
-                except IntegrityError as exc:
-                    self.stderr.write('One of the Data you passed already exists in the substrabac local database. Please review your args.')
-                except Exception as exc:
-                    raise Exception(exc.args)
-                else:
-                    # init ledger serializer
-                    file_size = 0
-                    for file in data_files:
-                        file_size += os.path.getsize(file)
+        dataset_keys = data.get('dataset_keys')
+        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
 
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                                   'size': file_size,
-                                                                   'dataset_key': dataset.pk,
-                                                                   'instances': instances})
+        # check all dataset exists
+        if dataset_count != len(dataset_keys):
+            return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
 
-                    if not ledger_serializer.is_valid():
-                        # delete instance
-                        for instance in instances:
-                            instance.delete()
-                        raise ValidationError(ledger_serializer.errors)
+        # bulk
+        if files:
+            l = []
+            for x in files:
+                file = files[path_leaf(x)]
+                l.append({
+                    'pkhash': get_hash(file),
+                    'file': file
+                })
 
-                    # create on ledger
-                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
+            serializer = DataSerializer(data=l, many=True)
+            serializer.is_valid(raise_exception=True)
+            # create on db
+            try:
+                instances = serializer.save()
+            except IntegrityError as exc:
+                self.stderr.write('One of the Data you passed already exists in the substrabac local database. Please review your args.')
+            except Exception as exc:
+                raise Exception(exc.args)
+            else:
+                # init ledger serializer
 
-                    for d in serializer.data:
-                        if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
-                            d['validated'] = data['validated']
+                ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                                                               'dataset_keys': dataset_keys,
+                                                               'instances': instances})
 
-                    self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
+                if not ledger_serializer.is_valid():
+                    # delete instance
+                    for instance in instances:
+                        instance.delete()
+                    raise ValidationError(ledger_serializer.errors)
+
+                # create on ledger
+                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+
+                for d in serializer.data:
+                    if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
+                        d['validated'] = data['validated']
+
+                self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
