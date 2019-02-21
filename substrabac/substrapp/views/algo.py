@@ -21,21 +21,19 @@ from substrabac.celery import app
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import queryLedger, get_hash, get_computed_hash
+from substrapp.utils import queryLedger, get_hash, get_computed_hash, \
+    uncompress_content
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, algo_file, challenge_key, pkhash):
-    from io import BytesIO
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
-        tar = tarfile.open(fileobj=BytesIO(bytearray.fromhex(algo_file)))
-        tar.extractall(subtuple_directory)
-        tar.close()
+        uncompress_content(bytearray.fromhex(algo_file), subtuple_directory)
 
         try:
             challenge = getObjectFromLedger(challenge_key)
@@ -92,7 +90,7 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
     except ContainerError as e:
         raise Exception(e.stderr)
     except Exception as e:
-        raise e
+        raise str(e)
     finally:
         try:
             container = client.containers.get(algo_docker_name)
@@ -144,7 +142,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
                     task = compute_dryrun.apply_async((file.open().read().hex(), challenge_key, pkhash), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
-                    current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                    site_port = getattr(settings, "SITE_PORT", None)
+                    current_site = f'{getattr(settings, "SITE_HOST")}'
+                    if site_port:
+                        current_site = f'{current_site}:{site_port}'
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:

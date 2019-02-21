@@ -63,7 +63,7 @@ def getObjectFromLedger(pk):
     if st != status.HTTP_200_OK:
         raise JsonException(data)
 
-    if data['permissions'] == 'all':
+    if 'permissions' not in data or data['permissions'] == 'all':
         return data
     else:
         raise Exception('Not Allowed')
