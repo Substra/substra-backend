@@ -5,8 +5,6 @@ import shutil
 import tempfile
 from os import path
 
-
-import requests
 from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status
@@ -153,7 +151,7 @@ def put_data(subtuple, subtuple_directory):
         except Exception as e:
             raise e
         else:
-            data_hash = get_hash(data.file.path)
+            data_hash = dirhash(path.join(getattr(settings, 'MEDIA_ROOT'), data.path), 'sha256')
             if data_hash != data_key:
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 

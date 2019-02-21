@@ -1,11 +1,12 @@
 import logging
 import shutil
-import zipfile
 from os import path, rename
 
 from checksumdir import dirhash
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
+
+from substrapp.utils import uncompress_path
 
 
 def data_pre_save(sender, instance, **kwargs):
@@ -14,9 +15,7 @@ def data_pre_save(sender, instance, **kwargs):
     # unzip file
     if isinstance(instance.path, InMemoryUploadedFile):
         try:
-            zip_ref = zipfile.ZipFile(instance.path)
-            zip_ref.extractall(directory)
-            zip_ref.close()
+            uncompress_path(instance.path, directory)
         except Exception as e:
             logging.info(e)
         else:
@@ -27,6 +26,7 @@ def data_pre_save(sender, instance, **kwargs):
             try:
                 rename(directory, path.join(getattr(settings, 'MEDIA_ROOT'), new_directory))
             except Exception as e:
+                # directory already exists with same exact data inside
                 shutil.rmtree(directory)
                 logging.error(e, exc_info=True)
 
