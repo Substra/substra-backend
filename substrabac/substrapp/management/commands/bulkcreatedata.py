@@ -74,32 +74,36 @@ class Command(BaseCommand):
                 })
 
             serializer = DataSerializer(data=l, many=True)
-            serializer.is_valid(raise_exception=True)
-            # create on db
             try:
-                instances = serializer.save()
-            except IntegrityError as exc:
-                self.stderr.write('One of the Data you passed already exists in the substrabac local database. Please review your args.')
-            except Exception as exc:
-                raise Exception(exc.args)
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                return self.stderr(str(e))
             else:
-                # init ledger serializer
+                # create on db
+                try:
+                    instances = serializer.save()
+                except IntegrityError as exc:
+                    self.stderr.write('One of the Data you passed already exists in the substrabac local database. Please review your args.')
+                except Exception as exc:
+                    raise Exception(exc.args)
+                else:
+                    # init ledger serializer
 
-                ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                               'dataset_keys': dataset_keys,
-                                                               'instances': instances})
+                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
+                                                                   'dataset_keys': dataset_keys,
+                                                                   'instances': instances})
 
-                if not ledger_serializer.is_valid():
-                    # delete instance
-                    for instance in instances:
-                        instance.delete()
-                    raise ValidationError(ledger_serializer.errors)
+                    if not ledger_serializer.is_valid():
+                        # delete instance
+                        for instance in instances:
+                            instance.delete()
+                        raise ValidationError(ledger_serializer.errors)
 
-                # create on ledger
-                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+                    # create on ledger
+                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                for d in serializer.data:
-                    if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
-                        d['validated'] = data['validated']
+                    for d in serializer.data:
+                        if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
+                            d['validated'] = data['validated']
 
-                self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
+                    self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
