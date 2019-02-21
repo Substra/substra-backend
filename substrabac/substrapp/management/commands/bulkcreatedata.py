@@ -33,8 +33,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        # TODO Add validation
-
         # load args
         args = options['data']
         try:
@@ -55,6 +53,10 @@ class Command(BaseCommand):
                     files[filename] = ContentFile(f.read(), filename)
 
         dataset_keys = data.get('dataset_keys', [])
+
+        if not type(dataset_keys) == list:
+            return self.stderr('The dataset_keys you provided is not an array')
+
         dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
 
         # check all dataset exists
