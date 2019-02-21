@@ -33,6 +33,8 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
+        # TODO Add validation
+
         # load args
         args = options['data']
         try:
@@ -52,11 +54,11 @@ class Command(BaseCommand):
                     filename = path_leaf(file)
                     files[filename] = ContentFile(f.read(), filename)
 
-        dataset_keys = data.get('dataset_keys')
+        dataset_keys = data.get('dataset_keys', [])
         dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
 
         # check all dataset exists
-        if dataset_count != len(dataset_keys):
+        if not len(dataset_keys) or dataset_count != len(dataset_keys):
             return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
 
         # bulk
