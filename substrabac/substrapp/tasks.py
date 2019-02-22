@@ -227,7 +227,7 @@ def prepareTask(tuple_type, model_type):
             'args': f'{{"Args":["queryFilter","{tuple_type}~worker~status","{data_owner},todo"]}}'
         })
 
-        if st == 200 and subtuples is not None:
+        if st == status.HTTP_200_OK and subtuples is not None:
             for subtuple in subtuples:
 
                 fltask = None
@@ -242,6 +242,7 @@ def prepareTask(tuple_type, model_type):
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
                 try:
+                    # TODO should set a status right now
                     computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
                                             queue=worker_queue)
                 except Exception as e:
@@ -272,25 +273,25 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 
     result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
-    # Get materials
-    try:
-        prepareMaterials(subtuple, model_type)
-    except Exception as e:
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-        fail(subtuple['key'], error_code, tuple_type)
-        return result
-
     # Log Start of the Subtuple
     start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
-
     data, st = invokeLedger({
         'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
     }, sync=True)
 
     if st is not status.HTTP_201_CREATED:
-        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}')
+        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
     else:
+
+        # Get materials
+        try:
+            prepareMaterials(subtuple, model_type)
+        except Exception as e:
+            error_code = compute_error_code(e)
+            logging.error(error_code, exc_info=True)
+            fail(subtuple['key'], error_code, tuple_type)
+            return result
+
         logging.info(f'Prepare Task success {tuple_type}')
 
         try:
