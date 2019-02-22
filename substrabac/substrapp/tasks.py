@@ -436,7 +436,13 @@ def doTask(subtuple, tuple_type):
             from substrapp.models import Model
             end_model_path = path.join(subtuple_directory, 'model/model')
             end_model_file_hash = get_hash(end_model_path)
-            instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+            try:
+                instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+            except Exception as e:
+                error_code = compute_error_code(e)
+                logging.error(error_code, exc_info=True)
+                return fail(subtuple['key'], error_code, tuple_type)
+
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
             url_http = 'http' if settings.DEBUG else 'https'
