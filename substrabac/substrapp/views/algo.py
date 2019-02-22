@@ -347,7 +347,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
 
