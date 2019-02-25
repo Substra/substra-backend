@@ -69,6 +69,10 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
                            opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'},
                            model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
+                dockerfile_path = os.path.join(algo_path, 'Dockerfile')
+                if not os.path.exists(dockerfile_path):
+                    raise Exception('Missing dockerfile in the algo archive.')
+
                 client.images.build(path=algo_path,
                                     tag=algo_docker,
                                     rm=True)
