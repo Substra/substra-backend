@@ -68,13 +68,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                 return Response(data, status=st)
 
         headers = self.get_success_headers(serializer.data)
-
-        try:
-            pkhash = data['message'].replace('"', '').split('-')[-1].strip()
-            return Response({'message': data['message'],
-                             'pkhash': pkhash}, status=st, headers=headers)
-        except:
-            return Response(data, status=st, headers=headers)
+        return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
