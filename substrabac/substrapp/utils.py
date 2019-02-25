@@ -222,11 +222,14 @@ def uncompress_path(archive_path, to_directory):
 
 
 def uncompress_content(archive_content, to_directory):
-    try:
+    if zipfile.is_zipfile(io.BytesIO(archive_content)):
         zip_ref = zipfile.ZipFile(io.BytesIO(archive_content))
         zip_ref.extractall(to_directory)
         zip_ref.close()
-    except:
+    else:
+        # We cannot check with tarfile.is_tarfile because it checks
+        # by trying to open from a real path, here we have just a
+        # bytes object
         try:
             tar = tarfile.open(fileobj=io.BytesIO(archive_content))
             tar.extractall(to_directory)
