@@ -60,7 +60,12 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         data, st = serializer.create(serializer.validated_data)
 
         if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
-            return Response(data, status=st)
+            try:
+                pkhash = data['message'].replace('"', '').split('-')[-1].strip()
+                return Response({'message': data['message'],
+                                 'pkhash': pkhash}, status=st)
+            except:
+                return Response(data, status=st)
 
         headers = self.get_success_headers(serializer.data)
         return Response(data, status=st, headers=headers)
