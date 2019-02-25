@@ -195,13 +195,19 @@ class DataViewSet(mixins.CreateModelMixin,
                         # create on ledger
                         data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                        if st == status.HTTP_408_REQUEST_TIMEOUT:
+                            data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
                             return Response(data, status=st)
 
+                        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+                            return Response(data, status=st)
+
+                        # update validated to True in response
+                        if 'pkhash' in data and data['validated']:
+                            for d in serializer.data:
+                                if d['pkhash'] in data['pkhash']:
+                                    d.update({'validated': data['validated']})
                         headers = self.get_success_headers(serializer.data)
-                        for d in serializer.data:
-                            if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
-                                d['validated'] = data['validated']
                         return Response(serializer.data, status=st, headers=headers)
             else:
                 file = data.get('file')
@@ -264,7 +270,7 @@ class DataViewSet(mixins.CreateModelMixin,
                         # create on ledger
                         data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
                             return Response(data, status=st)
 
                         headers = self.get_success_headers(serializer.data)
