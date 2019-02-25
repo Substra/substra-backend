@@ -341,16 +341,23 @@ else:
 
             res = popen(['substra', 'add', 'testtuple', '--profile=owkin', '--config=/tmp/.substrabac', data],
                         stdout=PIPE).communicate()[0]
-            res = json.loads(res.decode('utf-8'))
-            testtuple_key = res['pkhash']
-            print(json.dumps(res, indent=2))
 
-            res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-            res = json.loads(res.decode('utf-8'))
-
-            while res['status'] not in ('done', 'failed'):
-                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
-                      stdout=PIPE).communicate()[0]
+            try:
+                print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+            except:
+                print(res.decode('utf-8'))
+            else:
                 res = json.loads(res.decode('utf-8'))
+                testtuple_key = res['pkhash']
                 print(json.dumps(res, indent=2))
-                time.sleep(3)
+
+                res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                            stdout=PIPE).communicate()[0]
+                res = json.loads(res.decode('utf-8'))
+
+                while res['status'] not in ('done', 'failed'):
+                    res = popen(['substra', 'get', 'testtuple', testtuple_key, '--profile=owkin', '--config=/tmp/.substrabac'],
+                                stdout=PIPE).communicate()[0]
+                    res = json.loads(res.decode('utf-8'))
+                    print(json.dumps(res, indent=2))
+                    time.sleep(3)
