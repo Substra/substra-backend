@@ -80,6 +80,20 @@ class ComputeHashMixin(object):
 
         return computedHash
 
+    def compute_model_hash(self, file, key):
+
+        sha256_hash = hashlib.sha256()
+        if isinstance(file, str):
+            file = file.encode()
+
+        if key is not None and isinstance(key, str):
+            file += key.encode()
+
+        sha256_hash.update(file)
+        computedHash = sha256_hash.hexdigest()
+
+        return computedHash
+
 
 class CustomFileResponse(FileResponse):
     def set_headers(self, filelike):

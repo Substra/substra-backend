@@ -142,7 +142,7 @@ def invokeLedger(options, sync=False):
     return data, st
 
 
-def get_hash(file):
+def get_hash(file, key=None):
     if file is None:
         return ''
     else:
@@ -153,21 +153,24 @@ def get_hash(file):
             openedfile = file.open()
             data = openedfile.read()
 
-        return compute_hash(data)
+        return compute_hash(data, key)
 
 
-def compute_hash(bytes):
+def compute_hash(bytes, key=None):
     sha256_hash = hashlib.sha256()
 
     if isinstance(bytes, str):
         bytes = bytes.encode()
+
+    if key is not None and isinstance(key, str):
+        bytes += key.encode()
 
     sha256_hash.update(bytes)
 
     return sha256_hash.hexdigest()
 
 
-def get_computed_hash(url):
+def get_computed_hash(url, key=None):
     username = getattr(settings, 'BASICAUTH_USERNAME', None)
     password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
@@ -188,13 +191,13 @@ def get_computed_hash(url):
             raise Exception(
                 f'Url: {url} to fetch file returned status code: {r.status_code}')
 
-        computedHash = compute_hash(r.content)
+        computedHash = compute_hash(r.content, key)
 
         return r.content, computedHash
 
 
-def get_remote_file(object):
-    content, computed_hash = get_computed_hash(object['storageAddress'])
+def get_remote_file(object, key=None):
+    content, computed_hash = get_computed_hash(object['storageAddress'], key)
 
     if computed_hash != object['hash']:
         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
