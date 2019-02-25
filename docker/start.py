@@ -5,6 +5,9 @@ import argparse
 from subprocess import call, check_output
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+raven_dryrunner_url = "https://cff352ba26fc49f19e01692db93bf951@sentry.io/1317743"
+raven_worker_url = "https://cff352ba26fc49f19e01692db93bf951@sentry.io/1317743"
+raven_scheduler_url = raven_worker_url
 
 
 def generate_docker_compose_file(conf, launch_settings):
@@ -91,6 +94,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                      'PYTHONUNBUFFERED=1',
                                      f"CELERYD_CONCURRENCY={celeryd_concurrency}",
+                                     f"RAVEN_URL={raven_scheduler_url}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                      f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -113,6 +117,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                   'PYTHONUNBUFFERED=1',
                                   f"CELERYD_CONCURRENCY={celeryd_concurrency}",
+                                  f"RAVEN_URL={raven_worker_url}",
                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                   f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -135,6 +140,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                      'PYTHONUNBUFFERED=1',
                                      f"CELERYD_CONCURRENCY={celeryd_concurrency}",
+                                     f"RAVEN_URL={raven_dryrunner_url}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                      f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
