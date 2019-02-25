@@ -42,7 +42,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     raise Exception(f'end to end node report {r.text}')
 
                 try:
-                    computed_hash = self.compute_model_hash(r.content, traintuple['key'])
+                    computed_hash = self.compute_hash(r.content, traintuple['key'])
                 except Exception:
                     raise Exception('Failed to fetch outModel file')
                 else:
