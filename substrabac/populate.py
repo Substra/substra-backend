@@ -328,15 +328,13 @@ if __name__ == '__main__':
                     'dataset_key': dataset_chunantes_key,
                     'train_data_keys': train_data_keys,
                 })
-                traintuple = create_traintuple(data, 'chunantes')
+                traintuple_key = create_traintuple(data, 'chunantes')
 
                 ####################################################
 
-                if traintuple and 'pkhash' in traintuple:
-                        traintuple_key = traintuple['pkhash']
-
+                if traintuple_key:
                         res = popen(
-                            ['substra', 'get', 'traintuple', traintuple['pkhash'],
+                            ['substra', 'get', 'traintuple', traintuple_key,
                              '--profile=chunantes',
                              '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
@@ -357,11 +355,10 @@ if __name__ == '__main__':
                             data = json.dumps({
                                 'traintuple_key': traintuple_key
                             })
-                            testtuple = create_testuple(data, 'chunantes')
 
-                            if testtuple and 'pkhash' in testtuple:
-                                testtuple_key = testtuple['pkhash']
+                            testtuple_key = create_testuple(data, 'chunantes')
 
+                            if testtuple_key:
                                 res = popen(
                                     ['substra', 'get', 'testtuple', testtuple_key,
                                      '--profile=chunantes',
@@ -369,7 +366,7 @@ if __name__ == '__main__':
                                     stdout=PIPE).communicate()[0]
                                 res = json.loads(res.decode('utf-8'))
 
-                                while res['result']['status'] not in ('done', 'failed'):
+                                while res['status'] not in ('done', 'failed'):
                                     res = popen(['substra', 'get', 'testtuple',
                                                  testtuple_key,
                                                  '--profile=chunantes',
