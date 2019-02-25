@@ -48,14 +48,17 @@ class Command(BaseCommand):
         files = {}
         if data_files and type(data_files) == list:
             for file in data_files:
-                with open(file, 'rb') as f:
-                    filename = path_leaf(file)
-                    files[filename] = ContentFile(f.read(), filename)
+                if os.path.exists(file):
+                    with open(file, 'rb') as f:
+                        filename = path_leaf(file)
+                        files[filename] = ContentFile(f.read(), filename)
+                else:
+                    return self.stderr.write(f'File : {file} does not exist.')
 
         dataset_keys = data.get('dataset_keys', [])
 
         if not type(dataset_keys) == list:
-            return self.stderr('The dataset_keys you provided is not an array')
+            return self.stderr.write('The dataset_keys you provided is not an array')
 
         dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
 
@@ -77,7 +80,7 @@ class Command(BaseCommand):
             try:
                 serializer.is_valid(raise_exception=True)
             except Exception as e:
-                return self.stderr(str(e))
+                return self.stderr.write(str(e))
             else:
                 # create on db
                 try:
