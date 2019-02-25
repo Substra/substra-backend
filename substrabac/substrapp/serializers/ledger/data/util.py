@@ -1,4 +1,3 @@
-# Create your tasks here
 from __future__ import absolute_import, unicode_literals
 from rest_framework import status
 
@@ -18,12 +17,16 @@ def createLedgerData(args, pkhashes, sync=False):
     except:
         pass
     else:
-        if st != status.HTTP_201_CREATED:
+
+        # delete if not created
+        if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             instances.delete()
         else:
-            instances.update(validated=True)
-            # update data to return
-            data['validated'] = True
+            # do not pass to true if still waiting for validation
+            if st != status.HTTP_408_REQUEST_TIMEOUT:
+                instances.update(validated=True)
+                # update data to return
+                data['validated'] = True
 
     return data, st
 

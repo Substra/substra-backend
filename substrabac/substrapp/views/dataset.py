@@ -109,7 +109,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 # create on ledger
                 data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+                if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
                     return Response(data, status=st)
 
                 headers = self.get_success_headers(serializer.data)

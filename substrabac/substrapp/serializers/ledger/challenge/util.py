@@ -1,4 +1,3 @@
-# Create your tasks here
 from __future__ import absolute_import, unicode_literals
 from rest_framework import status
 
@@ -19,12 +18,13 @@ def createLedgerChallenge(args, pkhash, sync=False):
     except:
         pass
     else:
-        if st != status.HTTP_201_CREATED:
+        if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             instance.delete()
         else:
-            instance.validated = True
-            instance.save()
-            # update data to return
-            data['validated'] = True
+            if st != status.HTTP_408_REQUEST_TIMEOUT:
+                instance.validated = True
+                instance.save()
+                # update data to return
+                data['validated'] = True
 
     return data, st
