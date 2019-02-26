@@ -5,8 +5,8 @@ import argparse
 from subprocess import call, check_output
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-raven_dryrunner_url = "https://cff352ba26fc49f19e01692db93bf951@sentry.io/1317743"
-raven_worker_url = "https://cff352ba26fc49f19e01692db93bf951@sentry.io/1317743"
+raven_dryrunner_url = "https://a1c2de65bb0f4120aa11d75bca9b47f6@sentry.io/1402760"
+raven_worker_url = "https://76abd6b5d11e48ea8a118831c86fc615@sentry.io/1402762"
 raven_scheduler_url = raven_worker_url
 
 
