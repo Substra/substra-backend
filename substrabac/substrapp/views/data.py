@@ -1,6 +1,5 @@
 import docker
 import os
-import zipfile
 import ntpath
 
 from django.conf import settings
@@ -18,7 +17,7 @@ from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
-from substrapp.utils import get_hash, get_computed_hash, uncompress_content
+from substrapp.utils import get_hash, uncompress_content
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
@@ -93,7 +92,7 @@ class DataViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   # mixins.UpdateModelMixin,
                   # mixins.DestroyModelMixin,
-                  mixins.ListModelMixin,
+                  # mixins.ListModelMixin,
                   GenericViewSet):
     queryset = Data.objects.all()
     serializer_class = DataSerializer
