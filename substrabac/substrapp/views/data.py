@@ -17,7 +17,7 @@ from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
-from substrapp.utils import get_hash, uncompress_content
+from substrapp.utils import get_hash, uncompress_path
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
@@ -37,8 +37,8 @@ def compute_dryrun(self, data_files, dataset_keys):
 
         for data in data_files:
             try:
-                uncompress_content(bytearray.fromhex(data['file']),
-                                   os.path.join(subtuple_directory, 'data'))
+                uncompress_path(data['filepath'],
+                                os.path.join(subtuple_directory, 'data'))
             except Exception as e:
                 raise e
 
@@ -49,7 +49,7 @@ def compute_dryrun(self, data_files, dataset_keys):
             # Launch verification
             client = docker.from_env()
             opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # base metrics comes with substrabac
+            data_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # fake_data comes with substrabac
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{pkhash}'
@@ -86,6 +86,9 @@ def compute_dryrun(self, data_files, dataset_keys):
         except:
             pass
         remove_subtuple_materials(subtuple_directory)
+        for data in data_files:
+            if os.path.exists(data['filepath']):
+                os.remove(data['filepath'])
 
 
 class DataViewSet(mixins.CreateModelMixin,
@@ -103,7 +106,7 @@ class DataViewSet(mixins.CreateModelMixin,
     def dryrun_task(self, data_files, dataset_keys):
         # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
         task = compute_dryrun.apply_async((data_files, dataset_keys),
-                                          queue=f"{settings.LEDGER['org']['name']}.dryrunner")
+                                          queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
         site_port = getattr(settings, "SITE_PORT", None)
         current_site = f'{getattr(settings, "SITE_HOST")}'
@@ -152,9 +155,15 @@ class DataViewSet(mixins.CreateModelMixin,
                             data_files = []
                             for x in files:
                                 file = request.FILES[path_leaf(x)]
+                                pkhash = get_hash(file)
+
+                                data_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'data_{pkhash}.zip')
+                                with open(data_path, 'wb') as data_file:
+                                    data_file.write(file.open().read())
+
                                 data_files.append({
-                                    'pkhash': get_hash(file),
-                                    'file': file.open().read().hex(),
+                                    'pkhash': pkhash,
+                                    'filepath': data_path,
                                 })
 
                             task, msg = self.dryrun_task(data_files, dataset_keys)
@@ -216,9 +225,14 @@ class DataViewSet(mixins.CreateModelMixin,
                         try:
                             file = data.get('file')
                             pkhash = get_hash(file)
+
+                            data_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'data_{pkhash}.zip')
+                            with open(data_path, 'wb') as data_file:
+                                data_file.write(file.open().read())
+
                             data_files = [{
                                 'pkhash': pkhash,
-                                'file': file.open().read().hex(),
+                                'filepath': data_path,
                             }]
 
                             task, msg = self.dryrun_task(data_files, dataset_keys)

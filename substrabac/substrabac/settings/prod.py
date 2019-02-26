@@ -37,6 +37,7 @@ DATABASES = {
 }
 
 MEDIA_ROOT = f'/substra/medias/{ORG_NAME}'
+DRYRUN_ROOT = f'/substra/dryrun/{ORG_NAME}'
 
 SITE_ID = 1
 SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
