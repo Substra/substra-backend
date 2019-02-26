@@ -70,11 +70,15 @@ def getObjectFromLedger(pk):
 
 
 class ComputeHashMixin(object):
-    def compute_hash(self, file):
+    def compute_hash(self, file, key=None):
 
         sha256_hash = hashlib.sha256()
         if isinstance(file, str):
             file = file.encode()
+
+        if key is not None and isinstance(key, str):
+            file += key.encode()
+
         sha256_hash.update(file)
         computedHash = sha256_hash.hexdigest()
 

@@ -62,7 +62,7 @@ def get_model(subtuple):
     model_content, model_computed_hash = None, None
 
     if subtuple.get('model', None) is not None:
-        model_content, model_computed_hash = get_remote_file(subtuple['model'])
+        model_content, model_computed_hash = get_remote_file(subtuple['model'], subtuple['model']['traintupleKey'])
 
     return model_content, model_computed_hash
 
@@ -72,7 +72,7 @@ def get_models(subtuple):
 
     if subtuple.get('inModels', None) is not None:
         for subtuple_model in subtuple['inModels']:
-            model_content, model_computed_hash = get_remote_file(subtuple_model)
+            model_content, model_computed_hash = get_remote_file(subtuple_model, subtuple_model['traintupleKey'])
             models_content.append(model_content)
             models_computed_hash.append(model_computed_hash)
 
@@ -91,13 +91,13 @@ def put_model(subtuple, subtuple_directory, model_content):
             with open(model_dst_path, 'wb') as f:
                 f.write(model_content)
         else:
-            if get_hash(model.file.path) != subtuple['model']['hash']:
+            if get_hash(model.file.path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
                 raise Exception('Model Hash in Subtuple is not the same as in local db')
 
             if not os.path.exists(model_dst_path):
                 os.link(model.file.path, model_dst_path)
             else:
-                if get_hash(model_dst_path) != subtuple['model']['hash']:
+                if get_hash(model_dst_path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
                     raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
@@ -114,13 +114,13 @@ def put_models(subtuple, subtuple_directory, models_content):
                 with open(model_dst_path, 'wb') as f:
                     f.write(model_content)
             else:
-                if get_hash(model.file.path) != subtuple_model['hash']:
+                if get_hash(model.file.path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
                     raise Exception('Model Hash in Subtuple is not the same as in local db')
 
                 if not os.path.exists(model_dst_path):
                     os.link(model.file.path, model_dst_path)
                 else:
-                    if get_hash(model_dst_path) != subtuple_model['hash']:
+                    if get_hash(model_dst_path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
                         raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
@@ -435,7 +435,7 @@ def doTask(subtuple, tuple_type):
         if tuple_type == 'traintuple':
             from substrapp.models import Model
             end_model_path = path.join(subtuple_directory, 'model/model')
-            end_model_file_hash = get_hash(end_model_path)
+            end_model_file_hash = get_hash(end_model_path, subtuple['key'])
             try:
                 instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
             except Exception as e:
