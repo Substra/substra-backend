@@ -126,6 +126,7 @@ def invokeLedger(options, sync=False):
         data = {'message': msg}
 
         if 'Error' in msg or 'ERRO' in msg:
+            # https://github.com/hyperledger/fabric/blob/eca1b14b7e3453a5d32296af79cc7bad10c7673b/peer/chaincode/common.go
             if "timed out waiting for txid on all peers" in msg or "failed to receive txid on all peers" in msg:
                 st = status.HTTP_408_REQUEST_TIMEOUT
             else:
