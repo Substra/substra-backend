@@ -11,9 +11,9 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     dataset_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False)
     FLtask_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
-    input_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                              min_length=0,
-                                              max_length=None)
+    in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
+                                           min_length=0,
+                                           max_length=None)
     train_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                             min_length=1,
                                             max_length=None)
@@ -24,13 +24,13 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         rank = validated_data.get('rank', '')
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_keys = validated_data.get('train_data_keys')
-        input_models_keys = validated_data.get('input_models_keys')
+        in_models_keys = validated_data.get('in_models_keys')
 
         args = '"%(algoKey)s", "%(inModels)s", "%(datasetKey)s", "%(dataKeys)s", "%(FLtask)s", "%(rank)s"' % {
             'algoKey': algo_key,
             'rank': rank,
             'FLtask': FLtask_key,
-            'inModels': ','.join([x for x in input_models_keys]),
+            'inModels': ','.join([x for x in in_models_keys]),
             'datasetKey': dataset_key,
             'dataKeys': ','.join([x for x in train_data_keys]),
         }
