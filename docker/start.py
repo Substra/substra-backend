@@ -94,7 +94,6 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                      'PYTHONUNBUFFERED=1',
                                      f"CELERYD_CONCURRENCY={celeryd_concurrency}",
-                                     f"RAVEN_URL={raven_scheduler_url}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                      f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -117,7 +116,6 @@ def generate_docker_compose_file(conf, launch_settings):
                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                   'PYTHONUNBUFFERED=1',
                                   f"CELERYD_CONCURRENCY={celeryd_concurrency}",
-                                  f"RAVEN_URL={raven_worker_url}",
                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                   f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -140,7 +138,6 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}.{org_name_stripped}',
                                      'PYTHONUNBUFFERED=1',
                                      f"CELERYD_CONCURRENCY={celeryd_concurrency}",
-                                     f"RAVEN_URL={raven_dryrunner_url}",
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                      f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                      f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
@@ -162,6 +159,10 @@ def generate_docker_compose_file(conf, launch_settings):
             worker['environment'].append(media_root)
             dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
+        else:
+            scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}",)
+            worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
+            dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
