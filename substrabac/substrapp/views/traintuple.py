@@ -45,9 +45,9 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', ''))
 
         try:
-            input_models_keys = request.data.getlist('input_models_keys', [])
+            in_models_keys = request.data.getlist('in_models_keys', [])
         except:
-            input_models_keys = request.data.get('input_models_keys', request.POST.getlist('input_models_keys', []))
+            in_models_keys = request.data.get('in_models_keys', request.POST.getlist('in_models_keys', []))
 
         try:
             train_data_keys = request.data.getlist('train_data_keys', [])
@@ -59,7 +59,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'dataset_key': dataset_key,
             'rank': rank,
             'FLtask_key': FLtask_key,
-            'input_models_keys': input_models_keys,
+            'in_models_keys': in_models_keys,
             'train_data_keys': train_data_keys,  # list of train data keys (which are stored in the train worker node)
         }
 
