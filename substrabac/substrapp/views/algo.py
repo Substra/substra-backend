@@ -22,18 +22,18 @@ from substrabac.celery import app
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger, get_hash, get_computed_hash, \
-    uncompress_content
+    uncompress_path
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, algo_file, challenge_key, pkhash):
+def compute_dryrun(self, algo_path, challenge_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
-        uncompress_content(bytearray.fromhex(algo_file), subtuple_directory)
+        uncompress_path(algo_path, subtuple_directory)
 
         try:
             challenge = getObjectFromLedger(challenge_key)
@@ -103,6 +103,8 @@ def compute_dryrun(self, algo_file, challenge_key, pkhash):
         except:
             pass
         remove_subtuple_materials(subtuple_directory)
+        if os.path.exists(algo_path):
+            os.remove(algo_path)
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -143,8 +145,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
             if dryrun:
                 try:
-                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
-                    task = compute_dryrun.apply_async((file.open().read().hex(), challenge_key, pkhash), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
+                    algo_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'algo_{pkhash}.tar.gz')
+                    with open(algo_path, 'wb') as algo_file:
+                        algo_file.write(file.open().read())
+
+                    task = compute_dryrun.apply_async((algo_path, challenge_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
                     site_port = getattr(settings, "SITE_PORT", None)
                     current_site = f'{getattr(settings, "SITE_HOST")}'
