@@ -5,6 +5,9 @@ import argparse
 from subprocess import call, check_output
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+raven_dryrunner_url = "https://a1c2de65bb0f4120aa11d75bca9b47f6@sentry.io/1402760"
+raven_worker_url = "https://76abd6b5d11e48ea8a118831c86fc615@sentry.io/1402762"
+raven_scheduler_url = raven_worker_url
 
 
 def generate_docker_compose_file(conf, launch_settings):
@@ -70,7 +73,9 @@ def generate_docker_compose_file(conf, launch_settings):
                                    f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
                                    f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
                                    f"FABRIC_CFG_PATH_ENV={org['peers'][0]['docker_core_dir']}",
-                                   f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}"],
+                                   f"CORE_PEER_ADDRESS_ENV={org['peers'][0]['host']}:{org['peers'][0]['port']}",
+                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",],
                    'volumes': ['/substra:/substra',
                                '/substra/static:/usr/src/app/substrabac/statics',
                                f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
@@ -154,6 +159,10 @@ def generate_docker_compose_file(conf, launch_settings):
             worker['environment'].append(media_root)
             dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
+        else:
+            scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}",)
+            worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
+            dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
