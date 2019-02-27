@@ -328,20 +328,21 @@ if __name__ == '__main__':
                     'dataset_key': dataset_chunantes_key,
                     'train_data_keys': train_data_keys,
                 })
-                traintuple_key = create_traintuple(data, 'chunantes')
+                traintuple = create_traintuple(data, 'chunantes')
 
                 ####################################################
 
-                # TODO
-                if traintuple_key:
+                if traintuple and 'pkhash' in traintuple:
+                        traintuple_key = traintuple['pkhash']
+
                         res = popen(
-                            ['substra', 'get', 'traintuple', traintuple_key,
+                            ['substra', 'get', 'traintuple', traintuple['pkhash'],
                              '--profile=chunantes',
                              '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
                         res = json.loads(res.decode('utf-8'))
                         print(json.dumps(res, indent=2))
-                        while res['status'] not in ('done', 'failed'):
+                        while res['result']['status'] not in ('done', 'failed'):
                             res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
                                   stdout=PIPE).communicate()[0]
                             res = json.loads(res.decode('utf-8'))
@@ -350,27 +351,30 @@ if __name__ == '__main__':
 
                         ####################################################
 
-                        if res['status'] == 'done':
+                        if res['result']['status'] == 'done':
                             # create testtuple
                             print('create testtuple')
                             data = json.dumps({
                                 'traintuple_key': traintuple_key
                             })
-                            testtuple_key = create_testuple(data, 'chunantes')
+                            testtuple = create_testuple(data, 'chunantes')
 
-                            res = popen(
-                                ['substra', 'get', 'testtuple', testtuple_key,
-                                 '--profile=chunantes',
-                                 '--config=/tmp/.substrabac'],
-                                stdout=PIPE).communicate()[0]
-                            res = json.loads(res.decode('utf-8'))
+                            if testtuple and 'pkhash' in testtuple:
+                                testtuple_key = testtuple['pkhash']
 
-                            while res['status'] not in ('done', 'failed'):
-                                res = popen(['substra', 'get', 'testtuple',
-                                             testtuple_key,
-                                             '--profile=chunantes',
-                                             '--config=/tmp/.substrabac'],
-                                            stdout=PIPE).communicate()[0]
+                                res = popen(
+                                    ['substra', 'get', 'testtuple', testtuple_key,
+                                     '--profile=chunantes',
+                                     '--config=/tmp/.substrabac'],
+                                    stdout=PIPE).communicate()[0]
                                 res = json.loads(res.decode('utf-8'))
-                                print(json.dumps(res, indent=2))
-                                time.sleep(3)
+
+                                while res['result']['status'] not in ('done', 'failed'):
+                                    res = popen(['substra', 'get', 'testtuple',
+                                                 testtuple_key,
+                                                 '--profile=chunantes',
+                                                 '--config=/tmp/.substrabac'],
+                                                stdout=PIPE).communicate()[0]
+                                    res = json.loads(res.decode('utf-8'))
+                                    print(json.dumps(res, indent=2))
+                                    time.sleep(3)

@@ -112,7 +112,7 @@ def invokeLedger(options, sync=False):
            '--certfile', peer_cert_file]
 
     if sync:
-        cmd += ['--waitForEvent', '--waitForEventTimeout', '45s']
+        cmd += ['--waitForEvent', '--waitForEventTimeout', '1s']
 
     output = subprocess.run(cmd,
                             stdout=subprocess.PIPE,
