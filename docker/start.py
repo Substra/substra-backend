@@ -192,13 +192,13 @@ def generate_docker_compose_file(conf, launch_settings):
             worker['environment'].append(media_root)
             dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
+
+            dryrunner['environment'].append(dryrun_root)
+            backend['environment'].append(dryrun_root)
         else:
             scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}",)
             worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
             dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
-
-            dryrunner['environment'].append(dryrun_root)
-            backend['environment'].append(dryrun_root)
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
