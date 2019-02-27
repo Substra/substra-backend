@@ -36,7 +36,7 @@ def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
         metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
         if not os.path.exists(metrics_path_dst):
             shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
-
+            os.remove(metrics_path)
         try:
             dataset = getObjectFromLedger(test_dataset_key)
         except JsonException as e:

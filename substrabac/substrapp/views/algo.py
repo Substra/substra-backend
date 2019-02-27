@@ -1,8 +1,6 @@
 import docker
 import os
 import tempfile
-import tarfile
-
 
 import requests
 from django.conf import settings
@@ -34,6 +32,7 @@ def compute_dryrun(self, algo_path, challenge_key, pkhash):
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
         uncompress_path(algo_path, subtuple_directory)
+        os.remove(algo_path)
 
         try:
             challenge = getObjectFromLedger(challenge_key)
