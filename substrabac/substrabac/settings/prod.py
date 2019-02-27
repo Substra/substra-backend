@@ -1,14 +1,56 @@
-from ..common import *
+import os
 
-from ..deps.restframework import *
-from ..deps.cors import *
-from ..deps.raven import *
+from .common import *
+
+from .deps.restframework import *
+from .deps.cors import *
+from .deps.raven import *
 
 DEBUG = False
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 os.environ['HTTPS'] = "on"
 os.environ['wsgi.url_scheme'] = 'https'  # safer
+
+import os
+
+ORG = os.environ.get('SUBSTRABAC_ORG', 'substra')
+DEFAULT_PORT = os.environ.get('SUBSTRABAC_DEFAULT_PORT', '8000')
+
+ORG_NAME = ORG.replace('-', '')
+ORG_DB_NAME = ORG.replace('-', '_').upper()
+
+LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
+
+# Database
+# https://docs.djangoproject.com/en/2.0/ref/settings/#databases
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get(f'SUBSTRABAC_{ORG_DB_NAME}_DB_NAME', f'substrabac_{ORG_NAME}'),
+        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabac'),
+        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabac'),
+        'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
+        'PORT': 5432,
+    }
+}
+
+MEDIA_ROOT = f'/substra/medias/{ORG_NAME}'
+DRYRUN_ROOT = f'/substra/dryrun/{ORG}'
+
+SITE_ID = 1
+SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
+SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
+
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
+
+# deactivate when public
+BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
+BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
+MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
+
 
 LOGGING = {
     'version': 1,
@@ -67,11 +109,3 @@ LOGGING = {
         }
     },
 }
-
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
-
-# deactivate when public
-BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
-BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
-MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']

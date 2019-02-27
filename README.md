@@ -79,8 +79,8 @@ It will drop the databases if they are already created, then create them and gra
 
 - With django migrations
 ```shell
-python substrabac/manage.py migrate --settings=substrabac.settings.dev.owkin
-python substrabac/manage.py migrate --settings=substrabac.settings.dev.chunantes```
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py migrate --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev```
 ```
 
 ###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
@@ -90,10 +90,10 @@ data in fixtures are relative to the data already set in the ledger if the fixtu
 Two solutions:
 - With django migrations + load data
 ```shell
-python substrabac/manage.py migrate --settings=substrabac.settings.dev.owkin
-python substrabac/manage.py migrate --settings=substrabac.settings.dev.chunantes
-python substrabac/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabac.settings.dev.owkin
-python substrabac/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabac.settings.dev.chunantes
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py migrate --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabac.settings.dev
 ```
 - From dumps:
 ```shell
@@ -110,8 +110,8 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 
 8. Optional: Create a superuser in your databases:
 ```
-python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.owkin
-python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev.chunantes
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
 ```
 
 9. Build the substra-model docker image:
@@ -136,27 +136,28 @@ Run `./boostrap.sh`
 sudo apt-get install rabbitmq-server
 ```
 
-### Launch celery workers
+### Launch celery workers/scheduler and celery beat
 
 Execute this command in the `substrabac/substrabac` folder.
 
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.owkin celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev.chunantes celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler, celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
+DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l info
 ```
 
 ## Launch the servers
 
 Go in the `substrabac` folder and run the server locally:
  ```
- python manage.py runserver 8000 --settings=substrabac.settings.dev.owkin
- python manage.py runserver 8001 --settings=substrabac.settings.dev.chunantes
+ SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.dev
+ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.dev
  ```
 
 
