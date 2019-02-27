@@ -328,13 +328,19 @@ if __name__ == '__main__':
                     'dataset_key': dataset_chunantes_key,
                     'train_data_keys': train_data_keys,
                 })
-                traintuple_key = create_traintuple(data, 'chunantes')
+                traintuple = create_traintuple(data, 'chunantes')
 
                 ####################################################
 
+<<<<<<< HEAD
                 if traintuple_key:
+=======
+                if traintuple and 'pkhash' in traintuple:
+                        traintuple_key = traintuple['pkhash']
+
+>>>>>>> update traintuple
                         res = popen(
-                            ['substra', 'get', 'traintuple', traintuple_key,
+                            ['substra', 'get', 'traintuple', traintuple['pkhash'],
                              '--profile=chunantes',
                              '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
@@ -366,7 +372,7 @@ if __name__ == '__main__':
                                     stdout=PIPE).communicate()[0]
                                 res = json.loads(res.decode('utf-8'))
 
-                                while res['status'] not in ('done', 'failed'):
+                                while res['result']['status'] not in ('done', 'failed'):
                                     res = popen(['substra', 'get', 'testtuple',
                                                  testtuple_key,
                                                  '--profile=chunantes',
