@@ -9,6 +9,7 @@ from rest_framework.exceptions import ValidationError
 
 from substrapp.models import Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.utils import get_hash
 
 
 def path_leaf(path):
@@ -20,11 +21,11 @@ class Command(BaseCommand):
     help = '''
     Bulk create data
 
-    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}'
+    python ./manage.py bulkcreatedata '{"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}'
     python ./manage.py bulkcreatedata data.json
 
     # data.json:
-    # {"files": ["./data1.zip", "./data2.zip"], "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af", "test_only": false}
+    # {"files": ["./data1.zip", "./data2.zip"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}
     '''
 
     def add_arguments(self, parser):
@@ -47,19 +48,40 @@ class Command(BaseCommand):
         files = {}
         if data_files and type(data_files) == list:
             for file in data_files:
-                with open(file, 'rb') as f:
-                    filename = path_leaf(file)
-                    files[filename] = ContentFile(f.read(), filename)
+                if os.path.exists(file):
+                    with open(file, 'rb') as f:
+                        filename = path_leaf(file)
+                        files[filename] = ContentFile(f.read(), filename)
+                else:
+                    return self.stderr.write(f'File : {file} does not exist.')
 
-        try:
-            dataset = Dataset.objects.get(pkhash=data.get('dataset_key'))
-        except:
-            self.stderr.write(f'This Dataset key: {data.get("dataset_key")} does not exist in local substrabac database.')
-        else:
-            # bulk
-            if files:
-                serializer = DataSerializer(data=[{'file': files[x]} for x in files], many=True)
+        dataset_keys = data.get('dataset_keys', [])
+
+        if not type(dataset_keys) == list:
+            return self.stderr.write('The dataset_keys you provided is not an array')
+
+        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
+
+        # check all dataset exists
+        if not len(dataset_keys) or dataset_count != len(dataset_keys):
+            return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
+
+        # bulk
+        if files:
+            l = []
+            for x in files:
+                file = files[path_leaf(x)]
+                l.append({
+                    'pkhash': get_hash(file),
+                    'file': file
+                })
+
+            serializer = DataSerializer(data=l, many=True)
+            try:
                 serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                return self.stderr.write(str(e))
+            else:
                 # create on db
                 try:
                     instances = serializer.save()
@@ -69,13 +91,9 @@ class Command(BaseCommand):
                     raise Exception(exc.args)
                 else:
                     # init ledger serializer
-                    file_size = 0
-                    for file in data_files:
-                        file_size += os.path.getsize(file)
 
                     ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                                   'size': file_size,
-                                                                   'dataset_key': dataset.pk,
+                                                                   'dataset_keys': dataset_keys,
                                                                    'instances': instances})
 
                     if not ledger_serializer.is_valid():

@@ -63,18 +63,22 @@ def getObjectFromLedger(pk):
     if st != status.HTTP_200_OK:
         raise JsonException(data)
 
-    if data['permissions'] == 'all':
+    if 'permissions' not in data or data['permissions'] == 'all':
         return data
     else:
         raise Exception('Not Allowed')
 
 
 class ComputeHashMixin(object):
-    def compute_hash(self, file):
+    def compute_hash(self, file, key=None):
 
         sha256_hash = hashlib.sha256()
         if isinstance(file, str):
             file = file.encode()
+
+        if key is not None and isinstance(key, str):
+            file += key.encode()
+
         sha256_hash.update(file)
         computedHash = sha256_hash.hexdigest()
 

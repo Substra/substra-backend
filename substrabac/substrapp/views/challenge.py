@@ -80,7 +80,7 @@ def compute_dryrun(self, metrics, test_dataset_key, pkhash):
     except ContainerError as e:
         raise Exception(e.stderr)
     except Exception as e:
-        raise e
+        raise str(e)
     finally:
         try:
             container = client.containers.get(metrics_docker_name)
@@ -155,7 +155,10 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
                     task = compute_dryrun.apply_async((metrics.open().read(), test_dataset_key, pkhash), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
-                    current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                    site_port = getattr(settings, "SITE_PORT", None)
+                    current_site = f'{getattr(settings, "SITE_HOST")}'
+                    if site_port:
+                        current_site = f'{current_site}:{site_port}'
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:
@@ -340,7 +343,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     datasetKeys = [x['key'] for x in filteredData]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['dataset_key'] in datasetKeys]
+                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['testData']['datasetKey'] in datasetKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
@@ -368,7 +371,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
 
