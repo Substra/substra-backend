@@ -195,6 +195,10 @@ def monitoring_job(client, job_args):
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, cpu_set, gpu_set,
                    remove_image=True):
 
+    dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
+    if not os.path.exists(dockerfile_fullpath):
+        raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
+
     # Build metrics
     client.images.build(path=dockerfile_path,
                         tag=image_name,
