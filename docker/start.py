@@ -187,7 +187,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         if launch_settings == 'dev':
             media_root = f'MEDIA_ROOT=/substra/medias/{org_name_stripped}'
-            dryrun_root = f'DRYRUN_ROOT=/substra/dryrun/{org_name_stripped}'
+            dryrun_root = f'DRYRUN_ROOT=/substra/dryrun/{org_name}'
 
             worker['environment'].append(media_root)
             dryrunner['environment'].append(media_root)
