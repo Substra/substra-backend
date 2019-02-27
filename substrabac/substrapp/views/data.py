@@ -100,6 +100,18 @@ class DataViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
+    def dryrun_task(self, data_files, dataset_keys):
+        # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
+        task = compute_dryrun.apply_async((data_files, dataset_keys),
+                                          queue=f"{settings.LEDGER['org']['name']}.dryrunner")
+        url_http = 'http' if settings.DEBUG else 'https'
+        site_port = getattr(settings, "SITE_PORT", None)
+        current_site = f'{getattr(settings, "SITE_HOST")}'
+        if site_port:
+            current_site = f'{current_site}:{site_port}'
+        task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+        return task, f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+
     def create(self, request, *args, **kwargs):
         data = request.data
 
@@ -116,43 +128,8 @@ class DataViewSet(mixins.CreateModelMixin,
                 'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
                 status=status.HTTP_400_BAD_REQUEST)
         else:
-
-            if dryrun:
-                try:
-                    if files:
-                        data_files = []
-                        for x in files:
-                            file = request.FILES[path_leaf(x)]
-                            data_files.append({
-                                'pkhash': get_hash(file),
-                                'file': file.open().read().hex(),
-                            })
-                    else:
-                        file = data.get('file')
-                        pkhash = get_hash(file)
-                        data_files = [{
-                            'pkhash': pkhash,
-                            'file': file.open().read().hex(),
-                        }]
-
-                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
-                    task = compute_dryrun.apply_async((data_files, dataset_keys), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
-                    url_http = 'http' if settings.DEBUG else 'https'
-                    site_port = getattr(settings, "SITE_PORT", None)
-                    current_site = f'{getattr(settings, "SITE_HOST")}'
-                    if site_port:
-                        current_site = f'{current_site}:{site_port}'
-                    task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
-                    msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
-                except Exception as e:
-                    return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
-
             # bulk
             if files:
-
                 l = []
                 for x in files:
                     file = request.FILES[path_leaf(x)]
@@ -170,6 +147,23 @@ class DataViewSet(mixins.CreateModelMixin,
                         'pkhash': [x['pkhash'] for x in l]},
                         status=status.HTTP_409_CONFLICT)
                 else:
+                    if dryrun:
+                        try:
+                            data_files = []
+                            for x in files:
+                                file = request.FILES[path_leaf(x)]
+                                data_files.append({
+                                    'pkhash': get_hash(file),
+                                    'file': file.open().read().hex(),
+                                })
+
+                            task, msg = self.dryrun_task(data_files, dataset_keys)
+                        except Exception as e:
+                            return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
+                                            status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            return Response({'id': task.id, 'message': msg},
+                                            status=status.HTTP_202_ACCEPTED)
                     # create on db
                     try:
                         instances = self.perform_create(serializer)
@@ -217,6 +211,24 @@ class DataViewSet(mixins.CreateModelMixin,
                         'pkhash': pkhash},
                         status=status.HTTP_400_BAD_REQUEST)
                 else:
+
+                    if dryrun:
+                        try:
+                            file = data.get('file')
+                            pkhash = get_hash(file)
+                            data_files = [{
+                                'pkhash': pkhash,
+                                'file': file.open().read().hex(),
+                            }]
+
+                            task, msg = self.dryrun_task(data_files, dataset_keys)
+                        except Exception as e:
+                            return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
+                                            status=status.HTTP_400_BAD_REQUEST)
+                        else:
+                            return Response({'id': task.id, 'message': msg},
+                                            status=status.HTTP_202_ACCEPTED)
+
                     # create on db
                     try:
                         instance = self.perform_create(serializer)
