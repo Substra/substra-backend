@@ -1,3 +1,6 @@
+import hashlib
+
+from django.conf import settings
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -59,9 +62,24 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
 
-        if st not in [status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED]:
+        if st == status.HTTP_408_REQUEST_TIMEOUT:
+            # with open(settings.LEDGER['signcert'], 'rb') as f:
+            #     sha256_creator_hash = hashlib.sha256(f.read())
+
+            #creator = sha256_creator_hash.hexdigest()
+            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + dataset_key).encode())
+            pkhash = sha256_pkhash.hexdigest()
+            return Response({'message': data['message'],
+                             'pkhash': pkhash}, status=st)
+
+        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
             try:
-                pkhash = data['message'].replace('"', '').split('-')[-1].strip()
+                pkhash = data['message'].replace('"', '').split('-')[
+                    -1].strip()
+
+                if not len(pkhash) == 64:
+                    raise Exception('bad pkhash')
+
                 return Response({'message': data['message'],
                                  'pkhash': pkhash}, status=st)
             except:
