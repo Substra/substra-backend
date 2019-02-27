@@ -230,13 +230,9 @@ def uncompress_content(archive_content, to_directory):
         zip_ref.extractall(to_directory)
         zip_ref.close()
     else:
-        # We cannot check with tarfile.is_tarfile because it checks
-        # by trying to open from a real path, here we have just a
-        # bytes object
         try:
             tar = tarfile.open(fileobj=io.BytesIO(archive_content))
             tar.extractall(to_directory)
             tar.close()
-        except:
-            print('failed')
+        except tarfile.TarError:
             raise Exception('Archive must be zip or tar.gz')
