@@ -13,13 +13,12 @@ from django.utils.deconstruct import deconstructible
 @deconstructible
 class FileValidator(object):
     error_messages = {
-      'open': ("Cannot handle this file object."),
-      'compressed': ("Ensure this file is an archive (zip or tar.* compressed file)."),
+        'open': ("Cannot handle this file object."),
+        'compressed': ("Ensure this file is an archive (zip or tar.* compressed file)."),
     }
 
     def __call__(self, data):
 
-        archive = None
         try:
             data.file.seek(0)
         except:
@@ -32,11 +31,8 @@ class FileValidator(object):
                 # is zipfile?
                 if not zipfile.is_zipfile(data.file):
                     raise ValidationError(self.error_messages['compressed'])
-            finally:
-                if archive:
-                    archive.close()
-                else:
-                    raise ValidationError(self.error_messages['open'])
+            else:
+                archive.close()
 
 
 class DataSerializer(serializers.ModelSerializer):
