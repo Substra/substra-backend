@@ -33,8 +33,6 @@ class BasicAuthMiddleware:
         username = getattr(settings, 'BASICAUTH_USERNAME', None)
         password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
-        response = self.get_response(request)
-
         if username not in (None, '') and password not in (None, ''):
             if request.method != 'OPTIONS':
                 if 'HTTP_AUTHORIZATION' not in request.META:
@@ -49,4 +47,4 @@ class BasicAuthMiddleware:
                     if username != settings.BASICAUTH_USERNAME or password != settings.BASICAUTH_PASSWORD:
                         return self.unauthed()
 
-        return response
+        return self.get_response(request)

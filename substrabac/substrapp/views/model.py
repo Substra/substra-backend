@@ -28,7 +28,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def create_or_update_model(self, traintuple, pk):
         if traintuple['outModel'] is None:
-            raise Exception(f'This traintuple key {pk} does not have a related outModel')
+            raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
 
         try:
             # get challenge description from remote node
@@ -42,7 +42,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     raise Exception(f'end to end node report {r.text}')
 
                 try:
-                    computed_hash = self.compute_hash(r.content)
+                    computed_hash = self.compute_hash(r.content, traintuple['key'])
                 except Exception:
                     raise Exception('Failed to fetch outModel file')
                 else:
