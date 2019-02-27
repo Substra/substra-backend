@@ -169,8 +169,13 @@ def generate_docker_compose_file(conf, launch_settings):
                                      'DATABASE_HOST=postgresql',
                                      f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
                                      f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}"],
-                     'volumes': ['/substra:/substra',
-                                 '/var/run/docker.sock:/var/run/docker.sock',
+                     'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
+                                 '/substra/medias:/substra/medias',
+                                 f'/substra/conf/{org_name}:/substra/conf/{org_name}',
+                                 f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                                 f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
+                                 f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                                 f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
                                  f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
                      'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
