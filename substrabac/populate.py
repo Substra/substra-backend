@@ -150,10 +150,10 @@ def create_traintuple(data, profile):
     else:
         print('result: ', json.dumps(r['result'], indent=2))
 
-        if r['status_code'] in (status.HTTP_400_BAD_REQUEST, status.HTTP_408_REQUEST_TIMEOUT):
-            return None
+        if r['status_code'] == status.HTTP_400_BAD_REQUEST:
+            return r['pkhash']
 
-        return r['result']
+        return r['result']['pkhash']
 
 
 def create_testuple(data, profile):
@@ -168,10 +168,10 @@ def create_testuple(data, profile):
         else:
             print('result: ', json.dumps(r['result'], indent=2))
 
-            if r['status_code'] in (status.HTTP_400_BAD_REQUEST, status.HTTP_408_REQUEST_TIMEOUT):
-                return None
+            if r['status_code'] == status.HTTP_400_BAD_REQUEST:
+                return r['pkhash']
 
-            return r['result']
+            return r['result']['pkhash']
 
 
 if __name__ == '__main__':
@@ -217,7 +217,7 @@ if __name__ == '__main__':
 
     ####################################################
 
-    if dataset_owkin_key:
+    if dataset_owkin_key and dataset_chunantes_key:
         print('register test data')
         data = json.dumps({
             'files': [
@@ -324,23 +324,17 @@ if __name__ == '__main__':
                 data = json.dumps({
                     'algo_key': algo_key,
                     'FLtask_key': '',
-                    'model_key': '',
+                    'input_models_keys': [],
                     'dataset_key': dataset_chunantes_key,
                     'train_data_keys': train_data_keys,
                 })
-                traintuple = create_traintuple(data, 'chunantes')
+                traintuple_key = create_traintuple(data, 'chunantes')
 
                 ####################################################
 
-<<<<<<< HEAD
                 if traintuple_key:
-=======
-                if traintuple and 'pkhash' in traintuple:
-                        traintuple_key = traintuple['pkhash']
-
->>>>>>> update traintuple
                         res = popen(
-                            ['substra', 'get', 'traintuple', traintuple['pkhash'],
+                            ['substra', 'get', 'traintuple', traintuple_key,
                              '--profile=chunantes',
                              '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
