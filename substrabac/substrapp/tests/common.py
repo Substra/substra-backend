@@ -40,6 +40,14 @@ def get_sample_script():
     return script, script_filename
 
 
+def get_sample_model():
+    model_content = "model"
+    model_filename = "model.bin"
+    model = get_temporary_text_file(model_content, model_filename)
+
+    return model, model_filename,
+
+
 def get_sample_dataset():
     description_content = "description"
     description_filename = "description.md"
