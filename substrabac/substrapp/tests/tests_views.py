@@ -17,8 +17,8 @@ from substrapp.utils import compute_hash
 
 from substrapp.models import Challenge, Dataset, Algo, Model
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_sample_algo, get_sample_model
-from .assets import challenge, data, dataset, algo, traintuple, testtuple, model
+from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model
+from .assets import challenge, dataset, algo, traintuple, model
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
