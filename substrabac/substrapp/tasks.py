@@ -242,9 +242,18 @@ def prepareTask(tuple_type, model_type):
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
                 try:
-                    # TODO should set a status right now
-                    computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
-                                            queue=worker_queue)
+                    # Log Start of the Subtuple
+                    start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
+                    data, st = invokeLedger({
+                        'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
+                    }, sync=True)
+
+                    if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+                        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+                    else:
+                        computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
+                                                queue=worker_queue)
+
                 except Exception as e:
                     error_code = compute_error_code(e)
                     logging.error(error_code, exc_info=True)
@@ -273,48 +282,38 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 
     result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
-    # Log Start of the Subtuple
-    start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
-    data, st = invokeLedger({
-        'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
-    }, sync=True)
+    # Get materials
+    try:
+        prepareMaterials(subtuple, model_type)
+    except Exception as e:
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        fail(subtuple['key'], error_code, tuple_type)
+        return result
 
-    if st is not status.HTTP_201_CREATED:
-        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+    logging.info(f'Prepare Task success {tuple_type}')
+
+    try:
+        res = doTask(subtuple, tuple_type)
+    except Exception as e:
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        fail(subtuple['key'], error_code, tuple_type)
+        return result
     else:
+        # Invoke ledger to log success
+        if tuple_type == 'traintuple':
+            invoke_args = f'{{"Args":["logSuccessTrain","{subtuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
+        elif tuple_type == 'testtuple':
+            invoke_args = f'{{"Args":["logSuccessTest","{subtuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
 
-        # Get materials
-        try:
-            prepareMaterials(subtuple, model_type)
-        except Exception as e:
-            error_code = compute_error_code(e)
-            logging.error(error_code, exc_info=True)
-            fail(subtuple['key'], error_code, tuple_type)
-            return result
+        data, st = invokeLedger({
+            'args': invoke_args
+        }, sync=True)
 
-        logging.info(f'Prepare Task success {tuple_type}')
-
-        try:
-            res = doTask(subtuple, tuple_type)
-        except Exception as e:
-            error_code = compute_error_code(e)
-            logging.error(error_code, exc_info=True)
-            fail(subtuple['key'], error_code, tuple_type)
-            return result
-        else:
-            # Invoke ledger to log success
-            if tuple_type == 'traintuple':
-                invoke_args = f'{{"Args":["logSuccessTrain","{subtuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
-            elif tuple_type == 'testtuple':
-                invoke_args = f'{{"Args":["logSuccessTest","{subtuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
-
-            data, st = invokeLedger({
-                'args': invoke_args
-            }, sync=True)
-
-            if st is not status.HTTP_201_CREATED:
-                logging.error('Failed to invoke ledger on logSuccess')
-                logging.error(data)
+        if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+            logging.error('Failed to invoke ledger on logSuccess')
+            logging.error(data)
 
     return result
 
