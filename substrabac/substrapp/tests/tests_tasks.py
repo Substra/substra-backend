@@ -309,10 +309,11 @@ class TasksTests(APITestCase):
                 self.file = FakePath(filepath)
 
         model_content = b'MODEL 1 2 3'
-        model_hash = compute_hash(model_content)
+        traintupleKey = compute_hash(model_content)
+        model_hash = compute_hash(model_content, traintupleKey)
         model_type = 'model'
-        modelpath = os.path.join(self.subtuple_path, 'model', model_hash)
-        subtuple = {'key': model_hash, model_type: {'hash': model_hash, 'traintupleKey': model_hash}}
+        modelpath = os.path.join(self.subtuple_path, 'model', traintupleKey)
+        subtuple = {'key': model_hash, model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
@@ -343,11 +344,12 @@ class TasksTests(APITestCase):
 
         model_content = b'MODEL 1 2 3'
         models_content = [model_content, model_content]
-        model_hash = compute_hash(model_content)
-        modelpath = os.path.join(self.subtuple_path, 'model', model_hash)
+        traintupleKey = compute_hash(model_content)
+        model_hash = compute_hash(model_content, traintupleKey)
+        modelpath = os.path.join(self.subtuple_path, 'model', traintupleKey)
         model_type = 'inModels'
-        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': model_hash},
-                                 {'hash': model_hash, 'traintupleKey': model_hash}]}
+        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
+                                 {'hash': model_hash, 'traintupleKey': traintupleKey}]}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
         create_directory(model_directory)
@@ -368,9 +370,10 @@ class TasksTests(APITestCase):
 
     def test_get_model(self):
         model_content = b'MODEL 1 2 3'
-        model_hash = compute_hash(model_content)
+        traintupleKey = compute_hash(model_content)
+        model_hash = compute_hash(model_content, traintupleKey)
         model_type = 'model'
-        subtuple = {model_type: {'hash': model_hash}}
+        subtuple = {model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
 
         with mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = model_content, model_hash
@@ -382,10 +385,12 @@ class TasksTests(APITestCase):
     def test_get_models(self):
         model_content = b'MODEL 1 2 3'
         models_content = [model_content, model_content]
-        model_hash = compute_hash(model_content)
+        traintupleKey = compute_hash(model_content)
+        model_hash = compute_hash(model_content, traintupleKey)
         models_hash = [model_hash, model_hash]
         model_type = 'inModels'
-        subtuple = {model_type: [{'hash': model_hash}, {'hash': model_hash}]}
+        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
+                                 {'hash': model_hash, 'traintupleKey': traintupleKey}]}
 
         with mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = models_content, models_hash
