@@ -164,7 +164,7 @@ Go in the `substrabac` folder and run the server locally:
 ## Test with unit and functionnal tests
 
 ```
-    coverage run manage.py test
+    DJANGO_SETTINGS_MODULE=substrabac.settings.tests coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
 ```
