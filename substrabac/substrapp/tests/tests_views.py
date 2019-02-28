@@ -26,7 +26,6 @@ challenge = [
     {
         "descriptionStorageAddress": "http://testserver/challenge/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description/",
         "key": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
-        "dataset_key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
         "metrics": {
             "hash": "0bc732c26bafdc41321c2bffd35b6835aa35f7371a4eb02994642c2c3a688f60",
             "name": "macro-average recall",
@@ -35,15 +34,17 @@ challenge = [
         "name": "Simplified skin lesion classification",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
-        "testDataKeys": [
-            "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
-            "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
-        ]
+        "testData": {
+            "dataKeys": [
+                "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
+                "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
+            ],
+            "datasetKey": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"
+        }
     },
     {
         "descriptionStorageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description/",
         "key": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
-        "dataset_key": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
         "metrics": {
             "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
             "name": "macro-average recall",
@@ -52,52 +53,84 @@ challenge = [
         "name": "Skin Lesion Classification Challenge",
         "owner": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
         "permissions": "all",
-        "testDataKeys": [
-            "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
-        ]
+        "testData": {
+            "dataKeys": [
+                "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
+            ],
+            "datasetKey": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181"
+        }
     }
 ]
 
 model = [
     {
-        "algo": {
-            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
-            "name": "Logistic regression",
-            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+        "testtuple": {
+            "algo": {
+                "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+                "name": "Logistic regression",
+                "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+            },
+            "certified": True,
+            "challenge": {
+                "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
+                "metrics": {
+                    "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                    "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                }
+            },
+            "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
+            "data": {
+                "keys": [
+                    "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
+                ],
+                "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+                "perf": 0,
+                "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
+            },
+            "key": "84d2ba229b3209b119d61f30ca8295ecc5bcf4f41a17373cd1e5908495e063a8",
+            "log": "Test - CPU:170.65 % - Mem:0.76 GB - GPU:1.00 % - GPU Mem:0.49 GB; ",
+            "model": {
+                "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
+                "storageAddress": "https://substra.owkin.com:9000/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/",
+                "traintupleKey": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f"
+            },
+            "permissions": "all",
+            "status": "done"
         },
-        "challenge": {
-            "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
-            "metrics": {
-                "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
-            }
-        },
-        "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
-        "outModel": {
-            "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
-            "storageAddress": "http://testserver/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
-        },
-        "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
-        "log": "Train - CPU:75.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
-        "permissions": "all",
-        "inModel": None,
-        "status": "done",
-        "testData": {
-            "keys": [
-                "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
-            ],
-            "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
-            "perf": 1,
-            "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
-        },
-        "trainData": {
-            "keys": [
-                "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
-                "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
-            ],
-            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
-            "perf": 1,
-            "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
+        "traintuple": {
+            "algo": {
+                "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+                "name": "Logistic regression",
+                "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+            },
+            "challenge": {
+                "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
+                "metrics": {
+                    "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                    "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                }
+            },
+            "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
+            "data": {
+                "keys": [
+                    "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
+                    "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
+                ],
+                "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+                "perf": 0,
+                "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
+            },
+            "fltask": "",
+            "inModels": None,
+            "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
+            "log": "Train - CPU:171.43 % - Mem:1.20 GB - GPU:99.00 % - GPU Mem:5.19 GB; ",
+            "outModel": {
+                "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
+                "storageAddress": "https://substra.owkin.com:9000/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
+            },
+            "permissions": "all",
+            "rank": 0,
+            "status": "done"
         }
     }
 ]
@@ -253,39 +286,33 @@ traintuple = [
             "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
         },
         "challenge": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
             }
         },
         "creator": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1",
-        "outModel": {
-            "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
-            "storageAddress": "http://testserver/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
-        },
-        "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
-        "log": "Train - CPU:75.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
-        "permissions": "all",
-        "inModel": None,
-        "status": "done",
-        "testData": {
-            "keys": [
-                "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
-            ],
-            "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
-            "perf": 1,
-            "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
-        },
-        "trainData": {
+        "data": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
             "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
-            "perf": 1,
+            "perf": 0,
             "worker": "26b9f7e4bd2946e6c725778469d982c74bd65548bbf280bd59e793a7d14351f1"
-        }
+        },
+        "fltask": "",
+        "inModels": None,
+        "key": "c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f",
+        "log": "Train - CPU:171.43 % - Mem:1.20 GB - GPU:99.00 % - GPU Mem:5.19 GB; ",
+        "outModel": {
+            "hash": "454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011",
+            "storageAddress": "https://substra.owkin.com:9000/model/454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/file/"
+        },
+        "permissions": "all",
+        "rank": 0,
+        "status": "done"
     }
 ]
 
@@ -398,7 +425,7 @@ class ViewTests(APITestCase):
         url = reverse('substrapp:challenge-list')
         with mock.patch('substrapp.views.challenge.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(challenge, status.HTTP_200_OK),
-                                        (model, status.HTTP_200_OK)]
+                                        (traintuple, status.HTTP_200_OK)]
 
             search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
             response = self.client.get(url + search_params, **self.extra)
@@ -505,7 +532,7 @@ class ViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
-                                        (model, status.HTTP_200_OK)]
+                                        (traintuple, status.HTTP_200_OK)]
 
             search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
             response = self.client.get(url + search_params, **self.extra)
@@ -719,7 +746,7 @@ class ViewTests(APITestCase):
         url = reverse('substrapp:dataset-list')
         with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
-                                        (model, status.HTTP_200_OK)]
+                                        (traintuple, status.HTTP_200_OK)]
 
             search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
             response = self.client.get(url + search_params, **self.extra)
