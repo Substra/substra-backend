@@ -13,7 +13,6 @@ from rest_framework.test import APITestCase
 from substrapp.models import Challenge, Dataset, Algo, Data
 from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer
-from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.utils import get_hash, compute_hash
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_zip_data, get_sample_script, \
@@ -23,8 +22,9 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # APITestCase
+
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-class QueryTests(APITestCase):
+class ChallengeQueryTests(APITestCase):
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -33,15 +33,8 @@ class QueryTests(APITestCase):
         self.challenge_description, self.challenge_description_filename, \
             self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
 
-        self.script, self.script_filename = get_sample_script()
-        self.algo, self.algo_filename = get_sample_algo()
-        self.data_file, self.data_file_filename = get_sample_zip_data()
-
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_dataset()
-
-        self.data_description2, self.data_description_filename2, self.data_data_opener2, \
-            self.data_opener_filename2 = get_sample_dataset2()
 
     def tearDown(self):
         try:
@@ -173,6 +166,56 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
+    def test_get_challenge_metrics(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = self.challenge_metrics
+            extra = {
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertNotEqual(challenge.pkhash, compute_hash(response.getvalue()))
+            self.assertEqual(self.challenge_metrics_filename, response.filename)
+            # self.assertEqual(r, f'http://testserver/media/challenges/{challenge.pkhash}/{self.challenge_metrics_filename}')
+
+    def test_get_challenge_metrics_no_version(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
+        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/')
+        r = response.json()
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_get_challenge_metrics_wrong_version(self):
+        challenge = Challenge.objects.create(description=self.challenge_description,
+                                             metrics=self.challenge_metrics)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
+        }
+        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class DatasetQueryTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.data_description, self.data_description_filename, self.data_data_opener, \
+            self.data_opener_filename = get_sample_dataset()
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
     def test_add_dataset_sync_ok(self):
         url = reverse('substrapp:dataset-list')
 
@@ -264,6 +307,29 @@ class QueryTests(APITestCase):
 
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class DataQueryTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.script, self.script_filename = get_sample_script()
+        self.data_file, self.data_file_filename = get_sample_zip_data()
+
+        self.data_description, self.data_description_filename, self.data_data_opener, \
+            self.data_opener_filename = get_sample_dataset()
+
+        self.data_description2, self.data_description_filename2, self.data_data_opener2, \
+            self.data_opener_filename2 = get_sample_dataset2()
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
 
     def test_add_data_sync_ok(self):
 
@@ -420,6 +486,28 @@ class QueryTests(APITestCase):
             self.assertEqual(r['keys'], [d.pkhash])
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class AlgoQueryTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.challenge_description, self.challenge_description_filename, \
+            self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
+
+        self.algo, self.algo_filename = get_sample_algo()
+
+        self.data_description, self.data_description_filename, self.data_data_opener, \
+            self.data_opener_filename = get_sample_dataset()
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
     def test_add_algo_sync_ok(self):
 
         # add associated challenge
@@ -561,6 +649,52 @@ class QueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
+    def test_get_algo_files(self):
+        algo = Algo.objects.create(file=self.algo)
+        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = self.algo
+            extra = {
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
+            # self.assertEqual(r, f'http://testserver/media/algos/{algo.pkhash}/{self.algo_filename}')
+
+    def test_get_algo_files_no_version(self):
+        algo = Algo.objects.create(file=self.algo)
+        response = self.client.get(f'/algo/{algo.pkhash}/file/')
+        r = response.json()
+        self.assertEqual(r, {'detail': 'A version is required.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+    def test_get_algo_files_wrong_version(self):
+        algo = Algo.objects.create(file=self.algo)
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=-1.0',
+        }
+        response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
+        r = response.json()
+        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
+        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class TraintupleQueryTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.challenge_description, self.challenge_description_filename, \
+            self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
     def test_add_traintuple_ok(self):
         # Add associated challenge
         description, _, metrics, _ = get_sample_challenge()
@@ -642,68 +776,6 @@ class QueryTests(APITestCase):
         }
 
         response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_get_challenge_metrics(self):
-        challenge = Challenge.objects.create(description=self.challenge_description,
-                                             metrics=self.challenge_metrics)
-        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = self.challenge_metrics
-            extra = {
-                'HTTP_ACCEPT': 'application/json;version=0.0',
-            }
-            response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertNotEqual(challenge.pkhash, compute_hash(response.getvalue()))
-            self.assertEqual(self.challenge_metrics_filename, response.filename)
-            # self.assertEqual(r, f'http://testserver/media/challenges/{challenge.pkhash}/{self.challenge_metrics_filename}')
-
-    def test_get_challenge_metrics_no_version(self):
-        challenge = Challenge.objects.create(description=self.challenge_description,
-                                             metrics=self.challenge_metrics)
-        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_get_challenge_metrics_wrong_version(self):
-        challenge = Challenge.objects.create(description=self.challenge_description,
-                                             metrics=self.challenge_metrics)
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-        response = self.client.get(f'/challenge/{challenge.pkhash}/metrics/', **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_get_algo_files(self):
-        algo = Algo.objects.create(file=self.script)
-        with mock.patch('substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = self.script
-            extra = {
-                'HTTP_ACCEPT': 'application/json;version=0.0',
-            }
-            response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
-            # self.assertEqual(r, f'http://testserver/media/algos/{algo.pkhash}/{self.script_filename}')
-
-    def test_get_algo_files_no_version(self):
-        algo = Algo.objects.create(file=self.script)
-        response = self.client.get(f'/algo/{algo.pkhash}/file/')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_get_algo_files_wrong_version(self):
-        algo = Algo.objects.create(file=self.script)
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-        response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
         r = response.json()
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
