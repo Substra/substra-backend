@@ -1,4 +1,5 @@
-from io import StringIO
+from io import StringIO, BytesIO
+import os
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
@@ -49,6 +50,7 @@ def get_sample_dataset():
 
     return description, description_filename, data_opener, data_opener_filename
 
+
 def get_sample_dataset2():
     description_content = "description 2"
     description_filename = "description2.md"
@@ -64,6 +66,34 @@ def get_sample_data():
     file_content = "0\n1\n2"
     file_filename = "file.csv"
     file = get_temporary_text_file(file_content, file_filename)
+
+    return file, file_filename
+
+
+def get_sample_zip_data():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.zip"
+    f = BytesIO()
+    with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'), 'rb') as zip_file:
+        flength = f.write(zip_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/zip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
+
+def get_sample_algo():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.tar.gz"
+    f = BytesIO()
+    with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'), 'rb') as tar_file:
+        flength = f.write(tar_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/tar+gzip', flength, None)
+    file.seek(0)
 
     return file, file_filename
 

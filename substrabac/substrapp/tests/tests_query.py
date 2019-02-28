@@ -16,8 +16,8 @@ from substrapp.serializers import LedgerChallengeSerializer, LedgerDatasetSerial
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.utils import get_hash, compute_hash
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, \
-    get_temporary_text_file, get_sample_dataset2
+from .common import get_sample_challenge, get_sample_dataset, get_sample_zip_data, get_sample_script, \
+    get_temporary_text_file, get_sample_dataset2, get_sample_algo
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -34,13 +34,14 @@ class QueryTests(APITestCase):
             self.challenge_metrics, self.challenge_metrics_filename = get_sample_challenge()
 
         self.script, self.script_filename = get_sample_script()
-        self.data_file, self.data_file_filename = get_sample_data()
+        self.algo, self.algo_filename = get_sample_algo()
+        self.data_file, self.data_file_filename = get_sample_zip_data()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_dataset()
 
         self.data_description2, self.data_description_filename2, self.data_data_opener2, \
-        self.data_opener_filename2 = get_sample_dataset2()
+            self.data_opener_filename2 = get_sample_dataset2()
 
     def tearDown(self):
         try:
@@ -285,7 +286,7 @@ class QueryTests(APITestCase):
                 mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mgetsize.return_value = 100
-            mcreate.return_value = {'pkhash': 'c4276dce1d5952cafea6aebd872c389f0945e4a2400859fa3998138d2e006f34'}, status.HTTP_201_CREATED
+            mcreate.return_value = {'pkhash': 'e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -428,7 +429,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:algo-list')
 
         data = {
-            'file': self.script,
+            'file': self.algo,
             'description': self.data_description,
             'name': 'super top algo',
             'challenge_key': get_hash(self.challenge_description),
@@ -439,12 +440,12 @@ class QueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.return_value = {'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
+            mcreate.return_value = {'pkhash': 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], get_hash(self.script))
+            self.assertEqual(r['pkhash'], get_hash(self.algo))
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -454,7 +455,7 @@ class QueryTests(APITestCase):
                                  metrics=self.challenge_metrics)
         url = reverse('substrapp:algo-list')
         data = {
-            'file': self.script,
+            'file': self.algo,
             'description': self.data_description,
             'name': 'super top algo',
             'challenge_key': get_hash(self.challenge_description),
@@ -476,10 +477,10 @@ class QueryTests(APITestCase):
 
         # non existing associated challenge
         data = {
-            'file': self.script,
+            'file': self.algo,
             'description': self.data_description,
             'name': 'super top algo',
-            'challenge_key': 'non existing challenge',
+            'challenge_key': 'non existing challengexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
             'permissions': 'all'
         }
         extra = {
@@ -508,7 +509,7 @@ class QueryTests(APITestCase):
 
             # missing ledger field
             data = {
-                'file': self.script,
+                'file': self.algo,
                 'description': self.data_description,
                 'challenge_key': get_hash(self.challenge_description),
             }
@@ -524,7 +525,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:algo-list')
 
         data = {
-            'file': self.script,
+            'file': self.algo,
             'description': self.data_description,
             'name': 'super top algo',
             'challenge_key': get_hash(self.challenge_description),
@@ -545,7 +546,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:algo-list')
 
         data = {
-            'file': self.script,
+            'file': self.algo,
             'description': self.data_description,
             'name': 'super top algo',
             'challenge_key': get_hash(self.challenge_description),
@@ -615,6 +616,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'dataset_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
@@ -632,6 +634,7 @@ class QueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {'train_data_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+                'dataset_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
