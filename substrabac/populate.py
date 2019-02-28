@@ -1,7 +1,10 @@
+import argparse
 import os
 import json
 import time
 from subprocess import PIPE, Popen as popen
+
+from termcolor import colored
 
 from rest_framework import status
 
@@ -18,9 +21,9 @@ def setup_config():
     else:
         print('Init config in /tmp/.substrabac for owkin and chunantes')
         popen(['substra', 'config', 'http://owkin.substrabac:8000', '0.0', '--profile=owkin',
-                     '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+               '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
         popen(['substra', 'config', 'http://chunantes.substrabac:8001', '0.0', '--profile=chunantes',
-                     '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
+               '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
 
 
 def create_asset(data, profile, asset, dryrun=False):
@@ -28,9 +31,9 @@ def create_asset(data, profile, asset, dryrun=False):
         print('dry-run')
         res = popen(['substra', 'add', asset, f'--profile={profile}', '--config=/tmp/.substrabac', data, '--dry-run'], stdout=PIPE).communicate()[0]
         try:
-            print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+            print(colored(json.dumps(json.loads(res.decode('utf-8')), indent=2), 'magenta'))
         except:
-            print(res.decode('utf-8'))
+            print(colored(res.decode('utf-8'), 'red'))
 
     print('real')
     res = popen(['substra', 'add', asset, f'--profile={profile}', '--config=/tmp/.substrabac', data], stdout=PIPE).communicate()[0]
@@ -38,10 +41,10 @@ def create_asset(data, profile, asset, dryrun=False):
     try:
         r = json.loads(res.decode('utf-8'))
     except:
-        print(res.decode('utf-8'))
+        print(colored(res.decode('utf-8'), 'red'))
         return None
     else:
-        print('result: ', json.dumps(r['result'], indent=2))
+        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
         if r['status_code'] == status.HTTP_400_BAD_REQUEST:
             if 'pkhash' not in r['result']:
@@ -56,7 +59,7 @@ def create_asset(data, profile, asset, dryrun=False):
                 print(json.dumps(r, indent=2))
                 print('.', end='')
                 time.sleep(1)
-            print(json.dumps(r['result'], indent=2))
+            print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
         return r['result']['pkhash']
 
@@ -68,9 +71,9 @@ def create_data(data, profile, dryrun=False):
         res = popen(['substra', 'add', 'data', data, f'--profile={profile}', '--config=/tmp/.substrabac', '--dry-run'],
                     stdout=PIPE).communicate()[0]
         try:
-            print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+            print(colored(json.dumps(json.loads(res.decode('utf-8')), indent=2), 'magenta'))
         except:
-            print(res.decode('utf-8'))
+            print(colored(res.decode('utf-8'), 'red'))
 
     print('real')
     res = popen(['substra', 'add', 'data', data, f'--profile={profile}', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
@@ -78,10 +81,10 @@ def create_data(data, profile, dryrun=False):
     try:
         r = json.loads(res.decode('utf-8'))
     except:
-        print(res.decode('utf-8'))
+        print(colored(res.decode('utf-8'), 'red'))
         return None
     else:
-        print('result: ', json.dumps(r['result'], indent=2))
+        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
         if r['status_code'] == status.HTTP_400_BAD_REQUEST:
             if 'pkhash' not in r['result']:
@@ -99,10 +102,10 @@ def create_data(data, profile, dryrun=False):
                 while not r['status_code'] == status.HTTP_200_OK:
                     res = popen(['substra', 'get', 'data', pkhash, f'--profile={profile}', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
                     r = json.loads(res.decode('utf-8'))
-                    print(json.dumps(r, indent=2))
+                    print(colored(json.dumps(r, indent=2), 'blue'))
                     print('.', end='')
                     time.sleep(1)
-                print(json.dumps(r['result'], indent=2))
+                print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
         return data_keys
 
@@ -113,9 +116,9 @@ def update_dataset(dataset_key, data, profile):
                  '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     try:
-        print(json.dumps(json.loads(res.decode('utf-8')), indent=2))
+        print(colored(json.dumps(json.loads(res.decode('utf-8')), indent=2), 'green'))
     except:
-        print(res.decode('utf-8'))
+        print(colored(res.decode('utf-8'), 'red'))
 
     r = json.loads(res.decode('utf-8'))
 
@@ -130,10 +133,10 @@ def update_dataset(dataset_key, data, profile):
                 ['substra', 'get', 'dataset', dataset_key, f'--profile={profile}',
                  '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
             r = json.loads(res.decode('utf-8'))
-            print(json.dumps(r, indent=2))
+            print(colored(json.dumps(r, indent=2), 'blue'))
             print('.', end='')
             time.sleep(1)
-        print(json.dumps(r['result'], indent=2))
+        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
     return r['result']['pkhash']
 
@@ -145,13 +148,13 @@ def create_traintuple(data, profile):
     try:
         r = json.loads(res.decode('utf-8'))
     except:
-        print(res.decode('utf-8'))
+        print(colored(res.decode('utf-8'), 'red'))
         return None
     else:
-        print('result: ', json.dumps(r['result'], indent=2))
+        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
-        if r['status_code'] == status.HTTP_400_BAD_REQUEST:
-            return r['pkhash']
+        # if r['status_code'] == status.HTTP_400_BAD_REQUEST:
+        #     return r['pkhash']
 
         return r['result']['pkhash']
 
@@ -163,13 +166,13 @@ def create_testuple(data, profile):
         try:
             r = json.loads(res.decode('utf-8'))
         except:
-            print(res.decode('utf-8'))
+            print(colored(res.decode('utf-8'), 'red'))
             return None
         else:
-            print('result: ', json.dumps(r['result'], indent=2))
+            print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
 
-            if r['status_code'] == status.HTTP_400_BAD_REQUEST:
-                return r['pkhash']
+            # if r['status_code'] == status.HTTP_400_BAD_REQUEST:
+            #     return r['pkhash']
 
             return r['result']['pkhash']
 
@@ -177,8 +180,16 @@ def create_testuple(data, profile):
 if __name__ == '__main__':
     setup_config()
 
-    print('will create dataset with chu-nantes org')
-    # create dataset with chu-nantes org
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-o', '--one-org', action='store_true', default=False,
+                        help='Launch populate with one org only')
+    args = vars(parser.parse_args())
+
+    org_0 = 'owkin'
+    org_1 = org_0 if args['one_org'] else 'chunantes'
+
+    print(f'will create dataset with {org_1}')
+    # create dataset with org1
     data = json.dumps({
         'name': 'ISIC 2018',
         'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
@@ -186,26 +197,26 @@ if __name__ == '__main__':
         'description': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
         'permissions': 'all',
     })
-    dataset_chunantes_key = create_asset(data, 'chunantes', 'dataset', dryrun=True)
+    dataset_org1_key = create_asset(data, org_1, 'dataset', dryrun=True)
 
     ####################################################
 
     train_data_keys = []
-    if dataset_chunantes_key:
-        print('register train data on dataset chu-nantes (will take dataset creator as worker)')
+    if dataset_org1_key:
+        print(f'register train data on dataset {org_1} (will take dataset creator as worker)')
         data = json.dumps({
             'files': [
                 os.path.join(dir_path, './fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'),
                 os.path.join(dir_path, './fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
             ],
-            'dataset_keys': [dataset_chunantes_key],
+            'dataset_keys': [dataset_org1_key],
             'test_only': False,
         })
-        train_data_keys = create_data(data, 'chunantes', True)
+        train_data_keys = create_data(data, org_1, True)
 
     ####################################################
 
-    print('create dataset, test data and challenge on owkin')
+    print(f'create dataset, test data and challenge on {org_0}')
     data = json.dumps({
         'name': 'Simplified ISIC 2018',
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py'),
@@ -213,21 +224,21 @@ if __name__ == '__main__':
         'description': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description.md'),
         'permissions': 'all'
     })
-    dataset_owkin_key = create_asset(data, 'owkin', 'dataset')
+    dataset_org0_key = create_asset(data, org_0, 'dataset')
 
     ####################################################
 
-    if dataset_owkin_key and dataset_chunantes_key:
+    if dataset_org0_key and dataset_org1_key:
         print('register test data')
         data = json.dumps({
             'files': [
                 os.path.join(dir_path, './fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'),
                 os.path.join(dir_path, './fixtures/owkin/data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip')
             ],
-            'dataset_keys': [dataset_owkin_key],
+            'dataset_keys': [dataset_org0_key],
             'test_only': True,
         })
-        test_data_keys = create_data(data, 'owkin', False)
+        test_data_keys = create_data(data, org_0, False)
 
         ####################################################
 
@@ -237,10 +248,10 @@ if __name__ == '__main__':
                 os.path.join(dir_path, './fixtures/owkin/data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.zip'),
                 os.path.join(dir_path, './fixtures/owkin/data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.zip')
             ],
-            'dataset_keys': [dataset_owkin_key],
+            'dataset_keys': [dataset_org0_key],
             'test_only': True,
         })
-        test_data_keys_2 = create_data(data, 'owkin', False)
+        test_data_keys_2 = create_data(data, org_0, False)
 
         ####################################################
 
@@ -248,12 +259,12 @@ if __name__ == '__main__':
         data = json.dumps({
             'files': [
                 os.path.join(dir_path, './fixtures/owkin/data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.zip'),
-                os.path.join(dir_path,  './fixtures/owkin/data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip')
             ],
-            'dataset_keys': [dataset_owkin_key],
+            'dataset_keys': [dataset_org0_key],
             'test_only': True,
         })
-        test_data_keys_3 = create_data(data, 'owkin', False)
+        test_data_keys_3 = create_data(data, org_0, False)
 
         ####################################################
 
@@ -262,13 +273,13 @@ if __name__ == '__main__':
             'name': 'Skin Lesion Classification Challenge',
             'description': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md'),
             'metrics_name': 'macro-average recall',
-            'metrics': os.path.join(dir_path,  './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
+            'metrics': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
             'permissions': 'all',
             'test_data_keys': test_data_keys,
-            'test_dataset_key': dataset_owkin_key
+            'test_dataset_key': dataset_org0_key
         })
 
-        challenge_key = create_asset(data, 'owkin', 'challenge', True)
+        challenge_key = create_asset(data, org_0, 'challenge', True)
 
         ####################################################
 
@@ -277,7 +288,7 @@ if __name__ == '__main__':
         data = json.dumps({
             'challenge_key': challenge_key
         })
-        update_dataset(dataset_chunantes_key, data, 'owkin')
+        update_dataset(dataset_org1_key, data, org_0)
 
         ####################################################
 
@@ -291,7 +302,7 @@ if __name__ == '__main__':
                 'challenge_key': challenge_key,
                 'permissions': 'all',
             })
-            algo_key = create_asset(data, 'chunantes', 'algo', True)
+            algo_key = create_asset(data, org_1, 'algo', True)
 
             ####################################################
 
@@ -303,7 +314,7 @@ if __name__ == '__main__':
                 'challenge_key': challenge_key,
                 'permissions': 'all',
             })
-            algo_key_2 = create_asset(data, 'chunantes', 'algo', False)
+            algo_key_2 = create_asset(data, org_1, 'algo', False)
 
             ####################################################
 
@@ -314,7 +325,7 @@ if __name__ == '__main__':
                 'challenge_key': challenge_key,
                 'permissions': 'all',
             })
-            algo_key_3 = create_asset(data, 'chunantes', 'algo', False)
+            algo_key_3 = create_asset(data, org_1, 'algo', False)
 
             ####################################################
 
@@ -325,53 +336,68 @@ if __name__ == '__main__':
                     'algo_key': algo_key,
                     'FLtask_key': '',
                     'input_models_keys': [],
-                    'dataset_key': dataset_chunantes_key,
+                    'dataset_key': dataset_org1_key,
                     'train_data_keys': train_data_keys,
                 })
-                traintuple_key = create_traintuple(data, 'chunantes')
+                traintuple_key = create_traintuple(data, org_1)
 
                 ####################################################
 
                 if traintuple_key:
                         res = popen(
                             ['substra', 'get', 'traintuple', traintuple_key,
-                             '--profile=chunantes',
+                             f'--profile={org_1}',
                              '--config=/tmp/.substrabac'],
                             stdout=PIPE).communicate()[0]
                         res = json.loads(res.decode('utf-8'))
-                        print(json.dumps(res, indent=2))
-                        while res['result']['status'] not in ('done', 'failed'):
-                            res = popen(['substra', 'get', 'traintuple', traintuple_key, '--profile=chunantes', '--config=/tmp/.substrabac'],
-                                  stdout=PIPE).communicate()[0]
-                            res = json.loads(res.decode('utf-8'))
-                            print(json.dumps(res, indent=2))
-                            time.sleep(3)
+                        print(colored(json.dumps(res, indent=2), 'green'))
 
-                        ####################################################
+                        # create testtuple
+                        print('create testtuple')
+                        data = json.dumps({
+                            'traintuple_key': traintuple_key
+                        })
 
-                        if res['result']['status'] == 'done':
-                            # create testtuple
-                            print('create testtuple')
-                            data = json.dumps({
-                                'traintuple_key': traintuple_key
-                            })
+                        testtuple_key = create_testuple(data, org_1)
 
-                            testtuple_key = create_testuple(data, 'chunantes')
+                        if testtuple_key:
+                            res_tc = popen(
+                                ['substra', 'get', 'testtuple', testtuple_key,
+                                 f'--profile={org_1}',
+                                 '--config=/tmp/.substrabac'],
+                                stdout=PIPE).communicate()[0]
+                            res_t = json.loads(res_tc.decode('utf-8'))
+                            print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
-                            if testtuple_key:
-                                res = popen(
-                                    ['substra', 'get', 'testtuple', testtuple_key,
-                                     '--profile=chunantes',
-                                     '--config=/tmp/.substrabac'],
-                                    stdout=PIPE).communicate()[0]
-                                res = json.loads(res.decode('utf-8'))
-
-                                while res['result']['status'] not in ('done', 'failed'):
-                                    res = popen(['substra', 'get', 'testtuple',
-                                                 testtuple_key,
-                                                 '--profile=chunantes',
-                                                 '--config=/tmp/.substrabac'],
+                            while res['result']['status'] not in ('done', 'failed') or res_t['result']['status'] not in ('done', 'failed'):
+                                print('-' * 100)
+                                try:
+                                    resc = popen(['substra', 'get', 'traintuple', traintuple_key, f'--profile={org_1}', '--config=/tmp/.substrabac'],
                                                 stdout=PIPE).communicate()[0]
-                                    res = json.loads(res.decode('utf-8'))
-                                    print(json.dumps(res, indent=2))
-                                    time.sleep(3)
+                                    res = json.loads(resc.decode('utf-8'))
+                                    print(colored(json.dumps(res, indent=2), 'green'))
+
+                                    res_tc = popen(['substra', 'get', 'testtuple',
+                                                   testtuple_key,
+                                                   f'--profile={org_1}',
+                                                   '--config=/tmp/.substrabac'],
+                                                  stdout=PIPE).communicate()[0]
+                                    res_t = json.loads(res_tc.decode('utf-8'))
+                                    print(colored(json.dumps(res_t, indent=2), 'yellow'))
+                                except:
+                                    print(colored('Error when getting subtuples', 'red'))
+                                time.sleep(3)
+
+                        else:
+                            while res['result']['status'] not in ('done', 'failed'):
+                                print('-' * 100)
+                                try:
+                                    resc = popen(['substra', 'get', 'traintuple', traintuple_key, f'--profile={org_1}', '--config=/tmp/.substrabac'],
+                                                stdout=PIPE).communicate()[0]
+                                    res = json.loads(resc.decode('utf-8'))
+                                    print(colored(json.dumps(res, indent=2), 'green'))
+                                except:
+                                    print(colored('Error when getting subtuple', 'red'))
+                                time.sleep(3)
+
+                            print('Testtuple create failed')
