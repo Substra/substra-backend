@@ -9,9 +9,10 @@ import tarfile
 import zipfile
 from rest_framework import status
 
-from substrabac.settings.common import PROJECT_ROOT, LEDGER_CONF
+from substrabac.settings.common import PROJECT_ROOT
 from django.conf import settings
 
+LEDGER = getattr(settings, 'LEDGER', None)
 
 def clean_env_variables():
     os.environ.pop('FABRIC_CFG_PATH', None)
@@ -28,15 +29,15 @@ def clean_env_variables():
 def queryLedger(options):
     args = options['args']
 
-    org = settings.LEDGER['org']
-    peer = settings.LEDGER['peer']
-    channel_name = LEDGER_CONF['misc']['channel_name']
-    chaincode_name = LEDGER_CONF['misc']['chaincode_name']
+    channel_name = LEDGER['channel_name']
+    chaincode_name = LEDGER['chaincode_name']
+    core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
+    peer = LEDGER['peer']
 
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["host_port"]}')
+    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
 
     print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
 
@@ -81,19 +82,19 @@ def queryLedger(options):
 def invokeLedger(options, sync=False):
     args = options['args']
 
-    org = settings.LEDGER['org']
-    peer = settings.LEDGER['peer']
-    orderer = settings.LEDGER['orderer']
-    channel_name = LEDGER_CONF['misc']['channel_name']
-    chaincode_name = LEDGER_CONF['misc']['chaincode_name']
-    orderer_ca_file = orderer['ca']['certfile']
-    orderer_key_file = peer['tls']['clientKey']
-    orderer_cert_file = peer['tls']['clientCert']
+    channel_name = LEDGER['channel_name']
+    chaincode_name = LEDGER['chaincode_name']
+    core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
+    peer = LEDGER['peer']
+    orderer = LEDGER['orderer']
+    orderer_ca_file = orderer['ca']
+    peer_key_file = peer['clientKey']
+    peer_cert_file = peer['clientCert']
 
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', org['users']['user']['home'] + '/msp')
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["host_port"]}')
+    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
 
     print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
 
@@ -107,8 +108,8 @@ def invokeLedger(options, sync=False):
            '--cafile', orderer_ca_file,
            '--tls',
            '--clientauth',
-           '--keyfile', orderer_key_file,
-           '--certfile', orderer_cert_file]
+           '--keyfile', peer_key_file,
+           '--certfile', peer_cert_file]
 
     if sync:
         cmd.append('--waitForEvent')
@@ -142,7 +143,7 @@ def invokeLedger(options, sync=False):
     return data, st
 
 
-def get_hash(file):
+def get_hash(file, key=None):
     if file is None:
         return ''
     else:
@@ -153,21 +154,24 @@ def get_hash(file):
             openedfile = file.open()
             data = openedfile.read()
 
-        return compute_hash(data)
+        return compute_hash(data, key)
 
 
-def compute_hash(bytes):
+def compute_hash(bytes, key=None):
     sha256_hash = hashlib.sha256()
 
     if isinstance(bytes, str):
         bytes = bytes.encode()
+
+    if key is not None and isinstance(key, str):
+        bytes += key.encode()
 
     sha256_hash.update(bytes)
 
     return sha256_hash.hexdigest()
 
 
-def get_computed_hash(url):
+def get_computed_hash(url, key=None):
     username = getattr(settings, 'BASICAUTH_USERNAME', None)
     password = getattr(settings, 'BASICAUTH_PASSWORD', None)
 
@@ -188,13 +192,13 @@ def get_computed_hash(url):
             raise Exception(
                 f'Url: {url} to fetch file returned status code: {r.status_code}')
 
-        computedHash = compute_hash(r.content)
+        computedHash = compute_hash(r.content, key)
 
         return r.content, computedHash
 
 
-def get_remote_file(object):
-    content, computed_hash = get_computed_hash(object['storageAddress'])
+def get_remote_file(object, key=None):
+    content, computed_hash = get_computed_hash(object['storageAddress'], key)
 
     if computed_hash != object['hash']:
         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
@@ -222,15 +226,14 @@ def uncompress_path(archive_path, to_directory):
 
 
 def uncompress_content(archive_content, to_directory):
-    try:
+    if zipfile.is_zipfile(io.BytesIO(archive_content)):
         zip_ref = zipfile.ZipFile(io.BytesIO(archive_content))
         zip_ref.extractall(to_directory)
         zip_ref.close()
-    except:
+    else:
         try:
             tar = tarfile.open(fileobj=io.BytesIO(archive_content))
             tar.extractall(to_directory)
             tar.close()
-        except:
-            print('failed')
+        except tarfile.TarError:
             raise Exception('Archive must be zip or tar.gz')

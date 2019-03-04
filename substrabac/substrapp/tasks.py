@@ -62,7 +62,7 @@ def get_model(subtuple):
     model_content, model_computed_hash = None, None
 
     if subtuple.get('model', None) is not None:
-        model_content, model_computed_hash = get_remote_file(subtuple['model'])
+        model_content, model_computed_hash = get_remote_file(subtuple['model'], subtuple['model']['traintupleKey'])
 
     return model_content, model_computed_hash
 
@@ -72,7 +72,7 @@ def get_models(subtuple):
 
     if subtuple.get('inModels', None) is not None:
         for subtuple_model in subtuple['inModels']:
-            model_content, model_computed_hash = get_remote_file(subtuple_model)
+            model_content, model_computed_hash = get_remote_file(subtuple_model, subtuple_model['traintupleKey'])
             models_content.append(model_content)
             models_computed_hash.append(model_computed_hash)
 
@@ -91,13 +91,13 @@ def put_model(subtuple, subtuple_directory, model_content):
             with open(model_dst_path, 'wb') as f:
                 f.write(model_content)
         else:
-            if get_hash(model.file.path) != subtuple['model']['hash']:
+            if get_hash(model.file.path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
                 raise Exception('Model Hash in Subtuple is not the same as in local db')
 
             if not os.path.exists(model_dst_path):
                 os.link(model.file.path, model_dst_path)
             else:
-                if get_hash(model_dst_path) != subtuple['model']['hash']:
+                if get_hash(model_dst_path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
                     raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
@@ -114,13 +114,13 @@ def put_models(subtuple, subtuple_directory, models_content):
                 with open(model_dst_path, 'wb') as f:
                     f.write(model_content)
             else:
-                if get_hash(model.file.path) != subtuple_model['hash']:
+                if get_hash(model.file.path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
                     raise Exception('Model Hash in Subtuple is not the same as in local db')
 
                 if not os.path.exists(model_dst_path):
                     os.link(model.file.path, model_dst_path)
                 else:
-                    if get_hash(model_dst_path) != subtuple_model['hash']:
+                    if get_hash(model_dst_path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
                         raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
@@ -227,11 +227,11 @@ def prepareTask(tuple_type, model_type):
             'args': f'{{"Args":["queryFilter","{tuple_type}~worker~status","{data_owner},todo"]}}'
         })
 
-        if st == 200 and subtuples is not None:
+        if st == status.HTTP_200_OK and subtuples is not None:
             for subtuple in subtuples:
 
                 fltask = None
-                worker_queue = f"{settings.LEDGER['org']['name']}.worker"
+                worker_queue = f"{settings.LEDGER['name']}.worker"
 
                 if 'fltask' in subtuple and subtuple['fltask']:
                     fltask = subtuple['fltask']
@@ -242,6 +242,7 @@ def prepareTask(tuple_type, model_type):
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
                 try:
+                    # TODO should set a status right now
                     computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
                                             queue=worker_queue)
                 except Exception as e:
@@ -267,30 +268,30 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
         worker = self.request.hostname.split('@')[1]
         queue = self.request.delivery_info['routing_key']
     except:
-        worker = f"{settings.LEDGER['org']['name']}.worker"
-        queue = f"{settings.LEDGER['org']['name']}"
+        worker = f"{settings.LEDGER['name']}.worker"
+        queue = f"{settings.LEDGER['name']}"
 
     result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
-    # Get materials
-    try:
-        prepareMaterials(subtuple, model_type)
-    except Exception as e:
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-        fail(subtuple['key'], error_code, tuple_type)
-        return result
-
     # Log Start of the Subtuple
     start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
-
     data, st = invokeLedger({
         'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
     }, sync=True)
 
     if st is not status.HTTP_201_CREATED:
-        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}')
+        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
     else:
+
+        # Get materials
+        try:
+            prepareMaterials(subtuple, model_type)
+        except Exception as e:
+            error_code = compute_error_code(e)
+            logging.error(error_code, exc_info=True)
+            fail(subtuple['key'], error_code, tuple_type)
+            return result
+
         logging.info(f'Prepare Task success {tuple_type}')
 
         try:
@@ -434,8 +435,14 @@ def doTask(subtuple, tuple_type):
         if tuple_type == 'traintuple':
             from substrapp.models import Model
             end_model_path = path.join(subtuple_directory, 'model/model')
-            end_model_file_hash = get_hash(end_model_path)
-            instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+            end_model_file_hash = get_hash(end_model_path, subtuple['key'])
+            try:
+                instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+            except Exception as e:
+                error_code = compute_error_code(e)
+                logging.error(error_code, exc_info=True)
+                return fail(subtuple['key'], error_code, tuple_type)
+
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
             url_http = 'http' if settings.DEBUG else 'https'

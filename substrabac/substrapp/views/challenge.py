@@ -1,6 +1,7 @@
 import docker
 import os
 import re
+import shutil
 import tempfile
 
 import requests
@@ -27,13 +28,15 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, metrics, test_dataset_key, pkhash):
+def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
-        with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'w') as metrics_file:
-            metrics_file.write(metrics)
 
+        metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
+        if not os.path.exists(metrics_path_dst):
+            shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
+            os.remove(metrics_path)
         try:
             dataset = getObjectFromLedger(test_dataset_key)
         except JsonException as e:
@@ -80,7 +83,7 @@ def compute_dryrun(self, metrics, test_dataset_key, pkhash):
     except ContainerError as e:
         raise Exception(e.stderr)
     except Exception as e:
-        raise e
+        raise str(e)
     finally:
         try:
             container = client.containers.get(metrics_docker_name)
@@ -152,10 +155,16 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
             if dryrun:
                 try:
-                    # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
-                    task = compute_dryrun.apply_async((metrics.open().read(), test_dataset_key, pkhash), queue=f"{settings.LEDGER['org']['name']}.dryrunner")
+                    metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
+                    with open(metrics_path, 'wb') as metrics_file:
+                        metrics_file.write(metrics.open().read())
+
+                    task = compute_dryrun.apply_async((metrics_path, test_dataset_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
-                    current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
+                    site_port = getattr(settings, "SITE_PORT", None)
+                    current_site = f'{getattr(settings, "SITE_HOST")}'
+                    if site_port:
+                        current_site = f'{current_site}:{site_port}'
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:
@@ -340,7 +349,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     datasetKeys = [x['key'] for x in filteredData]
                                     challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['dataset_key'] in datasetKeys]
+                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['testData']['datasetKey'] in datasetKeys]
                             elif k == 'algo':  # select challenge used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
@@ -368,7 +377,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'][key] in val]
+                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
                                     challengeKeys = [x['challenge']['hash'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
 
