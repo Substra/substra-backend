@@ -2,6 +2,7 @@ from io import StringIO, BytesIO
 import os
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from .tests_misc import Stats
 
 
 def get_temporary_text_file(contents, filename):
@@ -38,14 +39,6 @@ def get_sample_script():
     script = get_temporary_text_file(script_content, script_filename)
 
     return script, script_filename
-
-
-def get_sample_model():
-    model_content = "model"
-    model_filename = "model.bin"
-    model = get_temporary_text_file(model_content, model_filename)
-
-    return model, model_filename,
 
 
 def get_sample_dataset():
@@ -92,6 +85,20 @@ def get_sample_zip_data():
     return file, file_filename
 
 
+def get_sample_tar_data():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.tar.gz"
+    f = BytesIO()
+    with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.tar.gz'), 'rb') as tar_file:
+        flength = f.write(tar_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/zip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
+
 def get_sample_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
@@ -112,3 +119,61 @@ def get_sample_model():
     model = get_temporary_text_file(model_content, model_filename)
 
     return model, model_filename
+
+
+class FakeContainer(object):
+    def __init__(self):
+        self.c_stats = Stats.get_stats()
+
+    def stats(self, decode, stream):
+        return self.c_stats
+
+
+class FakeClient(object):
+    def __init__(self):
+        self.containers = {'job': FakeContainer()}
+
+
+class FakeMetrics(object):
+    def __init__(self, filepath='path'):
+        self.path = filepath
+
+    def save(self, p, f):
+        return
+
+
+class FakeChallenge(object):
+    def __init__(self, filepath='path'):
+        self.metrics = FakeMetrics(filepath)
+
+
+class FakeOpener(object):
+    def __init__(self, filepath):
+        self.path = filepath
+        self.name = self.path
+
+
+class FakeDataset(object):
+    def __init__(self, filepath):
+        self.data_opener = FakeOpener(filepath)
+
+
+class FakeFile(object):
+    def __init__(self, filepath):
+        self.path = filepath
+        self.name = self.path
+
+
+class FakeData(object):
+    def __init__(self, filepath):
+        self.file = FakeFile(filepath)
+
+
+class FakePath(object):
+    def __init__(self, filepath):
+        self.path = filepath
+
+
+class FakeModel(object):
+    def __init__(self, filepath):
+        self.file = FakePath(filepath)
