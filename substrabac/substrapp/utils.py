@@ -14,6 +14,7 @@ from django.conf import settings
 
 LEDGER = getattr(settings, 'LEDGER', None)
 
+
 def clean_env_variables():
     os.environ.pop('FABRIC_CFG_PATH', None)
     os.environ.pop('CORE_PEER_MSPCONFIGPATH', None)
