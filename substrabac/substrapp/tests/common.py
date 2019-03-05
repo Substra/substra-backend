@@ -177,3 +177,14 @@ class FakePath(object):
 class FakeModel(object):
     def __init__(self, filepath):
         self.file = FakePath(filepath)
+
+
+class FakeAsyncResult(object):
+    def __init__(self, status=None, successful=True):
+        if status is not None:
+            self.status = status
+        self.success = successful
+        self.result = {'res': 'result'}
+
+    def successful(self):
+        return self.success
