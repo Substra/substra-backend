@@ -248,8 +248,10 @@ Use these configurations for easier debugging and productivity:
 ![](assets/server_chunantes.png)
 ![](assets/celery owkin worker.png)
 ![](assets/celery owkin scheduler.png)
+![](assets/celery owkin dryrunner.png)
 ![](assets/celery chunantes worker.png)
 ![](assets/celery chunantes scheduler.png)
+![](assets/celery chunantes dryrunner.png)
 ![](assets/celery_beat.png)
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
