@@ -112,7 +112,7 @@ def invokeLedger(options, sync=False):
            '--certfile', peer_cert_file]
 
     if sync:
-        cmd.append('--waitForEvent')
+        cmd += ['--waitForEvent', '--waitForEventTimeout', '45s']
 
     output = subprocess.run(cmd,
                             stdout=subprocess.PIPE,
@@ -126,7 +126,11 @@ def invokeLedger(options, sync=False):
         data = {'message': msg}
 
         if 'Error' in msg or 'ERRO' in msg:
-            st = status.HTTP_400_BAD_REQUEST
+            # https://github.com/hyperledger/fabric/blob/eca1b14b7e3453a5d32296af79cc7bad10c7673b/peer/chaincode/common.go
+            if "timed out waiting for txid on all peers" in msg or "failed to receive txid on all peers" in msg:
+                st = status.HTTP_408_REQUEST_TIMEOUT
+            else:
+                st = status.HTTP_400_BAD_REQUEST
         elif 'access denied' in msg or 'authentication handshake failed' in msg:
             st = status.HTTP_403_FORBIDDEN
         elif 'Chaincode invoke successful' in msg:
