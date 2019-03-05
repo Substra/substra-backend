@@ -10,15 +10,15 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DatasetViewSet, TrainTupleViewSet, ChallengeViewSet, AlgoViewSet, ModelViewSet
-from substrapp.views.utils import JsonException, ComputeHashMixin
+from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, ChallengeViewSet, AlgoViewSet, ModelViewSet
+from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.data import path_leaf
 from substrapp.utils import compute_hash
 
 from substrapp.models import Challenge, Dataset, Algo, Model
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model
-from .assets import challenge, dataset, algo, traintuple, model
+from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model, FakeAsyncResult
+from .assets import challenge, dataset, algo, traintuple, model, testtuple
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -32,10 +32,6 @@ class ViewTests(APITestCase):
     def tearDown(self):
         pass
 
-    def test_traintuple_queryset(self):
-        traintuple_view = TrainTupleViewSet()
-        self.assertFalse(traintuple_view.get_queryset())
-
     def test_data_path_view(self):
         self.assertEqual('tutu', path_leaf('/toto/tata/tutu'))
         self.assertEqual('toto', path_leaf('/toto/'))
@@ -44,9 +40,26 @@ class ViewTests(APITestCase):
 
         compute = ComputeHashMixin()
         myfile = 'toto'
+        key = 'tata'
+
         myfilehash = compute_hash(myfile)
+        myfilehashwithkey = compute_hash(myfile, key)
 
         self.assertEqual(myfilehash, compute.compute_hash(myfile))
+        self.assertEqual(myfilehashwithkey, compute.compute_hash(myfile, key))
+
+    def test_utils_getObjectFromLedger(self):
+
+        with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(challenge, status.HTTP_200_OK)]
+            data = getObjectFromLedger('')
+
+            self.assertEqual(data, challenge)
+
+        with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [('', status.HTTP_400_BAD_REQUEST)]
+            with self.assertRaises(JsonException):
+                getObjectFromLedger('')
 
 
 # APITestCase
@@ -576,3 +589,176 @@ class DatasetViewTests(APITestCase):
             search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+# APITestCase
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+class TraintupleViewTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0'
+        }
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
+    def test_traintuple_queryset(self):
+        traintuple_view = TrainTupleViewSet()
+        self.assertFalse(traintuple_view.get_queryset())
+
+    def test_traintuple_list_empty(self):
+        url = reverse('substrapp:traintuple-list')
+        with mock.patch('substrapp.views.traintuple.queryLedger') as mqueryLedger:
+            mqueryLedger.return_value = ([[]], status.HTTP_200_OK)
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, [[]])
+
+    def test_traintuple_retrieve(self):
+
+        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = traintuple[0]
+            url = reverse('substrapp:traintuple-list')
+            search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+            self.assertEqual(r, traintuple[0])
+
+    def test_traintuple_retrieve_fail(self):
+        url = reverse('substrapp:traintuple-list')
+
+        # PK hash < 64 chars
+        search_params = '42303efa663015e729159833a12ffb510ff/'
+        response = self.client.get(url + search_params, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # PK hash not hexa
+        search_params = 'X' * 64 + '/'
+        response = self.client.get(url + search_params, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.side_effect = JsonException('TEST')
+
+            search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
+            response = self.client.get(url + search_params, **self.extra)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+# APITestCase
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+class TesttupleViewTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0'
+        }
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
+    def test_testtuple_queryset(self):
+        testtuple_view = TestTupleViewSet()
+        self.assertFalse(testtuple_view.get_queryset())
+
+    def test_testtuple_list_empty(self):
+        url = reverse('substrapp:testtuple-list')
+        with mock.patch('substrapp.views.testtuple.queryLedger') as mqueryLedger:
+            mqueryLedger.return_value = ([[]], status.HTTP_200_OK)
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, [[]])
+
+    def test_testtuple_retrieve(self):
+
+        with mock.patch('substrapp.views.testtuple.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.return_value = testtuple[0]
+            url = reverse('substrapp:testtuple-list')
+            search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+            self.assertEqual(r, testtuple[0])
+
+    def test_testtuple_retrieve_fail(self):
+        url = reverse('substrapp:testtuple-list')
+
+        # PK hash < 64 chars
+        search_params = '42303efa663015e729159833a12ffb510ff/'
+        response = self.client.get(url + search_params, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # PK hash not hexa
+        search_params = 'X' * 64 + '/'
+        response = self.client.get(url + search_params, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        with mock.patch('substrapp.views.testtuple.getObjectFromLedger') as mgetObjectFromLedger:
+            mgetObjectFromLedger.side_effect = JsonException('TEST')
+
+            search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
+            response = self.client.get(url + search_params, **self.extra)
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+# APITestCase
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+class TaskViewTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0'
+        }
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
+    def test_task_retrieve(self):
+
+        url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+            mAsyncResult.return_value = FakeAsyncResult(status='SUCCESS')
+            response = self.client.get(url, **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+    def test_task_retrieve_fail(self):
+        url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+            mAsyncResult.return_value = FakeAsyncResult()
+            response = self.client.get(url, **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_task_retrieve_pending(self):
+        url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+            mAsyncResult.return_value = FakeAsyncResult(status='PENDING', successful=False)
+            response = self.client.get(url, **self.extra)
+            self.assertEqual(response.data['message'],
+                             'Task is either waiting, does not exist in this context or has been removed after 24h')
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
