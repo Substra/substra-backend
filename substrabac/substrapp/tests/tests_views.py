@@ -573,11 +573,21 @@ class DatasetViewTests(APITestCase):
     def test_dataset_retrieve(self):
         url = reverse('substrapp:dataset-list')
         with mock.patch.object(DatasetViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch.object(DatasetViewSet, 'create_or_update_dataset') as mcreate_or_update_dataset:
+                mock.patch('substrapp.views.dataset.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = dataset[1]
-            mcreate_or_update_dataset.return_value = Dataset.objects.create(name='slide',
-                                                                            description=self.data_description,
-                                                                            data_opener=self.data_data_opener)
+
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'), 'rb') as f:
+                opener_content = f.read()
+
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'), 'rb') as f:
+                description_content = f.read()
+
+            mrequestsget.side_effect = [FakeRequest(status=status.HTTP_200_OK,
+                                                    content=opener_content),
+                                        FakeRequest(status=status.HTTP_200_OK,
+                                                    content=description_content)]
 
             search_params = '6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/'
             response = self.client.get(url + search_params, **self.extra)
