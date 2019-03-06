@@ -615,6 +615,40 @@ class DatasetViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_dataset_create_dryrun(self):
+        url = reverse('substrapp:dataset-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        files = {'data_opener': open(os.path.join(dir_path,
+                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
+                                     'rb'),
+                 'description': open(os.path.join(dir_path,
+                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+                                     'rb')}
+
+        data = {
+            'name': 'ISIC 2018',
+            'type': 'Images',
+            'permissions': 'all',
+            'dryrun': True
+        }
+
+        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
+        self.assertEqual(response.data, {'message': f'Your data opener is valid. You can remove the dryrun option.'})
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Will fail because metrics.py instead of opener
+        files = {'data_opener': open(os.path.join(dir_path,
+                                                  '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
+                                     'rb'),
+                 'description': open(os.path.join(dir_path,
+                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+                                     'rb')}
+
+        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
+        self.assertIn('please review your opener and the documentation.', response.data['message'])
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
