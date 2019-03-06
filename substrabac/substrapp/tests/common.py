@@ -188,3 +188,10 @@ class FakeAsyncResult(object):
 
     def successful(self):
         return self.success
+
+
+class FakeRequest(object):
+    """docstring for FakeRequest"""
+    def __init__(self, status, content):
+        self.status_code = status
+        self.content = content

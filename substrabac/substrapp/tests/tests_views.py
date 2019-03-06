@@ -17,7 +17,7 @@ from substrapp.utils import compute_hash
 
 from substrapp.models import Challenge, Dataset, Algo, Model
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model, FakeAsyncResult
+from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model, FakeAsyncResult, FakeRequest
 from .assets import challenge, dataset, algo, traintuple, model, testtuple
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -170,11 +170,17 @@ class ChallengeViewTests(APITestCase):
 
     def test_challenge_retrieve(self):
         url = reverse('substrapp:challenge-list')
+
         with mock.patch('substrapp.views.challenge.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch.object(ChallengeViewSet, 'create_or_update_challenge') as mcreate_or_update_challenge:
+                mock.patch('substrapp.views.challenge.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = challenge[0]
-            mcreate_or_update_challenge.return_value = Challenge.objects.create(description=self.challenge_description,
-                                                                                metrics=self.challenge_metrics)
+
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md'), 'rb') as f:
+                content = f.read()
+
+            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
+                                                    content=content)
 
             search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
             response = self.client.get(url + search_params, **self.extra)
@@ -300,9 +306,14 @@ class AlgoViewTests(APITestCase):
     def test_algo_retrieve(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch.object(AlgoViewSet, 'create_or_update_algo') as mcreate_or_update_algo:
+                mock.patch('substrapp.views.algo.requests.get') as mrequestsget:
+
+            with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                   '../../fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'), 'rb') as f:
+                content = f.read()
             mgetObjectFromLedger.return_value = algo[3]
-            mcreate_or_update_algo.return_value = Algo.objects.create(file=self.algo)
+            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
+                                                    content=content)
 
             search_params = 'f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/'
             response = self.client.get(url + search_params, **self.extra)
@@ -428,16 +439,20 @@ class ModelViewTests(APITestCase):
     def test_model_retrieve(self):
 
         with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch.object(ModelViewSet, 'create_or_update_model') as mcreate_or_update_model:
-            mgetObjectFromLedger.return_value = model[0]
-            instance = Model.objects.create(pkhash=model[0]['traintuple']['outModel']['hash'], validated=True, file=self.model)
-            mcreate_or_update_model.return_value = instance
+                mock.patch('substrapp.views.model.requests.get') as mrequestsget, \
+                mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
+            mgetObjectFromLedger.return_value = model[0]['traintuple']
+
+            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
+                                                    content=self.model.read().encode())
+
+            mcomputed_hash.return_value = model[0]['traintuple']['outModel']['hash']
 
             url = reverse('substrapp:model-list')
             search_params = '454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[0])
+            self.assertEqual(r, model[0]['traintuple'])
 
     def test_model_retrieve_fail(self):
         url = reverse('substrapp:model-list')
