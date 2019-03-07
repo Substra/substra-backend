@@ -2,7 +2,6 @@ import argparse
 import os
 import json
 import time
-from subprocess import PIPE, Popen as popen
 from substra_sdk_py import Client
 
 from termcolor import colored
@@ -50,8 +49,7 @@ def create_asset(data, profile, asset, dryrun=False):
             pkhash = r['result']['pkhash']
             # wait until asset is correctly created
             while not r['status_code'] == status.HTTP_200_OK:
-                res = popen(['substra', 'get', asset, pkhash, f'--profile={profile}', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-                r = json.loads(res.decode('utf-8'))
+                r = client.get(asset, pkhash)
                 print(json.dumps(r, indent=2))
                 print('.', end='')
                 time.sleep(1)
@@ -93,8 +91,7 @@ def create_data(data, profile, dryrun=False):
             for pkhash in data_keys:
                 # wait until dataset is correctly created
                 while not r['status_code'] == status.HTTP_200_OK:
-                    res = popen(['substra', 'get', 'data', pkhash, f'--profile={profile}', '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-                    r = json.loads(res.decode('utf-8'))
+                    r = client.get('data', pkhash)
                     print(colored(json.dumps(r, indent=2), 'blue'))
                     print('.', end='')
                     time.sleep(1)
@@ -120,10 +117,7 @@ def update_dataset(dataset_key, data, profile):
             print('timeout on ledger, will wait until available')
             # wait until asset is correctly created
             while not r['status_code'] == status.HTTP_200_OK:
-                res = popen(
-                    ['substra', 'get', 'dataset', dataset_key, f'--profile={profile}',
-                     '--config=/tmp/.substrabac'], stdout=PIPE).communicate()[0]
-                r = json.loads(res.decode('utf-8'))
+                r = client.get('dataset', dataset_key)
                 print(colored(json.dumps(r, indent=2), 'blue'))
                 print('.', end='')
                 time.sleep(1)
@@ -335,6 +329,7 @@ if __name__ == '__main__':
 
                 traintuple_key_2 = create_traintuple(data, org_1)
 
+                print('create third traintuple')
                 data = {
                     'algo_key': algo_key_3,
                     'FLtask_key': '',
@@ -348,61 +343,46 @@ if __name__ == '__main__':
                 ####################################################
 
                 if traintuple_key:
-                        res = popen(
-                            ['substra', 'get', 'traintuple', traintuple_key,
-                             f'--profile={org_1}',
-                             '--config=/tmp/.substrabac'],
-                            stdout=PIPE).communicate()[0]
-                        res = json.loads(res.decode('utf-8'))
-                        print(colored(json.dumps(res, indent=2), 'green'))
+                    client.set_config(org_1)
+                    res = client.get('traintuple', traintuple_key)
+                    print(colored(json.dumps(res, indent=2), 'green'))
 
-                        # create testtuple
-                        print('create testtuple')
-                        data = json.dumps({
-                            'traintuple_key': traintuple_key
-                        })
+                    # create testtuple
+                    print('create testtuple')
+                    data = {
+                        'traintuple_key': traintuple_key
+                    }
 
-                        #testtuple_key = create_testuple(data, org_1)
-                        testtuple_key = None
+                    testtuple_key = create_testuple(data, org_1)
+                    # testtuple_key = None
 
-                        if testtuple_key:
-                            res_tc = popen(
-                                ['substra', 'get', 'testtuple', testtuple_key,
-                                 f'--profile={org_1}',
-                                 '--config=/tmp/.substrabac'],
-                                stdout=PIPE).communicate()[0]
-                            res_t = json.loads(res_tc.decode('utf-8'))
-                            print(colored(json.dumps(res_t, indent=2), 'yellow'))
+                    if testtuple_key:
+                        client.set_config(org_1)
+                        res_t = client.get('testtuple', testtuple_key)
+                        print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
-                            while res['result']['status'] not in ('done', 'failed') or res_t['result']['status'] not in ('done', 'failed'):
-                                print('-' * 100)
-                                try:
-                                    resc = popen(['substra', 'get', 'traintuple', traintuple_key, f'--profile={org_1}', '--config=/tmp/.substrabac'],
-                                                stdout=PIPE).communicate()[0]
-                                    res = json.loads(resc.decode('utf-8'))
-                                    print(colored(json.dumps(res, indent=2), 'green'))
+                        while res['result']['status'] not in ('done', 'failed') or res_t['result']['status'] not in ('done', 'failed'):
+                            print('-' * 100)
+                            try:
+                                client.set_config(org_1)
+                                res = client.get('traintuple', traintuple_key)
+                                print(colored(json.dumps(res, indent=2), 'green'))
 
-                                    res_tc = popen(['substra', 'get', 'testtuple',
-                                                   testtuple_key,
-                                                   f'--profile={org_1}',
-                                                   '--config=/tmp/.substrabac'],
-                                                  stdout=PIPE).communicate()[0]
-                                    res_t = json.loads(res_tc.decode('utf-8'))
-                                    print(colored(json.dumps(res_t, indent=2), 'yellow'))
-                                except:
-                                    print(colored('Error when getting subtuples', 'red'))
-                                time.sleep(3)
+                                res_t = client.get('testtuple', testtuple_key)
+                                print(colored(json.dumps(res_t, indent=2), 'yellow'))
+                            except:
+                                print(colored('Error when getting subtuples', 'red'))
+                            time.sleep(3)
 
-                        else:
-                            while res['result']['status'] not in ('done', 'failed'):
-                                print('-' * 100)
-                                try:
-                                    resc = popen(['substra', 'get', 'traintuple', traintuple_key, f'--profile={org_1}', '--config=/tmp/.substrabac'],
-                                                stdout=PIPE).communicate()[0]
-                                    res = json.loads(resc.decode('utf-8'))
-                                    print(colored(json.dumps(res, indent=2), 'green'))
-                                except:
-                                    print(colored('Error when getting subtuple', 'red'))
-                                time.sleep(3)
+                    else:
+                        while res['result']['status'] not in ('done', 'failed'):
+                            print('-' * 100)
+                            try:
+                                client.set_config(org_1)
+                                res = client.get('traintuple', traintuple_key)
+                                print(colored(json.dumps(res, indent=2), 'green'))
+                            except:
+                                print(colored('Error when getting subtuple', 'red'))
+                            time.sleep(3)
 
-                            print('Testtuple create failed')
+                        print('Testtuple create failed')
