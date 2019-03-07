@@ -11,11 +11,12 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, DataViewSet
 
-from substrapp.serializers import LedgerDataSerializer, LedgerChallengeSerializer
+from substrapp.serializers import LedgerDataSerializer, LedgerChallengeSerializer, LedgerAlgoSerializer
 
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.data import path_leaf, compute_dryrun as data_compute_dryrun
 from substrapp.views.challenge import compute_dryrun as challenge_compute_dryrun
+from substrapp.views.algo import compute_dryrun as algo_compute_dryrun
 from substrapp.utils import compute_hash
 
 from substrapp.models import Dataset
@@ -310,6 +311,8 @@ class ChallengeViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(DRYRUN_ROOT=MEDIA_ROOT)
+@override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class AlgoViewTests(APITestCase):
 
@@ -438,6 +441,93 @@ class AlgoViewTests(APITestCase):
             search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_algo_create(self):
+        url = reverse('substrapp:algo-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
+        description_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md')
+
+        pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
+
+        data = {'name': 'Logistic regression',
+                'file': open(algo_path, 'rb'),
+                'description': open(description_path, 'rb'),
+                'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
+                'permissions': 'all'}
+
+        with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
+
+            mcreate.return_value = ({},
+                                    status.HTTP_201_CREATED)
+
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data['description'].close()
+        data['file'].close()
+
+    def test_algo_create_dryrun(self):
+
+        url = reverse('substrapp:algo-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
+        description_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md')
+
+        data = {'name': 'Logistic regression',
+                'file': open(algo_path, 'rb'),
+                'description': open(description_path, 'rb'),
+                'challenge_key': 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f',
+                'permissions': 'all',
+                'dryrun': True}
+
+        with mock.patch('substrapp.views.algo.compute_dryrun.apply_async') as mdryrun_task:
+
+            mdryrun_task.return_value = FakeTask('42')
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['id'], '42')
+        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on https://localhost/task/42/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        data['description'].close()
+        data['file'].close()
+
+    def test_algo_compute_dryrun(self):
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
+        shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
+
+        metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py')
+        with open(metrics_path, 'rb') as f:
+            metrics_content = f.read()
+        metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+        with open(opener_path, 'rb') as f:
+            opener_content = f.read()
+        opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+
+        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
+                mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
+            mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
+                                                 'testData': {'datasetKey': 'test'}},
+                                                {'openerStorageAddress': 'test'}]
+            mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
+
+            challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+            pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
+
+            # Slow operation, about 45 s
+            algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
 
 
 # APITestCase
