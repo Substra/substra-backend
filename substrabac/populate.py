@@ -12,12 +12,13 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 
 client = Client()
 
+
 # Use substra-sdk-py
 def setup_config():
     print('Init config in /tmp/.substrabac for owkin and chunantes')
 
     client.create_config('owkin', 'http://owkin.substrabac:8000', '0.0')
-    client.create_config('chunantes', 'http://owkin.substrabac:8001', '0.0')
+    client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
 
 
 def create_asset(data, profile, asset, dryrun=False):
