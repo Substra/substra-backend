@@ -1,7 +1,5 @@
-import ntpath
 import os
 import shutil
-import tempfile
 
 import mock
 
@@ -11,15 +9,16 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, ChallengeViewSet, AlgoViewSet, ModelViewSet, DataViewSet
+from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, DataViewSet
 
-from substrapp.serializers import LedgerDataSerializer
+from substrapp.serializers import LedgerDataSerializer, LedgerChallengeSerializer
 
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.data import path_leaf, compute_dryrun as data_compute_dryrun
+from substrapp.views.challenge import compute_dryrun as challenge_compute_dryrun
 from substrapp.utils import compute_hash
 
-from substrapp.models import Challenge, Dataset, Algo, Model
+from substrapp.models import Dataset
 
 from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model
 from .common import FakeAsyncResult, FakeRequest, FakeFilterDataset, FakeTask, FakeDataset
@@ -69,7 +68,9 @@ class ViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(DRYRUN_ROOT=MEDIA_ROOT)
+@override_settings(SITE_HOST='localhost')
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class ChallengeViewTests(APITestCase):
 
     def setUp(self):
@@ -214,10 +215,102 @@ class ChallengeViewTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_challenge_create(self):
+        url = reverse('substrapp:challenge-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        description_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md')
+        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py')
+
+        pkhash = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c'
+
+        data = {
+            'name': 'Simplified skin lesion classification',
+            'description': open(description_path, 'rb'),
+            'metrics_name': 'macro-average recall',
+            'metrics': open(metrics_path, 'rb'),
+            'permissions': 'all',
+            'test_data_keys': [
+                "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
+                "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
+            ],
+            'test_dataset_key': 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+        }
+
+        with mock.patch.object(LedgerChallengeSerializer, 'create') as mcreate:
+
+            mcreate.return_value = ({},
+                                    status.HTTP_201_CREATED)
+
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data['description'].close()
+        data['metrics'].close()
+
+    def test_challenge_create_dryrun(self):
+
+        url = reverse('substrapp:challenge-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        description_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/description.md')
+        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py')
+
+        data = {
+            'name': 'Simplified skin lesion classification',
+            'description': open(description_path, 'rb'),
+            'metrics_name': 'macro-average recall',
+            'metrics': open(metrics_path, 'rb'),
+            'permissions': 'all',
+            'test_data_keys': [
+                "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
+                "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
+            ],
+            'test_dataset_key': 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af',
+            'dryrun': True
+        }
+
+        with mock.patch('substrapp.views.challenge.compute_dryrun.apply_async') as mdryrun_task:
+
+            mdryrun_task.return_value = FakeTask('42')
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['id'], '42')
+        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on https://localhost/task/42/')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        data['description'].close()
+        data['metrics'].close()
+
+    def test_challenge_compute_dryrun(self):
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py')
+        shutil.copy(metrics_path, os.path.join(MEDIA_ROOT, 'metrics.py'))
+
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+
+        with open(opener_path, 'rb') as f:
+            opener_content = f.read()
+        pkhash = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c'
+
+        test_dataset_key = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+
+        with mock.patch('substrapp.views.challenge.getObjectFromLedger') as mdataset,\
+                mock.patch('substrapp.views.challenge.get_computed_hash') as mopener:
+            mdataset.return_value = {'openerStorageAddress': 'test'}
+            mopener.return_value = (opener_content, pkhash)
+            challenge_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_dataset_key, pkhash)
+
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class AlgoViewTests(APITestCase):
 
     def setUp(self):
@@ -349,7 +442,7 @@ class AlgoViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class ModelViewTests(APITestCase):
 
     def setUp(self):
@@ -483,7 +576,7 @@ class ModelViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class DatasetViewTests(APITestCase):
 
     def setUp(self):
@@ -660,7 +753,7 @@ class DatasetViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TraintupleViewTests(APITestCase):
 
     def setUp(self):
@@ -724,7 +817,7 @@ class TraintupleViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TesttupleViewTests(APITestCase):
 
     def setUp(self):
@@ -788,7 +881,7 @@ class TesttupleViewTests(APITestCase):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'org': {'org_name': 'test-org'}, 'peer': 'test-peer'})
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TaskViewTests(APITestCase):
 
     def setUp(self):
@@ -996,4 +1089,3 @@ class DataViewTests(APITestCase):
         with mock.patch.object(Dataset.objects, 'get') as mdataset:
             mdataset.return_value = FakeDataset(opener_path)
             data_compute_dryrun(data_files, dataset_keys)
-        pass
