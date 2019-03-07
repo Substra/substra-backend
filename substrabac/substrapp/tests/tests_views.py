@@ -1,3 +1,4 @@
+import ntpath
 import os
 import shutil
 import tempfile
@@ -10,17 +11,21 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, ChallengeViewSet, AlgoViewSet, ModelViewSet
+from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, ChallengeViewSet, AlgoViewSet, ModelViewSet, DataViewSet
+
+from substrapp.serializers import LedgerDataSerializer
+
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
-from substrapp.views.data import path_leaf
+from substrapp.views.data import path_leaf, compute_dryrun as data_compute_dryrun
 from substrapp.utils import compute_hash
 
 from substrapp.models import Challenge, Dataset, Algo, Model
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model, FakeAsyncResult, FakeRequest
+from .common import get_sample_challenge, get_sample_dataset, get_sample_algo, get_sample_model
+from .common import FakeAsyncResult, FakeRequest, FakeFilterDataset, FakeTask, FakeDataset
 from .assets import challenge, dataset, algo, traintuple, model, testtuple
 
-MEDIA_ROOT = tempfile.mkdtemp()
+MEDIA_ROOT = "/tmp/unittests_views/"
 
 
 # APITestCase
@@ -649,6 +654,9 @@ class DatasetViewTests(APITestCase):
         self.assertIn('please review your opener and the documentation.', response.data['message'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+        for x in files:
+            files[x].close()
+
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
@@ -821,3 +829,171 @@ class TaskViewTests(APITestCase):
                              'Task is either waiting, does not exist in this context or has been removed after 24h')
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+
+# APITestCase
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(DRYRUN_ROOT=MEDIA_ROOT)
+@override_settings(SITE_HOST='localhost')
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+class DataViewTests(APITestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+        self.data_description, self.data_description_filename, \
+            self.data_data_opener, self.data_opener_filename = get_sample_dataset()
+
+        self.extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0'
+        }
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
+    def test_data_create_bulk(self):
+        url = reverse('substrapp:data-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+
+        pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
+
+        data = {
+            'files': [path_leaf(data_path1), path_leaf(data_path2)],
+            path_leaf(data_path1): open(data_path1, 'rb'),
+            path_leaf(data_path2): open(data_path2, 'rb'),
+            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'test_only': False
+        }
+
+        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+
+            mdataset.return_value = FakeFilterDataset(1)
+            mcreate.return_value = ({'keys': [pkhash1, pkhash2]},
+                                    status.HTTP_201_CREATED)
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+        self.assertEqual([r['pkhash'] for r in response.data], [pkhash1, pkhash2])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        for x in data['files']:
+            data[x].close()
+
+    def test_data_create_bulk_dryrun(self):
+        url = reverse('substrapp:data-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+
+        data = {
+            'files': [path_leaf(data_path1), path_leaf(data_path2)],
+            path_leaf(data_path1): open(data_path1, 'rb'),
+            path_leaf(data_path2): open(data_path2, 'rb'),
+            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'test_only': False,
+            'dryrun': True
+        }
+
+        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+                mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
+
+            mdataset.return_value = FakeFilterDataset(1)
+            mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['id'], '42')
+        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on localhost')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        for x in data['files']:
+            data[x].close()
+
+    def test_data_create(self):
+        url = reverse('substrapp:data-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+
+        pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        data = {
+            'file': open(data_path, 'rb'),
+            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'test_only': False
+        }
+
+        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+
+            mdataset.return_value = FakeFilterDataset(1)
+            mcreate.return_value = ({'keys': [pkhash]},
+                                    status.HTTP_201_CREATED)
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+        data['file'].close()
+
+    def test_data_create_dryrun(self):
+
+        url = reverse('substrapp:data-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+
+        data = {
+            'file': open(data_path, 'rb'),
+            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'test_only': False,
+            'dryrun': True
+        }
+
+        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+                mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
+
+            mdataset.return_value = FakeFilterDataset(1)
+            mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data['id'], '42')
+        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on localhost')
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+
+        data['file'].close()
+
+    def test_data_compute_dryrun(self):
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+
+        shutil.copy(data_path, os.path.join(MEDIA_ROOT, '0024700.zip'))
+
+        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py')
+
+        pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+
+        data = {
+            'filepath': os.path.join(MEDIA_ROOT, '0024700.zip'),
+            'pkhash': pkhash,
+        }
+
+        data_files = [data]
+        dataset_keys = ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181']
+
+        with mock.patch.object(Dataset.objects, 'get') as mdataset:
+            mdataset.return_value = FakeDataset(opener_path)
+            data_compute_dryrun(data_files, dataset_keys)
+        pass

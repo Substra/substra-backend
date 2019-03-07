@@ -158,6 +158,14 @@ class FakeDataset(object):
         self.data_opener = FakeOpener(filepath)
 
 
+class FakeFilterDataset(object):
+    def __init__(self, count):
+        self.count_value = count
+
+    def count(self):
+        return self.count_value
+
+
 class FakeFile(object):
     def __init__(self, filepath):
         self.path = filepath
@@ -191,7 +199,11 @@ class FakeAsyncResult(object):
 
 
 class FakeRequest(object):
-    """docstring for FakeRequest"""
     def __init__(self, status, content):
         self.status_code = status
         self.content = content
+
+
+class FakeTask(object):
+    def __init__(self, task_id):
+        self.id = task_id
