@@ -1,9 +1,8 @@
-from rest_framework import serializers
-
+from libs.serializers import DynamicFieldsModelSerializer
 from substrapp.models import Model
 
 
-class ModelSerializer(serializers.ModelSerializer):
+class ModelSerializer(DynamicFieldsModelSerializer):
 
     class Meta:
         model = Model

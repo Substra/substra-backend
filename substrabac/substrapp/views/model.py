@@ -161,7 +161,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
                                     algoHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['algo']['hash'] in algoHashes]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['algo']['hash'] in algoHashes]
                             elif k == 'dataset':  # select model which trainData.openerHash is
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
@@ -176,7 +176,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     datasetHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['trainData']['openerHash'] in datasetHashes]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['data']['openerHash'] in datasetHashes]
                             elif k == 'challenge':  # select challenge used by these datasets
                                 if not challengeData:
                                     # TODO find a way to put this call in cache
@@ -194,7 +194,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     else:
                                         filteredData = [x for x in challengeData if x[key] in val]
                                     challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challenge']['hash'] in challengeKeys]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['challenge']['hash'] in challengeKeys]
 
         return Response(l, status=st)
 
