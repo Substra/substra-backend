@@ -1,5 +1,6 @@
 import os
 import shutil
+import logging
 
 import mock
 
@@ -85,11 +86,17 @@ class ChallengeViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_challenge_list_empty(self):
         url = reverse('substrapp:challenge-list')
@@ -325,12 +332,17 @@ class AlgoViewTests(APITestCase):
         self.extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_algo_list_empty(self):
         url = reverse('substrapp:algo-list')
@@ -545,11 +557,17 @@ class ModelViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_model_list_empty(self):
         url = reverse('substrapp:model-list')
@@ -680,11 +698,17 @@ class DatasetViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_dataset_list_empty(self):
         url = reverse('substrapp:dataset-list')
@@ -854,11 +878,17 @@ class TraintupleViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_traintuple_queryset(self):
         traintuple_view = TrainTupleViewSet()
@@ -918,11 +948,17 @@ class TesttupleViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_testtuple_queryset(self):
         testtuple_view = TestTupleViewSet()
@@ -982,11 +1018,17 @@ class TaskViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_task_retrieve(self):
 
@@ -1032,11 +1074,17 @@ class DataViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.logger = logging.getLogger('django.request')
+        self.previous_level = self.logger.getEffectiveLevel()
+        self.logger.setLevel(logging.ERROR)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
         except FileNotFoundError:
             pass
+
+        self.logger.setLevel(self.previous_level)
 
     def test_data_create_bulk(self):
         url = reverse('substrapp:data-list')
