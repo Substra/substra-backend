@@ -36,12 +36,11 @@ admin_owkin = create_user(name='admin',
 
 
 client = Client()
-client._crypto_suite = ecies()
 
 print(client.query_peers(admin_owkin, peer1_owkin))
 print(client.query_peers(admin_owkin, peer1_owkin, channel='mychannel', local=False))
 
-response = Channel('mychannel', '')._discovery(admin_owkin, peer1_owkin, client.crypto_suite, config=True, local=False)
+response = Channel('mychannel', '')._discovery(admin_owkin, peer1_owkin, admin_owkin.crypto_suite, config=True, local=False)
 
 
 def process_config_result(config_result):
