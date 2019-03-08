@@ -5,6 +5,7 @@ import os
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from django.db import IntegrityError
+from rest_framework import status
 from rest_framework.exceptions import ValidationError
 
 from substrapp.models import Dataset
@@ -44,6 +45,17 @@ class Command(BaseCommand):
             except:
                 raise CommandError('Invalid args. Please review help')
 
+        dataset_keys = data.get('dataset_keys', [])
+
+        if not type(dataset_keys) == list:
+            return self.stderr.write('The dataset_keys you provided is not an array')
+
+        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
+
+        # check all dataset exist
+        if not len(dataset_keys) or dataset_count != len(dataset_keys):
+            return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
+
         data_files = data.get('files', None)
         files = {}
         if data_files and type(data_files) == list:
@@ -54,18 +66,6 @@ class Command(BaseCommand):
                         files[filename] = ContentFile(f.read(), filename)
                 else:
                     return self.stderr.write(f'File : {file} does not exist.')
-
-        dataset_keys = data.get('dataset_keys', [])
-
-        if not type(dataset_keys) == list:
-            return self.stderr.write('The dataset_keys you provided is not an array')
-
-        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
-
-        # check all dataset exists
-        if not len(dataset_keys) or dataset_count != len(dataset_keys):
-            return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
-
         # bulk
         if files:
             l = []
@@ -105,8 +105,17 @@ class Command(BaseCommand):
                     # create on ledger
                     data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                    for d in serializer.data:
-                        if d['pkhash'] in data['pkhash'] and data['validated'] is not None:
-                            d['validated'] = data['validated']
+                    if st == status.HTTP_408_REQUEST_TIMEOUT:
+                        data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
+                        return self.stdout.write(self.style.WARNING(data))
+
+                    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+                        return self.stderr.write(data)
+
+                    # update validated to True in response
+                    if 'pkhash' in data and data['validated']:
+                        for d in serializer.data:
+                            if d['pkhash'] in data['pkhash']:
+                                d.update({'validated': data['validated']})
 
                     self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
