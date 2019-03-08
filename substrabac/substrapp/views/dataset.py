@@ -43,7 +43,12 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                }
 
         file = data_opener.open().read()
-        node = ast.parse(file)
+
+        try:
+            node = ast.parse(file)
+        except:
+            return Response({'message': f'Opener must be a valid python file, please review your opener file and the documentation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         funcs_args = {n.name: {arg.arg for arg in n.args.args} for n in node.body if isinstance(n, ast.FunctionDef)}
 
