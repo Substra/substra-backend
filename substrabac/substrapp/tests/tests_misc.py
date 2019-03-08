@@ -1,6 +1,7 @@
 from django.test import TestCase, override_settings
 from django.core.management import call_command
 from rest_framework import status
+from unittest.mock import MagicMock
 
 import json
 import os
@@ -219,20 +220,17 @@ class CommandsTestCase(TestCase):
         pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
         pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
 
-        class FakeFilter(object):
-            def __init__(self, count):
-                self.count_value = count
-
-            def count(self):
-                return self.count_value
-
         with patch.object(Dataset.objects, 'filter') as mdataset, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
                                     'validated': True},
                                     status.HTTP_201_CREATED)
-            mdataset.return_value = FakeFilter(1)
+
+            mock_filter = MagicMock()
+            mock_filter.count.return_value = 1
+            mdataset.return_value = mock_filter
+
             saved_stdout = sys.stdout
 
             out_data = [
