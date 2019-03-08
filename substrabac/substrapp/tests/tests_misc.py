@@ -1,6 +1,20 @@
-from django.test import TestCase
+from django.test import TestCase, override_settings
+from django.core.management import call_command
+from rest_framework import status
+
+import json
+import os
+import sys
+from io import StringIO
+import shutil
 from mock import patch
 from substrapp.job_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, update_statistics
+
+
+from substrapp.models import Dataset
+from substrapp.serializers import LedgerDataSerializer
+
+MEDIA_ROOT = "/tmp/unittests_misc/"
 
 
 class gpu():
@@ -174,3 +188,73 @@ class MiscTests(TestCase):
         self.assertNotEqual(job_statistics['memory']['max'], 0)
         self.assertNotEqual(job_statistics['cpu']['max'], 0)
         self.assertNotEqual(job_statistics['netio']['rx'], 0)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(SITE_HOST='localhost')
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+class CommandsTestCase(TestCase):
+
+    def setUp(self):
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
+    def tearDown(self):
+        try:
+            shutil.rmtree(MEDIA_ROOT)
+        except FileNotFoundError:
+            pass
+
+    def test_bulkcreatedata(self):
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+
+        data = {'files': [data_path1, data_path2],
+                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'test_only': False}
+
+        pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
+
+        class FakeFilter(object):
+            def __init__(self, count):
+                self.count_value = count
+
+            def count(self):
+                return self.count_value
+
+        with patch.object(Dataset.objects, 'filter') as mdataset, \
+                patch.object(LedgerDataSerializer, 'create') as mcreate:
+
+            mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
+                                    'validated': True},
+                                    status.HTTP_201_CREATED)
+            mdataset.return_value = FakeFilter(1)
+            saved_stdout = sys.stdout
+
+            out_data = [
+                {
+                    "pkhash": "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
+                    "file": "/media/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
+                    "validated": True
+                },
+                {
+                    "pkhash": "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9",
+                    "file": "/media/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
+                    "validated": True
+                }
+            ]
+            wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {json.dumps(out_data, indent=4)}'
+
+            try:
+                out = StringIO()
+                sys.stdout = out
+                call_command('bulkcreatedata', json.dumps(data))
+
+                output = out.getvalue().strip()
+                self.assertEqual(wanted_output, output)
+            finally:
+                sys.stdout = saved_stdout
