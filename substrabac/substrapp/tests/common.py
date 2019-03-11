@@ -74,7 +74,7 @@ def get_sample_data():
 def get_sample_zip_data():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
-    f = BytesIO()
+    f = BytesIO(b'foo')
     with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
 
