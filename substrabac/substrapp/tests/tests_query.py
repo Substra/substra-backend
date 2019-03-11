@@ -708,7 +708,7 @@ class TraintupleQueryTests(APITestCase):
                 'dataset_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'rank': -1,
                 'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'input_models_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']}
+                'in_models_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
