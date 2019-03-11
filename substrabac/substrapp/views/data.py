@@ -100,11 +100,7 @@ class DataViewSet(mixins.CreateModelMixin,
     queryset = Data.objects.all()
     serializer_class = DataSerializer
 
-    def perform_create(self, serializer):
-        return serializer.save()
-
     def dryrun_task(self, data_files, dataset_keys):
-        # TODO: DO NOT pass file content to celery tasks, use another strategy -> upload on remote nfs and pass path/url
         task = compute_dryrun.apply_async((data_files, dataset_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
@@ -115,168 +111,127 @@ class DataViewSet(mixins.CreateModelMixin,
         task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
         return task, f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
+    @staticmethod
+    def check_datasets(dataset_keys):
+        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
+
+        if not len(dataset_keys) or dataset_count != len(dataset_keys):
+            raise Exception(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
+
+    @staticmethod
+    def commit(serializer, ledger_data, many):
+        try:
+            instances = serializer.save()
+        except Exception as exc:
+            raise exc
+        else:
+            # init ledger serializer
+            if not many:
+                instances = [instances]
+            ledger_data.update({'instances': instances})
+            ledger_serializer = LedgerDataSerializer(data=ledger_data)
+
+            if not ledger_serializer.is_valid():
+                # delete instance
+                for instance in instances:
+                    instance.delete()
+                raise ValidationError(ledger_serializer.errors)
+
+            # create on ledger
+            data, st = ledger_serializer.create(
+                ledger_serializer.validated_data)
+
+            if st == status.HTTP_408_REQUEST_TIMEOUT:
+                if many:
+                    data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
+                raise Exception({'data': data, 'status': st})
+
+            if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+                raise Exception({'data': data, 'status': st})
+
+            # update validated to True in response
+            if 'pkhash' in data and data['validated']:
+                if many:
+                    for d in serializer.data:
+                        if d['pkhash'] in data['pkhash']:
+                            d.update({'validated': data['validated']})
+                else:
+                    d = dict(serializer.data)
+                    d.update({'validated': data['validated']})
+
+            return serializer.data, st
+
     def create(self, request, *args, **kwargs):
         data = request.data
 
         dryrun = data.get('dryrun', False)
+        test_only = data.get('test_only', False)
 
         # check if bulk create
-        files = request.data.getlist('files', None)
         dataset_keys = data.getlist('dataset_keys')
-        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
 
-        # check all dataset exists
-        if dataset_count != len(dataset_keys):
-            return Response({
-                'message': f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}'},
-                status=status.HTTP_400_BAD_REQUEST)
+        try:
+            self.check_datasets(dataset_keys)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # bulk
-            if files:
-                l = []
-                for x in files:
-                    file = request.FILES[path_leaf(x)]
-                    l.append({
-                        'pkhash': get_hash(file),
-                        'file': file
-                    })
-
-                serializer = self.get_serializer(data=l, many=True)
-                try:
-                    serializer.is_valid(raise_exception=True)
-                except Exception as e:
-                    return Response({
-                        'message': e.args,
-                        'pkhash': [x['pkhash'] for x in l]},
-                        status=status.HTTP_409_CONFLICT)
-                else:
-                    if dryrun:
-                        try:
-                            data_files = []
-                            for x in files:
-                                file = request.FILES[path_leaf(x)]
-                                pkhash = get_hash(file)
-
-                                data_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'data_{pkhash}.zip')
-                                with open(data_path, 'wb') as data_file:
-                                    data_file.write(file.open().read())
-
-                                data_files.append({
-                                    'pkhash': pkhash,
-                                    'filepath': data_path,
-                                })
-
-                            task, msg = self.dryrun_task(data_files, dataset_keys)
-                        except Exception as e:
-                            return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
-                                            status=status.HTTP_400_BAD_REQUEST)
-                        else:
-                            return Response({'id': task.id, 'message': msg},
-                                            status=status.HTTP_202_ACCEPTED)
-                    # create on db
-                    try:
-                        instances = self.perform_create(serializer)
-                    except Exception as exc:
-                        return Response({'message': exc.args},
-                                        status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        # init ledger serializer
-                        ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                       'dataset_keys': dataset_keys,
-                                                                       'instances': instances},
-                                                                 context={'request': request})
-
-                        if not ledger_serializer.is_valid():
-                            # delete instance
-                            for instance in instances:
-                                instance.delete()
-                            raise ValidationError(ledger_serializer.errors)
-
-                        # create on ledger
-                        data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-                        if st == status.HTTP_408_REQUEST_TIMEOUT:
-                            data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-                            return Response(data, status=st)
-
-                        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-                            return Response(data, status=st)
-
-                        # update validated to True in response
-                        if 'pkhash' in data and data['validated']:
-                            for d in serializer.data:
-                                if d['pkhash'] in data['pkhash']:
-                                    d.update({'validated': data['validated']})
-                        headers = self.get_success_headers(serializer.data)
-                        return Response(serializer.data, status=st, headers=headers)
-            else:
-                file = data.get('file')
-                pkhash = get_hash(file)
-                d = {
-                    'pkhash': pkhash,
+            l = []
+            for k, file in request.FILES.items():
+                l.append({
+                    'pkhash': get_hash(file),
                     'file': file
-                }
-                serializer = self.get_serializer(data=d)
+                })
 
-                try:
-                    serializer.is_valid(raise_exception=True)
-                except Exception as e:
-                    return Response({
-                        'message': e.args,
-                        'pkhash': pkhash},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-
-                    if dryrun:
-                        try:
-                            file = data.get('file')
+            many = len(request.FILES) > 1
+            data = l
+            if not many:
+                data = data[0]
+            serializer = self.get_serializer(data=data, many=many)
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                return Response({
+                    'message': e.args,
+                    'pkhash': [x['pkhash'] for x in l]},
+                    status=status.HTTP_409_CONFLICT)
+            else:
+                if dryrun:
+                    try:
+                        data_files = []
+                        for k, file in request.FILES.items():
                             pkhash = get_hash(file)
 
                             data_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'data_{pkhash}.zip')
                             with open(data_path, 'wb') as data_file:
                                 data_file.write(file.open().read())
 
-                            data_files = [{
+                            data_files.append({
                                 'pkhash': pkhash,
                                 'filepath': data_path,
-                            }]
+                            })
 
-                            task, msg = self.dryrun_task(data_files, dataset_keys)
-                        except Exception as e:
-                            return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
-                                            status=status.HTTP_400_BAD_REQUEST)
-                        else:
-                            return Response({'id': task.id, 'message': msg},
-                                            status=status.HTTP_202_ACCEPTED)
-
-                    # create on db
-                    try:
-                        instance = self.perform_create(serializer)
-                    except Exception as exc:
-                        return Response({'message': exc.args},
+                        task, msg = self.dryrun_task(data_files, dataset_keys)
+                    except Exception as e:
+                        return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
                                         status=status.HTTP_400_BAD_REQUEST)
                     else:
-                        # init ledger serializer
-                        ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only', False),
-                                                                       'dataset_keys': dataset_keys,
-                                                                       'instances': [instance]},
-                                                                 context={'request': request})
-
-                        if not ledger_serializer.is_valid():
-                            # delete instance
-                            instance.delete()
-                            raise ValidationError(ledger_serializer.errors)
-
-                        # create on ledger
-                        data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-                        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-                            return Response(data, status=st)
-
-                        headers = self.get_success_headers(serializer.data)
-                        d = dict(serializer.data)
-                        d.update(data)
-                        return Response(d, status=st, headers=headers)
+                        return Response({'id': task.id, 'message': msg},
+                                        status=status.HTTP_202_ACCEPTED)
+                # create on ledger + db
+                ledger_data = {'test_only': test_only,
+                               'dataset_keys': dataset_keys}
+                try:
+                    data, st = self.commit(serializer, ledger_data, many)
+                except Exception as e:
+                    message = str(e)
+                    st = status.HTTP_400_BAD_REQUEST
+                    if 'data' in e.args[0]:
+                        message = e.args[0]['data']
+                        st = e.args[0]['status']
+                    return Response({'message': message}, status=st)
+                else:
+                    headers = self.get_success_headers(data)
+                    return Response(data, status=st, headers=headers)
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
