@@ -8,7 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import getObjectFromLedger, JsonException
+from substrapp.views.utils import JsonException
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
@@ -77,7 +77,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 sha256_creator_hash = hashlib.sha256(f.read())
 
             creator = sha256_creator_hash.hexdigest()
-            sha256_pkhash = hashlib.sha256((algo_key + ','.join(input_models_keys) + ','.join(train_data_keys) + creator).encode())
+            sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_keys) + creator).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)
@@ -98,13 +98,25 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
-
         data, st = queryLedger({
             'args': '{"Args":["queryTraintuples"]}'
         })
 
         return Response(data, status=st)
+
+    def getObjectFromLedger(self, pk):
+        # get instance from remote node
+        data, st = queryLedger({
+            'args': f'{{"Args":["queryTraintuple","{pk}"]}}'
+        })
+
+        if st != status.HTTP_200_OK:
+            raise JsonException(data)
+
+        if 'permissions' not in data or data['permissions'] == 'all':
+            return data
+        else:
+            raise Exception('Not Allowed')
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -120,7 +132,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
+                data = self.getObjectFromLedger(pk)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
