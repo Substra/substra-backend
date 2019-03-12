@@ -1,7 +1,10 @@
+import zipfile
+
+from django.core.files import File
 from django.test import TestCase, override_settings
-from django.core.management import call_command
+from django.core.management import call_command, CommandError
 from rest_framework import status
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, mock_open
 
 import json
 import os
@@ -9,17 +12,20 @@ import sys
 from io import StringIO
 import shutil
 from mock import patch
-from substrapp.job_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, update_statistics
-
+from substrapp.job_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
+    update_statistics
 
 from substrapp.models import Dataset
-from substrapp.serializers import LedgerDataSerializer
+from substrapp.serializers import LedgerDataSerializer, DataSerializer
+from substrapp.views import DataViewSet
+from substrapp.views.data import LedgerException
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
 
 class gpu():
     """Fake gpu"""
+
     def __init__(self):
         self.load = 0.8
         self.memoryUsed = 1024
@@ -144,12 +150,14 @@ class MiscTests(TestCase):
     def test_cpu_sets(self):
         cpu_count = 16
         for concurrency in range(1, cpu_count + 1, 1):
-            self.assertEqual(concurrency, len(get_cpu_sets(cpu_count, concurrency)))
+            self.assertEqual(concurrency,
+                             len(get_cpu_sets(cpu_count, concurrency)))
 
     def test_gpu_sets(self):
         gpu_list = ['0', '1']
         for concurrency in range(1, len(gpu_list) + 1, 1):
-            self.assertEqual(concurrency, len(get_gpu_sets(gpu_list, concurrency)))
+            self.assertEqual(concurrency,
+                             len(get_gpu_sets(gpu_list, concurrency)))
 
         self.assertFalse(get_gpu_sets([], concurrency))
 
@@ -200,6 +208,20 @@ class CommandsTestCase(TestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
+        mock_description = MagicMock(spec=File)
+        mock_description.name = 'description.md'
+        mock_description.read = MagicMock(return_value=b'desc')
+        mock_description.open = MagicMock(return_value=mock_description)
+
+        mock_data_opener = MagicMock(spec=File)
+        mock_data_opener.name = 'opener.py'
+        mock_data_opener.read = MagicMock(return_value=b'import os')
+        mock_data_opener.open = MagicMock(return_value=mock_data_opener)
+
+        self.dataset = Dataset.objects.create(name='slide opener',
+                                              description=mock_description,
+                                              data_opener=mock_data_opener)
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
@@ -210,11 +232,14 @@ class CommandsTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
-        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+        data_path1 = os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
+        data_path2 = os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
 
         data = {'files': [data_path1, data_path2],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
@@ -224,7 +249,7 @@ class CommandsTestCase(TestCase):
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
-                                    'validated': True},
+                                     'validated': True},
                                     status.HTTP_201_CREATED)
 
             mock_filter = MagicMock()
@@ -233,26 +258,238 @@ class CommandsTestCase(TestCase):
 
             saved_stdout = sys.stdout
 
-            out_data = [
-                {
-                    "pkhash": "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
-                    "file": "/media/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
-                    "validated": True
-                },
-                {
-                    "pkhash": "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9",
-                    "file": "/media/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
-                    "validated": True
-                }
-            ]
-            wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {json.dumps(out_data, indent=4)}'
-
             try:
                 out = StringIO()
                 sys.stdout = out
                 call_command('bulkcreatedata', json.dumps(data))
 
                 output = out.getvalue().strip()
+
+                out_data = [
+                    {
+                        "pkhash": "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
+                        "file": "/media/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
+                        "validated": True
+                    },
+                    {
+                        "pkhash": "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9",
+                        "file": "/media/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
+                        "validated": True
+                    }
+                ]
+                data = json.dumps(out_data, indent=4)
+                wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
+
+    def test_bulkcreatedata_invalid_json_dict(self):
+
+        data = 'tutu'
+
+        err = StringIO()
+        sys.stderr = err
+
+        with self.assertRaises(CommandError):
+            call_command('bulkcreatedata', json.dumps(data))
+
+    def test_bulkcreatedata_invalid_json_args(self):
+
+        err = StringIO()
+        sys.stderr = err
+
+        with self.assertRaises(CommandError):
+            call_command('bulkcreatedata', '(')
+
+    def test_bulkcreatedata_valid_path(self):
+
+        err = StringIO()
+        sys.stderr = err
+
+        with patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data='{"toto": 1}')) as mopen:
+            call_command('bulkcreatedata', './foo')
+            mopen.assert_called_once_with('./foo', 'r')
+
+
+    def test_bulkcreatedata_invalid_dataset(self):
+
+        data = {'files': ['./foo'],
+                'dataset_keys': ['bar'],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+        call_command('bulkcreatedata', json.dumps(data))
+
+        output = err.getvalue().strip()
+
+        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['bar']"
+
+        self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_not_array_dataset(self):
+
+        data = {'files': ['./foo'],
+                'dataset_keys': 'bar',
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+        call_command('bulkcreatedata', json.dumps(data))
+
+        output = err.getvalue().strip()
+
+        wanted_output = "The dataset_keys you provided is not an array"
+
+        self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_dataset_do_not_exist(self):
+
+        data = {'files': ['./foo'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+        call_command('bulkcreatedata', json.dumps(data))
+
+        output = err.getvalue().strip()
+
+        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af']"
+
+        self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_invalid_file(self):
+        data = {'files': ['./foo'],
+                'dataset_keys': [self.dataset.pk],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+        call_command('bulkcreatedata', json.dumps(data))
+
+        output = err.getvalue().strip()
+
+        wanted_output = "File : ./foo does not exist."
+
+        self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_invalid_serializer(self):
+        data = {'files': ['./foo'],
+                'dataset_keys': [self.dataset.pk],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+
+        with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+                patch.object(os.path, 'exists') as mexists, \
+                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=b'foo')) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer:
+            mis_zipfile.return_value = True
+            mexists.return_value = True
+
+            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer.is_valid.side_effect = Exception('Failed')
+            mDataSerializer.return_value = mocked_serializer
+
+            call_command('bulkcreatedata', json.dumps(data))
+
+            output = err.getvalue().strip()
+
+            wanted_output = "Failed"
+
+            self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_408(self):
+        data = {'files': ['./foo'],
+                'dataset_keys': [self.dataset.pk],
+                'test_only': False}
+
+        out = StringIO()
+        sys.stdout = out
+
+        with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+                patch.object(os.path, 'exists') as mexists, \
+                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=b'foo')) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch.object(DataViewSet, 'commit') as mcommit:
+            mis_zipfile.return_value = True
+            mexists.return_value = True
+
+            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer.is_valid.return_value = True
+            mDataSerializer.return_value = mocked_serializer
+
+            err_data = {'toto': 1}
+            mcommit.side_effect = LedgerException(err_data, status.HTTP_408_REQUEST_TIMEOUT)
+
+            call_command('bulkcreatedata', json.dumps(data))
+
+            output = out.getvalue().strip()
+
+            wanted_output = json.dumps(err_data, indent=2)
+
+            self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_ledger_400(self):
+        data = {'files': ['./foo'],
+                'dataset_keys': [self.dataset.pk],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+
+        with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+                patch.object(os.path, 'exists') as mexists, \
+                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=b'foo')) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch.object(DataViewSet, 'commit') as mcommit:
+            mis_zipfile.return_value = True
+            mexists.return_value = True
+
+            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer.is_valid.return_value = True
+            mDataSerializer.return_value = mocked_serializer
+
+            err_data = {'toto': 1}
+            mcommit.side_effect = LedgerException(err_data, status.HTTP_400_BAD_REQUEST)
+
+            call_command('bulkcreatedata', json.dumps(data))
+
+            output = err.getvalue().strip()
+
+            wanted_output = json.dumps(err_data, indent=2)
+
+            self.assertEqual(wanted_output, output)
+
+    def test_bulkcreatedata_400(self):
+        data = {'files': ['./foo'],
+                'dataset_keys': [self.dataset.pk],
+                'test_only': False}
+
+        err = StringIO()
+        sys.stderr = err
+
+        with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+                patch.object(os.path, 'exists') as mexists, \
+                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=b'foo')) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch.object(DataViewSet, 'commit') as mcommit:
+            mis_zipfile.return_value = True
+            mexists.return_value = True
+
+            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer.is_valid.return_value = True
+            mDataSerializer.return_value = mocked_serializer
+
+            mcommit.side_effect = Exception('Failed', status.HTTP_400_BAD_REQUEST)
+
+            call_command('bulkcreatedata', json.dumps(data))
+
+            output = err.getvalue().strip()
+
+            wanted_output = "('Failed', 400)"
+
+            self.assertEqual(wanted_output, output)
