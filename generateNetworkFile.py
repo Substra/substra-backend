@@ -39,7 +39,9 @@ def generate_network_file(conf):
             'grpcOptions': {'grpc.ssl_target_name_override': orderer['host'],
                             'grpc-max-send-message-length': 15
                             },
-            'tlsCACerts': {'path': orderer['ca']['certfile']}
+            'tlsCACerts': {'path': orderer['ca']['certfile']},
+            'clientKey': {'path': orderer['tls']['key']},
+            'clientCert': {'path': orderer['tls']['cert']},
         }
 
         network_conf['certificateAuthorities'][orderer['ca']['name']] = {
@@ -105,9 +107,9 @@ def generate_network_file(conf):
                     'grpc.ssl_target_name_override': peer['host'],
                     'grpc.http2.keepalive_time': 15,
                 },
-                'tlsCACerts': {'path': peer['tls']['serverCa']},
+                'tlsCACerts': {'path': org['ca']['certfile']},
                 'clientKey': {'path': peer['tls']['clientKey']},
-                'clientServer': {'path': peer['tls']['clientCert']},
+                'clientCert': {'path': peer['tls']['clientCert']},
             }
 
     with open(os.path.join(dir_path, 'network.json'), 'w') as outfile:
