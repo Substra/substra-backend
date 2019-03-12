@@ -313,7 +313,7 @@ if __name__ == '__main__':
                 data = {
                     'algo_key': algo_key,
                     'FLtask_key': '',
-                    'input_models_keys': [],
+                    'in_models_keys': [],
                     'dataset_key': dataset_org1_key,
                     'train_data_keys': train_data_keys,
                 }
@@ -323,7 +323,7 @@ if __name__ == '__main__':
                 data = {
                     'algo_key': algo_key_2,
                     'FLtask_key': '',
-                    'input_models_keys': [],
+                    'in_models_keys': [],
                     'dataset_key': dataset_org1_key,
                     'train_data_keys': train_data_keys,
                 }
@@ -334,7 +334,7 @@ if __name__ == '__main__':
                 data = {
                     'algo_key': algo_key_3,
                     'FLtask_key': '',
-                    'input_models_keys': [],
+                    'in_models_keys': [],
                     'dataset_key': dataset_org1_key,
                     'train_data_keys': train_data_keys,
                 }
