@@ -905,7 +905,7 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_retrieve(self):
 
-        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch.object(TrainTupleViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.return_value = traintuple[0]
             url = reverse('substrapp:traintuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
@@ -926,7 +926,7 @@ class TraintupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch.object(TrainTupleViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
             search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
