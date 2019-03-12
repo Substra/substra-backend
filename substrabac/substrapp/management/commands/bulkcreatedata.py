@@ -4,13 +4,12 @@ import os
 
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
-from django.db import IntegrityError
 from rest_framework import status
-from rest_framework.exceptions import ValidationError
 
-from substrapp.models import Dataset
-from substrapp.serializers import DataSerializer, LedgerDataSerializer
+from substrapp.views import DataViewSet
+from substrapp.serializers import DataSerializer
 from substrapp.utils import get_hash
+from substrapp.views.data import LedgerException
 
 
 def path_leaf(path):
@@ -44,78 +43,60 @@ class Command(BaseCommand):
                     data = json.load(f)
             except:
                 raise CommandError('Invalid args. Please review help')
+        else:
+            if not isinstance(data, dict):
+                raise CommandError('Invalid args. Please provide a valid json file.')
 
         dataset_keys = data.get('dataset_keys', [])
-
         if not type(dataset_keys) == list:
             return self.stderr.write('The dataset_keys you provided is not an array')
 
-        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
-
-        # check all dataset exist
-        if not len(dataset_keys) or dataset_count != len(dataset_keys):
-            return self.stderr.write(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
-
+        test_only = data.get('test_only', False)
         data_files = data.get('files', None)
-        files = {}
-        if data_files and type(data_files) == list:
-            for file in data_files:
-                if os.path.exists(file):
-                    with open(file, 'rb') as f:
-                        filename = path_leaf(file)
-                        files[filename] = ContentFile(f.read(), filename)
-                else:
-                    return self.stderr.write(f'File : {file} does not exist.')
-        # bulk
-        if files:
-            l = []
-            for x in files:
-                file = files[path_leaf(x)]
-                l.append({
-                    'pkhash': get_hash(file),
-                    'file': file
-                })
 
-            serializer = DataSerializer(data=l, many=True)
-            try:
-                serializer.is_valid(raise_exception=True)
-            except Exception as e:
-                return self.stderr.write(str(e))
-            else:
-                # create on db
+        try:
+            DataViewSet.check_datasets(dataset_keys)
+        except Exception as e:
+            self.stderr.write(str(e))
+        else:
+            files = {}
+            if data_files and type(data_files) == list:
+                for file in data_files:
+                    if os.path.exists(file):
+                        with open(file, 'rb') as f:
+                            filename = path_leaf(file)
+                            files[filename] = ContentFile(f.read(), filename)
+                    else:
+                        return self.stderr.write(f'File : {file} does not exist.')
+            # bulk
+            if files:
+                l = []
+                for x in files:
+                    file = files[path_leaf(x)]
+                    l.append({
+                        'pkhash': get_hash(file),
+                        'file': file
+                    })
+
+                many = True
+                serializer = DataSerializer(data=l, many=many)
                 try:
-                    instances = serializer.save()
-                except IntegrityError as exc:
-                    self.stderr.write('One of the Data you passed already exists in the substrabac local database. Please review your args.')
-                except Exception as exc:
-                    raise Exception(exc.args)
+                    serializer.is_valid(raise_exception=True)
+                except Exception as e:
+                    return self.stderr.write(str(e))
                 else:
-                    # init ledger serializer
-
-                    ledger_serializer = LedgerDataSerializer(data={'test_only': data.get('test_only'),
-                                                                   'dataset_keys': dataset_keys,
-                                                                   'instances': instances})
-
-                    if not ledger_serializer.is_valid():
-                        # delete instance
-                        for instance in instances:
-                            instance.delete()
-                        raise ValidationError(ledger_serializer.errors)
-
-                    # create on ledger
-                    data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-                    if st == status.HTTP_408_REQUEST_TIMEOUT:
-                        data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-                        return self.stdout.write(self.style.WARNING(data))
-
-                    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-                        return self.stderr.write(data)
-
-                    # update validated to True in response
-                    if 'pkhash' in data and data['validated']:
-                        for d in serializer.data:
-                            if d['pkhash'] in data['pkhash']:
-                                d.update({'validated': data['validated']})
-
-                    self.stdout.write(self.style.SUCCESS(f'Succesfully added data via bulk with status code {st} and data: {json.dumps(serializer.data, indent=4)}'))
+                    # create on ledger + db
+                    ledger_data = {'test_only': test_only,
+                                   'dataset_keys': dataset_keys}
+                    try:
+                        data, st = DataViewSet.commit(serializer, ledger_data, many)
+                    except LedgerException as e:
+                        if e.st == status.HTTP_408_REQUEST_TIMEOUT:
+                            self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
+                        else:
+                            self.stderr.write(json.dumps(e.data, indent=2))
+                    except Exception as e:
+                        self.stderr.write(str(e))
+                    else:
+                        msg = f'Succesfully added data via bulk with status code {st} and data: {json.dumps(data, indent=4)}'
+                        self.stdout.write(self.style.SUCCESS(msg))
