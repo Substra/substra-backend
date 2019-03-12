@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 import zipfile
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 import mock
 from django.core.files import File
@@ -16,8 +16,9 @@ from rest_framework.test import APITestCase
 from substrapp.models import Challenge, Dataset, Algo, Data
 from substrapp.serializers import LedgerChallengeSerializer, \
     LedgerDatasetSerializer, LedgerAlgoSerializer, \
-    LedgerDataSerializer, LedgerTrainTupleSerializer
+    LedgerDataSerializer, LedgerTrainTupleSerializer, DataSerializer
 from substrapp.utils import get_hash, compute_hash
+from substrapp.views import DataViewSet
 
 from .common import get_sample_challenge, get_sample_dataset, \
     get_sample_zip_data, get_sample_script, \
@@ -648,6 +649,41 @@ class DataQueryTests(APITestCase):
             self.assertEqual(r['message'], 'Failed')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_add_data_ko_serializer_invalid(self):
+        url = reverse('substrapp:data-list')
+
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name,
+                               description=self.data_description,
+                               data_opener=self.data_data_opener)
+
+        file_mock = MagicMock(spec=File)
+        file_mock.name = 'foo.zip'
+        file_mock.read = MagicMock(return_value=b'foo')
+
+        data = {
+            'file': file_mock,
+            'dataset_keys': [get_hash(self.data_data_opener)],
+            'test_only': True,
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+            mock.patch.object(DataViewSet, 'get_serializer') as mget_serializer:
+            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer.is_valid.return_value = True
+            mocked_serializer.save.side_effect = Exception('Failed')
+            mget_serializer.return_value = mocked_serializer
+
+            mis_zipfile.return_value = True
+
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(r['message'], "Failed")
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_data_ko_ledger_invalid(self):
         url = reverse('substrapp:data-list')
 
@@ -670,10 +706,12 @@ class DataQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(LedgerDataSerializer, 'is_valid') as mis_valid, \
-            mock.patch.object(LedgerDataSerializer, 'errors', new_callable=PropertyMock) as merrors:
-            mis_valid.return_value = False
-            merrors.return_value = 'Failed'
+            mock.patch('substrapp.views.data.LedgerDataSerializer', spec=True) as mLedgerDataSerializer:
+            mocked_LedgerDataSerializer = MagicMock()
+            mocked_LedgerDataSerializer.is_valid.return_value = False
+            mocked_LedgerDataSerializer.errors = 'Failed'
+            mLedgerDataSerializer.return_value = mocked_LedgerDataSerializer
+
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()

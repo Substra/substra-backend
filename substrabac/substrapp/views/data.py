@@ -26,6 +26,13 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 
 
+class LedgerException(Exception):
+    def __init__(self, data, st):
+        self.data = data
+        self.st = st
+        super(LedgerException).__init__()
+
+
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, data_files, dataset_keys):
     from shutil import copy
@@ -144,10 +151,10 @@ class DataViewSet(mixins.CreateModelMixin,
             if st == status.HTTP_408_REQUEST_TIMEOUT:
                 if many:
                     data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-                raise Exception({'data': data, 'status': st})
+                raise LedgerException(data, st)
 
             if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-                raise Exception({'data': data, 'status': st})
+                raise LedgerException(data, st)
 
             # update validated to True in response
             if 'pkhash' in data and data['validated']:
@@ -222,13 +229,10 @@ class DataViewSet(mixins.CreateModelMixin,
                                'dataset_keys': dataset_keys}
                 try:
                     data, st = self.commit(serializer, ledger_data, many)
+                except LedgerException as e:
+                    return Response({'message': e.data}, status=e.st)
                 except Exception as e:
-                    message = str(e)
-                    st = status.HTTP_400_BAD_REQUEST
-                    if 'data' in e.args[0]:
-                        message = e.args[0]['data']
-                        st = e.args[0]['status']
-                    return Response({'message': message}, status=st)
+                    return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
                 else:
                     headers = self.get_success_headers(data)
                     return Response(data, status=st, headers=headers)

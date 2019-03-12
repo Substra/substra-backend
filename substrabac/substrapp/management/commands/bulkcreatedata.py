@@ -9,6 +9,7 @@ from rest_framework import status
 from substrapp.views import DataViewSet
 from substrapp.serializers import DataSerializer
 from substrapp.utils import get_hash
+from substrapp.views.data import LedgerException
 
 
 def path_leaf(path):
@@ -42,6 +43,9 @@ class Command(BaseCommand):
                     data = json.load(f)
             except:
                 raise CommandError('Invalid args. Please review help')
+        else:
+            if not isinstance(data, dict):
+                raise CommandError('Invalid args. Please provide a valid json file.')
 
         dataset_keys = data.get('dataset_keys', [])
         if not type(dataset_keys) == list:
@@ -53,9 +57,8 @@ class Command(BaseCommand):
         try:
             DataViewSet.check_datasets(dataset_keys)
         except Exception as e:
-            return self.stderr.write(e)
+            self.stderr.write(str(e))
         else:
-
             files = {}
             if data_files and type(data_files) == list:
                 for file in data_files:
@@ -87,11 +90,13 @@ class Command(BaseCommand):
                                    'dataset_keys': dataset_keys}
                     try:
                         data, st = DataViewSet.commit(serializer, ledger_data, many)
-                    except Exception as e:
-                        if e.args[0]['status'] == status.HTTP_408_REQUEST_TIMEOUT:
-                            self.stdout.write(self.style.WARNING(e.args[0]['data']))
+                    except LedgerException as e:
+                        if e.st == status.HTTP_408_REQUEST_TIMEOUT:
+                            self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
                         else:
-                            self.stderr.write(e.args[0]['data'])
+                            self.stderr.write(json.dumps(e.data, indent=2))
+                    except Exception as e:
+                        self.stderr.write(str(e))
                     else:
                         msg = f'Succesfully added data via bulk with status code {st} and data: {json.dumps(data, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
