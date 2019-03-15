@@ -8,7 +8,7 @@ challenge = [
             "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
         },
         "name": "Skin Lesion Classification Challenge",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684",
         "permissions": "all",
         "testData": {
             "dataKeys": [
@@ -30,7 +30,7 @@ dataset = [
         "key": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
         "name": "ISIC 2018",
         "openerStorageAddress": "http://testserver/dataset/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener/",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "permissions": "all",
         "type": "Images"
     },
@@ -43,7 +43,7 @@ dataset = [
         "key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
         "name": "Simplified ISIC 2018",
         "openerStorageAddress": "http://testserver/dataset/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener/",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684",
         "permissions": "all",
         "type": "Images"
     }
@@ -58,7 +58,7 @@ algo = [
         },
         "key": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f",
         "name": "Neural Network",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "permissions": "all",
         "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/file/"
     },
@@ -70,7 +70,7 @@ algo = [
         },
         "key": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
         "name": "Logistic regression",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "permissions": "all",
         "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
     },
@@ -82,7 +82,7 @@ algo = [
         },
         "key": "f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284",
         "name": "Random Forest",
-        "owner": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "owner": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "permissions": "all",
         "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/file/"
     }
@@ -102,7 +102,7 @@ traintuple = [
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
             }
         },
-        "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "data": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
@@ -110,12 +110,12 @@ traintuple = [
             ],
             "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
             "perf": 0,
-            "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+            "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
         "fltask": "",
         "inModels": None,
-        "key": "e93a78153145ccd950331e1bde634f2533d9ec43fc307880583b5344e5a9818d",
-        "log": "[00-01-0032-7ac0532]",
+        "key": "dba63a61ec52a050858cedfb1bd77b460c40d3aeada843dbdd1a1377b05bc436",
+        "log": "[00-01-0032-a07c4d7]",
         "outModel": None,
         "permissions": "all",
         "rank": 0,
@@ -134,7 +134,7 @@ traintuple = [
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
             }
         },
-        "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "data": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
@@ -142,15 +142,15 @@ traintuple = [
             ],
             "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
             "perf": 1,
-            "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+            "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
         "fltask": "",
         "inModels": None,
-        "key": "aab1dee7a9a70387b184aa46033bd56724d8957ac52fc33351dc9725442b0a05",
-        "log": "Train - CPU:75.36 % - Mem:0.10 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+        "key": "fa3e464ae9e6b6ed6afb7090a75eb82c03c18d537d1bd25d66052cceb8b2783e",
+        "log": "Train - CPU:118.81 % - Mem:0.10 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
         "outModel": {
-            "hash": "a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9",
-            "storageAddress": "http://testserver/model/a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9/file/"
+            "hash": "079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9",
+            "storageAddress": "http://testserver/model/079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9/file/"
         },
         "permissions": "all",
         "rank": 0,
@@ -169,7 +169,7 @@ traintuple = [
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
             }
         },
-        "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "data": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
@@ -177,12 +177,12 @@ traintuple = [
             ],
             "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
             "perf": 0,
-            "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+            "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
         "fltask": "",
         "inModels": None,
-        "key": "f20395cb69c1dbf04e827cc47330bb9b35c1bb5158e8b9e188eddd982c22b3a5",
-        "log": "[00-01-0032-6ac86b1]",
+        "key": "f8431d4b8feeb238229191d38283f0b0ec645011a4b38721959bc2d74f550142",
+        "log": "[00-01-0032-9286a34]",
         "outModel": None,
         "permissions": "all",
         "rank": 0,
@@ -205,7 +205,7 @@ testtuple = [
                 "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
             }
         },
-        "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+        "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "data": {
             "keys": [
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
@@ -213,14 +213,14 @@ testtuple = [
             ],
             "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
             "perf": 1,
-            "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+            "worker": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684"
         },
-        "key": "5d325994c93211e8886e4d421f5347dde1311665d1ca9e22ab5265acbd5f0e93",
+        "key": "7f324926d5283024747f3e1b7343ad0e1abd9b11bd8a1401e19a73a1a998e31c",
         "log": "Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
         "model": {
-            "hash": "a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9",
-            "storageAddress": "http://testserver/model/a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9/file/",
-            "traintupleKey": "aab1dee7a9a70387b184aa46033bd56724d8957ac52fc33351dc9725442b0a05"
+            "hash": "079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9",
+            "storageAddress": "http://testserver/model/079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9/file/",
+            "traintupleKey": "fa3e464ae9e6b6ed6afb7090a75eb82c03c18d537d1bd25d66052cceb8b2783e"
         },
         "permissions": "all",
         "status": "done"
@@ -243,7 +243,7 @@ model = [
                     "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
                 }
             },
-            "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+            "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
             "data": {
                 "keys": [
                     "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
@@ -251,14 +251,14 @@ model = [
                 ],
                 "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
                 "perf": 1,
-                "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+                "worker": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684"
             },
-            "key": "5d325994c93211e8886e4d421f5347dde1311665d1ca9e22ab5265acbd5f0e93",
+            "key": "7f324926d5283024747f3e1b7343ad0e1abd9b11bd8a1401e19a73a1a998e31c",
             "log": "Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
             "model": {
-                "hash": "a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9",
-                "storageAddress": "http://testserver/model/a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9/file/",
-                "traintupleKey": "aab1dee7a9a70387b184aa46033bd56724d8957ac52fc33351dc9725442b0a05"
+                "hash": "079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9",
+                "storageAddress": "http://testserver/model/079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9/file/",
+                "traintupleKey": "fa3e464ae9e6b6ed6afb7090a75eb82c03c18d537d1bd25d66052cceb8b2783e"
             },
             "permissions": "all",
             "status": "done"
@@ -276,7 +276,7 @@ model = [
                     "storageAddress": "http://testserver/challenge/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
                 }
             },
-            "creator": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f",
+            "creator": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
             "data": {
                 "keys": [
                     "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
@@ -284,15 +284,15 @@ model = [
                 ],
                 "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
                 "perf": 1,
-                "worker": "5264ca79ee9d13f3696e22a2c739a023c3d993efab8273093a3c38424a51ce2f"
+                "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
             },
             "fltask": "",
             "inModels": None,
-            "key": "aab1dee7a9a70387b184aa46033bd56724d8957ac52fc33351dc9725442b0a05",
-            "log": "Train - CPU:75.36 % - Mem:0.10 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+            "key": "fa3e464ae9e6b6ed6afb7090a75eb82c03c18d537d1bd25d66052cceb8b2783e",
+            "log": "Train - CPU:118.81 % - Mem:0.10 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
             "outModel": {
-                "hash": "a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9",
-                "storageAddress": "http://testserver/model/a922a42029abe1392f9b1fc80a503a49a423b9e2a001705df4bfd6d8988d49d9/file/"
+                "hash": "079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9",
+                "storageAddress": "http://testserver/model/079dc5aef00798e647b395e06c0272f0fee110704623cf495bc8228f61cd26a9/file/"
             },
             "permissions": "all",
             "rank": 0,
