@@ -26,6 +26,7 @@ def main():
     with open(os.path.join(dir_path, '../substrapp/tests/assets.py'), 'w') as f:
         for k, v in assets.items():
             v = v.replace('owkin.substrabac:8000', 'testserver')
+            v = v.replace('chunantes.substrabac:8001', 'testserver')
             v = v.replace('true', 'True')
             v = v.replace('false', 'False')
             v = v.replace('null', 'None')
