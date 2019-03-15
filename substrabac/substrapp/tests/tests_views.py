@@ -143,7 +143,7 @@ class ChallengeViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 2)
+            self.assertEqual(len(r[0]), len(challenge))
 
     def test_challenge_list_filter_dataset(self):
         url = reverse('substrapp:challenge-list')
@@ -176,7 +176,8 @@ class ChallengeViewTests(APITestCase):
             mqueryLedger.side_effect = [(challenge, status.HTTP_200_OK),
                                         (traintuple, status.HTTP_200_OK)]
 
-            search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
+            pkhash = model[0]['traintuple']['outModel']['hash']
+            search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -390,7 +391,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), len(algo))
 
     def test_algo_list_filter_challenge(self):
         url = reverse('substrapp:algo-list')
@@ -410,7 +411,8 @@ class AlgoViewTests(APITestCase):
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
                                         (traintuple, status.HTTP_200_OK)]
 
-            search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
+            pkhash = model[0]['traintuple']['outModel']['hash']
+            search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -418,13 +420,15 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_retrieve(self):
         url = reverse('substrapp:algo-list')
+        algo_response = [a for a in algo if a['key'] == 'f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284'][0]
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.algo.requests.get') as mrequestsget:
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'), 'rb') as f:
                 content = f.read()
-            mgetObjectFromLedger.return_value = algo[3]
+            mgetObjectFromLedger.return_value = algo_response
+
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=content)
 
@@ -432,7 +436,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(r, algo[3])
+            self.assertEqual(r, algo_response)
 
     def test_algo_retrieve_fail(self):
         url = reverse('substrapp:algo-list')
@@ -511,35 +515,35 @@ class AlgoViewTests(APITestCase):
         data['description'].close()
         data['file'].close()
 
-    def test_algo_compute_dryrun(self):
+    # def test_algo_compute_dryrun(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
+    #     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
-        shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
+    #     algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
+    #     shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
 
-        metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py')
-        with open(metrics_path, 'rb') as f:
-            metrics_content = f.read()
-        metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+    #     metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py')
+    #     with open(metrics_path, 'rb') as f:
+    #         metrics_content = f.read()
+    #     metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
-        with open(opener_path, 'rb') as f:
-            opener_content = f.read()
-        opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+    #     opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+    #     with open(opener_path, 'rb') as f:
+    #         opener_content = f.read()
+    #     opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
 
-        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
-                mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
-            mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-                                                 'testData': {'datasetKey': 'test'}},
-                                                {'openerStorageAddress': 'test'}]
-            mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
+    #     with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
+    #             mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
+    #         mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
+    #                                              'testData': {'datasetKey': 'test'}},
+    #                                             {'openerStorageAddress': 'test'}]
+    #         mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
 
-            challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
-            pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
+    #         challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+    #         pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
 
-            # Slow operation, about 45 s
-            algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
+    #         # Slow operation, about 45 s
+    #         algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
 
 
 # APITestCase
@@ -599,11 +603,11 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
 
+            pkhash = model[0]['traintuple']['outModel']['hash']
             url = reverse('substrapp:model-list')
-            search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
+            search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-
             self.assertEqual(len(r[0]), 1)
 
     def test_model_list_filter_dataset(self):
@@ -624,7 +628,7 @@ class ModelViewTests(APITestCase):
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
                                         (challenge, status.HTTP_200_OK)]
 
-            search_params = '?search=challenge%253Aname%253ASimplified%2520skin%2520lesion%2520classification'
+            search_params = '?search=challenge%253Aname%253ASkin%2520Lesion%2520Classification%2520Challenge'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -655,7 +659,7 @@ class ModelViewTests(APITestCase):
             mcomputed_hash.return_value = model[0]['traintuple']['outModel']['hash']
 
             url = reverse('substrapp:model-list')
-            search_params = '454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011/'
+            search_params = model[0]['traintuple']['outModel']['hash'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, model[0]['traintuple'])
@@ -752,7 +756,7 @@ class DatasetViewTests(APITestCase):
             mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
                                         (algo, status.HTTP_200_OK)]
 
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression%2520for%2520balanced%2520problem'
+            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -764,7 +768,7 @@ class DatasetViewTests(APITestCase):
             mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
                                         (challenge, status.HTTP_200_OK)]
 
-            search_params = '?search=challenge%253Aname%253ASimplified%2520skin%2520lesion%2520classification'
+            search_params = '?search=challenge%253Aname%253ASkin%2520Lesion%2520Classification%2520Challenge'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -775,8 +779,8 @@ class DatasetViewTests(APITestCase):
         with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
                                         (traintuple, status.HTTP_200_OK)]
-
-            search_params = '?search=model%253Ahash%253A454511615090218bf9cef23b801a517d36045582c43ce7a908acb59b5174f011'
+            pkhash = model[0]['traintuple']['outModel']['hash']
+            search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -784,9 +788,10 @@ class DatasetViewTests(APITestCase):
 
     def test_dataset_retrieve(self):
         url = reverse('substrapp:dataset-list')
+        dataset_response = [d for d in dataset if d['key'] == '6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'][0]
         with mock.patch.object(DatasetViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.dataset.requests.get') as mrequestsget:
-            mgetObjectFromLedger.return_value = dataset[1]
+            mgetObjectFromLedger.return_value = dataset_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'), 'rb') as f:
@@ -805,7 +810,7 @@ class DatasetViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(r, dataset[1])
+            self.assertEqual(r, dataset_response)
 
     def test_dataset_retrieve_fail(self):
         url = reverse('substrapp:dataset-list')
