@@ -40,7 +40,12 @@ client = Client()
 print(client.query_peers(admin_owkin, peer1_owkin))
 print(client.query_peers(admin_owkin, peer1_owkin, channel='mychannel', local=False))
 
-response = Channel('mychannel', '')._discovery(admin_owkin, peer1_owkin, admin_owkin.crypto_suite, config=True, local=False)
+client.init_with_discovery(admin_owkin, peer1_owkin,
+                           'mychannel')
+
+response = Channel('', '')._discovery(admin_owkin, peer1_owkin, config=False, local=True)
+
+response = Channel('mychannel', '')._discovery(admin_owkin, peer1_owkin, config=True, local=False)
 
 
 def process_config_result(config_result):
