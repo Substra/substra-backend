@@ -515,35 +515,35 @@ class AlgoViewTests(APITestCase):
         data['description'].close()
         data['file'].close()
 
-    # def test_algo_compute_dryrun(self):
+    def test_algo_compute_dryrun(self):
 
-    #     dir_path = os.path.dirname(os.path.realpath(__file__))
+        dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    #     algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
-    #     shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
+        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz')
+        shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
 
-    #     metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py')
-    #     with open(metrics_path, 'rb') as f:
-    #         metrics_content = f.read()
-    #     metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+        metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py')
+        with open(metrics_path, 'rb') as f:
+            metrics_content = f.read()
+        metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
 
-    #     opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
-    #     with open(opener_path, 'rb') as f:
-    #         opener_content = f.read()
-    #     opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+        with open(opener_path, 'rb') as f:
+            opener_content = f.read()
+        opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
 
-    #     with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
-    #             mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
-    #         mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-    #                                              'testData': {'datasetKey': 'test'}},
-    #                                             {'openerStorageAddress': 'test'}]
-    #         mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
+        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
+                mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
+            mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
+                                                 'testData': {'datasetKey': 'test'}},
+                                                {'openerStorageAddress': 'test'}]
+            mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
 
-    #         challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
-    #         pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
+            challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
+            pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
 
-    #         # Slow operation, about 45 s
-    #         algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
+            # Slow operation, about 45 s
+            algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
 
 
 # APITestCase
