@@ -122,9 +122,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        data, st = queryLedger({
-            'args': '{"Args":["queryTraintuples"]}'
-        })
+        data, st = queryLedger(fcn='queryTraintuples', args=[])
 
         data = data if data else []
 
@@ -132,9 +130,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
     def getObjectFromLedger(self, pk):
         # get instance from remote node
-        data, st = queryLedger({
-            'args': f'{{"Args":["queryTraintuple","{pk}"]}}'
-        })
+        data, st = queryLedger(fcn='queryTraintuple', args=[f'{pk}'])
 
         if st == status.HTTP_404_NOT_FOUND:
             raise Http404('Not found')

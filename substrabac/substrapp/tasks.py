@@ -225,9 +225,10 @@ def prepareTask(tuple_type, model_type):
     except Exception as e:
         logging.error(e, exc_info=True)
     else:
-        subtuples, st = queryLedger({
-            'args': f'{{"Args":["queryFilter","{tuple_type}~worker~status","{data_owner},todo"]}}'
-        })
+
+        subtuples, st = queryLedger(fcn="queryFilter",
+                                    args=[f'{tuple_type}~worker~status',
+                                          f'{data_owner},todo'])
 
         if st == status.HTTP_200_OK and subtuples is not None:
             for subtuple in subtuples:

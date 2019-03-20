@@ -112,9 +112,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryTesttuples"]}'
-        })
+        data, st = queryLedger(fcn='queryTesttuples', args=[])
 
         data = data if data else []
 

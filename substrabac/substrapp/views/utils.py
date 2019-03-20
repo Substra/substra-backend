@@ -56,9 +56,7 @@ def get_filters(query_params):
 
 def getObjectFromLedger(pk, query):
     # get instance from remote node
-    data, st = queryLedger({
-        'args': f'{{"Args":["{query}","{pk}"]}}'
-    })
+    data, st = queryLedger(fcn='query', args=[f'{pk}'])
 
     if st == status.HTTP_404_NOT_FOUND:
         raise Http404('Not found')

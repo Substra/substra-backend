@@ -116,9 +116,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryModels"]}'
-        })
+        data, st = queryLedger(fcn='queryModels', args=[])
         algoData = None
         objectiveData = None
         dataManagerData = None
@@ -154,9 +152,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             elif k == 'algo':  # select model used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
-                                    algoData, st = queryLedger({
-                                        'args': '{"Args":["queryAlgos"]}'
-                                    })
+                                    algoData, st = queryLedger(fcn='queryAlgos', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(algoData, status=st)
 
@@ -169,9 +165,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             elif k == 'dataset':  # select model which trainData.openerHash is
                                 if not dataManagerData:
                                     # TODO find a way to put this call in cache
-                                    dataManagerData, st = queryLedger({
-                                        'args': '{"Args":["queryDataManagers"]}'
-                                    })
+                                    dataManagerData, st = queryLedger(fcn='queryDataManagers', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(dataManagerData, status=st)
 
@@ -184,9 +178,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                             elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
-                                    objectiveData, st = queryLedger({
-                                        'args': '{"Args":["queryObjectives"]}'
-                                    })
+                                    objectiveData, st = queryLedger(fcn='queryObjectives', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(objectiveData, status=st)
 
@@ -216,8 +208,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
-        data, st = queryLedger({
-            'args': f'{{"Args":["queryModelDetails", "{pk}"]}}'
-        })
+        data, st = queryLedger(fcn='queryModelDetails', args=[f'{pk}'])
 
         return Response(data, st)
