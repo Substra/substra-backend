@@ -6,10 +6,8 @@ from substrapp.utils import invokeLedger
 
 
 def createLedgerDataManager(args, pkhash, sync=False):
-    options = {
-        'args': '{"Args":["registerDataManager", ' + args + ']}'
-    }
-    data, st = invokeLedger(options, sync)
+
+    data, st = invokeLedger(fcn='registerDataManager', args=args, sync=sync)
 
     # if not created on ledger, delete from local db, else pass to validated true
     try:
@@ -30,9 +28,7 @@ def createLedgerDataManager(args, pkhash, sync=False):
 
 
 def updateLedgerDataManager(args, sync=False):
-    options = {
-        'args': '{"Args":["updateDataManager", ' + args + ']}'
-    }
-    data, st = invokeLedger(options, sync)
+
+    data, st = invokeLedger(fcn='updateDataManager', args=args, sync=sync)
 
     return data, st

@@ -30,16 +30,27 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         in_models_keys = validated_data.get('in_models_keys')
         tag = validated_data.get('tag', '')
 
-        args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
-            'algoKey': algo_key,
-            'associatedObjective': objective_key,
-            'inModels': ','.join(in_models_keys),
-            'dataManagerKey': data_manager_key,
-            'dataSampleKeys': ','.join(train_data_sample_keys),
-            'FLtask': FLtask_key,
-            'rank': rank,
-            'tag': tag
-        }
+        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
+        #     'algoKey': algo_key,
+        #     'associatedObjective': objective_key,
+        #     'inModels': ','.join(in_models_keys),
+        #     'dataManagerKey': data_manager_key,
+        #     'dataSampleKeys': ','.join(train_data_sample_keys),
+        #     'FLtask': FLtask_key,
+        #     'rank': rank,
+        #     'tag': tag
+        # }
+
+        args = [
+            algo_key,
+            objective_key,
+            ','.join([x for x in in_models_keys]),
+            data_manager_key,
+            ','.join([x for x in train_data_sample_keys]),
+            FLtask_key,
+            rank,
+            tag,
+        ]
 
         return args
 
