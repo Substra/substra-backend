@@ -151,22 +151,24 @@ def put_data(subtuple, subtuple_directory):
         except Exception as e:
             raise e
         else:
-            data_hash = dirhash(path.join(getattr(settings, 'MEDIA_ROOT'), data.path), 'sha256')
+            data_hash = dirhash(path.join(subtuple_directory, data.path), 'sha256')
             if data_hash != data_key:
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
-            # for all data files in folder create an hard link
-            src = path.join(getattr(settings, 'MEDIA_ROOT'), data.path)
+            # for all data files in folder create a sym link
+            src = path.join(subtuple_directory, data.path)
             for f in os.listdir(src):
                 try:
-                    link_name = path.join(getattr(settings, 'MEDIA_ROOT'),
+                    create_directory(path.join(subtuple_directory,
+                                              'subtuple', subtuple['key'],
+                                              'data', data_key))
+                    link_name = path.join(subtuple_directory,
                                           'subtuple', subtuple['key'],
-                                          'data', f)
-                    os.link(path.join(src, f), link_name)
+                                          'data', data_key, f)
+                    os.symlink(path.join(src, f), link_name)
                 except Exception as e:
                     logging.error(e, exc_info=True)
-                    raise Exception(
-                        'Failed to create hard link for subtuple data')
+                    raise Exception('Failed to create sym link for subtuple data')
 
 
 def put_metric(subtuple_directory, challenge):
@@ -247,9 +249,7 @@ def prepareTask(tuple_type, model_type):
                         result__icontains=f'"fltask": "{fltask}"')
 
                     if flresults and flresults.count() > 0:
-                        worker_queue = \
-                        json.loads(flresults.first().as_dict()['result'])[
-                            'worker']
+                        worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
                 try:
                     # Log Start of the Subtuple
@@ -258,8 +258,7 @@ def prepareTask(tuple_type, model_type):
                         'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
                     }, sync=True)
 
-                    if st not in (
-                    status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+                    if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
                         logging.error(
                             f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
                     else:

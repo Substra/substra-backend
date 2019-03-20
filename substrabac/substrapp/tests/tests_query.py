@@ -499,8 +499,9 @@ class DataQueryTests(APITestCase):
         file_mock = MagicMock(spec=File)
         file_mock.name = 'foo.zip'
         file_mock.read = MagicMock(return_value=b'foo')
+        file_mock.open = MagicMock(return_value=b'foo')
 
-        Data.objects.create(file=file_mock)
+        Data.objects.create(path=file_mock)
 
         data = {
             'file': file_mock,

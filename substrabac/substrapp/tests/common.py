@@ -174,7 +174,7 @@ class FakeFile(object):
 
 class FakeData(object):
     def __init__(self, filepath):
-        self.file = FakeFile(filepath)
+        self.path = filepath
 
 
 class FakePath(object):
