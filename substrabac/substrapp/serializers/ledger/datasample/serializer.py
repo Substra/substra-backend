@@ -18,11 +18,17 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         data_manager_keys = validated_data.get('data_manager_keys')
         test_only = validated_data.get('test_only')
 
-        args = '"%(hashes)s", "%(dataManagerKeys)s", "%(testOnly)s"' % {
-            'hashes': ','.join([x.pk for x in instances]),
-            'dataManagerKeys': ','.join([x for x in data_manager_keys]),
-            'testOnly': json.dumps(test_only),
-        }
+        # args = '"%(hashes)s", "%(dataManagerKeys)s", "%(testOnly)s"' % {
+        #     'hashes': ','.join([x.pk for x in instances]),
+        #     'dataManagerKeys': ','.join([x for x in data_manager_keys]),
+        #     'testOnly': json.dumps(test_only),
+        # }
+
+        args = [
+            ','.join([x.pk for x in instances]),
+            ','.join([x for x in data_manager_keys]),
+            json.dumps(test_only),
+        ]
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerDataSample(args, [x.pk for x in instances], sync=True)

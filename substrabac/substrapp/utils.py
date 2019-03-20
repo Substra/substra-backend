@@ -8,21 +8,20 @@ import tempfile
 from os.path import isfile, isdir
 
 import requests
-import subprocess
 import tarfile
 import zipfile
 
 from checksumdir import dirhash
 from rest_framework import status
 
-from substrabac.settings.common import PROJECT_ROOT
 from django.conf import settings
 
 LEDGER = getattr(settings, 'LEDGER', None)
 
 from hfc.fabric import Client
-from hfc.fabric.peer import create_peer
+from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
+from hfc.fabric.orderer import Orderer
 from hfc.util.keyvaluestore import FileKeyValueStore
 
 
@@ -60,12 +59,13 @@ def queryLedger(fcn, args=None):
                             key_path=glob.glob(requestor_config['key_path'])[0],
                             cert_path=requestor_config['cert_path'])
 
-    target_peer = create_peer(endpoint=f'{peer["host"]}:{peer_port}',
-                              tls_cacerts=peer['tlsCACerts'],
-                              client_key=peer['clientKey'],
-                              client_cert=peer['clientCert'],
-                              opts=[(k, v) for k, v in peer['grpcOptions'].items()])
-
+    target_peer = Peer(name=peer['name'])
+    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
+                                  'grpcOptions': peer['grpcOptions'],
+                                  'tlsCACerts': {'path': peer['tlsCACerts']},
+                                  'clientKey': {'path': peer['clientKey']},
+                                  'clientCert': {'path': peer['clientCert']},
+                                  })
     client._peers[peer['name']] = target_peer
 
     response = client.chaincode_query(
@@ -84,16 +84,15 @@ def queryLedger(fcn, args=None):
     # TO DO : review parsing error in case of failure
     #         May have changed by using fabric-sdk-py
 
-    if data:
+    try:
         # json transformation if needed
-        try:
-            data = json.loads(response)
-        except:
-            logging.error('Failed to json parse response in query')
+        data = json.loads(response)
+    except:
+        logging.error('Failed to json parse response in query')
 
         msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
         print(msg, flush=True)
-    else:
+
         try:
             msg = response.split('Error')[-1].split('\n')[0]
             data = {'message': msg}
@@ -110,74 +109,83 @@ def queryLedger(fcn, args=None):
     return data, st
 
 
-def invokeLedger(options, sync=False):
-    args = options['args']
+def invokeLedger(fcn, args=None, sync=False):
+
+    if args is None:
+        args = []
 
     channel_name = LEDGER['channel_name']
     chaincode_name = LEDGER['chaincode_name']
-    core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
+    chaincode_version = LEDGER['chaincode_version']
     peer = LEDGER['peer']
     peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
 
     orderer = LEDGER['orderer']
-    orderer_ca_file = orderer['ca']
-    peer_key_file = peer['clientKey']
-    peer_cert_file = peer['clientCert']
 
-    # update config path for using right core.yaml and override msp config path
-    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
+    requestor_config = LEDGER['client']
 
-    print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
+    client = Client()
+    client.new_channel(channel_name)
 
-    cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
-           'chaincode', 'invoke',
-           '-C', channel_name,
-           '-n', chaincode_name,
-           '-c', args,
-           '-o', f'{orderer["host"]}:{orderer["port"]}',
-           '--cafile', orderer_ca_file,
-           '--tls',
-           '--clientauth',
-           '--keyfile', peer_key_file,
-           '--certfile', peer_cert_file]
+    requestor = create_user(name=requestor_config['name'],
+                            org=requestor_config['org'],
+                            state_store=FileKeyValueStore(requestor_config['state_store']),
+                            msp_id=requestor_config['msp_id'],
+                            key_path=glob.glob(requestor_config['key_path'])[0],
+                            cert_path=requestor_config['cert_path'])
 
-    if sync:
-        cmd += ['--waitForEvent', '--waitForEventTimeout', '45s']
+    target_peer = Peer(name=peer['name'])
+    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
+                                  'grpcOptions': peer['grpcOptions'],
+                                  'tlsCACerts': {'path': peer['tlsCACerts']},
+                                  'clientKey': {'path': peer['clientKey']},
+                                  'clientCert': {'path': peer['clientCert']},
+                                  })
+    client._peers[peer['name']] = target_peer
 
-    output = subprocess.run(cmd,
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    target_orderer = Orderer(name=orderer['name'])
+    target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
+                                     'grpcOptions': orderer['grpcOptions'],
+                                     'tlsCACerts': {'path': orderer['ca']},
+                                     'clientKey': {'path': orderer['clientKey']},
+                                     'clientCert': {'path': orderer['clientCert']},
+                                     })
+    client._orderers[orderer['name']] = target_orderer
+
+    response = client.chaincode_invoke(
+        requestor=requestor,
+        channel_name=channel_name,
+        peer_names=[peer['name']],
+        args=args,
+        cc_name=chaincode_name,
+        cc_version=chaincode_version,
+        fcn=fcn,
+        wait_for_event=sync,
+        wait_for_event_timeout=45)
 
     st = status.HTTP_201_CREATED
-    data = output.stdout.decode('utf-8')
 
-    if not data:
-        msg = output.stderr.decode('utf-8')
-        data = {'message': msg}
+    # TO DO : review parsing error in case of failure
+    #         May have changed by using fabric-sdk-py
+    msg = response
+    data = {'message': msg}
 
-        if 'Error' in msg or 'ERRO' in msg:
-            # https://github.com/hyperledger/fabric/blob/eca1b14b7e3453a5d32296af79cc7bad10c7673b/peer/chaincode/common.go
-            if "timed out waiting for txid on all peers" in msg or "failed to receive txid on all peers" in msg:
-                st = status.HTTP_408_REQUEST_TIMEOUT
-            else:
-                st = status.HTTP_400_BAD_REQUEST
-        elif 'access denied' in msg or 'authentication handshake failed' in msg:
-            st = status.HTTP_403_FORBIDDEN
-        elif 'Chaincode invoke successful' in msg:
-            st = status.HTTP_201_CREATED
-            try:
-                msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
-            except:
-                pass
-            else:
-                msg = json.loads(msg.encode('utf-8').decode('unicode_escape'))
-                msg = msg.get('key', msg.get('keys'))  # get pkhash
-            finally:
-                data = {'pkhash': msg}
-
-    clean_env_variables()
+    if 'Error' in msg or 'ERRO' in msg:
+        # https://github.com/hyperledger/fabric/blob/eca1b14b7e3453a5d32296af79cc7bad10c7673b/peer/chaincode/common.go
+        if "timed out waiting for txid on all peers" in msg or "failed to receive txid on all peers" in msg:
+            st = status.HTTP_408_REQUEST_TIMEOUT
+        else:
+            st = status.HTTP_400_BAD_REQUEST
+    elif 'access denied' in msg or 'authentication handshake failed' in msg:
+        st = status.HTTP_403_FORBIDDEN
+    elif 'Chaincode invoke successful' in msg:
+        st = status.HTTP_201_CREATED
+        try:
+            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
+        except:
+            pass
+        finally:
+            data = {'pkhash': msg}
 
     return data, st
 

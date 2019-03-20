@@ -199,9 +199,9 @@ def fail(key, err_msg, tuple_type):
     # Log Fail TrainTest
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
-    data, st = invokeLedger({
-        'args': f'{{"Args":["{fail_type}","{key}","{err_msg}"]}}'
-    }, sync=True)
+    data, st = invokeLedger(fcn=fail_type,
+                            args=[f'{key}', f'{err_msg}'],
+                            sync=True)
 
     if st is not status.HTTP_201_CREATED:
         logging.error(data, exc_info=True)
@@ -248,9 +248,9 @@ def prepareTask(tuple_type, model_type):
                 try:
                     # Log Start of the Subtuple
                     start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
-                    data, st = invokeLedger({
-                        'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
-                    }, sync=True)
+                    data, st = invokeLedger(fcn=start_type,
+                                            args=[f'{subtuple["key"]}'],
+                                            sync=True)
 
                     if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
                         logging.error(
@@ -309,13 +309,19 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     else:
         # Invoke ledger to log success
         if tuple_type == 'traintuple':
-            invoke_args = f'{{"Args":["logSuccessTrain","{subtuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
-        elif tuple_type == 'testtuple':
-            invoke_args = f'{{"Args":["logSuccessTest","{subtuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
+            invoke_fcn = 'logSuccessTrain'
+            invoke_args = [f'{subtuple["key"]}',
+                           f'{res["end_model_file_hash"]}, {res["end_model_file"]}',
+                           f'{res["global_perf"]}',
+                           f'Train - {res["job_task_log"]};']
 
-        data, st = invokeLedger({
-            'args': invoke_args
-        }, sync=True)
+        elif tuple_type == 'testtuple':
+            invoke_fcn = 'logSuccessTest'
+            invoke_args = [f'{subtuple["key"]}',
+                           f'{res["global_perf"]}',
+                           f'Test - {res["job_task_log"]};']
+
+        data, st = invokeLedger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             logging.error('Failed to invoke ledger on logSuccess')

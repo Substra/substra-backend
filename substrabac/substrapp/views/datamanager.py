@@ -332,10 +332,12 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 return Response({'message': f'Objective Key is wrong: {pk}'},
                                 status.HTTP_400_BAD_REQUEST)
             else:
-                args = '"%(dataManagerKey)s", "%(objectiveKey)s"' % {
-                    'dataManagerKey': pk,
-                    'objectiveKey': objective_key,
-                }
+                # args = '"%(dataManagerKey)s", "%(objectiveKey)s"' % {
+                #     'dataManagerKey': pk,
+                #     'objectiveKey': objective_key,
+                # }
+
+                args = [pk, objective_key]
 
                 if getattr(settings, 'LEDGER_SYNC_ENABLED'):
                     data, st = updateLedgerDataManager(args, sync=True)
