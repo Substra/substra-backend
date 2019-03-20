@@ -161,10 +161,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryAlgos"]}'
-        })
-
+        data, st = queryLedger(fcn='queryAlgos', args=[])
         modelData = None
 
         # init list to return
@@ -197,9 +194,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger({
-                                        'args': '{"Args":["queryTraintuples"]}'
-                                    })
+                                    modelData, st = queryLedger(fcn='queryTraintuples', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(modelData, status=st)
                                     if modelData is None:

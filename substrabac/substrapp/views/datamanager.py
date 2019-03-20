@@ -173,9 +173,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def getObjectFromLedger(self, pk):
         # get instance from remote node
-        data, st = queryLedger({
-            'args': f'{{"Args":["queryDataset", "{pk}"]}}'
-        })
+        data, st = queryLedger(fcn='queryDataset', args=[f'{pk}'])
 
         if st == status.HTTP_404_NOT_FOUND:
             raise Http404('Not found')
@@ -241,11 +239,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryDataManagers"]}'
-        })
+        data, st = queryLedger(fcn='queryDataManagers', args=[])
         objectiveData = None
-        algoData = None
         modelData = None
 
         # init list to return
@@ -278,9 +273,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                             elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
-                                    objectiveData, st = queryLedger({
-                                        'args': '{"Args":["queryObjectives"]}'
-                                    })
+                                    objectiveData, st = queryLedger(fcn='queryObjectives', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(objectiveData, status=st)
                                     if objectiveData is None:
@@ -296,9 +289,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                             elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger({
-                                        'args': '{"Args":["queryTraintuples"]}'
-                                    })
+                                    modelData, st = queryLedger(fcn='queryTraintuples', args=[])
                                     if st != status.HTTP_200_OK:
                                         return Response(modelData, status=st)
                                     if modelData is None:

@@ -1,6 +1,7 @@
 import io
 import hashlib
 import json
+import glob
 import logging
 import os
 import tempfile
@@ -19,6 +20,11 @@ from django.conf import settings
 
 LEDGER = getattr(settings, 'LEDGER', None)
 
+from hfc.fabric import Client
+from hfc.fabric.peer import create_peer
+from hfc.fabric.user import create_user
+from hfc.util.keyvaluestore import FileKeyValueStore
+
 
 def clean_env_variables():
     os.environ.pop('FABRIC_CFG_PATH', None)
@@ -32,49 +38,67 @@ def clean_env_variables():
 # careful, passing invoke parameters to queryLedger will NOT fail
 
 
-def queryLedger(options):
-    args = options['args']
+def queryLedger(fcn, args=None):
+
+    if args is None:
+        args = []
 
     channel_name = LEDGER['channel_name']
     chaincode_name = LEDGER['chaincode_name']
-    core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
+    chaincode_version = LEDGER['chaincode_version']
     peer = LEDGER['peer']
-
     peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+    requestor_config = LEDGER['client']
 
-    # update config path for using right core.yaml and override msp config path
-    os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
-    os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
+    client = Client()
+    client.new_channel(channel_name)
 
-    print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
+    requestor = create_user(name=requestor_config['name'],
+                            org=requestor_config['org'],
+                            state_store=FileKeyValueStore(requestor_config['state_store']),
+                            msp_id=requestor_config['msp_id'],
+                            key_path=glob.glob(requestor_config['key_path'])[0],
+                            cert_path=requestor_config['cert_path'])
 
-    output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
-                             'chaincode', 'query',
-                             '-x',
-                             '-C', channel_name,
-                             '-n', chaincode_name,
-                             '-c', args],
-                            stdout=subprocess.PIPE,
-                            stderr=subprocess.PIPE)
+    target_peer = create_peer(endpoint=f'{peer["host"]}:{peer_port}',
+                              tls_cacerts=peer['tlsCACerts'],
+                              client_key=peer['clientKey'],
+                              client_cert=peer['clientCert'],
+                              opts=[(k, v) for k, v in peer['grpcOptions'].items()])
+
+    client._peers[peer['name']] = target_peer
+
+    response = client.chaincode_query(
+        requestor=requestor,
+        channel_name=channel_name,
+        peer_names=[peer['name']],
+        args=args,
+        cc_name=chaincode_name,
+        cc_version=chaincode_version,
+        fcn=fcn)
 
     st = status.HTTP_200_OK
-    data = output.stdout.decode('utf-8')
+
+    data = response
+
+    # TO DO : review parsing error in case of failure
+    #         May have changed by using fabric-sdk-py
+
     if data:
         # json transformation if needed
         try:
-            data = json.loads(bytes.fromhex(data.rstrip()).decode('utf-8'))
+            data = json.loads(response)
         except:
-            logging.error('Failed to json parse hexadecimal response in query')
+            logging.error('Failed to json parse response in query')
 
         msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
         print(msg, flush=True)
     else:
         try:
-            msg = output.stderr.decode('utf-8').split('Error')[-1].split('\n')[0]
+            msg = response.split('Error')[-1].split('\n')[0]
             data = {'message': msg}
         except:
-            msg = output.stderr.decode('utf-8')
+            msg = response
             data = {'message': msg}
         finally:
             st = status.HTTP_400_BAD_REQUEST
@@ -82,8 +106,6 @@ def queryLedger(options):
                 st = status.HTTP_403_FORBIDDEN
             elif 'no element with key' in msg:
                 st = status.HTTP_404_NOT_FOUND
-
-    clean_env_variables()
 
     return data, st
 
