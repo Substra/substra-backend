@@ -23,6 +23,8 @@ try:
     admin = cacli.enroll('admin-owkin', 'admin-owkinpw')
 except ValueError as e:
     print(e)
+except Exception as e:
+    print(e)
 else:
     print('Admin enrolled')
 
@@ -101,6 +103,8 @@ else:
               ],
         cc_name='mycc',
         cc_version='1.0',
-        fcn='registerDataset'
+        fcn='registerDataset',
+        wait_for_event=True,
+        wait_for_event_timeout=5
     )
     print(response)
