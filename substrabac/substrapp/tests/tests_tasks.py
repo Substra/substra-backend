@@ -8,6 +8,7 @@ from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from substrapp.models import Data
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_challenge, put_opener, put_model, put_models, put_algo, put_metric, put_data, prepareTask, doTask, computeTask
@@ -194,35 +195,58 @@ class TasksTests(APITestCase):
 
     def test_put_data_zip(self):
 
-        data_directory = os.path.join(self.subtuple_path, 'data/')
-        create_directory(data_directory)
+        data = Data(pkhash='foo', path=self.data)
+        data.save()
 
-        filepath = os.path.join(self.subtuple_path, self.data_filename)
-        with open(filepath, 'wb') as f:
-            f.write(self.data.read())
-        self.assertTrue(os.path.exists(filepath))
-
-        subtuple = {'data': {'keys': [get_hash(filepath)]}}
+        subtuple = {
+            'key': 'bar',
+            'data': {'keys': [data.pk]}
+        }
 
         with mock.patch('substrapp.models.Data.objects.get') as mget:
-            mget.return_value = FakeData(filepath)
+            mget.return_value = data
             put_data(subtuple, MEDIA_ROOT)
+
+            # check folder has been correctly renamed with pk of directory containing uncompressed data
+            self.assertFalse(
+                os.path.exists(os.path.join(MEDIA_ROOT, 'data', 'foo')))
+            dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
+            self.assertTrue(
+                os.path.exists(os.path.join(MEDIA_ROOT, 'data', dir_pkhash)))
+
+            # check subtuple folder has been created and sym links exists
+            self.assertTrue(os.path.exists(
+                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
+            self.assertTrue(os.path.islink(
+                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk,
+                             'LABEL_0024900.csv')))
+            self.assertTrue(os.path.islink(
+                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk,
+                             'IMG_0024900.jpg')))
 
     def test_put_data_tar(self):
 
-        data_directory = os.path.join(self.subtuple_path, 'data/')
-        create_directory(data_directory)
+        data = Data(pkhash='foo', path=self.data_tar)
+        data.save()
 
-        filepath = os.path.join(self.subtuple_path, self.data_tar_filename)
-        with open(filepath, 'wb') as f:
-            f.write(self.data_tar.read())
-        self.assertTrue(os.path.exists(filepath))
-
-        subtuple = {'data': {'keys': [get_hash(filepath)]}}
+        subtuple = {
+            'key': 'bar',
+            'data': {'keys': [data.pk]}
+        }
 
         with mock.patch('substrapp.models.Data.objects.get') as mget:
-            mget.return_value = FakeData(filepath)
+            mget.return_value = data
             put_data(subtuple, MEDIA_ROOT)
+
+            # check folder has been correctly renamed with pk of directory containing uncompressed data
+            self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'data', 'foo')))
+            dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'data', dir_pkhash)))
+
+            # check subtuple folder has been created and sym links exists
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
+            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'LABEL_0024900.csv')))
+            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'IMG_0024900.jpg')))
 
     def test_put_model(self):
 
