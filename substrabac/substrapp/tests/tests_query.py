@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 import mock
 from django.core.files import File
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from django.urls import reverse
 from django.test import override_settings
@@ -17,12 +18,13 @@ from substrapp.models import Challenge, Dataset, Algo, Data
 from substrapp.serializers import LedgerChallengeSerializer, \
     LedgerDatasetSerializer, LedgerAlgoSerializer, \
     LedgerDataSerializer, LedgerTrainTupleSerializer, DataSerializer
-from substrapp.utils import get_hash, compute_hash
+from substrapp.utils import get_hash, compute_hash, get_dir_hash
 from substrapp.views import DataViewSet
 
 from .common import get_sample_challenge, get_sample_dataset, \
     get_sample_zip_data, get_sample_script, \
-    get_temporary_text_file, get_sample_dataset2, get_sample_algo
+    get_temporary_text_file, get_sample_dataset2, get_sample_algo, \
+    get_sample_tar_data, get_sample_zip_data_2
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -349,6 +351,8 @@ class DataQueryTests(APITestCase):
 
         self.script, self.script_filename = get_sample_script()
         self.data_file, self.data_file_filename = get_sample_zip_data()
+        self.data_file_2, self.data_file_filename_2 = get_sample_zip_data_2()
+        self.data_tar_file, self.data_tar_file_filename = get_sample_tar_data()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
         self.data_opener_filename = get_sample_dataset()
@@ -383,12 +387,13 @@ class DataQueryTests(APITestCase):
 
         with mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
             mcreate.return_value = {
-                                       'pkhash': 'e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1',
+                                       'pkhash': '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553',
                                        'validated': True}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['pkhash'], get_hash(self.data_file))
+            self.data_file.file.seek(0)
+            self.assertEqual(r['pkhash'], get_dir_hash(self.data_file.file))
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -402,14 +407,12 @@ class DataQueryTests(APITestCase):
 
         url = reverse('substrapp:data-list')
 
-        file_mock = MagicMock(spec=File)
-        file_mock2 = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
         file_mock2.name = 'bar.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
-        file_mock2.read = MagicMock(return_value=b'bar')
-        file_mock.open = MagicMock(return_value=file_mock)
-        file_mock2.open = MagicMock(return_value=file_mock2)
+        file_mock.read = MagicMock(return_value=self.data_file.read())
+        file_mock2.read = MagicMock(return_value=self.data_file_2.read())
 
         data = {
             file_mock.name: file_mock,
@@ -421,17 +424,19 @@ class DataQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
                 mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
-            mis_zipfile.return_value = True
-            ledger_data = {'pkhash': [get_hash(file_mock), get_hash(file_mock2)], 'validated': True}
+            mget_validators.return_value = []
+            self.data_file.seek(0)
+            self.data_file_2.seek(0)
+            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': True}
             mcreate.return_value = ledger_data, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(len(r), 2)
-            self.assertEqual(r[0]['pkhash'], get_hash(file_mock))
-            self.assertEqual(r[0]['file'],  f'http://testserver/media/data/{r[0]["pkhash"]}/{file_mock.name}')
+            self.assertEqual(r[0]['pkhash'], get_dir_hash(file_mock))
+            self.assertTrue(r[0]['path'].endswith(f'/data/{get_dir_hash(file_mock)}'))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_no_sync_ok(self):
@@ -496,12 +501,14 @@ class DataQueryTests(APITestCase):
                                description=self.data_description,
                                data_opener=self.data_data_opener)
 
-        file_mock = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
-        file_mock.open = MagicMock(return_value=b'foo')
+        file_mock.read = MagicMock(return_value=self.data_file.file.read())
+        file_mock.open = MagicMock(return_value=file_mock)
 
-        Data.objects.create(path=file_mock)
+        d = Data(path=file_mock)
+        # trigger pre save
+        d.save()
 
         data = {
             'file': file_mock,
@@ -543,9 +550,8 @@ class DataQueryTests(APITestCase):
 
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
-        self.assertEqual(r['message'],
-                         [{'file': ['Ensure this file is an archive (zip or tar.* compressed file).']}])
-        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+        self.assertEqual(r['message'], 'Archive must be zip or tar.*')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_ko_408(self):
         url = reverse('substrapp:data-list')
@@ -555,9 +561,9 @@ class DataQueryTests(APITestCase):
                                description=self.data_description,
                                data_opener=self.data_data_opener)
 
-        file_mock = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
+        file_mock.read = MagicMock(return_value=self.data_file.file.read())
         file_mock.open = MagicMock(return_value=file_mock)
 
         data = {
@@ -588,14 +594,49 @@ class DataQueryTests(APITestCase):
 
         url = reverse('substrapp:data-list')
 
-        file_mock = MagicMock(spec=File)
-        file_mock2 = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock2.name = 'bar.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
-        file_mock2.read = MagicMock(return_value=b'bar')
-        file_mock.open = MagicMock(return_value=file_mock)
-        file_mock2.open = MagicMock(return_value=file_mock2)
+        file_mock.read = MagicMock(return_value=self.data_file.read())
+
+        data = {
+            file_mock.name: file_mock,
+            'dataset_keys': [get_hash(self.data_data_opener)],
+            'test_only': True,
+        }
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
+                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+            mget_validators.return_value = []
+            self.data_file.seek(0)
+            self.data_tar_file.seek(0)
+            ledger_data = {'pkhash': [get_dir_hash(file_mock)], 'validated': False}
+            mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
+
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(r['message']['validated'], False)
+            self.assertEqual(Data.objects.count(), 1)
+            self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
+
+    def test_bulk_add_data_ko_same_pkhash(self):
+
+        # add associated data opener
+        dataset_name = 'slide opener'
+        Dataset.objects.create(name=dataset_name,
+                               description=self.data_description,
+                               data_opener=self.data_data_opener)
+
+        url = reverse('substrapp:data-list')
+
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
+        file_mock.name = 'foo.zip'
+        file_mock2.name = 'bar.tar.gz'
+        file_mock.read = MagicMock(return_value=self.data_file.read())
+        file_mock2.read = MagicMock(return_value=self.data_tar_file.read())
 
         data = {
             file_mock.name: file_mock,
@@ -607,17 +648,19 @@ class DataQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
                 mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
-            mis_zipfile.return_value = True
-            ledger_data = {'pkhash': [get_hash(file_mock), get_hash(file_mock2)], 'validated': False}
+            mget_validators.return_value = []
+            self.data_file.seek(0)
+            self.data_tar_file.seek(0)
+            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': False}
             mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['message']['validated'], False)
-            self.assertEqual(Data.objects.count(), 2)
-            self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
+            self.assertEqual(Data.objects.count(), 0)
+            self.assertEqual(r['message'], f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file_mock2.name} and {file_mock.name} are the same')
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_ko_400(self):
         url = reverse('substrapp:data-list')
@@ -627,9 +670,9 @@ class DataQueryTests(APITestCase):
                                description=self.data_description,
                                data_opener=self.data_data_opener)
 
-        file_mock = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
+        file_mock.read = MagicMock(return_value=self.data_file.file.read())
 
         data = {
             'file': file_mock,
@@ -657,9 +700,9 @@ class DataQueryTests(APITestCase):
                                description=self.data_description,
                                data_opener=self.data_data_opener)
 
-        file_mock = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
+        file_mock.read = MagicMock(return_value=self.data_file.read())
 
         data = {
             'file': file_mock,
@@ -692,9 +735,9 @@ class DataQueryTests(APITestCase):
                                description=self.data_description,
                                data_opener=self.data_data_opener)
 
-        file_mock = MagicMock(spec=File)
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock.read = MagicMock(return_value=b'foo')
+        file_mock.read = MagicMock(return_value=self.data_file.file.read())
 
         data = {
             'file': file_mock,
@@ -772,7 +815,9 @@ class DataQueryTests(APITestCase):
                                           description=self.data_description2,
                                           data_opener=self.data_data_opener2)
 
-        d = Data.objects.create(file=self.data_file)
+        d = Data(path=self.data_file)
+        # trigger pre save
+        d.save()
 
         url = reverse('substrapp:data-bulk-update')
 

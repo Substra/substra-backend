@@ -542,7 +542,7 @@ class AlgoViewTests(APITestCase):
             challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
             pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
 
-            # Slow operation, about 45 s
+            # Slow operation, about 45 s, will fail if no internet connection
             algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
 
 
@@ -1099,8 +1099,8 @@ class DataViewTests(APITestCase):
         data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
 
-        pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
-        pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
+        pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -1161,7 +1161,7 @@ class DataViewTests(APITestCase):
 
         data_path = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
 
-        pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         data = {
             'file': open(data_path, 'rb'),
             'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],

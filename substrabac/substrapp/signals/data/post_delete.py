@@ -1,9 +1,10 @@
-from os import path, rmdir
+from os import path
+from shutil import rmtree
+
 from django.conf import settings
 
 
 def data_post_delete(sender, instance, **kwargs):
-    instance.file.delete(False)
-
+    # remove created folder
     directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'data/{0}'.format(instance.pk))
-    rmdir(directory)
+    rmtree(directory)
