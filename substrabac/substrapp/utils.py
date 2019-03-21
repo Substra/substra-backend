@@ -68,45 +68,34 @@ def queryLedger(fcn, args=None):
                                   })
     client._peers[peer['name']] = target_peer
 
-    response = client.chaincode_query(
-        requestor=requestor,
-        channel_name=channel_name,
-        peer_names=[peer['name']],
-        args=args,
-        cc_name=chaincode_name,
-        cc_version=chaincode_version,
-        fcn=fcn)
-
-    st = status.HTTP_200_OK
-
-    data = response
-
-    # TO DO : review parsing error in case of failure
-    #         May have changed by using fabric-sdk-py
-
     try:
-        # json transformation if needed
-        data = json.loads(response)
-    except:
-        logging.error('Failed to json parse response in query')
-
+        response = client.chaincode_query(
+            requestor=requestor,
+            channel_name=channel_name,
+            peer_names=[peer['name']],
+            args=args,
+            cc_name=chaincode_name,
+            cc_version=chaincode_version,
+            fcn=fcn)
+    except Exception as e:
+        st = status.HTTP_400_BAD_REQUEST
+        data = {'message': str(e)}
+    else:
         msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
         print(msg, flush=True)
 
-        try:
-            msg = response.split('Error')[-1].split('\n')[0]
-            data = {'message': msg}
-        except:
-            msg = response
-            data = {'message': msg}
-        finally:
-            st = status.HTTP_400_BAD_REQUEST
-            if 'access denied' in msg:
-                st = status.HTTP_403_FORBIDDEN
-            elif 'no element with key' in msg:
-                st = status.HTTP_404_NOT_FOUND
+        st = status.HTTP_200_OK
 
-    return data, st
+        # TO DO : review parsing error in case of failure
+        #         May have changed by using fabric-sdk-py
+        try:
+            data = json.loads(response)
+        except:
+            logging.error('Failed to json parse response in query')
+            data = response
+
+    finally:
+        return data, st
 
 
 def invokeLedger(fcn, args=None, sync=False):
@@ -152,42 +141,34 @@ def invokeLedger(fcn, args=None, sync=False):
                                      })
     client._orderers[orderer['name']] = target_orderer
 
-    response = client.chaincode_invoke(
-        requestor=requestor,
-        channel_name=channel_name,
-        peer_names=[peer['name']],
-        args=args,
-        cc_name=chaincode_name,
-        cc_version=chaincode_version,
-        fcn=fcn,
-        wait_for_event=sync,
-        wait_for_event_timeout=45)
+    try:
+        response = client.chaincode_invoke(
+            requestor=requestor,
+            channel_name=channel_name,
+            peer_names=[peer['name']],
+            args=args,
+            cc_name=chaincode_name,
+            cc_version=chaincode_version,
+            fcn=fcn,
+            wait_for_event=sync,
+            wait_for_event_timeout=45)
+    except TimeoutError as e:
+        st = status.HTTP_408_REQUEST_TIMEOUT
+        data = {'message': str(e)}
+    except Exception as e:
+        st = status.HTTP_400_BAD_REQUEST
+        data = {'message': str(e)}
+    else:
+        # TO DO : review parsing error in case of failure
+        #         May have changed by using fabric-sdk-py
+        # elif 'access denied' in msg or 'authentication handshake failed' in msg:
+        #     st = status.HTTP_403_FORBIDDEN
 
-    st = status.HTTP_201_CREATED
-
-    # TO DO : review parsing error in case of failure
-    #         May have changed by using fabric-sdk-py
-    msg = response
-    data = {'message': msg}
-
-    if 'Error' in msg or 'ERRO' in msg:
-        # https://github.com/hyperledger/fabric/blob/eca1b14b7e3453a5d32296af79cc7bad10c7673b/peer/chaincode/common.go
-        if "timed out waiting for txid on all peers" in msg or "failed to receive txid on all peers" in msg:
-            st = status.HTTP_408_REQUEST_TIMEOUT
-        else:
-            st = status.HTTP_400_BAD_REQUEST
-    elif 'access denied' in msg or 'authentication handshake failed' in msg:
-        st = status.HTTP_403_FORBIDDEN
-    elif 'Chaincode invoke successful' in msg:
         st = status.HTTP_201_CREATED
-        try:
-            msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
-        except:
-            pass
-        finally:
-            data = {'pkhash': msg}
+        data = {'pkhash': response}
 
-    return data, st
+    finally:
+        return data, st
 
 
 def get_dir_hash(archive_content):

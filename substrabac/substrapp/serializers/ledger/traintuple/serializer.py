@@ -11,6 +11,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False)
+    rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     FLtask_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
@@ -48,7 +49,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             data_manager_key,
             ','.join([x for x in train_data_sample_keys]),
             FLtask_key,
-            rank,
+            str(rank),
             tag,
         ]
 
