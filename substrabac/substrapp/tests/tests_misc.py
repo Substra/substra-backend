@@ -242,8 +242,8 @@ class CommandsTestCase(TestCase):
                     'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
-        pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
-        pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
+        pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         with patch.object(Dataset.objects, 'filter') as mdataset, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
@@ -267,13 +267,13 @@ class CommandsTestCase(TestCase):
 
                 out_data = [
                     {
-                        "pkhash": "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
-                        "file": "/media/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip",
+                        "pkhash": pkhash1,
+                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
                         "validated": True
                     },
                     {
-                        "pkhash": "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9",
-                        "file": "/media/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip",
+                        "pkhash": pkhash2,
+                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash2),
                         "validated": True
                     }
                 ]
@@ -371,7 +371,7 @@ class CommandsTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "File : ./foo does not exist."
+        wanted_output = "File: ./foo does not exist."
 
         self.assertEqual(wanted_output, output)
 

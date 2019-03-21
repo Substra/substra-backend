@@ -7,9 +7,9 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.serializers.data import AdminDataSerializer
+from substrapp.serializers.data import AdminDataSerializer, DataSerializer
 from substrapp.views import DataViewSet
-from substrapp.utils import get_hash
+from substrapp.utils import get_hash, get_dir_hash
 from substrapp.views.data import LedgerException
 
 
@@ -69,19 +69,30 @@ class Command(BaseCommand):
                             filename = path_leaf(file)
                             files[filename] = ContentFile(f.read(), filename)
                     else:
-                        return self.stderr.write(f'File : {file} does not exist.')
+                        return self.stderr.write(f'File: {file} does not exist.')
             # bulk
             if files:
                 l = []
                 for x in files:
                     file = files[path_leaf(x)]
-                    l.append({
-                        'pkhash': get_hash(file),
-                        'file': file
-                    })
+                    try:
+                        pkhash = get_dir_hash(file)
+                    except Exception as e:
+                        return self.stderr.write(str(e))
+                    else:
+                        # check pkhash does not belong to the list
+                        for x in l:
+                            if pkhash == x['pkhash']:
+                                return self.stderr.write({'message': f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same'})
+                        l.append({
+                            'pkhash': pkhash,
+                            'file': file
+                        })
 
                 many = True
-                serializer = AdminDataSerializer(data=[{'path': x, 'pkhash': dirhash(x, 'sha256')} for x in paths], many=True)
+
+                #[{'path': x, 'pkhash': dirhash(x, 'sha256')} for x in paths]
+                serializer = DataSerializer(data=l, many=many)
                 try:
                     serializer.is_valid(raise_exception=True)
                 except Exception as e:

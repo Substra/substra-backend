@@ -4,7 +4,7 @@ from os import path, rename, link
 
 from checksumdir import dirhash
 from django.conf import settings
-from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.core.files import File
 
 from substrapp.utils import uncompress_content
 
@@ -13,11 +13,14 @@ def data_pre_save(sender, instance, **kwargs):
     directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'data/{0}'.format(instance.pk))
 
     # uncompress file if an archive
-    if isinstance(instance.path, InMemoryUploadedFile):
+    if isinstance(instance.path, File):
         try:
-            uncompress_content(instance.path.file.read(), directory)
+            content = instance.path.read()
+            instance.path.seek(0)
+            uncompress_content(content, directory)
         except Exception as e:
             logging.info(e)
+            raise e
         else:
             # calculate new hash
             sha256hash = dirhash(directory, 'sha256')
@@ -34,7 +37,7 @@ def data_pre_save(sender, instance, **kwargs):
 
             # override defaults
             instance.pkhash = sha256hash
-            instance.path = new_directory
+            instance.path = path.join(getattr(settings, 'MEDIA_ROOT'), new_directory)
     # make an hardlink if a path
     else:
         try:

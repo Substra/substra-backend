@@ -84,6 +84,19 @@ def get_sample_zip_data():
 
     return file, file_filename
 
+def get_sample_zip_data_2():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.zip"
+    f = BytesIO(b'foo')
+    with open(os.path.join(dir_path, '../../fixtures/owkin/data/test/0024901.zip'), 'rb') as zip_file:
+        flength = f.write(zip_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/zip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
 
 def get_sample_tar_data():
     dir_path = os.path.dirname(os.path.realpath(__file__))

@@ -15,7 +15,7 @@ class Data(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pkhash:
-            self.pkhash = get_hash(self.path)
+            self.pkhash = get_hash(self.path) # will be overrided
         super(Data, self).save(*args, **kwargs)
 
     def __str__(self):
