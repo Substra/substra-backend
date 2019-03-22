@@ -43,7 +43,6 @@ class FileValidator(object):
 
 
 class DataSerializer(serializers.ModelSerializer):
-    #pkhash = serializers.CharField(default='', min_length=64, max_length=64, read_only=True)
     validated = serializers.HiddenField(default=False)
     path = serializers.CharField(default='', max_length=8192, required=False)
     file = serializers.FileField(validators=[FileValidator()], required=False)
