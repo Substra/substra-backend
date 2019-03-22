@@ -54,10 +54,10 @@ def get_filters(query_params):
     return filters
 
 
-def getObjectFromLedger(pk):
+def getObjectFromLedger(pk, query):
     # get instance from remote node
     data, st = queryLedger({
-        'args': f'{{"Args":["query","{pk}"]}}'
+        'args': f'{{"Args":["{query}","{pk}"]}}'
     })
 
     if st != status.HTTP_200_OK:
@@ -100,7 +100,7 @@ class ManageFileMixin(object):
         # TODO get cert for permissions check
 
         try:
-            getObjectFromLedger(pk)
+            getObjectFromLedger(pk, self.query_call)
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
         else:

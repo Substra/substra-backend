@@ -58,14 +58,14 @@ class ViewTests(APITestCase):
 
         with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(challenge, status.HTTP_200_OK)]
-            data = getObjectFromLedger('')
+            data = getObjectFromLedger('', 'queryChallenge')
 
             self.assertEqual(data, challenge)
 
         with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [('', status.HTTP_400_BAD_REQUEST)]
             with self.assertRaises(JsonException):
-                getObjectFromLedger('')
+                getObjectFromLedger('', 'queryAllChallenge')
 
 
 # APITestCase
@@ -312,7 +312,7 @@ class ChallengeViewTests(APITestCase):
 
         with mock.patch('substrapp.views.challenge.getObjectFromLedger') as mdataset,\
                 mock.patch('substrapp.views.challenge.get_computed_hash') as mopener:
-            mdataset.return_value = {'openerStorageAddress': 'test'}
+            mdataset.return_value = {'opener': {'storageAddress': 'test'}}
             mopener.return_value = (opener_content, pkhash)
             challenge_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_dataset_key, pkhash)
 
@@ -536,7 +536,7 @@ class AlgoViewTests(APITestCase):
                 mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
             mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
                                                  'testData': {'datasetKey': 'test'}},
-                                                {'openerStorageAddress': 'test'}]
+                                                {'opener': {'storageAddress': 'test'}}]
             mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
 
             challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'

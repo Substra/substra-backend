@@ -28,6 +28,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                      GenericViewSet):
     queryset = Dataset.objects.all()
     serializer_class = DatasetSerializer
+    query_call = 'queryDataset'
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -130,7 +131,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
         if not instance.data_opener:
             try:
-                url = dataset['openerStorageAddress']
+                url = dataset['opener']['storageAddress']
                 try:
                     r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
                 except:

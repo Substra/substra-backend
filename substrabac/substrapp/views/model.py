@@ -75,7 +75,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
+                data = getObjectFromLedger(pk, 'queryModelDetails')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
