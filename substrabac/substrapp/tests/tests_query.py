@@ -595,11 +595,15 @@ class DataQueryTests(APITestCase):
         url = reverse('substrapp:data-list')
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
+        file_mock2.name = 'bar.zip'
         file_mock.read = MagicMock(return_value=self.data_file.read())
+        file_mock2.read = MagicMock(return_value=self.data_file_2.read())
 
         data = {
             file_mock.name: file_mock,
+            file_mock2.name: file_mock2,
             'dataset_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
@@ -612,13 +616,13 @@ class DataQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            ledger_data = {'pkhash': [get_dir_hash(file_mock)], 'validated': False}
+            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': False}
             mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(r['message']['validated'], False)
-            self.assertEqual(Data.objects.count(), 1)
+            self.assertEqual(Data.objects.count(), 2)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_ko_same_pkhash(self):
