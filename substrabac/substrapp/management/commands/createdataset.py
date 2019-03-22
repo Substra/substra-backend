@@ -6,7 +6,6 @@ from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
 from substrapp.management.commands.bulkcreatedata import bulk_create_data
-from substrapp.models import Dataset
 from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
 from substrapp.utils import get_hash
 from substrapp.views.data import LedgerException
