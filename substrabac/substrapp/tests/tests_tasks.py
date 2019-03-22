@@ -14,7 +14,7 @@ from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_challenge, put_opener, put_model, put_models, put_algo, put_metric, put_data, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data, get_sample_tar_data, get_sample_model
-from .common import FakeClient, FakeChallenge, FakeDataset, FakeData, FakeModel
+from .common import FakeClient, FakeChallenge, FakeDataset, FakeModel
 
 import zipfile
 from threading import Thread

@@ -45,14 +45,6 @@ class ModelTests(TestCase):
         self.assertIn(f'name {dataset.name}', str(dataset))
 
     def test_create_data(self):
-
-        # data_file, self.data_file_filename = get_sample_zip_data()
-        # file_mock = MagicMock(spec=File)
-        # file_mock.name = 'foo.zip'
-        # file_mock.read = MagicMock(return_value=data_file.read())
-        # file_mock.open = MagicMock(return_value=file_mock)
-        # file_mock.seek = MagicMock(return_value=True)
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308')
         data = Data.objects.create(path=path)

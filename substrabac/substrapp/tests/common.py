@@ -283,17 +283,6 @@ class FakeFilterDataset(object):
         return self.count_value
 
 
-class FakeFile(object):
-    def __init__(self, filepath):
-        self.path = filepath
-        self.name = self.path
-
-
-class FakeData(object):
-    def __init__(self, filepath):
-        self.path = filepath
-
-
 class FakePath(object):
     def __init__(self, filepath):
         self.path = filepath
