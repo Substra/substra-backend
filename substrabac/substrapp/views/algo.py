@@ -35,7 +35,7 @@ def compute_dryrun(self, algo_path, challenge_key, pkhash):
         os.remove(algo_path)
 
         try:
-            challenge = getObjectFromLedger(challenge_key)
+            challenge = getObjectFromLedger(challenge_key, 'queryChallenge')
         except JsonException as e:
             raise e
         else:
@@ -45,11 +45,11 @@ def compute_dryrun(self, algo_path, challenge_key, pkhash):
             dataset_key = challenge['testData']['datasetKey']
 
             try:
-                dataset = getObjectFromLedger(dataset_key)
+                dataset = getObjectFromLedger(dataset_key, 'queryDataset')
             except JsonException as e:
                 raise e
             else:
-                opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
+                opener_content, opener_computed_hash = get_computed_hash(dataset['opener']['storageAddress'])
                 with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
                     opener_file.write(opener_content)
 
@@ -114,6 +114,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
+    query_call = 'queryAlgo'
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -239,7 +240,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             error = None
             instance = None
             try:
-                data = getObjectFromLedger(pk)
+                data = getObjectFromLedger(pk, 'queryAlgo')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:

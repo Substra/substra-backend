@@ -38,11 +38,11 @@ def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
             shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
             os.remove(metrics_path)
         try:
-            dataset = getObjectFromLedger(test_dataset_key)
+            dataset = getObjectFromLedger(test_dataset_key, 'queryDataset')
         except JsonException as e:
             raise e
         else:
-            opener_content, opener_computed_hash = get_computed_hash(dataset['openerStorageAddress'])
+            opener_content, opener_computed_hash = get_computed_hash(dataset['opener']['storageAddress'])
             with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
                 opener_file.write(opener_content)
 
@@ -101,7 +101,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                        GenericViewSet):
     queryset = Challenge.objects.all()
     serializer_class = ChallengeSerializer
-
+    query_call = 'queryChallenge'
     # permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
@@ -216,7 +216,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
     def create_or_update_challenge(self, challenge, pk):
         try:
             # get challenge description from remote node
-            url = challenge['descriptionStorageAddress']
+            url = challenge['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
@@ -260,7 +260,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
+                data = getObjectFromLedger(pk, 'queryChallenge')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -391,43 +391,6 @@ class ChallengeViewSet(mixins.CreateModelMixin,
     @action(detail=True)
     def metrics(self, request, *args, **kwargs):
         return self.manage_file('metrics')
-
-    @action(detail=True)
-    def leaderboard(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            # try to get it from local db
-            instance = self.get_object()
-        except Http404:
-            # get instance from remote node
-            challenge, st = queryLedger({
-                'args': '{"Args":["queryObject","' + pk + '"]}'
-            })
-
-            # TODO check hash
-
-            # TODO save challenge in local db for later use
-            # instance = Challenge.objects.create(description=challenge['description'], metrics=challenge['metrics'])
-        finally:
-            # TODO query list of algos and models from ledger
-            algos, _ = queryLedger({
-                'args': '{"Args":["queryObjects", "algo"]}'
-            })
-            models, _ = queryLedger({
-                'args': '{"Args":["queryObjects", "model"]}'
-            })
-            # TODO sort algos given the best perfs of their models
-
-            # TODO return success, challenge info, sorted algo + models
-
-            # serializer = self.get_serializer(instance)
-            return Response({
-                'challenge': challenge,
-                'algos': [x for x in algos if x['challenge'] == pk],
-                'models': models
-            })
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):
