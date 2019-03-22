@@ -27,7 +27,6 @@ def create_asset(data, profile, asset, dryrun=False):
     if dryrun:
         print('dry-run')
 
-
         res = client.add(asset, data, dryrun=True)
         try:
             print(colored(json.dumps(res, indent=2), 'magenta'))
@@ -185,8 +184,8 @@ if __name__ == '__main__':
         print(f'register train data on dataset {org_1} (will take dataset creator as worker)')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+                os.path.join(dir_path, './fixtures/chunantes/data/train/0024306.zip'),
+                os.path.join(dir_path, './fixtures/chunantes/data/train/0024307.zip')
             ],
             'dataset_keys': [dataset_org1_key],
             'test_only': False,
@@ -211,8 +210,8 @@ if __name__ == '__main__':
         print('register test data')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024900.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024901.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,
@@ -224,8 +223,8 @@ if __name__ == '__main__':
         print('register test data 2')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024902.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024903.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,
@@ -237,8 +236,8 @@ if __name__ == '__main__':
         print('register test data 3')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024904.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024905.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,
