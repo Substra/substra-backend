@@ -88,7 +88,7 @@ class DataSerializer(serializers.ModelSerializer):
 
         # if path is empty and file is a InMemoryUploadedFile, switch it
         # pre_save method will uncompress the archive present in file and return a correct pat h
-        if isinstance(validated_data['file'], File) and validated_data['path'] == '':
+        if 'file' in validated_data and isinstance(validated_data['file'], File) and validated_data['path'] == '':
             validated_data['path'] = validated_data['file']
             del validated_data['file']
 
@@ -119,12 +119,3 @@ class DataSerializer(serializers.ModelSerializer):
                 field.set(value)
 
         return instance
-
-
-class AdminDataSerializer(DataSerializer):
-    path = serializers.CharField(default='', max_length=2048)
-    pkhash = serializers.CharField(default='', min_length=64, max_length=64)
-
-    class Meta:
-        model = Data
-        fields = '__all__'
