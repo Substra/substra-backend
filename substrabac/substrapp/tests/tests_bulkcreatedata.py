@@ -21,10 +21,11 @@ from substrapp.views.data import LedgerException
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
+
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-class CommandsTestCase(TestCase):
+class BulkCreateDataTestCase(TestCase):
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -62,7 +63,8 @@ class CommandsTestCase(TestCase):
                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
 
         data = {'paths': [data_path1, data_path2],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -110,10 +112,12 @@ class CommandsTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308')
+        data_path1 = os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/train/0024308')
 
         data = {'paths': [data_path1],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -136,7 +140,8 @@ class CommandsTestCase(TestCase):
                 sys.stdout = out
 
                 # mock hard links as we are on /tmp which is on another patition
-                with patch('substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                with patch(
+                        'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
 
                     call_command('bulkcreatedata', json.dumps(data))
@@ -160,10 +165,12 @@ class CommandsTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308'))
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -206,11 +213,14 @@ class CommandsTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308'))
-        data_path2 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/train/0024308'))
+        data_path2 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -234,7 +244,8 @@ class CommandsTestCase(TestCase):
                 sys.stdout = out
 
                 # mock hard links as we are on /tmp which is on another patition
-                with patch('substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                with patch(
+                        'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
 
                     call_command('bulkcreatedata', json.dumps(data))
@@ -264,10 +275,11 @@ class CommandsTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1, data_path1],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -301,10 +313,12 @@ class CommandsTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308'))
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1, data_path1],
-                'dataset_keys': ['bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
+                'dataset_keys': [
+                    'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -347,8 +361,8 @@ class CommandsTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        self.assertEqual(output, 'Please specify a list of paths (can be archives or directories)')
-
+        self.assertEqual(output,
+                         'Please specify a list of paths (can be archives or directories)')
 
     def test_bulkcreatedata_invalid_json_dict(self):
 
@@ -373,7 +387,8 @@ class CommandsTestCase(TestCase):
         err = StringIO()
         sys.stderr = err
 
-        with patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data='{"toto": 1}')) as mopen:
+        with patch('substrapp.management.commands.bulkcreatedata.open',
+                   mock_open(read_data='{"toto": 1}')) as mopen:
             call_command('bulkcreatedata', './foo')
             mopen.assert_called_once_with('./foo', 'r')
 
@@ -455,8 +470,11 @@ class CommandsTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=self.data_file.read())) as mopen, \
-                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer:
+                patch('substrapp.management.commands.bulkcreatedata.open',
+                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch(
+                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    spec=True) as mDataSerializer:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -474,7 +492,8 @@ class CommandsTestCase(TestCase):
 
     def test_bulkcreatedata_408(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_path1 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'dataset_keys': [self.dataset.pk],
@@ -485,8 +504,11 @@ class CommandsTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=self.data_file.read())) as mopen, \
-                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch('substrapp.management.commands.bulkcreatedata.open',
+                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch(
+                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    spec=True) as mDataSerializer, \
                 patch.object(DataViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
@@ -496,7 +518,8 @@ class CommandsTestCase(TestCase):
             mDataSerializer.return_value = mocked_serializer
 
             err_data = {'toto': 1}
-            mcommit.side_effect = LedgerException(err_data, status.HTTP_408_REQUEST_TIMEOUT)
+            mcommit.side_effect = LedgerException(err_data,
+                                                  status.HTTP_408_REQUEST_TIMEOUT)
 
             call_command('bulkcreatedata', json.dumps(data))
 
@@ -511,7 +534,6 @@ class CommandsTestCase(TestCase):
         data_path1 = os.path.normpath(os.path.join(dir_path,
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
-
         data = {'paths': [dir_path],
                 'dataset_keys': [self.dataset.pk],
                 'test_only': False}
@@ -521,8 +543,11 @@ class CommandsTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=self.data_file.read())) as mopen, \
-                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch('substrapp.management.commands.bulkcreatedata.open',
+                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch(
+                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    spec=True) as mDataSerializer, \
                 patch.object(DataViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
@@ -532,7 +557,8 @@ class CommandsTestCase(TestCase):
             mDataSerializer.return_value = mocked_serializer
 
             err_data = {'toto': 1}
-            mcommit.side_effect = LedgerException(err_data, status.HTTP_400_BAD_REQUEST)
+            mcommit.side_effect = LedgerException(err_data,
+                                                  status.HTTP_400_BAD_REQUEST)
 
             call_command('bulkcreatedata', json.dumps(data))
 
@@ -544,7 +570,8 @@ class CommandsTestCase(TestCase):
 
     def test_bulkcreatedata_400(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_path1 = os.path.normpath(os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'dataset_keys': [self.dataset.pk],
@@ -555,8 +582,11 @@ class CommandsTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open', mock_open(read_data=self.data_file.read())) as mopen, \
-                patch('substrapp.management.commands.bulkcreatedata.DataSerializer', spec=True) as mDataSerializer, \
+                patch('substrapp.management.commands.bulkcreatedata.open',
+                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch(
+                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    spec=True) as mDataSerializer, \
                 patch.object(DataViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
@@ -565,7 +595,8 @@ class CommandsTestCase(TestCase):
             mocked_serializer.is_valid.return_value = True
             mDataSerializer.return_value = mocked_serializer
 
-            mcommit.side_effect = Exception('Failed', status.HTTP_400_BAD_REQUEST)
+            mcommit.side_effect = Exception('Failed',
+                                            status.HTTP_400_BAD_REQUEST)
 
             call_command('bulkcreatedata', json.dumps(data))
 
@@ -574,3 +605,4 @@ class CommandsTestCase(TestCase):
             wanted_output = "('Failed', 400)"
 
             self.assertEqual(wanted_output, output)
+
