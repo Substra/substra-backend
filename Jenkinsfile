@@ -2,7 +2,7 @@ pipeline {
   options {
     timestamps ()
     timeout(time: 1, unit: 'HOURS')
-    retry(2)
+    buildDiscarder(logRotator(numToKeepStr: '5'))
   }
 
   agent none
@@ -29,22 +29,14 @@ pipeline {
                 image: python:3.7
                 command: [cat]
                 tty: true
-                securityContext:
-                  privileged: true
                 volumeMounts:
-                  - name: tmp
-                    mountPath: /tmp
-                  - name: docker
-                    mountPath: /var/run/docker.sock
+                  - { name: tmp, mountPath: /tmp }
+                  - { name: docker, mountPath: /var/run/docker.sock }
               volumes:
                 - name: tmp
-                  hostPath:
-                    path: /tmp
-                    type: Directory
+                  hostPath: { path: /tmp, type: Directory }
                 - name: docker
-                  hostPath:
-                    path: /var/run/docker.sock
-                    type: File
+                  hostPath: { path: /var/run/docker.sock, type: File }
             """
         }
       }
@@ -52,7 +44,13 @@ pipeline {
       steps {
         sh "apt update"
         sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
-        sh "make test"
+
+        dir("substrabac") {
+          sh "pip install -r requirements.txt"
+          sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
+          sh "coverage report"
+          sh "coverage html"
+        }
       }
 
       post {
@@ -66,32 +64,6 @@ pipeline {
             reportName: 'Coverage Report'
           ]
         }
-      }
-    }
-
-    stage('Build') {
-      agent {
-        kubernetes {
-          label 'docker'
-          defaultContainer 'docker'
-          yaml """
-            apiVersion: v1
-            kind: Pod
-            spec:
-              containers:
-              - name: docker
-                image: docker:dind
-                command: [cat]
-                tty: true
-                securityContext:
-                  privileged: true
-            """
-        }
-      }
-
-      steps {
-        sh "apk add --update make"
-        sh "make build"
       }
     }
   }
