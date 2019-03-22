@@ -57,10 +57,10 @@ class BulkCreateDataTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
-        data_path2 = os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+        data_path2 = os.path.normpath(os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
                 'dataset_keys': [
@@ -112,8 +112,8 @@ class BulkCreateDataTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/train/0024308')
+        data_path1 = os.path.normpath(os.path.join(dir_path,
+                                  '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1],
                 'dataset_keys': [
@@ -534,7 +534,7 @@ class BulkCreateDataTestCase(TestCase):
         data_path1 = os.path.normpath(os.path.join(dir_path,
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
-        data = {'paths': [dir_path],
+        data = {'paths': [data_path1],
                 'dataset_keys': [self.dataset.pk],
                 'test_only': False}
 
