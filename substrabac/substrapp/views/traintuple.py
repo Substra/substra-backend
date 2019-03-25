@@ -43,7 +43,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         '''
 
         algo_key = request.data.get('algo_key', request.POST.get('algo_key', None))
-        dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
+        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
         rank = request.data.get('rank', request.POST.get('rank', None))
         FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', ''))
 
@@ -59,7 +59,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         data = {
             'algo_key': algo_key,
-            'dataset_key': dataset_key,
+            'data_manager_key': data_manager_key,
             'rank': rank,
             'FLtask_key': FLtask_key,
             'in_models_keys': in_models_keys,

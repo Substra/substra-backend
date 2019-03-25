@@ -3,13 +3,13 @@
 from .data import DataSerializer
 from .objective import ObjectiveSerializer
 from .model import ModelSerializer
-from .dataset import DatasetSerializer
+from .datamanager import DataManagerSerializer
 from .algo import AlgoSerializer
 from .ledger import *
 
 __all__ = ['DataSerializer', 'ObjectiveSerializer', 'ModelSerializer',
-           'DatasetSerializer', 'AlgoSerializer',
+           'DataManagerSerializer', 'AlgoSerializer',
            'LedgerObjectiveSerializer', 'LedgerModelSerializer',
            'LedgerDataSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
-           'LedgerDatasetSerializer']
+           'LedgerDataManagerSerializer']

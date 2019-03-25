@@ -12,23 +12,23 @@ from rest_framework.viewsets import GenericViewSet
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
-from substrapp.models import Dataset
-from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
-from substrapp.serializers.ledger.dataset.util import updateLedgerDataset
-from substrapp.serializers.ledger.dataset.tasks import updateLedgerDatasetAsync
+from substrapp.models import DataManager
+from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
+from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
+from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import queryLedger, get_hash
 from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
 
 
-class DatasetViewSet(mixins.CreateModelMixin,
+class DataManagerViewSet(mixins.CreateModelMixin,
                      mixins.RetrieveModelMixin,
                      mixins.ListModelMixin,
                      ComputeHashMixin,
                      ManageFileMixin,
                      GenericViewSet):
-    queryset = Dataset.objects.all()
-    serializer_class = DatasetSerializer
-    query_call = 'queryDataset'
+    queryset = DataManager.objects.all()
+    serializer_class = DataManagerSerializer
+    query_call = 'queryDataManager'
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -100,12 +100,12 @@ class DatasetViewSet(mixins.CreateModelMixin,
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
-                                                                  'permissions': data.get('permissions'),
-                                                                  'type': data.get('type'),
-                                                                  'objective_keys': data.getlist('objective_keys'),
-                                                                  'instance': instance},
-                                                            context={'request': request})
+                ledger_serializer = LedgerDataManagerSerializer(data={'name': data.get('name'),
+                                                                      'permissions': data.get('permissions'),
+                                                                      'type': data.get('type'),
+                                                                      'objective_keys': data.getlist('objective_keys'),
+                                                                      'instance': instance},
+                                                                context={'request': request})
 
                 if not ledger_serializer.is_valid():
                     # delete instance
@@ -123,15 +123,15 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 d.update(data)
                 return Response(d, status=st, headers=headers)
 
-    def create_or_update_dataset(self, instance, dataset, pk):
+    def create_or_update_datamanager(self, instance, datamanager, pk):
 
         # create instance if does not exist
         if not instance:
-            instance, created = Dataset.objects.update_or_create(pkhash=pk, name=dataset['name'], validated=True)
+            instance, created = DataManager.objects.update_or_create(pkhash=pk, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
             try:
-                url = dataset['opener']['storageAddress']
+                url = datamanager['opener']['storageAddress']
                 try:
                     r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
                 except:
@@ -160,7 +160,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
         if not instance.description:
             # do the same for description
-            url = dataset['description']['storageAddress']
+            url = datamanager['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
             except:
@@ -174,7 +174,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 except Exception:
                     raise Exception('Failed to fetch description file')
                 else:
-                    if computed_hash != dataset['description']['hash']:
+                    if computed_hash != datamanager['description']['hash']:
                         msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
@@ -189,7 +189,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
     def getObjectFromLedger(self, pk):
         # get instance from remote node
         data, st = queryLedger({
-            'args': f'{{"Args":["queryDatasetData", "{pk}"]}}'
+            'args': f'{{"Args":["queryDataset", "{pk}"]}}'
         })
 
         if st != status.HTTP_200_OK:
@@ -214,7 +214,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = self.getObjectFromLedger(pk)  # dataset use particular query to ledger
+                data = self.getObjectFromLedger(pk)  # datamanager use particular query to ledger
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -225,14 +225,14 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     instance = self.get_object()
                 except Http404:
                     try:
-                        instance = self.create_or_update_dataset(instance, data, pk)
+                        instance = self.create_or_update_datamanager(instance, data, pk)
                     except Exception as e:
                         error = e
                 else:
                     # check if instance has description or data_opener
                     if not instance.description or not instance.data_opener:
                         try:
-                            instance = self.create_or_update_dataset(instance, data, pk)
+                            instance = self.create_or_update_datamanager(instance, data, pk)
                         except Exception as e:
                             error = e
                 finally:
@@ -252,7 +252,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'args': '{"Args":["queryDatasets"]}'
+            'args': '{"Args":["queryDataManagers"]}'
         })
         objectiveData = None
         algoData = None
@@ -285,7 +285,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                             if k == 'dataset':  # filter by own key
                                 for key, val in subfilters.items():
                                     l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'objective':  # select objective used by these datasets
+                            elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
                                     objectiveData, st = queryLedger({
@@ -366,13 +366,13 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 return Response({'message': f'Objective Key is wrong: {pk}'},
                                 status.HTTP_400_BAD_REQUEST)
             else:
-                args = '"%(datasetKey)s", "%(objectiveKey)s"' % {
-                    'datasetKey': pk,
+                args = '"%(dataManagerKey)s", "%(objectiveKey)s"' % {
+                    'dataManagerKey': pk,
                     'objectiveKey': objective_key,
                 }
 
                 if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                    data, st = updateLedgerDataset(args, sync=True)
+                    data, st = updateLedgerDataManager(args, sync=True)
 
                     # patch status for update
                     if st == status.HTTP_201_CREATED:
@@ -380,9 +380,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
                     return Response(data, status=st)
                 else:
                     # use a celery task, as we are in an http request transaction
-                    updateLedgerDatasetAsync.delay(args)
+                    updateLedgerDataManagerAsync.delay(args)
                     data = {
-                        'message': 'The substra network has been notified for updating this Dataset'
+                        'message': 'The substra network has been notified for updating this DataManager'
                     }
                     st = status.HTTP_202_ACCEPTED
                     return Response(data, status=st)

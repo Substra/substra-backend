@@ -11,12 +11,12 @@ class LedgerTestTupleSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
-        dataset_key = validated_data.get('dataset_key', '')
+        datamanager_key = validated_data.get('datamanager_key', '')
         test_data_keys = validated_data.get('test_data_keys', '')
 
-        args = '"%(traintupleKey)s", "%(datasetKey)s", "%(dataKeys)s"' % {
+        args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataKeys)s"' % {
             'traintupleKey': traintuple_key,
-            'datasetKey': dataset_key,
+            'dataManagerKey': datamanager_key,
             'dataKeys': ','.join([x for x in test_data_keys]),
         }
 

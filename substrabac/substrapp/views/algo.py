@@ -42,14 +42,14 @@ def compute_dryrun(self, algo_path, objective_key, pkhash):
             metrics_content, metrics_computed_hash = get_computed_hash(objective['metrics']['storageAddress'])
             with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'wb') as metrics_file:
                 metrics_file.write(metrics_content)
-            dataset_key = objective['testData']['datasetKey']
+            datamanager_key = objective['testData']['dataManagerKey']
 
             try:
-                dataset = getObjectFromLedger(dataset_key, 'queryDataset')
+                datamanager = getObjectFromLedger(datamanager_key, 'queryDataManager')
             except JsonException as e:
                 raise e
             else:
-                opener_content, opener_computed_hash = get_computed_hash(dataset['opener']['storageAddress'])
+                opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
                 with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
                     opener_file.write(opener_content)
 
@@ -279,7 +279,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             'args': '{"Args":["queryAlgos"]}'
         })
         objectiveData = None
-        datasetData = None
+        datamanagerData = None
         modelData = None
 
         # init list to return
@@ -309,7 +309,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             if k == 'algo':  # filter by own key
                                 for key, val in subfilters.items():
                                     l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'objective':  # select objective used by these datasets
+                            elif k == 'objective':  # select objective used by these datamanagers
                                 st = None
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
@@ -330,18 +330,18 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                     objectiveKeys = [x['key'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
                             elif k == 'dataset':  # select objective used by these algo
-                                if not datasetData:
+                                if not datamanagerData:
                                     # TODO find a way to put this call in cache
-                                    datasetData, st = queryLedger({
-                                        'args': '{"Args":["queryDatasets"]}'
+                                    datamanagerData, st = queryLedger({
+                                        'args': '{"Args":["queryDataManagers"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(datasetData, status=st)
-                                    if datasetData is None:
-                                        datasetData = []
+                                        return Response(datamanagerData, status=st)
+                                    if datamanagerData is None:
+                                        datamanagerData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in datasetData if x[key] in val]
+                                    filteredData = [x for x in datamanagerData if x[key] in val]
                                     objectiveKeys = [x['objectiveKey'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
                             elif k == 'model':  # select objectives used by outModel hash

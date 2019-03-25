@@ -13,7 +13,7 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 
-from substrapp.models import Data, Dataset
+from substrapp.models import Data, DataManager
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
@@ -34,9 +34,9 @@ class LedgerException(Exception):
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data_files, dataset_keys):
+def compute_dryrun(self, data_files, datamanager_keys):
     from shutil import copy
-    from substrapp.models import Dataset
+    from substrapp.models import DataManager
 
     try:
         # Name of the dry-run subtuple (not important)
@@ -51,9 +51,9 @@ def compute_dryrun(self, data_files, dataset_keys):
             except Exception as e:
                 raise e
 
-        for dataset_key in dataset_keys:
-            dataset = Dataset.objects.get(pk=dataset_key)
-            copy(dataset.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
+        for datamanager_key in datamanager_keys:
+            datamanager = DataManager.objects.get(pk=datamanager_key)
+            copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
 
             # Launch verification
             client = docker.from_env()
@@ -109,8 +109,8 @@ class DataViewSet(mixins.CreateModelMixin,
     queryset = Data.objects.all()
     serializer_class = DataSerializer
 
-    def dryrun_task(self, data_files, dataset_keys):
-        task = compute_dryrun.apply_async((data_files, dataset_keys),
+    def dryrun_task(self, data_files, datamanager_keys):
+        task = compute_dryrun.apply_async((data_files, datamanager_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
         site_port = getattr(settings, "SITE_PORT", None)
@@ -121,11 +121,11 @@ class DataViewSet(mixins.CreateModelMixin,
         return task, f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
     @staticmethod
-    def check_datasets(dataset_keys):
-        dataset_count = Dataset.objects.filter(pkhash__in=dataset_keys).count()
+    def check_datamanagers(datamanager_keys):
+        datamanager_count = DataManager.objects.filter(pkhash__in=datamanager_keys).count()
 
-        if not len(dataset_keys) or dataset_count != len(dataset_keys):
-            raise Exception(f'One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: {dataset_keys}')
+        if not len(datamanager_keys) or datamanager_count != len(datamanager_keys):
+            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {datamanager_keys}')
 
     @staticmethod
     def commit(serializer, ledger_data, many):
@@ -177,10 +177,10 @@ class DataViewSet(mixins.CreateModelMixin,
         test_only = data.get('test_only', False)
 
         # check if bulk create
-        dataset_keys = data.getlist('dataset_keys')
+        datamanager_keys = data.getlist('datamanager_keys')
 
         try:
-            self.check_datasets(dataset_keys)
+            self.check_datamanagers(datamanager_keys)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -229,7 +229,7 @@ class DataViewSet(mixins.CreateModelMixin,
                                 'filepath': data_path,
                             })
 
-                        task, msg = self.dryrun_task(data_files, dataset_keys)
+                        task, msg = self.dryrun_task(data_files, datamanager_keys)
                     except Exception as e:
                         return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
                                         status=status.HTTP_400_BAD_REQUEST)
@@ -239,7 +239,7 @@ class DataViewSet(mixins.CreateModelMixin,
 
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
-                               'dataset_keys': dataset_keys}
+                               'datamanager_keys': datamanager_keys}
                 try:
                     data, st = self.commit(serializer, ledger_data, many)
                 except LedgerException as e:
@@ -254,12 +254,12 @@ class DataViewSet(mixins.CreateModelMixin,
     def bulk_update(self, request):
 
         data = request.data
-        dataset_keys = data.getlist('dataset_keys')
+        datamanager_keys = data.getlist('dataManager_keys')
         data_keys = data.getlist('data_keys')
 
-        args = '"%(hashes)s", "%(datasetKeys)s"' % {
+        args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
             'hashes': ','.join(data_keys),
-            'datasetKeys': ','.join(dataset_keys),
+            'dataManagerKeys': ','.join(datamanager_keys),
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

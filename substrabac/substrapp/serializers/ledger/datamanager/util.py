@@ -1,19 +1,19 @@
 from __future__ import absolute_import, unicode_literals
 from rest_framework import status
 
-from substrapp.models import Dataset
+from substrapp.models import DataManager
 from substrapp.utils import invokeLedger
 
 
-def createLedgerDataset(args, pkhash, sync=False):
+def createLedgerDataManager(args, pkhash, sync=False):
     options = {
-        'args': '{"Args":["registerDataset", ' + args + ']}'
+        'args': '{"Args":["registerDataManager", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)
 
     # if not created on ledger, delete from local db, else pass to validated true
     try:
-        instance = Dataset.objects.get(pk=pkhash)
+        instance = DataManager.objects.get(pk=pkhash)
     except:
         pass
     else:
@@ -29,9 +29,9 @@ def createLedgerDataset(args, pkhash, sync=False):
     return data, st
 
 
-def updateLedgerDataset(args, sync=False):
+def updateLedgerDataManager(args, sync=False):
     options = {
-        'args': '{"Args":["updateDataset", ' + args + ']}'
+        'args': '{"Args":["updateDataManager", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)
 

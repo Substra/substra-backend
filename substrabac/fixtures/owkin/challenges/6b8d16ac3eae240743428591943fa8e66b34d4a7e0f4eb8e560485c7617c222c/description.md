@@ -22,4 +22,4 @@ Test dataset features are numpy array of shape (n_test_samples, 450, 600, 3).
 
 ## Predictions format
 
-Dataset opener must implement the `save_pred` function so that it creates a `pred/pred.csv` file with one line for each sample (same order as features returned by the opener `get_X` function) and 3 columns contaning the probability of belonging to each of the seven classes.
+DataManager opener must implement the `save_pred` function so that it creates a `pred/pred.csv` file with one line for each sample (same order as features returned by the opener `get_X` function) and 3 columns contaning the probability of belonging to each of the seven classes.

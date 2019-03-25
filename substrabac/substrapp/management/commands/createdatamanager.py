@@ -6,7 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
 from substrapp.management.commands.bulkcreatedata import bulk_create_data
-from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer
+from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.data import LedgerException
 
@@ -18,12 +18,12 @@ def path_leaf(path):
 
 class Command(BaseCommand):
     help = '''
-    create dataset
-    python ./manage.py createdataset '{"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
-    python ./manage.py createdataset dataset.json
+    create datamanager
+    python ./manage.py createdatamanager '{"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdatamanager datamanager.json
     # data.json:
     # objective_keys and permissions are optional
-    # {"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -45,17 +45,17 @@ class Command(BaseCommand):
             if not isinstance(data_input, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        dataset = data_input.get('dataset', None)
-        if dataset is None:
-            return self.stderr.write('Please provide a dataset')
-        if 'name' not in dataset:
-            return self.stderr.write('Please provide a name to your dataset')
-        if 'type' not in dataset:
-            return self.stderr.write('Please provide a type to your dataset')
-        if 'data_opener' not in dataset:
-            return self.stderr.write('Please provide a data_opener to your dataset')
-        if 'description' not in dataset:
-            return self.stderr.write('Please provide a description to your dataset')
+        datamanager = data_input.get('datamanager', None)
+        if datamanager is None:
+            return self.stderr.write('Please provide a datamanager')
+        if 'name' not in datamanager:
+            return self.stderr.write('Please provide a name to your datamanager')
+        if 'type' not in datamanager:
+            return self.stderr.write('Please provide a type to your datamanager')
+        if 'data_opener' not in datamanager:
+            return self.stderr.write('Please provide a data_opener to your datamanager')
+        if 'description' not in datamanager:
+            return self.stderr.write('Please provide a description to your datamanager')
 
         data = data_input.get('data', None)
         if data is None:
@@ -66,20 +66,20 @@ class Command(BaseCommand):
             return self.stderr.write('Please provide a boolean test_only parameter to your data')
 
         # TODO add validation
-        with open(dataset['data_opener'], 'rb') as f:
-            filename = path_leaf(dataset['data_opener'])
+        with open(datamanager['data_opener'], 'rb') as f:
+            filename = path_leaf(datamanager['data_opener'])
             data_opener = ContentFile(f.read(), filename)
 
-        with open(dataset['description'], 'rb') as f:
-            filename = path_leaf(dataset['description'])
+        with open(datamanager['description'], 'rb') as f:
+            filename = path_leaf(datamanager['description'])
             description = ContentFile(f.read(), filename)
 
         pkhash = get_hash(data_opener)
-        serializer = DatasetSerializer(data={
+        serializer = DataManagerSerializer(data={
             'pkhash': pkhash,
             'data_opener': data_opener,
             'description': description,
-            'name': dataset['name'],
+            'name': datamanager['name'],
         })
 
         try:
@@ -94,11 +94,11 @@ class Command(BaseCommand):
                 self.stderr.write(str(e))
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerDatasetSerializer(
-                    data={'name': dataset['name'],
-                          'permissions': dataset.get('permissions', ''),
-                          'type': dataset['type'],
-                          'objective_keys': dataset.get('objective_keys', []),
+                ledger_serializer = LedgerDataManagerSerializer(
+                    data={'name': datamanager['name'],
+                          'permissions': datamanager.get('permissions', ''),
+                          'type': datamanager['type'],
+                          'objective_keys': datamanager.get('objective_keys', []),
                           'instance': instance})
 
                 try:
@@ -117,14 +117,14 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Succesfully added dataset with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Succesfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
-        # Try to add data even if dataset creation failed
+        # Try to add data even if datamanager creation failed
 
-        self.stdout.write('Will add data to this dataset now')
+        self.stdout.write('Will add data to this datamanager now')
         # Add data in bulk now
-        data.update({'dataset_keys': [pkhash]})
+        data.update({'datamanager_keys': [pkhash]})
         try:
             res, st = bulk_create_data(data)
         except LedgerException as e:

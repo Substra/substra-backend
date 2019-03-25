@@ -9,19 +9,19 @@ from .tasks import createLedgerDataAsync
 
 
 class LedgerDataSerializer(serializers.Serializer):
-    dataset_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
+    datamanager_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                          min_length=1,
                                          max_length=None)
     test_only = serializers.BooleanField()
 
     def create(self, validated_data):
         instances = self.initial_data.get('instances')
-        dataset_keys = validated_data.get('dataset_keys')
+        datamanager_keys = validated_data.get('datamanager_keys')
         test_only = validated_data.get('test_only')
 
-        args = '"%(hashes)s", "%(datasetKeys)s", "%(testOnly)s"' % {
+        args = '"%(hashes)s", "%(dataManagerKeys)s", "%(testOnly)s"' % {
             'hashes': ','.join([x.pk for x in instances]),
-            'datasetKeys': ','.join([x for x in dataset_keys]),
+            'dataManagerKeys': ','.join([x for x in datamanager_keys]),
             'testOnly': json.dumps(test_only),
         }
 

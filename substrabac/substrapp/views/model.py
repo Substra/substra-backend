@@ -117,7 +117,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         })
         algoData = None
         objectiveData = None
-        datasetData = None
+        dataManagerData = None
 
         # init list to return
         if data is None:
@@ -163,21 +163,21 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     algoHashes = [x['key'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['traintuple']['algo']['hash'] in algoHashes]
                             elif k == 'dataset':  # select model which trainData.openerHash is
-                                if not datasetData:
+                                if not dataManagerData:
                                     # TODO find a way to put this call in cache
-                                    datasetData, st = queryLedger({
-                                        'args': '{"Args":["queryDatasets"]}'
+                                    dataManagerData, st = queryLedger({
+                                        'args': '{"Args":["queryDataManagers"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(datasetData, status=st)
+                                        return Response(dataManagerData, status=st)
 
-                                    if datasetData is None:
-                                        datasetData = []
+                                    if dataManagerData is None:
+                                        dataManagerData = []
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in datasetData if x[key] in val]
-                                    datasetHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['data']['openerHash'] in datasetHashes]
-                            elif k == 'objective':  # select objective used by these datasets
+                                    filteredData = [x for x in dataManagerData if x[key] in val]
+                                    datamanagerHashes = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['data']['openerHash'] in datamanagerHashes]
+                            elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
                                     objectiveData, st = queryLedger({

@@ -28,7 +28,7 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
+def compute_dryrun(self, metrics_path, test_datamanager_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
@@ -38,11 +38,11 @@ def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
             shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
             os.remove(metrics_path)
         try:
-            dataset = getObjectFromLedger(test_dataset_key, 'queryDataset')
+            datamanager = getObjectFromLedger(test_datamanager_key, 'queryDataManager')
         except JsonException as e:
             raise e
         else:
-            opener_content, opener_computed_hash = get_computed_hash(dataset['opener']['storageAddress'])
+            opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
             with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
                 opener_file.write(opener_content)
 
@@ -136,7 +136,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         description = data.get('description')
-        test_dataset_key = data.get('test_dataset_key')
+        test_datamanager_key = data.get('test_datamanager_key')
         test_data_keys = data.getlist('test_data_keys')
         metrics = data.get('metrics')
 
@@ -159,7 +159,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                     with open(metrics_path, 'wb') as metrics_file:
                         metrics_file.write(metrics.open().read())
 
-                    task = compute_dryrun.apply_async((metrics_path, test_dataset_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
+                    task = compute_dryrun.apply_async((metrics_path, test_datamanager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
                     site_port = getattr(settings, "SITE_PORT", None)
                     current_site = f'{getattr(settings, "SITE_HOST")}'
@@ -189,7 +189,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             else:
                 # init ledger serializer
                 ledger_serializer = LedgerObjectiveSerializer(data={'test_data_keys': test_data_keys,
-                                                                    'test_dataset_key': test_dataset_key,
+                                                                    'test_datamanager_key': test_datamanager_key,
                                                                     'name': data.get('name'),
                                                                     'permissions': data.get('permissions'),
                                                                     'metrics_name': data.get('metrics_name'),
@@ -211,7 +211,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 d = dict(serializer.data)
                 d.update(data)
                 return Response(d, status=st, headers=headers)
-
 
     def create_or_update_objective(self, objective, pk):
         try:
@@ -301,7 +300,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'args': '{"Args":["queryObjectives"]}'
         })
-        datasetData = None
+        dataManagerData = None
         algoData = None
         modelData = None
 
@@ -335,22 +334,22 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                                         l[idx] = [x for x in l[idx] if x[key]['name'] in val]
                                     else:
                                         l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'dataset':  # select objective used by these datasets
-                                if not datasetData:
+                            elif k == 'dataset':  # select objective used by these datamanagers
+                                if not dataManagerData:
                                     # TODO find a way to put this call in cache
-                                    datasetData, st = queryLedger({
-                                        'args': '{"Args":["queryDatasets"]}'
+                                    dataManagerData, st = queryLedger({
+                                        'args': '{"Args":["queryDataManagers"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(datasetData, status=st)
-                                    if datasetData is None:
-                                        datasetData = []
+                                        return Response(dataManagerData, status=st)
+                                    if dataManagerData is None:
+                                        dataManagerData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in datasetData if x[key] in val]
-                                    datasetKeys = [x['key'] for x in filteredData]
+                                    filteredData = [x for x in dataManagerData if x[key] in val]
+                                    dataManagerKeys = [x['key'] for x in filteredData]
                                     objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys or x['testData']['datasetKey'] in datasetKeys]
+                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys or x['testData']['dataManagerKey'] in dataManagerKeys]
                             elif k == 'algo':  # select objective used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache

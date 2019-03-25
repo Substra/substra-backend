@@ -7,10 +7,10 @@ from coreapi.utils import File
 from django.test import TestCase, override_settings
 from mock import MagicMock
 
-from substrapp.models import Objective, Dataset, Data, Algo, Model
+from substrapp.models import Objective, DataManager, Data, Algo, Model
 from substrapp.utils import get_hash, get_dir_hash
 
-from .common import get_sample_objective, get_sample_dataset, get_sample_data, \
+from .common import get_sample_objective, get_sample_datamanager, get_sample_data, \
     get_sample_script, get_sample_model, get_sample_zip_data
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -36,13 +36,13 @@ class ModelTests(TestCase):
         self.assertIn(f'pkhash {objective.pkhash}', str(objective))
         self.assertIn(f'validated {objective.validated}', str(objective))
 
-    def test_create_dataset(self):
-        description, _, data_opener, _ = get_sample_dataset()
-        dataset = Dataset.objects.create(description=description, data_opener=data_opener, name="slides_opener")
-        self.assertEqual(dataset.pkhash, get_hash(data_opener))
-        self.assertFalse(dataset.validated)
-        self.assertIn(f'pkhash {dataset.pkhash}', str(dataset))
-        self.assertIn(f'name {dataset.name}', str(dataset))
+    def test_create_datamanager(self):
+        description, _, data_opener, _ = get_sample_datamanager()
+        datamanager = DataManager.objects.create(description=description, data_opener=data_opener, name="slides_opener")
+        self.assertEqual(datamanager.pkhash, get_hash(data_opener))
+        self.assertFalse(datamanager.validated)
+        self.assertIn(f'pkhash {datamanager.pkhash}', str(datamanager))
+        self.assertIn(f'name {datamanager.name}', str(datamanager))
 
     def test_create_data(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))

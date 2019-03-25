@@ -43,7 +43,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         '''
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
-        dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
+        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
 
         try:
             test_data_keys = request.data.getlist('test_data_keys', [])
@@ -52,7 +52,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         data = {
             'traintuple_key': traintuple_key,
-            'dataset_key': dataset_key,
+            'data_manager_key': data_manager_key,
             'test_data_keys': test_data_keys,  # list of test data keys
         }
 
@@ -67,7 +67,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             #     sha256_creator_hash = hashlib.sha256(f.read())
 
             #creator = sha256_creator_hash.hexdigest()
-            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + dataset_key).encode())
+            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + data_manager_key).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)

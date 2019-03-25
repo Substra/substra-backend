@@ -13,7 +13,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                                            min_length=1,
                                            max_length=None)
     name = serializers.CharField(min_length=1, max_length=100)
-    test_dataset_key = serializers.CharField(max_length=256)
+    test_datamanager_key = serializers.CharField(max_length=256)
     permissions = serializers.CharField(min_length=1, max_length=60)
     metrics_name = serializers.CharField(min_length=1, max_length=100)
 
@@ -22,7 +22,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         name = validated_data.get('name')
         metrics_name = validated_data.get('metrics_name')
         permissions = validated_data.get('permissions')
-        test_dataset_key = validated_data.get('test_dataset_key')
+        test_datamanager_key = validated_data.get('test_datamanager_key')
         test_data_keys = validated_data.get('test_data_keys')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
@@ -38,7 +38,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
             'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
-            'testData': f'{test_dataset_key}:{",".join([x for x in test_data_keys])}',
+            'testData': f'{test_datamanager_key}:{",".join([x for x in test_data_keys])}',
             'permissions': permissions
         }
 
