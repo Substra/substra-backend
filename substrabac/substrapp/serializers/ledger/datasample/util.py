@@ -1,19 +1,19 @@
 from __future__ import absolute_import, unicode_literals
 from rest_framework import status
 
-from substrapp.models import Data
+from substrapp.models import DataSample
 from substrapp.utils import invokeLedger
 
 
-def createLedgerData(args, pkhashes, sync=False):
+def createLedgerDataSample(args, pkhashes, sync=False):
     options = {
-        'args': '{"Args":["registerData", ' + args + ']}'
+        'args': '{"Args":["registerDataSample", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)
 
     #  if not created on ledger, delete from local db, else pass to validated true
     try:
-        instances = Data.objects.filter(pk__in=pkhashes)
+        instances = DataSample.objects.filter(pk__in=pkhashes)
     except:
         pass
     else:
@@ -31,9 +31,9 @@ def createLedgerData(args, pkhashes, sync=False):
     return data, st
 
 
-def updateLedgerData(args, sync=False):
+def updateLedgerDataSample(args, sync=False):
     options = {
-        'args': '{"Args":["updateData", ' + args + ']}'
+        'args': '{"Args":["updateDataSample", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)
 

@@ -14,17 +14,17 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Objective, DataManager, Algo, Data
+from substrapp.models import Objective, DataManager, Algo, DataSample
 from substrapp.serializers import LedgerObjectiveSerializer, \
     LedgerDataManagerSerializer, LedgerAlgoSerializer, \
-    LedgerDataSerializer, LedgerTrainTupleSerializer, DataSerializer
+    LedgerDataSampleSerializer, LedgerTrainTupleSerializer, DataSampleSerializer
 from substrapp.utils import get_hash, compute_hash, get_dir_hash
-from substrapp.views import DataViewSet
+from substrapp.views import DataSampleViewSet
 
 from .common import get_sample_objective, get_sample_datamanager, \
-    get_sample_zip_data, get_sample_script, \
+    get_sample_zip_data_sample, get_sample_script, \
     get_temporary_text_file, get_sample_datamanager2, get_sample_algo, \
-    get_sample_tar_data, get_sample_zip_data_2
+    get_sample_tar_data_sample, get_sample_zip_data_sample_2
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -54,8 +54,8 @@ class ObjectiveQueryTests(APITestCase):
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:objective-list')
 
@@ -95,8 +95,8 @@ class ObjectiveQueryTests(APITestCase):
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:objective-list')
 
@@ -343,16 +343,16 @@ class DataManagerQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-class DataQueryTests(APITestCase):
+class DataSampleQueryTests(APITestCase):
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
         self.script, self.script_filename = get_sample_script()
-        self.data_file, self.data_file_filename = get_sample_zip_data()
-        self.data_file_2, self.data_file_filename_2 = get_sample_zip_data_2()
-        self.data_tar_file, self.data_tar_file_filename = get_sample_tar_data()
+        self.data_file, self.data_file_filename = get_sample_zip_data_sample()
+        self.data_file_2, self.data_file_filename_2 = get_sample_zip_data_sample_2()
+        self.data_tar_file, self.data_tar_file_filename = get_sample_tar_data_sample()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
         self.data_opener_filename = get_sample_datamanager()
@@ -366,26 +366,26 @@ class DataQueryTests(APITestCase):
         except FileNotFoundError:
             pass
 
-    def test_add_data_sync_ok(self):
+    def test_add_data_sample_sync_ok(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
             'file': self.data_file,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+        with mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = {
                                        'pkhash': '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553',
                                        'validated': True}, status.HTTP_201_CREATED
@@ -397,13 +397,13 @@ class DataQueryTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_bulk_add_data_sync_ok(self):
+    def test_bulk_add_data_sample_sync_ok(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
@@ -417,15 +417,15 @@ class DataQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
-                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_file_2.seek(0)
@@ -439,33 +439,33 @@ class DataQueryTests(APITestCase):
             self.assertTrue(r[0]['path'].endswith(f'/data/{get_dir_hash(file_mock)}'))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_add_data_no_sync_ok(self):
+    def test_add_data_sample_no_sync_ok(self):
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
         url = reverse('substrapp:data-list')
         data = {
             'file': self.data_file,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+        with mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = {'message': 'Data added in local db waiting for validation. \
                                      The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-    def test_add_data_ko(self):
+    def test_add_data_sample_ko(self):
         url = reverse('substrapp:data-list')
 
         # missing datamanager
-        data = {'datamanager_keys': ['toto']}
+        data = {'data_manager_keys': ['toto']}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -478,28 +478,28 @@ class DataQueryTests(APITestCase):
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         # missing local storage field
-        data = {'datamanager_keys': [get_hash(self.data_description)],
+        data = {'data_manager_keys': [get_hash(self.data_description)],
                 'test_only': True, }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # missing ledger field
-        data = {'datamanager_keys': [get_hash(self.data_description)],
+        data = {'data_manager_keys': [get_hash(self.data_description)],
                 'file': self.script, }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_ko_already_exists(self):
+    def test_add_data_sample_ko_already_exists(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
@@ -512,7 +512,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -527,13 +527,13 @@ class DataQueryTests(APITestCase):
                              [{'pkhash': ['data with this pkhash already exists.']}])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
-    def test_add_data_ko_not_a_zip(self):
+    def test_add_data_sample_ko_not_a_zip(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=File)
         file_mock.name = 'foo.zip'
@@ -541,7 +541,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -553,13 +553,13 @@ class DataQueryTests(APITestCase):
         self.assertEqual(r['message'], 'Archive must be zip or tar.*')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_ko_408(self):
+    def test_add_data_sample_ko_408(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
@@ -568,7 +568,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -576,7 +576,7 @@ class DataQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+            mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = {'pkhash': get_hash(file_mock), 'validated': False}, status.HTTP_408_REQUEST_TIMEOUT
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
@@ -584,13 +584,13 @@ class DataQueryTests(APITestCase):
             self.assertEqual(r['message'], {'pkhash': get_hash(file_mock), 'validated': False})
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
-    def test_bulk_add_data_ko_408(self):
+    def test_bulk_add_data_sample_ko_408(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
@@ -604,15 +604,15 @@ class DataQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
-                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
@@ -622,16 +622,16 @@ class DataQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(r['message']['validated'], False)
-            self.assertEqual(Data.objects.count(), 2)
+            self.assertEqual(DataSample.objects.count(), 2)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
-    def test_bulk_add_data_ko_same_pkhash(self):
+    def test_bulk_add_data_sample_ko_same_pkhash(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
@@ -645,15 +645,15 @@ class DataQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSerializer.get_validators') as mget_validators, \
-                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
@@ -662,17 +662,17 @@ class DataQueryTests(APITestCase):
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(Data.objects.count(), 0)
+            self.assertEqual(DataSample.objects.count(), 0)
             self.assertEqual(r['message'], f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file_mock2.name} and {file_mock.name} are the same')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_ko_400(self):
+    def test_add_data_sample_ko_400(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
@@ -680,7 +680,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -688,7 +688,7 @@ class DataQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+            mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = 'Failed', status.HTTP_400_BAD_REQUEST
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
@@ -696,13 +696,13 @@ class DataQueryTests(APITestCase):
             self.assertEqual(r['message'], 'Failed')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_ko_serializer_invalid(self):
+    def test_add_data_sample_ko_serializer_invalid(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
@@ -710,7 +710,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -718,8 +718,8 @@ class DataQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(DataViewSet, 'get_serializer') as mget_serializer:
-            mocked_serializer = MagicMock(DataSerializer)
+            mock.patch.object(DataSampleViewSet, 'get_serializer') as mget_serializer:
+            mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.return_value = True
             mocked_serializer.save.side_effect = Exception('Failed')
             mget_serializer.return_value = mocked_serializer
@@ -731,13 +731,13 @@ class DataQueryTests(APITestCase):
             self.assertEqual(r['message'], "Failed")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_ko_ledger_invalid(self):
+    def test_add_data_sample_ko_ledger_invalid(self):
         url = reverse('substrapp:data-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
@@ -745,7 +745,7 @@ class DataQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'datamanager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener)],
             'test_only': True,
         }
         extra = {
@@ -753,11 +753,11 @@ class DataQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch('substrapp.views.data.LedgerDataSerializer', spec=True) as mLedgerDataSerializer:
-            mocked_LedgerDataSerializer = MagicMock()
-            mocked_LedgerDataSerializer.is_valid.return_value = False
-            mocked_LedgerDataSerializer.errors = 'Failed'
-            mLedgerDataSerializer.return_value = mocked_LedgerDataSerializer
+            mock.patch('substrapp.views.data.LedgerDataSampleSerializer', spec=True) as mLedgerDataSampleSerializer:
+            mocked_LedgerDataSampleSerializer = MagicMock()
+            mocked_LedgerDataSampleSerializer.is_valid.return_value = False
+            mocked_LedgerDataSampleSerializer.errors = 'Failed'
+            mLedgerDataSampleSerializer.return_value = mocked_LedgerDataSampleSerializer
 
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
@@ -765,19 +765,19 @@ class DataQueryTests(APITestCase):
             self.assertEqual(r['message'], "[ErrorDetail(string='Failed', code='invalid')]")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_no_version(self):
+    def test_add_data_sample_no_version(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
             'file': self.data_file,
-            'datamanager_keys': [get_hash(self.data_description)],
+            'data_manager_keys': [get_hash(self.data_description)],
             'test_only': True,
         }
         response = self.client.post(url, data, format='multipart')
@@ -786,19 +786,19 @@ class DataQueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'A version is required.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_add_data_wrong_version(self):
+    def test_add_data_sample_wrong_version(self):
 
         # add associated data opener
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
-                               description=self.data_description,
-                               data_opener=self.data_data_opener)
+                                   description=self.data_description,
+                                   data_opener=self.data_data_opener)
 
         url = reverse('substrapp:data-list')
 
         data = {
             'file': self.script,
-            'datamanager_keys': [datamanager_name],
+            'data_manager_keys': [datamanager_name],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
@@ -813,20 +813,20 @@ class DataQueryTests(APITestCase):
 
         # add associated data opener
         datamanager = DataManager.objects.create(name='slide opener',
-                                         description=self.data_description,
-                                         data_opener=self.data_data_opener)
+                                                 description=self.data_description,
+                                                 data_opener=self.data_data_opener)
         datamanager2 = DataManager.objects.create(name='slide opener 2',
-                                          description=self.data_description2,
-                                          data_opener=self.data_data_opener2)
+                                                  description=self.data_description2,
+                                                  data_opener=self.data_data_opener2)
 
-        d = Data(path=self.data_file)
+        d = DataSample(path=self.data_file)
         # trigger pre save
         d.save()
 
         url = reverse('substrapp:data-bulk-update')
 
         data = {
-            'datamanager_keys': [datamanager.pkhash, datamanager2.pkhash],
+            'data_manager_keys': [datamanager.pkhash, datamanager2.pkhash],
             'data_keys': [d.pkhash],
         }
         extra = {
@@ -1062,7 +1062,7 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_keys': [
+        data = {'train_data_sample_keys': [
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
@@ -1085,7 +1085,7 @@ class TraintupleQueryTests(APITestCase):
     def test_add_traintuple_ko(self):
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_keys': [
+        data = {'train_data_sample_keys': [
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
@@ -1112,7 +1112,7 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_keys': [
+        data = {'train_data_sample_keys': [
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
@@ -1131,7 +1131,7 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_keys': [
+        data = {'train_data_sample_keys': [
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',

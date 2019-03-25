@@ -13,10 +13,10 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 
-from substrapp.models import Data, DataManager
-from substrapp.serializers import DataSerializer, LedgerDataSerializer
-from substrapp.serializers.ledger.data.util import updateLedgerData
-from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
+from substrapp.models import DataSample, DataManager
+from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
+from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
+from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import get_hash, uncompress_path, get_dir_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
@@ -34,20 +34,20 @@ class LedgerException(Exception):
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data_files, datamanager_keys):
+def compute_dryrun(self, data_sample_files, datamanager_keys):
     from shutil import copy
     from substrapp.models import DataManager
 
     try:
         # Name of the dry-run subtuple (not important)
-        pkhash = data_files[0]['pkhash']
+        pkhash = data_sample_files[0]['pkhash']
 
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
-        for data in data_files:
+        for data_sample in data_sample_files:
             try:
-                uncompress_path(data['filepath'],
-                                os.path.join(subtuple_directory, 'data', data['pkhash']))
+                uncompress_path(data_sample['filepath'],
+                                os.path.join(subtuple_directory, 'data', data_sample['pkhash']))
             except Exception as e:
                 raise e
 
@@ -95,22 +95,22 @@ def compute_dryrun(self, data_files, datamanager_keys):
         except:
             pass
         remove_subtuple_materials(subtuple_directory)
-        for data in data_files:
-            if os.path.exists(data['filepath']):
-                os.remove(data['filepath'])
+        for data_sample in data_sample_files:
+            if os.path.exists(data_sample['filepath']):
+                os.remove(data_sample['filepath'])
 
 
-class DataViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  # mixins.UpdateModelMixin,
-                  # mixins.DestroyModelMixin,
-                  # mixins.ListModelMixin,
-                  GenericViewSet):
-    queryset = Data.objects.all()
-    serializer_class = DataSerializer
+class DataSampleViewSet(mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin,
+                        # mixins.UpdateModelMixin,
+                        # mixins.DestroyModelMixin,
+                        # mixins.ListModelMixin,
+                        GenericViewSet):
+    queryset = DataSample.objects.all()
+    serializer_class = DataSampleSerializer
 
-    def dryrun_task(self, data_files, datamanager_keys):
-        task = compute_dryrun.apply_async((data_files, datamanager_keys),
+    def dryrun_task(self, data_sample_files, datamanager_keys):
+        task = compute_dryrun.apply_async((data_sample_files, datamanager_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
         site_port = getattr(settings, "SITE_PORT", None)
@@ -138,7 +138,7 @@ class DataViewSet(mixins.CreateModelMixin,
             if not many:
                 instances = [instances]
             ledger_data.update({'instances': instances})
-            ledger_serializer = LedgerDataSerializer(data=ledger_data)
+            ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
 
             if not ledger_serializer.is_valid():
                 # delete instance
@@ -177,7 +177,7 @@ class DataViewSet(mixins.CreateModelMixin,
         test_only = data.get('test_only', False)
 
         # check if bulk create
-        datamanager_keys = data.getlist('datamanager_keys')
+        datamanager_keys = data.getlist('data_manager_keys')
 
         try:
             self.check_datamanagers(datamanager_keys)
@@ -195,7 +195,7 @@ class DataViewSet(mixins.CreateModelMixin,
                     # check pkhash does not belong to the list
                     for x in l:
                         if pkhash == x['pkhash']:
-                            return Response({'message': f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same'}, status=status.HTTP_400_BAD_REQUEST)
+                            return Response({'message': f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same'}, status=status.HTTP_400_BAD_REQUEST)
                     l.append({
                         'pkhash': pkhash,
                         'file': file
@@ -216,7 +216,7 @@ class DataViewSet(mixins.CreateModelMixin,
             else:
                 if dryrun:
                     try:
-                        data_files = []
+                        data_sample_files = []
                         for k, file in request.FILES.items():
                             pkhash = get_hash(file)
 
@@ -224,12 +224,12 @@ class DataViewSet(mixins.CreateModelMixin,
                             with open(data_path, 'wb') as data_file:
                                 data_file.write(file.open().read())
 
-                            data_files.append({
+                            data_sample_files.append({
                                 'pkhash': pkhash,
                                 'filepath': data_path,
                             })
 
-                        task, msg = self.dryrun_task(data_files, datamanager_keys)
+                        task, msg = self.dryrun_task(data_sample_files, datamanager_keys)
                     except Exception as e:
                         return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
                                         status=status.HTTP_400_BAD_REQUEST)
@@ -239,7 +239,7 @@ class DataViewSet(mixins.CreateModelMixin,
 
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
-                               'datamanager_keys': datamanager_keys}
+                               'data_manager_keys': datamanager_keys}
                 try:
                     data, st = self.commit(serializer, ledger_data, many)
                 except LedgerException as e:
@@ -263,7 +263,7 @@ class DataViewSet(mixins.CreateModelMixin,
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = updateLedgerData(args, sync=True)
+            data, st = updateLedgerDataSample(args, sync=True)
 
             # patch status for update
             if st == status.HTTP_201_CREATED:
@@ -271,10 +271,9 @@ class DataViewSet(mixins.CreateModelMixin,
             return Response(data, status=st)
         else:
             # use a celery task, as we are in an http request transaction
-            updateLedgerDataAsync.delay(args)
+            updateLedgerDataSampleAsync.delay(args)
             data = {
                 'message': 'The substra network has been notified for updating these Data'
             }
             st = status.HTTP_202_ACCEPTED
             return Response(data, status=st)
-

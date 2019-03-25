@@ -9,9 +9,9 @@ from .tasks import createLedgerObjectiveAsync
 
 
 class LedgerObjectiveSerializer(serializers.Serializer):
-    test_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                           min_length=1,
-                                           max_length=None)
+    test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
+                                                  min_length=1,
+                                                  max_length=None)
     name = serializers.CharField(min_length=1, max_length=100)
     test_datamanager_key = serializers.CharField(max_length=256)
     permissions = serializers.CharField(min_length=1, max_length=60)
@@ -23,7 +23,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         metrics_name = validated_data.get('metrics_name')
         permissions = validated_data.get('permissions')
         test_datamanager_key = validated_data.get('test_datamanager_key')
-        test_data_keys = validated_data.get('test_data_keys')
+        test_data_sample_keys = validated_data.get('test_data_sample_keys')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
@@ -31,14 +31,14 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testData)s", "%(permissions)s"' % {
+        args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {
             'name': name,
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
             'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
-            'testData': f'{test_datamanager_key}:{",".join([x for x in test_data_keys])}',
+            'testDataSample': f'{test_datamanager_key}:{",".join([x for x in test_data_sample_keys])}',
             'permissions': permissions
         }
 

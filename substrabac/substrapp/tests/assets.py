@@ -12,9 +12,9 @@ objective = [
             "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "testData": {
+        "testDataSample": {
             "dataManagerKey": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
-            "dataKeys": [
+            "dataSampleKeys": [
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1",
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010"
             ],
@@ -121,7 +121,7 @@ traintuple = [
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "data": {
+        "dataset": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
@@ -153,7 +153,7 @@ traintuple = [
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "data": {
+        "dataset": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
@@ -188,7 +188,7 @@ traintuple = [
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "data": {
+        "dataset": {
             "keys": [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
@@ -227,7 +227,7 @@ testtuple = [
             "hash": "f40783150d90812e6f2c07f0feea0b7d6eb8673635aa96fa20a775c324d21446",
             "storageAddress": "http://testserver/model/f40783150d90812e6f2c07f0feea0b7d6eb8673635aa96fa20a775c324d21446/file/"
         },
-        "data": {
+        "dataset": {
             "worker": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
             "keys": [
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
@@ -261,7 +261,7 @@ model = [
                 }
             },
             "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-            "data": {
+            "dataset": {
                 "keys": [
                     "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
                     "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
@@ -294,7 +294,7 @@ model = [
                 }
             },
             "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-            "data": {
+            "dataset": {
                 "keys": [
                     "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                     "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"

@@ -15,9 +15,9 @@ from mock import patch
 
 from substrapp.models import DataManager
 from substrapp.serializers import LedgerDataSerializer, DataSerializer
-from substrapp.tests.common import get_sample_zip_data
-from substrapp.views import DataViewSet
-from substrapp.views.data import LedgerException
+from substrapp.tests.common import get_sample_zip_data_sample
+from substrapp.views import DataSampleViewSet
+from substrapp.views.datasample import LedgerException
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
@@ -25,7 +25,7 @@ MEDIA_ROOT = "/tmp/unittests_misc/"
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-class BulkCreateDataTestCase(TestCase):
+class BulkCreateDataSampleTestCase(TestCase):
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -42,10 +42,10 @@ class BulkCreateDataTestCase(TestCase):
         mock_data_opener.open = MagicMock(return_value=mock_data_opener)
 
         self.datamanager = DataManager.objects.create(name='slide opener',
-                                              description=mock_description,
-                                              data_opener=mock_data_opener)
+                                                      description=mock_description,
+                                                      data_opener=mock_data_opener)
 
-        self.data_file, self.data_file_filename = get_sample_zip_data()
+        self.data_sample_file, self.data_sample_file_filename = get_sample_zip_data_sample()
 
     def tearDown(self):
         try:
@@ -53,17 +53,17 @@ class BulkCreateDataTestCase(TestCase):
         except FileNotFoundError:
             pass
 
-    def test_bulkcreatedata(self):
+    def test_bulkcreatedatasample(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                  '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                  '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -86,37 +86,37 @@ class BulkCreateDataTestCase(TestCase):
             try:
                 out = StringIO()
                 sys.stdout = out
-                call_command('bulkcreatedata', json.dumps(data))
+                call_command('bulkcreatedatasample', json.dumps(data))
 
                 output = out.getvalue().strip()
 
                 out_data = [
                     {
                         "pkhash": pkhash1,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash1),
                         "validated": True
                     },
                     {
                         "pkhash": pkhash2,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash2),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash2),
                         "validated": True
                     }
                 ]
                 data = json.dumps(out_data, indent=4)
-                wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_path(self):
+    def test_bulkcreatedatasample_path(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/data/train/0024308'))
+                                  '../../fixtures/chunantes/datasamples/train/0024308'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -141,35 +141,35 @@ class BulkCreateDataTestCase(TestCase):
 
                 # mock hard links to simulate we are on the same partition
                 with patch(
-                        'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                        'substrapp.signals.datasample.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
 
-                    call_command('bulkcreatedata', json.dumps(data))
+                    call_command('bulkcreatedatasample', json.dumps(data))
 
                     output = out.getvalue().strip()
 
                     out_data = [
                         {
                             "pkhash": pkhash1,
-                            "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
+                            "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash1),
                             "validated": True
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Succesfully added data sample via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_original_path(self):
+    def test_bulkcreatedatasample_original_path(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/train/0024308'))
+                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -193,10 +193,10 @@ class BulkCreateDataTestCase(TestCase):
                 sys.stdout = out
 
                 # mock hard links to simulate we are on another partition
-                with patch('substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                with patch('substrapp.signals.datasamples.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.side_effect = Exception('Fail')
 
-                    call_command('bulkcreatedata', json.dumps(data))
+                    call_command('bulkcreatedatasample', json.dumps(data))
 
                     output = out.getvalue().strip()
 
@@ -208,22 +208,22 @@ class BulkCreateDataTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_path_and_files(self):
+    def test_bulkcreatedatasample_path_and_files(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/train/0024308'))
+                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                                   '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -252,19 +252,19 @@ class BulkCreateDataTestCase(TestCase):
                         'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
 
-                    call_command('bulkcreatedata', json.dumps(data))
+                    call_command('bulkcreatedatasample', json.dumps(data))
 
                     output = out.getvalue().strip()
 
                     out_data = [
                         {
                             "pkhash": pkhash1,
-                            "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
+                            "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash1),
                             "validated": True
                         },
                         {
                             "pkhash": pkhash2,
-                            "path": os.path.join(MEDIA_ROOT, 'data', pkhash2),
+                            "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash2),
                             "validated": True
                         },
                     ]
@@ -274,15 +274,15 @@ class BulkCreateDataTestCase(TestCase):
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_same_on_file(self):
+    def test_bulkcreatedatasample_same_on_file(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1, data_path1],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -304,7 +304,7 @@ class BulkCreateDataTestCase(TestCase):
             try:
                 err = StringIO()
                 sys.stderr = err
-                call_command('bulkcreatedata', json.dumps(data))
+                call_command('bulkcreatedatasample', json.dumps(data))
 
                 output = err.getvalue().strip()
 
@@ -313,15 +313,15 @@ class BulkCreateDataTestCase(TestCase):
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_same_on_path(self):
+    def test_bulkcreatedatasample_same_on_path(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/train/0024308'))
+                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
 
         data = {'paths': [data_path1, data_path1],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -343,7 +343,7 @@ class BulkCreateDataTestCase(TestCase):
             try:
                 err = StringIO()
                 sys.stderr = err
-                call_command('bulkcreatedata', json.dumps(data))
+                call_command('bulkcreatedatasample', json.dumps(data))
 
                 output = err.getvalue().strip()
 
@@ -352,23 +352,23 @@ class BulkCreateDataTestCase(TestCase):
             finally:
                 sys.stdout = saved_stdout
 
-    def test_bulkcreatedata_not_a_list(self):
+    def test_bulkcreatedatasample_not_a_list(self):
 
         data = {'paths': 'tutu',
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
         sys.stderr = err
 
-        call_command('bulkcreatedata', json.dumps(data))
+        call_command('bulkcreatedatasample', json.dumps(data))
 
         output = err.getvalue().strip()
 
         self.assertEqual(output,
                          'Please specify a list of paths (can be archives or directories)')
 
-    def test_bulkcreatedata_invalid_json_dict(self):
+    def test_bulkcreatedatasample_invalid_json_dict(self):
 
         data = 'tutu'
 
@@ -376,35 +376,35 @@ class BulkCreateDataTestCase(TestCase):
         sys.stderr = err
 
         with self.assertRaises(CommandError):
-            call_command('bulkcreatedata', json.dumps(data))
+            call_command('bulkcreatedatasample', json.dumps(data))
 
-    def test_bulkcreatedata_invalid_json_args(self):
+    def test_bulkcreatedatasample_invalid_json_args(self):
 
         err = StringIO()
         sys.stderr = err
 
         with self.assertRaises(CommandError):
-            call_command('bulkcreatedata', '(')
+            call_command('bulkcreatedatasample', '(')
 
-    def test_bulkcreatedata_valid_path(self):
+    def test_bulkcreatedatasample_valid_path(self):
 
         err = StringIO()
         sys.stderr = err
 
-        with patch('substrapp.management.commands.bulkcreatedata.open',
+        with patch('substrapp.management.commands.bulkcreatedatasample.open',
                    mock_open(read_data='{"toto": 1}')) as mopen:
-            call_command('bulkcreatedata', './foo')
+            call_command('bulkcreatedatasample', './foo')
             mopen.assert_called_once_with('./foo', 'r')
 
-    def test_bulkcreatedata_invalid_datamanager(self):
+    def test_bulkcreatedatasample_invalid_datamanager(self):
 
         data = {'paths': ['./foo'],
-                'datamanager_keys': ['bar'],
+                'data_manager_keys': ['bar'],
                 'test_only': False}
 
         err = StringIO()
         sys.stderr = err
-        call_command('bulkcreatedata', json.dumps(data))
+        call_command('bulkcreatedatasample', json.dumps(data))
 
         output = err.getvalue().strip()
 
@@ -412,15 +412,15 @@ class BulkCreateDataTestCase(TestCase):
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_not_array_datamanager(self):
+    def test_bulkcreatedatasample_not_array_datamanager(self):
 
         data = {'paths': ['./foo'],
-                'datamanager_keys': 'bar',
+                'data_manager_keys': 'bar',
                 'test_only': False}
 
         err = StringIO()
         sys.stderr = err
-        call_command('bulkcreatedata', json.dumps(data))
+        call_command('bulkcreatedatasample', json.dumps(data))
 
         output = err.getvalue().strip()
 
@@ -428,16 +428,16 @@ class BulkCreateDataTestCase(TestCase):
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_datamanager_do_not_exist(self):
+    def test_bulkcreatedatasample_datamanager_do_not_exist(self):
 
         data = {'files': ['./foo'],
-                'datamanager_keys': [
+                'data_manager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         err = StringIO()
         sys.stderr = err
-        call_command('bulkcreatedata', json.dumps(data))
+        call_command('bulkcreatedatasample', json.dumps(data))
 
         output = err.getvalue().strip()
 
@@ -445,14 +445,14 @@ class BulkCreateDataTestCase(TestCase):
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_invalid_file(self):
+    def test_bulkcreatedatasample_invalid_file(self):
         data = {'paths': ['./foo'],
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
         sys.stderr = err
-        call_command('bulkcreatedata', json.dumps(data))
+        call_command('bulkcreatedatasample', json.dumps(data))
 
         output = err.getvalue().strip()
 
@@ -460,13 +460,13 @@ class BulkCreateDataTestCase(TestCase):
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_invalid_serializer(self):
+    def test_bulkcreatedatasample_invalid_serializer(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -474,10 +474,10 @@ class BulkCreateDataTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open',
-                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedatasample.open',
+                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
                     spec=True) as mDataSerializer:
             mis_zipfile.return_value = True
             mexists.return_value = True
@@ -486,7 +486,7 @@ class BulkCreateDataTestCase(TestCase):
             mocked_serializer.is_valid.side_effect = Exception('Failed')
             mDataSerializer.return_value = mocked_serializer
 
-            call_command('bulkcreatedata', json.dumps(data))
+            call_command('bulkcreatedatasample', json.dumps(data))
 
             output = err.getvalue().strip()
 
@@ -494,13 +494,13 @@ class BulkCreateDataTestCase(TestCase):
 
             self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_408(self):
+    def test_bulkcreatedatasample_408(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         out = StringIO()
@@ -508,12 +508,12 @@ class BulkCreateDataTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open',
-                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedatasample.open',
+                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
                     spec=True) as mDataSerializer, \
-                patch.object(DataViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -525,7 +525,7 @@ class BulkCreateDataTestCase(TestCase):
             mcommit.side_effect = LedgerException(err_data,
                                                   status.HTTP_408_REQUEST_TIMEOUT)
 
-            call_command('bulkcreatedata', json.dumps(data))
+            call_command('bulkcreatedatasample', json.dumps(data))
 
             output = out.getvalue().strip()
 
@@ -533,13 +533,13 @@ class BulkCreateDataTestCase(TestCase):
 
             self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_ledger_400(self):
+    def test_bulkcreatedatasample_ledger_400(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -547,12 +547,12 @@ class BulkCreateDataTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open',
-                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedatasample.open',
+                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
                     spec=True) as mDataSerializer, \
-                patch.object(DataViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -564,7 +564,7 @@ class BulkCreateDataTestCase(TestCase):
             mcommit.side_effect = LedgerException(err_data,
                                                   status.HTTP_400_BAD_REQUEST)
 
-            call_command('bulkcreatedata', json.dumps(data))
+            call_command('bulkcreatedatasample', json.dumps(data))
 
             output = err.getvalue().strip()
 
@@ -572,13 +572,13 @@ class BulkCreateDataTestCase(TestCase):
 
             self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_400(self):
+    def test_bulkcreatedatasample_400(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'datamanager_keys': [self.datamanager.pk],
+                'data_manager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -586,12 +586,12 @@ class BulkCreateDataTestCase(TestCase):
 
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
-                patch('substrapp.management.commands.bulkcreatedata.open',
-                      mock_open(read_data=self.data_file.read())) as mopen, \
+                patch('substrapp.management.commands.bulkcreatedatasample.open',
+                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedata.DataSerializer',
+                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
                     spec=True) as mDataSerializer, \
-                patch.object(DataViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -602,11 +602,10 @@ class BulkCreateDataTestCase(TestCase):
             mcommit.side_effect = Exception('Failed',
                                             status.HTTP_400_BAD_REQUEST)
 
-            call_command('bulkcreatedata', json.dumps(data))
+            call_command('bulkcreatedatasample', json.dumps(data))
 
             output = err.getvalue().strip()
 
             wanted_output = "('Failed', 400)"
 
             self.assertEqual(wanted_output, output)
-

@@ -5,7 +5,7 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.management.commands.bulkcreatedata import bulk_create_data
+from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.data import LedgerException
@@ -19,11 +19,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     create datamanager
-    python ./manage.py createdatamanager '{"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdatamanager datamanager.json
     # data.json:
     # objective_keys and permissions are optional
-    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -45,25 +45,25 @@ class Command(BaseCommand):
             if not isinstance(data_input, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        datamanager = data_input.get('datamanager', None)
+        datamanager = data_input.get('data_manager', None)
         if datamanager is None:
-            return self.stderr.write('Please provide a datamanager')
+            return self.stderr.write('Please provide a data_manager')
         if 'name' not in datamanager:
-            return self.stderr.write('Please provide a name to your datamanager')
+            return self.stderr.write('Please provide a name to your data_manager')
         if 'type' not in datamanager:
-            return self.stderr.write('Please provide a type to your datamanager')
+            return self.stderr.write('Please provide a type to your data_manager')
         if 'data_opener' not in datamanager:
-            return self.stderr.write('Please provide a data_opener to your datamanager')
+            return self.stderr.write('Please provide a data_opener to your data_manager')
         if 'description' not in datamanager:
-            return self.stderr.write('Please provide a description to your datamanager')
+            return self.stderr.write('Please provide a description to your data_manager')
 
-        data = data_input.get('data', None)
-        if data is None:
-            return self.stderr.write('Please provide some data')
-        if 'paths' not in data:
-            return self.stderr.write('Please provide paths to your data')
-        if 'test_only' not in data:
-            return self.stderr.write('Please provide a boolean test_only parameter to your data')
+        data_samples = data_input.get('data_samples', None)
+        if data_samples is None:
+            return self.stderr.write('Please provide some data samples')
+        if 'paths' not in data_samples:
+            return self.stderr.write('Please provide paths to your data sample')
+        if 'test_only' not in data_samples:
+            return self.stderr.write('Please provide a boolean test_only parameter to your data samples')
 
         # TODO add validation
         with open(datamanager['data_opener'], 'rb') as f:
@@ -124,9 +124,9 @@ class Command(BaseCommand):
 
         self.stdout.write('Will add data to this datamanager now')
         # Add data in bulk now
-        data.update({'datamanager_keys': [pkhash]})
+        data_samples.update({'data_manager_keys': [pkhash]})
         try:
-            res, st = bulk_create_data(data)
+            res, st = bulk_create_data_sample(data_samples)
         except LedgerException as e:
             if e.st == status.HTTP_408_REQUEST_TIMEOUT:
                 self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
@@ -135,5 +135,5 @@ class Command(BaseCommand):
         except Exception as e:
             return self.stderr.write(str(e))
         else:
-            msg = f'Succesfully bulk added data with status code {st} and result: {json.dumps(res, indent=4)}'
+            msg = f'Succesfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))

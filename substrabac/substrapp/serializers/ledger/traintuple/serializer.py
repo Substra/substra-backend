@@ -14,25 +14,25 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
                                            max_length=None)
-    train_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                            min_length=1,
-                                            max_length=None)
+    train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
+                                                   min_length=1,
+                                                   max_length=None)
 
     def create(self, validated_data):
         algo_key = validated_data.get('algo_key')
-        datamanager_key = validated_data.get('datamanager_key')
+        datamanager_key = validated_data.get('data_manager_key')
         rank = validated_data.get('rank', '')
         FLtask_key = validated_data.get('FLtask_key', '')
-        train_data_keys = validated_data.get('train_data_keys')
+        train_data_sample_keys = validated_data.get('train_data_sample_keys')
         in_models_keys = validated_data.get('in_models_keys')
 
-        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataKeys)s", "%(FLtask)s", "%(rank)s"' % {
+        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s"' % {
             'algoKey': algo_key,
             'rank': rank,
             'FLtask': FLtask_key,
             'inModels': ','.join([x for x in in_models_keys]),
             'dataManagerKey': datamanager_key,
-            'dataKeys': ','.join([x for x in train_data_keys]),
+            'dataSampleKeys': ','.join([x for x in train_data_sample_keys]),
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

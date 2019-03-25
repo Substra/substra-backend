@@ -10,12 +10,12 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DataManagerViewSet, TrainTupleViewSet, TestTupleViewSet, DataViewSet
+from substrapp.views import DataManagerViewSet, TrainTupleViewSet, TestTupleViewSet, DataSampleViewSet
 
 from substrapp.serializers import LedgerDataSerializer, LedgerObjectiveSerializer, LedgerAlgoSerializer
 
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
-from substrapp.views.data import path_leaf, compute_dryrun as data_compute_dryrun
+from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.views.algo import compute_dryrun as algo_compute_dryrun
 from substrapp.utils import compute_hash
@@ -38,7 +38,7 @@ class ViewTests(APITestCase):
     def tearDown(self):
         pass
 
-    def test_data_path_view(self):
+    def test_data_sample_path_view(self):
         self.assertEqual('tutu', path_leaf('/toto/tata/tutu'))
         self.assertEqual('toto', path_leaf('/toto/'))
 
@@ -240,7 +240,7 @@ class ObjectiveViewTests(APITestCase):
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
             'permissions': 'all',
-            'test_data_keys': [
+            'test_data_sample_keys': [
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
@@ -275,7 +275,7 @@ class ObjectiveViewTests(APITestCase):
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
             'permissions': 'all',
-            'test_data_keys': [
+            'test_data_sample_keys': [
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
@@ -1106,7 +1106,7 @@ class DataViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'data_manager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
@@ -1135,13 +1135,13 @@ class DataViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'data_manager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
+                mock.patch.object(DataSampleViewSet, 'dryrun_task') as mdryrun_task:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
@@ -1164,7 +1164,7 @@ class DataViewTests(APITestCase):
         pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         data = {
             'file': open(data_path, 'rb'),
-            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'data_manager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
@@ -1191,13 +1191,13 @@ class DataViewTests(APITestCase):
 
         data = {
             'file': open(data_path, 'rb'),
-            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'data_manager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
+                mock.patch.object(DataSampleViewSet, 'dryrun_task') as mdryrun_task:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
@@ -1209,7 +1209,7 @@ class DataViewTests(APITestCase):
 
         data['file'].close()
 
-    def test_data_compute_dryrun(self):
+    def test_data_sample_compute_dryrun(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1231,4 +1231,4 @@ class DataViewTests(APITestCase):
 
         with mock.patch.object(DataManager.objects, 'get') as mdatamanager:
             mdatamanager.return_value = FakeDataManager(opener_path)
-            data_compute_dryrun(data_files, datamanager_keys)
+            data_sample_compute_dryrun(data_files, datamanager_keys)

@@ -42,7 +42,7 @@ def compute_dryrun(self, algo_path, objective_key, pkhash):
             metrics_content, metrics_computed_hash = get_computed_hash(objective['metrics']['storageAddress'])
             with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'wb') as metrics_file:
                 metrics_file.write(metrics_content)
-            datamanager_key = objective['testData']['dataManagerKey']
+            datamanager_key = objective['testDataSample']['dataManagerKey']
 
             try:
                 datamanager = getObjectFromLedger(datamanager_key, 'queryDataManager')

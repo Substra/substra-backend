@@ -18,8 +18,9 @@ def create_hard_links(base_dir, directory):
         for subdir in subdirs:
             create_hard_links(root, subdir)
 
-def data_pre_save(sender, instance, **kwargs):
-    directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'data/{0}'.format(instance.pk))
+
+def data_sample_pre_save(sender, instance, **kwargs):
+    directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.pk))
 
     # uncompress file if an archive
     if isinstance(instance.path, File):
@@ -34,11 +35,11 @@ def data_pre_save(sender, instance, **kwargs):
             # calculate new hash
             sha256hash = dirhash(directory, 'sha256')
             # rename directory to new hash if does not exist
-            new_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'data', sha256hash)
+            new_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples', sha256hash)
             try:
                 rename(directory, new_directory)
             except Exception as e:
-                # directory already exists with same exact data inside
+                # directory already exists with same exact data sample inside
                 # created by a previous save, delete directory entitled pkhash
                 # for avoiding duplicates
                 shutil.rmtree(directory)

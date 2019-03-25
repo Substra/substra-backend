@@ -7,10 +7,10 @@ from coreapi.utils import File
 from django.test import TestCase, override_settings
 from mock import MagicMock
 
-from substrapp.models import Objective, DataManager, Data, Algo, Model
+from substrapp.models import Objective, DataManager, DataSample, Algo, Model
 from substrapp.utils import get_hash, get_dir_hash
 
-from .common import get_sample_objective, get_sample_datamanager, get_sample_data, \
+from .common import get_sample_objective, get_sample_datamanager, get_sample_data_sample, \
     get_sample_script, get_sample_model, get_sample_zip_data
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -46,12 +46,12 @@ class ModelTests(TestCase):
 
     def test_create_data(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308')
-        data = Data.objects.create(path=path)
-        self.assertEqual(data.pkhash, dirhash(path, 'sha256'))
-        self.assertFalse(data.validated)
-        self.assertIn(f'pkhash {data.pkhash}', str(data))
-        self.assertIn(f'validated {data.validated}', str(data))
+        path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/train/0024308')
+        data_sample = DataSample.objects.create(path=path)
+        self.assertEqual(data_sample.pkhash, dirhash(path, 'sha256'))
+        self.assertFalse(data_sample.validated)
+        self.assertIn(f'pkhash {data_sample.pkhash}', str(data_sample))
+        self.assertIn(f'validated {data_sample.validated}', str(data_sample))
 
     def test_create_algo(self):
         script, _ = get_sample_script()
