@@ -170,9 +170,9 @@ if __name__ == '__main__':
     # create dataset with org1
     data = {
         'name': 'ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/description.md'),
         'permissions': 'all',
     }
     dataset_org1_key = create_asset(data, org_1, 'dataset', dryrun=True)
@@ -197,9 +197,9 @@ if __name__ == '__main__':
     print(f'create dataset, test data and challenge on {org_0}')
     data = {
         'name': 'Simplified ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description.md'),
+        'description': os.path.join(dir_path, './fixtures/owkin/datasets/3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a/description.md'),
         'permissions': 'all'
     }
     dataset_org0_key = create_asset(data, org_0, 'dataset')

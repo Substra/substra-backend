@@ -94,10 +94,10 @@ class Command(BaseCommand):
     help = '''
     Bulk create data
     paths is a list of archives or paths to directories
-    python ./manage.py bulkcreatedata '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}'    
+    python ./manage.py bulkcreatedata '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "dataset_keys": ["3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a"], "test_only": false}'
     python ./manage.py bulkcreatedata data.json
     # data.json:
-    # {"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "dataset_keys": ["bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"], "test_only": false}
+    # {"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "dataset_keys": ["3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a"], "test_only": false}
     '''
 
     def add_arguments(self, parser):
