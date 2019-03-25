@@ -41,9 +41,9 @@ class CreateDatasetTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         dataset_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'))
+                                                            '../../fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/opener.py'))
         dataset_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'))
+                                                                 '../../fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/description.md'))
 
         data = {
             'dataset': {
@@ -124,9 +124,9 @@ class CreateDatasetTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         dataset_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'))
+                                                            '../../fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/opener.py'))
         dataset_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'))
+                                                                 '../../fixtures/chunantes/datasets/ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98/description.md'))
 
         data = {
             'dataset': {
