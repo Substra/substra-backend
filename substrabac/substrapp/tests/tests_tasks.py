@@ -14,7 +14,7 @@ from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data, get_sample_tar_data, get_sample_model
-from .common import FakeClient, FakeObjective, FakeDataset, FakeModel
+from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
 
 import zipfile
 from threading import Thread
@@ -181,8 +181,8 @@ class TasksTests(APITestCase):
         opener_directory = os.path.join(self.subtuple_path, 'opener')
         create_directory(opener_directory)
 
-        with mock.patch('substrapp.models.Dataset.objects.get') as mget:
-            mget.return_value = FakeDataset(filepath)
+        with mock.patch('substrapp.models.DataManager.objects.get') as mget:
+            mget.return_value = FakeDataManager(filepath)
 
             # test fail
             with self.assertRaises(Exception):

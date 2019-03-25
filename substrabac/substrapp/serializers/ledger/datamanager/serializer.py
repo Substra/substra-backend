@@ -4,11 +4,11 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 
 from substrapp.utils import get_hash
-from .util import createLedgerDataset
-from .tasks import createLedgerDatasetAsync
+from .util import createLedgerDataManager
+from .tasks import createLedgerDataManagerAsync
 
 
-class LedgerDatasetSerializer(serializers.Serializer):
+class LedgerDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
     objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
@@ -30,22 +30,22 @@ class LedgerDatasetSerializer(serializers.Serializer):
         args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {
             'name': name,
             'openerHash': get_hash(instance.data_opener),
-            'openerStorageAddress': protocol + host + reverse('substrapp:dataset-opener', args=[instance.pk]),
+            'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
             'type': type,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:dataset-description', args=[instance.pk]),
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
             'objectiveKey': objective_key,
             'permissions': permissions
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerDataset(args, instance.pkhash, sync=True)
+            return createLedgerDataManager(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
-            createLedgerDatasetAsync.delay(args, instance.pkhash)
+            createLedgerDataManagerAsync.delay(args, instance.pkhash)
 
             data = {
-                'message': 'Dataset added in local db waiting for validation. The substra network has been notified for adding this Dataset'
+                'message': 'DataManager added in local db waiting for validation. The substra network has been notified for adding this DataManager'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

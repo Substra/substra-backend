@@ -21,8 +21,8 @@ else:
         auth = [username, password]
     res = popen(['substra', 'config', 'https://substra.owkin.com:9000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
 
-    print('create dataset with owkin org')
-    # create dataset with owkin org
+    print('create data manager with owkin org')
+    # create data manager with owkin org
     data = json.dumps({
         "name": "ISIC 2018",
         "data_opener": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/dataset/isic2018/opener.py",
@@ -32,10 +32,10 @@ else:
         "challenge_keys": []
     })
 
-    res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    res = popen(['substra', 'add', 'datamanager', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     res_data = json.loads(res.decode('utf-8'))
-    dataset_key = res_data['pkhash']
+    datamanager_key = res_data['pkhash']
     print(json.dumps(res_data, indent=2))
 
     # Register Data on substrabac docker

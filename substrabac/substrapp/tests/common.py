@@ -145,7 +145,7 @@ def get_sample_script():
     return script, script_filename
 
 
-def get_sample_dataset():
+def get_sample_datamanager():
     description_content = "description"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
@@ -156,7 +156,7 @@ def get_sample_dataset():
     return description, description_filename, data_opener, data_opener_filename
 
 
-def get_sample_dataset2():
+def get_sample_datamanager2():
     description_content = "description 2"
     description_filename = "description2.md"
     description = get_temporary_text_file(description_content, description_filename)
@@ -270,12 +270,12 @@ class FakeOpener(object):
         self.name = self.path
 
 
-class FakeDataset(object):
+class FakeDataManager(object):
     def __init__(self, filepath):
         self.data_opener = FakeOpener(filepath)
 
 
-class FakeFilterDataset(object):
+class FakeFilterDataManager(object):
     def __init__(self, count):
         self.count_value = count
 

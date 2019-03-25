@@ -13,7 +13,7 @@ from io import StringIO
 import shutil
 from mock import patch
 
-from substrapp.models import Dataset
+from substrapp.models import DataManager
 from substrapp.serializers import LedgerDataSerializer, DataSerializer
 from substrapp.tests.common import get_sample_zip_data
 from substrapp.views import DataViewSet
@@ -41,7 +41,7 @@ class BulkCreateDataTestCase(TestCase):
         mock_data_opener.read = MagicMock(return_value=b'import os')
         mock_data_opener.open = MagicMock(return_value=mock_data_opener)
 
-        self.dataset = Dataset.objects.create(name='slide opener',
+        self.datamanager = DataManager.objects.create(name='slide opener',
                                               description=mock_description,
                                               data_opener=mock_data_opener)
 
@@ -63,14 +63,14 @@ class BulkCreateDataTestCase(TestCase):
                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
@@ -79,7 +79,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -116,13 +116,13 @@ class BulkCreateDataTestCase(TestCase):
                                   '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1],
@@ -131,7 +131,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -169,13 +169,13 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1],
@@ -184,7 +184,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -223,14 +223,14 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         data = {'paths': [data_path1, data_path2],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
@@ -239,7 +239,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -282,13 +282,13 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1, data_path1],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash1],
@@ -297,7 +297,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -321,13 +321,13 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/train/0024308'))
 
         data = {'paths': [data_path1, data_path1],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        with patch.object(Dataset.objects, 'filter') as mdataset, \
+        with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash1],
@@ -336,7 +336,7 @@ class BulkCreateDataTestCase(TestCase):
 
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
-            mdataset.return_value = mock_filter
+            mdatamanager.return_value = mock_filter
 
             saved_stdout = sys.stdout
 
@@ -355,7 +355,7 @@ class BulkCreateDataTestCase(TestCase):
     def test_bulkcreatedata_not_a_list(self):
 
         data = {'paths': 'tutu',
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -396,10 +396,10 @@ class BulkCreateDataTestCase(TestCase):
             call_command('bulkcreatedata', './foo')
             mopen.assert_called_once_with('./foo', 'r')
 
-    def test_bulkcreatedata_invalid_dataset(self):
+    def test_bulkcreatedata_invalid_datamanager(self):
 
         data = {'paths': ['./foo'],
-                'dataset_keys': ['bar'],
+                'datamanager_keys': ['bar'],
                 'test_only': False}
 
         err = StringIO()
@@ -408,14 +408,14 @@ class BulkCreateDataTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['bar']"
+        wanted_output = "One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: ['bar']"
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_not_array_dataset(self):
+    def test_bulkcreatedata_not_array_datamanager(self):
 
         data = {'paths': ['./foo'],
-                'dataset_keys': 'bar',
+                'datamanager_keys': 'bar',
                 'test_only': False}
 
         err = StringIO()
@@ -424,14 +424,14 @@ class BulkCreateDataTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "The dataset_keys you provided is not an array"
+        wanted_output = "The datamanager_keys you provided is not an array"
 
         self.assertEqual(wanted_output, output)
 
-    def test_bulkcreatedata_dataset_do_not_exist(self):
+    def test_bulkcreatedata_datamanager_do_not_exist(self):
 
         data = {'files': ['./foo'],
-                'dataset_keys': [
+                'datamanager_keys': [
                     '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
@@ -441,13 +441,13 @@ class BulkCreateDataTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528']"
+        wanted_output = "One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: ['9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528']"
 
         self.assertEqual(wanted_output, output)
 
     def test_bulkcreatedata_invalid_file(self):
         data = {'paths': ['./foo'],
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -466,7 +466,7 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -500,7 +500,7 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         out = StringIO()
@@ -539,7 +539,7 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()
@@ -578,7 +578,7 @@ class BulkCreateDataTestCase(TestCase):
                                                    '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
 
         data = {'paths': [data_path1],
-                'dataset_keys': [self.dataset.pk],
+                'datamanager_keys': [self.datamanager.pk],
                 'test_only': False}
 
         err = StringIO()

@@ -13,7 +13,7 @@ objective = [
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
         "testData": {
-            "datasetKey": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
+            "dataManagerKey": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
             "dataKeys": [
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1",
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010"
@@ -23,18 +23,18 @@ objective = [
     }
 ]
 
-dataset = [
+datamanager = [
     {
         "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
         "description": {
             "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb09",
-            "storageAddress": "http://testserver/dataset/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description/"
+            "storageAddress": "http://testserver/data_manager/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description/"
         },
         "key": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
         "name": "ISIC 2018",
         "opener": {
             "hash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
-            "storageAddress": "http://testserver/dataset/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener/"
+            "storageAddress": "http://testserver/data_manager/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
         "permissions": "all",
@@ -44,13 +44,13 @@ dataset = [
         "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
-            "storageAddress": "http://testserver/dataset/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description/"
+            "storageAddress": "http://testserver/data_manager/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description/"
         },
         "key": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
         "name": "Simplified ISIC 2018",
         "opener": {
             "hash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
-            "storageAddress": "http://testserver/dataset/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener/"
+            "storageAddress": "http://testserver/data_manager/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
         "permissions": "all",

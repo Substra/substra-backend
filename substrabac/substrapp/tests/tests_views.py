@@ -10,7 +10,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DatasetViewSet, TrainTupleViewSet, TestTupleViewSet, DataViewSet
+from substrapp.views import DataManagerViewSet, TrainTupleViewSet, TestTupleViewSet, DataViewSet
 
 from substrapp.serializers import LedgerDataSerializer, LedgerObjectiveSerializer, LedgerAlgoSerializer
 
@@ -20,11 +20,11 @@ from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.views.algo import compute_dryrun as algo_compute_dryrun
 from substrapp.utils import compute_hash
 
-from substrapp.models import Dataset
+from substrapp.models import DataManager
 
-from .common import get_sample_objective, get_sample_dataset, get_sample_algo, get_sample_model
-from .common import FakeAsyncResult, FakeRequest, FakeFilterDataset, FakeTask, FakeDataset
-from .assets import objective, dataset, algo, traintuple, model, testtuple
+from .common import get_sample_objective, get_sample_datamanager, get_sample_algo, get_sample_model
+from .common import FakeAsyncResult, FakeRequest, FakeFilterDataManager, FakeTask, FakeDataManager
+from .assets import objective, datamanager, algo, traintuple, model, testtuple
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -145,11 +145,11 @@ class ObjectiveViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), len(objective))
 
-    def test_objective_list_filter_dataset(self):
+    def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(objective, status.HTTP_200_OK),
-                                        (dataset, status.HTTP_200_OK)]
+                                        (datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -244,7 +244,7 @@ class ObjectiveViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_dataset_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
+            'test_datamanager_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
         }
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
@@ -279,7 +279,7 @@ class ObjectiveViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_dataset_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528',
+            'test_datamanager_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528',
             'dryrun': True
         }
 
@@ -302,19 +302,19 @@ class ObjectiveViewTests(APITestCase):
         metrics_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py')
         shutil.copy(metrics_path, os.path.join(MEDIA_ROOT, 'metrics.py'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datamanagers/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
 
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
         pkhash = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c'
 
-        test_dataset_key = '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
+        test_datamanager_key = '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
 
-        with mock.patch('substrapp.views.objective.getObjectFromLedger') as mdataset,\
+        with mock.patch('substrapp.views.objective.getObjectFromLedger') as mdatamanager,\
                 mock.patch('substrapp.views.objective.get_computed_hash') as mopener:
-            mdataset.return_value = {'opener': {'storageAddress': 'test'}}
+            mdatamanager.return_value = {'opener': {'storageAddress': 'test'}}
             mopener.return_value = (opener_content, pkhash)
-            objective_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_dataset_key, pkhash)
+            objective_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_datamanager_key, pkhash)
 
 
 # APITestCase
@@ -381,11 +381,11 @@ class AlgoViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 1)
 
-    def test_algo_list_filter_dataset(self):
+    def test_algo_list_filter_datamanager(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
-                                        (dataset, status.HTTP_200_OK)]
+                                        (datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -527,7 +527,7 @@ class AlgoViewTests(APITestCase):
             metrics_content = f.read()
         metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datamanagers/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
         opener_pkhash = '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
@@ -535,7 +535,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
                 mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
             mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-                                                 'testData': {'datasetKey': 'test'}},
+                                                 'testData': {'dataManagerKey': 'test'}},
                                                 {'opener': {'storageAddress': 'test'}}]
             mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
 
@@ -610,11 +610,11 @@ class ModelViewTests(APITestCase):
             r = response.json()
             self.assertEqual(len(r[0]), 1)
 
-    def test_model_list_filter_dataset(self):
+    def test_model_list_filter_datamanager(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
-                                        (dataset, status.HTTP_200_OK)]
+                                        (datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253AISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -689,14 +689,14 @@ class ModelViewTests(APITestCase):
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-class DatasetViewTests(APITestCase):
+class DataManagerViewTests(APITestCase):
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
         self.data_description, self.data_description_filename, \
-            self.data_data_opener, self.data_opener_filename = get_sample_dataset()
+            self.data_data_opener, self.data_opener_filename = get_sample_datamanager()
 
         self.extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0'
@@ -714,9 +714,9 @@ class DatasetViewTests(APITestCase):
 
         self.logger.setLevel(self.previous_level)
 
-    def test_dataset_list_empty(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
+    def test_datamanager_list_empty(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(None, status.HTTP_200_OK),
                                         (['ISIC'], status.HTTP_200_OK)]
 
@@ -728,10 +728,10 @@ class DatasetViewTests(APITestCase):
             r = response.json()
             self.assertEqual(r, [['ISIC']])
 
-    def test_dataset_list_filter_fail(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK)]
+    def test_datamanager_list_filter_fail(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataseERRORt'
             response = self.client.get(url + search_params, **self.extra)
@@ -739,10 +739,10 @@ class DatasetViewTests(APITestCase):
 
             self.assertIn('Malformed search filters', r['message'])
 
-    def test_dataset_list_filter_name(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK)]
+    def test_datamanager_list_filter_name(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -750,10 +750,10 @@ class DatasetViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 1)
 
-    def test_dataset_list_filter_algo(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
+    def test_datamanager_list_filter_algo(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
                                         (algo, status.HTTP_200_OK)]
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
@@ -762,10 +762,10 @@ class DatasetViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 2)
 
-    def test_dataset_list_filter_objective(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
+    def test_datamanager_list_filter_objective(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
                                         (objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
@@ -774,10 +774,10 @@ class DatasetViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 2)
 
-    def test_dataset_list_filter_model(self):
-        url = reverse('substrapp:dataset-list')
-        with mock.patch('substrapp.views.dataset.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(dataset, status.HTTP_200_OK),
+    def test_datamanager_list_filter_model(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
                                         (traintuple, status.HTTP_200_OK)]
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -786,19 +786,19 @@ class DatasetViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 2)
 
-    def test_dataset_retrieve(self):
-        url = reverse('substrapp:dataset-list')
-        dataset_response = [d for d in dataset if d['key'] == '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'][0]
-        with mock.patch.object(DatasetViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.dataset.requests.get') as mrequestsget:
-            mgetObjectFromLedger.return_value = dataset_response
+    def test_datamanager_retrieve(self):
+        url = reverse('substrapp:data_manager-list')
+        datamanager_response = [d for d in datamanager if d['key'] == '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'][0]
+        with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
+                mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
+            mgetObjectFromLedger.return_value = datamanager_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'), 'rb') as f:
+                                   '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'), 'rb') as f:
                 opener_content = f.read()
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'), 'rb') as f:
+                                   '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'), 'rb') as f:
                 description_content = f.read()
 
             mrequestsget.side_effect = [FakeRequest(status=status.HTTP_200_OK,
@@ -810,10 +810,10 @@ class DatasetViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(r, dataset_response)
+            self.assertEqual(r, datamanager_response)
 
-    def test_dataset_retrieve_fail(self):
-        url = reverse('substrapp:dataset-list')
+    def test_datamanager_retrieve_fail(self):
+        url = reverse('substrapp:data_manager-list')
 
         # PK hash < 64 chars
         search_params = '42303efa663015e729159833a12ffb510ff/'
@@ -825,22 +825,22 @@ class DatasetViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch.object(DatasetViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
             search_params = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/'
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_dataset_create_dryrun(self):
-        url = reverse('substrapp:dataset-list')
+    def test_datamanager_create_dryrun(self):
+        url = reverse('substrapp:data_manager-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
+                                                  '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
                                      'rb'),
                  'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
+                                                  '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
                                      'rb')}
 
         data = {
@@ -859,7 +859,7 @@ class DatasetViewTests(APITestCase):
                                                   '../../fixtures/owkin/objectives/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
                                      'rb'),
                  'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
+                                                  '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
                                      'rb')}
 
         response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
@@ -1073,7 +1073,7 @@ class DataViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.data_description, self.data_description_filename, \
-            self.data_data_opener, self.data_opener_filename = get_sample_dataset()
+            self.data_data_opener, self.data_opener_filename = get_sample_datamanager()
 
         self.extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0'
@@ -1106,14 +1106,14 @@ class DataViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
-        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
 
-            mdataset.return_value = FakeFilterDataset(1)
+            mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = ({'keys': [pkhash1, pkhash2]},
                                     status.HTTP_201_CREATED)
             response = self.client.post(url, data=data, format='multipart', **self.extra)
@@ -1135,15 +1135,15 @@ class DataViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
 
-        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
 
-            mdataset.return_value = FakeFilterDataset(1)
+            mdatamanager.return_value = FakeFilterDataManager(1)
             mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
@@ -1164,14 +1164,14 @@ class DataViewTests(APITestCase):
         pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         data = {
             'file': open(data_path, 'rb'),
-            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
-        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
 
-            mdataset.return_value = FakeFilterDataset(1)
+            mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = ({'keys': [pkhash]},
                                     status.HTTP_201_CREATED)
             response = self.client.post(url, data=data, format='multipart', **self.extra)
@@ -1191,15 +1191,15 @@ class DataViewTests(APITestCase):
 
         data = {
             'file': open(data_path, 'rb'),
-            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
+            'datamanager_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
 
-        with mock.patch.object(Dataset.objects, 'filter') as mdataset, \
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 mock.patch.object(DataViewSet, 'dryrun_task') as mdryrun_task:
 
-            mdataset.return_value = FakeFilterDataset(1)
+            mdatamanager.return_value = FakeFilterDataManager(1)
             mdryrun_task.return_value = (FakeTask('42'), 'Your dry-run has been taken in account. You can follow the task execution on localhost')
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
@@ -1217,7 +1217,7 @@ class DataViewTests(APITestCase):
 
         shutil.copy(data_path, os.path.join(MEDIA_ROOT, '0024700.zip'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py')
 
         pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
 
@@ -1227,8 +1227,8 @@ class DataViewTests(APITestCase):
         }
 
         data_files = [data]
-        dataset_keys = ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd']
+        datamanager_keys = ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd']
 
-        with mock.patch.object(Dataset.objects, 'get') as mdataset:
-            mdataset.return_value = FakeDataset(opener_path)
-            data_compute_dryrun(data_files, dataset_keys)
+        with mock.patch.object(DataManager.objects, 'get') as mdatamanager:
+            mdatamanager.return_value = FakeDataManager(opener_path)
+            data_compute_dryrun(data_files, datamanager_keys)

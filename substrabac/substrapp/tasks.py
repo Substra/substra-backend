@@ -126,20 +126,20 @@ def put_models(subtuple, subtuple_directory, models_content):
 
 
 def put_opener(subtuple, subtuple_directory):
-    from substrapp.models import Dataset
+    from substrapp.models import DataManager
 
     try:
-        dataset = Dataset.objects.get(pk=subtuple['data']['openerHash'])
+        datamanager = DataManager.objects.get(pk=subtuple['data']['openerHash'])
     except Exception as e:
         raise e
 
-    data_opener_hash = get_hash(dataset.data_opener.path)
+    data_opener_hash = get_hash(datamanager.data_opener.path)
     if data_opener_hash != subtuple['data']['openerHash']:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
     opener_dst_path = path.join(subtuple_directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
-        os.link(dataset.data_opener.path, opener_dst_path)
+        os.link(datamanager.data_opener.path, opener_dst_path)
 
 
 def put_data(subtuple, subtuple_directory):

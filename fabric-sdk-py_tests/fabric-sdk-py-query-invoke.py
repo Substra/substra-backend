@@ -38,7 +38,7 @@ else:
                              '-n', 'mycc',
                              #'--tls',
                              #'--clientauth',
-                             '-c', '{"Args":["queryDatasets"]}'
+                             '-c', '{"Args":["queryDataManagers"]}'
                              ],
                             stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE)
@@ -63,7 +63,7 @@ else:
         args=[],
         cc_name='mycc',
         cc_version='1.0',
-        fcn='queryDatasets'
+        fcn='queryDataManagers'
     )
     print(response)
 
@@ -94,16 +94,16 @@ else:
         peer_names=['peer1-owkin'],
         args=['ISIC 2018',
               '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
-              'http://chunantes.substrabac:8001/media/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py',
+              'http://chunantes.substrabac:8001/media/data_managers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py',
               'Images',
               '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
-              'http://chunantes.substrabac:8001/media/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md',
+              'http://chunantes.substrabac:8001/media/data_managers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md',
               '',
               'all'
               ],
         cc_name='mycc',
         cc_version='1.0',
-        fcn='registerDataset',
+        fcn='registerDataManager',
         wait_for_event=True,
         wait_for_event_timeout=5
     )
