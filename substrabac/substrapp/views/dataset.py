@@ -103,7 +103,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
                 ledger_serializer = LedgerDatasetSerializer(data={'name': data.get('name'),
                                                                   'permissions': data.get('permissions'),
                                                                   'type': data.get('type'),
-                                                                  'challenge_keys': data.getlist('challenge_keys'),
+                                                                  'objective_keys': data.getlist('objective_keys'),
                                                                   'instance': instance},
                                                             context={'request': request})
 
@@ -254,7 +254,7 @@ class DatasetViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'args': '{"Args":["queryDatasets"]}'
         })
-        challengeData = None
+        objectiveData = None
         algoData = None
         modelData = None
 
@@ -285,25 +285,25 @@ class DatasetViewSet(mixins.CreateModelMixin,
                             if k == 'dataset':  # filter by own key
                                 for key, val in subfilters.items():
                                     l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'challenge':  # select challenge used by these datasets
-                                if not challengeData:
+                            elif k == 'objective':  # select objective used by these datasets
+                                if not objectiveData:
                                     # TODO find a way to put this call in cache
-                                    challengeData, st = queryLedger({
-                                        'args': '{"Args":["queryChallenges"]}'
+                                    objectiveData, st = queryLedger({
+                                        'args': '{"Args":["queryObjectives"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(challengeData, status=st)
-                                    if challengeData is None:
-                                        challengeData = []
+                                        return Response(objectiveData, status=st)
+                                    if objectiveData is None:
+                                        objectiveData = []
 
                                 for key, val in subfilters.items():
                                     if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
                                     else:
-                                        filteredData = [x for x in challengeData if x[key] in val]
-                                    challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
-                            elif k == 'algo':  # select challenge used by these algo
+                                        filteredData = [x for x in objectiveData if x[key] in val]
+                                    objectiveKeys = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                            elif k == 'algo':  # select objective used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
@@ -316,9 +316,9 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
-                                    challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
-                            elif k == 'model':  # select challenges used by outModel hash
+                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                            elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
@@ -331,8 +331,8 @@ class DatasetViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
-                                    challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
+                                    objectiveKeys = [x['objective']['hash'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
 
         return Response(l, status=st)
 
@@ -354,21 +354,21 @@ class DatasetViewSet(mixins.CreateModelMixin,
         else:
 
             data = request.data
-            challenge_key = data.get('challenge_key')
+            objective_key = data.get('objective_key')
 
             if len(pk) != 64:
-                return Response({'message': f'Challenge Key is wrong: {pk}'},
+                return Response({'message': f'Objective Key is wrong: {pk}'},
                                 status.HTTP_400_BAD_REQUEST)
 
             try:
                 int(pk, 16)  # test if pk is correct (hexadecimal)
             except:
-                return Response({'message': f'Challenge Key is wrong: {pk}'},
+                return Response({'message': f'Objective Key is wrong: {pk}'},
                                 status.HTTP_400_BAD_REQUEST)
             else:
-                args = '"%(datasetKey)s", "%(challengeKey)s"' % {
+                args = '"%(datasetKey)s", "%(objectiveKey)s"' % {
                     'datasetKey': pk,
-                    'challengeKey': challenge_key,
+                    'objectiveKey': objective_key,
                 }
 
                 if getattr(settings, 'LEDGER_SYNC_ENABLED'):

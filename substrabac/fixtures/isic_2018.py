@@ -44,10 +44,10 @@ else:
     print('You have to register data manually')
     input("When it is done, press Enter to continue...")
 
-    # register challenge
-    print('register challenge')
+    # register objective
+    print('register objective')
     data = json.dumps({
-        "name": "Skin Lesion Classification Challenge",
+        "name": "Skin Lesion Classification Objective",
         "description": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/description.md",
         "metrics_name": "macro-average recall",
         "metrics": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/metrics.py",
@@ -55,10 +55,10 @@ else:
         "test_data_keys": ["039eecf8279c570022f000984d91e175ca8efbf858f11b8bffc88d91ccb51096"]
     })
 
-    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    res = popen(['substra', 'add', 'objective', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     res_data = json.loads(res.decode('utf-8'))
-    challenge_key = res_data['pkhash']
+    objective_key = res_data['pkhash']
     print(json.dumps(res_data, indent=2))
 
     # ############################
@@ -69,7 +69,7 @@ else:
         "name": "CNN Classifier GPU Updated",
         "file": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/algo/algo.tar.gz",
         "description": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/algo/description.md",
-        "challenge_key": challenge_key,
+        "objective_key": objective_key,
         "permissions": "all",
     })
 

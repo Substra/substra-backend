@@ -7,10 +7,10 @@ from coreapi.utils import File
 from django.test import TestCase, override_settings
 from mock import MagicMock
 
-from substrapp.models import Challenge, Dataset, Data, Algo, Model
+from substrapp.models import Objective, Dataset, Data, Algo, Model
 from substrapp.utils import get_hash, get_dir_hash
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, \
+from .common import get_sample_objective, get_sample_dataset, get_sample_data, \
     get_sample_script, get_sample_model, get_sample_zip_data
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -26,15 +26,15 @@ class ModelTests(TestCase):
         except FileNotFoundError:
             pass
 
-    def test_create_challenge(self):
-        description, _, metrics, _ = get_sample_challenge()
-        challenge = Challenge.objects.create(description=description,
+    def test_create_objective(self):
+        description, _, metrics, _ = get_sample_objective()
+        objective = Objective.objects.create(description=description,
                                              metrics=metrics)
 
-        self.assertEqual(challenge.pkhash, get_hash(description))
-        self.assertFalse(challenge.validated)
-        self.assertIn(f'pkhash {challenge.pkhash}', str(challenge))
-        self.assertIn(f'validated {challenge.validated}', str(challenge))
+        self.assertEqual(objective.pkhash, get_hash(description))
+        self.assertFalse(objective.validated)
+        self.assertIn(f'pkhash {objective.pkhash}', str(objective))
+        self.assertIn(f'validated {objective.validated}', str(objective))
 
     def test_create_dataset(self):
         description, _, data_opener, _ = get_sample_dataset()

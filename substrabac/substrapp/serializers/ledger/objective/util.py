@@ -1,20 +1,20 @@
 from __future__ import absolute_import, unicode_literals
 from rest_framework import status
 
-from substrapp.models import Challenge
+from substrapp.models import Objective
 from substrapp.utils import invokeLedger
 
 
-def createLedgerChallenge(args, pkhash, sync=False):
+def createLedgerObjective(args, pkhash, sync=False):
 
     options = {
-        'args': '{"Args":["registerChallenge", ' + args + ']}'
+        'args': '{"Args":["registerObjective", ' + args + ']}'
     }
     data, st = invokeLedger(options, sync)
 
     #  if not created on ledger, delete from local db, else pass to validated true
     try:
-        instance = Challenge.objects.get(pk=pkhash)
+        instance = Objective.objects.get(pk=pkhash)
     except:
         pass
     else:

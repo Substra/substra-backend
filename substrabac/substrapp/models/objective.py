@@ -5,11 +5,11 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return 'challenges/{0}/{1}'.format(instance.pk, filename)
+    return 'objectives/{0}/{1}'.format(instance.pk, filename)
 
 
-class Challenge(TimeStamped):
-    """Storage Challenge table"""
+class Objective(TimeStamped):
+    """Storage Objective table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False, blank=True)
     description = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)  # path max length to 500 instead of default 100
@@ -19,7 +19,7 @@ class Challenge(TimeStamped):
         """Use hash of description file as primary key"""
         if not self.pkhash:
             self.pkhash = get_hash(self.description)
-        super(Challenge, self).save(*args, **kwargs)
+        super(Objective, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"Challenge with pkhash {self.pkhash} with validated {self.validated}"
+        return f"Objective with pkhash {self.pkhash} with validated {self.validated}"

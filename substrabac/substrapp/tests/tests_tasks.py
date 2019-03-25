@@ -11,10 +11,10 @@ from rest_framework.test import APITestCase
 from substrapp.models import Data
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
-from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_challenge, put_opener, put_model, put_models, put_algo, put_metric, put_data, prepareTask, doTask, computeTask
+from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data, get_sample_tar_data, get_sample_model
-from .common import FakeClient, FakeChallenge, FakeDataset, FakeModel
+from .common import FakeClient, FakeObjective, FakeDataset, FakeModel
 
 import zipfile
 from threading import Thread
@@ -168,7 +168,7 @@ class TasksTests(APITestCase):
         metrics_directory = os.path.join(self.subtuple_path, 'metrics/')
         create_directory(metrics_directory)
 
-        put_metric(self.subtuple_path, FakeChallenge(filepath))
+        put_metric(self.subtuple_path, FakeObjective(filepath))
         self.assertTrue(os.path.exists(os.path.join(metrics_directory, 'metrics.py')))
 
     def test_put_opener(self):
@@ -364,21 +364,21 @@ class TasksTests(APITestCase):
             mget_remote_file.return_value = algo_content, algo_hash
             self.assertEqual((algo_content, algo_hash), get_algo({'algo': ''}))
 
-    def test_get_challenge(self):
+    def test_get_objective(self):
         metrics_content = self.script.read()
-        challenge_hash = get_hash(self.script)
+        objective_hash = get_hash(self.script)
 
-        with mock.patch('substrapp.models.Challenge.objects.get') as mget, \
+        with mock.patch('substrapp.models.Objective.objects.get') as mget, \
                 mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file, \
-                mock.patch('substrapp.models.Challenge.objects.update_or_create') as mupdate_or_create:
+                mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
-                mget.return_value = FakeChallenge()
-                mget_remote_file.return_value = metrics_content, challenge_hash
-                mupdate_or_create.return_value = FakeChallenge(), True
+                mget.return_value = FakeObjective()
+                mget_remote_file.return_value = metrics_content, objective_hash
+                mupdate_or_create.return_value = FakeObjective(), True
 
-                challenge = get_challenge({'challenge': {'hash': challenge_hash,
+                objective = get_objective({'objective': {'hash': objective_hash,
                                            'metrics': ''}})
-                self.assertTrue(isinstance(challenge, FakeChallenge))
+                self.assertTrue(isinstance(objective, FakeObjective))
 
     def test_compute_docker(self):
         cpu_set, gpu_set = None, None
@@ -431,7 +431,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.get_hash') as mget_hash, \
                 mock.patch('substrapp.tasks.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.tasks.get_challenge') as mget_challenge, \
+                mock.patch('substrapp.tasks.get_objective') as mget_objective, \
                 mock.patch('substrapp.tasks.get_algo') as mget_algo, \
                 mock.patch('substrapp.tasks.get_model') as mget_model, \
                 mock.patch('substrapp.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
@@ -444,7 +444,7 @@ class TasksTests(APITestCase):
                 msettings.return_value = FakeSettings()
                 mget_hash.return_value = 'owkinhash'
                 mqueryLedger.return_value = subtuple, 200
-                mget_challenge.return_value = 'challenge'
+                mget_objective.return_value = 'objective'
                 mget_algo.return_value = 'algo', 'algo_hash'
                 mget_model.return_value = 'model', 'model_hash'
                 mbuild_subtuple_folders.return_value = MEDIA_ROOT

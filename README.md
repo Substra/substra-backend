@@ -199,7 +199,7 @@ The chu-nantes celery worker will try to add the traintuple to the ledger.
 You can check your traintuple has been corectly added by visiting `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/`
 As the trainData passed are also created by chu-nantes, the chu-nantes celery worker will try to update the traintuple status to `training` and save some data if needed.
 You can check `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/` to check if the status of your newly created traintuple is set to `training` after 10 sec (celery worker periodic task period).
-You can also check a new challenge has been added in `medias/chu-nantes` with a `metrics.py` file but not `description.md` file.
+You can also check a new objective has been added in `medias/chu-nantes` with a `metrics.py` file but not `description.md` file.
 
 ## Testing with the browsable API
 

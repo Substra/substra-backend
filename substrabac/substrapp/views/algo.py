@@ -26,7 +26,7 @@ from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, algo_path, challenge_key, pkhash):
+def compute_dryrun(self, algo_path, objective_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
@@ -35,14 +35,14 @@ def compute_dryrun(self, algo_path, challenge_key, pkhash):
         os.remove(algo_path)
 
         try:
-            challenge = getObjectFromLedger(challenge_key, 'queryChallenge')
+            objective = getObjectFromLedger(objective_key, 'queryObjective')
         except JsonException as e:
             raise e
         else:
-            metrics_content, metrics_computed_hash = get_computed_hash(challenge['metrics']['storageAddress'])
+            metrics_content, metrics_computed_hash = get_computed_hash(objective['metrics']['storageAddress'])
             with open(os.path.join(subtuple_directory, 'metrics/metrics.py'), 'wb') as metrics_file:
                 metrics_file.write(metrics_content)
-            dataset_key = challenge['testData']['datasetKey']
+            dataset_key = objective['testData']['datasetKey']
 
             try:
                 dataset = getObjectFromLedger(dataset_key, 'queryDataset')
@@ -125,7 +125,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         file = data.get('file')
-        challenge_key = data.get('challenge_key')
+        objective_key = data.get('objective_key')
         pkhash = get_hash(file)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -149,7 +149,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     with open(algo_path, 'wb') as algo_file:
                         algo_file.write(file.open().read())
 
-                    task = compute_dryrun.apply_async((algo_path, challenge_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
+                    task = compute_dryrun.apply_async((algo_path, objective_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
                     site_port = getattr(settings, "SITE_PORT", None)
                     current_site = f'{getattr(settings, "SITE_HOST")}'
@@ -173,7 +173,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                 # init ledger serializer
                 ledger_serializer = LedgerAlgoSerializer(data={'name': data.get('name'),
                                                                'permissions': data.get('permissions', 'all'),
-                                                               'challenge_key': challenge_key,
+                                                               'objective_key': objective_key,
                                                                'instance': instance},
                                                          context={'request': request})
                 if not ledger_serializer.is_valid():
@@ -194,7 +194,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def create_or_update_algo(self, algo, pk):
         try:
-            # get challenge description from remote node
+            # get objective description from remote node
             url = algo['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
@@ -216,7 +216,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     f = tempfile.TemporaryFile()
                     f.write(r.content)
 
-                    # save/update challenge in local db for later use
+                    # save/update objective in local db for later use
                     instance, created = Algo.objects.update_or_create(pkhash=pk, validated=True)
                     instance.description.save('description.md', f)
         except Exception as e:
@@ -278,7 +278,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'args': '{"Args":["queryAlgos"]}'
         })
-        challengeData = None
+        objectiveData = None
         datasetData = None
         modelData = None
 
@@ -309,27 +309,27 @@ class AlgoViewSet(mixins.CreateModelMixin,
                             if k == 'algo':  # filter by own key
                                 for key, val in subfilters.items():
                                     l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'challenge':  # select challenge used by these datasets
+                            elif k == 'objective':  # select objective used by these datasets
                                 st = None
-                                if not challengeData:
+                                if not objectiveData:
                                     # TODO find a way to put this call in cache
-                                    challengeData, st = queryLedger({
-                                        'args': '{"Args":["queryChallenges"]}'
+                                    objectiveData, st = queryLedger({
+                                        'args': '{"Args":["queryObjectives"]}'
                                     })
 
                                     if st != status.HTTP_200_OK:
-                                        return Response(challengeData, status=st)
-                                    if challengeData is None:
-                                        challengeData = []
+                                        return Response(objectiveData, status=st)
+                                    if objectiveData is None:
+                                        objectiveData = []
 
                                 for key, val in subfilters.items():
                                     if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
                                     else:
-                                        filteredData = [x for x in challengeData if x[key] in val]
-                                    challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
-                            elif k == 'dataset':  # select challenge used by these algo
+                                        filteredData = [x for x in objectiveData if x[key] in val]
+                                    objectiveKeys = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                            elif k == 'dataset':  # select objective used by these algo
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
                                     datasetData, st = queryLedger({
@@ -342,9 +342,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
-                                    challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['challengeKey'] in challengeKeys]
-                            elif k == 'model':  # select challenges used by outModel hash
+                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                            elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
