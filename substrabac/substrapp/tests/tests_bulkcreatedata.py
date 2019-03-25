@@ -139,7 +139,7 @@ class BulkCreateDataTestCase(TestCase):
                 out = StringIO()
                 sys.stdout = out
 
-                # mock hard links as we are on /tmp which is on another patition
+                # mock hard links to simulate we are on the same partition
                 with patch(
                         'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
@@ -192,20 +192,24 @@ class BulkCreateDataTestCase(TestCase):
                 out = StringIO()
                 sys.stdout = out
 
-                call_command('bulkcreatedata', json.dumps(data))
+                # mock hard links to simulate we are on another partition
+                with patch('substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                    mcreate_hard_links.side_effect = Exception('Fail')
 
-                output = out.getvalue().strip()
+                    call_command('bulkcreatedata', json.dumps(data))
 
-                out_data = [
-                    {
-                        "pkhash": pkhash1,
-                        "path": data_path1,
-                        "validated": True
-                    },
-                ]
-                data = json.dumps(out_data, indent=4)
-                wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
-                self.assertEqual(wanted_output, output)
+                    output = out.getvalue().strip()
+
+                    out_data = [
+                        {
+                            "pkhash": pkhash1,
+                            "path": data_path1,
+                            "validated": True
+                        },
+                    ]
+                    data = json.dumps(out_data, indent=4)
+                    wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
 
