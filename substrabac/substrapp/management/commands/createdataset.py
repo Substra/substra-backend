@@ -19,11 +19,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     create dataset
-    python ./manage.py createdataset '{"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdataset '{"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdataset dataset.json
     # data.json:
-    # challenge_keys and permissions are optional
-    # {"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # objective_keys and permissions are optional
+    # {"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -98,7 +98,7 @@ class Command(BaseCommand):
                     data={'name': dataset['name'],
                           'permissions': dataset.get('permissions', ''),
                           'type': dataset['type'],
-                          'challenge_keys': dataset.get('challenge_keys', []),
+                          'objective_keys': dataset.get('objective_keys', []),
                           'instance': instance})
 
                 try:

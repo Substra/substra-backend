@@ -126,8 +126,8 @@ def get_temporary_text_file(contents, filename):
     return text_file
 
 
-def get_sample_challenge():
-    description_content = "Super challenge"
+def get_sample_objective():
+    description_content = "Super objective"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
     metrics_content = "def metrics():\n\tpass"
@@ -259,7 +259,7 @@ class FakeMetrics(object):
         return
 
 
-class FakeChallenge(object):
+class FakeObjective(object):
     def __init__(self, filepath='path'):
         self.metrics = FakeMetrics(filepath)
 

@@ -11,7 +11,7 @@ from .tasks import createLedgerDatasetAsync
 class LedgerDatasetSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
-    challenge_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
     permissions = serializers.CharField(min_length=1, max_length=60)
 
     def create(self, validated_data):
@@ -19,7 +19,7 @@ class LedgerDatasetSerializer(serializers.Serializer):
         name = validated_data.get('name')
         type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        challenge_key = validated_data.get('challenge_key', '')
+        objective_key = validated_data.get('objective_key', '')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
@@ -27,14 +27,14 @@ class LedgerDatasetSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(challengeKey)s", "%(permissions)s"' % {
+        args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {
             'name': name,
             'openerHash': get_hash(instance.data_opener),
             'openerStorageAddress': protocol + host + reverse('substrapp:dataset-opener', args=[instance.pk]),
             'type': type,
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:dataset-description', args=[instance.pk]),
-            'challengeKey': challenge_key,
+            'objectiveKey': objective_key,
             'permissions': permissions
         }
 

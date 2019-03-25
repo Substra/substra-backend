@@ -194,7 +194,7 @@ if __name__ == '__main__':
 
     ####################################################
 
-    print(f'create dataset, test data and challenge on {org_0}')
+    print(f'create dataset, test data and objective on {org_0}')
     data = {
         'name': 'Simplified ISIC 2018',
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py'),
@@ -246,38 +246,38 @@ if __name__ == '__main__':
 
         ####################################################
 
-        print('register challenge')
+        print('register objective')
         data = {
-            'name': 'Skin Lesion Classification Challenge',
-            'description': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md'),
+            'name': 'Skin Lesion Classification Objective',
+            'description': os.path.join(dir_path, './fixtures/chunantes/objectives/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md'),
             'metrics_name': 'macro-average recall',
-            'metrics': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
+            'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
             'permissions': 'all',
             'test_data_keys': test_data_keys,
             'test_dataset_key': dataset_org0_key
         }
 
-        challenge_key = create_asset(data, org_0, 'challenge', True)
+        objective_key = create_asset(data, org_0, 'objective', True)
 
         ####################################################
 
         # update dataset
         print('update dataset')
         data = {
-            'challenge_key': challenge_key
+            'objective_key': objective_key
         }
         update_dataset(dataset_org1_key, data, org_0)
 
         ####################################################
 
-        if challenge_key:
+        if objective_key:
             # register algo
             print('register algo')
             data = {
                 'name': 'Logistic regression',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md'),
-                'challenge_key': challenge_key,
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key = create_asset(data, org_1, 'algo', True)
@@ -289,7 +289,7 @@ if __name__ == '__main__':
                 'name': 'Neural Network',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description.md'),
-                'challenge_key': challenge_key,
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_2 = create_asset(data, org_1, 'algo', False)
@@ -300,7 +300,7 @@ if __name__ == '__main__':
                 'name': 'Random Forest',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'),
-                'challenge_key': challenge_key,
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_3 = create_asset(data, org_1, 'algo', False)

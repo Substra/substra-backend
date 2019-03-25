@@ -4,11 +4,11 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 
 from substrapp.utils import get_hash
-from .util import createLedgerChallenge
-from .tasks import createLedgerChallengeAsync
+from .util import createLedgerObjective
+from .tasks import createLedgerObjectiveAsync
 
 
-class LedgerChallengeSerializer(serializers.Serializer):
+class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=1,
                                            max_length=None)
@@ -34,21 +34,21 @@ class LedgerChallengeSerializer(serializers.Serializer):
         args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testData)s", "%(permissions)s"' % {
             'name': name,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:challenge-description', args=[instance.pk]),
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
-            'metricsStorageAddress': protocol + host + reverse('substrapp:challenge-metrics', args=[instance.pk]),
+            'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
             'testData': f'{test_dataset_key}:{",".join([x for x in test_data_keys])}',
             'permissions': permissions
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerChallenge(args, instance.pkhash, sync=True)
+            return createLedgerObjective(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
-            createLedgerChallengeAsync.delay(args, instance.pkhash)
+            createLedgerObjectiveAsync.delay(args, instance.pkhash)
             data = {
-                'message': 'Challenge added in local db waiting for validation. The substra network has been notified for adding this Challenge'
+                'message': 'Objective added in local db waiting for validation. The substra network has been notified for adding this Objective'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

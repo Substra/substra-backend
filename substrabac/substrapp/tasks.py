@@ -22,36 +22,36 @@ from multiprocessing.managers import BaseManager
 import logging
 
 
-def get_challenge(subtuple):
-    from substrapp.models import Challenge
+def get_objective(subtuple):
+    from substrapp.models import Objective
 
-    # check if challenge exists and its metrics is not null
-    challengeHash = subtuple['challenge']['hash']
+    # check if objective exists and its metrics is not null
+    objectiveHash = subtuple['objective']['hash']
 
     try:
-        # get challenge from local db
-        challenge = Challenge.objects.get(pk=challengeHash)
+        # get objective from local db
+        objective = Objective.objects.get(pk=objectiveHash)
     except:
-        challenge = None
+        objective = None
     finally:
-        if challenge is None or not challenge.metrics:
-            # get challenge metrics
+        if objective is None or not objective.metrics:
+            # get objective metrics
             try:
-                content, computed_hash = get_remote_file(subtuple['challenge']['metrics'])
+                content, computed_hash = get_remote_file(subtuple['objective']['metrics'])
             except Exception as e:
                 raise e
 
-            challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
+            objective, created = Objective.objects.update_or_create(pkhash=objectiveHash, validated=True)
 
             try:
                 f = tempfile.TemporaryFile()
                 f.write(content)
-                challenge.metrics.save('metrics.py', f)  # update challenge in local db for later use
+                objective.metrics.save('metrics.py', f)  # update objective in local db for later use
             except Exception as e:
-                logging.error('Failed to save challenge metrics in local db for later use')
+                logging.error('Failed to save objective metrics in local db for later use')
                 raise e
 
-    return challenge
+    return objective
 
 
 def get_algo(subtuple):
@@ -164,10 +164,10 @@ def put_data(subtuple, subtuple_directory):
                 raise Exception('Failed to create sym link for subtuple data')
 
 
-def put_metric(subtuple_directory, challenge):
+def put_metric(subtuple_directory, objective):
     metrics_dst_path = path.join(subtuple_directory, 'metrics/metrics.py')
     if not os.path.exists(metrics_dst_path):
-        os.link(challenge.metrics.path, metrics_dst_path)
+        os.link(objective.metrics.path, metrics_dst_path)
 
 
 def put_algo(subtuple_directory, algo_content):
@@ -326,7 +326,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 def prepareMaterials(subtuple, model_type):
     # get subtuple components
     try:
-        challenge = get_challenge(subtuple)
+        objective = get_objective(subtuple)
         algo_content, algo_computed_hash = get_algo(subtuple)
         if model_type == 'model':
             model_content, model_computed_hash = get_model(subtuple)  # can return None, None
@@ -341,7 +341,7 @@ def prepareMaterials(subtuple, model_type):
         subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
         put_opener(subtuple, subtuple_directory)
         put_data(subtuple, subtuple_directory)
-        put_metric(subtuple_directory, challenge)
+        put_metric(subtuple_directory, objective)
         put_algo(subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)

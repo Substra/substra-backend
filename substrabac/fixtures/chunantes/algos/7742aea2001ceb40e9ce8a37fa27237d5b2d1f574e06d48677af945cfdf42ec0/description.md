@@ -1,4 +1,4 @@
-# Algo for the balanced ISIC challenge 
+# Algo for the balanced ISIC objective 
 
 Set of one-vs-all logistic regression using sklearn (SGD classfier with loss=log)
 

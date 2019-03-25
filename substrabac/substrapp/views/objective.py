@@ -18,8 +18,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrabac.celery import app
 
-from substrapp.models import Challenge
-from substrapp.serializers import ChallengeSerializer, LedgerChallengeSerializer
+from substrapp.models import Objective
+from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 
 from substrapp.utils import queryLedger, get_hash, get_computed_hash
@@ -93,15 +93,15 @@ def compute_dryrun(self, metrics_path, test_dataset_key, pkhash):
         remove_subtuple_materials(subtuple_directory)
 
 
-class ChallengeViewSet(mixins.CreateModelMixin,
+class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
                        ComputeHashMixin,
                        ManageFileMixin,
                        GenericViewSet):
-    queryset = Challenge.objects.all()
-    serializer_class = ChallengeSerializer
-    query_call = 'queryChallenge'
+    queryset = Objective.objects.all()
+    serializer_class = ObjectiveSerializer
+    query_call = 'queryObjective'
     # permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
@@ -109,26 +109,26 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         """
-        Create a new Challenge \n
+        Create a new Objective \n
             TODO add info about what has to be posted\n
         - Example with curl (on localhost): \n
             curl -u username:password -H "Content-Type: application/json"\
             -X POST\
-            -d '{"name": "tough challenge", "permissions": "all", "metrics_name": 'accuracy', "test_data":
+            -d '{"name": "tough objective", "permissions": "all", "metrics_name": 'accuracy', "test_data":
             ["data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
             "data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389"],\
-                "files": {"description.md": '#My tough challenge',\
+                "files": {"description.md": '#My tough objective',\
                 'metrics.py': 'def AUC_score(y_true, y_pred):\n\treturn 1'}}'\
-                http://127.0.0.1:8000/substrapp/challenge/ \n
+                http://127.0.0.1:8000/substrapp/objective/ \n
             Use double quotes for the json, simple quotes don't work.\n
         - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/challenge/',
+            requests.post('http://127.0.0.1:8000/objective/',
                           #auth=('username', 'password'),
                           data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_keys': ['da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
                           files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
                           headers={'Accept': 'application/json;version=0.0'}) \n
         ---
-        response_serializer: ChallengeSerializer
+        response_serializer: ObjectiveSerializer
         """
 
         data = request.data
@@ -168,7 +168,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
                     msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
                 except Exception as e:
-                    return Response({'message': f'Could not launch challenge creation with dry-run on this instance: {str(e)}'},
+                    return Response({'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'},
                                     status=status.HTTP_400_BAD_REQUEST)
                 else:
                     return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
@@ -181,14 +181,14 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
                 except:
                     pkhash = ''
-                return Response({'message': 'A challenge with this description file already exists.', 'pkhash': pkhash},
+                return Response({'message': 'A objective with this description file already exists.', 'pkhash': pkhash},
                                 status=status.HTTP_409_CONFLICT)
             except Exception as exc:
                 return Response({'message': exc.args},
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerChallengeSerializer(data={'test_data_keys': test_data_keys,
+                ledger_serializer = LedgerObjectiveSerializer(data={'test_data_keys': test_data_keys,
                                                                     'test_dataset_key': test_dataset_key,
                                                                     'name': data.get('name'),
                                                                     'permissions': data.get('permissions'),
@@ -213,10 +213,10 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                 return Response(d, status=st, headers=headers)
 
 
-    def create_or_update_challenge(self, challenge, pk):
+    def create_or_update_objective(self, objective, pk):
         try:
-            # get challenge description from remote node
-            url = challenge['description']['storageAddress']
+            # get objective description from remote node
+            url = objective['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
             except:
@@ -237,8 +237,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     f = tempfile.TemporaryFile()
                     f.write(r.content)
 
-                    # save/update challenge in local db for later use
-                    instance, created = Challenge.objects.update_or_create(pkhash=pk, validated=True)
+                    # save/update objective in local db for later use
+                    instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
                     instance.description.save('description.md', f)
 
         except Exception as e:
@@ -260,7 +260,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk, 'queryChallenge')
+                data = getObjectFromLedger(pk, 'queryObjective')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -271,14 +271,14 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                     instance = self.get_object()
                 except Http404:
                     try:
-                        instance = self.create_or_update_challenge(data, pk)
+                        instance = self.create_or_update_objective(data, pk)
                     except Exception as e:
                         error = e
                 else:
                     # check if instance has description
                     if not instance.description:
                         try:
-                            instance = self.create_or_update_challenge(data, pk)
+                            instance = self.create_or_update_objective(data, pk)
                         except Exception as e:
                             error = e
                 finally:
@@ -299,7 +299,7 @@ class ChallengeViewSet(mixins.CreateModelMixin,
         # can modify result by interrogating `request.version`
 
         data, st = queryLedger({
-            'args': '{"Args":["queryChallenges"]}'
+            'args': '{"Args":["queryObjectives"]}'
         })
         datasetData = None
         algoData = None
@@ -329,13 +329,13 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                         # init each list iteration to data
                         l.append(data)
                         for k, subfilters in filter.items():
-                            if k == 'challenge':  # filter by own key
+                            if k == 'objective':  # filter by own key
                                 for key, val in subfilters.items():
                                     if key == 'metrics':  # specific to nested metrics
                                         l[idx] = [x for x in l[idx] if x[key]['name'] in val]
                                     else:
                                         l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'dataset':  # select challenge used by these datasets
+                            elif k == 'dataset':  # select objective used by these datasets
                                 if not datasetData:
                                     # TODO find a way to put this call in cache
                                     datasetData, st = queryLedger({
@@ -349,9 +349,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in datasetData if x[key] in val]
                                     datasetKeys = [x['key'] for x in filteredData]
-                                    challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys or x['testData']['datasetKey'] in datasetKeys]
-                            elif k == 'algo':  # select challenge used by these algo
+                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys or x['testData']['datasetKey'] in datasetKeys]
+                            elif k == 'algo':  # select objective used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
                                     algoData, st = queryLedger({
@@ -364,9 +364,9 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
-                                    challengeKeys = [x['challengeKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
-                            elif k == 'model':  # select challenges used by outModel hash
+                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys]
+                            elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
                                     modelData, st = queryLedger({
@@ -379,8 +379,8 @@ class ChallengeViewSet(mixins.CreateModelMixin,
 
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
-                                    challengeKeys = [x['challenge']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in challengeKeys]
+                                    objectiveKeys = [x['objective']['hash'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys]
 
         return Response(l, status=st)
 

@@ -2,13 +2,13 @@
 
 from .data import DataViewSet
 from .dataset import DatasetViewSet
-from .challenge import ChallengeViewSet
+from .objective import ObjectiveViewSet
 from .model import ModelViewSet
 from .algo import AlgoViewSet
 from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
 from .task import TaskViewSet
 
-__all__ = ['DataViewSet', 'DatasetViewSet', 'ChallengeViewSet', 'ModelViewSet',
+__all__ = ['DataViewSet', 'DatasetViewSet', 'ObjectiveViewSet', 'ModelViewSet',
            'AlgoViewSet', 'TrainTupleViewSet', 'TestTupleViewSet',
            'TaskViewSet']

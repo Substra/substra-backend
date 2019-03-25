@@ -14,7 +14,7 @@ def main():
     client.set_config('owkin')
 
     assets = {}
-    assets['challenge'] = json.dumps(client.list('challenge')['result'], indent=4)
+    assets['objective'] = json.dumps(client.list('objective')['result'], indent=4)
     assets['dataset'] = json.dumps(client.list('dataset')['result'], indent=4)
     assets['algo'] = json.dumps(client.list('algo')['result'], indent=4)
     assets['traintuple'] = json.dumps(client.list('traintuple')['result'], indent=4)
