@@ -52,26 +52,6 @@ class DataSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def create(self, validated_data):
-        """
-        We have a bit of extra checking around this in order to provide
-        descriptive messages when something goes wrong, but this method is
-        essentially just:
-
-            return ExampleModel.objects.create(**validated_data)
-
-        If there are many to many fields present on the instance then they
-        cannot be set until the model is instantiated, in which case the
-        implementation is like so:
-
-            example_relationship = validated_data.pop('example_relationship')
-            instance = ExampleModel.objects.create(**validated_data)
-            instance.example_relationship = example_relationship
-            return instance
-
-        The default implementation also does not handle nested relationships.
-        If you want to support writable nested relationships you'll need
-        to write an explicit `.create()` method.
-        """
         raise_errors_on_nested_writes('create', self, validated_data)
 
         ModelClass = self.Meta.model
@@ -86,7 +66,7 @@ class DataSerializer(serializers.ModelSerializer):
                 many_to_many[field_name] = validated_data.pop(field_name)
 
         # if path is empty and file is a InMemoryUploadedFile, switch it
-        # pre_save method will uncompress the archive present in file and return a correct pat h
+        # pre_save method will uncompress the archive present in file and return a correct path
         if 'file' in validated_data and isinstance(validated_data['file'], File) and validated_data['path'] == '':
             validated_data['path'] = validated_data['file']
             del validated_data['file']

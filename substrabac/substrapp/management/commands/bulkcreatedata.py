@@ -21,7 +21,7 @@ def path_leaf(path):
 
 # check if not already in data list
 def check(file_or_path, pkhash, data):
-    err_msg = f'Your data archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
+    err_msg = 'Your data archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
     for x in data:
         if pkhash == x['pkhash']:
             if 'file' in x:
