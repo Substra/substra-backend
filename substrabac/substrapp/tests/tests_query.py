@@ -374,7 +374,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         data = {
             'file': self.data_file,
@@ -405,7 +405,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock2 = MagicMock(spec=InMemoryUploadedFile)
@@ -445,7 +445,7 @@ class DataSampleQueryTests(APITestCase):
         DataManager.objects.create(name=datamanager_name,
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
         data = {
             'file': self.data_file,
             'data_manager_keys': [get_hash(self.data_data_opener)],
@@ -462,7 +462,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_data_sample_ko(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         # missing datamanager
         data = {'data_manager_keys': ['toto']}
@@ -494,7 +494,7 @@ class DataSampleQueryTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_already_exists(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -506,7 +506,7 @@ class DataSampleQueryTests(APITestCase):
         file_mock.read = MagicMock(return_value=self.data_file.file.read())
         file_mock.open = MagicMock(return_value=file_mock)
 
-        d = Data(path=file_mock)
+        d = DataSample(path=file_mock)
         # trigger pre save
         d.save()
 
@@ -528,7 +528,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_add_data_sample_ko_not_a_zip(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -554,7 +554,7 @@ class DataSampleQueryTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_408(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -592,7 +592,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock2 = MagicMock(spec=InMemoryUploadedFile)
@@ -633,7 +633,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock2 = MagicMock(spec=InMemoryUploadedFile)
@@ -667,7 +667,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_400(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -697,7 +697,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_serializer_invalid(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -732,7 +732,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_ledger_invalid(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         datamanager_name = 'slide opener'
         DataManager.objects.create(name=datamanager_name,
@@ -773,7 +773,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         data = {
             'file': self.data_file,
@@ -794,7 +794,7 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         data = {
             'file': self.script,
@@ -823,7 +823,7 @@ class DataSampleQueryTests(APITestCase):
         # trigger pre save
         d.save()
 
-        url = reverse('substrapp:data-bulk-update')
+        url = reverse('substrapp:data_sample-bulk-update')
 
         data = {
             'data_manager_keys': [datamanager.pkhash, datamanager2.pkhash],

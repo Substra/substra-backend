@@ -11,7 +11,7 @@ import shutil
 from mock import patch
 
 from substrapp.models import DataManager
-from substrapp.serializers import LedgerDataSerializer, LedgerDataManagerSerializer
+from substrapp.serializers import LedgerDataSampleSerializer, LedgerDataManagerSerializer
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
@@ -63,7 +63,7 @@ class CreateDataManagerTestCase(TestCase):
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         with patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
-                patch.object(LedgerDataSerializer, 'create') as mdatacreate, \
+                patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
                 patch(
                     'substrapp.views.data.DataViewSet.check_datamanagers') as mcheck_datamanagers:
 
@@ -150,7 +150,7 @@ class CreateDataManagerTestCase(TestCase):
         # d.save()
 
         with patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
-                patch.object(LedgerDataSerializer, 'create') as mdatacreate, \
+                patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
                 patch(
                     'substrapp.views.data.DataViewSet.check_datamanagers') as mcheck_datamanagers:
 

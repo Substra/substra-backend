@@ -14,7 +14,7 @@ import shutil
 from mock import patch
 
 from substrapp.models import DataManager
-from substrapp.serializers import LedgerDataSerializer, DataSerializer
+from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 from substrapp.tests.common import get_sample_zip_data_sample
 from substrapp.views import DataSampleViewSet
 from substrapp.views.datasample import LedgerException
@@ -71,7 +71,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
                                      'validated': True},
@@ -123,7 +123,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1],
                                      'validated': True},
@@ -176,7 +176,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1],
                                      'validated': True},
@@ -231,7 +231,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash2],
                                      'validated': True},
@@ -289,7 +289,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash1],
                                      'validated': True},
@@ -328,7 +328,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                patch.object(LedgerDataSerializer, 'create') as mcreate:
+                patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mcreate.return_value = ({'pkhash': [pkhash1, pkhash1],
                                      'validated': True},
@@ -477,14 +477,14 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
-                    spec=True) as mDataSerializer:
+                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                    spec=True) as mDataSampleSerializer:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
-            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.side_effect = Exception('Failed')
-            mDataSerializer.return_value = mocked_serializer
+            mDataSampleSerializer.return_value = mocked_serializer
 
             call_command('bulkcreatedatasample', json.dumps(data))
 
@@ -511,15 +511,15 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
-                    spec=True) as mDataSerializer, \
+                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                    spec=True) as mDataSampleSerializer, \
                 patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
-            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.return_value = True
-            mDataSerializer.return_value = mocked_serializer
+            mDataSampleSerializer.return_value = mocked_serializer
 
             err_data = {'toto': 1}
             mcommit.side_effect = LedgerException(err_data,
@@ -550,15 +550,15 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
-                    spec=True) as mDataSerializer, \
+                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                    spec=True) as mDataSampleSerializer, \
                 patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
-            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.return_value = True
-            mDataSerializer.return_value = mocked_serializer
+            mDataSampleSerializer.return_value = mocked_serializer
 
             err_data = {'toto': 1}
             mcommit.side_effect = LedgerException(err_data,
@@ -589,15 +589,15 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())) as mopen, \
                 patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSerializer',
-                    spec=True) as mDataSerializer, \
+                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                    spec=True) as mDataSampleSerializer, \
                 patch.object(DataSampleViewSet, 'commit') as mcommit:
             mis_zipfile.return_value = True
             mexists.return_value = True
 
-            mocked_serializer = MagicMock(DataSerializer)
+            mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.return_value = True
-            mDataSerializer.return_value = mocked_serializer
+            mDataSampleSerializer.return_value = mocked_serializer
 
             mcommit.side_effect = Exception('Failed',
                                             status.HTTP_400_BAD_REQUEST)
