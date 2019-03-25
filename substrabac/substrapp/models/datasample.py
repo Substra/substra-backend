@@ -4,10 +4,10 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return 'data/{0}/{1}'.format(instance.pk, filename)
+    return 'datasamples/{0}/{1}'.format(instance.pk, filename)
 
 
-class Data(models.Model):
+class DataSample(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False)
@@ -15,8 +15,8 @@ class Data(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.pkhash:
-            self.pkhash = get_hash(self.path) # will be overrided
-        super(Data, self).save(*args, **kwargs)
+            self.pkhash = get_hash(self.path)   # will be overrided
+        super(DataSample, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'Data with pkhash {self.pkhash} with validated {self.validated}'
+        return f'DataSample with pkhash {self.pkhash} with validated {self.validated}'

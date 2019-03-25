@@ -28,14 +28,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # TODO update
         '''
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
-             -d "algo_key=da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
+             -d "algo_key=da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_sample_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
              -X POST http://localhost:8001/traintuple/
 
         or
 
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
              -H "Content-Type: application/json"
-             -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
+             -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_sample_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
              -X POST http://localhost:8001/traintuple/?format=json
 
         :param request:
@@ -53,9 +53,9 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             in_models_keys = request.data.get('in_models_keys', request.POST.getlist('in_models_keys', []))
 
         try:
-            train_data_keys = request.data.getlist('train_data_keys', [])
+            train_data_sample_keys = request.data.getlist('train_data_sample_keys', [])
         except:
-            train_data_keys = request.data.get('train_data_keys', request.POST.getlist('train_data_keys', []))
+            train_data_sample_keys = request.data.get('train_data_sample_keys', request.POST.getlist('train_data_sample_keys', []))
 
         data = {
             'algo_key': algo_key,
@@ -63,7 +63,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'rank': rank,
             'FLtask_key': FLtask_key,
             'in_models_keys': in_models_keys,
-            'train_data_keys': train_data_keys,  # list of train data keys (which are stored in the train worker node)
+            'train_data_sample_keys': train_data_sample_keys,  # list of train data keys (which are stored in the train worker node)
         }
 
         # init ledger serializer
@@ -77,7 +77,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 sha256_creator_hash = hashlib.sha256(f.read())
 
             creator = sha256_creator_hash.hexdigest()
-            sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_keys) + creator).encode())
+            sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_sample_keys) + creator).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)

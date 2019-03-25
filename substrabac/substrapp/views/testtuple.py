@@ -46,14 +46,14 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
 
         try:
-            test_data_keys = request.data.getlist('test_data_keys', [])
+            test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
         except:
-            test_data_keys = request.data.get('test_data_keys', request.POST.getlist('test_data_keys', []))
+            test_data_sample_keys = request.data.get('test_data_sample_keys', request.POST.getlist('test_data_sample_keys', []))
 
         data = {
             'traintuple_key': traintuple_key,
             'data_manager_key': data_manager_key,
-            'test_data_keys': test_data_keys,  # list of test data keys
+            'test_data_sample_keys': test_data_sample_keys,  # list of test data keys
         }
 
         # init ledger serializer

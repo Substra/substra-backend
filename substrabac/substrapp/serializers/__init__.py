@@ -1,15 +1,15 @@
 # encoding: utf-8
 
-from .data import DataSerializer
+from .datasample import DataSampleSerializer
 from .objective import ObjectiveSerializer
 from .model import ModelSerializer
 from .datamanager import DataManagerSerializer
 from .algo import AlgoSerializer
 from .ledger import *
 
-__all__ = ['DataSerializer', 'ObjectiveSerializer', 'ModelSerializer',
+__all__ = ['DataSampleSerializer', 'ObjectiveSerializer', 'ModelSerializer',
            'DataManagerSerializer', 'AlgoSerializer',
            'LedgerObjectiveSerializer', 'LedgerModelSerializer',
-           'LedgerDataSerializer', 'LedgerAlgoSerializer',
+           'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer']

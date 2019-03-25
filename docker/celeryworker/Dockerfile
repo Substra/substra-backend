@@ -17,7 +17,7 @@ RUN pip3 install -r requirements.txt
 COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/base_metrics /usr/src/app/base_metrics
 COPY ./substrabac/fake_metrics /usr/src/app/fake_metrics
-COPY ./substrabac/fake_data /usr/src/app/fake_data
+COPY ./substrabac/fake_data_sample /usr/src/app/fake_data_sample
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/substrabac /usr/src/app/substrabac
 

@@ -9,7 +9,7 @@ from rest_framework import serializers
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import model_meta
 
-from substrapp.models import Data
+from substrapp.models import DataSample
 
 
 from django.utils.deconstruct import deconstructible
@@ -42,13 +42,13 @@ class FileValidator(object):
                 data.file.seek(0)
 
 
-class DataSerializer(serializers.ModelSerializer):
+class DataSampleSerializer(serializers.ModelSerializer):
     validated = serializers.HiddenField(default=False)
     path = serializers.CharField(default='', max_length=8192, required=False)
     file = serializers.FileField(validators=[FileValidator()], required=False)
 
     class Meta:
-        model = Data
+        model = DataSample
         fields = '__all__'
 
     def create(self, validated_data):

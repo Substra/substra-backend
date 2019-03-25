@@ -25,13 +25,13 @@ fake_models = [
             'storageAddress': 'http://chunantes.substrabac:8001/model/20060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'status': 'done',
-        'testData': {
+        'testDataSample': {
             'keys': ['4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010'],
             'openerHash': 'a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0',
             'perf': 0.20,
             'worker': '2d76419f4231cf67bdc53f569201322a4822dff152351fb468db013d484fc762',
         },
-        'trainData': {
+        'trainDataSample': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
             'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
@@ -65,13 +65,13 @@ fake_models = [
             'storageAddress': 'http://chunantes.substrabac:8001/model/30060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'status': 'done',
-        'testData': {
+        'testDataSample': {
             'keys': ['4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010'],
             'openerHash': 'a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0',
             'perf': 0.35,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
-        'trainData': {
+        'trainDataSample': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
             'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
@@ -105,13 +105,13 @@ fake_models = [
             'storageAddress': 'http://chunantes.substrabac:8001/model/40060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'status': 'done',
-        'testData': {
+        'testDataSample': {
             'keys': ['4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010'],
             'openerHash': 'a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0',
             'perf': 0.79,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
-        'trainData': {
+        'trainDataSample': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
             'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
@@ -145,13 +145,13 @@ fake_models = [
             'storageAddress': 'http://chunantes.substrabac:8001/model/60060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'status': 'done',
-        'testData': {
+        'testDataSample': {
             'keys': ['4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010'],
             'openerHash': 'a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0',
             'perf': 0.12,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
-        'trainData': {
+        'trainDataSample': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
             'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
@@ -185,13 +185,13 @@ fake_models = [
             'storageAddress': 'http://chunantes.substrabac:8001/model/70060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568/file/',
         },
         'status': 'done',
-        'testData': {
+        'testDataSample': {
             'keys': ['4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010'],
             'openerHash': 'a8b7c235abb9a93742e336bd76ff7cd8ecc49f612e5cf6ea506dc10f4fd6b6f0',
             'perf': 0.66,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
-        'trainData': {
+        'trainDataSample': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
             'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',

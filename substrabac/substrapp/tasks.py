@@ -129,12 +129,12 @@ def put_opener(subtuple, subtuple_directory):
     from substrapp.models import DataManager
 
     try:
-        datamanager = DataManager.objects.get(pk=subtuple['data']['openerHash'])
+        datamanager = DataManager.objects.get(pk=subtuple['data']['opener']['hash'])
     except Exception as e:
         raise e
 
     data_opener_hash = get_hash(datamanager.data_opener.path)
-    if data_opener_hash != subtuple['data']['openerHash']:
+    if data_opener_hash != subtuple['data']['opener']['hash']:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
     opener_dst_path = path.join(subtuple_directory, 'opener/opener.py')
@@ -142,26 +142,26 @@ def put_opener(subtuple, subtuple_directory):
         os.link(datamanager.data_opener.path, opener_dst_path)
 
 
-def put_data(subtuple, subtuple_directory):
-    from substrapp.models import Data
+def put_data_sample(subtuple, subtuple_directory):
+    from substrapp.models import DataSample
 
-    for data_key in subtuple['data']['keys']:
+    for data_sample_key in subtuple['data']['keys']:
         try:
-            data = Data.objects.get(pk=data_key)
+            data_sample = DataSample.objects.get(pk=data_sample_key)
         except Exception as e:
             raise e
         else:
-            data_hash = dirhash(data.path, 'sha256')
-            if data_hash != data_key:
-                raise Exception('Data Hash in Subtuple is not the same as in local db')
+            data_sample_hash = dirhash(data_sample.path, 'sha256')
+            if data_sample_hash != data_sample_key:
+                raise Exception('Data Sample Hash in Subtuple is not the same as in local db')
 
             # create a symlink on the folder containing data
             try:
-                subtuple_data_directory = path.join(subtuple_directory, 'data', data_key)
-                os.symlink(data.path, subtuple_data_directory)
+                subtuple_data_directory = path.join(subtuple_directory, 'data', data_sample_key)
+                os.symlink(data_sample.path, subtuple_data_directory)
             except Exception as e:
                 logging.error(e, exc_info=True)
-                raise Exception('Failed to create sym link for subtuple data')
+                raise Exception('Failed to create sym link for subtuple data sample')
 
 
 def put_metric(subtuple_directory, objective):
@@ -340,7 +340,7 @@ def prepareMaterials(subtuple, model_type):
     try:
         subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
         put_opener(subtuple, subtuple_directory)
-        put_data(subtuple, subtuple_directory)
+        put_data_sample(subtuple, subtuple_directory)
         put_metric(subtuple_directory, objective)
         put_algo(subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple

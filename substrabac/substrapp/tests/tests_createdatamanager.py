@@ -36,9 +36,9 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                                   '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
                                                             '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'))
@@ -46,13 +46,13 @@ class CreateDataManagerTestCase(TestCase):
                                                                  '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'))
 
         data = {
-            'datamanager': {
+            'data_manager': {
                 'name': 'foo',
                 'type': 'bar',
                 'data_opener': datamanager_opener_path,
                 'description': datamanager_description_path
             },
-            'data': {
+            'data_samples': {
                 'paths': [data_path1, data_path2],
                 'test_only': False
             }
@@ -96,12 +96,12 @@ class CreateDataManagerTestCase(TestCase):
                 data_out = [
                     {
                         "pkhash": pkhash1,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash1),
                         "validated": True
                     },
                     {
                         "pkhash": pkhash2,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash2),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash2),
                         "validated": True
                     }
                 ]
@@ -119,9 +119,9 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                                   '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
                                                             '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'))
@@ -129,13 +129,13 @@ class CreateDataManagerTestCase(TestCase):
                                                                  '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'))
 
         data = {
-            'datamanager': {
+            'data_manager': {
                 'name': 'foo',
                 'type': 'bar',
                 'data_opener': datamanager_opener_path,
                 'description': datamanager_description_path
             },
-            'data': {
+            'data_samples': {
                 'paths': [data_path1, data_path2],
                 'test_only': False
             }
@@ -184,12 +184,12 @@ class CreateDataManagerTestCase(TestCase):
                 data_out = [
                     {
                         "pkhash": pkhash1,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash1),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash1),
                         "validated": True
                     },
                     {
                         "pkhash": pkhash2,
-                        "path": os.path.join(MEDIA_ROOT, 'data', pkhash2),
+                        "path": os.path.join(MEDIA_ROOT, 'datasamples', pkhash2),
                         "validated": True
                     }
                 ]

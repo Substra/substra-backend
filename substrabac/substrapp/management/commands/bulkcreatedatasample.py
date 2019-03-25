@@ -8,10 +8,10 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.serializers.data import DataSerializer
-from substrapp.views import DataViewSet
+from substrapp.serializers.datasample import DataSampleSerializer
+from substrapp.views import DataSampleViewSet
 from substrapp.utils import get_dir_hash
-from substrapp.views.data import LedgerException
+from substrapp.views.datasample import LedgerException
 
 
 def path_leaf(path):
@@ -19,10 +19,10 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 
 
-# check if not already in data list
-def check(file_or_path, pkhash, data):
-    err_msg = 'Your data archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
-    for x in data:
+# check if not already in data sample list
+def check(file_or_path, pkhash, data_sample):
+    err_msg = 'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
+    for x in data_sample:
         if pkhash == x['pkhash']:
             if 'file' in x:
                 p = x['file'].name
@@ -31,8 +31,8 @@ def check(file_or_path, pkhash, data):
             raise Exception(err_msg % (file_or_path, p))
 
 
-def map_data(paths):
-    data = []
+def map_data_sample(paths):
+    data_sample = []
     for file_or_path in paths:
         if os.path.exists(file_or_path):
 
@@ -43,9 +43,9 @@ def map_data(paths):
                     file = ContentFile(f.read(), filename)
                     pkhash = get_dir_hash(file)
 
-                    check(file_or_path, pkhash, data)
+                    check(file_or_path, pkhash, data_sample)
 
-                    data.append({
+                    data_sample.append({
                         'pkhash': pkhash,
                         'file': file
                     })
@@ -54,9 +54,9 @@ def map_data(paths):
             elif os.path.isdir(file_or_path):
                 pkhash = dirhash(file_or_path, 'sha256')
 
-                check(file_or_path, pkhash, data)
+                check(file_or_path, pkhash, data_sample)
 
-                data.append({
+                data_sample.append({
                     'pkhash': pkhash,
                     'path': normpath(file_or_path)
                 })
@@ -66,36 +66,36 @@ def map_data(paths):
         else:
             raise Exception(f'File or Path: {file_or_path} does not exist')
 
-    return data
+    return data_sample
 
 
-def bulk_create_data(data):
-    datamanager_keys = data.get('datamanager_keys', [])
+def bulk_create_data_sample(data):
+    datamanager_keys = data.get('data_manager_keys', [])
     test_only = data.get('test_only', False)
     paths = data.get('paths', None)
 
-    DataViewSet.check_datamanagers(datamanager_keys)
+    DataSampleViewSet.check_datamanagers(datamanager_keys)
 
     if not (paths and type(paths)) == list:
         raise Exception('Please specify a list of paths (can be archives or directories)')
 
-    data = map_data(paths)
+    data_samples = map_data_sample(paths)
 
-    serializer = DataSerializer(data=data, many=True)
+    serializer = DataSampleSerializer(data=data_samples, many=True)
     serializer.is_valid(raise_exception=True)
 
     # create on ledger + db
     ledger_data = {'test_only': test_only,
-                   'datamanager_keys': datamanager_keys}
-    return DataViewSet.commit(serializer, ledger_data, True)
+                   'data_manager_keys': datamanager_keys}
+    return DataSampleViewSet.commit(serializer, ledger_data, True)
 
 
 class Command(BaseCommand):
     help = '''
-    Bulk create data
+    Bulk create data sample
     paths is a list of archives or paths to directories
-    python ./manage.py bulkcreatedata '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "datamanager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}'
-    python ./manage.py bulkcreatedata data.json
+    python ./manage.py bulkcreatedatasample '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "datamanager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}'
+    python ./manage.py bulkcreatedatasample data.json
     # data.json:
     # {"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "datamanager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}
     '''
@@ -119,12 +119,12 @@ class Command(BaseCommand):
             if not isinstance(data, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        datamanager_keys = data.get('datamanager_keys', [])
+        datamanager_keys = data.get('data_manager_keys', [])
         if not type(datamanager_keys) == list:
             return self.stderr.write('The datamanager_keys you provided is not an array')
 
         try:
-            res, st = bulk_create_data(data)
+            res, st = bulk_create_data_sample(data)
         except LedgerException as e:
             if e.st == status.HTTP_408_REQUEST_TIMEOUT:
                 self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
