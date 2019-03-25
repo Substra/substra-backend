@@ -151,24 +151,17 @@ def put_data(subtuple, subtuple_directory):
         except Exception as e:
             raise e
         else:
-            data_hash = dirhash(path.join(subtuple_directory, data.path), 'sha256')
+            data_hash = dirhash(data.path, 'sha256')
             if data_hash != data_key:
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
-            # for all data files in folder create a sym link
-            src = path.join(subtuple_directory, data.path)
-            for f in os.listdir(src):
-                try:
-                    create_directory(path.join(subtuple_directory,
-                                              'subtuple', subtuple['key'],
-                                              'data', data_key))
-                    link_name = path.join(subtuple_directory,
-                                          'subtuple', subtuple['key'],
-                                          'data', data_key, f)
-                    os.symlink(path.join(src, f), link_name)
-                except Exception as e:
-                    logging.error(e, exc_info=True)
-                    raise Exception('Failed to create sym link for subtuple data')
+            # create a symlink on the folder containing data
+            try:
+                subtuple_data_directory = path.join(subtuple_directory, 'data', data_key)
+                os.symlink(data.path, subtuple_data_directory)
+            except Exception as e:
+                logging.error(e, exc_info=True)
+                raise Exception('Failed to create sym link for subtuple data')
 
 
 def put_metric(subtuple_directory, challenge):

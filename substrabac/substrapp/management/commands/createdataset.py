@@ -27,25 +27,25 @@ class Command(BaseCommand):
     '''
 
     def add_arguments(self, parser):
-        parser.add_argument('data', type=str)
+        parser.add_argument('data_input', type=str)
 
     def handle(self, *args, **options):
 
         # load args
-        args = options['data']
+        args = options['data_input']
         try:
-            data = json.loads(args)
+            data_input = json.loads(args)
         except:
             try:
                 with open(args, 'r') as f:
-                    data = json.load(f)
+                    data_input = json.load(f)
             except:
                 raise CommandError('Invalid args. Please review help')
         else:
-            if not isinstance(data, dict):
+            if not isinstance(data_input, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        dataset = data.get('dataset', None)
+        dataset = data_input.get('dataset', None)
         if dataset is None:
             return self.stderr.write('Please provide a dataset')
         if 'name' not in dataset:
@@ -57,13 +57,13 @@ class Command(BaseCommand):
         if 'description' not in dataset:
             return self.stderr.write('Please provide a description to your dataset')
 
-        data = data.get('data', None)
+        data = data_input.get('data', None)
         if data is None:
             return self.stderr.write('Please provide some data')
         if 'paths' not in data:
             return self.stderr.write('Please provide paths to your data')
         if 'test_only' not in data:
-            return self.stderr.write('Please provide test_only parameter to your data')
+            return self.stderr.write('Please provide a boolean test_only parameter to your data')
 
         # TODO add validation
         with open(dataset['data_opener'], 'rb') as f:
@@ -96,7 +96,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDatasetSerializer(
                     data={'name': dataset['name'],
-                          'permissions': data.get('permissions', ''),
+                          'permissions': dataset.get('permissions', ''),
                           'type': dataset['type'],
                           'challenge_keys': dataset.get('challenge_keys', []),
                           'instance': instance})

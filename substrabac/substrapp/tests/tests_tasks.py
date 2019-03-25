@@ -205,7 +205,10 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.models.Data.objects.get') as mget:
             mget.return_value = data
-            put_data(subtuple, MEDIA_ROOT)
+
+            subtuple_direcory = build_subtuple_folders(subtuple)
+
+            put_data(subtuple, subtuple_direcory)
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data
             self.assertFalse(
@@ -215,14 +218,10 @@ class TasksTests(APITestCase):
                 os.path.exists(os.path.join(MEDIA_ROOT, 'data', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
-            self.assertTrue(os.path.exists(
-                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
-            self.assertTrue(os.path.islink(
-                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk,
-                             'LABEL_0024900.csv')))
-            self.assertTrue(os.path.islink(
-                os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk,
-                             'IMG_0024900.jpg')))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
+            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'LABEL_0024900.csv')))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'IMG_0024900.jpg')))
 
     def test_put_data_tar(self):
 
@@ -236,7 +235,10 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.models.Data.objects.get') as mget:
             mget.return_value = data
-            put_data(subtuple, MEDIA_ROOT)
+
+            subtuple_direcory = build_subtuple_folders(subtuple)
+
+            put_data(subtuple, subtuple_direcory)
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'data', 'foo')))
@@ -245,8 +247,9 @@ class TasksTests(APITestCase):
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
-            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'LABEL_0024900.csv')))
-            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'IMG_0024900.jpg')))
+            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'LABEL_0024900.csv')))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data.pk, 'IMG_0024900.jpg')))
 
     def test_put_model(self):
 
