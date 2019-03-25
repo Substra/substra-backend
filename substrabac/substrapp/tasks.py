@@ -377,6 +377,20 @@ def doTask(subtuple, tuple_type):
         # subtuple setup
         model_path = path.join(subtuple_directory, 'model')
         data_path = path.join(subtuple_directory, 'data')
+
+        ##########################################
+        # RESOLVE SYMLINKS
+        # TO DO:
+        #   - Verify that real paths are safe
+        #   - Try to see if it's clean to do that
+        ##########################################
+        symlinks_volume = {}
+        for subfolder in os.listdir(data_path):
+            real_path = os.path.realpath(os.path.join(data_path, subfolder))
+            symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+        ##########################################
+
         pred_path = path.join(subtuple_directory, 'pred')
         opener_file = path.join(subtuple_directory, 'opener/opener.py')
         metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
@@ -430,7 +444,7 @@ def doTask(subtuple, tuple_type):
                                       dockerfile_path=algo_path,
                                       image_name=algo_docker,
                                       container_name=algo_docker_name,
-                                      volumes={**volumes, **model_volume},
+                                      volumes={**volumes, **model_volume, **symlinks_volume},
                                       command=algo_command,
                                       cpu_set=cpu_set,
                                       gpu_set=gpu_set,
@@ -462,7 +476,7 @@ def doTask(subtuple, tuple_type):
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
-                       volumes=volumes,
+                       volumes={**volumes, **symlinks_volume},
                        command=None,
                        cpu_set=cpu_set,
                        gpu_set=gpu_set,
