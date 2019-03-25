@@ -64,7 +64,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1, data_path2],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -117,7 +117,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -170,7 +170,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -220,7 +220,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1, data_path2],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
@@ -279,7 +279,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1, data_path1],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -318,7 +318,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'paths': [data_path1, data_path1],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -428,7 +428,7 @@ class BulkCreateDataTestCase(TestCase):
 
         data = {'files': ['./foo'],
                 'dataset_keys': [
-                    '3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a'],
+                    '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'],
                 'test_only': False}
 
         err = StringIO()
@@ -437,7 +437,7 @@ class BulkCreateDataTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['3412e10beb007a0841a5506c4ba2a451c4a19f762ba9c2db6fa096225759f07a']"
+        wanted_output = "One or more dataset keys provided do not exist in local substrabac database. Please create them before. Dataset keys: ['9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528']"
 
         self.assertEqual(wanted_output, output)
 

@@ -39,13 +39,15 @@ def compute_dryrun(self, data_files, dataset_keys):
     from substrapp.models import Dataset
 
     try:
+        # Name of the dry-run subtuple (not important)
         pkhash = data_files[0]['pkhash']
+
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
         for data in data_files:
             try:
                 uncompress_path(data['filepath'],
-                                os.path.join(subtuple_directory, 'data'))
+                                os.path.join(subtuple_directory, 'data', data['pkhash']))
             except Exception as e:
                 raise e
 

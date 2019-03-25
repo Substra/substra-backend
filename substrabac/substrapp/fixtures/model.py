@@ -34,7 +34,7 @@ fake_models = [
         'trainData': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
-            'openerHash': 'ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98',
+            'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
             'perf': 0.50,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
@@ -74,7 +74,7 @@ fake_models = [
         'trainData': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
-            'openerHash': 'ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98',
+            'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
             'perf': 0.70,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
@@ -114,7 +114,7 @@ fake_models = [
         'trainData': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
-            'openerHash': 'ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98',
+            'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
             'perf': 0.79,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
@@ -154,7 +154,7 @@ fake_models = [
         'trainData': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
-            'openerHash': 'ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98',
+            'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
             'perf': 0.79,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
@@ -194,7 +194,7 @@ fake_models = [
         'trainData': {
             'keys': ['62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a',
                      '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'],
-            'openerHash': 'ddc213a29d62eeba65c431c8641662f73b859b0f566657f9f35a4955bf298f98',
+            'openerHash': '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
             'perf': 0.79,
             'worker': 'a3119c79a173581425cbe6e06c3034ec396ee805b60d9a34feaa3048beb0e4a9',
         },
