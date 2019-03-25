@@ -3,15 +3,13 @@ import shutil
 import tempfile
 
 from checksumdir import dirhash
-from coreapi.utils import File
 from django.test import TestCase, override_settings
-from mock import MagicMock
 
 from substrapp.models import Objective, DataManager, DataSample, Algo, Model
-from substrapp.utils import get_hash, get_dir_hash
+from substrapp.utils import get_hash
 
-from .common import get_sample_objective, get_sample_datamanager, get_sample_data_sample, \
-    get_sample_script, get_sample_model, get_sample_zip_data
+from .common import get_sample_objective, get_sample_datamanager, \
+    get_sample_script, get_sample_model
 
 MEDIA_ROOT = tempfile.mkdtemp()
 

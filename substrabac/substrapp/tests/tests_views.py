@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import DataManagerViewSet, TrainTupleViewSet, TestTupleViewSet, DataSampleViewSet
 
-from substrapp.serializers import LedgerDataSerializer, LedgerObjectiveSerializer, LedgerAlgoSerializer
+from substrapp.serializers import LedgerDataSampleSerializer, LedgerObjectiveSerializer, LedgerAlgoSerializer
 
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
@@ -1092,7 +1092,7 @@ class DataViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_data_create_bulk(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1111,7 +1111,7 @@ class DataViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = ({'keys': [pkhash1, pkhash2]},
@@ -1124,7 +1124,7 @@ class DataViewTests(APITestCase):
             data[x].close()
 
     def test_data_create_bulk_dryrun(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1155,7 +1155,7 @@ class DataViewTests(APITestCase):
             data[x].close()
 
     def test_data_create(self):
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -1169,7 +1169,7 @@ class DataViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = ({'keys': [pkhash]},
@@ -1183,7 +1183,7 @@ class DataViewTests(APITestCase):
 
     def test_data_create_dryrun(self):
 
-        url = reverse('substrapp:data-list')
+        url = reverse('substrapp:data_sample-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
