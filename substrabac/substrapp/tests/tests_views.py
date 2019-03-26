@@ -244,7 +244,7 @@ class ChallengeViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_dataset_key': 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+            'test_dataset_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
         }
 
         with mock.patch.object(LedgerChallengeSerializer, 'create') as mcreate:
@@ -279,7 +279,7 @@ class ChallengeViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_dataset_key': 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af',
+            'test_dataset_key': '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528',
             'dryrun': True
         }
 
@@ -302,13 +302,13 @@ class ChallengeViewTests(APITestCase):
         metrics_path = os.path.join(dir_path, '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py')
         shutil.copy(metrics_path, os.path.join(MEDIA_ROOT, 'metrics.py'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
 
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
         pkhash = '6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c'
 
-        test_dataset_key = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+        test_dataset_key = '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
 
         with mock.patch('substrapp.views.challenge.getObjectFromLedger') as mdataset,\
                 mock.patch('substrapp.views.challenge.get_computed_hash') as mopener:
@@ -527,10 +527,10 @@ class AlgoViewTests(APITestCase):
             metrics_content = f.read()
         metrics_pkhash = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py')
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
-        opener_pkhash = 'bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af'
+        opener_pkhash = '9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528'
 
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
                 mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
@@ -542,7 +542,7 @@ class AlgoViewTests(APITestCase):
             challenge_key = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
             pkhash = 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'
 
-            # Slow operation, about 45 s
+            # Slow operation, about 45 s, will fail if no internet connection
             algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), challenge_key, pkhash)
 
 
@@ -788,17 +788,17 @@ class DatasetViewTests(APITestCase):
 
     def test_dataset_retrieve(self):
         url = reverse('substrapp:dataset-list')
-        dataset_response = [d for d in dataset if d['key'] == '6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'][0]
+        dataset_response = [d for d in dataset if d['key'] == '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'][0]
         with mock.patch.object(DatasetViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.dataset.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = dataset_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'), 'rb') as f:
+                                   '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'), 'rb') as f:
                 opener_content = f.read()
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'), 'rb') as f:
+                                   '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'), 'rb') as f:
                 description_content = f.read()
 
             mrequestsget.side_effect = [FakeRequest(status=status.HTTP_200_OK,
@@ -806,7 +806,7 @@ class DatasetViewTests(APITestCase):
                                         FakeRequest(status=status.HTTP_200_OK,
                                                     content=description_content)]
 
-            search_params = '6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/'
+            search_params = '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -837,10 +837,10 @@ class DatasetViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
+                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
                                      'rb'),
                  'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
                                      'rb')}
 
         data = {
@@ -859,7 +859,7 @@ class DatasetViewTests(APITestCase):
                                                   '../../fixtures/owkin/challenges/6b8d16ac3eae240743428591943fa8e66b34d4a7e0f4eb8e560485c7617c222c/metrics.py'),
                                      'rb'),
                  'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+                                                  '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
                                      'rb')}
 
         response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
@@ -1099,14 +1099,14 @@ class DataViewTests(APITestCase):
         data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
 
-        pkhash1 = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
-        pkhash2 = '42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9'
+        pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
@@ -1135,7 +1135,7 @@ class DataViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
@@ -1161,10 +1161,10 @@ class DataViewTests(APITestCase):
 
         data_path = os.path.join(dir_path, '../../fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip')
 
-        pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         data = {
             'file': open(data_path, 'rb'),
-            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False
         }
 
@@ -1191,7 +1191,7 @@ class DataViewTests(APITestCase):
 
         data = {
             'file': open(data_path, 'rb'),
-            'dataset_keys': ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181'],
+            'dataset_keys': ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'],
             'test_only': False,
             'dryrun': True
         }
@@ -1217,7 +1217,7 @@ class DataViewTests(APITestCase):
 
         shutil.copy(data_path, os.path.join(MEDIA_ROOT, '0024700.zip'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py')
+        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py')
 
         pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
 
@@ -1227,7 +1227,7 @@ class DataViewTests(APITestCase):
         }
 
         data_files = [data]
-        dataset_keys = ['6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181']
+        dataset_keys = ['59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd']
 
         with mock.patch.object(Dataset.objects, 'get') as mdataset:
             mdataset.return_value = FakeDataset(opener_path)

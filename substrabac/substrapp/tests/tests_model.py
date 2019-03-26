@@ -1,12 +1,17 @@
+import os
 import shutil
 import tempfile
 
+from checksumdir import dirhash
+from coreapi.utils import File
 from django.test import TestCase, override_settings
+from mock import MagicMock
 
 from substrapp.models import Challenge, Dataset, Data, Algo, Model
-from substrapp.utils import get_hash
+from substrapp.utils import get_hash, get_dir_hash
 
-from .common import get_sample_challenge, get_sample_dataset, get_sample_data, get_sample_script, get_sample_model
+from .common import get_sample_challenge, get_sample_dataset, get_sample_data, \
+    get_sample_script, get_sample_model, get_sample_zip_data
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -14,9 +19,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class ModelTests(TestCase):
     """Model tests"""
-
-    def setUp(self):
-        pass
 
     def tearDown(self):
         try:
@@ -43,9 +45,10 @@ class ModelTests(TestCase):
         self.assertIn(f'name {dataset.name}', str(dataset))
 
     def test_create_data(self):
-        file, _ = get_sample_data()
-        data = Data.objects.create(file=file)
-        self.assertEqual(data.pkhash, get_hash(file))
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.join(dir_path, '../../fixtures/chunantes/data/train/0024308')
+        data = Data.objects.create(path=path)
+        self.assertEqual(data.pkhash, dirhash(path, 'sha256'))
         self.assertFalse(data.validated)
         self.assertIn(f'pkhash {data.pkhash}', str(data))
         self.assertIn(f'validated {data.validated}', str(data))

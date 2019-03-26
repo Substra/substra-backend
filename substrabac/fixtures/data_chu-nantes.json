@@ -28,11 +28,11 @@
 },
 {
     "model": "substrapp.dataset",
-    "pk": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+    "pk": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
     "fields": {
         "name": "ISIC 2018",
-        "data_opener": "datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py",
-        "description": "datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md",
+        "data_opener": "datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py",
+        "description": "datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md",
         "validated": true
     }
 },
