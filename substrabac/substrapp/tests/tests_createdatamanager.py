@@ -9,10 +9,9 @@ from io import StringIO
 import shutil
 from mock import patch
 
-from substrapp.models import DataManager
 from substrapp.serializers import LedgerDataSampleSerializer, LedgerDataManagerSerializer
 
-from substrapp.utils import compute_hash, get_hash
+from substrapp.utils import get_hash
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 

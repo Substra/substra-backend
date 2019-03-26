@@ -9,7 +9,6 @@ from io import StringIO
 import shutil
 from mock import patch
 
-from substrapp.models import Objective
 from substrapp.serializers import LedgerObjectiveSerializer, \
     LedgerDataManagerSerializer, LedgerDataSampleSerializer
 
