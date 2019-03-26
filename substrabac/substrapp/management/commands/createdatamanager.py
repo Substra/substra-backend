@@ -19,11 +19,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     create datamanager
-    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdatamanager datamanager.json
     # datamanager.json:
-    # challenge_keys are optional
-    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # objective_keys are optional
+    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
