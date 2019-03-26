@@ -106,7 +106,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                     }
                 ]
                 data = json.dumps(out_data, indent=4)
-                wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -160,7 +160,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -213,7 +213,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -275,7 +275,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout

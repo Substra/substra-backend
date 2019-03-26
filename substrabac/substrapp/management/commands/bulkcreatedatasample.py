@@ -133,5 +133,5 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(str(e))
         else:
-            msg = f'Succesfully added data samples via bulk with status code {st} and data: {json.dumps(res, indent=4)}'
+            msg = f'Successfully added data samples via bulk with status code {st} and data: {json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))

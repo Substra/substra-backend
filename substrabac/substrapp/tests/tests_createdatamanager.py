@@ -1,7 +1,6 @@
 from django.test import TestCase, override_settings
 from django.core.management import call_command
 from rest_framework import status
-from unittest.mock import MagicMock
 
 import json
 import os
@@ -110,8 +109,8 @@ class CreateDataManagerTestCase(TestCase):
 
                 datamanager = json.dumps(datamanager_out, indent=4)
                 data = json.dumps(data_out, indent=4)
-                datamanager_wanted_output = f'Succesfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
-                data_wanted_output = f'Succesfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
+                datamanager_wanted_output = f'Successfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
+                data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
                 self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data to this datamanager now\n{data_wanted_output}')
             finally:
                 sys.stdout = saved_stdout
@@ -146,10 +145,6 @@ class CreateDataManagerTestCase(TestCase):
         datamanager_pk = get_hash(datamanager_opener_path)
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
-
-        # create datamanager
-        # d = DataManager(pkhash=datamanager_pk, name='foo', data_opener=datamanager_opener_path, description=datamanager_description_path)
-        # d.save()
 
         with patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
@@ -198,7 +193,7 @@ class CreateDataManagerTestCase(TestCase):
 
                 datamanager = json.dumps(datamanager_out, indent=2)
                 data = json.dumps(data_out, indent=4)
-                data_wanted_output = f'Succesfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
+                data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
                 self.assertEqual(output, f'Will add data to this datamanager now\n{data_wanted_output}')
                 self.assertEqual(err_output, datamanager)
             finally:
