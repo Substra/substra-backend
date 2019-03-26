@@ -59,12 +59,12 @@ def create_asset(data, profile, asset, dryrun=False):
         return r['result']['pkhash']
 
 
-def create_data(data, profile, dryrun=False):
+def create_data_sample(data, profile, dryrun=False):
     client.set_config(profile)
 
     if dryrun:
         print('dry-run')
-        res = client.add('data', data, dryrun=True)
+        res = client.add('data_sample', data, dryrun=True)
         try:
             print(colored(json.dumps(res, indent=2), 'magenta'))
         except:
@@ -72,7 +72,7 @@ def create_data(data, profile, dryrun=False):
 
     print('real')
     try:
-        r = client.add('data', data)
+        r = client.add('data_sample', data)
     except Exception as e:
         print(colored(e, 'red'))
     else:
@@ -90,9 +90,9 @@ def create_data(data, profile, dryrun=False):
         if r['status_code'] == status.HTTP_408_REQUEST_TIMEOUT:
             print('timeout on ledger, will wait until available')
             for pkhash in data_keys:
-                # wait until dataset is correctly created
+                # wait until datamanager is correctly created
                 while not r['status_code'] == status.HTTP_200_OK:
-                    r = client.get('data', pkhash)
+                    r = client.get('data_sample', pkhash)
                     print(colored(json.dumps(r, indent=2), 'blue'))
                     print('.', end='')
                     time.sleep(1)
@@ -101,10 +101,10 @@ def create_data(data, profile, dryrun=False):
         return data_keys
 
 
-def update_dataset(dataset_key, data, profile):
+def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
 
-    r = client.update('dataset', dataset_key, data)
+    r = client.update('data_manager', data_manager_key, data)
 
     try:
         print(colored(json.dumps(r, indent=2), 'green'))
@@ -118,7 +118,7 @@ def update_dataset(dataset_key, data, profile):
             print('timeout on ledger, will wait until available')
             # wait until asset is correctly created
             while not r['status_code'] == status.HTTP_200_OK:
-                r = client.get('dataset', dataset_key)
+                r = client.get('data_manager', data_manager_key)
                 print(colored(json.dumps(r, indent=2), 'blue'))
                 print('.', end='')
                 time.sleep(1)
@@ -166,118 +166,118 @@ if __name__ == '__main__':
     org_0 = 'owkin'
     org_1 = org_0 if args['one_org'] else 'chunantes'
 
-    print(f'will create dataset with {org_1}')
-    # create dataset with org1
+    print(f'will create datamanager with {org_1}')
+    # create datamanager with org1
     data = {
         'name': 'ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': 'all',
     }
-    dataset_org1_key = create_asset(data, org_1, 'dataset', dryrun=True)
+    data_manager_org1_key = create_asset(data, org_1, 'data_manager', dryrun=True)
 
     ####################################################
 
-    train_data_keys = []
-    if dataset_org1_key:
-        print(f'register train data on dataset {org_1} (will take dataset creator as worker)')
+    train_data_sample_keys = []
+    if data_manager_org1_key:
+        print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/chunantes/data/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/data/train/0024307.zip')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
             ],
-            'dataset_keys': [dataset_org1_key],
+            'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_keys = create_data(data, org_1, True)
+        train_data_sample_keys = create_data_sample(data, org_1, True)
 
     ####################################################
 
-    print(f'create dataset, test data and challenge on {org_0}')
+    print(f'create datamanager, test data and objective on {org_0}')
     data = {
         'name': 'Simplified ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description.md'),
+        'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
         'permissions': 'all'
     }
-    dataset_org0_key = create_asset(data, org_0, 'dataset')
+    data_manager_org0_key = create_asset(data, org_0, 'data_manager')
 
     ####################################################
 
-    if dataset_org0_key and dataset_org1_key:
+    if data_manager_org0_key and data_manager_org1_key:
         print('register test data')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024900.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024901.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
             ],
-            'dataset_keys': [dataset_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys = create_data(data, org_0, False)
+        test_data_sample_keys = create_data_sample(data, org_0, False)
 
         ####################################################
 
         print('register test data 2')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024902.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024903.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
             ],
-            'dataset_keys': [dataset_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys_2 = create_data(data, org_0, False)
+        test_data_sample_keys_2 = create_data_sample(data, org_0, False)
 
         ####################################################
 
         print('register test data 3')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024904.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024905.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
             ],
-            'dataset_keys': [dataset_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys_3 = create_data(data, org_0, False)
+        test_data_sample_keys_3 = create_data_sample(data, org_0, False)
 
         ####################################################
 
-        print('register challenge')
+        print('register objective')
         data = {
-            'name': 'Skin Lesion Classification Challenge',
-            'description': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md'),
+            'name': 'Skin Lesion Classification Objective',
+            'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
-            'metrics': os.path.join(dir_path, './fixtures/chunantes/challenges/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
+            'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/metrics.py'),
             'permissions': 'all',
-            'test_data_keys': test_data_keys,
-            'test_dataset_key': dataset_org0_key
+            'test_data_sample_keys': test_data_sample_keys,
+            'test_data_manager_key': data_manager_org0_key
         }
 
-        challenge_key = create_asset(data, org_0, 'challenge', True)
+        objective_key = create_asset(data, org_0, 'objective', True)
 
         ####################################################
 
-        # update dataset
-        print('update dataset')
+        # update datamanager
+        print('update datamanager')
         data = {
-            'challenge_key': challenge_key
+            'objective_key': objective_key
         }
-        update_dataset(dataset_org1_key, data, org_0)
+        update_datamanager(data_manager_org1_key, data, org_0)
 
         ####################################################
 
-        if challenge_key:
+        if objective_key:
             # register algo
             print('register algo')
             data = {
                 'name': 'Logistic regression',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md'),
-                'challenge_key': challenge_key,
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key = create_asset(data, org_1, 'algo', True)
@@ -287,9 +287,9 @@ if __name__ == '__main__':
             print('register algo 2')
             data = {
                 'name': 'Neural Network',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description.md'),
-                'challenge_key': challenge_key,
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_2 = create_asset(data, org_1, 'algo', False)
@@ -298,24 +298,24 @@ if __name__ == '__main__':
 
             data = {
                 'name': 'Random Forest',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'),
-                'challenge_key': challenge_key,
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
+                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_3 = create_asset(data, org_1, 'algo', False)
 
             ####################################################
 
-            if algo_key and train_data_keys:
+            if algo_key and train_data_sample_keys:
                 # create traintuple
                 print('create traintuple')
                 data = {
                     'algo_key': algo_key,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'dataset_key': dataset_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
                 traintuple_key = create_traintuple(data, org_1)
 
@@ -324,8 +324,8 @@ if __name__ == '__main__':
                     'algo_key': algo_key_2,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'dataset_key': dataset_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
 
                 traintuple_key_2 = create_traintuple(data, org_1)
@@ -335,8 +335,8 @@ if __name__ == '__main__':
                     'algo_key': algo_key_3,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'dataset_key': dataset_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
 
                 traintuple_key_3 = create_traintuple(data, org_1)

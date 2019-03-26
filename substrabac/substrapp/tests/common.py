@@ -126,8 +126,8 @@ def get_temporary_text_file(contents, filename):
     return text_file
 
 
-def get_sample_challenge():
-    description_content = "Super challenge"
+def get_sample_objective():
+    description_content = "Super objective"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
     metrics_content = "def metrics():\n\tpass"
@@ -145,7 +145,7 @@ def get_sample_script():
     return script, script_filename
 
 
-def get_sample_dataset():
+def get_sample_datamanager():
     description_content = "description"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
@@ -156,7 +156,7 @@ def get_sample_dataset():
     return description, description_filename, data_opener, data_opener_filename
 
 
-def get_sample_dataset2():
+def get_sample_datamanager2():
     description_content = "description 2"
     description_filename = "description2.md"
     description = get_temporary_text_file(description_content, description_filename)
@@ -167,7 +167,7 @@ def get_sample_dataset2():
     return description, description_filename, data_opener, data_opener_filename
 
 
-def get_sample_data():
+def get_sample_data_sample():
     file_content = "0\n1\n2"
     file_filename = "file.csv"
     file = get_temporary_text_file(file_content, file_filename)
@@ -175,24 +175,11 @@ def get_sample_data():
     return file, file_filename
 
 
-def get_sample_zip_data():
+def get_sample_zip_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'), 'rb') as zip_file:
-        flength = f.write(zip_file.read())
-
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/zip', flength, None)
-    file.seek(0)
-
-    return file, file_filename
-
-def get_sample_zip_data_2():
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_filename = "file.zip"
-    f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../fixtures/owkin/data/test/0024901.zip'), 'rb') as zip_file:
+    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/datasample4/0024900.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -202,11 +189,25 @@ def get_sample_zip_data_2():
     return file, file_filename
 
 
-def get_sample_tar_data():
+def get_sample_zip_data_sample_2():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.zip"
+    f = BytesIO(b'foo')
+    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/test/0024901.zip'), 'rb') as zip_file:
+        flength = f.write(zip_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/zip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
+
+def get_sample_tar_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.tar.gz'), 'rb') as tar_file:
+    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -220,7 +221,7 @@ def get_sample_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'), 'rb') as tar_file:
+    with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -259,7 +260,7 @@ class FakeMetrics(object):
         return
 
 
-class FakeChallenge(object):
+class FakeObjective(object):
     def __init__(self, filepath='path'):
         self.metrics = FakeMetrics(filepath)
 
@@ -270,12 +271,12 @@ class FakeOpener(object):
         self.name = self.path
 
 
-class FakeDataset(object):
+class FakeDataManager(object):
     def __init__(self, filepath):
         self.data_opener = FakeOpener(filepath)
 
 
-class FakeFilterDataset(object):
+class FakeFilterDataManager(object):
     def __init__(self, count):
         self.count_value = count
 

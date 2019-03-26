@@ -7,19 +7,19 @@ class SubstrappConfig(AppConfig):
 
     def ready(self):
         from .signals.algo.post_delete import algo_post_delete
-        from .signals.challenge.post_delete import challenge_post_delete
-        from .signals.data.post_delete import data_post_delete
-        from .signals.dataset.post_delete import dataset_post_delete
+        from .signals.objective.post_delete import objective_post_delete
+        from .signals.datasample.post_delete import data_sample_post_delete
+        from .signals.datamanager.post_delete import datamanager_post_delete
         from .signals.model.post_delete import model_post_delete
-        from .signals.data.pre_save import data_pre_save
+        from .signals.datasample.pre_save import data_sample_pre_save
 
         # registering signals with the model's string label
-        from substrapp.models import Algo, Challenge, Data, Dataset, Model
+        from substrapp.models import Algo, Objective, DataSample, DataManager, Model
 
         post_delete.connect(algo_post_delete, sender=Algo)
-        post_delete.connect(challenge_post_delete, sender=Challenge)
-        post_delete.connect(data_post_delete, sender=Data)
-        post_delete.connect(dataset_post_delete, sender=Dataset)
+        post_delete.connect(objective_post_delete, sender=Objective)
+        post_delete.connect(data_sample_post_delete, sender=DataSample)
+        post_delete.connect(datamanager_post_delete, sender=DataManager)
         post_delete.connect(model_post_delete, sender=Model)
 
-        pre_save.connect(data_pre_save, sender=Data)
+        pre_save.connect(data_sample_pre_save, sender=DataSample)

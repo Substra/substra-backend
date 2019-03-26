@@ -14,7 +14,10 @@ DEFAULT_PORT = os.environ.get('SUBSTRABAC_DEFAULT_PORT', '8000')
 ORG_NAME = ORG.replace('-', '')
 ORG_DB_NAME = ORG.replace('-', '_').upper()
 
-LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
+try:
+    LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
+except:
+    pass
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

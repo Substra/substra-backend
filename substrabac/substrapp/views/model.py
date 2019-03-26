@@ -31,7 +31,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
 
         try:
-            # get challenge description from remote node
+            # get objective description from remote node
             url = traintuple['outModel']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
@@ -53,7 +53,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     f = tempfile.TemporaryFile()
                     f.write(r.content)
 
-                    # save/update challenge in local db for later use
+                    # save/update objective in local db for later use
                     instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
                     instance.file.save('model', f)
         except Exception as e:
@@ -75,7 +75,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
+                data = getObjectFromLedger(pk, 'queryModelDetails')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
@@ -116,8 +116,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             'args': '{"Args":["queryModels"]}'
         })
         algoData = None
-        challengeData = None
-        datasetData = None
+        objectiveData = None
+        dataManagerData = None
 
         # init list to return
         if data is None:
@@ -163,38 +163,38 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     algoHashes = [x['key'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['traintuple']['algo']['hash'] in algoHashes]
                             elif k == 'dataset':  # select model which trainData.openerHash is
-                                if not datasetData:
+                                if not dataManagerData:
                                     # TODO find a way to put this call in cache
-                                    datasetData, st = queryLedger({
-                                        'args': '{"Args":["queryDatasets"]}'
+                                    dataManagerData, st = queryLedger({
+                                        'args': '{"Args":["queryDataManagers"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(datasetData, status=st)
+                                        return Response(dataManagerData, status=st)
 
-                                    if datasetData is None:
-                                        datasetData = []
+                                    if dataManagerData is None:
+                                        dataManagerData = []
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in datasetData if x[key] in val]
-                                    datasetHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['data']['openerHash'] in datasetHashes]
-                            elif k == 'challenge':  # select challenge used by these datasets
-                                if not challengeData:
+                                    filteredData = [x for x in dataManagerData if x[key] in val]
+                                    datamanagerHashes = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['dataset']['openerHash'] in datamanagerHashes]
+                            elif k == 'objective':  # select objective used by these datamanagers
+                                if not objectiveData:
                                     # TODO find a way to put this call in cache
-                                    challengeData, st = queryLedger({
-                                        'args': '{"Args":["queryChallenges"]}'
+                                    objectiveData, st = queryLedger({
+                                        'args': '{"Args":["queryObjectives"]}'
                                     })
                                     if st != status.HTTP_200_OK:
-                                        return Response(challengeData, status=st)
+                                        return Response(objectiveData, status=st)
 
-                                    if challengeData is None:
-                                        challengeData = []
+                                    if objectiveData is None:
+                                        objectiveData = []
                                 for key, val in subfilters.items():
                                     if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in challengeData if x[key]['name'] in val]
+                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
                                     else:
-                                        filteredData = [x for x in challengeData if x[key] in val]
-                                    challengeKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['challenge']['hash'] in challengeKeys]
+                                        filteredData = [x for x in objectiveData if x[key] in val]
+                                    objectiveKeys = [x['key'] for x in filteredData]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['objective']['hash'] in objectiveKeys]
 
         return Response(l, status=st)
 
