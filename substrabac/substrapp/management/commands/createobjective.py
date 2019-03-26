@@ -148,7 +148,7 @@ class Command(BaseCommand):
         self.stdout.write('Will add data samples to this datamanager now')
         # Add data in bulk now
         data_samples.update({'data_manager_keys': [data_manager_pkhash]})
-        res_data = []
+        data_sample_pkhashes = []
         try:
             res_data, st = bulk_create_data_sample(data_samples)
         except LedgerException as e:
@@ -158,19 +158,20 @@ class Command(BaseCommand):
             else:
                 self.stderr.write(json.dumps(e.data, indent=2))
         except InvalidException as e:
-            res_data = e.data
-            self.stderr.write(json.dumps({'message': e.msg, 'pkhash': res_data}, indent=2))
+            data_sample_pkhashes = e.data
+            self.stderr.write(json.dumps({'message': e.msg, 'pkhash': data_sample_pkhashes}, indent=2))
         except Exception as e:
             self.stderr.write(str(e))
         else:
             msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res_data, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
+            data_sample_pkhashes = [x['pkhash'] for x in res_data]
 
         # Try to add objective even if datamanager or data creation failed (409 or others)
         self.stdout.write('Will add objective to this datamanager now')
         # Add data in bulk now
         objective.update({'test_data_manager_key': data_manager_pkhash})
-        objective.update({'test_data_sample_keys': res_data})
+        objective.update({'test_data_sample_keys': data_sample_pkhashes})
 
         # TODO add validation
         with open(objective['metrics'], 'rb') as f:
