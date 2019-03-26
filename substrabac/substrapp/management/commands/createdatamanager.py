@@ -6,6 +6,7 @@ from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
 from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
+from substrapp.management.utils.localRequest import LocalRequest
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.datasample import LedgerException
@@ -99,7 +100,8 @@ class Command(BaseCommand):
                           'permissions': 'all', # forced, TODO changed when permissions are available
                           'type': data_manager['type'],
                           'objective_keys': data_manager.get('objective_keys', []),
-                          'instance': instance})
+                          'instance': instance},
+                    context={'request': LocalRequest()})
 
                 try:
                     ledger_serializer.is_valid()
