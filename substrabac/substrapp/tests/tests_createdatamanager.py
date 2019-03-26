@@ -13,6 +13,8 @@ from mock import patch
 from substrapp.models import DataManager
 from substrapp.serializers import LedgerDataSampleSerializer, LedgerDataManagerSerializer
 
+from substrapp.utils import compute_hash, get_hash
+
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
 
@@ -36,14 +38,14 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                                   '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'))
+                                                            '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
         datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'))
+                                                                 '../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {
@@ -58,7 +60,7 @@ class CreateDataManagerTestCase(TestCase):
             }
         }
 
-        datamanager_pk = '678912ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        datamanager_pk = get_hash(datamanager_opener_path)
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
@@ -119,14 +121,14 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'))
+                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip'))
+                                                   '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'))
+                                                            '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
         datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'))
+                                                                 '../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {
@@ -141,7 +143,7 @@ class CreateDataManagerTestCase(TestCase):
             }
         }
 
-        datamanager_pk = '678912ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        datamanager_pk = get_hash(datamanager_opener_path)
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 

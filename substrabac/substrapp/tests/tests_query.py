@@ -885,14 +885,12 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.return_value = {
-                                       'pkhash': 'da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b'}, status.HTTP_201_CREATED
+            mcreate.return_value = {'pkhash': compute_hash(self.algo)}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(r['pkhash'], get_hash(self.algo))
-
 
     def test_add_algo_no_sync_ok(self):
         # add associated objective
