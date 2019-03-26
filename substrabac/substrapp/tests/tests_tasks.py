@@ -186,10 +186,10 @@ class TasksTests(APITestCase):
 
             # test fail
             with self.assertRaises(Exception):
-                put_opener({'data': {'openerHash': 'HASH'}}, self.subtuple_path)
+                put_opener({'dataset': {'openerHash': 'HASH'}}, self.subtuple_path)
 
             # test work
-            put_opener({'data': {'openerHash': get_hash(filepath)}}, self.subtuple_path)
+            put_opener({'dataset': {'openerHash': get_hash(filepath)}}, self.subtuple_path)
 
         self.assertTrue(os.path.exists(os.path.join(opener_directory, 'opener.py')))
 
@@ -200,7 +200,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'data': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [data_sample.pk]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -212,10 +212,10 @@ class TasksTests(APITestCase):
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data sample
             self.assertFalse(
-                os.path.exists(os.path.join(MEDIA_ROOT, 'data', 'foo')))
+                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
             self.assertTrue(
-                os.path.exists(os.path.join(MEDIA_ROOT, 'data', dir_pkhash)))
+                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
@@ -230,7 +230,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'data': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [data_sample.pk]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -241,9 +241,9 @@ class TasksTests(APITestCase):
             put_data_sample(subtuple, subtuple_direcory)
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
-            self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'data', 'foo')))
+            self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'data', dir_pkhash)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))

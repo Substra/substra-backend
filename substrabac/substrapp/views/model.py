@@ -176,7 +176,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in dataManagerData if x[key] in val]
                                     datamanagerHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['data']['openerHash'] in datamanagerHashes]
+                                    l[idx] = [x for x in l[idx] if x['traintuple']['dataset']['openerHash'] in datamanagerHashes]
                             elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache

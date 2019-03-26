@@ -160,7 +160,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data sample via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -275,7 +275,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -315,7 +315,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
                 output = err.getvalue().strip()
 
-                wanted_output = f'Your data archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and 0024700.zip are the same'
+                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and 0024700.zip are the same'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -355,7 +355,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
                 output = err.getvalue().strip()
 
-                wanted_output = f'Your data archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and {data_path1} are the same'
+                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and {data_path1} are the same'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout

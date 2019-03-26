@@ -111,7 +111,7 @@ class CreateDataManagerTestCase(TestCase):
                 datamanager = json.dumps(datamanager_out, indent=4)
                 data = json.dumps(data_out, indent=4)
                 datamanager_wanted_output = f'Succesfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
-                data_wanted_output = f'Succesfully bulk added data with status code {status.HTTP_201_CREATED} and result: {data}'
+                data_wanted_output = f'Succesfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
                 self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data to this datamanager now\n{data_wanted_output}')
             finally:
                 sys.stdout = saved_stdout
@@ -198,7 +198,7 @@ class CreateDataManagerTestCase(TestCase):
 
                 datamanager = json.dumps(datamanager_out, indent=2)
                 data = json.dumps(data_out, indent=4)
-                data_wanted_output = f'Succesfully bulk added data with status code {status.HTTP_201_CREATED} and result: {data}'
+                data_wanted_output = f'Succesfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
                 self.assertEqual(output, f'Will add data to this datamanager now\n{data_wanted_output}')
                 self.assertEqual(err_output, datamanager)
             finally:
