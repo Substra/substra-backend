@@ -147,8 +147,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 raise ValidationError(ledger_serializer.errors)
 
             # create on ledger
-            data, st = ledger_serializer.create(
-                ledger_serializer.validated_data)
+            data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
             if st == status.HTTP_408_REQUEST_TIMEOUT:
                 if many:

@@ -19,6 +19,13 @@ def path_leaf(path):
     return tail or ntpath.basename(head)
 
 
+class InvalidException(Exception):
+    def __init__(self, msg, data):
+        self.data = data
+        self.msg = msg
+        super(LedgerException).__init__()
+
+
 # check if not already in data sample list
 def check(file_or_path, pkhash, data_sample):
     err_msg = 'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
@@ -82,7 +89,10 @@ def bulk_create_data_sample(data):
     data_samples = map_data_sample(paths)
 
     serializer = DataSampleSerializer(data=data_samples, many=True)
-    serializer.is_valid(raise_exception=True)
+    try:
+        serializer.is_valid(raise_exception=True)
+    except Exception as e:
+        raise InvalidException(msg=str(e), data=[x['pkhash'] for x in data_samples])
 
     # create on ledger + db
     ledger_data = {'test_only': test_only,
@@ -130,6 +140,8 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
             else:
                 self.stderr.write(json.dumps(e.data, indent=2))
+        except InvalidException as e:
+            self.stderr.write(e.msg)
         except Exception as e:
             self.stderr.write(str(e))
         else:
