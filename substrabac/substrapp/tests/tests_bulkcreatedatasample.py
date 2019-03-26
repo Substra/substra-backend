@@ -19,7 +19,7 @@ from substrapp.tests.common import get_sample_zip_data_sample
 from substrapp.views import DataSampleViewSet
 from substrapp.views.datasample import LedgerException
 
-from substrapp.utils import compute_hash, get_hash
+from substrapp.utils import get_hash
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
