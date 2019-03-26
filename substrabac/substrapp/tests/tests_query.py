@@ -77,7 +77,7 @@ class ObjectiveQueryTests(APITestCase):
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
             mcreate.return_value = {
-                                       'pkhash': '27593c659ecceb0c15739d55b7504b5ee8aef28c353e17fe1d107543efd99536'}, status.HTTP_201_CREATED
+                                       'pkhash': 'a554bb7adf2cad37ea8b140dc07359dd6e6cbffb067d568d3ba7b3a9de1ed2f3'}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -436,7 +436,7 @@ class DataSampleQueryTests(APITestCase):
             r = response.json()
             self.assertEqual(len(r), 2)
             self.assertEqual(r[0]['pkhash'], get_dir_hash(file_mock))
-            self.assertTrue(r[0]['path'].endswith(f'/data/{get_dir_hash(file_mock)}'))
+            self.assertTrue(r[0]['path'].endswith(f'/datasamples/{get_dir_hash(file_mock)}'))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_sample_no_sync_ok(self):
@@ -524,7 +524,7 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(r['message'],
-                             [{'pkhash': ['data with this pkhash already exists.']}])
+                             [{'pkhash': ['data sample with this pkhash already exists.']}])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_add_data_sample_ko_not_a_zip(self):
@@ -663,7 +663,7 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(DataSample.objects.count(), 0)
-            self.assertEqual(r['message'], f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file_mock2.name} and {file_mock.name} are the same')
+            self.assertEqual(r['message'], f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file_mock2.name} and {file_mock.name} are the same')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_400(self):
@@ -867,6 +867,10 @@ class AlgoQueryTests(APITestCase):
 
     def test_add_algo_sync_ok(self):
 
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
+            algo_content = tar_file.read()
+
         # add associated objective
         Objective.objects.create(description=self.objective_description,
                                  metrics=self.objective_metrics)
@@ -885,12 +889,12 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.return_value = {'pkhash': compute_hash(self.algo)}, status.HTTP_201_CREATED
+            mcreate.return_value = {'pkhash': compute_hash(algo_content)}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], get_hash(self.algo))
+            self.assertEqual(r['pkhash'], compute_hash(algo_content))
 
     def test_add_algo_no_sync_ok(self):
         # add associated objective
@@ -1063,7 +1067,7 @@ class TraintupleQueryTests(APITestCase):
         data = {'train_data_sample_keys': [
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'data_manager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'rank': -1,
                 'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'in_models_keys': [
