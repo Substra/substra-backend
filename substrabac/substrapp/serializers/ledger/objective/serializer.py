@@ -23,7 +23,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         metrics_name = validated_data.get('metrics_name')
         permissions = validated_data.get('permissions')
         test_data_manager_key = validated_data.get('test_data_manager_key')
-        test_data_sample_keys = validated_data.get('test_data_sample_keys')
+        test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
