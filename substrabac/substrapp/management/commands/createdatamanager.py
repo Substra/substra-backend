@@ -19,11 +19,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     create datamanager
-    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
-    python ./manage.py createdatamanager datamanager.json
-    # data.json:
-    # objective_keys and permissions are optional
-    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    python ./manage.py createdatamanager '{"dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": []}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdatamanager dataset.json
+    # datamanager.json:
+    # challenge_keys are optional
+    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "challenge_keys": []}, "data": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -96,7 +96,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': datamanager['name'],
-                          'permissions': datamanager.get('permissions', ''),
+                          'permissions': 'all', # forced, TODO changed when permissions are available
                           'type': datamanager['type'],
                           'objective_keys': datamanager.get('objective_keys', []),
                           'instance': instance})
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Succesfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
         # Try to add data even if datamanager creation failed
@@ -135,5 +135,5 @@ class Command(BaseCommand):
         except Exception as e:
             return self.stderr.write(str(e))
         else:
-            msg = f'Succesfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
+            msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
