@@ -28,7 +28,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                          GenericViewSet):
     queryset = DataManager.objects.all()
     serializer_class = DataManagerSerializer
-    query_call = 'queryDataManager'
+    ledger_query_call = 'queryDataManager'
 
     def perform_create(self, serializer):
         return serializer.save()
