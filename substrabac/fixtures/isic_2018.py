@@ -52,7 +52,7 @@ else:
         "metrics_name": "macro-average recall",
         "metrics": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/metrics.py",
         "permissions": "all",
-        "test_data_keys": ["039eecf8279c570022f000984d91e175ca8efbf858f11b8bffc88d91ccb51096"]
+        "test_data_sample_keys": ["039eecf8279c570022f000984d91e175ca8efbf858f11b8bffc88d91ccb51096"]
     })
 
     res = popen(['substra', 'add', 'objective', '--profile=owkin', '--config=/tmp/.substrabac', data],

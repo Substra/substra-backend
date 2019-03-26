@@ -59,12 +59,12 @@ def create_asset(data, profile, asset, dryrun=False):
         return r['result']['pkhash']
 
 
-def create_data(data, profile, dryrun=False):
+def create_data_sample(data, profile, dryrun=False):
     client.set_config(profile)
 
     if dryrun:
         print('dry-run')
-        res = client.add('data', data, dryrun=True)
+        res = client.add('data_sample', data, dryrun=True)
         try:
             print(colored(json.dumps(res, indent=2), 'magenta'))
         except:
@@ -72,7 +72,7 @@ def create_data(data, profile, dryrun=False):
 
     print('real')
     try:
-        r = client.add('data', data)
+        r = client.add('data_sample', data)
     except Exception as e:
         print(colored(e, 'red'))
     else:
@@ -92,7 +92,7 @@ def create_data(data, profile, dryrun=False):
             for pkhash in data_keys:
                 # wait until datamanager is correctly created
                 while not r['status_code'] == status.HTTP_200_OK:
-                    r = client.get('data', pkhash)
+                    r = client.get('data_sample', pkhash)
                     print(colored(json.dumps(r, indent=2), 'blue'))
                     print('.', end='')
                     time.sleep(1)
@@ -101,10 +101,10 @@ def create_data(data, profile, dryrun=False):
         return data_keys
 
 
-def update_datamanager(datamanager_key, data, profile):
+def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
 
-    r = client.update('data_manager', datamanager_key, data)
+    r = client.update('data_manager', data_manager_key, data)
 
     try:
         print(colored(json.dumps(r, indent=2), 'green'))
@@ -118,7 +118,7 @@ def update_datamanager(datamanager_key, data, profile):
             print('timeout on ledger, will wait until available')
             # wait until asset is correctly created
             while not r['status_code'] == status.HTTP_200_OK:
-                r = client.get('data_manager', datamanager_key)
+                r = client.get('data_manager', data_manager_key)
                 print(colored(json.dumps(r, indent=2), 'blue'))
                 print('.', end='')
                 time.sleep(1)
@@ -175,22 +175,22 @@ if __name__ == '__main__':
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': 'all',
     }
-    datamanager_org1_key = create_asset(data, org_1, 'data_manager', dryrun=True)
+    data_manager_org1_key = create_asset(data, org_1, 'data_manager', dryrun=True)
 
     ####################################################
 
-    train_data_keys = []
-    if datamanager_org1_key:
+    train_data_sample_keys = []
+    if data_manager_org1_key:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/chunantes/data/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/data/train/0024307.zip')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
             ],
-            'datamanager_keys': [datamanager_org1_key],
+            'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_keys = create_data(data, org_1, True)
+        train_data_sample_keys = create_data_sample(data, org_1, True)
 
     ####################################################
 
@@ -202,47 +202,47 @@ if __name__ == '__main__':
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
         'permissions': 'all'
     }
-    datamanager_org0_key = create_asset(data, org_0, 'data_manager')
+    data_manager_org0_key = create_asset(data, org_0, 'data_manager')
 
     ####################################################
 
-    if datamanager_org0_key and datamanager_org1_key:
+    if data_manager_org0_key and data_manager_org1_key:
         print('register test data')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024900.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024901.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
             ],
-            'datamanager_keys': [datamanager_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys = create_data(data, org_0, False)
+        test_data_sample_keys = create_data_sample(data, org_0, False)
 
         ####################################################
 
         print('register test data 2')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024902.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024903.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
             ],
-            'datamanager_keys': [datamanager_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys_2 = create_data(data, org_0, False)
+        test_data_sample_keys_2 = create_data_sample(data, org_0, False)
 
         ####################################################
 
         print('register test data 3')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024904.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/test/0024905.zip')
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
+                os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
             ],
-            'datamanager_keys': [datamanager_org0_key],
+            'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_keys_3 = create_data(data, org_0, False)
+        test_data_sample_keys_3 = create_data_sample(data, org_0, False)
 
         ####################################################
 
@@ -253,8 +253,8 @@ if __name__ == '__main__':
             'metrics_name': 'macro-average recall',
             'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/metrics.py'),
             'permissions': 'all',
-            'test_data_keys': test_data_keys,
-            'test_datamanager_key': datamanager_org0_key
+            'test_data_sample_keys': test_data_sample_keys,
+            'test_data_manager_key': data_manager_org0_key
         }
 
         objective_key = create_asset(data, org_0, 'objective', True)
@@ -266,7 +266,7 @@ if __name__ == '__main__':
         data = {
             'objective_key': objective_key
         }
-        update_datamanager(datamanager_org1_key, data, org_0)
+        update_datamanager(data_manager_org1_key, data, org_0)
 
         ####################################################
 
@@ -307,15 +307,15 @@ if __name__ == '__main__':
 
             ####################################################
 
-            if algo_key and train_data_keys:
+            if algo_key and train_data_sample_keys:
                 # create traintuple
                 print('create traintuple')
                 data = {
                     'algo_key': algo_key,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'datamanager_key': datamanager_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
                 traintuple_key = create_traintuple(data, org_1)
 
@@ -324,8 +324,8 @@ if __name__ == '__main__':
                     'algo_key': algo_key_2,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'datamanager_key': datamanager_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
 
                 traintuple_key_2 = create_traintuple(data, org_1)
@@ -335,8 +335,8 @@ if __name__ == '__main__':
                     'algo_key': algo_key_3,
                     'FLtask_key': '',
                     'in_models_keys': [],
-                    'datamanager_key': datamanager_org1_key,
-                    'train_data_keys': train_data_keys,
+                    'data_manager_key': data_manager_org1_key,
+                    'train_data_sample_keys': train_data_sample_keys,
                 }
 
                 traintuple_key_3 = create_traintuple(data, org_1)

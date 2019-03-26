@@ -236,7 +236,7 @@ class ObjectiveViewTests(APITestCase):
 
         pkhash = get_hash(description_path)
 
-        test_datamanager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
+        test_data_manager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
 
         data = {
             'name': 'Simplified skin lesion classification',
@@ -248,7 +248,7 @@ class ObjectiveViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_datamanager_key': test_datamanager_key
+            'test_data_manager_key': test_data_manager_key
         }
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
@@ -273,7 +273,7 @@ class ObjectiveViewTests(APITestCase):
         description_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/description.md')
         metrics_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/metrics.py')
 
-        test_datamanager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
+        test_data_manager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
 
         data = {
             'name': 'Simplified skin lesion classification',
@@ -285,7 +285,7 @@ class ObjectiveViewTests(APITestCase):
                 "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
                 "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
             ],
-            'test_datamanager_key': test_datamanager_key,
+            'test_data_manager_key': test_data_manager_key,
             'dryrun': True
         }
 
@@ -316,13 +316,13 @@ class ObjectiveViewTests(APITestCase):
 
         pkhash = get_hash(description_path)
 
-        test_datamanager_key = compute_hash(opener_content)
+        test_data_manager_key = compute_hash(opener_content)
 
         with mock.patch('substrapp.views.objective.getObjectFromLedger') as mdatamanager,\
                 mock.patch('substrapp.views.objective.get_computed_hash') as mopener:
             mdatamanager.return_value = {'opener': {'storageAddress': 'test'}}
             mopener.return_value = (opener_content, pkhash)
-            objective_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_datamanager_key, pkhash)
+            objective_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_data_manager_key, pkhash)
 
 
 # APITestCase
@@ -1257,8 +1257,8 @@ class DataViewTests(APITestCase):
         }
 
         data_files = [data]
-        datamanager_keys = [get_hash(opener_path)]
+        data_manager_keys = [get_hash(opener_path)]
 
         with mock.patch.object(DataManager.objects, 'get') as mdatamanager:
             mdatamanager.return_value = FakeDataManager(opener_path)
-            data_sample_compute_dryrun(data_files, datamanager_keys)
+            data_sample_compute_dryrun(data_files, data_manager_keys)

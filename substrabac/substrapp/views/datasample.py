@@ -34,7 +34,7 @@ class LedgerException(Exception):
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data_sample_files, datamanager_keys):
+def compute_dryrun(self, data_sample_files, data_manager_keys):
     from shutil import copy
     from substrapp.models import DataManager
 
@@ -51,14 +51,14 @@ def compute_dryrun(self, data_sample_files, datamanager_keys):
             except Exception as e:
                 raise e
 
-        for datamanager_key in datamanager_keys:
+        for datamanager_key in data_manager_keys:
             datamanager = DataManager.objects.get(pk=datamanager_key)
             copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
 
             # Launch verification
             client = docker.from_env()
             opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data')   # fake_data comes with substrabac
+            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data_sample')   # fake_data comes with substrabac
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{pkhash}'
@@ -66,7 +66,7 @@ def compute_dryrun(self, data_sample_files, datamanager_keys):
             volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
-            client.images.build(path=data_docker_path,
+            client.images.build(path=data_sample_docker_path,
                                 tag=data_docker,
                                 rm=False)
 
@@ -109,8 +109,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
 
-    def dryrun_task(self, data_sample_files, datamanager_keys):
-        task = compute_dryrun.apply_async((data_sample_files, datamanager_keys),
+    def dryrun_task(self, data_sample_files, data_manager_keys):
+        task = compute_dryrun.apply_async((data_sample_files, data_manager_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
         site_port = getattr(settings, "SITE_PORT", None)
@@ -121,11 +121,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return task, f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
     @staticmethod
-    def check_datamanagers(datamanager_keys):
-        datamanager_count = DataManager.objects.filter(pkhash__in=datamanager_keys).count()
+    def check_datamanagers(data_manager_keys):
+        datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
 
-        if not len(datamanager_keys) or datamanager_count != len(datamanager_keys):
-            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {datamanager_keys}')
+        if not len(data_manager_keys) or datamanager_count != len(data_manager_keys):
+            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
     def commit(serializer, ledger_data, many):
@@ -177,10 +177,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         test_only = data.get('test_only', False)
 
         # check if bulk create
-        datamanager_keys = data.getlist('data_manager_keys')
+        data_manager_keys = data.getlist('data_manager_keys')
 
         try:
-            self.check_datamanagers(datamanager_keys)
+            self.check_datamanagers(data_manager_keys)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -229,7 +229,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                                 'filepath': data_path,
                             })
 
-                        task, msg = self.dryrun_task(data_sample_files, datamanager_keys)
+                        task, msg = self.dryrun_task(data_sample_files, data_manager_keys)
                     except Exception as e:
                         return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
                                         status=status.HTTP_400_BAD_REQUEST)
@@ -239,7 +239,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
-                               'data_manager_keys': datamanager_keys}
+                               'data_manager_keys': data_manager_keys}
                 try:
                     data, st = self.commit(serializer, ledger_data, many)
                 except LedgerException as e:
@@ -254,12 +254,12 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     def bulk_update(self, request):
 
         data = request.data
-        datamanager_keys = data.getlist('dataManager_keys')
-        data_keys = data.getlist('data_keys')
+        data_manager_keys = data.getlist('data_manager_keys')
+        data_keys = data.getlist('data_sample_keys')
 
         args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
             'hashes': ','.join(data_keys),
-            'dataManagerKeys': ','.join(datamanager_keys),
+            'dataManagerKeys': ','.join(data_manager_keys),
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
