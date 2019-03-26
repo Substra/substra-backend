@@ -193,7 +193,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                 sys.stdout = out
 
                 # mock hard links to simulate we are on another partition
-                with patch('substrapp.signals.datasamples.pre_save.create_hard_links') as mcreate_hard_links:
+                with patch('substrapp.signals.datasample.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.side_effect = Exception('Fail')
 
                     call_command('bulkcreatedatasample', json.dumps(data))
@@ -249,7 +249,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
                 # mock hard links as we are on /tmp which is on another patition
                 with patch(
-                        'substrapp.signals.data.pre_save.create_hard_links') as mcreate_hard_links:
+                        'substrapp.signals.datasample.pre_save.create_hard_links') as mcreate_hard_links:
                     mcreate_hard_links.return_value = True
 
                     call_command('bulkcreatedatasample', json.dumps(data))

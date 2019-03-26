@@ -65,7 +65,7 @@ class CreateDataManagerTestCase(TestCase):
         with patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
                 patch(
-                    'substrapp.views.data.DataViewSet.check_datamanagers') as mcheck_datamanagers:
+                    'substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
             mdatamanagercreate.return_value = ({
                                                'pkhash': datamanager_pk,
@@ -152,7 +152,7 @@ class CreateDataManagerTestCase(TestCase):
         with patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
                 patch(
-                    'substrapp.views.data.DataViewSet.check_datamanagers') as mcheck_datamanagers:
+                    'substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
             mdatamanagercreate.return_value = ({
                                                'message': 'datamanager already exists',

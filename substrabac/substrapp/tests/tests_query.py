@@ -424,7 +424,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
@@ -611,7 +611,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
@@ -652,7 +652,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.data.DataSampleSerializer.get_validators') as mget_validators, \
+        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mget_validators.return_value = []
             self.data_file.seek(0)
@@ -753,7 +753,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch('substrapp.views.data.LedgerDataSampleSerializer', spec=True) as mLedgerDataSampleSerializer:
+            mock.patch('substrapp.views.datasample.LedgerDataSampleSerializer', spec=True) as mLedgerDataSampleSerializer:
             mocked_LedgerDataSampleSerializer = MagicMock()
             mocked_LedgerDataSampleSerializer.is_valid.return_value = False
             mocked_LedgerDataSampleSerializer.errors = 'Failed'
@@ -834,7 +834,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch(
-                'substrapp.serializers.ledger.data.util.invokeLedger') as minvokeLedger:
+                'substrapp.serializers.ledger.datasample.util.invokeLedger') as minvokeLedger:
             minvokeLedger.return_value = {'keys': [
                 d.pkhash]}, status.HTTP_200_OK
 
