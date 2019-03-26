@@ -5,12 +5,12 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.management.commands.bulkcreatedata import bulk_create_data
-from substrapp.serializers import DatasetSerializer, LedgerDatasetSerializer, \
-    ChallengeSerializer, LedgerChallengeSerializer
-from substrapp.serializers.ledger.dataset.util import updateLedgerDataset
+from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
+from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer, \
+     LedgerObjectiveSerializer, ObjectiveSerializer
+from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.utils import get_hash
-from substrapp.views.data import LedgerException
+from substrapp.views.datasample import LedgerException
 
 
 def path_leaf(path):
@@ -20,12 +20,11 @@ def path_leaf(path):
 
 class Command(BaseCommand):
     help = '''
-    create dataset
-    python ./manage.py createobjective '{"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data": {"paths": ["./data.zip", "./train/data"]}}'
+    create objective
+    python ./manage.py createobjective '{"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}'
     python ./manage.py createobjective objective.json
     # objective.json:
-    # permissions are optional
-    # {"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "dataset": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data": {"paths": ["./data.zip", "./train/data"]}}
+    # {"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}
     '''
 
     def add_arguments(self, parser):
@@ -48,27 +47,27 @@ class Command(BaseCommand):
                 raise CommandError(
                     'Invalid args. Please provide a valid json file.')
 
-        # get dataset and check
-        dataset = data_input.get('dataset', None)
-        if dataset is None:
-            return self.stderr.write('Please provide a dataset')
-        if 'name' not in dataset:
-            return self.stderr.write('Please provide a name to your dataset')
-        if 'type' not in dataset:
-            return self.stderr.write('Please provide a type to your dataset')
-        if 'data_opener' not in dataset:
+        # get datamanager and check
+        data_manager = data_input.get('data_manager', None)
+        if data_manager is None:
+            return self.stderr.write('Please provide a data_manager')
+        if 'name' not in data_manager:
+            return self.stderr.write('Please provide a name to your data_manager')
+        if 'type' not in data_manager:
+            return self.stderr.write('Please provide a type to your data_manager')
+        if 'data_opener' not in data_manager:
             return self.stderr.write(
-                'Please provide a data_opener to your dataset')
-        if 'description' not in dataset:
+                'Please provide a data_opener to your data_manager')
+        if 'description' not in data_manager:
             return self.stderr.write(
-                'Please provide a description to your dataset')
+                'Please provide a description to your data_manager')
 
         # get data and check
-        data = data_input.get('data', None)
-        if data is None:
-            return self.stderr.write('Please provide some data')
-        if 'paths' not in data:
-            return self.stderr.write('Please provide paths to your data')
+        data_samples = data_input.get('data_samples', None)
+        if data_samples is None:
+            return self.stderr.write('Please provide some data_samples')
+        if 'paths' not in data_samples:
+            return self.stderr.write('Please provide paths to your data_samples')
 
         # get objective and check
         objective = data_input.get('objective', None)
@@ -87,23 +86,23 @@ class Command(BaseCommand):
                 'Please provide a description to your objective')
 
         # by default data need to be test_only
-        data['test_only'] = True
+        data_samples['test_only'] = True
 
         # TODO add validation
-        with open(dataset['data_opener'], 'rb') as f:
-            filename = path_leaf(dataset['data_opener'])
+        with open(data_manager['data_opener'], 'rb') as f:
+            filename = path_leaf(data_manager['data_opener'])
             data_opener = ContentFile(f.read(), filename)
 
-        with open(dataset['description'], 'rb') as f:
-            filename = path_leaf(dataset['description'])
+        with open(data_manager['description'], 'rb') as f:
+            filename = path_leaf(data_manager['description'])
             description = ContentFile(f.read(), filename)
 
-        dataset_pkhash = get_hash(data_opener)
-        serializer = DatasetSerializer(data={
-            'pkhash': dataset_pkhash,
+        data_manager_pkhash = get_hash(data_opener)
+        serializer = DataManagerSerializer(data={
+            'pkhash': data_manager_pkhash,
             'data_opener': data_opener,
             'description': description,
-            'name': dataset['name'],
+            'name': data_manager['name'],
         })
 
         try:
@@ -118,12 +117,10 @@ class Command(BaseCommand):
                 self.stderr.write(str(e))
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerDatasetSerializer(
-                    data={'name': dataset['name'],
-                          'permissions': 'all',
-                          # forced, TODO changed when permissions are available
-                          'type': dataset['type'],
-                          'challenge_keys': dataset.get('challenge_keys', []),
+                ledger_serializer = LedgerDataManagerSerializer(
+                    data={'name': data_manager['name'],
+                          'permissions': 'all', # forced, TODO changed when permissions are available
+                          'type': data_manager['type'],
                           'instance': instance})
 
                 try:
@@ -144,16 +141,16 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Successfully added dataset with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
-        # Try to add data even if dataset creation failed
-        self.stdout.write('Will add data to this dataset now')
+        # Try to add data even if datamanager creation failed
+        self.stdout.write('Will add data samples to this datamanager now')
         # Add data in bulk now
-        data.update({'dataset_keys': [dataset_pkhash]})
+        data_samples.update({'data_manager_keys': [data_manager_pkhash]})
         res_data = []
         try:
-            res_data, st = bulk_create_data(data)
+            res_data, st = bulk_create_data_sample(data_samples)
         except LedgerException as e:
             if e.st == status.HTTP_408_REQUEST_TIMEOUT:
                 self.stdout.write(
@@ -163,14 +160,14 @@ class Command(BaseCommand):
         except Exception as e:
             return self.stderr.write(str(e))
         else:
-            msg = f'Successfully bulk added data with status code {st} and result: {json.dumps(res_data, indent=4)}'
+            msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res_data, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
 
-        # Try to add objective even if dataset or data creation failed (409 or others)
-        self.stdout.write('Will add objective to this dataset now')
+        # Try to add objective even if datamanager or data creation failed (409 or others)
+        self.stdout.write('Will add objective to this datamanager now')
         # Add data in bulk now
-        objective.update({'test_dataset_key': dataset_pkhash})
-        objective.update({'test_data_keys': res_data})
+        objective.update({'test_data_manager_key': data_manager_pkhash})
+        objective.update({'test_data_sample_keys': res_data})
 
         # TODO add validation
         with open(objective['metrics'], 'rb') as f:
@@ -182,7 +179,7 @@ class Command(BaseCommand):
             description = ContentFile(f.read(), filename)
 
         pkhash = get_hash(description)
-        serializer = ChallengeSerializer(data={
+        serializer = ObjectiveSerializer(data={
             'pkhash': pkhash,
             'metrics': metrics,
             'description': description,
@@ -200,15 +197,13 @@ class Command(BaseCommand):
                 self.stderr.write(str(e))
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerChallengeSerializer(
+                ledger_serializer = LedgerObjectiveSerializer(
                     data={'name': objective['name'],
                           'permissions': 'all',
                           # forced, TODO changed when permissions are available
                           'metrics_name': objective['metrics_name'],
-                          'test_data_keys': objective.get('test_data_keys',
-                                                          []),
-                          'test_dataset_key': objective.get('test_dataset_key',
-                                                            ''),
+                          'test_data_sample_keys': objective.get('test_data_sample_keys', []),
+                          'test_data_manager_key': objective.get('test_data_manager_key', ''),
                           'instance': instance})
 
                 try:
@@ -232,14 +227,14 @@ class Command(BaseCommand):
                         msg = f'Successfully added objective with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
-                        # Try to update dataset with this challenge key if success
+                        # Try to update datamanager with this objective key if success
                         # TODO refacto with updateLedger view
-                        self.stdout.write('Will update dataset with this objective now')
-                        args = '"%(datasetKey)s", "%(challengeKey)s"' % {
-                            'datasetKey': dataset_pkhash,
-                            'challengeKey': res['pkhash'],
+                        self.stdout.write('Will update datamanager with this objective now')
+                        args = '"%(datamanagerKey)s", "%(objectiveKey)s"' % {
+                            'datamanagerKey': data_manager_pkhash,
+                            'objectiveKey': res['pkhash'],
                         }
-                        res, st = updateLedgerDataset(args, sync=True)
+                        res, st = updateLedgerDataManager(args, sync=True)
 
-                        msg = f'Successfully updated dataset with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully updated datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
