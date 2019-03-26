@@ -1,15 +1,15 @@
 objective = [
     {
-        "key": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "key": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "name": "Skin Lesion Classification Objective",
         "description": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
-            "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description/"
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
+            "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/description/"
         },
         "metrics": {
             "name": "macro-average recall",
             "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-            "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+            "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
         "testDataSample": {
@@ -25,7 +25,7 @@ objective = [
 
 datamanager = [
     {
-        "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "description": {
             "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb09",
             "storageAddress": "http://testserver/data_manager/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description/"
@@ -41,7 +41,7 @@ datamanager = [
         "type": "Images"
     },
     {
-        "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
             "storageAddress": "http://testserver/data_manager/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description/"
@@ -71,7 +71,7 @@ algo = [
             "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "permissions": "all"
     },
     {
@@ -86,7 +86,7 @@ algo = [
             "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "permissions": "all"
     },
     {
@@ -101,7 +101,7 @@ algo = [
             "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description/"
         },
         "owner": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
-        "objectiveKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "permissions": "all"
     }
 ]
@@ -114,10 +114,10 @@ traintuple = [
             "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/file/"
         },
         "objective": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
@@ -146,10 +146,10 @@ traintuple = [
             "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
         },
         "objective": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
@@ -181,10 +181,10 @@ traintuple = [
             "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/file/"
         },
         "objective": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
@@ -211,10 +211,10 @@ traintuple = [
 testtuple = [
     {
         "objective": {
-            "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
                 "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "algo": {
@@ -254,10 +254,10 @@ model = [
             },
             "certified": True,
             "objective": {
-                "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+                "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
                     "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                    "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                    "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",
@@ -287,10 +287,10 @@ model = [
                 "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
             },
             "objective": {
-                "hash": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
+                "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
                     "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                    "storageAddress": "http://testserver/objective/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics/"
+                    "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "creator": "3ab9763cc352dca85802c4e7579d50512283719e375ef4e256a73c5139f792ff",

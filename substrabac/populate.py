@@ -170,9 +170,9 @@ if __name__ == '__main__':
     # create datamanager with org1
     data = {
         'name': 'ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': 'all',
     }
     datamanager_org1_key = create_asset(data, org_1, 'data_manager', dryrun=True)
@@ -197,9 +197,9 @@ if __name__ == '__main__':
     print(f'create datamanager, test data and objective on {org_0}')
     data = {
         'name': 'Simplified ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description.md'),
+        'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
         'permissions': 'all'
     }
     datamanager_org0_key = create_asset(data, org_0, 'data_manager')
@@ -249,9 +249,9 @@ if __name__ == '__main__':
         print('register objective')
         data = {
             'name': 'Skin Lesion Classification Objective',
-            'description': os.path.join(dir_path, './fixtures/chunantes/objectives/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/description.md'),
+            'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
-            'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f/metrics.py'),
+            'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/metrics.py'),
             'permissions': 'all',
             'test_data_keys': test_data_keys,
             'test_datamanager_key': datamanager_org0_key
@@ -275,8 +275,8 @@ if __name__ == '__main__':
             print('register algo')
             data = {
                 'name': 'Logistic regression',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description.md'),
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
                 'objective_key': objective_key,
                 'permissions': 'all',
             }
@@ -287,8 +287,8 @@ if __name__ == '__main__':
             print('register algo 2')
             data = {
                 'name': 'Neural Network',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description.md'),
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
                 'objective_key': objective_key,
                 'permissions': 'all',
             }
@@ -298,8 +298,8 @@ if __name__ == '__main__':
 
             data = {
                 'name': 'Random Forest',
-                'file': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/algo.tar.gz'),
-                'description': os.path.join(dir_path, './fixtures/chunantes/algos/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description.md'),
+                'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/algo.tar.gz'),
+                'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
                 'objective_key': objective_key,
                 'permissions': 'all',
             }
