@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from os import path
 
+from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -150,16 +151,17 @@ def put_data(subtuple, subtuple_directory):
         except Exception as e:
             raise e
         else:
-            data_hash = get_hash(data.file.path)
+            data_hash = dirhash(data.path, 'sha256')
             if data_hash != data_key:
                 raise Exception('Data Hash in Subtuple is not the same as in local db')
 
+            # create a symlink on the folder containing data
             try:
-                to_directory = path.join(subtuple_directory, 'data')
-                uncompress_path(data.file.path, to_directory)
+                subtuple_data_directory = path.join(subtuple_directory, 'data', data_key)
+                os.symlink(data.path, subtuple_data_directory)
             except Exception as e:
-                logging.error('Fail to uncompress data file')
-                raise e
+                logging.error(e, exc_info=True)
+                raise Exception('Failed to create sym link for subtuple data')
 
 
 def put_metric(subtuple_directory, challenge):
@@ -235,8 +237,9 @@ def prepareTask(tuple_type, model_type):
 
                 if 'fltask' in subtuple and subtuple['fltask']:
                     fltask = subtuple['fltask']
-                    flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
-                                                          result__icontains=f'"fltask": "{fltask}"')
+                    flresults = TaskResult.objects.filter(
+                        task_name='substrapp.tasks.computeTask',
+                        result__icontains=f'"fltask": "{fltask}"')
 
                     if flresults and flresults.count() > 0:
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -249,10 +252,12 @@ def prepareTask(tuple_type, model_type):
                     }, sync=True)
 
                     if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-                        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+                        logging.error(
+                            f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
                     else:
-                        computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
-                                                queue=worker_queue)
+                        computeTask.apply_async(
+                            (tuple_type, subtuple, model_type, fltask),
+                            queue=worker_queue)
 
                 except Exception as e:
                     error_code = compute_error_code(e)
@@ -372,6 +377,20 @@ def doTask(subtuple, tuple_type):
         # subtuple setup
         model_path = path.join(subtuple_directory, 'model')
         data_path = path.join(subtuple_directory, 'data')
+
+        ##########################################
+        # RESOLVE SYMLINKS
+        # TO DO:
+        #   - Verify that real paths are safe
+        #   - Try to see if it's clean to do that
+        ##########################################
+        symlinks_volume = {}
+        for subfolder in os.listdir(data_path):
+            real_path = os.path.realpath(os.path.join(data_path, subfolder))
+            symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+        ##########################################
+
         pred_path = path.join(subtuple_directory, 'pred')
         opener_file = path.join(subtuple_directory, 'opener/opener.py')
         metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
@@ -425,7 +444,7 @@ def doTask(subtuple, tuple_type):
                                       dockerfile_path=algo_path,
                                       image_name=algo_docker,
                                       container_name=algo_docker_name,
-                                      volumes={**volumes, **model_volume},
+                                      volumes={**volumes, **model_volume, **symlinks_volume},
                                       command=algo_command,
                                       cpu_set=cpu_set,
                                       gpu_set=gpu_set,
@@ -457,7 +476,7 @@ def doTask(subtuple, tuple_type):
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
-                       volumes=volumes,
+                       volumes={**volumes, **symlinks_volume},
                        command=None,
                        cpu_set=cpu_set,
                        gpu_set=gpu_set,

@@ -170,9 +170,9 @@ if __name__ == '__main__':
     # create dataset with org1
     data = {
         'name': 'ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description.md'),
+        'description': os.path.join(dir_path, './fixtures/chunantes/datasets/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description.md'),
         'permissions': 'all',
     }
     dataset_org1_key = create_asset(data, org_1, 'dataset', dryrun=True)
@@ -184,8 +184,8 @@ if __name__ == '__main__':
         print(f'register train data on dataset {org_1} (will take dataset creator as worker)')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/chunantes/data/62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a/0024700.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/data/42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9/0024899.zip')
+                os.path.join(dir_path, './fixtures/chunantes/data/train/0024306.zip'),
+                os.path.join(dir_path, './fixtures/chunantes/data/train/0024307.zip')
             ],
             'dataset_keys': [dataset_org1_key],
             'test_only': False,
@@ -197,9 +197,9 @@ if __name__ == '__main__':
     print(f'create dataset, test data and challenge on {org_0}')
     data = {
         'name': 'Simplified ISIC 2018',
-        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener.py'),
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener.py'),
         'type': 'Images',
-        'description': os.path.join(dir_path, './fixtures/owkin/datasets/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description.md'),
+        'description': os.path.join(dir_path, './fixtures/owkin/datasets/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description.md'),
         'permissions': 'all'
     }
     dataset_org0_key = create_asset(data, org_0, 'dataset')
@@ -210,8 +210,8 @@ if __name__ == '__main__':
         print('register test data')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010/0024701.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024900.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024901.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,
@@ -223,8 +223,8 @@ if __name__ == '__main__':
         print('register test data 2')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/93e4b1e040b08cfa8a68b13f9dddb95a6672e8a377378545b2b1254691cfc060/0024317.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/eed4c6ea09babe7ca6428377fff6e54102ef5cdb0cae593732ddbe3f224217cb/0024316.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024902.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024903.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,
@@ -236,8 +236,8 @@ if __name__ == '__main__':
         print('register test data 3')
         data = {
             'files': [
-                os.path.join(dir_path, './fixtures/owkin/data/2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e/0024315.zip'),
-                os.path.join(dir_path, './fixtures/owkin/data/533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1/0024318.zip')
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024904.zip'),
+                os.path.join(dir_path, './fixtures/owkin/data/test/0024905.zip')
             ],
             'dataset_keys': [dataset_org0_key],
             'test_only': True,

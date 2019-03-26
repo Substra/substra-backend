@@ -3,10 +3,15 @@ import hashlib
 import json
 import logging
 import os
+import tempfile
+from os.path import isfile, isdir
+
 import requests
 import subprocess
 import tarfile
 import zipfile
+
+from checksumdir import dirhash
 from rest_framework import status
 
 from substrabac.settings.common import PROJECT_ROOT
@@ -148,16 +153,33 @@ def invokeLedger(options, sync=False):
     return data, st
 
 
+def get_dir_hash(archive_content):
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            content = archive_content.read()
+            archive_content.seek(0)
+            uncompress_content(content, temp_dir)
+        except Exception as e:
+            logging.error(e)
+            raise e
+        else:
+            return dirhash(temp_dir, 'sha256')
+
+
 def get_hash(file, key=None):
     if file is None:
         return ''
     else:
         if isinstance(file, (str, bytes, os.PathLike)):
-            with open(file, 'rb') as f:
-                data = f.read()
+            if isfile(file):
+                with open(file, 'rb') as f:
+                    data = f.read()
+            elif isdir(file):
+                return dirhash(file, 'sha256')
         else:
             openedfile = file.open()
             data = openedfile.read()
+            openedfile.seek(0)
 
         return compute_hash(data, key)
 
@@ -241,4 +263,4 @@ def uncompress_content(archive_content, to_directory):
             tar.extractall(to_directory)
             tar.close()
         except tarfile.TarError:
-            raise Exception('Archive must be zip or tar.gz')
+            raise Exception('Archive must be zip or tar.*')

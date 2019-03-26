@@ -15,7 +15,7 @@ challenge = [
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1",
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010"
             ],
-            "datasetKey": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af"
+            "datasetKey": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"
         }
     }
 ]
@@ -25,11 +25,11 @@ dataset = [
         "challengeKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
         "description": {
             "hash": "7a90514f88c70002608a9868681dd1589ea598e78d00a8cd7783c3ea0f9ceb09",
-            "storageAddress": "http://testserver/dataset/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/description/"
+            "storageAddress": "http://testserver/dataset/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description/"
         },
-        "key": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+        "key": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
         "name": "ISIC 2018",
-        "openerStorageAddress": "http://testserver/dataset/6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181/opener/",
+        "openerStorageAddress": "http://testserver/dataset/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener/",
         "owner": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c",
         "permissions": "all",
         "type": "Images"
@@ -38,11 +38,11 @@ dataset = [
         "challengeKey": "d5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
-            "storageAddress": "http://testserver/dataset/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/description/"
+            "storageAddress": "http://testserver/dataset/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description/"
         },
-        "key": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
+        "key": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
         "name": "Simplified ISIC 2018",
-        "openerStorageAddress": "http://testserver/dataset/bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af/opener/",
+        "openerStorageAddress": "http://testserver/dataset/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener/",
         "owner": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684",
         "permissions": "all",
         "type": "Images"
@@ -108,7 +108,7 @@ traintuple = [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
-            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
             "perf": 0,
             "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
@@ -140,7 +140,7 @@ traintuple = [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
-            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
             "perf": 1,
             "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
@@ -175,7 +175,7 @@ traintuple = [
                 "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                 "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
             ],
-            "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
             "perf": 0,
             "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
         },
@@ -211,7 +211,7 @@ testtuple = [
                 "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
                 "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
             ],
-            "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
+            "openerHash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
             "perf": 1,
             "worker": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684"
         },
@@ -249,7 +249,7 @@ model = [
                     "4b5152871b181d10ee774c10458c064c70710f4ba35938f10c0b7aa51f7dc010",
                     "e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1"
                 ],
-                "openerHash": "bcfdad31dbe9163e9f254a2b9a485f2dd5d035ecce4a1331788039f2bccdf7af",
+                "openerHash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
                 "perf": 1,
                 "worker": "f41b169128f7a54dd7d7c9a65a92717807119b3433a26461cc47099fb156a684"
             },
@@ -282,7 +282,7 @@ model = [
                     "62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a",
                     "42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
                 ],
-                "openerHash": "6ed251c2d71d99b206bf11e085e69c315e1861630655b3ce6fd55ca9513ef181",
+                "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
                 "perf": 1,
                 "worker": "6313a15322df1d8e317d03c48a34ee717807a8c645887bbefb69977a41d7e38c"
             },

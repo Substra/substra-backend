@@ -17,7 +17,7 @@ from substrapp.models import Data, Dataset
 from substrapp.serializers import DataSerializer, LedgerDataSerializer
 from substrapp.serializers.ledger.data.util import updateLedgerData
 from substrapp.serializers.ledger.data.tasks import updateLedgerDataAsync
-from substrapp.utils import get_hash, uncompress_path
+from substrapp.utils import get_hash, uncompress_path, get_dir_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
@@ -39,13 +39,15 @@ def compute_dryrun(self, data_files, dataset_keys):
     from substrapp.models import Dataset
 
     try:
+        # Name of the dry-run subtuple (not important)
         pkhash = data_files[0]['pkhash']
+
         subtuple_directory = build_subtuple_folders({'key': pkhash})
 
         for data in data_files:
             try:
                 uncompress_path(data['filepath'],
-                                os.path.join(subtuple_directory, 'data'))
+                                os.path.join(subtuple_directory, 'data', data['pkhash']))
             except Exception as e:
                 raise e
 
@@ -184,10 +186,20 @@ class DataViewSet(mixins.CreateModelMixin,
         else:
             l = []
             for k, file in request.FILES.items():
-                l.append({
-                    'pkhash': get_hash(file),
-                    'file': file
-                })
+                try:
+                    pkhash = get_dir_hash(file)
+                except Exception as e:
+                    return Response({'message': str(e)},
+                                    status=status.HTTP_400_BAD_REQUEST)
+                else:
+                    # check pkhash does not belong to the list
+                    for x in l:
+                        if pkhash == x['pkhash']:
+                            return Response({'message': f'Your data archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same'}, status=status.HTTP_400_BAD_REQUEST)
+                    l.append({
+                        'pkhash': pkhash,
+                        'file': file
+                    })
 
             many = len(request.FILES) > 1
             data = l
@@ -224,6 +236,7 @@ class DataViewSet(mixins.CreateModelMixin,
                     else:
                         return Response({'id': task.id, 'message': msg},
                                         status=status.HTTP_202_ACCEPTED)
+
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
                                'dataset_keys': dataset_keys}

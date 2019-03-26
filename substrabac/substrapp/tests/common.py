@@ -2,7 +2,111 @@ from io import StringIO, BytesIO
 import os
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from .tests_misc import Stats
+
+class gpu():
+    """Fake gpu"""
+
+    def __init__(self):
+        self.load = 0.8
+        self.memoryUsed = 1024
+
+
+class Stats():
+    @classmethod
+    def get_stats(cls):
+        """ Docker stats"""
+        return {"read": "2018-11-05T13:44:07.1782391Z",
+                "preread": "2018-11-05T13:44:06.1746531Z",
+                "pids_stats": {
+                    "current": 8
+                },
+                "num_procs": 0,
+                "storage_stats": {},
+                "cpu_stats": {
+                    "cpu_usage": {
+                        "total_usage": 22900421851,
+                        "percpu_usage": [
+                            4944824970,
+                            4964929089,
+                            8163433379,
+                            4827234413,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "usage_in_kernelmode": 5520000000,
+                        "usage_in_usermode": 17350000000
+                    },
+                    "system_cpu_usage": 185691120000000,
+                    "online_cpus": 8,
+                    "throttling_data": {
+                        "periods": 0,
+                        "throttled_periods": 0,
+                        "throttled_time": 0
+                    }},
+                "precpu_stats": {
+                    "cpu_usage": {
+                        "total_usage": 18898246805,
+                        "percpu_usage": [
+                            3938977859,
+                            3966955357,
+                            7165817747,
+                            3826495842,
+                            0,
+                            0,
+                            0,
+                            0
+                        ],
+                        "usage_in_kernelmode": 5470000000,
+                        "usage_in_usermode": 13390000000
+                    },
+                    "system_cpu_usage": 185683050000000,
+                    "online_cpus": 8,
+                    "throttling_data": {
+                        "periods": 0,
+                        "throttled_periods": 0,
+                        "throttled_time": 0
+                    }
+                },
+                "memory_stats": {
+                    "usage": 1404354560,
+                    "max_usage": 1404616704,
+                    "limit": 8589934592
+                },
+                "name": "/job_c9868",
+                "id": "60fa7ab1c6dafdaa08ec3e2b95b16120757ac5cb7ebd512b3526b2d521623776",
+                "networks": {
+                    "eth0": {
+                        "rx_bytes": 758,
+                        "rx_packets": 9,
+                        "rx_errors": 0,
+                        "rx_dropped": 0,
+                        "tx_bytes": 0,
+                        "tx_packets": 0,
+                        "tx_errors": 0,
+                        "tx_dropped": 0
+                    }
+                }}
+
+
+class JobStats():
+
+    @classmethod
+    def get_new_stats(cls):
+        return {'memory': {'max': 0,
+                           'current': [0]},
+                'gpu_memory': {'max': 0,
+                               'current': [0]},
+                'cpu': {'max': 0,
+                        'current': [0]},
+                'gpu': {'max': 0,
+                        'current': []},
+                'io': {'max': 0,
+                       'current': []},
+                'netio': {'rx': 0,
+                          'tx': 0},
+                'time': 0}
 
 
 def get_temporary_text_file(contents, filename):
@@ -76,6 +180,19 @@ def get_sample_zip_data():
     file_filename = "file.zip"
     f = BytesIO(b'foo')
     with open(os.path.join(dir_path, '../../fixtures/owkin/data/e11aeec290749e4c50c91305e10463eced8dbf3808971ec0c6ea0e36cb7ab3e1/0024900.zip'), 'rb') as zip_file:
+        flength = f.write(zip_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/zip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
+def get_sample_zip_data_2():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.zip"
+    f = BytesIO(b'foo')
+    with open(os.path.join(dir_path, '../../fixtures/owkin/data/test/0024901.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -164,17 +281,6 @@ class FakeFilterDataset(object):
 
     def count(self):
         return self.count_value
-
-
-class FakeFile(object):
-    def __init__(self, filepath):
-        self.path = filepath
-        self.name = self.path
-
-
-class FakeData(object):
-    def __init__(self, filepath):
-        self.file = FakeFile(filepath)
 
 
 class FakePath(object):
