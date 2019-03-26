@@ -5,7 +5,8 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
+from substrapp.management.commands.bulkcreatedatasample import \
+    bulk_create_data_sample, InvalidException
 from substrapp.management.utils.localRequest import LocalRequest
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer, \
      LedgerObjectiveSerializer, ObjectiveSerializer
@@ -109,7 +110,7 @@ class Command(BaseCommand):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            self.stderr.write(str(e))
+            self.stderr.write(json.dumps({'message': str(e), 'pkhash': data_manager_pkhash}))
         else:
             # create on db
             try:
@@ -133,12 +134,9 @@ class Command(BaseCommand):
                     self.stderr.write(str(e))
                 else:
                     # create on ledger
-                    res, st = ledger_serializer.create(
-                        ledger_serializer.validated_data)
+                    res, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                    if st not in (
-                    status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED,
-                    status.HTTP_408_REQUEST_TIMEOUT):
+                    if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
                         self.stderr.write(json.dumps(res, indent=2))
                     else:
                         d = dict(serializer.data)
@@ -159,8 +157,11 @@ class Command(BaseCommand):
                     self.style.WARNING(json.dumps(e.data, indent=2)))
             else:
                 self.stderr.write(json.dumps(e.data, indent=2))
+        except InvalidException as e:
+            res_data = e.data
+            self.stderr.write(json.dumps({'message': e.msg, 'pkhash': res_data}, indent=2))
         except Exception as e:
-            return self.stderr.write(str(e))
+            self.stderr.write(str(e))
         else:
             msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res_data, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
@@ -190,7 +191,7 @@ class Command(BaseCommand):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            self.stderr.write(str(e))
+            self.stderr.write(json.dumps({'message': str(e), 'pkhash': pkhash}))
         else:
             # create on db
             try:
@@ -228,16 +229,4 @@ class Command(BaseCommand):
                         d = dict(serializer.data)
                         d.update(res)
                         msg = f'Successfully added objective with status code {st} and result: {json.dumps(res, indent=4)}'
-                        self.stdout.write(self.style.SUCCESS(msg))
-
-                        # Try to update datamanager with this objective key if success
-                        # TODO refacto with updateLedger view
-                        self.stdout.write('Will update datamanager with this objective now')
-                        args = '"%(datamanagerKey)s", "%(objectiveKey)s"' % {
-                            'datamanagerKey': data_manager_pkhash,
-                            'objectiveKey': res['pkhash'],
-                        }
-                        res, st = updateLedgerDataManager(args, sync=True)
-
-                        msg = f'Successfully updated datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
