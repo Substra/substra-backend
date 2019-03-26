@@ -19,11 +19,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''
     create datamanager
-    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdatamanager datamanager.json
-    # data.json:
-    # objective_keys and permissions are optional
-    # {"datamanager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": "all"}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # datamanager.json:
+    # objective_keys are optional
+    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -45,33 +45,33 @@ class Command(BaseCommand):
             if not isinstance(data_input, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        datamanager = data_input.get('data_manager', None)
-        if datamanager is None:
+        data_manager = data_input.get('data_manager', None)
+        if data_manager is None:
             return self.stderr.write('Please provide a data_manager')
-        if 'name' not in datamanager:
+        if 'name' not in data_manager:
             return self.stderr.write('Please provide a name to your data_manager')
-        if 'type' not in datamanager:
+        if 'type' not in data_manager:
             return self.stderr.write('Please provide a type to your data_manager')
-        if 'data_opener' not in datamanager:
+        if 'data_opener' not in data_manager:
             return self.stderr.write('Please provide a data_opener to your data_manager')
-        if 'description' not in datamanager:
+        if 'description' not in data_manager:
             return self.stderr.write('Please provide a description to your data_manager')
 
         data_samples = data_input.get('data_samples', None)
         if data_samples is None:
             return self.stderr.write('Please provide some data samples')
         if 'paths' not in data_samples:
-            return self.stderr.write('Please provide paths to your data sample')
+            return self.stderr.write('Please provide paths to your data samples')
         if 'test_only' not in data_samples:
             return self.stderr.write('Please provide a boolean test_only parameter to your data samples')
 
         # TODO add validation
-        with open(datamanager['data_opener'], 'rb') as f:
-            filename = path_leaf(datamanager['data_opener'])
+        with open(data_manager['data_opener'], 'rb') as f:
+            filename = path_leaf(data_manager['data_opener'])
             data_opener = ContentFile(f.read(), filename)
 
-        with open(datamanager['description'], 'rb') as f:
-            filename = path_leaf(datamanager['description'])
+        with open(data_manager['description'], 'rb') as f:
+            filename = path_leaf(data_manager['description'])
             description = ContentFile(f.read(), filename)
 
         pkhash = get_hash(data_opener)
@@ -79,7 +79,7 @@ class Command(BaseCommand):
             'pkhash': pkhash,
             'data_opener': data_opener,
             'description': description,
-            'name': datamanager['name'],
+            'name': data_manager['name'],
         })
 
         try:
@@ -95,10 +95,10 @@ class Command(BaseCommand):
             else:
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
-                    data={'name': datamanager['name'],
-                          'permissions': datamanager.get('permissions', ''),
-                          'type': datamanager['type'],
-                          'objective_keys': datamanager.get('objective_keys', []),
+                    data={'name': data_manager['name'],
+                          'permissions': 'all', # forced, TODO changed when permissions are available
+                          'type': data_manager['type'],
+                          'objective_keys': data_manager.get('objective_keys', []),
                           'instance': instance})
 
                 try:
@@ -117,7 +117,7 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Succesfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
         # Try to add data even if datamanager creation failed
@@ -135,5 +135,5 @@ class Command(BaseCommand):
         except Exception as e:
             return self.stderr.write(str(e))
         else:
-            msg = f'Succesfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
+            msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
