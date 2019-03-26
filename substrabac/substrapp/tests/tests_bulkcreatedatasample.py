@@ -432,7 +432,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "The datamanager_keys you provided is not an array"
+        wanted_output = "The data_manager_keys you provided is not an array"
 
         self.assertEqual(wanted_output, output)
 

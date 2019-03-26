@@ -21,11 +21,11 @@ from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
-                     mixins.RetrieveModelMixin,
-                     mixins.ListModelMixin,
-                     ComputeHashMixin,
-                     ManageFileMixin,
-                     GenericViewSet):
+                         mixins.RetrieveModelMixin,
+                         mixins.ListModelMixin,
+                         ComputeHashMixin,
+                         ManageFileMixin,
+                         GenericViewSet):
     queryset = DataManager.objects.all()
     serializer_class = DataManagerSerializer
     query_call = 'queryDataManager'

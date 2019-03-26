@@ -61,8 +61,8 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_datamanager_key': get_hash(self.data_data_opener),
-            'test_data_keys': [
+            'test_data_manager_key': get_hash(self.data_data_opener),
+            'test_data_sample_keys': [
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.objective_description,
@@ -102,8 +102,8 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_datamanager_key': get_hash(self.data_data_opener),
-            'test_data_keys': [
+            'test_data_manager_key': get_hash(self.data_data_opener),
+            'test_data_sample_keys': [
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': self.objective_description,
@@ -148,7 +148,7 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_data_keys': [
+            'test_data_sample_keys': [
                 'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                 'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': description,
@@ -173,7 +173,7 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_data_keys': [
+            'test_data_sample_keys': [
                 'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                 'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
             'description': description,

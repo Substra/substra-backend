@@ -70,11 +70,11 @@ def map_data_sample(paths):
 
 
 def bulk_create_data_sample(data):
-    datamanager_keys = data.get('data_manager_keys', [])
+    data_manager_keys = data.get('data_manager_keys', [])
     test_only = data.get('test_only', False)
     paths = data.get('paths', None)
 
-    DataSampleViewSet.check_datamanagers(datamanager_keys)
+    DataSampleViewSet.check_datamanagers(data_manager_keys)
 
     if not (paths and type(paths)) == list:
         raise Exception('Please specify a list of paths (can be archives or directories)')
@@ -86,7 +86,7 @@ def bulk_create_data_sample(data):
 
     # create on ledger + db
     ledger_data = {'test_only': test_only,
-                   'data_manager_keys': datamanager_keys}
+                   'data_manager_keys': data_manager_keys}
     return DataSampleViewSet.commit(serializer, ledger_data, True)
 
 
@@ -94,10 +94,10 @@ class Command(BaseCommand):
     help = '''
     Bulk create data sample
     paths is a list of archives or paths to directories
-    python ./manage.py bulkcreatedatasample '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "datamanager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}'
+    python ./manage.py bulkcreatedatasample '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "data_manager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}'
     python ./manage.py bulkcreatedatasample data.json
     # data.json:
-    # {"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "datamanager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}
+    # {"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "data_manager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}
     '''
 
     def add_arguments(self, parser):
@@ -119,9 +119,9 @@ class Command(BaseCommand):
             if not isinstance(data, dict):
                 raise CommandError('Invalid args. Please provide a valid json file.')
 
-        datamanager_keys = data.get('data_manager_keys', [])
-        if not type(datamanager_keys) == list:
-            return self.stderr.write('The datamanager_keys you provided is not an array')
+        data_manager_keys = data.get('data_manager_keys', [])
+        if not type(data_manager_keys) == list:
+            return self.stderr.write('The data_manager_keys you provided is not an array')
 
         try:
             res, st = bulk_create_data_sample(data)

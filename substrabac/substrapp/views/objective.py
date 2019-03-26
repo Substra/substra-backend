@@ -28,7 +28,7 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, metrics_path, test_datamanager_key, pkhash):
+def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
 
     try:
         subtuple_directory = build_subtuple_folders({'key': pkhash})
@@ -38,7 +38,7 @@ def compute_dryrun(self, metrics_path, test_datamanager_key, pkhash):
             shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
             os.remove(metrics_path)
         try:
-            datamanager = getObjectFromLedger(test_datamanager_key, 'queryDataManager')
+            datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
         except JsonException as e:
             raise e
         else:
@@ -124,7 +124,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         - Example with the python package requests (on localhost): \n
             requests.post('http://127.0.0.1:8000/objective/',
                           #auth=('username', 'password'),
-                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_keys': ['da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
+                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_sample_keys': ['da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
                           files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
                           headers={'Accept': 'application/json;version=0.0'}) \n
         ---
@@ -136,8 +136,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         description = data.get('description')
-        test_datamanager_key = data.get('test_datamanager_key')
-        test_data_keys = data.getlist('test_data_keys')
+        test_data_manager_key = data.get('test_data_manager_key')
+        test_data_sample_keys = data.getlist('test_data_sample_keys')
         metrics = data.get('metrics')
 
         pkhash = get_hash(description)
@@ -159,7 +159,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                     with open(metrics_path, 'wb') as metrics_file:
                         metrics_file.write(metrics.open().read())
 
-                    task = compute_dryrun.apply_async((metrics_path, test_datamanager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
+                    task = compute_dryrun.apply_async((metrics_path, test_data_manager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
                     url_http = 'http' if settings.DEBUG else 'https'
                     site_port = getattr(settings, "SITE_PORT", None)
                     current_site = f'{getattr(settings, "SITE_HOST")}'
@@ -188,8 +188,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                                 status=status.HTTP_400_BAD_REQUEST)
             else:
                 # init ledger serializer
-                ledger_serializer = LedgerObjectiveSerializer(data={'test_data_keys': test_data_keys,
-                                                                    'test_datamanager_key': test_datamanager_key,
+                ledger_serializer = LedgerObjectiveSerializer(data={'test_data_sample_keys': test_data_sample_keys,
+                                                                    'test_data_manager_key': test_data_manager_key,
                                                                     'name': data.get('name'),
                                                                     'permissions': data.get('permissions'),
                                                                     'metrics_name': data.get('metrics_name'),
