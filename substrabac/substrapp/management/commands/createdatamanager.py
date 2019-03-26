@@ -5,7 +5,8 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
+from substrapp.management.commands.bulkcreatedatasample import \
+    bulk_create_data_sample, InvalidException
 from substrapp.management.utils.localRequest import LocalRequest
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
@@ -86,7 +87,7 @@ class Command(BaseCommand):
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            self.stderr.write(str(e))
+            self.stderr.write(json.dumps({'message': str(e), 'pkhash': pkhash}))
         else:
             # create on db
             try:
@@ -134,8 +135,10 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.WARNING(json.dumps(e.data, indent=2)))
             else:
                 self.stderr.write(json.dumps(e.data, indent=2))
+        except InvalidException as e:
+            self.stderr.write(json.dumps({'message': e.msg, 'pkhash': e.data}, indent=2))
         except Exception as e:
-            return self.stderr.write(str(e))
+            self.stderr.write(str(e))
         else:
             msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
