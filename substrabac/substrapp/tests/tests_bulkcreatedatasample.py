@@ -19,7 +19,7 @@ from substrapp.tests.common import get_sample_zip_data_sample
 from substrapp.views import DataSampleViewSet
 from substrapp.views.datasample import LedgerException
 
-from substrapp.utils import compute_hash, get_hash
+from substrapp.utils import get_hash
 
 MEDIA_ROOT = "/tmp/unittests_misc/"
 
@@ -106,7 +106,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                     }
                 ]
                 data = json.dumps(out_data, indent=4)
-                wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -160,7 +160,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -213,7 +213,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -275,7 +275,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Succesfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
