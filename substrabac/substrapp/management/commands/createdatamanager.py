@@ -8,7 +8,7 @@ from rest_framework import status
 from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
-from substrapp.views.data import LedgerException
+from substrapp.views.datasample import LedgerException
 
 
 def path_leaf(path):
