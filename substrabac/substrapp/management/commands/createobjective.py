@@ -160,7 +160,7 @@ class Command(BaseCommand):
             else:
                 self.stderr.write(json.dumps(e.data, indent=2))
         except Exception as e:
-            return self.stderr.write(str(e))
+            self.stderr.write(str(e))
         else:
             msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res_data, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
