@@ -101,7 +101,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                        GenericViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
-    query_call = 'queryObjective'
+    ledger_query_call = 'queryObjective'
     # permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
@@ -259,7 +259,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk, 'queryObjective')
+                data = getObjectFromLedger(pk, self.ledger_query_call)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:

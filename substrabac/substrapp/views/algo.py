@@ -114,7 +114,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
-    query_call = 'queryAlgo'
+    ledger_query_call = 'queryAlgo'
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -240,7 +240,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             error = None
             instance = None
             try:
-                data = getObjectFromLedger(pk, 'queryAlgo')
+                data = getObjectFromLedger(pk, self.ledger_query_call)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:

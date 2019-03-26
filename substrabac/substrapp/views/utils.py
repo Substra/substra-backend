@@ -100,7 +100,7 @@ class ManageFileMixin(object):
         # TODO get cert for permissions check
 
         try:
-            getObjectFromLedger(pk, self.query_call)
+            getObjectFromLedger(pk, self.ledger_query_call)
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
         else:
