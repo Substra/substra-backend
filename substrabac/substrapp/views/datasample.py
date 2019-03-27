@@ -124,7 +124,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     def check_datamanagers(data_manager_keys):
         datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
 
-        if not len(data_manager_keys) or datamanager_count != len(data_manager_keys):
+        if datamanager_count != len(data_manager_keys):
             raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
@@ -177,6 +177,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # check if bulk create
         data_manager_keys = data.getlist('data_manager_keys')
+        if not data_manager_keys:
+            message = "missing or empty field 'data_manager_keys'"
+            return Response({'message': message},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             self.check_datamanagers(data_manager_keys)
