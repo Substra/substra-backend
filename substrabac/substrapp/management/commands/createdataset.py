@@ -20,9 +20,9 @@ def path_leaf(path):
 
 class Command(BaseCommand):
     help = '''
-    create datamanager
-    python ./manage.py createdatamanager '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
-    python ./manage.py createdatamanager datamanager.json
+    create dataset
+    python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdataset dataset.json
     # datamanager.json:
     # objective_keys are optional
     # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
