@@ -176,6 +176,8 @@ def get_hash(file, key=None):
                     data = f.read()
             elif isdir(file):
                 return dirhash(file, 'sha256')
+            else:
+                return ''
         else:
             openedfile = file.open()
             data = openedfile.read()

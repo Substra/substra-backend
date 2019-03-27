@@ -134,18 +134,12 @@ class CreateObjectiveTestCase(TestCase):
                     }
                 ]
 
-                datamanager_updated_out = {
-                    "pkhash": datamanager_pk
-                }
-
                 datamanager = json.dumps(datamanager_out, indent=4)
                 data = json.dumps(data_out, indent=4)
                 objective = json.dumps(objective_out, indent=4)
-                datamanager_updated = json.dumps(datamanager_updated_out, indent=4)
                 datamanager_wanted_output = f'Successfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
                 data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
                 objective_wanted_output = f'Successfully added objective with status code {status.HTTP_201_CREATED} and result: {objective}'
-                datamanager_updated_wanted_output = f'Successfully updated datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager_updated}'
-                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data samples to this datamanager now\n{data_wanted_output}\nWill add objective to this datamanager now\n{objective_wanted_output}\nWill update datamanager with this objective now\n{datamanager_updated_wanted_output}')
+                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data samples to this datamanager now\n{data_wanted_output}\nWill add objective to this datamanager now\n{objective_wanted_output}')
             finally:
                 sys.stdout = saved_stdout
