@@ -177,6 +177,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # check if bulk create
         data_manager_keys = data.getlist('data_manager_keys')
+        if not data_manager_keys:
+            message = "missing or empty field 'data_manager_keys'"
+            return Response({'message': message},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
             self.check_datamanagers(data_manager_keys)
