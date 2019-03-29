@@ -547,7 +547,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
                 mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
             mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-                                                 'testDataSample': {'dataManagerKey': 'test'}},
+                                                 'testDataset': {'dataManagerKey': 'test'}},
                                                 {'opener': {'storageAddress': 'test'}}]
             mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
 
