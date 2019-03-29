@@ -84,7 +84,7 @@ class CreateDataManagerTestCase(TestCase):
             try:
                 out = StringIO()
                 sys.stdout = out
-                call_command('createdatamanager', json.dumps(data))
+                call_command('createdataset', json.dumps(data))
 
                 output = out.getvalue().strip()
 
@@ -141,7 +141,6 @@ class CreateDataManagerTestCase(TestCase):
             }
         }
 
-        datamanager_pk = get_hash(datamanager_opener_path)
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
@@ -168,7 +167,7 @@ class CreateDataManagerTestCase(TestCase):
                 err = StringIO()
                 sys.stdout = out
                 sys.stderr = err
-                call_command('createdatamanager', json.dumps(data))
+                call_command('createdataset', json.dumps(data))
 
                 output = out.getvalue().strip()
                 err_output = err.getvalue().strip()
