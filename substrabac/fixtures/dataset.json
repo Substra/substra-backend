@@ -1,0 +1,14 @@
+{
+  "data_manager": {
+    "name": "foo",
+    "data_opener": "./fixtures/chunantes/datamanagers/datamanager0/opener.py",
+    "description": "./fixtures/chunantes/datamanagers/datamanager0/description.md",
+    "type": "foo"
+  },
+  "data_samples": {
+    "paths": [
+      "./fixtures/chunantes/datasamples/datasample0/0024899.zip"
+    ],
+    "test_only": false
+  }
+}
