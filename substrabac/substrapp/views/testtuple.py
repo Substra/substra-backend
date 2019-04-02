@@ -65,9 +65,10 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         if st == status.HTTP_408_REQUEST_TIMEOUT:
             # with open(settings.LEDGER['signcert'], 'rb') as f:
             #     sha256_creator_hash = hashlib.sha256(f.read())
-
             #creator = sha256_creator_hash.hexdigest()
-            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + data_manager_key).encode())
+
+            # TODO ','.join(test_data_sample_keys will be sorted
+            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + ','.join(test_data_sample_keys)).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)
