@@ -7,6 +7,7 @@ import time
 import substra_sdk_py as substra
 
 from termcolor import colored
+from rest_framework import status
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -19,7 +20,7 @@ def setup_config():
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
 
 
-def retry_on_timeout(f):
+def retry_untill_sucess(f):
     """Retry request to substrabac in case of Timeout."""
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -29,43 +30,10 @@ def retry_on_timeout(f):
         while True:
             try:
                 return f(*args, **kwargs)
-            except substra.exceptions.RequestTimeout:
+            except substra.exceptions.HTTPError:
                 time.sleep(delay)
                 delay *= backoff
-                print('Request timeout: retrying in {delay}s')
-            return f(*args, **kwargs)
-
-    return wrapper
-
-
-def pprint_command(f):
-    @functools.wraps(f)
-    def wrapper(*args, **kwargs):
-        color_fail = 'red'
-
-        dryrun = kwargs.get('dryrun', False)
-        is_dryrun = dryrun is True
-        color_success = 'magenta' if is_dryrun else 'green'
-
-        try:
-            res = f(*args, **kwargs)
-
-        except substra.exceptions.ConnectionError as e:
-            print(colored(e, color_fail))
-            return
-
-        except substra.exceptions.HTTPError as e:
-            err_response = e.response.json()
-            # XXX big hack to not fail when conflicting
-            if 'pkhash' not in err_response:
-                print(colored(e, color_fail))
-                print(colored(str(e.response.json()), color_fail))
-                return
-
-            res = err_response
-
-        print(colored(json.dumps(res, indent=2), color_success))
-        return res
+                print(f'Request error: retrying in {delay}s')
 
     return wrapper
 
@@ -74,15 +42,42 @@ def create_asset(data, profile, asset, dryrun=False):
     client.set_config(profile)
 
     if dryrun:
-        print('dry-run')
-        pprint_command(retry_on_timeout(client.add))(asset, data, dryrun=True)
+        print('dryrun')
+        try:
+            r = client.add(asset, data, dryrun=True)
+        except substra.exceptions.HTTPError as e:
+            print(colored(e, 'red'))
+        else:
+            print(colored(json.dumps(r, indent=2), 'magenta'))
 
     print('real')
-    r = pprint_command(retry_on_timeout(client.add))(asset, data)
-    if not r:
-        return
+    try:
+        r = client.add(asset, data)
+    except substra.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_400_BAD_REQUEST:
+            if 'pkhash' in e.response.json():
+                # FIXME server is not correctly responding for some conflict
+                #       cases, overwrite the status code for these cases
+                e.response.status_code = status.HTTP_409_CONFLICT
 
-    return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
+        if e.response.status_code not in (status.HTTP_408_REQUEST_TIMEOUT,
+                                          status.HTTP_409_CONFLICT):
+            print(colored(e, 'red'))
+            return None
+
+        # retry untill success in case of conflict or timeout
+        r = e.response.json()
+        keys_to_check = r['pkhash'] if isinstance(r['pkhash'], list) else \
+            [r['pkhash']]
+        for k in keys_to_check:
+            retry_untill_sucess(client.get)(asset, k)
+
+        print(colored(json.dumps(r, indent=2), 'blue'))
+        return r['pkhash']
+
+    else:
+        print(colored(json.dumps(r, indent=2), 'green'))
+        return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
 
 
 def create_data_sample(data, profile, dryrun=False):
@@ -100,10 +95,18 @@ def create_testuple(data, profile):
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
 
-    r = pprint_command(retry_on_timeout(client.update))('data_manager',
-                                                        data_manager_key, data)
-    if not r:
-        return
+    try:
+        r = client.update('data_manager', data_manager_key, data)
+    except substra.exceptions.HTTPError as e:
+        if e.response.status_code != status.HTTP_408_REQUEST_TIMEOUT:
+            print(colored(e, 'red'))
+            return None
+
+        # retry untill success in case of timeout
+        r = retry_untill_sucess(client.get)('data_manager', data_manager_key)
+        print(colored(json.dumps(r, indent=2), 'blue'))
+
+    print(colored(json.dumps(r, indent=2), 'green'))
     return r['pkhash']
 
 
