@@ -30,7 +30,9 @@ def retry_untill_sucess(f):
         while True:
             try:
                 return f(*args, **kwargs)
-            except substra.exceptions.HTTPError:
+            except substra.exceptions.HTTPError as e:
+                print(colored(e, 'red'))
+
                 time.sleep(delay)
                 delay *= backoff
                 print(f'Request error: retrying in {delay}s')
@@ -60,20 +62,25 @@ def create_asset(data, profile, asset, dryrun=False):
                 #       cases, overwrite the status code for these cases
                 e.response.status_code = status.HTTP_409_CONFLICT
 
-        if e.response.status_code not in (status.HTTP_408_REQUEST_TIMEOUT,
-                                          status.HTTP_409_CONFLICT):
+        if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
+            # retry untill success in case of timeout
+            r = e.response.json()
+            pkhash = r['pkhash']
+            keys_to_check = pkhash if isinstance(pkhash, list) else [pkhash]
+            for k in keys_to_check:
+                retry_untill_sucess(client.get)(asset, k)
+
+            print(colored(json.dumps(r, indent=2), 'blue'))
+            return r['pkhash']
+
+        elif e.response.status_code == status.HTTP_409_CONFLICT:
+            r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'cyan'))
+            return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
+
+        else:
             print(colored(e, 'red'))
             return None
-
-        # retry untill success in case of conflict or timeout
-        r = e.response.json()
-        keys_to_check = r['pkhash'] if isinstance(r['pkhash'], list) else \
-            [r['pkhash']]
-        for k in keys_to_check:
-            retry_untill_sucess(client.get)(asset, k)
-
-        print(colored(json.dumps(r, indent=2), 'blue'))
-        return r['pkhash']
 
     else:
         print(colored(json.dumps(r, indent=2), 'green'))
@@ -104,7 +111,7 @@ def update_datamanager(data_manager_key, data, profile):
 
         # retry untill success in case of timeout
         r = retry_untill_sucess(client.get)('data_manager', data_manager_key)
-        print(colored(json.dumps(r, indent=2), 'blue'))
+        print(colored(json.dumps(r, indent=2), 'cyan'))
 
     print(colored(json.dumps(r, indent=2), 'green'))
     return r['pkhash']
