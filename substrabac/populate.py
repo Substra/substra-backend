@@ -87,18 +87,6 @@ def create_asset(data, profile, asset, dryrun=False):
         return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
 
 
-def create_data_sample(data, profile, dryrun=False):
-    return create_asset(data, profile, 'data_sample', dryrun=dryrun)
-
-
-def create_traintuple(data, profile):
-    return create_asset(data, profile, 'traintuple')
-
-
-def create_testuple(data, profile):
-    return create_asset(data, profile, 'testtuple')
-
-
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
 
@@ -152,7 +140,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = create_data_sample(data, org_1, True)
+        train_data_sample_keys = create_asset(data, org_1, 'data_sample', True)
 
     ####################################################
 
@@ -178,7 +166,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys = create_data_sample(data, org_0, False)
+        test_data_sample_keys = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -191,7 +179,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys_2 = create_data_sample(data, org_0, False)
+        test_data_sample_keys_2 = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -204,7 +192,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys_3 = create_data_sample(data, org_0, False)
+        test_data_sample_keys_3 = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -279,7 +267,7 @@ if __name__ == '__main__':
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
-                traintuple_key = create_traintuple(data, org_1)
+                traintuple_key = create_asset(data, org_1, 'traintuple')
 
                 print('create second traintuple')
                 data = {
@@ -290,7 +278,7 @@ if __name__ == '__main__':
                     'train_data_sample_keys': train_data_sample_keys,
                 }
 
-                traintuple_key_2 = create_traintuple(data, org_1)
+                traintuple_key_2 = create_asset(data, org_1, 'traintuple')
 
                 print('create third traintuple')
                 data = {
@@ -301,7 +289,7 @@ if __name__ == '__main__':
                     'train_data_sample_keys': train_data_sample_keys,
                 }
 
-                traintuple_key_3 = create_traintuple(data, org_1)
+                traintuple_key_3 = create_asset(data, org_1, 'traintuple')
 
                 ####################################################
 
@@ -316,7 +304,7 @@ if __name__ == '__main__':
                         'traintuple_key': traintuple_key
                     }
 
-                    testtuple_key = create_testuple(data, org_1)
+                    testtuple_key = create_asset(data, org_1, 'testtuple')
                     # testtuple_key = None
 
                     if testtuple_key:
