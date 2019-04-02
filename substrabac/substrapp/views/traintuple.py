@@ -77,6 +77,8 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 sha256_creator_hash = hashlib.sha256(f.read())
 
             creator = sha256_creator_hash.hexdigest()
+
+            # TODO ','.join(train_data_sample_keys will be sorted
             sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_sample_keys) + creator).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
