@@ -20,7 +20,7 @@ def setup_config():
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
 
 
-def retry_untill_sucess(f):
+def retry_until_success(f):
     """Retry request to substrabac in case of Timeout."""
     @functools.wraps(f)
     def wrapper(*args, **kwargs):
@@ -63,15 +63,15 @@ def create_asset(data, profile, asset, dryrun=False):
                 e.response.status_code = status.HTTP_409_CONFLICT
 
         if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
-            # retry untill success in case of timeout
+            # retry until success in case of timeout
             r = e.response.json()
-            pkhash = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
-            keys_to_check = pkhash if isinstance(pkhash, list) else [pkhash]
+            results = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
+            keys_to_check = results if isinstance(results, list) else [results]
             for k in keys_to_check:
-                retry_untill_sucess(client.get)(asset, k)
+                retry_until_success(client.get)(asset, k)
 
             print(colored(json.dumps(r, indent=2), 'blue'))
-            return pkhash
+            return results
 
         elif e.response.status_code == status.HTTP_409_CONFLICT:
             r = e.response.json()
@@ -109,8 +109,8 @@ def update_datamanager(data_manager_key, data, profile):
             print(colored(e, 'red'))
             return None
 
-        # retry untill success in case of timeout
-        r = retry_untill_sucess(client.get)('data_manager', data_manager_key)
+        # retry until success in case of timeout
+        r = retry_until_success(client.get)('data_manager', data_manager_key)
         print(colored(json.dumps(r, indent=2), 'cyan'))
 
     print(colored(json.dumps(r, indent=2), 'green'))
