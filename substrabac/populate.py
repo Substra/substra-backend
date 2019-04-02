@@ -65,13 +65,13 @@ def create_asset(data, profile, asset, dryrun=False):
         if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
             # retry untill success in case of timeout
             r = e.response.json()
-            pkhash = r['pkhash']
+            pkhash = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
             keys_to_check = pkhash if isinstance(pkhash, list) else [pkhash]
             for k in keys_to_check:
                 retry_untill_sucess(client.get)(asset, k)
 
             print(colored(json.dumps(r, indent=2), 'blue'))
-            return r['pkhash']
+            return pkhash
 
         elif e.response.status_code == status.HTTP_409_CONFLICT:
             r = e.response.json()
