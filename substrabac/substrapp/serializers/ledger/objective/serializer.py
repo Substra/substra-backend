@@ -10,8 +10,7 @@ from .tasks import createLedgerObjectiveAsync
 
 class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                  min_length=1,
-                                                  max_length=None)
+                                                  min_length=1)
     name = serializers.CharField(min_length=1, max_length=100)
     test_data_manager_key = serializers.CharField(max_length=256)
     permissions = serializers.CharField(min_length=1, max_length=60)

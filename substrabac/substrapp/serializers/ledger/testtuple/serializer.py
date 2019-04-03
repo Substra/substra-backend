@@ -8,15 +8,19 @@ from .tasks import createLedgerTesttupleAsync
 
 class LedgerTestTupleSerializer(serializers.Serializer):
     traintuple_key = serializers.CharField(min_length=64, max_length=64)
+    data_manager_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
+    test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
+                                                  min_length=0,
+                                                  required=False)
 
     def create(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
-        datamanager_key = validated_data.get('data_manager_key', '')
+        data_manager_key = validated_data.get('data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataSampleKeys)s"' % {
             'traintupleKey': traintuple_key,
-            'dataManagerKey': datamanager_key,
+            'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(test_data_sample_keys),
         }
 

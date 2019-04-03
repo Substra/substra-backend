@@ -1,10 +1,8 @@
 import hashlib
 
-from django.conf import settings
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-
 
 from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.utils import queryLedger
@@ -43,7 +41,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         '''
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
-        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
+        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', ''))
 
         try:
             test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
