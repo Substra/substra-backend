@@ -12,12 +12,12 @@ class LedgerTestTupleSerializer(serializers.Serializer):
     def create(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
         datamanager_key = validated_data.get('data_manager_key', '')
-        test_data_sample_keys = validated_data.get('test_data_sample_keys', '')
+        test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataSampleKeys)s"' % {
             'traintupleKey': traintuple_key,
             'dataManagerKey': datamanager_key,
-            'dataSampleKeys': ','.join([x for x in test_data_sample_keys]),
+            'dataSampleKeys': ','.join(test_data_sample_keys),
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

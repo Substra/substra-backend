@@ -65,9 +65,11 @@ def create_asset(data, profile, asset, dryrun=False):
 
         if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
             # retry until success in case of timeout
+            print(colored('got a 408, will test to get if from ledger', 'grey'))
             r = e.response.json()
             print(colored(json.dumps(r, indent=2), 'blue'))
             results = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
+
             keys_to_check = results if isinstance(results, list) else [results]
             for k in keys_to_check:
                 retry_until_success(client.get)(asset, k)
@@ -81,8 +83,6 @@ def create_asset(data, profile, asset, dryrun=False):
 
         else:
             print(colored(e, 'red'))
-            return None
-
     else:
         print(colored(json.dumps(r, indent=2), 'green'))
         return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
