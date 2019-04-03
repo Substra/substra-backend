@@ -13,7 +13,7 @@ class LedgerTestTupleSerializer(serializers.Serializer):
                                                   min_length=0,
                                                   required=False)
 
-    def create(self, validated_data):
+    def get_args(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
         data_manager_key = validated_data.get('data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
@@ -23,6 +23,10 @@ class LedgerTestTupleSerializer(serializers.Serializer):
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(test_data_sample_keys),
         }
+        return args
+
+    def create(self, validated_data):
+        args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerTesttuple(args, sync=True)

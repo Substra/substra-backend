@@ -69,19 +69,16 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # init ledger serializer
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
+
+        # Get traintuple pkhash of the proposal
+        args = serializer.get_args(serializer.validated_data)
+        data, st = queryLedger({'args': '{"Args":["createTraintuple", ' + args + ']}'})
+        pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
 
         if st == status.HTTP_408_REQUEST_TIMEOUT:
-            # TODO query with invoke data for getting the proposal and getting the hash
-            with open(settings.LEDGER['signcert'], 'rb') as f:
-                sha256_creator_hash = hashlib.sha256(f.read())
-
-            creator = sha256_creator_hash.hexdigest()
-
-            # TODO ','.join(train_data_sample_keys will be sorted
-            sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_sample_keys) + creator).encode())
-            pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)
 
