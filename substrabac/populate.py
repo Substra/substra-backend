@@ -32,10 +32,10 @@ def retry_until_success(f):
                 return f(*args, **kwargs)
             except substra.exceptions.HTTPError as e:
                 print(colored(e, 'red'))
-
+                print(colored(e.response.content, 'red'))
+                print(f'Request error: retrying in {delay}s')
                 time.sleep(delay)
                 delay *= backoff
-                print(f'Request error: retrying in {delay}s')
 
     return wrapper
 
@@ -60,17 +60,18 @@ def create_asset(data, profile, asset, dryrun=False):
             if 'pkhash' in e.response.json():
                 # FIXME server is not correctly responding for some conflict
                 #       cases, overwrite the status code for these cases
+                print('Bad request should be a conflict')
                 e.response.status_code = status.HTTP_409_CONFLICT
 
         if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
             # retry until success in case of timeout
             r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'blue'))
             results = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
             keys_to_check = results if isinstance(results, list) else [results]
             for k in keys_to_check:
                 retry_until_success(client.get)(asset, k)
 
-            print(colored(json.dumps(r, indent=2), 'blue'))
             return results
 
         elif e.response.status_code == status.HTTP_409_CONFLICT:
