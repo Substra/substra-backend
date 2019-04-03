@@ -39,10 +39,10 @@ class ObjectiveQueryTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.objective_description, self.objective_description_filename, \
-        self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
-        self.data_opener_filename = get_sample_datamanager()
+            self.data_opener_filename = get_sample_datamanager()
 
     def tearDown(self):
         try:
@@ -50,46 +50,82 @@ class ObjectiveQueryTests(APITestCase):
         except FileNotFoundError:
             pass
 
-    def test_add_objective_sync_ok(self):
-        # add associated data opener
-        datamanager_name = 'slide opener'
-        DataManager.objects.create(name=datamanager_name,
+    def add_default_data_manager(self):
+        DataManager.objects.create(name='slide opener',
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
-        url = reverse('substrapp:objective-list')
+    def get_default_objective_data(self):
+        # XXX reload fixtures as it is an opened buffer and a post will
+        #     modify the objects
+        desc, _, metrics, _ = get_sample_objective()
 
+        expected_hash = get_hash(self.objective_description)
         data = {
             'name': 'tough objective',
             'test_data_manager_key': get_hash(self.data_data_opener),
             'test_data_sample_keys': [
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
                 '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
-            'description': self.objective_description,
-            'metrics': self.objective_metrics,
+            'description': desc,
+            'metrics': metrics,
             'permissions': 'all',
             'metrics_name': 'accuracy'
         }
+        return expected_hash, data
+
+    def test_add_objective_sync_ok(self):
+        self.add_default_data_manager()
+
+        pkhash, data = self.get_default_objective_data()
+
+        url = reverse('substrapp:objective-list')
 
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
-            mcreate.return_value = {
-                                       'pkhash': 'a554bb7adf2cad37ea8b140dc07359dd6e6cbffb067d568d3ba7b3a9de1ed2f3'}, status.HTTP_201_CREATED
+            mcreate.return_value = {'pkhash': pkhash}, status.HTTP_201_CREATED
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], get_hash(self.objective_description))
+            self.assertEqual(r['pkhash'], pkhash)
             self.assertEqual(r['validated'], False)
             self.assertEqual(r['description'],
                              f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_description_filename}')
             self.assertEqual(r['metrics'],
                              f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_metrics_filename}')
-
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_objective_conflict(self):
+        self.add_default_data_manager()
+
+        pkhash, data = self.get_default_objective_data()
+
+        url = reverse('substrapp:objective-list')
+
+        extra = {
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
+            mcreate.return_value = {'pkhash': pkhash}, status.HTTP_201_CREATED
+
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+
+            self.assertEqual(r['pkhash'], pkhash)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+            # XXX reload data as the previous call to post change it
+            _, data = self.get_default_objective_data()
+            response = self.client.post(url, data, format='multipart', **extra)
+            r = response.json()
+
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            self.assertEqual(r['pkhash'], pkhash)
 
     def test_add_objective_no_sync_ok(self):
         # add associated data opener

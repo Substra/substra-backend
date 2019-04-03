@@ -24,7 +24,7 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.utils import queryLedger, get_hash, get_computed_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 
 
 @app.task(bind=True, ignore_result=False)
@@ -140,10 +140,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            return Response({'message': e.args,
-                             'pkhash': pkhash},
-                            status=status.HTTP_400_BAD_REQUEST)
+        except ValidationError as e:
+            conflict_error = find_primary_key_error(e)
+            st = (status.HTTP_409_CONFLICT if conflict_error else
+                  status.HTTP_400_BAD_REQUEST)
+            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
 
         if dryrun:
             try:
