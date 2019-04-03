@@ -73,6 +73,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         data, st = serializer.create(serializer.validated_data)
 
         if st == status.HTTP_408_REQUEST_TIMEOUT:
+            # TODO query with invoke data for getting the proposal and getting the hash
             with open(settings.LEDGER['signcert'], 'rb') as f:
                 sha256_creator_hash = hashlib.sha256(f.read())
 
