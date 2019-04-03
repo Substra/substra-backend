@@ -5,6 +5,7 @@ import shutil
 import tempfile
 from os import path
 
+from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -21,36 +22,36 @@ from multiprocessing.managers import BaseManager
 import logging
 
 
-def get_challenge(subtuple):
-    from substrapp.models import Challenge
+def get_objective(subtuple):
+    from substrapp.models import Objective
 
-    # check if challenge exists and its metrics is not null
-    challengeHash = subtuple['challenge']['hash']
+    # check if objective exists and its metrics is not null
+    objectiveHash = subtuple['objective']['hash']
 
     try:
-        # get challenge from local db
-        challenge = Challenge.objects.get(pk=challengeHash)
+        # get objective from local db
+        objective = Objective.objects.get(pk=objectiveHash)
     except:
-        challenge = None
+        objective = None
     finally:
-        if challenge is None or not challenge.metrics:
-            # get challenge metrics
+        if objective is None or not objective.metrics:
+            # get objective metrics
             try:
-                content, computed_hash = get_remote_file(subtuple['challenge']['metrics'])
+                content, computed_hash = get_remote_file(subtuple['objective']['metrics'])
             except Exception as e:
                 raise e
 
-            challenge, created = Challenge.objects.update_or_create(pkhash=challengeHash, validated=True)
+            objective, created = Objective.objects.update_or_create(pkhash=objectiveHash, validated=True)
 
             try:
                 f = tempfile.TemporaryFile()
                 f.write(content)
-                challenge.metrics.save('metrics.py', f)  # update challenge in local db for later use
+                objective.metrics.save('metrics.py', f)  # update objective in local db for later use
             except Exception as e:
-                logging.error('Failed to save challenge metrics in local db for later use')
+                logging.error('Failed to save objective metrics in local db for later use')
                 raise e
 
-    return challenge
+    return objective
 
 
 def get_algo(subtuple):
@@ -125,47 +126,48 @@ def put_models(subtuple, subtuple_directory, models_content):
 
 
 def put_opener(subtuple, subtuple_directory):
-    from substrapp.models import Dataset
+    from substrapp.models import DataManager
 
     try:
-        dataset = Dataset.objects.get(pk=subtuple['data']['openerHash'])
+        datamanager = DataManager.objects.get(pk=subtuple['dataset']['openerHash'])
     except Exception as e:
         raise e
 
-    data_opener_hash = get_hash(dataset.data_opener.path)
-    if data_opener_hash != subtuple['data']['openerHash']:
+    data_opener_hash = get_hash(datamanager.data_opener.path)
+    if data_opener_hash != subtuple['dataset']['openerHash']:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
     opener_dst_path = path.join(subtuple_directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
-        os.link(dataset.data_opener.path, opener_dst_path)
+        os.link(datamanager.data_opener.path, opener_dst_path)
 
 
-def put_data(subtuple, subtuple_directory):
-    from substrapp.models import Data
+def put_data_sample(subtuple, subtuple_directory):
+    from substrapp.models import DataSample
 
-    for data_key in subtuple['data']['keys']:
+    for data_sample_key in subtuple['dataset']['keys']:
         try:
-            data = Data.objects.get(pk=data_key)
+            data_sample = DataSample.objects.get(pk=data_sample_key)
         except Exception as e:
             raise e
         else:
-            data_hash = get_hash(data.file.path)
-            if data_hash != data_key:
-                raise Exception('Data Hash in Subtuple is not the same as in local db')
+            data_sample_hash = dirhash(data_sample.path, 'sha256')
+            if data_sample_hash != data_sample_key:
+                raise Exception('Data Sample Hash in Subtuple is not the same as in local db')
 
+            # create a symlink on the folder containing data
             try:
-                to_directory = path.join(subtuple_directory, 'data')
-                uncompress_path(data.file.path, to_directory)
+                subtuple_data_directory = path.join(subtuple_directory, 'data', data_sample_key)
+                os.symlink(data_sample.path, subtuple_data_directory)
             except Exception as e:
-                logging.error('Fail to uncompress data file')
-                raise e
+                logging.error(e, exc_info=True)
+                raise Exception('Failed to create sym link for subtuple data sample')
 
 
-def put_metric(subtuple_directory, challenge):
+def put_metric(subtuple_directory, objective):
     metrics_dst_path = path.join(subtuple_directory, 'metrics/metrics.py')
     if not os.path.exists(metrics_dst_path):
-        os.link(challenge.metrics.path, metrics_dst_path)
+        os.link(objective.metrics.path, metrics_dst_path)
 
 
 def put_algo(subtuple_directory, algo_content):
@@ -235,8 +237,9 @@ def prepareTask(tuple_type, model_type):
 
                 if 'fltask' in subtuple and subtuple['fltask']:
                     fltask = subtuple['fltask']
-                    flresults = TaskResult.objects.filter(task_name='substrapp.tasks.computeTask',
-                                                          result__icontains=f'"fltask": "{fltask}"')
+                    flresults = TaskResult.objects.filter(
+                        task_name='substrapp.tasks.computeTask',
+                        result__icontains=f'"fltask": "{fltask}"')
 
                     if flresults and flresults.count() > 0:
                         worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -249,10 +252,12 @@ def prepareTask(tuple_type, model_type):
                     }, sync=True)
 
                     if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-                        logging.error(f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+                        logging.error(
+                            f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
                     else:
-                        computeTask.apply_async((tuple_type, subtuple, model_type, fltask),
-                                                queue=worker_queue)
+                        computeTask.apply_async(
+                            (tuple_type, subtuple, model_type, fltask),
+                            queue=worker_queue)
 
                 except Exception as e:
                     error_code = compute_error_code(e)
@@ -321,7 +326,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 def prepareMaterials(subtuple, model_type):
     # get subtuple components
     try:
-        challenge = get_challenge(subtuple)
+        objective = get_objective(subtuple)
         algo_content, algo_computed_hash = get_algo(subtuple)
         if model_type == 'model':
             model_content, model_computed_hash = get_model(subtuple)  # can return None, None
@@ -335,8 +340,8 @@ def prepareMaterials(subtuple, model_type):
     try:
         subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
         put_opener(subtuple, subtuple_directory)
-        put_data(subtuple, subtuple_directory)
-        put_metric(subtuple_directory, challenge)
+        put_data_sample(subtuple, subtuple_directory)
+        put_metric(subtuple_directory, objective)
         put_algo(subtuple_directory, algo_content)
         if model_type == 'model':  # testtuple
             put_model(subtuple, subtuple_directory, model_content)
@@ -372,6 +377,20 @@ def doTask(subtuple, tuple_type):
         # subtuple setup
         model_path = path.join(subtuple_directory, 'model')
         data_path = path.join(subtuple_directory, 'data')
+
+        ##########################################
+        # RESOLVE SYMLINKS
+        # TO DO:
+        #   - Verify that real paths are safe
+        #   - Try to see if it's clean to do that
+        ##########################################
+        symlinks_volume = {}
+        for subfolder in os.listdir(data_path):
+            real_path = os.path.realpath(os.path.join(data_path, subfolder))
+            symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+        ##########################################
+
         pred_path = path.join(subtuple_directory, 'pred')
         opener_file = path.join(subtuple_directory, 'opener/opener.py')
         metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
@@ -425,7 +444,7 @@ def doTask(subtuple, tuple_type):
                                       dockerfile_path=algo_path,
                                       image_name=algo_docker,
                                       container_name=algo_docker_name,
-                                      volumes={**volumes, **model_volume},
+                                      volumes={**volumes, **model_volume, **symlinks_volume},
                                       command=algo_command,
                                       cpu_set=cpu_set,
                                       gpu_set=gpu_set,
@@ -457,7 +476,7 @@ def doTask(subtuple, tuple_type):
                        dockerfile_path=metrics_path,
                        image_name=metrics_docker,
                        container_name=metrics_docker_name,
-                       volumes=volumes,
+                       volumes={**volumes, **symlinks_volume},
                        command=None,
                        cpu_set=cpu_set,
                        gpu_set=gpu_set,

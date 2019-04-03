@@ -1,6 +1,7 @@
 Django==2.1.2
 PyYAML==3.12
 celery == 4.2.1
+checksumdir == 1.1.4
 cryptography >= 1.9
 coverage == 4.5.1
 django-cors-headers==2.0.2
@@ -16,7 +17,7 @@ ipython==6.4.0
 ipython-genutils==0.2.0
 mock==2.0.0
 psycopg2-binary==2.7.4
-protobuf == 3.5.2post1
+protobuf == 3.6.0
 pycryptodomex >= 3.4.2
 pysha3 == 1.0b1
 raven == 6.9.0

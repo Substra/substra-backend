@@ -21,8 +21,8 @@ else:
         auth = [username, password]
     res = popen(['substra', 'config', 'https://substra.owkin.com:9000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
 
-    print('create dataset with owkin org')
-    # create dataset with owkin org
+    print('create data manager with owkin org')
+    # create data manager with owkin org
     data = json.dumps({
         "name": "ISIC 2018",
         "data_opener": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/dataset/isic2018/opener.py",
@@ -32,10 +32,10 @@ else:
         "challenge_keys": []
     })
 
-    res = popen(['substra', 'add', 'dataset', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    res = popen(['substra', 'add', 'datamanager', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     res_data = json.loads(res.decode('utf-8'))
-    dataset_key = res_data['pkhash']
+    datamanager_key = res_data['pkhash']
     print(json.dumps(res_data, indent=2))
 
     # Register Data on substrabac docker
@@ -44,21 +44,21 @@ else:
     print('You have to register data manually')
     input("When it is done, press Enter to continue...")
 
-    # register challenge
-    print('register challenge')
+    # register objective
+    print('register objective')
     data = json.dumps({
-        "name": "Skin Lesion Classification Challenge",
+        "name": "Skin Lesion Classification Objective",
         "description": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/description.md",
         "metrics_name": "macro-average recall",
         "metrics": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/metrics.py",
         "permissions": "all",
-        "test_data_keys": ["039eecf8279c570022f000984d91e175ca8efbf858f11b8bffc88d91ccb51096"]
+        "test_data_sample_keys": ["039eecf8279c570022f000984d91e175ca8efbf858f11b8bffc88d91ccb51096"]
     })
 
-    res = popen(['substra', 'add', 'challenge', '--profile=owkin', '--config=/tmp/.substrabac', data],
+    res = popen(['substra', 'add', 'objective', '--profile=owkin', '--config=/tmp/.substrabac', data],
                 stdout=PIPE).communicate()[0]
     res_data = json.loads(res.decode('utf-8'))
-    challenge_key = res_data['pkhash']
+    objective_key = res_data['pkhash']
     print(json.dumps(res_data, indent=2))
 
     # ############################
@@ -69,7 +69,7 @@ else:
         "name": "CNN Classifier GPU Updated",
         "file": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/algo/algo.tar.gz",
         "description": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/algo/description.md",
-        "challenge_key": challenge_key,
+        "objective_key": objective_key,
         "permissions": "all",
     })
 

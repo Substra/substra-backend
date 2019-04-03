@@ -164,7 +164,7 @@ Go in the `substrabac` folder and run the server locally:
 ## Test with unit and functionnal tests
 
 ```
-    coverage run manage.py test
+    DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
 ```
@@ -192,14 +192,14 @@ When you want to re-run the testing process:
 
 You can test your environment by creating a traintuple:
 ```shell
-curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}' -X POST http://localhost:8001/traintuple/?format=json
+curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"","train_data_sample_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}' -X POST http://localhost:8001/traintuple/?format=json
 ```
 It will try to create a traintuple with creator: chu-nantes (localhost:8001).
 The chu-nantes celery worker will try to add the traintuple to the ledger.
 You can check your traintuple has been corectly added by visiting `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/`
-As the trainData passed are also created by chu-nantes, the chu-nantes celery worker will try to update the traintuple status to `training` and save some data if needed.
+As the trainDataSample passed are also created by chu-nantes, the chu-nantes celery worker will try to update the traintuple status to `training` and save some data if needed.
 You can check `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/` to check if the status of your newly created traintuple is set to `training` after 10 sec (celery worker periodic task period).
-You can also check a new challenge has been added in `medias/chu-nantes` with a `metrics.py` file but not `description.md` file.
+You can also check a new objective has been added in `medias/chu-nantes` with a `metrics.py` file but not `description.md` file.
 
 ## Testing with the browsable API
 
@@ -248,8 +248,10 @@ Use these configurations for easier debugging and productivity:
 ![](assets/server_chunantes.png)
 ![](assets/celery owkin worker.png)
 ![](assets/celery owkin scheduler.png)
+![](assets/celery owkin dryrunner.png)
 ![](assets/celery chunantes worker.png)
 ![](assets/celery chunantes scheduler.png)
+![](assets/celery chunantes dryrunner.png)
 ![](assets/celery_beat.png)
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.

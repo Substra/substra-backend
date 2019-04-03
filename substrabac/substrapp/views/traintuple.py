@@ -8,7 +8,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.utils import queryLedger
-from substrapp.views.utils import getObjectFromLedger, JsonException
+from substrapp.views.utils import JsonException
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
@@ -28,14 +28,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # TODO update
         '''
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
-             -d "algo_key=da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
+             -d "algo_key=da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b&model_key=10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568&train_data_sample_keys[]=62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a&train_data[]=42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"
              -X POST http://localhost:8001/traintuple/
 
         or
 
         curl -H "Accept: text/html;version=0.0, */*;version=0.0"
              -H "Content-Type: application/json"
-             -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
+             -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"10060f1d9e450d98bb5892190860eee8dd48594f00e0e1c9374a27c5acdba568","train_data_sample_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}'
              -X POST http://localhost:8001/traintuple/?format=json
 
         :param request:
@@ -43,27 +43,27 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         '''
 
         algo_key = request.data.get('algo_key', request.POST.get('algo_key', None))
-        dataset_key = request.data.get('dataset_key', request.POST.get('dataset_key', None))
+        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
         rank = request.data.get('rank', request.POST.get('rank', None))
         FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', ''))
 
         try:
-            input_models_keys = request.data.getlist('input_models_keys', [])
+            in_models_keys = request.data.getlist('in_models_keys', [])
         except:
-            input_models_keys = request.data.get('input_models_keys', request.POST.getlist('input_models_keys', []))
+            in_models_keys = request.data.get('in_models_keys', request.POST.getlist('in_models_keys', []))
 
         try:
-            train_data_keys = request.data.getlist('train_data_keys', [])
+            train_data_sample_keys = request.data.getlist('train_data_sample_keys', [])
         except:
-            train_data_keys = request.data.get('train_data_keys', request.POST.getlist('train_data_keys', []))
+            train_data_sample_keys = request.data.get('train_data_sample_keys', request.POST.getlist('train_data_sample_keys', []))
 
         data = {
             'algo_key': algo_key,
-            'dataset_key': dataset_key,
+            'data_manager_key': data_manager_key,
             'rank': rank,
             'FLtask_key': FLtask_key,
-            'input_models_keys': input_models_keys,
-            'train_data_keys': train_data_keys,  # list of train data keys (which are stored in the train worker node)
+            'in_models_keys': in_models_keys,
+            'train_data_sample_keys': train_data_sample_keys,  # list of train data keys (which are stored in the train worker node)
         }
 
         # init ledger serializer
@@ -73,11 +73,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         data, st = serializer.create(serializer.validated_data)
 
         if st == status.HTTP_408_REQUEST_TIMEOUT:
+            # TODO query with invoke data for getting the proposal and getting the hash
             with open(settings.LEDGER['signcert'], 'rb') as f:
                 sha256_creator_hash = hashlib.sha256(f.read())
 
             creator = sha256_creator_hash.hexdigest()
-            sha256_pkhash = hashlib.sha256((algo_key + ','.join(input_models_keys) + ','.join(train_data_keys) + creator).encode())
+
+            # TODO ','.join(train_data_sample_keys will be sorted
+            sha256_pkhash = hashlib.sha256((algo_key + ','.join(in_models_keys) + ','.join(train_data_sample_keys) + creator).encode())
             pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)
@@ -98,13 +101,25 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
-
         data, st = queryLedger({
             'args': '{"Args":["queryTraintuples"]}'
         })
 
         return Response(data, status=st)
+
+    def getObjectFromLedger(self, pk):
+        # get instance from remote node
+        data, st = queryLedger({
+            'args': f'{{"Args":["queryTraintuple","{pk}"]}}'
+        })
+
+        if st != status.HTTP_200_OK:
+            raise JsonException(data)
+
+        if 'permissions' not in data or data['permissions'] == 'all':
+            return data
+        else:
+            raise Exception('Not Allowed')
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -120,7 +135,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk)
+                data = self.getObjectFromLedger(pk)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             else:
