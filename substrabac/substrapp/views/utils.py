@@ -108,3 +108,12 @@ class ManageFileMixin(object):
 
             data = getattr(object, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+
+
+def find_primary_key_error(validation_error, key_name='pkhash'):
+    for detail in validation_error.detail:
+        if key_name in detail:
+            for error in detail[key_name]:
+                if error.code == 'unique':
+                    return error
+    return None
