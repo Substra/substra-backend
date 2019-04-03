@@ -1,158 +1,109 @@
 import argparse
+import functools
 import os
 import json
 import time
-from substra_sdk_py import Client
+
+import substra_sdk_py as substra
 
 from termcolor import colored
-
 from rest_framework import status
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-client = Client()
+client = substra.Client()
 
 
-# Use substra-sdk-py
 def setup_config():
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-
     client.create_config('owkin', 'http://owkin.substrabac:8000', '0.0')
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
+
+
+def retry_until_success(f):
+    """Retry request to substrabac in case of Timeout."""
+    @functools.wraps(f)
+    def wrapper(*args, **kwargs):
+        delay = 1
+        backoff = 2
+
+        while True:
+            try:
+                return f(*args, **kwargs)
+            except substra.exceptions.HTTPError as e:
+                print(colored(e, 'red'))
+                print(colored(e.response.content, 'red'))
+                print(f'Request error: retrying in {delay}s')
+                time.sleep(delay)
+                delay *= backoff
+
+    return wrapper
 
 
 def create_asset(data, profile, asset, dryrun=False):
     client.set_config(profile)
 
     if dryrun:
-        print('dry-run')
-
-        res = client.add(asset, data, dryrun=True)
+        print('dryrun')
         try:
-            print(colored(json.dumps(res, indent=2), 'magenta'))
-        except:
-            print(colored(res.decode('utf-8'), 'red'))
+            r = client.add(asset, data, dryrun=True)
+        except substra.exceptions.HTTPError as e:
+            print(colored(e, 'red'))
+        else:
+            print(colored(json.dumps(r, indent=2), 'magenta'))
 
     print('real')
     try:
         r = client.add(asset, data)
-    except Exception as e:
-        print(colored(e, 'red'))
-        return None
-    else:
-        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
+    except substra.exceptions.HTTPError as e:
+        if e.response.status_code == status.HTTP_400_BAD_REQUEST:
+            if 'pkhash' in e.response.json():
+                # FIXME server is not correctly responding for some conflict
+                #       cases, overwrite the status code for these cases
+                print('Bad request should be a conflict')
+                e.response.status_code = status.HTTP_409_CONFLICT
 
-        if r['status_code'] == status.HTTP_400_BAD_REQUEST:
-            if 'pkhash' not in r['result']:
-                return None
-        elif r['status_code'] == status.HTTP_408_REQUEST_TIMEOUT:
-            print('timeout on ledger, will wait until available')
-            pkhash = r['result']['pkhash']
-            # wait until asset is correctly created
-            while not r['status_code'] == status.HTTP_200_OK:
-                r = client.get(asset, pkhash)
-                print(json.dumps(r, indent=2))
-                print('.', end='')
-                time.sleep(1)
-            print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
+        if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
+            # retry until success in case of timeout
+            print(colored('got a 408, will test to get if from ledger', 'grey'))
+            r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'blue'))
+            results = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
 
-        return r['result']['pkhash']
+            keys_to_check = results if isinstance(results, list) else [results]
+            for k in keys_to_check:
+                retry_until_success(client.get)(asset, k)
 
+            return results
 
-def create_data_sample(data, profile, dryrun=False):
-    client.set_config(profile)
+        elif e.response.status_code == status.HTTP_409_CONFLICT:
+            r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'cyan'))
+            return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
 
-    if dryrun:
-        print('dry-run')
-        res = client.add('data_sample', data, dryrun=True)
-        try:
-            print(colored(json.dumps(res, indent=2), 'magenta'))
-        except:
-            print(colored(res.decode('utf-8'), 'red'))
-
-    print('real')
-    try:
-        r = client.add('data_sample', data)
-    except Exception as e:
-        print(colored(e, 'red'))
-    else:
-        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
-
-        if r['status_code'] == status.HTTP_400_BAD_REQUEST:
-            if 'pkhash' not in r['result']:
-                return None
-
-        if r['status_code'] in (status.HTTP_408_REQUEST_TIMEOUT, status.HTTP_409_CONFLICT):
-            data_keys = r['result']['pkhash']
         else:
-            data_keys = [x['pkhash'] for x in r['result']]
-
-        if r['status_code'] == status.HTTP_408_REQUEST_TIMEOUT:
-            print('timeout on ledger, will wait until available')
-            for pkhash in data_keys:
-                # wait until datamanager is correctly created
-                while not r['status_code'] == status.HTTP_200_OK:
-                    r = client.get('data_sample', pkhash)
-                    print(colored(json.dumps(r, indent=2), 'blue'))
-                    print('.', end='')
-                    time.sleep(1)
-                print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
-
-        return data_keys
+            print(colored(e, 'red'))
+    else:
+        print(colored(json.dumps(r, indent=2), 'green'))
+        return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
 
 
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
 
-    r = client.update('data_manager', data_manager_key, data)
-
     try:
-        print(colored(json.dumps(r, indent=2), 'green'))
-    except Exception as e:
-        print(colored(e, 'red'))
-    else:
-        if r['status_code'] == status.HTTP_400_BAD_REQUEST:
+        r = client.update('data_manager', data_manager_key, data)
+    except substra.exceptions.HTTPError as e:
+        if e.response.status_code != status.HTTP_408_REQUEST_TIMEOUT:
+            print(colored(e, 'red'))
             return None
 
-        if r['status_code'] == status.HTTP_408_REQUEST_TIMEOUT:
-            print('timeout on ledger, will wait until available')
-            # wait until asset is correctly created
-            while not r['status_code'] == status.HTTP_200_OK:
-                r = client.get('data_manager', data_manager_key)
-                print(colored(json.dumps(r, indent=2), 'blue'))
-                print('.', end='')
-                time.sleep(1)
-            print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
+        # retry until success in case of timeout
+        r = retry_until_success(client.get)('data_manager', data_manager_key)
+        print(colored(json.dumps(r, indent=2), 'cyan'))
 
-        return r['result']['pkhash']
-
-
-def create_traintuple(data, profile):
-    client.set_config(profile)
-
-    try:
-        r = client.add('traintuple', data)
-    except Exception as e:
-        print(colored(e, 'red'))
-    else:
-        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
-
-        return r['result']['pkhash']
-
-
-def create_testuple(data, profile):
-    client.set_config(profile)
-    try:
-        r = client.add('testtuple', data)
-    except Exception as e:
-        print(colored(e, 'red'))
-    else:
-        print(colored(json.dumps({'result': r['result']}, indent=2), 'green'))
-
-        # if r['status_code'] == status.HTTP_400_BAD_REQUEST:
-        #     return r['pkhash']
-
-        return r['result']['pkhash']
+    print(colored(json.dumps(r, indent=2), 'green'))
+    return r['pkhash']
 
 
 if __name__ == '__main__':
@@ -190,7 +141,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = create_data_sample(data, org_1, True)
+        train_data_sample_keys = create_asset(data, org_1, 'data_sample', True)
 
     ####################################################
 
@@ -216,7 +167,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys = create_data_sample(data, org_0, False)
+        test_data_sample_keys = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -229,7 +180,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys_2 = create_data_sample(data, org_0, False)
+        test_data_sample_keys_2 = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -242,7 +193,7 @@ if __name__ == '__main__':
             'data_manager_keys': [data_manager_org0_key],
             'test_only': True,
         }
-        test_data_sample_keys_3 = create_data_sample(data, org_0, False)
+        test_data_sample_keys_3 = create_asset(data, org_0, 'data_sample', False)
 
         ####################################################
 
@@ -317,7 +268,7 @@ if __name__ == '__main__':
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
-                traintuple_key = create_traintuple(data, org_1)
+                traintuple_key = create_asset(data, org_1, 'traintuple')
 
                 print('create second traintuple')
                 data = {
@@ -328,7 +279,7 @@ if __name__ == '__main__':
                     'train_data_sample_keys': train_data_sample_keys,
                 }
 
-                traintuple_key_2 = create_traintuple(data, org_1)
+                traintuple_key_2 = create_asset(data, org_1, 'traintuple')
 
                 print('create third traintuple')
                 data = {
@@ -339,7 +290,7 @@ if __name__ == '__main__':
                     'train_data_sample_keys': train_data_sample_keys,
                 }
 
-                traintuple_key_3 = create_traintuple(data, org_1)
+                traintuple_key_3 = create_asset(data, org_1, 'traintuple')
 
                 ####################################################
 
@@ -354,7 +305,7 @@ if __name__ == '__main__':
                         'traintuple_key': traintuple_key
                     }
 
-                    testtuple_key = create_testuple(data, org_1)
+                    testtuple_key = create_asset(data, org_1, 'testtuple')
                     # testtuple_key = None
 
                     if testtuple_key:
@@ -362,7 +313,7 @@ if __name__ == '__main__':
                         res_t = client.get('testtuple', testtuple_key)
                         print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
-                        while res['result']['status'] not in ('done', 'failed') or res_t['result']['status'] not in ('done', 'failed'):
+                        while res['status'] not in ('done', 'failed') or res_t['status'] not in ('done', 'failed'):
                             print('-' * 100)
                             try:
                                 client.set_config(org_1)
@@ -371,18 +322,18 @@ if __name__ == '__main__':
 
                                 res_t = client.get('testtuple', testtuple_key)
                                 print(colored(json.dumps(res_t, indent=2), 'yellow'))
-                            except:
+                            except substra.exceptions.SDKException:
                                 print(colored('Error when getting subtuples', 'red'))
                             time.sleep(3)
 
                     else:
-                        while res['result']['status'] not in ('done', 'failed'):
+                        while res['status'] not in ('done', 'failed'):
                             print('-' * 100)
                             try:
                                 client.set_config(org_1)
                                 res = client.get('traintuple', traintuple_key)
                                 print(colored(json.dumps(res, indent=2), 'green'))
-                            except:
+                            except substra.exceptions.SDKException:
                                 print(colored('Error when getting subtuple', 'red'))
                             time.sleep(3)
 
