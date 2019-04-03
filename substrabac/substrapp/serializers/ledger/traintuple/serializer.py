@@ -17,7 +17,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
 
-    def create(self, validated_data):
+    def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
         data_manager_key = validated_data.get('data_manager_key')
         rank = validated_data.get('rank', '')
@@ -33,6 +33,11 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(train_data_sample_keys),
         }
+
+        return args
+
+    def create(self, validated_data):
+        args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerTraintuple(args, sync=True)
