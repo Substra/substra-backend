@@ -1076,8 +1076,11 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(LedgerTrainTupleSerializer,
-                               'create') as mcreate:
+        with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mcreate, \
+                mock.patch('substrapp.views.traintuple.queryLedger') as mqueryLedger:
+
+            raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
+            mqueryLedger.return_value = (raw_pkhash, status.HTTP_200_OK)
             mcreate.return_value = {'message': 'Traintuple added in local db waiting for validation. \
                                      The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
