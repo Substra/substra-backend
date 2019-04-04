@@ -12,7 +12,7 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content
-from substrapp.job_utils import ResourcesManager, compute_docker
+from substrapp.task_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
 import docker

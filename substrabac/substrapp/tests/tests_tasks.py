@@ -10,7 +10,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
-from substrapp.job_utils import ResourcesManager, monitoring_task, compute_docker
+from substrapp.task_utils import ResourcesManager, monitoring_task, compute_docker
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample, get_sample_model
