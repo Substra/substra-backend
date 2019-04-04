@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content, uncompress_path
+from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content
 from substrapp.job_utils import ResourcesManager, compute_docker
 from substrapp.exception_handler import compute_error_code
 
@@ -353,9 +353,6 @@ def prepareMaterials(subtuple, model_type):
 
 
 def doTask(subtuple, tuple_type):
-    # Must be defined before to return ressource in case of failure
-    cpu_set = None
-    gpu_set = None
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
 
     # Federated learning variables
@@ -446,8 +443,6 @@ def doTask(subtuple, tuple_type):
                                       container_name=algo_docker_name,
                                       volumes={**volumes, **model_volume, **symlinks_volume},
                                       command=algo_command,
-                                      cpu_set=cpu_set,
-                                      gpu_set=gpu_set,
                                       remove_image=remove_image)
         # save model in database
         if tuple_type == 'traintuple':
@@ -478,8 +473,6 @@ def doTask(subtuple, tuple_type):
                        container_name=metrics_docker_name,
                        volumes={**volumes, **symlinks_volume},
                        command=None,
-                       cpu_set=cpu_set,
-                       gpu_set=gpu_set,
                        remove_image=remove_image)
 
         # load performance
@@ -488,9 +481,6 @@ def doTask(subtuple, tuple_type):
         global_perf = perf['all']
 
     except Exception as e:
-        resources_manager.return_cpu_set(cpu_set)
-        resources_manager.return_gpu_set(gpu_set)
-
         # If an exception is thrown set flrank == -1 (we stop the fl training)
         if fltask is not None:
             flrank = -1
