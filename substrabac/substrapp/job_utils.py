@@ -5,8 +5,9 @@ import threading
 import time
 
 import logging
+from django.conf import settings
 
-DOCKER_LABEL = 'substrabac_job'
+DOCKER_LABEL = 'substra_task'
 
 
 def get_cpu_sets(cpu_count, concurrency):
@@ -281,7 +282,8 @@ class ExceptionThread(threading.Thread):
 
 
 class ResourcesManager():
-    __concurrency = int(os.environ.get('CELERYD_CONCURRENCY', 1))
+
+    __concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
     __memory_gb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
 
     __cpu_count = os.cpu_count()
