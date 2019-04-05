@@ -155,12 +155,12 @@ def monitoring_task(client, task_args):
                                  'tx': 0},
                        'time': 0}
 
-    while getattr(t, "alive", True):
+    while not t.stopthread.isSet():
         stats = None
         try:
             container = client.containers.get(task_name)
             stats = container.stats(decode=True, stream=False)
-        except:
+        except (docker.errors.NotFound, docker.errors.APIError):
             pass
 
         gpu_stats = None
@@ -171,10 +171,10 @@ def monitoring_task(client, task_args):
 
     task_statistics['time'] = time.time() - start
 
-    t._result = f"CPU:{task_statistics['cpu']['max']:.2f} % - Mem:{task_statistics['memory']['max']:.2f}"
-    t._result += f" GB - GPU:{task_statistics['gpu']['max']:.2f} % - GPU Mem:{task_statistics['gpu_memory']['max']:.2f} GB"
-
     t._stats = task_statistics
+
+    t._result = f"CPU:{t._stats['cpu']['max']:.2f} % - Mem:{t._stats['memory']['max']:.2f}"
+    t._result += f" GB - GPU:{t._stats['gpu']['max']:.2f} % - GPU Mem:{t._stats['gpu_memory']['max']:.2f} GB"
 
 
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, remove_image=True):
@@ -218,7 +218,6 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     monitoring.start()
 
     task.join()
-    monitoring.alive = False
     monitoring.join()
 
     # Remove container in all case (exception thrown or not)
@@ -239,6 +238,10 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
 
 class ExceptionThread(threading.Thread):
 
+    def __init__(self, *args, **kwargs):
+        super(ExceptionThread, self).__init__(*args, **kwargs)
+        self.stopthread = threading.Event()
+
     def run(self):
         try:
             if self._target:
@@ -250,6 +253,10 @@ class ExceptionThread(threading.Thread):
             # Avoid a refcycle if the thread is running a function with
             # an argument that has a member that points to the thread.
             del self._target, self._args, self._kwargs
+
+    def join(self, timeout=None):
+        self.stopthread.set()
+        super(ExceptionThread, self).join(timeout)
 
 
 class ResourcesManager():
@@ -282,42 +289,44 @@ class ResourcesManager():
         with cls.__lock:
             # We can just wait for cpu because cpu and gpu is allocated the same way
             while cpu_set is None:
-                try:
 
-                    # Get ressources used
-                    filters = {'status': 'running', 'label': [DOCKER_LABEL]}
+                # Get ressources used
+                filters = {'status': 'running',
+                           'label': [DOCKER_LABEL]}
+
+                try:
                     containers = [container.attrs
                                   for container in cls.__docker.containers.list(filters=filters)]
-
-                    # CPU
-                    used_cpu_sets = [container['HostConfig']['CpusetCpus']
-                                     for container in containers
-                                     if container['HostConfig']['CpusetCpus']]
-
-                    cpu_sets_available = filter_cpu_sets(used_cpu_sets, cls.__cpu_sets)
-
-                    if cpu_sets_available:
-                        cpu_set = cpu_sets_available.pop()
-
-                    # GPU
-                    if cls.__gpu_sets is not None:
-                        env_containers = [container['Config']['Env']
-                                          for container in containers]
-
-                        used_gpu_sets = []
-
-                        for env_list in env_containers:
-                            nvidia_env_var = [s.split('=')[1]
-                                              for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
-
-                            used_gpu_sets.extend(nvidia_env_var)
-
-                        gpu_sets_available = filter_gpu_sets(used_gpu_sets, cls.__gpu_sets)
-
-                        if gpu_sets_available:
-                            gpu_set = gpu_sets_available.pop()
-
-                except Exception as e:
+                except docker.errors.APIError as e:
                     logging.error(e, exc_info=True)
+                    continue
+
+                # CPU
+                used_cpu_sets = [container['HostConfig']['CpusetCpus']
+                                 for container in containers
+                                 if container['HostConfig']['CpusetCpus']]
+
+                cpu_sets_available = filter_cpu_sets(used_cpu_sets, cls.__cpu_sets)
+
+                if cpu_sets_available:
+                    cpu_set = cpu_sets_available.pop()
+
+                # GPU
+                if cls.__gpu_sets is not None:
+                    env_containers = [container['Config']['Env']
+                                      for container in containers]
+
+                    used_gpu_sets = []
+
+                    for env_list in env_containers:
+                        nvidia_env_var = [s.split('=')[1]
+                                          for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
+
+                        used_gpu_sets.extend(nvidia_env_var)
+
+                    gpu_sets_available = filter_gpu_sets(used_gpu_sets, cls.__gpu_sets)
+
+                    if gpu_sets_available:
+                        gpu_set = gpu_sets_available.pop()
 
         return cpu_set, gpu_set

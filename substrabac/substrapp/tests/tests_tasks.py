@@ -10,14 +10,13 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
-from substrapp.task_utils import ResourcesManager, monitoring_task, compute_docker
+from substrapp.task_utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample, get_sample_model
 from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
 
 import zipfile
-from threading import Thread
 import docker
 MEDIA_ROOT = "/tmp/unittests_tasks/"
 # MEDIA_ROOT = tempfile.mkdtemp()
@@ -99,10 +98,9 @@ class TasksTests(APITestCase):
 
     def test_monitoring_task(self):
 
-        monitoring = Thread(target=monitoring_task, args=(FakeClient(), {'name': 'job'}))
+        monitoring = ExceptionThread(target=monitoring_task, args=(FakeClient(), {'name': 'job'}))
         monitoring.start()
         time.sleep(0.1)
-        monitoring.alive = False
         monitoring.join()
 
         self.assertNotEqual(monitoring._stats['memory']['max'], 0)
