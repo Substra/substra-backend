@@ -8,7 +8,6 @@ pipeline {
   agent none
 
   stages {
-
     stage('Abort previous builds'){
       steps {
         milestone(Integer.parseInt(env.BUILD_ID)-1)
