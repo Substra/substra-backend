@@ -21,7 +21,7 @@ from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger, get_hash, get_computed_hash, \
     uncompress_path
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 
 
@@ -136,11 +136,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            return Response({
-                'message': e.args,
-                'pkhash': pkhash
-            },
-                status=status.HTTP_400_BAD_REQUEST)
+            conflict_error = find_primary_key_error(e)
+            st = (status.HTTP_409_CONFLICT if conflict_error else
+                  status.HTTP_400_BAD_REQUEST)
+            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
         else:
 
             if dryrun:

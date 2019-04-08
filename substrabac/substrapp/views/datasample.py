@@ -19,6 +19,7 @@ from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import get_hash, uncompress_path, get_dir_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
+from substrapp.views.utils import find_primary_key_error
 
 
 def path_leaf(path):
@@ -212,10 +213,12 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             try:
                 serializer.is_valid(raise_exception=True)
             except Exception as e:
-                return Response({
-                    'message': e.args,
-                    'pkhash': [x['pkhash'] for x in l]},
-                    status=status.HTTP_409_CONFLICT)
+                pkhashes = [x['pkhash'] for x in l]
+                conflict_error = find_primary_key_error(e)
+                st = (status.HTTP_409_CONFLICT if conflict_error else
+                      status.HTTP_400_BAD_REQUEST)
+                return Response({'message': e.args, 'pkhash': pkhashes}, status=st)
+
             else:
                 if dryrun:
                     try:
