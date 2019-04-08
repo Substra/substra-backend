@@ -111,9 +111,18 @@ class ManageFileMixin(object):
 
 
 def find_primary_key_error(validation_error, key_name='pkhash'):
-    for detail in validation_error.detail:
-        if key_name in detail:
-            for error in detail[key_name]:
-                if error.code == 'unique':
-                    return error
+    detail = validation_error.detail
+
+    if not isinstance(detail, dict):
+        # XXX according to the rest_framework documentation,
+        #     validation_error.detail could be either a dict, a list or a
+        #     nested data structure
+        return None
+
+    for key, errors in detail.items():
+        if key != key_name:
+            continue
+        for error in errors:
+            if error.code == 'unique':
+                return error
     return None
