@@ -80,7 +80,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     finally:
         try:
             container = client.containers.get(metrics_docker_name)
-            container.remove()
+            container.remove(force=True)
         except BaseException:
             pass
         remove_subtuple_materials(subtuple_directory)
