@@ -20,26 +20,9 @@ pipeline {
         stage('Test') {
           agent {
             kubernetes {
-              label 'python'
+              label 'substrabac-test'
               defaultContainer 'python'
-              yaml """
-                apiVersion: v1
-                kind: Pod
-                spec:
-                  containers:
-                  - name: python
-                    image: python:3.7
-                    command: [cat]
-                    tty: true
-                    volumeMounts:
-                      - { name: tmp, mountPath: /tmp }
-                      - { name: docker, mountPath: /var/run/docker.sock }
-                  volumes:
-                    - name: tmp
-                      hostPath: { path: /tmp, type: Directory }
-                    - name: docker
-                      hostPath: { path: /var/run/docker.sock, type: File }
-                """
+              yamlFile '.cicd/agent-python.yaml'
             }
           }
 
@@ -69,32 +52,11 @@ pipeline {
           }
         }
 
-        stage('Build') {
+        stage('Build substrabac') {
           agent {
             kubernetes {
-              label 'kaniko'
-              yaml """
-                apiVersion: v1
-                kind: Pod
-                metadata:
-                  name: substrafront-build
-                spec:
-                  containers:
-                  - name: kaniko
-                    image: gcr.io/kaniko-project/executor:debug
-                    command: [/busybox/cat]
-                    tty: true
-                    volumeMounts:
-                    - name: kaniko-secret
-                      mountPath: /secret
-                    env:
-                    - name: GOOGLE_APPLICATION_CREDENTIALS
-                      value: /secret/kaniko-secret.json
-                  volumes:
-                    - name: kaniko-secret
-                      secret:
-                        secretName: kaniko-secret
-                """
+              label 'substrabac-kaniko-substrabac'
+              yamlFile '.cicd/agent-kaniko.yaml'
             }
           }
 
@@ -102,6 +64,40 @@ pipeline {
             container(name:'kaniko', shell:'/busybox/sh') {
               sh '''#!/busybox/sh
                 /kaniko/executor -f `pwd`/docker/substrabac/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/substrabac:$GIT_COMMIT"
+              '''
+            }
+          }
+        }
+
+        stage('Build celerybeat') {
+          agent {
+            kubernetes {
+              label 'substrabac-kaniko-celerybeat'
+              yamlFile '.cicd/agent-kaniko.yaml'
+            }
+          }
+
+          steps {
+            container(name:'kaniko', shell:'/busybox/sh') {
+              sh '''#!/busybox/sh
+                /kaniko/executor -f `pwd`/docker/celerybeat/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/celerybeat:$GIT_COMMIT"
+              '''
+            }
+          }
+        }
+
+        stage('Build celeryworker') {
+          agent {
+            kubernetes {
+              label 'substrabac-kaniko-celeryworker'
+              yamlFile '.cicd/agent-kaniko.yaml'
+            }
+          }
+
+          steps {
+            container(name:'kaniko', shell:'/busybox/sh') {
+              sh '''#!/busybox/sh
+                /kaniko/executor -f `pwd`/docker/celeryworker/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/celeryworker:$GIT_COMMIT"
               '''
             }
           }
