@@ -10,8 +10,7 @@ from .tasks import createLedgerDataSampleAsync
 
 class LedgerDataSampleSerializer(serializers.Serializer):
     data_manager_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                              min_length=1,
-                                              max_length=None)
+                                              min_length=1)
     test_only = serializers.BooleanField()
 
     def create(self, validated_data):
