@@ -1,4 +1,5 @@
 import docker
+import logging
 import os
 import re
 import shutil
@@ -72,7 +73,6 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
 
     try:
         client.containers.run(**job_args)
-        assert os.path.exists(os.path.join(pred_path, 'perf.json'))
 
     except ContainerError as e:
         raise Exception(e.stderr)
@@ -81,9 +81,12 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         try:
             container = client.containers.get(metrics_docker_name)
             container.remove(force=True)
-        except BaseException:
-            pass
+        except BaseException as e:
+            logging.error(e, exc_info=True)
         remove_subtuple_materials(subtuple_directory)
+
+    if not os.path.exists(os.path.join(pred_path, 'perf.json')):
+        raise Exception('Perf file not found')
 
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
@@ -157,7 +160,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                                 status=status.HTTP_400_BAD_REQUEST)
 
             url_http = 'http' if settings.DEBUG else 'https'
-            current_site = f'{getattr(settings, "SITE_HOST")}'
+            current_site = getattr(settings, "SITE_HOST")
             site_port = getattr(settings, "SITE_PORT", None)
             if site_port:
                 current_site = f'{current_site}:{site_port}'
@@ -174,8 +177,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 pkhash = re.search(r'\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
             except BaseException:
                 pkhash = ''
-            return Response({'message': 'A objective with this description file already exists.', 'pkhash': pkhash},
-                            status=status.HTTP_409_CONFLICT)
+            finally:
+                return Response({'message': 'A objective with this description file already exists.', 'pkhash': pkhash},
+                                status=status.HTTP_409_CONFLICT)
         except Exception as exc:
             return Response({'message': exc.args},
                             status=status.HTTP_400_BAD_REQUEST)
