@@ -141,9 +141,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except ValidationError as e:
-            conflict_error = find_primary_key_error(e)
-            st = (status.HTTP_409_CONFLICT if conflict_error else
-                  status.HTTP_400_BAD_REQUEST)
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            else:
+                st = status.HTTP_400_BAD_REQUEST
             return Response({'message': e.args, 'pkhash': pkhash}, status=st)
 
         if dryrun:
