@@ -263,8 +263,6 @@ if __name__ == '__main__':
                 print('create traintuple')
                 data = {
                     'algo_key': algo_key,
-                    'FLtask_key': '',
-                    'in_models_keys': [],
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
@@ -273,8 +271,6 @@ if __name__ == '__main__':
                 print('create second traintuple')
                 data = {
                     'algo_key': algo_key_2,
-                    'FLtask_key': '',
-                    'in_models_keys': [],
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
@@ -284,8 +280,6 @@ if __name__ == '__main__':
                 print('create third traintuple')
                 data = {
                     'algo_key': algo_key_3,
-                    'FLtask_key': '',
-                    'in_models_keys': [],
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
