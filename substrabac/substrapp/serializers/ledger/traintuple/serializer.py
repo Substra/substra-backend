@@ -13,15 +13,15 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     FLtask_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
-                                           max_length=None)
+                                           required=False)
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                   min_length=1,
-                                                   max_length=None)
+                                                   min_length=1)
 
-    def create(self, validated_data):
+    def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
         data_manager_key = validated_data.get('data_manager_key')
         rank = validated_data.get('rank', '')
+        rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys')
@@ -34,6 +34,11 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(train_data_sample_keys),
         }
+
+        return args
+
+    def create(self, validated_data):
+        args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerTraintuple(args, sync=True)

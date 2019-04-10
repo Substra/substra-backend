@@ -86,7 +86,6 @@
     "DecimalException": "0085",
     "DecodeError": "0086",
     "DependencyWarning": "0087",
-    "DeprecatedBundleWarning": "0088",
     "DeprecatedMethod": "0089",
     "DeprecationWarning": "0090",
     "DeserializationError": "0091",

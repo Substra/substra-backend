@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from mock import patch
-from substrapp.job_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
+from substrapp.task_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
     update_statistics
 
 from substrapp.tests.common import JobStats, Stats, gpu

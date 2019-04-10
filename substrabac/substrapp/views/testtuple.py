@@ -1,10 +1,8 @@
 import hashlib
 
-from django.conf import settings
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-
 
 from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.utils import queryLedger
@@ -43,7 +41,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         '''
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
-        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
+        data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', ''))
 
         try:
             test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
@@ -59,20 +57,16 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         # init ledger serializer
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
+
+        # Get testtuple pkhash of the proposal
+        args = serializer.get_args(serializer.validated_data)
+        data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
+        pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
 
         if st == status.HTTP_408_REQUEST_TIMEOUT:
-            # TODO query with invoke data for getting the proposal and getting the hash
-            # with open(settings.LEDGER['signcert'], 'rb') as f:
-            #     sha256_creator_hash = hashlib.sha256(f.read())
-            #creator = sha256_creator_hash.hexdigest()
-
-            # TODO if test_data_sample_keys and data_manager_key are empty, default are one of the traintuple.objective
-
-            sorted_test_data_sample_keys = sorted(test_data_sample_keys)
-            sha256_pkhash = hashlib.sha256(('testtuple' + traintuple_key + ','.join(sorted_test_data_sample_keys)).encode())
-            pkhash = sha256_pkhash.hexdigest()
             return Response({'message': data['message'],
                              'pkhash': pkhash}, status=st)
 

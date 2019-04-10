@@ -10,14 +10,13 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
-from substrapp.job_utils import ResourcesManager, monitoring_job, compute_docker
+from substrapp.task_utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample, get_sample_model
 from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
 
 import zipfile
-from threading import Thread
 import docker
 MEDIA_ROOT = "/tmp/unittests_tasks/"
 # MEDIA_ROOT = tempfile.mkdtemp()
@@ -89,25 +88,19 @@ class TasksTests(APITestCase):
 
     def test_Ressource_Manager(self):
 
-        self.assertIn('M', self.ResourcesManager.memory_limit_mb())
+        self.assertTrue(isinstance(self.ResourcesManager.memory_limit_mb(), int))
 
-        cpu_set = self.ResourcesManager.acquire_cpu_set()
-        self.assertIn(cpu_set, self.ResourcesManager._ResourcesManager__used_cpu_sets)
-        self.ResourcesManager.return_cpu_set(cpu_set)
-        self.assertNotIn(cpu_set, self.ResourcesManager._ResourcesManager__used_cpu_sets)
+        cpu_set, gpu_set = self.ResourcesManager.get_cpu_gpu_sets()
+        self.assertIn(cpu_set, self.ResourcesManager._ResourcesManager__cpu_sets)
 
-        gpu_set = self.ResourcesManager.acquire_gpu_set()
-        if gpu_set != 'no_gpu':
-            self.assertIn(gpu_set, self.ResourcesManager._ResourcesManager__used_gpu_sets)
-        self.ResourcesManager.return_gpu_set(gpu_set)
-        self.assertNotIn(gpu_set, self.ResourcesManager._ResourcesManager__used_gpu_sets)
+        if gpu_set is not None:
+            self.assertIn(gpu_set, self.ResourcesManager._ResourcesManager__gpu_sets)
 
-    def test_monitoring_job(self):
+    def test_monitoring_task(self):
 
-        monitoring = Thread(target=monitoring_job, args=(FakeClient(), {'name': 'job'}))
+        monitoring = ExceptionThread(target=monitoring_task, args=(FakeClient(), {'name': 'job'}))
         monitoring.start()
         time.sleep(0.1)
-        monitoring.do_run = False
         monitoring.join()
 
         self.assertNotEqual(monitoring._stats['memory']['max'], 0)
@@ -390,7 +383,7 @@ class TasksTests(APITestCase):
 
         result = compute_docker(client, self.ResourcesManager,
                                 self.subtuple_path, 'test_compute_docker',
-                                'test_compute_docker_name', None, None, cpu_set, gpu_set)
+                                'test_compute_docker_name', None, None)
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
