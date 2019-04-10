@@ -21,7 +21,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         algo_key = validated_data.get('algo_key')
         data_manager_key = validated_data.get('data_manager_key')
         rank = validated_data.get('rank', '')
-        rank = '' if rank is None else rank,  # rank should be an integer or empty string, not None
+        rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys')
