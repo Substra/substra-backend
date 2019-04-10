@@ -13,7 +13,7 @@ Current is `0.0`.
  git clone https://github.com/SubstraFoundation/substrabac
  ```
 2. :warning: Do this step only if your environment development is on linux.
-On linux systems, all the docker isntances create files with `root` permissions.
+On linux systems, all the docker instances create files with `root` permissions.
 For working correctly in a dev environment, we need the files created by our dockers have the same rights as the one we use to launch our celery tasks.
 The celery tasks run dockers containers, these containers create files (models), the celery tasks manipulate these files.
 
