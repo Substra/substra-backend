@@ -56,13 +56,6 @@ def create_asset(data, profile, asset, dryrun=False):
     try:
         r = client.add(asset, data)
     except substra.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_400_BAD_REQUEST:
-            if 'pkhash' in e.response.json():
-                # FIXME server is not correctly responding for some conflict
-                #       cases, overwrite the status code for these cases
-                print('Bad request should be a conflict')
-                e.response.status_code = status.HTTP_409_CONFLICT
-
         if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
             # retry until success in case of timeout
             print(colored('got a 408, will test to get if from ledger', 'grey'))
