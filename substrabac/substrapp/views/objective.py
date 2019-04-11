@@ -283,7 +283,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         data = [] if data is None else data
         objectives = [data]
 
-        if st != 200:
+        if st != status.HTTP_200_OK:
             return Response(objectives, status=st)
 
         dataManagerData = None
