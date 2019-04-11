@@ -114,9 +114,9 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
     detail = validation_error.detail
 
     if not isinstance(detail, dict):
-        # XXX according to the rest_framework documentation,
-        #     validation_error.detail could be either a dict, a list or a
-        #     nested data structure
+        # according to the rest_framework documentation,
+        # validation_error.detail could be either a dict, a list or a nested
+        # data structure
         return None
 
     for key, errors in detail.items():
