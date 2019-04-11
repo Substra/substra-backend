@@ -73,6 +73,8 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
 
     try:
         client.containers.run(**job_args)
+        if not os.path.exists(os.path.join(pred_path, 'perf.json')):
+            raise Exception('Perf file not found')
 
     except ContainerError as e:
         raise Exception(e.stderr)
@@ -84,9 +86,6 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         except BaseException as e:
             logging.error(e, exc_info=True)
         remove_subtuple_materials(subtuple_directory)
-
-    if not os.path.exists(os.path.join(pred_path, 'perf.json')):
-        raise Exception('Perf file not found')
 
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
