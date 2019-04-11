@@ -85,10 +85,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            else:
-                st = status.HTTP_400_BAD_REQUEST
             return Response({'message': e.args, 'pkhash': pkhash}, status=st)
         else:
             if dryrun:
