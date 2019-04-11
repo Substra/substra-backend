@@ -7,7 +7,6 @@ import time
 import substra_sdk_py as substra
 
 from termcolor import colored
-from rest_framework import status
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -56,7 +55,7 @@ def create_asset(data, profile, asset, dryrun=False):
     try:
         r = client.add(asset, data)
     except substra.exceptions.HTTPError as e:
-        if e.response.status_code == status.HTTP_408_REQUEST_TIMEOUT:
+        if e.response.status_code == 408:
             # retry until success in case of timeout
             print(colored('got a 408, will test to get if from ledger', 'grey'))
             r = e.response.json()
@@ -69,7 +68,7 @@ def create_asset(data, profile, asset, dryrun=False):
 
             return results
 
-        elif e.response.status_code == status.HTTP_409_CONFLICT:
+        elif e.response.status_code == 409:
             r = e.response.json()
             print(colored(json.dumps(r, indent=2), 'cyan'))
             return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
@@ -87,7 +86,7 @@ def update_datamanager(data_manager_key, data, profile):
     try:
         r = client.update('data_manager', data_manager_key, data)
     except substra.exceptions.HTTPError as e:
-        if e.response.status_code != status.HTTP_408_REQUEST_TIMEOUT:
+        if e.response.status_code != 408:
             print(colored(e, 'red'))
             return None
 
