@@ -17,7 +17,7 @@ from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerial
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
+from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException, find_primary_key_error
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -85,9 +85,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            return Response({'message': e.args,
-                             'pkhash': pkhash},
-                            status=status.HTTP_400_BAD_REQUEST)
+            st = status.HTTP_400_BAD_REQUEST
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
         else:
             if dryrun:
                 return self.dryrun(data_opener)

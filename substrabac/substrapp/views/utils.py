@@ -108,3 +108,21 @@ class ManageFileMixin(object):
 
             data = getattr(object, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+
+
+def find_primary_key_error(validation_error, key_name='pkhash'):
+    detail = validation_error.detail
+
+    if not isinstance(detail, dict):
+        # according to the rest_framework documentation,
+        # validation_error.detail could be either a dict, a list or a nested
+        # data structure
+        return None
+
+    for key, errors in detail.items():
+        if key != key_name:
+            continue
+        for error in errors:
+            if error.code == 'unique':
+                return error
+    return None
