@@ -40,6 +40,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
         data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', ''))
+        tag = request.data.get('tag', request.POST.get('tag', ''))
 
         try:
             test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
@@ -50,6 +51,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             'traintuple_key': traintuple_key,
             'data_manager_key': data_manager_key,
             'test_data_sample_keys': test_data_sample_keys,  # list of test data keys
+            'tag': tag
         }
 
         # init ledger serializer

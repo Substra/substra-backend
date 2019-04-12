@@ -257,6 +257,7 @@ if __name__ == '__main__':
                     'algo_key': algo_key,
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
+                    'tag': 'substra'
                 }
                 traintuple_key = create_asset(data, org_1, 'traintuple')
 

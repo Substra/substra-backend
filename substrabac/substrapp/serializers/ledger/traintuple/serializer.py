@@ -16,6 +16,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
                                            required=False)
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
@@ -25,14 +26,16 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys')
+        tag = validated_data.get('tag', '')
 
-        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s"' % {
+        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
             'algoKey': algo_key,
             'rank': rank,
             'FLtask': FLtask_key,
             'inModels': ','.join(in_models_keys),
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(train_data_sample_keys),
+            'tag': tag
         }
 
         return args
