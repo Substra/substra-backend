@@ -12,16 +12,19 @@ class LedgerTestTupleSerializer(serializers.Serializer):
     test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                   min_length=0,
                                                   required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
     def get_args(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
         data_manager_key = validated_data.get('data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
+        tag = validated_data.get('tag', '')
 
-        args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataSampleKeys)s"' % {
+        args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(tag)s"' % {
             'traintupleKey': traintuple_key,
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(test_data_sample_keys),
+            'tag': tag
         }
         return args
 

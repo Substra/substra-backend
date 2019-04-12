@@ -42,6 +42,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', None))
         rank = request.data.get('rank', request.POST.get('rank', None))
         FLtask_key = request.data.get('FLtask_key', request.POST.get('FLtask_key', ''))
+        tag = request.data.get('tag', request.POST.get('tag', ''))
 
         try:
             in_models_keys = request.data.getlist('in_models_keys', [])
@@ -60,6 +61,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'FLtask_key': FLtask_key,
             'in_models_keys': in_models_keys,
             'train_data_sample_keys': train_data_sample_keys,  # list of train data keys (which are stored in the train worker node)
+            'tag': tag
         }
 
         # init ledger serializer
