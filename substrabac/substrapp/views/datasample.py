@@ -1,8 +1,11 @@
+from os.path import normpath
+
 import docker
 import os
 import ntpath
 import uuid
 
+from checksumdir import dirhash
 from django.conf import settings
 from docker.errors import ContainerError
 from rest_framework import status, mixins
@@ -190,6 +193,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             l = []
+            # files, should be archive
             for k, file in request.FILES.items():
                 try:
                     pkhash = get_dir_hash(file)
@@ -205,8 +209,18 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                         'pkhash': pkhash,
                         'file': file
                     })
+            # paths, should be directory
+            for path in request.POST.getlist('paths'):
+                if os.path.isdir(path):
+                    pkhash = dirhash(path, 'sha256')
+                    l.append({
+                        'pkhash': pkhash,
+                        'path': normpath(path)
+                    })
+                else:
+                    return Response({'message': f'One of your paths does not exist, is not a directory or is not an absolute path: {path}'}, status=status.HTTP_400_BAD_REQUEST)
 
-            many = len(request.FILES) > 1
+            many = len(l) > 1
             data = l
             if not many:
                 data = data[0]

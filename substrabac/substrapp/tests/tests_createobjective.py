@@ -75,7 +75,6 @@ class CreateObjectiveTestCase(TestCase):
 
         with patch.object(LedgerObjectiveSerializer, 'create') as mobjectivecreate, \
                 patch.object(LedgerDataManagerSerializer, 'create') as mdatamanagercreate, \
-                patch('substrapp.management.commands.createobjective.updateLedgerDataManager') as mdatamanagerupdate, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mdatacreate, \
                 patch('substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
@@ -92,11 +91,6 @@ class CreateObjectiveTestCase(TestCase):
             mdatacreate.return_value = ({
                                             'pkhash': [pkhash1, pkhash2],
                                             'validated': True
-                                        },
-                                        status.HTTP_201_CREATED)
-
-            mdatamanagerupdate.return_value = ({
-                                            'pkhash': datamanager_pk
                                         },
                                         status.HTTP_201_CREATED)
 
