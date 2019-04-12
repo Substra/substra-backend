@@ -209,8 +209,20 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                         'pkhash': pkhash,
                         'file': file
                     })
-            # paths, should be directory
-            for path in request.POST.getlist('paths'):
+
+            # path/paths case
+            path = request.POST.get('path', None)
+            paths = request.POST.getlist('paths', [])
+
+            if path and paths:
+                return Response({'message': 'Cannot use path and paths together.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            if path is not None:
+                paths = [path]
+
+            # paths, should be directories
+            for path in paths:
                 if os.path.isdir(path):
                     pkhash = dirhash(path, 'sha256')
                     l.append({
@@ -236,6 +248,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
             else:
                 if dryrun:
+                    # TODO handle
+                    # path = request.POST.get('path', None)
+                    # paths = request.POST.getlist('paths', [])
                     try:
                         data_sample_files = []
                         for k, file in request.FILES.items():

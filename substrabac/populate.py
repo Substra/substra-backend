@@ -125,10 +125,11 @@ if __name__ == '__main__':
     train_data_sample_keys = []
     if data_manager_org1_key:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
+
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024308')
             ],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
@@ -152,7 +153,7 @@ if __name__ == '__main__':
     if data_manager_org0_key and data_manager_org1_key:
         print('register test data')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
             ],
@@ -165,7 +166,7 @@ if __name__ == '__main__':
 
         print('register test data 2')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
             ],
@@ -178,7 +179,7 @@ if __name__ == '__main__':
 
         print('register test data 3')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
             ],
