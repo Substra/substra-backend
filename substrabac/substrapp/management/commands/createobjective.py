@@ -10,7 +10,6 @@ from substrapp.management.commands.bulkcreatedatasample import \
 from substrapp.management.utils.localRequest import LocalRequest
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer, \
      LedgerObjectiveSerializer, ObjectiveSerializer
-from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.utils import get_hash
 from substrapp.views.datasample import LedgerException
 
