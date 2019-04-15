@@ -9,6 +9,7 @@ from .tasks import createLedgerTraintupleAsync
 class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
+    objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False)
     FLtask_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
@@ -21,6 +22,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
         data_manager_key = validated_data.get('data_manager_key')
+        objective_key = validated_data.get('objective_key')
         rank = validated_data.get('rank', '')
         rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
         FLtask_key = validated_data.get('FLtask_key', '')
@@ -28,13 +30,14 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         in_models_keys = validated_data.get('in_models_keys')
         tag = validated_data.get('tag', '')
 
-        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
+        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(associatedObjective)s", "%(tag)s"' % {
             'algoKey': algo_key,
             'rank': rank,
             'FLtask': FLtask_key,
             'inModels': ','.join(in_models_keys),
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(train_data_sample_keys),
+            'associatedObjective': objective_key,
             'tag': tag
         }
 
