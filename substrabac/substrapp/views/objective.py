@@ -37,6 +37,9 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
         os.remove(metrics_path)
 
+    if not test_data_manager_key:
+        raise Exception('Cannot do a objective dryrun without a data manager key.')
+
     datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
     opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
     with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
@@ -131,8 +134,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         description = data.get('description')
-        test_data_manager_key = data.get('test_data_manager_key')
-        test_data_sample_keys = data.getlist('test_data_sample_keys')
+        test_data_manager_key = request.data.get('test_data_manager_key', request.POST.get('test_data_manager_key', ''))
+
+        try:
+            test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
+        except:
+            test_data_sample_keys = request.data.get('test_data_sample_keys', request.POST.getlist('test_data_sample_keys', []))
+
         metrics = data.get('metrics')
 
         pkhash = get_hash(description)
