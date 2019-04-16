@@ -1,3 +1,4 @@
+import logging
 from os.path import normpath
 
 import docker
@@ -25,6 +26,8 @@ from substrapp.utils import get_hash, uncompress_path, get_dir_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error
 
+logger = logging.getLogger('django.request')
+
 
 def path_leaf(path):
     head, tail = ntpath.split(path)
@@ -38,36 +41,48 @@ class LedgerException(Exception):
         super(LedgerException).__init__()
 
 
+class InvalidException(Exception):
+    def __init__(self, data, pkhash, st):
+        self.data = data
+        self.pkhash = pkhash
+        self.st = st
+        super(LedgerException).__init__()
+
+
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data_sample_files, data_manager_keys):
+def compute_dryrun(self, data, data_manager_keys):
     from shutil import copy
     from substrapp.models import DataManager
 
+    client = docker.from_env()
+
+    # Name of the dry-run subtuple (not important)
+    pkhash = data[0]['pkhash']
+    subtuple_directory = build_subtuple_folders({'key': pkhash})
+
     try:
-        # Name of the dry-run subtuple (not important)
-        pkhash = data_sample_files[0]['pkhash']
 
-        subtuple_directory = build_subtuple_folders({'key': pkhash})
-
-        for data_sample in data_sample_files:
-            try:
-                uncompress_path(data_sample['filepath'],
-                                os.path.join(subtuple_directory, 'data', data_sample['pkhash']))
-            except Exception as e:
-                raise e
+        for data_sample in data:
+            # uncompress only for file
+            if 'file' in data_sample:
+                try:
+                    uncompress_path(data_sample['file'], os.path.join(subtuple_directory, 'data', data_sample['pkhash']))
+                except Exception as e:
+                    raise e
 
         for datamanager_key in data_manager_keys:
             datamanager = DataManager.objects.get(pk=datamanager_key)
             copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
 
             # Launch verification
-            client = docker.from_env()
             opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
             data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data_sample')   # fake_data comes with substrabac
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{pkhash}_{uuid.uuid4().hex}'
             data_path = os.path.join(subtuple_directory, 'data')
+
+            # TODO bind paths
             volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
@@ -98,11 +113,11 @@ def compute_dryrun(self, data_sample_files, data_manager_keys):
             container = client.containers.get(data_docker_name)
             container.remove()
         except:
-            pass
+            logger.error('Could not remove containers')
         remove_subtuple_materials(subtuple_directory)
-        for data_sample in data_sample_files:
-            if os.path.exists(data_sample['filepath']):
-                os.remove(data_sample['filepath'])
+        for data_sample in data:
+            if 'file' in data_sample and os.path.exists(data_sample['file']):
+                os.remove(data_sample['file'])
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
@@ -114,8 +129,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
 
-    def dryrun_task(self, data_sample_files, data_manager_keys):
-        task = compute_dryrun.apply_async((data_sample_files, data_manager_keys),
+    def dryrun_task(self, data, data_manager_keys):
+        task = compute_dryrun.apply_async((data, data_manager_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         url_http = 'http' if settings.DEBUG else 'https'
         site_port = getattr(settings, "SITE_PORT", None)
@@ -134,157 +149,167 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     @staticmethod
     def commit(serializer, ledger_data, many):
+        instances = serializer.save()  # can raise
+        # init ledger serializer
+        if not many:
+            instances = [instances]
+        ledger_data.update({'instances': instances})
+        ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
+
+        if not ledger_serializer.is_valid():
+            # delete instance
+            for instance in instances:
+                instance.delete()
+            raise ValidationError(ledger_serializer.errors)
+
+        # create on ledger
+        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+
+        if st == status.HTTP_408_REQUEST_TIMEOUT:
+            if many:
+                data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
+            raise LedgerException(data, st)
+
+        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+            raise LedgerException(data, st)
+
+        # update validated to True in response
+        if 'pkhash' in data and data['validated']:
+            if many:
+                for d in serializer.data:
+                    if d['pkhash'] in data['pkhash']:
+                        d.update({'validated': data['validated']})
+            else:
+                d = dict(serializer.data)
+                d.update({'validated': data['validated']})
+
+        return serializer.data, st
+
+    def compute_data(self, request):
+        data = []
+        # files, should be archive
+        for k, file in request.FILES.items():
+            pkhash = get_dir_hash(file)  # can raise
+            # check pkhash does not belong to the list
+            for x in data:
+                if pkhash == x['pkhash']:
+                    raise Exception(f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same')
+            data.append({
+                'pkhash': pkhash,
+                'file': file
+            })
+
+        # path/paths case
+        path = request.POST.get('path', None)
+        paths = request.POST.getlist('paths', [])
+
+        if path and paths:
+            raise Exception('Cannot use path and paths together.')
+
+        if path is not None:
+            paths = [path]
+
+        # paths, should be directories
+        for path in paths:
+            if os.path.isdir(path):
+                pkhash = dirhash(path, 'sha256')
+                data.append({
+                    'pkhash': pkhash,
+                    'path': normpath(path)
+                })
+            else:
+                raise Exception(f'One of your paths does not exist, is not a directory or is not an absolute path: {path}')
+
+        return data
+
+    def handle_dryrun(self, request, data_manager_keys):
+        data = []
+        for k, file in request.FILES.items():
+            pkhash = get_hash(file)
+
+            # write on DRYRUN_ROOT
+            file_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'),
+                                     f'data_{pkhash}.zip')
+            with open(file_path, 'wb') as data_file:
+                data_file.write(file.open().read())
+
+            data.append({
+                'pkhash': pkhash,
+                'file': file_path,
+            })
+
+        # path/paths case
+        path = request.POST.get('path', None)
+        paths = request.POST.getlist('paths', [])
+
+        if path is not None:
+            paths = [path]
+
+        # paths, should be directories
+        for path in paths:
+            if os.path.isdir(path):
+                pkhash = dirhash(path, 'sha256')
+                data.append({
+                    'pkhash': pkhash,
+                    'path': normpath(path)
+                })
+
         try:
-            instances = serializer.save()
-        except Exception as exc:
-            raise exc
+            task, msg = self.dryrun_task(data, data_manager_keys)
+        except Exception as e:
+            return Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
-            # init ledger serializer
-            if not many:
-                instances = [instances]
-            ledger_data.update({'instances': instances})
-            ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
+            return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED, {}
 
-            if not ledger_serializer.is_valid():
-                # delete instance
-                for instance in instances:
-                    instance.delete()
-                raise ValidationError(ledger_serializer.errors)
+    def _create(self, request, data_manager_keys, test_only, dryrun):
 
-            # create on ledger
-            data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        if not data_manager_keys:
+            raise Exception("missing or empty field 'data_manager_keys'")
 
-            if st == status.HTTP_408_REQUEST_TIMEOUT:
-                if many:
-                    data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-                raise LedgerException(data, st)
+        self.check_datamanagers(data_manager_keys)  # can raise
 
-            if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-                raise LedgerException(data, st)
+        computed_data = self.compute_data(request)
 
-            # update validated to True in response
-            if 'pkhash' in data and data['validated']:
-                if many:
-                    for d in serializer.data:
-                        if d['pkhash'] in data['pkhash']:
-                            d.update({'validated': data['validated']})
-                else:
-                    d = dict(serializer.data)
-                    d.update({'validated': data['validated']})
+        many = len(computed_data) > 1
+        data = computed_data if many else computed_data[0]
 
-            return serializer.data, st
+        serializer = self.get_serializer(data=data, many=many)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            pkhashes = [x['pkhash'] for x in computed_data]
+            st = status.HTTP_400_BAD_REQUEST
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            raise InvalidException(e.args, pkhashes, st)
+        else:
+            if dryrun:
+                return self.handle_dryrun(request, data_manager_keys)
+
+            # create on ledger + db
+            ledger_data = {'test_only': test_only,
+                           'data_manager_keys': data_manager_keys}
+            data, st = self.commit(serializer, ledger_data, many)
+            headers = self.get_success_headers(data)
+            return data, st, headers
 
     def create(self, request, *args, **kwargs):
         data = request.data
 
         dryrun = data.get('dryrun', False)
         test_only = data.get('test_only', False)
-
-        # check if bulk create
         data_manager_keys = data.getlist('data_manager_keys')
-        if not data_manager_keys:
-            message = "missing or empty field 'data_manager_keys'"
-            return Response({'message': message},
-                            status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            self.check_datamanagers(data_manager_keys)
+            data, st, headers = self._create(request, data_manager_keys, test_only, dryrun)
+        except InvalidException as e:
+            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except LedgerException as e:
+            return Response({'message': e.data}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            l = []
-            # files, should be archive
-            for k, file in request.FILES.items():
-                try:
-                    pkhash = get_dir_hash(file)
-                except Exception as e:
-                    return Response({'message': str(e)},
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # check pkhash does not belong to the list
-                    for x in l:
-                        if pkhash == x['pkhash']:
-                            return Response({'message': f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same'}, status=status.HTTP_400_BAD_REQUEST)
-                    l.append({
-                        'pkhash': pkhash,
-                        'file': file
-                    })
-
-            # path/paths case
-            path = request.POST.get('path', None)
-            paths = request.POST.getlist('paths', [])
-
-            if path and paths:
-                return Response({'message': 'Cannot use path and paths together.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-            if path is not None:
-                paths = [path]
-
-            # paths, should be directories
-            for path in paths:
-                if os.path.isdir(path):
-                    pkhash = dirhash(path, 'sha256')
-                    l.append({
-                        'pkhash': pkhash,
-                        'path': normpath(path)
-                    })
-                else:
-                    return Response({'message': f'One of your paths does not exist, is not a directory or is not an absolute path: {path}'}, status=status.HTTP_400_BAD_REQUEST)
-
-            many = len(l) > 1
-            data = l
-            if not many:
-                data = data[0]
-            serializer = self.get_serializer(data=data, many=many)
-            try:
-                serializer.is_valid(raise_exception=True)
-            except Exception as e:
-                pkhashes = [x['pkhash'] for x in l]
-                st = status.HTTP_400_BAD_REQUEST
-                if find_primary_key_error(e):
-                    st = status.HTTP_409_CONFLICT
-                return Response({'message': e.args, 'pkhash': pkhashes}, status=st)
-
-            else:
-                if dryrun:
-                    # TODO handle
-                    # path = request.POST.get('path', None)
-                    # paths = request.POST.getlist('paths', [])
-                    try:
-                        data_sample_files = []
-                        for k, file in request.FILES.items():
-                            pkhash = get_hash(file)
-
-                            data_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'data_{pkhash}.zip')
-                            with open(data_path, 'wb') as data_file:
-                                data_file.write(file.open().read())
-
-                            data_sample_files.append({
-                                'pkhash': pkhash,
-                                'filepath': data_path,
-                            })
-
-                        task, msg = self.dryrun_task(data_sample_files, data_manager_keys)
-                    except Exception as e:
-                        return Response({'message': f'Could not launch data creation with dry-run on this instance: {str(e)}'},
-                                        status=status.HTTP_400_BAD_REQUEST)
-                    else:
-                        return Response({'id': task.id, 'message': msg},
-                                        status=status.HTTP_202_ACCEPTED)
-
-                # create on ledger + db
-                ledger_data = {'test_only': test_only,
-                               'data_manager_keys': data_manager_keys}
-                try:
-                    data, st = self.commit(serializer, ledger_data, many)
-                except LedgerException as e:
-                    return Response({'message': e.data}, status=e.st)
-                except Exception as e:
-                    return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    headers = self.get_success_headers(data)
-                    return Response(data, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
