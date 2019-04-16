@@ -259,7 +259,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except Exception as e:
             return Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
-            return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED, {}
+            return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
@@ -290,18 +290,15 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             ledger_data = {'test_only': test_only,
                            'data_manager_keys': data_manager_keys}
             data, st = self.commit(serializer, ledger_data, many)
-            headers = self.get_success_headers(data)
-            return data, st, headers
+            return data, st
 
     def create(self, request, *args, **kwargs):
-        data = request.data
-
-        dryrun = data.get('dryrun', False)
-        test_only = data.get('test_only', False)
-        data_manager_keys = data.getlist('data_manager_keys')
+        dryrun = request.data.get('dryrun', False)
+        test_only = request.data.get('test_only', False)
+        data_manager_keys = request.data.getlist('data_manager_keys', [])
 
         try:
-            data, st, headers = self._create(request, data_manager_keys, test_only, dryrun)
+            data, st = self._create(request, data_manager_keys, test_only, dryrun)
         except InvalidException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -309,6 +306,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
+            headers = self.get_success_headers(data)
             return Response(data, status=st, headers=headers)
 
     @action(methods=['post'], detail=False)
