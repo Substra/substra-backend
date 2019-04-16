@@ -46,7 +46,7 @@ class InvalidException(Exception):
         self.data = data
         self.pkhash = pkhash
         self.st = st
-        super(LedgerException).__init__()
+        super(InvalidException).__init__()
 
 
 @app.task(bind=True, ignore_result=False)
