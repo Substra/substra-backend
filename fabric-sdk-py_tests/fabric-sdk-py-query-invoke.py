@@ -1,4 +1,5 @@
 import os
+import asyncio
 import subprocess
 
 from hfc.fabric import Client
@@ -11,6 +12,8 @@ cli = Client(net_profile=os.path.join(dir_path, '../network.json'))
 admin_owkin = cli.get_user('owkin', 'admin')
 
 cli.new_channel('mychannel')
+
+loop = asyncio.get_event_loop()
 
 from hfc.fabric_ca.caservice import ca_service
 
@@ -56,42 +59,42 @@ else:
         finally:
             print(data)
 
-    response = cli.chaincode_query(
+    response = loop.run_until_complete(cli.chaincode_query(
         requestor=admin_owkin,
         channel_name='mychannel',
-        peer_names=['peer1-owkin'],
+        peers=['peer1-owkin'],
         args=[],
         cc_name='mycc',
         cc_version='1.0',
         fcn='queryDataManagers'
-    )
+    ))
     print(response)
 
-    response = cli.query_installed_chaincodes(
+    response = loop.run_until_complete(cli.query_installed_chaincodes(
         requestor=admin_owkin,
-        peer_names=['peer1-owkin']
-    )
+        peers=['peer1-owkin']
+    ))
     print(response)
 
-    response = cli.query_channels(
+    response = loop.run_until_complete(cli.query_channels(
         requestor=admin_owkin,
-        peer_names=['peer1-owkin']
-    )
+        peers=['peer1-owkin']
+    ))
     print(response)
 
-    response = cli.query_info(
+    response = loop.run_until_complete(cli.query_info(
         requestor=admin_owkin,
         channel_name='mychannel',
-        peer_names=['peer1-owkin']
-    )
+        peers=['peer1-owkin']
+    ))
     print(response)
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    response = cli.chaincode_invoke(
+    response = loop.run_until_complete(cli.chaincode_invoke(
         requestor=admin_owkin,
         channel_name='mychannel',
-        peer_names=['peer1-owkin'],
+        peers=['peer1-owkin'],
         args=['ISIC 2018',
               '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd',
               'http://chunantes.substrabac:8001/media/data_managers/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener.py',
@@ -106,5 +109,5 @@ else:
         fcn='registerDataManager',
         wait_for_event=True,
         wait_for_event_timeout=5
-    )
+    ))
     print(response)
