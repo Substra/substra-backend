@@ -41,12 +41,12 @@ class LedgerException(Exception):
         super(LedgerException).__init__()
 
 
-class InvalidException(Exception):
+class ValidationException(Exception):
     def __init__(self, data, pkhash, st):
         self.data = data
         self.pkhash = pkhash
         self.st = st
-        super(InvalidException).__init__()
+        super(ValidationException).__init__()
 
 
 @app.task(bind=True, ignore_result=False)
@@ -281,7 +281,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            raise InvalidException(e.args, pkhashes, st)
+            raise ValidationException(e.args, pkhashes, st)
         else:
             if dryrun:
                 return self.handle_dryrun(request, data_manager_keys)
@@ -299,7 +299,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         try:
             data, st = self._create(request, data_manager_keys, test_only, dryrun)
-        except InvalidException as e:
+        except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
