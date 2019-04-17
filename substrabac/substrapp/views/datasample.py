@@ -22,7 +22,7 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
-from substrapp.utils import get_hash, uncompress_path, get_dir_hash
+from substrapp.utils import uncompress_path, get_dir_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error
 
@@ -186,18 +186,21 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return serializer.data, st
 
     def compute_data(self, request):
-        data = []
+        data = {}
         # files, should be archive
         for k, file in request.FILES.items():
             pkhash = get_dir_hash(file)  # can raise
             # check pkhash does not belong to the list
-            for x in data:
-                if pkhash == x['pkhash']:
-                    raise Exception(f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {x["file"]} are the same')
-            data.append({
+            try:
+                existing = data[pkhash]
+            except KeyError:
+                pass
+            else:
+                raise Exception(f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {existing["file"]} are the same')
+            data[pkhash] = {
                 'pkhash': pkhash,
                 'file': file
-            })
+            }
 
         # path/paths case
         path = request.POST.get('path', None)
@@ -211,48 +214,33 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # paths, should be directories
         for path in paths:
-            if os.path.isdir(path):
-                pkhash = dirhash(path, 'sha256')
-                data.append({
-                    'pkhash': pkhash,
-                    'path': normpath(path)
-                })
-            else:
+            if not os.path.isdir(path):
                 raise Exception(f'One of your paths does not exist, is not a directory or is not an absolute path: {path}')
+            pkhash = dirhash(path, 'sha256')
+            try:
+                existing = data[pkhash]
+            except KeyError:
+                pass
+            else:
+                # existing can be a dict with a field path or file
+                raise Exception(f'Your data sample directory contain same files leading to same pkhash. Invalid path: {path}.')
 
-        return data
-
-    def handle_dryrun(self, request, data_manager_keys):
-        data = []
-        for k, file in request.FILES.items():
-            pkhash = get_hash(file)
-
-            # write on DRYRUN_ROOT
-            file_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'),
-                                     f'data_{pkhash}.zip')
-            with open(file_path, 'wb') as data_file:
-                data_file.write(file.open().read())
-
-            data.append({
+            data[pkhash] = {
                 'pkhash': pkhash,
-                'file': file_path,
-            })
+                'path': normpath(path)
+            }
 
-        # path/paths case
-        path = request.POST.get('path', None)
-        paths = request.POST.getlist('paths', [])
+        return list(data.values())
 
-        if path is not None:
-            paths = [path]
-
-        # paths, should be directories
-        for path in paths:
-            if os.path.isdir(path):
-                pkhash = dirhash(path, 'sha256')
-                data.append({
-                    'pkhash': pkhash,
-                    'path': normpath(path)
-                })
+    def handle_dryrun(self, data, data_manager_keys):
+        # write uploaded file to disk
+        for d in data:
+            pkhash = d['pkhash']
+            if 'file' in d:
+                file_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'),
+                                         f'data_{pkhash}.zip')
+                with open(file_path, 'wb') as f:
+                    f.write(d['file'].open().read())
 
         try:
             task, msg = self.dryrun_task(data, data_manager_keys)
@@ -284,7 +272,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise ValidationException(e.args, pkhashes, st)
         else:
             if dryrun:
-                return self.handle_dryrun(request, data_manager_keys)
+                return self.handle_dryrun(computed_data, data_manager_keys)
 
             # create on ledger + db
             ledger_data = {'test_only': test_only,
