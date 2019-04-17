@@ -63,7 +63,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         # Get testtuple pkhash of the proposal with a queryLedger in case of 408 timeout
         args = serializer.get_args(serializer.validated_data)
-        data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
+        data, st = queryLedger(fcn='createTesttuple', args=args)
+        print(data)
         if st == status.HTTP_200_OK:
             pkhash = data.get('key', data.get('keys'))
         else:
