@@ -113,16 +113,27 @@ class ManageFileMixin(object):
 def find_primary_key_error(validation_error, key_name='pkhash'):
     detail = validation_error.detail
 
-    if not isinstance(detail, dict):
-        # according to the rest_framework documentation,
-        # validation_error.detail could be either a dict, a list or a nested
-        # data structure
+    def find_unique_error(detail_dict):
+        for key, errors in detail_dict.items():
+                if key != key_name:
+                    continue
+                for error in errors:
+                    if error.code == 'unique':
+                        return error
+
         return None
 
-    for key, errors in detail.items():
-        if key != key_name:
-            continue
-        for error in errors:
-            if error.code == 'unique':
-                return error
+    # according to the rest_framework documentation,
+    # validation_error.detail could be either a dict, a list or a nested
+    # data structure
+
+    if isinstance(detail, dict):
+        return find_unique_error(detail)
+    elif isinstance(detail, list):
+        for sub_detail in detail:
+            if isinstance(sub_detail, dict):
+                unique_error = find_unique_error(sub_detail)
+                if unique_error is not None:
+                    return unique_error
+
     return None
