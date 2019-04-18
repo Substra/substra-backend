@@ -30,14 +30,14 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         in_models_keys = validated_data.get('in_models_keys')
         tag = validated_data.get('tag', '')
 
-        args = '"%(algoKey)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(associatedObjective)s", "%(tag)s"' % {
+        args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
             'algoKey': algo_key,
-            'rank': rank,
-            'FLtask': FLtask_key,
+            'associatedObjective': objective_key,
             'inModels': ','.join(in_models_keys),
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join(train_data_sample_keys),
-            'associatedObjective': objective_key,
+            'FLtask': FLtask_key,
+            'rank': rank,
             'tag': tag
         }
 
