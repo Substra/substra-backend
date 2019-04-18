@@ -204,6 +204,19 @@ if __name__ == '__main__':
 
         ####################################################
 
+        print('register objective without data manager and data sample')
+        data = {
+            'name': 'Skin Lesion Classification Objective',
+            'description': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/description.md'),
+            'metrics_name': 'macro-average recall',
+            'metrics': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/metrics.py'),
+            'permissions': 'all'
+        }
+
+        objective_key_test = create_asset(data, org_0, 'objective', True)
+
+        ####################################################
+
         # update datamanager
         print('update datamanager')
         data = {
@@ -220,7 +233,6 @@ if __name__ == '__main__':
                 'name': 'Logistic regression',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
-                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key = create_asset(data, org_1, 'algo', True)
@@ -232,7 +244,6 @@ if __name__ == '__main__':
                 'name': 'Neural Network',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
-                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_2 = create_asset(data, org_1, 'algo', False)
@@ -243,7 +254,6 @@ if __name__ == '__main__':
                 'name': 'Random Forest',
                 'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/algo.tar.gz'),
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
-                'objective_key': objective_key,
                 'permissions': 'all',
             }
             algo_key_3 = create_asset(data, org_1, 'algo', False)
@@ -255,6 +265,7 @@ if __name__ == '__main__':
                 print('create traintuple')
                 data = {
                     'algo_key': algo_key,
+                    'objective_key': objective_key,
                     'data_manager_key': data_manager_org1_key,
                     'train_data_sample_keys': train_data_sample_keys,
                     'tag': 'substra'
@@ -265,7 +276,9 @@ if __name__ == '__main__':
                 data = {
                     'algo_key': algo_key_2,
                     'data_manager_key': data_manager_org1_key,
+                    'objective_key': objective_key,
                     'train_data_sample_keys': train_data_sample_keys,
+                    'tag': 'My super tag'
                 }
 
                 traintuple_key_2 = create_asset(data, org_1, 'traintuple')
@@ -274,6 +287,7 @@ if __name__ == '__main__':
                 data = {
                     'algo_key': algo_key_3,
                     'data_manager_key': data_manager_org1_key,
+                    'objective_key': objective_key,
                     'train_data_sample_keys': train_data_sample_keys,
                 }
 
