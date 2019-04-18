@@ -1104,6 +1104,7 @@ class TraintupleQueryTests(APITestCase):
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
                 'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'data_manager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+                'objective_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'rank': -1,
                 'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
                 'in_models_keys': [
@@ -1121,6 +1122,8 @@ class TraintupleQueryTests(APITestCase):
                                      The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
 
             response = self.client.post(url, data, format='multipart', **extra)
+
+            print(response.json())
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_traintuple_ko(self):
