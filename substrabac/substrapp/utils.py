@@ -147,8 +147,7 @@ def invokeLedger(options, sync=False):
                 pass
             else:
                 msg = json.loads(msg.encode('utf-8').decode('unicode_escape'))
-                if isinstance(msg, dict):
-                    msg = msg.get('key', msg.get('keys'))
+                msg = msg.get('key', msg.get('keys'))  # get pkhash
             finally:
                 data = {'pkhash': msg}
 
