@@ -61,7 +61,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         # Get testtuple pkhash of the proposal
         args = serializer.get_args(serializer.validated_data)
         data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
-        pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+        if st in (status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+            pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
 
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
@@ -72,11 +73,12 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
             try:
-                pkhash = data['message'].replace('"', '').split('-')[
-                    -1].strip()
+                pkhash = data['message'].replace(')" ', '').split('tkey: ')[-1].strip()
 
-                if not len(pkhash) == 64:
+                if len(pkhash) != 64:
                     raise Exception('bad pkhash')
+                else:
+                    st = status.HTTP_409_CONFLICT
 
                 return Response({'message': data['message'],
                                  'pkhash': pkhash}, status=st)
