@@ -17,7 +17,6 @@ from substrapp.serializers import LedgerDataSampleSerializer, LedgerObjectiveSer
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
-from substrapp.views.algo import compute_dryrun as algo_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
 from substrapp.models import DataManager
@@ -498,64 +497,6 @@ class AlgoViewTests(APITestCase):
 
         data['description'].close()
         data['file'].close()
-
-    def test_algo_create_dryrun(self):
-
-        url = reverse('substrapp:algo-list')
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz')
-        description_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/description.md')
-
-        data = {'name': 'Logistic regression',
-                'file': open(algo_path, 'rb'),
-                'description': open(description_path, 'rb'),
-                'objective_key': get_hash(os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/description.md')),
-                'permissions': 'all',
-                'dryrun': True}
-
-        with mock.patch('substrapp.views.algo.compute_dryrun.apply_async') as mdryrun_task:
-
-            mdryrun_task.return_value = FakeTask('42')
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
-
-        self.assertEqual(response.data['id'], '42')
-        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on https://localhost/task/42/')
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-        data['description'].close()
-        data['file'].close()
-
-    def test_algo_compute_dryrun(self):
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz')
-        shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
-
-        metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/metrics.py')
-        with open(metrics_path, 'rb') as f:
-            metrics_content = f.read()
-        metrics_pkhash = compute_hash(metrics_content)
-
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py')
-        with open(opener_path, 'rb') as f:
-            opener_content = f.read()
-        opener_pkhash = compute_hash(opener_content)
-
-        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
-                mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
-            mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-                                                 'testDataset': {'dataManagerKey': 'test'}},
-                                                {'opener': {'storageAddress': 'test'}}]
-            mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
-
-            objective_key = get_hash(os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/description.md'))
-            pkhash = get_hash(algo_path)
-
-            # Slow operation, about 45 s, will fail if no internet connection
-            algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), objective_key, pkhash)
 
 
 # APITestCase
