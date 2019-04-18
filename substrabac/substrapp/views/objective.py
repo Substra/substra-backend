@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import tempfile
+import uuid
 
 import requests
 from django.conf import settings
@@ -53,7 +54,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
 
     metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
-    metrics_docker_name = f'{metrics_docker}_{pkhash}'
+    metrics_docker_name = f'{metrics_docker}_{pkhash}_{uuid.uuid4().hex}'
     volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}

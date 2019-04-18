@@ -2,6 +2,7 @@ import os
 import shutil
 import mock
 import time
+import uuid
 
 from django.test import override_settings
 from django.http import HttpResponse
@@ -381,9 +382,10 @@ class TasksTests(APITestCase):
         with open(dockerfile_path, 'w') as f:
             f.write('FROM library/hello-world')
 
+        hash_docker = uuid.uuid4().hex
         result = compute_docker(client, self.ResourcesManager,
-                                self.subtuple_path, 'test_compute_docker',
-                                'test_compute_docker_name', None, None)
+                                self.subtuple_path, 'test_compute_docker_' + hash_docker,
+                                'test_compute_docker_name_' + hash_docker, None, None)
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
