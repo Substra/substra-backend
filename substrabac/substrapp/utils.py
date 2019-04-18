@@ -145,6 +145,10 @@ def invokeLedger(options, sync=False):
                 msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
             except:
                 pass
+            else:
+                msg = json.loads(msg.encode('utf-8').decode('unicode_escape'))
+                if isinstance(msg, dict):
+                    msg = msg.get('key', msg.get('keys'))
             finally:
                 data = {'pkhash': msg}
 
