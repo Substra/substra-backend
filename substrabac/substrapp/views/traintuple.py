@@ -85,7 +85,6 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                                  'pkhash': pkhash}, status=st)
             except:
                 return Response(data, status=st)
-        pkhash = data.get('key', data.get('keys'))
 
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
