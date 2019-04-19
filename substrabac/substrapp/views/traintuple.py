@@ -1,10 +1,6 @@
-import hashlib
-
-from django.conf import settings
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.utils import queryLedger
@@ -74,7 +70,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
         data, st = queryLedger({'args': '{"Args":["createTraintuple", ' + args + ']}'})
         if st == status.HTTP_200_OK:
-            pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+            pkhash = data.get('key', data.get('keys'))
         else:
             # If queryLedger fails, invoke will fail too so we handle the issue right now
             try:
