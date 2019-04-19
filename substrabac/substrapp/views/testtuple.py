@@ -58,7 +58,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get traintuple pkhash of the proposal with a queryLedger in case of 408 timeout
+        # Get testtuple pkhash of the proposal with a queryLedger in case of 408 timeout
         args = serializer.get_args(serializer.validated_data)
         data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
         if st == status.HTTP_200_OK:
