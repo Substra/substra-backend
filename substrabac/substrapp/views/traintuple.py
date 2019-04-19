@@ -70,12 +70,25 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get traintuple pkhash of the proposal
+        # Get traintuple pkhash of the proposal with a queryLedger in case of 408 timeout
         args = serializer.get_args(serializer.validated_data)
         data, st = queryLedger({'args': '{"Args":["createTraintuple", ' + args + ']}'})
-
-        if st in (status.HTTP_200_OK, status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
+        if st == status.HTTP_200_OK:
             pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+        else:
+            # If queryLedger fails, invoke will fail too so we handle the issue right now
+            try:
+                pkhash = data['message'].replace(')" ', '').split('tkey: ')[-1].strip()
+
+                if len(pkhash) != 64:
+                    raise Exception('bad pkhash')
+                else:
+                    st = status.HTTP_409_CONFLICT
+
+                return Response({'message': data['message'],
+                                 'pkhash': pkhash}, status=st)
+            except:
+                return Response(data, status=st)
 
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
