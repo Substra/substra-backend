@@ -340,23 +340,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                         filteredData = [x for x in dataManagerData if x[key] in val]
                         dataManagerKeys = [x['key'] for x in filteredData]
                         objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or x['testData']['dataManagerKey'] in dataManagerKeys]
-
-                elif k == 'algo':  # select objective used by these algo
-                    if not algoData:
-                        # TODO find a way to put this call in cache
-                        algoData, st = queryLedger({
-                            'args': '{"Args":["queryAlgos"]}'
-                        })
-                        if st != status.HTTP_200_OK:
-                            return Response(algoData, status=st)
-                        if algoData is None:
-                            algoData = []
-
-                    for key, val in subfilters.items():
-                        filteredData = [x for x in algoData if x[key] in val]
-                        objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys]
+                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or
+                                           (x['testDataset'] and x['testDataset']['dataManagerKey'] in dataManagerKeys)]
 
                 elif k == 'model':  # select objectives used by outModel hash
                     if not modelData:
