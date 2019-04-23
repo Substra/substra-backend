@@ -80,7 +80,7 @@ def create_asset(data, profile, asset, dryrun=False):
             try:
                 error = e.response.json()
             except Exception:
-                pass
+                error = e.response
             else:
                 print(colored(error, 'red'))
     else:
@@ -127,7 +127,7 @@ def register_asset(data, profile, asset, dryrun=False):
             try:
                 error = e.response.json()
             except Exception:
-                pass
+                error = e.response
             else:
                 print(colored(error, 'red'))
     else:
@@ -190,8 +190,11 @@ if __name__ == '__main__':
         train_data_sample_keys = create_asset(data, org_1, 'data_sample', True)
 
         print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
-        shutil.copytree(os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024308'),
-                        os.path.join(server_path, './fixtures/chunantes/datasamples/train/0024308'))
+        try:
+            shutil.copytree(os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024308'),
+                            os.path.join(server_path, './fixtures/chunantes/datasamples/train/0024308'))
+        except FileExistsError:
+            pass
         data = {
             'paths': [
                 os.path.join(server_path, './fixtures/chunantes/datasamples/train/0024308')
