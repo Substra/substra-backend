@@ -1,3 +1,5 @@
+import json
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -66,7 +68,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         else:
             # If queryLedger fails, invoke will fail too so we handle the issue right now
             try:
-                pkhash = data['message'].replace(')" ', '').split('tkey: ')[-1].strip()
+                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
+                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
                 if len(pkhash) != 64:
                     raise Exception('bad pkhash')
@@ -87,7 +90,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
             try:
-                pkhash = data['message'].replace(')" ', '').split('tkey: ')[-1].strip()
+                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
+                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
                 if len(pkhash) != 64:
                     raise Exception('bad pkhash')
