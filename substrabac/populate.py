@@ -179,26 +179,17 @@ if __name__ == '__main__':
 
     train_data_sample_keys = []
     if data_manager_org1_key:
-        print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
-        data = {
-            'paths': [
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
-            ],
-            'data_manager_keys': [data_manager_org1_key],
-            'test_only': False,
-        }
-        train_data_sample_keys = create_asset(data, org_1, 'data_sample', True)
-
         print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
-        try:
-            shutil.copytree(os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024308'),
-                            os.path.join(server_path, './fixtures/chunantes/datasamples/train/0024308'))
-        except FileExistsError:
-            pass
+        data_samples_path = ['./fixtures/chunantes/datasamples/train/0024306',
+                             './fixtures/chunantes/datasamples/train/0024307']
+        for d in data_samples_path:
+            try:
+                shutil.copytree(os.path.join(dir_path, d),
+                                os.path.join(server_path, d))
+            except FileExistsError:
+                pass
         data = {
-            'paths': [
-                os.path.join(server_path, './fixtures/chunantes/datasamples/train/0024308')
-            ],
+            'paths': [os.path.join(server_path, d) for d in data_samples_path],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
