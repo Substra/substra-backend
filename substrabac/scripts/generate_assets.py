@@ -14,13 +14,13 @@ def main():
     client.set_config('owkin')
 
     assets = {}
-    assets['objective'] = json.dumps(client.list('objective')['result'], indent=4)
-    assets['datamanager'] = json.dumps(client.list('data_manager')['result'], indent=4)
-    assets['algo'] = json.dumps(client.list('algo')['result'], indent=4)
-    assets['traintuple'] = json.dumps(client.list('traintuple')['result'], indent=4)
-    assets['testtuple'] = json.dumps(client.list('testtuple')['result'], indent=4)
+    assets['objective'] = json.dumps(client.list('objective'), indent=4)
+    assets['datamanager'] = json.dumps(client.list('data_manager'), indent=4)
+    assets['algo'] = json.dumps(client.list('algo'), indent=4)
+    assets['traintuple'] = json.dumps(client.list('traintuple'), indent=4)
+    assets['testtuple'] = json.dumps(client.list('testtuple'), indent=4)
 
-    assets['model'] = json.dumps([res for res in client.list('model')['result']
+    assets['model'] = json.dumps([res for res in client.list('model')
                                   if ('traintuple' in res and 'testtuple' in res)], indent=4)
 
     with open(os.path.join(dir_path, '../substrapp/tests/assets.py'), 'w') as f:

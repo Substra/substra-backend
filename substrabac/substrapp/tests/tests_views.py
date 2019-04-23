@@ -131,7 +131,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
@@ -151,19 +151,6 @@ class ObjectiveViewTests(APITestCase):
                                         (datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 1)
-
-    def test_objective_list_filter_algo(self):
-        url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK),
-                                        (algo, status.HTTP_200_OK)]
-
-            url = reverse('substrapp:objective-list')
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -705,18 +692,6 @@ class DataManagerViewTests(APITestCase):
             r = response.json()
 
             self.assertEqual(len(r[0]), 1)
-
-    def test_datamanager_list_filter_algo(self):
-        url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
-                                        (algo, status.HTTP_200_OK)]
-
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 2)
 
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
