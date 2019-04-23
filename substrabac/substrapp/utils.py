@@ -48,7 +48,6 @@ def queryLedger(options):
     print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
 
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
-                             '--logging-level', 'DEBUG',
                              'chaincode', 'query',
                              '-x',
                              '-C', channel_name,
@@ -105,7 +104,6 @@ def invokeLedger(options, sync=False):
     print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
 
     cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
-           '--logging-level', 'DEBUG',
            'chaincode', 'invoke',
            '-C', channel_name,
            '-n', chaincode_name,

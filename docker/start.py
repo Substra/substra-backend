@@ -10,6 +10,8 @@ raven_dryrunner_url = "https://a1c2de65bb0f4120aa11d75bca9b47f6@sentry.io/140276
 raven_worker_url = "https://76abd6b5d11e48ea8a118831c86fc615@sentry.io/1402762"
 raven_scheduler_url = raven_worker_url
 
+FABRIC_LOGGING_SPEC = "debug"
+
 
 def generate_docker_compose_file(conf, launch_settings):
     try:
@@ -80,7 +82,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                    f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
                                    f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                    f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                   f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}"],
+                                   f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}",
+                                   f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
                    'volumes': ['/substra/medias:/substra/medias',
                                '/substra/dryrun:/substra/dryrun',
                                '/substra/static:/usr/src/app/substrabac/statics',
@@ -109,7 +112,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                      'DATABASE_HOST=postgresql',
                                      f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}"],
+                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}",
+                                     f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
                      'volumes': [f'/substra/conf/{org_name}:/substra/conf/{org_name}',
                                  f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
                                  f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
@@ -135,7 +139,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                   'DATABASE_HOST=postgresql',
                                   f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                  f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}"],
+                                  f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}",
+                                  f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
                   'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
                               '/substra/medias:/substra/medias',
                               f'/substra/conf/{org_name}:/substra/conf/{org_name}',
@@ -163,7 +168,8 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
                                      'DATABASE_HOST=postgresql',
                                      f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}"],
+                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}",
+                                     f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
                      'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
                                  '/substra/medias:/substra/medias',
                                  '/substra/dryrun:/substra/dryrun',
