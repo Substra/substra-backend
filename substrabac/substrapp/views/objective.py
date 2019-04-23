@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import tempfile
+import uuid
 
 import requests
 from django.conf import settings
@@ -37,6 +38,9 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
         os.remove(metrics_path)
 
+    if not test_data_manager_key:
+        raise Exception('Cannot do a objective dryrun without a data manager key.')
+
     datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
     opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
     with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
@@ -50,7 +54,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
 
     metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
-    metrics_docker_name = f'{metrics_docker}_{pkhash}'
+    metrics_docker_name = f'{metrics_docker}_{pkhash}_{uuid.uuid4().hex}'
     volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
@@ -131,8 +135,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         description = data.get('description')
-        test_data_manager_key = data.get('test_data_manager_key')
-        test_data_sample_keys = data.getlist('test_data_sample_keys')
+        test_data_manager_key = request.data.get('test_data_manager_key', request.POST.get('test_data_manager_key', ''))
+
+        try:
+            test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
+        except:
+            test_data_sample_keys = request.data.get('test_data_sample_keys', request.POST.getlist('test_data_sample_keys', []))
+
         metrics = data.get('metrics')
 
         pkhash = get_hash(description)
@@ -331,23 +340,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                         filteredData = [x for x in dataManagerData if x[key] in val]
                         dataManagerKeys = [x['key'] for x in filteredData]
                         objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or x['testData']['dataManagerKey'] in dataManagerKeys]
-
-                elif k == 'algo':  # select objective used by these algo
-                    if not algoData:
-                        # TODO find a way to put this call in cache
-                        algoData, st = queryLedger({
-                            'args': '{"Args":["queryAlgos"]}'
-                        })
-                        if st != status.HTTP_200_OK:
-                            return Response(algoData, status=st)
-                        if algoData is None:
-                            algoData = []
-
-                    for key, val in subfilters.items():
-                        filteredData = [x for x in algoData if x[key] in val]
-                        objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys]
+                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or
+                                           (x['testDataset'] and x['testDataset']['dataManagerKey'] in dataManagerKeys)]
 
                 elif k == 'model':  # select objectives used by outModel hash
                     if not modelData:

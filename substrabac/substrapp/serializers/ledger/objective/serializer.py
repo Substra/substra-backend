@@ -10,9 +10,10 @@ from .tasks import createLedgerObjectiveAsync
 
 class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                  min_length=1)
+                                                  min_length=0,
+                                                  required=False)
     name = serializers.CharField(min_length=1, max_length=100)
-    test_data_manager_key = serializers.CharField(max_length=256)
+    test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
     permissions = serializers.CharField(min_length=1, max_length=60)
     metrics_name = serializers.CharField(min_length=1, max_length=100)
 
@@ -21,7 +22,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         name = validated_data.get('name')
         metrics_name = validated_data.get('metrics_name')
         permissions = validated_data.get('permissions')
-        test_data_manager_key = validated_data.get('test_data_manager_key')
+        test_data_manager_key = validated_data.get('test_data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website

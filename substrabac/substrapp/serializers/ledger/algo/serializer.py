@@ -10,14 +10,12 @@ from .tasks import createLedgerAlgoAsync
 
 class LedgerAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=100)
-    objective_key = serializers.CharField(min_length=64, max_length=64)
     permissions = serializers.CharField(min_length=1, max_length=60)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         permissions = validated_data.get('permissions')
-        objective_key = validated_data.get('objective_key')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         # current_site = Site.objects.get_current()
@@ -25,13 +23,12 @@ class LedgerAlgoSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(associatedObjective)s", "%(permissions)s"' % {
+        args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(permissions)s"' % {
             'name': name,
             'algoHash': get_hash(instance.file),
             'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
-            'associatedObjective': objective_key,
             'permissions': permissions
         }
 
