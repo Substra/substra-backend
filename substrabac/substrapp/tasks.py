@@ -424,7 +424,7 @@ def doTask(subtuple, tuple_type):
             algo_command = 'predict'    # main command
 
             inmodels = subtuple['model']["traintupleKey"]
-            algo_command += inmodels
+            algo_command += f' {inmodels}'
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':
