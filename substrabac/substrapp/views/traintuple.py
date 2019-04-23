@@ -79,6 +79,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         else:
             # If queryLedger fails, invoke will fail too so we handle the issue right now
             try:
+                data['message'] = data['message'].split('Error')[-1]
                 msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
                 pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
@@ -87,7 +88,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 else:
                     st = status.HTTP_409_CONFLICT
 
-                return Response({'message': data['message'],
+                return Response({'message': data['message'].split('payload')[0],
                                  'pkhash': pkhash}, status=st)
             except:
                 return Response(data, status=st)
@@ -101,6 +102,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
             try:
+                data['message'] = data['message'].split('Error')[-1]
                 msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
                 pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
@@ -109,7 +111,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 else:
                     st = status.HTTP_409_CONFLICT
 
-                return Response({'message': data['message'],
+                return Response({'message': data['message'].split('payload')[0],
                                  'pkhash': pkhash}, status=st)
             except:
                 return Response(data, status=st)
