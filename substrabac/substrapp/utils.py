@@ -90,9 +90,9 @@ def queryLedger(fcn, args=None):
         #         May have changed by using fabric-sdk-py
         try:
             data = json.loads(response)
-        except:
-            logging.error('Failed to json parse response in query')
-            data = response
+        except json.decoder.JSONDecodeError:
+            st = status.HTTP_400_BAD_REQUEST
+            data = {'message': response}
 
     finally:
         return data, st
@@ -165,8 +165,13 @@ def invokeLedger(fcn, args=None, sync=False):
         #     st = status.HTTP_403_FORBIDDEN
 
         st = status.HTTP_201_CREATED
-        data = {'pkhash': response}
-
+        try:
+            response = json.loads(response)
+            pkhash = response.get('key', response.get('keys'))
+            data = {'pkhash': pkhash}
+        except json.decoder.JSONDecodeError:
+            st = status.HTTP_400_BAD_REQUEST
+            data = {'message': response}
     finally:
         return data, st
 
