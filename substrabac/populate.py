@@ -295,7 +295,7 @@ if __name__ == '__main__':
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
                 'permissions': 'all',
             }
-            algo_key = create_asset(data, org_1, 'algo', True)
+            algo_key = create_asset(data, org_1, 'algo', False)
 
             ####################################################
 
