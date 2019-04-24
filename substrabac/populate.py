@@ -2,6 +2,7 @@ import argparse
 import functools
 import os
 import json
+import shutil
 import time
 
 import substra_sdk_py as substra
@@ -9,6 +10,7 @@ import substra_sdk_py as substra
 from termcolor import colored
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
+server_path = '/substra/servermedias'
 
 client = substra.Client()
 
@@ -75,6 +77,59 @@ def create_asset(data, profile, asset, dryrun=False):
 
         else:
             print(colored(e, 'red'))
+            try:
+                error = e.response.json()
+            except Exception:
+                error = e.response
+            else:
+                print(colored(error, 'red'))
+    else:
+        print(colored(json.dumps(r, indent=2), 'green'))
+        return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
+
+
+def register_asset(data, profile, asset, dryrun=False):
+    client.set_config(profile)
+
+    if dryrun:
+        print('dryrun')
+        try:
+            r = client.register(asset, data, dryrun=True)
+        except substra.exceptions.HTTPError as e:
+            print(colored(e, 'red'))
+        else:
+            print(colored(json.dumps(r, indent=2), 'magenta'))
+
+    print('real')
+    try:
+        r = client.register(asset, data)
+    except substra.exceptions.HTTPError as e:
+        if e.response.status_code == 408:
+            # retry until success in case of timeout
+            print(colored('got a 408, will test to get if from ledger', 'grey'))
+            r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'blue'))
+            results = r['pkhash'] if 'pkhash' in r else r['message'].get('pkhash')
+
+            keys_to_check = results if isinstance(results, list) else [results]
+            for k in keys_to_check:
+                retry_until_success(client.get)(asset, k)
+
+            return results
+
+        elif e.response.status_code == 409:
+            r = e.response.json()
+            print(colored(json.dumps(r, indent=2), 'cyan'))
+            return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
+
+        else:
+            print(colored(e, 'red'))
+            try:
+                error = e.response.json()
+            except Exception:
+                error = e.response
+            else:
+                print(colored(error, 'red'))
     else:
         print(colored(json.dumps(r, indent=2), 'green'))
         return [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
@@ -124,16 +179,21 @@ if __name__ == '__main__':
 
     train_data_sample_keys = []
     if data_manager_org1_key:
-        print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
+        print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
+        data_samples_path = ['./fixtures/chunantes/datasamples/train/0024306',
+                             './fixtures/chunantes/datasamples/train/0024307']
+        for d in data_samples_path:
+            try:
+                shutil.copytree(os.path.join(dir_path, d),
+                                os.path.join(server_path, d))
+            except FileExistsError:
+                pass
         data = {
-            'files': [
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
-            ],
+            'paths': [os.path.join(server_path, d) for d in data_samples_path],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = create_asset(data, org_1, 'data_sample', True)
+        train_data_sample_keys = register_asset(data, org_1, 'data_sample', True)
 
     ####################################################
 
@@ -152,7 +212,7 @@ if __name__ == '__main__':
     if data_manager_org0_key and data_manager_org1_key:
         print('register test data')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
             ],
@@ -165,7 +225,7 @@ if __name__ == '__main__':
 
         print('register test data 2')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
             ],
@@ -178,7 +238,7 @@ if __name__ == '__main__':
 
         print('register test data 3')
         data = {
-            'files': [
+            'paths': [
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
                 os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
             ],
@@ -235,7 +295,7 @@ if __name__ == '__main__':
                 'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
                 'permissions': 'all',
             }
-            algo_key = create_asset(data, org_1, 'algo', True)
+            algo_key = create_asset(data, org_1, 'algo', False)
 
             ####################################################
 
