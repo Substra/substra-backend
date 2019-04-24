@@ -59,6 +59,8 @@ def compute_dryrun(self, data, data_manager_keys):
     # Name of the dry-run subtuple (not important)
     pkhash = data[0]['pkhash']
     subtuple_directory = build_subtuple_folders({'key': pkhash})
+    data_path = os.path.join(subtuple_directory, 'data')
+    volumes = {}
 
     try:
 
@@ -66,9 +68,14 @@ def compute_dryrun(self, data, data_manager_keys):
             # uncompress only for file
             if 'file' in data_sample:
                 try:
-                    uncompress_path(data_sample['file'], os.path.join(subtuple_directory, 'data', data_sample['pkhash']))
+                    uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
                 except Exception as e:
                     raise e
+            # for all data paths, we need to create symbolic links inside data_path
+            # and add real path to volume bind docker
+            elif 'path' in data_sample:
+                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
+                volumes.update({data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}})
 
         for datamanager_key in data_manager_keys:
             datamanager = DataManager.objects.get(pk=datamanager_key)
@@ -80,11 +87,10 @@ def compute_dryrun(self, data, data_manager_keys):
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{pkhash}_{uuid.uuid4().hex}'
-            data_path = os.path.join(subtuple_directory, 'data')
 
-            # TODO bind paths
-            volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
-                       opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+            volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                            opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
+
 
             client.images.build(path=data_sample_docker_path,
                                 tag=data_docker,
