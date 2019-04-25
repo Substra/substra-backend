@@ -1,4 +1,6 @@
+import contextlib
 import io
+import asyncio
 import hashlib
 import json
 import glob
@@ -30,150 +32,172 @@ def clean_env_variables():
     os.environ.pop('CORE_PEER_MSPCONFIGPATH', None)
     os.environ.pop('CORE_PEER_ADDRESS', None)
 
+
 #######
 # /!\ #
 #######
 
+@contextlib.contextmanager
+def get_event_loop():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        yield loop
+    finally:
+        loop.close()
+
+
 # careful, passing invoke parameters to queryLedger will NOT fail
-
-
 def queryLedger(fcn, args=None):
 
-    if args is None:
-        args = []
+    with get_event_loop() as loop:
 
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-    chaincode_version = LEDGER['chaincode_version']
-    peer = LEDGER['peer']
-    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
-    requestor_config = LEDGER['client']
+        if args is None:
+            args = []
 
-    client = Client()
-    client.new_channel(channel_name)
+        channel_name = LEDGER['channel_name']
+        chaincode_name = LEDGER['chaincode_name']
+        chaincode_version = LEDGER['chaincode_version']
+        peer = LEDGER['peer']
+        peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
 
-    requestor = create_user(name=requestor_config['name'],
-                            org=requestor_config['org'],
-                            state_store=FileKeyValueStore(requestor_config['state_store']),
-                            msp_id=requestor_config['msp_id'],
-                            key_path=glob.glob(requestor_config['key_path'])[0],
-                            cert_path=requestor_config['cert_path'])
+        requestor_config = LEDGER['client']
 
-    target_peer = Peer(name=peer['name'])
-    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
-                                  'grpcOptions': peer['grpcOptions'],
-                                  'tlsCACerts': {'path': peer['tlsCACerts']},
-                                  'clientKey': {'path': peer['clientKey']},
-                                  'clientCert': {'path': peer['clientCert']},
-                                  })
-    client._peers[peer['name']] = target_peer
+        client = Client()
+        client.new_channel(channel_name)
 
-    try:
-        response = client.chaincode_query(
-            requestor=requestor,
-            channel_name=channel_name,
-            peer_names=[peer['name']],
-            args=args,
-            cc_name=chaincode_name,
-            cc_version=chaincode_version,
-            fcn=fcn)
-    except Exception as e:
-        st = status.HTTP_400_BAD_REQUEST
-        data = {'message': str(e)}
-    else:
-        msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
-        print(msg, flush=True)
+        requestor = create_user(name=requestor_config['name'],
+                                org=requestor_config['org'],
+                                state_store=FileKeyValueStore(requestor_config['state_store']),
+                                msp_id=requestor_config['msp_id'],
+                                key_path=glob.glob(requestor_config['key_path'])[0],
+                                cert_path=requestor_config['cert_path'])
 
-        st = status.HTTP_200_OK
+        target_peer = Peer(name=peer['name'])
 
-        # TO DO : review parsing error in case of failure
-        #         May have changed by using fabric-sdk-py
+        # Need loop
+        target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
+                                      'grpcOptions': peer['grpcOptions'],
+                                      'tlsCACerts': {'path': peer['tlsCACerts']},
+                                      'clientKey': {'path': peer['clientKey']},
+                                      'clientCert': {'path': peer['clientCert']},
+                                      })
+
+        client._peers[peer['name']] = target_peer
+
         try:
-            data = json.loads(response)
-        except json.decoder.JSONDecodeError:
+            # Async - need loop
+            response = loop.run_until_complete(
+                client.chaincode_query(
+                    requestor=requestor,
+                    channel_name=channel_name,
+                    peers=[peer['name']],
+                    args=args,
+                    cc_name=chaincode_name,
+                    cc_version=chaincode_version,
+                    fcn=fcn))
+        except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
-            data = {'message': response}
+            data = {'message': str(e)}
+        else:
+            msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
+            print(msg, flush=True)
 
-    finally:
-        return data, st
+            st = status.HTTP_200_OK
+
+            # TO DO : review parsing error in case of failure
+            #         May have changed by using fabric-sdk-py
+            try:
+                # json transformation if needed
+                data = json.loads(response)
+            except json.decoder.JSONDecodeError:
+                st = status.HTTP_400_BAD_REQUEST
+                data = {'message': response}
+
+    return data, st
 
 
 def invokeLedger(fcn, args=None, sync=False):
 
-    if args is None:
-        args = []
+    with get_event_loop() as loop:
+        if args is None:
+            args = []
 
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-    chaincode_version = LEDGER['chaincode_version']
-    peer = LEDGER['peer']
-    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+        channel_name = LEDGER['channel_name']
+        chaincode_name = LEDGER['chaincode_name']
+        chaincode_version = LEDGER['chaincode_version']
+        peer = LEDGER['peer']
+        peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+        orderer = LEDGER['orderer']
 
-    orderer = LEDGER['orderer']
+        requestor_config = LEDGER['client']
 
-    requestor_config = LEDGER['client']
+        client = Client()
+        client.new_channel(channel_name)
 
-    client = Client()
-    client.new_channel(channel_name)
+        requestor = create_user(name=requestor_config['name'],
+                                org=requestor_config['org'],
+                                state_store=FileKeyValueStore(requestor_config['state_store']),
+                                msp_id=requestor_config['msp_id'],
+                                key_path=glob.glob(requestor_config['key_path'])[0],
+                                cert_path=requestor_config['cert_path'])
 
-    requestor = create_user(name=requestor_config['name'],
-                            org=requestor_config['org'],
-                            state_store=FileKeyValueStore(requestor_config['state_store']),
-                            msp_id=requestor_config['msp_id'],
-                            key_path=glob.glob(requestor_config['key_path'])[0],
-                            cert_path=requestor_config['cert_path'])
+        target_peer = Peer(name=peer['name'])
 
-    target_peer = Peer(name=peer['name'])
-    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
-                                  'grpcOptions': peer['grpcOptions'],
-                                  'tlsCACerts': {'path': peer['tlsCACerts']},
-                                  'clientKey': {'path': peer['clientKey']},
-                                  'clientCert': {'path': peer['clientCert']},
-                                  })
-    client._peers[peer['name']] = target_peer
+        # Need loop
+        target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
+                                      'grpcOptions': peer['grpcOptions'],
+                                      'tlsCACerts': {'path': peer['tlsCACerts']},
+                                      'clientKey': {'path': peer['clientKey']},
+                                      'clientCert': {'path': peer['clientCert']},
+                                      })
+        client._peers[peer['name']] = target_peer
 
-    target_orderer = Orderer(name=orderer['name'])
-    target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
-                                     'grpcOptions': orderer['grpcOptions'],
-                                     'tlsCACerts': {'path': orderer['ca']},
-                                     'clientKey': {'path': orderer['clientKey']},
-                                     'clientCert': {'path': orderer['clientCert']},
-                                     })
-    client._orderers[orderer['name']] = target_orderer
+        target_orderer = Orderer(name=orderer['name'])
 
-    try:
-        response = client.chaincode_invoke(
-            requestor=requestor,
-            channel_name=channel_name,
-            peer_names=[peer['name']],
-            args=args,
-            cc_name=chaincode_name,
-            cc_version=chaincode_version,
-            fcn=fcn,
-            wait_for_event=sync,
-            wait_for_event_timeout=45)
-    except TimeoutError as e:
-        st = status.HTTP_408_REQUEST_TIMEOUT
-        data = {'message': str(e)}
-    except Exception as e:
-        st = status.HTTP_400_BAD_REQUEST
-        data = {'message': str(e)}
-    else:
-        # TO DO : review parsing error in case of failure
-        #         May have changed by using fabric-sdk-py
-        # elif 'access denied' in msg or 'authentication handshake failed' in msg:
-        #     st = status.HTTP_403_FORBIDDEN
+        # Need loop
+        target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
+                                         'grpcOptions': orderer['grpcOptions'],
+                                         'tlsCACerts': {'path': orderer['ca']},
+                                         'clientKey': {'path': orderer['clientKey']},
+                                         'clientCert': {'path': orderer['clientCert']},
+                                         })
+        client._orderers[orderer['name']] = target_orderer
 
-        st = status.HTTP_201_CREATED
         try:
-            response = json.loads(response)
-            pkhash = response.get('key', response.get('keys'))
-            data = {'pkhash': pkhash}
-        except json.decoder.JSONDecodeError:
+            # Async - need loop
+            response = loop.run_until_complete(client.chaincode_invoke(
+                requestor=requestor,
+                channel_name=channel_name,
+                peers=[peer['name']],
+                args=args,
+                cc_name=chaincode_name,
+                cc_version=chaincode_version,
+                fcn=fcn,
+                wait_for_event=sync,
+                wait_for_event_timeout=45))
+        except TimeoutError as e:
+            st = status.HTTP_408_REQUEST_TIMEOUT
+            data = {'message': str(e)}
+        except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
-            data = {'message': response}
-    finally:
-        return data, st
+            data = {'message': str(e)}
+        else:
+            # TO DO : review parsing error in case of failure
+            #         May have changed by using fabric-sdk-py
+            # elif 'access denied' in msg or 'authentication handshake failed' in msg:
+            #     st = status.HTTP_403_FORBIDDEN
+
+            st = status.HTTP_201_CREATED
+            try:
+                response = json.loads(response)
+                pkhash = response.get('key', response.get('keys'))
+                data = {'pkhash': pkhash}
+            except json.decoder.JSONDecodeError:
+                st = status.HTTP_400_BAD_REQUEST
+                data = {'message': response}
+
+    return data, st
 
 
 def get_dir_hash(archive_content):
