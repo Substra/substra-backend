@@ -31,7 +31,7 @@ def create_or_get(data, profile, asset, dryrun=False, many=False,
         print('dryrun')
         try:
             r = method(asset, data, dryrun=True)
-        except substra.exceptions.AssetAlreadyExist as e:
+        except substra.exceptions.AlreadyExists as e:
             r = e.response.json()
             print(colored(json.dumps(r, indent=2), 'cyan'))
         else:
@@ -41,7 +41,7 @@ def create_or_get(data, profile, asset, dryrun=False, many=False,
     try:
         r = method(asset, data)
 
-    except substra.exceptions.AssetAlreadyExist as e:
+    except substra.exceptions.AlreadyExists as e:
         r = e.response.json()
         print(colored(json.dumps(r, indent=2), 'cyan'))
         key_or_keys = e.pkhash
@@ -58,7 +58,7 @@ def update_datamanager(data_manager_key, data, profile):
     try:
         r = client.update('data_manager', data_manager_key, data)
 
-    except substra.exceptions.AssetAlreadyExist as e:
+    except substra.exceptions.AlreadyExists as e:
         r = e.response.json()
         print(colored(json.dumps(r, indent=2), 'cyan'))
 
