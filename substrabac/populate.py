@@ -55,9 +55,22 @@ def create_or_get(data, profile, asset, dryrun=False, many=False,
 
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
-    r = client.update('data_manager', data_manager_key, data)
-    print(colored(json.dumps(r, indent=2), 'green'))
-    return r['pkhash']
+    try:
+        r = client.update('data_manager', data_manager_key, data)
+
+    except substra.exceptions.AssetAlreadyExist as e:
+        r = e.response.json()
+        print(colored(json.dumps(r, indent=2), 'cyan'))
+
+    except substra.exceptions.InvalidRequest as e:
+        # FIXME if the data manager is already associated with the objective
+        #       backend answer with a 400 and a raw error coming from the
+        #       ledger.
+        #       this case will be handled soon, with the fabric SDK.
+        print(colored(str(e), 'red'))
+
+    else:
+        print(colored(json.dumps(r, indent=2), 'green'))
 
 
 def do_populate():
