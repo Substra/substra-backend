@@ -159,8 +159,8 @@ def invokeLedger(fcn, args=None, sync=False):
         target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
                                          'grpcOptions': orderer['grpcOptions'],
                                          'tlsCACerts': {'path': orderer['ca']},
-                                         'clientKey': {'path': orderer['clientKey']},
-                                         'clientCert': {'path': orderer['clientCert']},
+                                         'clientKey': {'path': peer['clientKey']},  # use peer creds (mutual tls)
+                                         'clientCert': {'path': peer['clientCert']},  # use peer creds (mutual tls)
                                          })
         client._orderers[orderer['name']] = target_orderer
 
