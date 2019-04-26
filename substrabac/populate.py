@@ -283,36 +283,29 @@ def do_populate():
 
     testtuple_key = create_or_get(data, org_1, 'testtuple')
 
-    if testtuple_key:
-        client.set_config(org_1)
+    client.set_config(org_1)
+    res_t = client.get('testtuple', testtuple_key)
+    print(colored(json.dumps(res_t, indent=2), 'yellow'))
+
+    testtuple_status = None
+    traintuple_status = None
+
+    client.set_config(org_1)
+
+    while traintuple_status not in ('done', 'failed') or testtuple_status not in ('done', 'failed'):
+        res = client.get('traintuple', traintuple_key)
         res_t = client.get('testtuple', testtuple_key)
-        print(colored(json.dumps(res_t, indent=2), 'yellow'))
-
-        while res['status'] not in ('done', 'failed') or res_t['status'] not in ('done', 'failed'):
+        if traintuple_status != res['status'] or testtuple_status != res_t['status']:
+            traintuple_status = res['status']
+            testtuple_status = res_t['status']
+            print('')
             print('-' * 100)
-            try:
-                client.set_config(org_1)
-                res = client.get('traintuple', traintuple_key)
-                print(colored(json.dumps(res, indent=2), 'green'))
+            print(colored(json.dumps(res, indent=2), 'green'))
+            print(colored(json.dumps(res_t, indent=2), 'yellow'))
+        else:
+            print('.', end='', flush=True)
 
-                res_t = client.get('testtuple', testtuple_key)
-                print(colored(json.dumps(res_t, indent=2), 'yellow'))
-            except substra.exceptions.SDKException:
-                print(colored('Error when getting subtuples', 'red'))
-            time.sleep(3)
-
-    else:
-        while res['status'] not in ('done', 'failed'):
-            print('-' * 100)
-            try:
-                client.set_config(org_1)
-                res = client.get('traintuple', traintuple_key)
-                print(colored(json.dumps(res, indent=2), 'green'))
-            except substra.exceptions.SDKException:
-                print(colored('Error when getting subtuple', 'red'))
-            time.sleep(3)
-
-        print('Testtuple create failed')
+        time.sleep(3)
 
 
 if __name__ == '__main__':
