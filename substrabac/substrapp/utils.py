@@ -57,7 +57,6 @@ def queryLedger(fcn, args=None):
 
         channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
-        chaincode_version = LEDGER['chaincode_version']
         peer = LEDGER['peer']
         peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
 
@@ -84,6 +83,19 @@ def queryLedger(fcn, args=None):
                                       })
 
         client._peers[peer['name']] = target_peer
+
+        # Get chaincode version
+        response = loop.run_until_complete(
+            client.query_instantiated_chaincodes(
+                requestor=requestor,
+                channel_name=channel_name,
+                peers=[peer['name']],
+                decode=True
+            ))
+        for ccs in response:
+            for cc in ccs.chaincodes:
+                if cc.name == chaincode_name:
+                    chaincode_version = cc.version
 
         try:
             # Async - need loop
@@ -125,7 +137,6 @@ def invokeLedger(fcn, args=None, sync=False):
 
         channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
-        chaincode_version = LEDGER['chaincode_version']
         peer = LEDGER['peer']
         peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
         orderer = LEDGER['orderer']
@@ -163,6 +174,19 @@ def invokeLedger(fcn, args=None, sync=False):
                                          'clientCert': {'path': peer['clientCert']},  # use peer creds (mutual tls)
                                          })
         client._orderers[orderer['name']] = target_orderer
+
+        # Get chaincode version
+        response = loop.run_until_complete(
+            client.query_instantiated_chaincodes(
+                requestor=requestor,
+                channel_name=channel_name,
+                peers=[peer['name']],
+                decode=True
+            ))
+        for ccs in response:
+            for cc in ccs.chaincodes:
+                if cc.name == chaincode_name:
+                    chaincode_version = cc.version
 
         try:
             # Async - need loop
