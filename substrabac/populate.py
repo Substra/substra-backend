@@ -20,8 +20,7 @@ def setup_config():
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
 
 
-def get_or_create(data, profile, asset, dryrun=False, many=False,
-                  register=False):
+def get_or_create(data, profile, asset, dryrun=False, register=False):
 
     client.set_config(profile)
 
@@ -48,7 +47,7 @@ def get_or_create(data, profile, asset, dryrun=False, many=False,
 
     else:
         print(colored(json.dumps(r, indent=2), 'green'))
-        key_or_keys = [x['pkhash'] for x in r] if many else r['pkhash']
+        key_or_keys = [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
 
     return key_or_keys
 
@@ -112,7 +111,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org1_key],
         'test_only': False,
     }
-    train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, many=True, register=True)
+    train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=True)
 
     ####################################################
 
@@ -137,7 +136,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    test_data_sample_keys = get_or_create(data, org_0, 'data_sample', many=True)
+    test_data_sample_keys = get_or_create(data, org_0, 'data_sample')
 
     ####################################################
 
@@ -150,7 +149,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    get_or_create(data, org_0, 'data_sample', many=True)
+    get_or_create(data, org_0, 'data_sample')
 
     ####################################################
 
@@ -163,7 +162,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    get_or_create(data, org_0, 'data_sample', many=True)
+    get_or_create(data, org_0, 'data_sample')
 
     ####################################################
 
