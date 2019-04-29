@@ -20,7 +20,7 @@ def setup_config():
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
 
 
-def create_or_get(data, profile, asset, dryrun=False, many=False,
+def get_or_create(data, profile, asset, dryrun=False, many=False,
                   register=False):
 
     client.set_config(profile)
@@ -93,7 +93,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': 'all',
     }
-    data_manager_org1_key = create_or_get(data, org_1, 'data_manager', dryrun=True)
+    data_manager_org1_key = get_or_create(data, org_1, 'data_manager', dryrun=True)
 
     ####################################################
 
@@ -112,7 +112,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org1_key],
         'test_only': False,
     }
-    train_data_sample_keys = create_or_get(data, org_1, 'data_sample', dryrun=True, many=True, register=True)
+    train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, many=True, register=True)
 
     ####################################################
 
@@ -124,7 +124,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
         'permissions': 'all'
     }
-    data_manager_org0_key = create_or_get(data, org_0, 'data_manager')
+    data_manager_org0_key = get_or_create(data, org_0, 'data_manager')
 
     ####################################################
 
@@ -137,7 +137,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    test_data_sample_keys = create_or_get(data, org_0, 'data_sample', many=True)
+    test_data_sample_keys = get_or_create(data, org_0, 'data_sample', many=True)
 
     ####################################################
 
@@ -150,7 +150,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    create_or_get(data, org_0, 'data_sample', many=True)
+    get_or_create(data, org_0, 'data_sample', many=True)
 
     ####################################################
 
@@ -163,7 +163,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    create_or_get(data, org_0, 'data_sample', many=True)
+    get_or_create(data, org_0, 'data_sample', many=True)
 
     ####################################################
 
@@ -178,7 +178,7 @@ def do_populate():
         'test_data_manager_key': data_manager_org0_key
     }
 
-    objective_key = create_or_get(data, org_0, 'objective', dryrun=True)
+    objective_key = get_or_create(data, org_0, 'objective', dryrun=True)
 
     ####################################################
 
@@ -191,7 +191,7 @@ def do_populate():
         'permissions': 'all'
     }
 
-    create_or_get(data, org_0, 'objective', dryrun=True)
+    get_or_create(data, org_0, 'objective', dryrun=True)
 
     ####################################################
 
@@ -212,7 +212,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
         'permissions': 'all',
     }
-    algo_key = create_or_get(data, org_1, 'algo')
+    algo_key = get_or_create(data, org_1, 'algo')
 
     ####################################################
 
@@ -223,7 +223,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
         'permissions': 'all',
     }
-    algo_key_2 = create_or_get(data, org_1, 'algo')
+    algo_key_2 = get_or_create(data, org_1, 'algo')
 
     ####################################################
 
@@ -233,7 +233,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
         'permissions': 'all',
     }
-    algo_key_3 = create_or_get(data, org_1, 'algo')
+    algo_key_3 = get_or_create(data, org_1, 'algo')
 
     ####################################################
 
@@ -246,7 +246,7 @@ def do_populate():
         'train_data_sample_keys': train_data_sample_keys,
         'tag': 'substra'
     }
-    traintuple_key = create_or_get(data, org_1, 'traintuple')
+    traintuple_key = get_or_create(data, org_1, 'traintuple')
 
     print('create second traintuple')
     data = {
@@ -257,7 +257,7 @@ def do_populate():
         'tag': 'My super tag'
     }
 
-    create_or_get(data, org_1, 'traintuple')
+    get_or_create(data, org_1, 'traintuple')
 
     print('create third traintuple')
     data = {
@@ -267,7 +267,7 @@ def do_populate():
         'train_data_sample_keys': train_data_sample_keys,
     }
 
-    create_or_get(data, org_1, 'traintuple')
+    get_or_create(data, org_1, 'traintuple')
 
     ####################################################
 
@@ -281,7 +281,7 @@ def do_populate():
         'traintuple_key': traintuple_key
     }
 
-    testtuple_key = create_or_get(data, org_1, 'testtuple')
+    testtuple_key = get_or_create(data, org_1, 'testtuple')
 
     client.set_config(org_1)
     res_t = client.get('testtuple', testtuple_key)
