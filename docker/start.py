@@ -14,6 +14,24 @@ FABRIC_LOGGING_SPEC = "debug"
 
 
 def generate_docker_compose_file(conf, launch_settings):
+
+    # POSTGRES
+    POSTGRES_USER = 'substrabac'
+    USER = 'substrabac'
+    POSTGRES_PASSWORD = 'substrabac'
+    POSTGRES_DB = 'substrabac'
+
+    # RABBITMQ
+    RABBITMQ_DEFAULT_USER = 'guest'
+    RABBITMQ_DEFAULT_PASS = 'guest'
+    RABBITMQ_HOSTNAME = 'rabbitmq'
+    RABBITMQ_NODENAME = 'rabbitmq'
+    RABBITMQ_DOMAIN = 'rabbit'
+    RABBITMQ_PORT = '5672'
+
+    # CELERY
+    CELERY_BROKER_URL = f'amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@{RABBITMQ_DOMAIN}:{RABBITMQ_PORT}//'
+
     try:
         from ruamel import yaml
     except ImportError:
@@ -24,10 +42,10 @@ def generate_docker_compose_file(conf, launch_settings):
                       'substrabac_tools': {'postgresql': {'container_name': 'postgresql',
                                                           'image': 'library/postgres:10.5',
                                                           'restart': 'unless-stopped',
-                                                          'environment': ['POSTGRES_USER=substrabac',
-                                                                          'USER=substrabac',
-                                                                          'POSTGRES_PASSWORD=substrabac',
-                                                                          'POSTGRES_DB=substrabac'],
+                                                          'environment': [f'POSTGRES_USER={POSTGRES_USER}',
+                                                                          f'USER={USER}',
+                                                                          f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
+                                                                          f'POSTGRES_DB={POSTGRES_DB}'],
                                                           'volumes': [
                                                               '/substra/backup/postgres-data:/var/lib/postgresql/data',
                                                               f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
@@ -36,9 +54,10 @@ def generate_docker_compose_file(conf, launch_settings):
                                                           'hostname': 'celerybeat',
                                                           'image': 'substra/celerybeat',
                                                           'restart': 'unless-stopped',
-                                                          'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info -b rabbit"',
+                                                          'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info"',
                                                           'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': ['PYTHONUNBUFFERED=1',
+                                                                          f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                                                           f'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
                                                           'depends_on': ['postgresql', 'rabbit']
                                                           },
@@ -46,10 +65,10 @@ def generate_docker_compose_file(conf, launch_settings):
                                                       'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
                                                       'restart': 'unless-stopped',
                                                       'image': 'rabbitmq:3',
-                                                      'environment': ['RABBITMQ_DEFAULT_USER=guest',
-                                                                      'RABBITMQ_DEFAULT_PASS=guest',
-                                                                      'HOSTNAME=rabbitmq',
-                                                                      'RABBITMQ_NODENAME=rabbitmq'],
+                                                      'environment': [f'RABBITMQ_DEFAULT_USER={RABBITMQ_DEFAULT_USER}',
+                                                                      f'RABBITMQ_DEFAULT_PASS={RABBITMQ_DEFAULT_PASS}',
+                                                                      f'HOSTNAME={RABBITMQ_HOSTNAME}',
+                                                                      f'RABBITMQ_NODENAME={RABBITMQ_NODENAME}'],
                                                       'volumes': ['/substra/backup/rabbit-data:/var/lib/rabbitmq']
                                                       },
                                            },
@@ -66,13 +85,16 @@ def generate_docker_compose_file(conf, launch_settings):
         if org_name_stripped == 'chunantes':
             port = 8001
 
+        static = 'python3 manage.py collectstatic --noinput' if launch_settings == 'prod' else 'echo \'No static\''
+
         backend = {'container_name': f'{org_name_stripped}.substrabac',
                    'image': 'substra/substrabac',
                    'restart': 'unless-stopped',
                    'ports': [f'{port}:{port}'],
-                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
+                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate; {static}; python3 manage.py runserver 0.0.0.0:{port}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                    'environment': ['DATABASE_HOST=postgresql',
+                                   f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                    f'SUBSTRABAC_ORG={org_name}',
                                    f'SUBSTRABAC_DEFAULT_PORT={port}',
                                    f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
@@ -100,11 +122,12 @@ def generate_docker_compose_file(conf, launch_settings):
                      'hostname': f'{org_name}.scheduler',
                      'image': 'substra/celeryworker',
                      'restart': 'unless-stopped',
-                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery -b rabbit --hostname {org_name}.scheduler"',
+                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                      'environment': [f'ORG={org_name_stripped}',
                                      f'SUBSTRABAC_ORG={org_name}',
                                      f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
                                      'PYTHONUNBUFFERED=1',
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
@@ -127,11 +150,12 @@ def generate_docker_compose_file(conf, launch_settings):
                   'hostname': f'{org_name}.worker',
                   'image': 'substra/celeryworker',
                   'restart': 'unless-stopped',
-                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery -b rabbit --hostname {org_name}.worker"',
+                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                   'environment': [f'ORG={org_name_stripped}',
                                   f'SUBSTRABAC_ORG={org_name}',
                                   f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                  f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
                                   'PYTHONUNBUFFERED=1',
                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
@@ -157,11 +181,12 @@ def generate_docker_compose_file(conf, launch_settings):
                      'hostname': f'{org_name}.dryrunner',
                      'image': 'substra/celeryworker',
                      'restart': 'unless-stopped',
-                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.dryrunner,celery -b rabbit --hostname {org_name}.dryrunner"',
+                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.dryrunner,celery --hostname {org_name}.dryrunner"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                      'environment': [f'ORG={org_name_stripped}',
                                      f'SUBSTRABAC_ORG={org_name}',
                                      f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                      f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
                                      'PYTHONUNBUFFERED=1',
                                      f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
