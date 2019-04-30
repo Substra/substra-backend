@@ -28,9 +28,11 @@ pipeline {
 
           steps {
             sh "apt update"
-            sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
-            sh "apt install -y docker"
+            sh "export DOCKER_URL=https://download.docker.com/linux/static/stable/x86_64/docker-18.06.3-ce.tgz"
+            sh "echo $DOCKER_URL"
+            sh "apt install curl && mkdir -p /tmp/download && curl -L $DOCKER_URL | tar -xz -C /tmp/download && mv /tmp/download/docker/docker /usr/local/bin/"
             sh "docker login -u _json_key --password-stdin https://gcr.io < /secret/kaniko-secret.json"
+            sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
             dir("substrabac") {
               sh "pip install -r requirements.txt"
