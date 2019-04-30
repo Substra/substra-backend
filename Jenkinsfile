@@ -29,8 +29,7 @@ pipeline {
           steps {
             sh "apt update"
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
-            sh "apt install -y google-cloud-sdk"
-            sh "gcloud auth configure-docker"
+            sh "docker login -u _json_key --password-stdin https://gcr.io < /secret/kaniko-secret.json"
 
             dir("substrabac") {
               sh "pip install -r requirements.txt"
