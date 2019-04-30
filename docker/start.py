@@ -85,11 +85,13 @@ def generate_docker_compose_file(conf, launch_settings):
         if org_name_stripped == 'chunantes':
             port = 8001
 
+        static = 'python3 manage.py collectstatic --noinput' if launch_settings == 'prod' else 'echo \'No static\''
+
         backend = {'container_name': f'{org_name_stripped}.substrabac',
                    'image': 'substra/substrabac',
                    'restart': 'unless-stopped',
                    'ports': [f'{port}:{port}'],
-                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate --settings=substrabac.settings.{launch_settings}; python3 manage.py collectstatic --noinput; python3 manage.py runserver 0.0.0.0:{port}"',
+                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate; {static}; python3 manage.py runserver 0.0.0.0:{port}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                    'environment': ['DATABASE_HOST=postgresql',
                                    f'CELERY_BROKER_URL={CELERY_BROKER_URL}',

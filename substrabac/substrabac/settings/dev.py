@@ -43,9 +43,6 @@ SITE_ID = 1
 SITE_HOST = f'{ORG_NAME}.substrabac'
 SITE_PORT = DEFAULT_PORT
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
