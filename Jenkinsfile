@@ -28,11 +28,11 @@ pipeline {
 
           steps {
             sh "apt update"
-            sh "docker login -u _json_key --password-stdin https://gcr.io < /secret/kaniko-secret.json"
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
             dir("substrabac") {
               sh "pip install -r requirements.txt"
+              sh "docker login -u _json_key --password-stdin https://gcr.io < /secret/kaniko-secret.json"
               sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
               sh "coverage report"
               sh "coverage html"
