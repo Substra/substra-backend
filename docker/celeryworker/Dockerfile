@@ -20,5 +20,3 @@ COPY ./substrabac/fake_metrics /usr/src/app/fake_metrics
 COPY ./substrabac/fake_data_sample /usr/src/app/fake_data_sample
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/substrabac /usr/src/app/substrabac
-
-RUN sed -i 's/localhost/rabbit/g' /usr/src/app/substrabac/celery.py
