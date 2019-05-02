@@ -35,8 +35,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def dryrun(self, data_opener):
 
-        mandatory_functions = {}  # currently check by the substratools pacakge
-
         file = data_opener.open().read()
 
         try:
@@ -47,7 +45,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
         if 'substratools' not in imported_module_names:
-            return Response({'message': f'Opener must import substratools, please review your opener and the documentation.'},
+            return Response({'message': 'Opener must import substratools, please review your opener and the documentation.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
