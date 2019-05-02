@@ -35,13 +35,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def dryrun(self, data_opener):
 
-        mandatory_functions = {'get_X': {'folder'},
-                               'get_y': {'folder'},
-                               'save_pred': {'y_pred', 'folder'},
-                               'get_pred': {'folder'},
-                               'fake_X': {'n_sample'},
-                               'fake_y': {'n_sample'}
-                               }
+        mandatory_functions = {}  # currently check by the substratools pacakge
 
         file = data_opener.open().read()
 

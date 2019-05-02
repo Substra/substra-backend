@@ -1,4 +1,4 @@
-"""Opener of the simplified ISIC 2018 dataset"""
+"""Opener of the simplified ISIC 2018 dataset (other opener)"""
 import os
 import csv
 import numpy as np
