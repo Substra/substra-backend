@@ -9,8 +9,14 @@ spec:
     volumeMounts:
       - { name: tmp, mountPath: /tmp }
       - { name: docker, mountPath: /var/run/docker.sock }
+      - { name: kaniko-secret, mountPath: /secret }
+    env:
+      - { name: GOOGLE_APPLICATION_CREDENTIALS, value: /secret/kaniko-secret.json }
   volumes:
     - name: tmp
       hostPath: { path: /tmp, type: Directory }
     - name: docker
       hostPath: { path: /var/run/docker.sock, type: File }
+    - name: kaniko-secret
+      secret:
+        secretName: kaniko-secret
