@@ -29,7 +29,7 @@ objective = [
         },
         "owner": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
         "testDataset": {
-            "dataManagerKey": "82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2",
+            "dataManagerKey": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "dataSampleKeys": [
                 "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf",
                 "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a"
@@ -60,13 +60,13 @@ datamanager = [
         "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
-            "storageAddress": "http://testserver/data_manager/82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2/description/"
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/description/"
         },
-        "key": "82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2",
+        "key": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
         "name": "Simplified ISIC 2018",
         "opener": {
-            "hash": "82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2",
-            "storageAddress": "http://testserver/data_manager/82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2/opener/"
+            "hash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/opener/"
         },
         "owner": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
         "permissions": "all",
@@ -240,7 +240,7 @@ testtuple = [
                 "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a",
                 "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf"
             ],
-            "openerHash": "82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2",
+            "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "perf": 0
         },
         "log": "Test - CPU:179.46 % - Mem:0.09 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
@@ -277,7 +277,7 @@ model = [
                     "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a",
                     "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf"
                 ],
-                "openerHash": "82e841c49822b2abcab9e95fe9ae359316d70ab5f627a28b0b67618dd945b2c2",
+                "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
                 "perf": 0,
                 "worker": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7"
             },
