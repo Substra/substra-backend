@@ -45,18 +45,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': f'Opener must be a valid python file, please review your opener file and the documentation.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        funcs_args = {n.name: {arg.arg for arg in n.args.args} for n in node.body if isinstance(n, ast.FunctionDef)}
-
-        for mfunc, margs in mandatory_functions.items():
-            try:
-                args = funcs_args[mfunc]
-            except:
-                return Response({'message': f'Opener must have a "{mfunc}" function, please review your opener and the documentation.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                if not margs.issubset(args):
-                    return Response({'message': f'Opener function "{mfunc}" must have at least {margs} arguments, please review your opener and the documentation.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+        imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
+        if 'substratools' not in imported_module_names:
+            return Response({'message': f'Opener must import substratools, please review your opener and the documentation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
                         status=status.HTTP_200_OK)
