@@ -787,18 +787,6 @@ class DataManagerViewTests(APITestCase):
         self.assertEqual(response.data, {'message': f'Your data opener is valid. You can remove the dryrun option.'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
-        # Will fail because metrics.py instead of opener
-        files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/owkin/objectives/objective0/metrics.py'),
-                                     'rb'),
-                 'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
-                                     'rb')}
-
-        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
-        self.assertIn('please review your opener and the documentation.', response.data['message'])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
         for x in files:
             files[x].close()
 
