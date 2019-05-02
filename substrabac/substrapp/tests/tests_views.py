@@ -719,7 +719,7 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
-        datamanager_response = [d for d in datamanager if d['key'] == '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'][0]
+        datamanager_response = [d for d in datamanager if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
         with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = datamanager_response
@@ -737,7 +737,7 @@ class DataManagerViewTests(APITestCase):
                                         FakeRequest(status=status.HTTP_200_OK,
                                                     content=description_content)]
 
-            search_params = '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/'
+            search_params = '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -786,18 +786,6 @@ class DataManagerViewTests(APITestCase):
         response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
         self.assertEqual(response.data, {'message': f'Your data opener is valid. You can remove the dryrun option.'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Will fail because metrics.py instead of opener
-        files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/owkin/objectives/objective0/metrics.py'),
-                                     'rb'),
-                 'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
-                                     'rb')}
-
-        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
-        self.assertIn('please review your opener and the documentation.', response.data['message'])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         for x in files:
             files[x].close()
