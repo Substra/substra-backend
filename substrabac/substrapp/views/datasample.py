@@ -91,7 +91,6 @@ def compute_dryrun(self, data, data_manager_keys):
             volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                             opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
 
-
             client.images.build(path=data_sample_docker_path,
                                 tag=data_docker,
                                 rm=False)
@@ -138,12 +137,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     def dryrun_task(self, data, data_manager_keys):
         task = compute_dryrun.apply_async((data, data_manager_keys),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
-        url_http = 'http' if settings.DEBUG else 'https'
-        site_port = getattr(settings, "SITE_PORT", None)
-        current_site = f'{getattr(settings, "SITE_HOST")}'
-        if site_port:
-            current_site = f'{current_site}:{site_port}'
-        task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+        current_site = getattr(settings, "DEFAULT_DOMAIN")
+        task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
         return task, f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
     @staticmethod

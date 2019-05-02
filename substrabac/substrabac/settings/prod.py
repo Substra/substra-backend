@@ -43,6 +43,8 @@ SITE_ID = 1
 SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
 
+DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 

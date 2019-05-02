@@ -168,12 +168,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 return Response({'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'},
                                 status=status.HTTP_400_BAD_REQUEST)
 
-            url_http = 'http' if settings.DEBUG else 'https'
-            current_site = getattr(settings, "SITE_HOST")
-            site_port = getattr(settings, "SITE_PORT", None)
-            if site_port:
-                current_site = f'{current_site}:{site_port}'
-            task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+            current_site = getattr(settings, "DEFAULT_DOMAIN")
+            task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
             msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
             return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
