@@ -76,7 +76,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
     for org in conf:
         org_name = org['name']
-        orderer = org['orderer']['name']
+        orderer_ca = org['orderer']['ca']
         peer = org['peer']['name']
         org_name_stripped = org_name.replace('-', '')
 
@@ -115,11 +115,11 @@ def generate_docker_compose_file(conf, launch_settings):
                                '/substra/dryrun:/substra/dryrun',
                                '/substra/static:/usr/src/app/substrabac/statics',
                                f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                               f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                               f'{orderer_ca}:{orderer_ca}',
                                f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                               f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                               f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
                                f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                               f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                               ],
                    'depends_on': ['postgresql', 'rabbit']}
 
         scheduler = {'container_name': f'{org_name_stripped}.scheduler',
@@ -143,11 +143,11 @@ def generate_docker_compose_file(conf, launch_settings):
                                      f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['docker_port']}",
                                      f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
                      'volumes': [f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                                 f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                                 f'{orderer_ca}:{orderer_ca}',
                                  f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                                 f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                                 f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
                                  f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                                 f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                                 ],
                      'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
 
         worker = {'container_name': f'{org_name_stripped}.worker',
@@ -174,11 +174,11 @@ def generate_docker_compose_file(conf, launch_settings):
                               '/substra/medias:/substra/medias',
                               '/substra/servermedias:/substra/servermedias',
                               f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                              f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                              f'{orderer_ca}:{orderer_ca}',
                               f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                              f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                              f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
                               f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                              f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                              ],
                   'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         dryrunner = {'container_name': f'{org_name_stripped}.dryrunner',
@@ -206,11 +206,11 @@ def generate_docker_compose_file(conf, launch_settings):
                                  '/substra/servermedias:/substra/servermedias',
                                  '/substra/dryrun:/substra/dryrun',
                                  f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                                 f'/substra/data/orgs/{orderer}/ca-cert.pem:/substra/data/orgs/{orderer}/ca-cert.pem',
+                                 f'{orderer_ca}:{orderer_ca}',
                                  f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                                 f'/substra/data/orgs/{org_name}/user/msp:/substra/data/orgs/{org_name}/user/msp',
+                                 f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
                                  f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                                 f'/substra/data/orgs/{org_name}/user/msp:/opt/gopath/src/github.com/hyperledger/fabric/peer/msp'],
+                                 ],
                      'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
