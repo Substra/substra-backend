@@ -91,7 +91,6 @@ def compute_dryrun(self, data, data_manager_keys):
             volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                             opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
 
-
             client.images.build(path=data_sample_docker_path,
                                 tag=data_docker,
                                 rm=False)
@@ -112,8 +111,6 @@ def compute_dryrun(self, data, data_manager_keys):
 
     except ContainerError as e:
         raise Exception(e.stderr)
-    except Exception as e:
-        raise str(e)
     finally:
         try:
             container = client.containers.get(data_docker_name)
