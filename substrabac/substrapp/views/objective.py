@@ -6,6 +6,8 @@ import shutil
 import tempfile
 import uuid
 
+from urllib.parse import unquote
+
 import requests
 from django.conf import settings
 from django.db import IntegrityError

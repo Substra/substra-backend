@@ -35,7 +35,7 @@ def get_filters(query_params):
             value = el[2]
 
             filter = {
-                subparent: [value]
+                subparent: [unquote(value)]
             }
 
             if not len(filters[idx]):  # create and add it
