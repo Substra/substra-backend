@@ -135,7 +135,7 @@ def queryLedger(fcn, args=None):
     return data, st
 
 
-def invokeLedger(fcn, args=None, sync=False):
+def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
 
     with get_event_loop() as loop:
         if args is None:
@@ -196,16 +196,21 @@ def invokeLedger(fcn, args=None, sync=False):
 
         try:
             # Async - need loop
-            response = loop.run_until_complete(client.chaincode_invoke(
-                requestor=requestor,
-                channel_name=channel_name,
-                peers=[peer['name']],
-                args=args,
-                cc_name=chaincode_name,
-                cc_version=chaincode_version,
-                fcn=fcn,
-                wait_for_event=sync,
-                wait_for_event_timeout=45))
+            kwargs = {
+                'requestor': requestor,
+                'channel_name': channel_name,
+                'peers': [peer['name']],
+                'args': args,
+                'cc_name': chaincode_name,
+                'cc_version': chaincode_version,
+                'fcn': fcn,
+                'wait_for_event': sync,
+                'wait_for_event_timeout': 45
+            }
+            if cc_pattern:
+                kwargs['cc_pattern'] = cc_pattern
+
+            response = loop.run_until_complete(client.chaincode_invoke(**kwargs))
         except TimeoutError as e:
             st = status.HTTP_408_REQUEST_TIMEOUT
             data = {'message': str(e)}
