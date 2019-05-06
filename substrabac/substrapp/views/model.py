@@ -86,14 +86,16 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     instance = self.get_object()
                 except Http404:
                     try:
-                        instance = self.create_or_update_model(data, pk)
+                        instance = self.create_or_update_model(data['traintuple'],
+                                                               data['traintuple']['outModel']['hash'])
                     except Exception as e:
                         error = e
                 else:
                     # check if instance has file
                     if not instance.file:
                         try:
-                            instance = self.create_or_update_model(data, pk)
+                            instance = self.create_or_update_model(data['traintuple'],
+                                                                   data['traintuple']['outModel']['hash'])
                         except Exception as e:
                             error = e
                 finally:
