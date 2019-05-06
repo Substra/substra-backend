@@ -18,6 +18,7 @@ def setup_config():
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     client.create_config('owkin', 'http://owkin.substrabac:8000', '0.0')
     client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
+    client.create_config('clb', 'http://clb.substrabac:8002', '0.0')
 
 
 def get_or_create(data, profile, asset, dryrun=False, register=False):
@@ -78,10 +79,13 @@ def do_populate():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--one-org', action='store_true', default=False,
                         help='Launch populate with one org only')
+    parser.add_argument('-t', '--three-orgs', action='store_true', default=False,
+                        help='Launch populate with three orgs')
     args = vars(parser.parse_args())
 
     org_0 = 'owkin'
     org_1 = org_0 if args['one_org'] else 'chunantes'
+    org_2 = 'clb' if args['three_orgs'] else org_0
 
     print(f'will create datamanager with {org_1}')
     # create datamanager with org1
@@ -211,7 +215,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
         'permissions': 'all',
     }
-    algo_key = get_or_create(data, org_1, 'algo')
+    algo_key = get_or_create(data, org_2, 'algo')
 
     ####################################################
 
