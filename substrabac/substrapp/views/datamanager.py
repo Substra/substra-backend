@@ -177,6 +177,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'args': f'{{"Args":["queryDataset", "{pk}"]}}'
         })
 
+        if st == status.HTTP_404_NOT_FOUND:
+            raise Http404('Not found')
+
         if st != status.HTTP_200_OK:
             raise JsonException(data)
 
@@ -202,6 +205,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 data = self.getObjectFromLedger(pk)  # datamanager use particular query to ledger
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
             else:
                 error = None
                 instance = None
