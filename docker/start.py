@@ -13,6 +13,13 @@ raven_scheduler_url = raven_worker_url
 FABRIC_LOGGING_SPEC = "debug"
 
 
+BACKEND_PORT = {
+    'owkin': 8000,
+    'chunantes': 8001,
+    'clb': 8002
+}
+
+
 def generate_docker_compose_file(conf, launch_settings):
 
     # POSTGRES
@@ -83,9 +90,8 @@ def generate_docker_compose_file(conf, launch_settings):
         org_name_stripped = org_name.replace('-', '')
 
         # Dirty port assign
-        port = 8000
-        if org_name_stripped == 'chunantes':
-            port = 8001
+
+        port = BACKEND_PORT[org_name_stripped]
 
         cpu_count = os.cpu_count()
         processes = 2 * int(cpu_count) + 1
