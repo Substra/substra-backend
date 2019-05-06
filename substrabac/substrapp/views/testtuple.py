@@ -1,5 +1,6 @@
 import json
 
+from django.http import Http404
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -134,5 +135,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                 data = getObjectFromLedger(pk, 'queryTesttuple')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
             else:
                 return Response(data, status=status.HTTP_200_OK)
