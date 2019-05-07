@@ -33,7 +33,10 @@ from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashM
 
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
-    subtuple_directory = build_subtuple_folders({'key': pkhash})
+
+    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
+
+    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
 
     metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
     if not os.path.exists(metrics_path_dst):
@@ -56,7 +59,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
 
     metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
-    metrics_docker_name = f'{metrics_docker}_{pkhash}_{uuid.uuid4().hex}'
+    metrics_docker_name = f'{metrics_docker}_{dryrun_uuid}'
     volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
                metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
