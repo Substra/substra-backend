@@ -591,7 +591,7 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.model.requests.get') as mrequestsget, \
                 mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
-            mgetObjectFromLedger.return_value = model[0]['traintuple']
+            mgetObjectFromLedger.return_value = model[0]
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=self.model.read().encode())
@@ -602,7 +602,7 @@ class ModelViewTests(APITestCase):
             search_params = model[0]['traintuple']['outModel']['hash'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[0]['traintuple'])
+            self.assertEqual(r, model[0])
 
     def test_model_retrieve_fail(self):
 
