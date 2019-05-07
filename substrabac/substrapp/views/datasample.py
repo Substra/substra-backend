@@ -236,6 +236,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return list(data.values())
 
     def handle_dryrun(self, data, data_manager_keys):
+        data_dry_run = []
+
         # write uploaded file to disk
         for d in data:
             pkhash = d['pkhash']
@@ -245,8 +247,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 with open(file_path, 'wb') as f:
                     f.write(d['file'].open().read())
 
+                data_dry_run.append({
+                    'pkhash': pkhash,
+                    'file': file_path
+                })
+
+            if 'path' in d:
+                data_dry_run.append(d)
+
         try:
-            task, msg = self.dryrun_task(data, data_manager_keys)
+            task, msg = self.dryrun_task(data_dry_run, data_manager_keys)
         except Exception as e:
             return Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
