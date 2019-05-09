@@ -458,9 +458,8 @@ def doTask(subtuple, tuple_type):
 
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
-            url_http = 'http' if settings.DEBUG else 'https'
-            current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
-            end_model_file = f'{url_http}://{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+            current_site = getattr(settings, "DEFAULT_DOMAIN")
+            end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
         # compute metric task
         metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac

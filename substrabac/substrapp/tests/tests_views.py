@@ -72,6 +72,7 @@ class ViewTests(APITestCase):
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+@override_settings(DEFAULT_DOMAIN='https://localhost')
 class ObjectiveViewTests(APITestCase):
 
     def setUp(self):
@@ -991,6 +992,7 @@ class TaskViewTests(APITestCase):
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+@override_settings(DEFAULT_DOMAIN='https://localhost')
 class DataViewTests(APITestCase):
 
     def setUp(self):
