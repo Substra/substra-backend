@@ -42,6 +42,7 @@ def generate_docker_compose_file(conf, launch_settings):
                       'substrabac_tools': {'postgresql': {'container_name': 'postgresql',
                                                           'image': 'library/postgres:10.5',
                                                           'restart': 'unless-stopped',
+                                                          'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                           'environment': [f'POSTGRES_USER={POSTGRES_USER}',
                                                                           f'USER={USER}',
                                                                           f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
@@ -65,6 +66,7 @@ def generate_docker_compose_file(conf, launch_settings):
                                                       'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
                                                       'restart': 'unless-stopped',
                                                       'image': 'rabbitmq:3',
+                                                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                                                       'environment': [f'RABBITMQ_DEFAULT_USER={RABBITMQ_DEFAULT_USER}',
                                                                       f'RABBITMQ_DEFAULT_PASS={RABBITMQ_DEFAULT_PASS}',
                                                                       f'HOSTNAME={RABBITMQ_HOSTNAME}',
