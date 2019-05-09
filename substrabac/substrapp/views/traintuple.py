@@ -126,6 +126,8 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'args': '{"Args":["queryTraintuples"]}'
         })
 
+        data = data if data else []
+
         return Response(data, status=st)
 
     def getObjectFromLedger(self, pk):
