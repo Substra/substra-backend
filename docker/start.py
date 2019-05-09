@@ -231,6 +231,9 @@ def generate_docker_compose_file(conf, launch_settings):
             default_domain = os.environ.get('SUBSTRABAC_DEFAULT_DOMAIN', '')
             if default_domain:
                 backend['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
+                worker['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
+                scheduler['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
+                dryrunner['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
             scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}")
             worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
             dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
