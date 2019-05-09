@@ -233,6 +233,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 'path': normpath(path)
             }
 
+        if not data:
+            raise Exception(f'No data sample provided.')
+
         return list(data.values())
 
     def handle_dryrun(self, data, data_manager_keys):
