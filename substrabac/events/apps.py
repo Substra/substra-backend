@@ -19,6 +19,7 @@ LEDGER = getattr(settings, 'LEDGER', None)
 async def main(stream):
     await stream
 
+
 class EventsConfig(AppConfig):
     name = 'events'
 
