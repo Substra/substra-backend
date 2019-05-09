@@ -124,6 +124,12 @@ def queryLedger(fcn, args=None):
                 data = json.loads(response)
             except json.decoder.JSONDecodeError:
                 st = status.HTTP_400_BAD_REQUEST
+
+                if 'access denied' in response:
+                    st = status.HTTP_403_FORBIDDEN
+                elif 'no element with key' in response:
+                    st = status.HTTP_404_NOT_FOUND
+
                 data = {'message': response}
 
     return data, st
