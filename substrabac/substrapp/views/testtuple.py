@@ -116,6 +116,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             'args': '{"Args":["queryTesttuples"]}'
         })
 
+        data = data if data else []
+
         return Response(data, status=st)
 
     def retrieve(self, request, *args, **kwargs):
