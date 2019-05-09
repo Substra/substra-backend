@@ -265,7 +265,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             data = getObjectFromLedger(pk, self.ledger_query_call)
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-
+        except Http404:
+            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
         # try to get it from local db to check if description exists
         try:
             instance = self.get_object()

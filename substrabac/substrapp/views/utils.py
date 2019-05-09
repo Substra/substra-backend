@@ -2,7 +2,7 @@ import hashlib
 import os
 from urllib.parse import unquote
 
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -60,6 +60,9 @@ def getObjectFromLedger(pk, query):
         'args': f'{{"Args":["{query}","{pk}"]}}'
     })
 
+    if st == status.HTTP_404_NOT_FOUND:
+        raise Http404('Not found')
+
     if st != status.HTTP_200_OK:
         raise JsonException(data)
 
@@ -103,6 +106,8 @@ class ManageFileMixin(object):
             getObjectFromLedger(pk, self.ledger_query_call)
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
         else:
             object = self.get_object()
 
