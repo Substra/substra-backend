@@ -58,7 +58,8 @@ def compute_dryrun(self, data, data_manager_keys):
 
     # Name of the dry-run subtuple (not important)
     pkhash = data[0]['pkhash']
-    subtuple_directory = build_subtuple_folders({'key': pkhash})
+    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
+    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
     data_path = os.path.join(subtuple_directory, 'data')
     volumes = {}
 
@@ -86,7 +87,7 @@ def compute_dryrun(self, data, data_manager_keys):
             data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data_sample')   # fake_data comes with substrabac
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
-            data_docker_name = f'{data_docker}_{pkhash}_{uuid.uuid4().hex}'
+            data_docker_name = f'{data_docker}_{dryrun_uuid}'
 
             volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
                             opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
