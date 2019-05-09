@@ -69,7 +69,7 @@ def queryLedger(options):
         print(msg, flush=True)
     else:
         try:
-            msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+            msg = output.stderr.decode('utf-8').split('Error')[-1].split('\n')[0]
             data = {'message': msg}
         except:
             msg = output.stderr.decode('utf-8')
@@ -78,6 +78,8 @@ def queryLedger(options):
             st = status.HTTP_400_BAD_REQUEST
             if 'access denied' in msg:
                 st = status.HTTP_403_FORBIDDEN
+            elif 'no element with key' in msg:
+                st = status.HTTP_404_NOT_FOUND
 
     clean_env_variables()
 

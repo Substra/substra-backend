@@ -78,6 +78,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                 data = getObjectFromLedger(pk, 'queryModelDetails')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
             else:
                 error = None
                 instance = None
