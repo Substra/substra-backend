@@ -1110,7 +1110,7 @@ class DataViewTests(APITestCase):
                                     status.HTTP_201_CREATED)
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.data[0]['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['file'].close()

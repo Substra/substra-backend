@@ -97,7 +97,7 @@ def bulk_create_data_sample(data):
     # create on ledger + db
     ledger_data = {'test_only': test_only,
                    'data_manager_keys': data_manager_keys}
-    return DataSampleViewSet.commit(serializer, ledger_data, True)
+    return DataSampleViewSet.commit(serializer, ledger_data)
 
 
 class Command(BaseCommand):

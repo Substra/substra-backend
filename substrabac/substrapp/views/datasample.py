@@ -148,11 +148,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
-    def commit(serializer, ledger_data, many):
+    def commit(serializer, ledger_data):
         instances = serializer.save()  # can raise
         # init ledger serializer
-        if not many:
-            instances = [instances]
         ledger_data.update({'instances': instances})
         ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
 
@@ -166,8 +164,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
         if st == status.HTTP_408_REQUEST_TIMEOUT:
-            if many:
-                data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
+            data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
             raise LedgerException(data, st)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
@@ -175,13 +172,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # update validated to True in response
         if 'pkhash' in data and data['validated']:
-            if many:
-                for d in serializer.data:
-                    if d['pkhash'] in data['pkhash']:
-                        d.update({'validated': data['validated']})
-            else:
-                d = dict(serializer.data)
-                d.update({'validated': data['validated']})
+            for d in serializer.data:
+                if d['pkhash'] in data['pkhash']:
+                    d.update({'validated': data['validated']})
 
         return serializer.data, st
 
@@ -230,7 +223,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 'path': normpath(path)
             }
 
-        if not data:
+        if not data:  # data empty
             raise Exception(f'No data sample provided.')
 
         return list(data.values())
@@ -271,10 +264,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         computed_data = self.compute_data(request)
 
-        many = len(computed_data) > 1
-        data = computed_data if many else computed_data[0]
+        serializer = self.get_serializer(data=computed_data, many=True)
 
-        serializer = self.get_serializer(data=data, many=many)
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
@@ -290,7 +281,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             # create on ledger + db
             ledger_data = {'test_only': test_only,
                            'data_manager_keys': data_manager_keys}
-            data, st = self.commit(serializer, ledger_data, many)
+            data, st = self.commit(serializer, ledger_data)
             return data, st
 
     def create(self, request, *args, **kwargs):
