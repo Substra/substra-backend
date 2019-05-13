@@ -87,8 +87,11 @@ def generate_docker_compose_file(conf, launch_settings):
         if org_name_stripped == 'chunantes':
             port = 8001
 
+        cpu_count = os.cpu_count()
+        processes = 2 * int(cpu_count) + 1
+
         if launch_settings == 'prod':
-            django_server = f'python3 manage.py collectstatic --noinput; uwsgi --http :{port} --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master'
+            django_server = f'python3 manage.py collectstatic --noinput; uwsgi --http :{port} --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master --processes {processes} --threads 2'
         else:
 
             django_server = f'python3 manage.py runserver 0.0.0.0:{port}'
