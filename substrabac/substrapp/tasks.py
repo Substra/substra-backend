@@ -414,17 +414,17 @@ def doTask(subtuple, tuple_type):
             # add list of inmodels
             if subtuple['inModels'] is not None:
                 inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
-                algo_command += " ".join(inmodels)
+                algo_command = f"{algo_command} {' '.join(inmodels)}"
 
             # add fltask rank for training
             if flrank is not None:
-                algo_command += f' --rank {flrank}'
+                algo_command = f"{algo_command} --rank {flrank}"
 
         elif tuple_type == 'testtuple':
             algo_command = 'predict'    # main command
 
             inmodels = subtuple['model']["traintupleKey"]
-            algo_command += f' {inmodels}'
+            algo_command = f'{algo_command} {inmodels}'
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':
