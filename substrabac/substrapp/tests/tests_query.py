@@ -429,7 +429,7 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.data_file.file.seek(0)
-            self.assertEqual(r['pkhash'], get_dir_hash(self.data_file.file))
+            self.assertEqual(r[0]['pkhash'], get_dir_hash(self.data_file.file))
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -560,7 +560,7 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(r['message'],
-                             [{'pkhash': ['data sample with this pkhash already exists.']}])
+                             [[{'pkhash': ['data sample with this pkhash already exists.']}]])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     def test_add_data_sample_ko_not_a_zip(self):
@@ -617,7 +617,7 @@ class DataSampleQueryTests(APITestCase):
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['message'], {'pkhash': get_hash(file_mock), 'validated': False})
+            self.assertEqual(r['message'], {'pkhash': [get_dir_hash(file_mock)], 'validated': False})
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
