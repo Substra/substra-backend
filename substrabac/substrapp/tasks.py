@@ -354,6 +354,7 @@ def prepareMaterials(subtuple, model_type):
 
 def doTask(subtuple, tuple_type):
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+    org_name = getattr(settings, 'ORG_NAME')
 
     # Federated learning variables
     fltask = None
@@ -428,7 +429,7 @@ def doTask(subtuple, tuple_type):
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':
-            flvolume = f'local-{fltask}'
+            flvolume = f'local-{fltask}-{org_name}'
             if flrank == 0:
                 client.volumes.create(name=flvolume)
             else:
@@ -499,7 +500,7 @@ def doTask(subtuple, tuple_type):
 
         # Rank == -1 -> Last fl subtuple or fl throws an exception
         if flrank == -1:
-            flvolume = f'local-{fltask}'
+            flvolume = f'local-{fltask}-{org_name}'
             local_volume = client.volumes.get(volume_id=flvolume)
             try:
                 local_volume.remove(force=True)
