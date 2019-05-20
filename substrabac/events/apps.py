@@ -63,7 +63,11 @@ def wait():
         channel_event_hub = channel.newChannelEventHub(target_peer, requestor)
 
         # use chaincode event
+
+        # uncomment this line if you want to replay blocks from the beginning for debugging purposes
+        # stream = channel_event_hub.connect(start=0, filtered=False)
         stream = channel_event_hub.connect(filtered=False)
+
         channel_event_hub.registerChaincodeEvent(chaincode_name, 'traintuple-creation', onEvent=onEvent)
         loop.run_until_complete(stream)
     finally:
