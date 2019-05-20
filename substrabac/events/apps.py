@@ -23,7 +23,7 @@ def onEvent(block):
     print(payload)
     worker_queue = f"{settings.LEDGER['name']}.worker"
 
-    # TODO check if owner is the one to run task
+    # TODO check if owner is the one to run task, wait for chaincode to send full traintuple with key inside
     # if payload['status'] == 'todo':
     #     prepareTrainTuple.apply_async((payload,), queue=worker_queue)
 
@@ -49,21 +49,25 @@ def wait():
                                   'clientCert': {'path': peer['clientCert']},
                                   })
 
-    requestor = create_user(name=requestor_config['name'],
+    try:
+        # can fail
+        requestor = create_user(name=requestor_config['name'],
                             org=requestor_config['org'],
                             state_store=FileKeyValueStore(requestor_config['state_store']),
                             msp_id=requestor_config['msp_id'],
                             key_path=glob.glob(requestor_config['key_path'])[0],
                             cert_path=requestor_config['cert_path'])
+    except:
+        pass
+    else:
+        channel_event_hub = channel.newChannelEventHub(target_peer, requestor)
 
-    channel_event_hub = channel.newChannelEventHub(target_peer, requestor)
-
-    # use chaincode event
-    stream = channel_event_hub.connect(start=0, filtered=False)
-    channel_event_hub.registerChaincodeEvent(chaincode_name, 'traintuple-creation', onEvent=onEvent)
-
-    loop.run_until_complete(stream)
-    loop.close()
+        # use chaincode event
+        stream = channel_event_hub.connect(filtered=False)
+        channel_event_hub.registerChaincodeEvent(chaincode_name, 'traintuple-creation', onEvent=onEvent)
+        loop.run_until_complete(stream)
+    finally:
+        loop.close()
 
 
 class EventsConfig(AppConfig):
