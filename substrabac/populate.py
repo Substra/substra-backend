@@ -77,15 +77,27 @@ def do_populate():
     setup_config()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('-o', '--one-org', action='store_true', default=False,
-                        help='Launch populate with one org only')
-    parser.add_argument('-t', '--three-orgs', action='store_true', default=False,
-                        help='Launch populate with three orgs')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-o', '--one-org', action='store_const', dest='nb_org', const=1,
+                       help='Launch populate with one org only')
+    group.add_argument('-tw', '--two-orgs', action='store_const', dest='nb_org', const=2,
+                       help='Launch populate with two orgs only')
+    group.add_argument('-th', '--three-orgs', action='store_const', dest='nb_org', const=3,
+                       help='Launch populate with three orgs')
+    parser.set_defaults(nb_org=2)
     args = vars(parser.parse_args())
 
-    org_0 = 'owkin'
-    org_1 = org_0 if args['one_org'] else 'chunantes'
-    org_2 = 'clb' if args['three_orgs'] else org_0
+    if args['nb_org'] == 1:
+        org_0 = org_1 = org_2 = 'owkin'
+    elif args['nb_org'] == 2:
+        org_0 = org_2 = 'owkin'
+        org_1 = 'chunantes'
+    elif args['nb_org'] == 3:
+        org_0 = 'owkin'
+        org_1 = 'chunantes'
+        org_2 = 'clb'
+    else:
+        raise Exception(f"Number of orgs {args['nb_org']} not in [1, 2, 3]")
 
     print(f'will create datamanager with {org_1}')
     # create datamanager with org1

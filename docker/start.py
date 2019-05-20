@@ -89,8 +89,6 @@ def generate_docker_compose_file(conf, launch_settings):
         peer = org['peer']['name']
         org_name_stripped = org_name.replace('-', '')
 
-        # Dirty port assign
-
         port = BACKEND_PORT[org_name_stripped]
 
         cpu_count = os.cpu_count()
