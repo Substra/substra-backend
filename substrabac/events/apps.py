@@ -1,10 +1,7 @@
 import asyncio
 import json
 import multiprocessing
-
-from django.apps import AppConfig
-
-from django.conf import settings
+import os
 
 import glob
 
@@ -14,14 +11,20 @@ from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
 
-LEDGER = getattr(settings, 'LEDGER', None)
+ORG = os.environ.get('SUBSTRABAC_ORG', 'substra')
+
+try:
+    LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
+except:
+    pass
+
 
 def onEvent(block):
     payload = json.loads(
         block['data']['data'][0]['payload']['data']['actions'][0]['payload']['action']['proposal_response_payload'][
             'extension']['events']['payload'])
     print(payload)
-    worker_queue = f"{settings.LEDGER['name']}.worker"
+    worker_queue = f"{LEDGER['name']}.worker"
 
     # TODO check if owner is the one to run task, wait for chaincode to send full traintuple with key inside
     # if payload['status'] == 'todo':
@@ -35,6 +38,8 @@ def wait():
     chaincode_name = LEDGER['chaincode_name']
     peer = LEDGER['peer']
 
+    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+
     client = Client()
 
     channel = client.new_channel(channel_name)
@@ -42,7 +47,7 @@ def wait():
     target_peer = Peer(name=peer['name'])
     requestor_config = LEDGER['client']
 
-    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer["port"]}',
+    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
                                   'grpcOptions': peer['grpcOptions'],
                                   'tlsCACerts': {'path': peer['tlsCACerts']},
                                   'clientKey': {'path': peer['clientKey']},
@@ -74,10 +79,8 @@ def wait():
         loop.close()
 
 
-class EventsConfig(AppConfig):
-    name = 'events'
+if __name__ == '__main__':
 
-    def ready(self):
-        p1 = multiprocessing.Process(target=wait)
-        # always wait
-        p1.start()
+    p1 = multiprocessing.Process(target=wait)
+    # always wait
+    p1.start()
