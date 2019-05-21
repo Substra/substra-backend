@@ -264,7 +264,7 @@ def start(conf, launch_settings, no_backup):
     print('start docker-compose', flush=True)
     call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
           os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
-    call(['docker', 'ps', '-a'])
+    call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'])
 
 
 if __name__ == "__main__":
