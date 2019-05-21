@@ -17,4 +17,5 @@ RUN pip3 install -r requirements.txt
 COPY ./substrabac/manage.py /usr/src/app/manage.py
 COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/substrapp /usr/src/app/substrapp
+COPY ./substrabac/events /usr/src/app/events
 COPY ./substrabac/substrabac /usr/src/app/substrabac

@@ -156,6 +156,34 @@ def generate_docker_compose_file(conf, launch_settings):
                                '/substra/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
                    'depends_on': ['postgresql', 'rabbit']}
 
+        events = {'container_name': f'{org_name_stripped}.events',
+                  'image': 'substra/substrabac',
+                  'restart': 'unless-stopped',
+                  # 'ports': [f'{port}:{port}'],
+                  'command': f'/bin/bash -c "python events/apps.py"',
+                  'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                  'environment': ['DATABASE_HOST=postgresql',
+                                  'SUBSTRABAC_PEER_PORT=internal',
+                                  f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
+                                  f'SUBSTRABAC_ORG={org_name}',
+                                  f'SUBSTRABAC_DEFAULT_PORT={port}',
+                                  f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
+                                  'PYTHONUNBUFFERED=1',
+                                  f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+                                  f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+                                  f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+                                  f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+                                  f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
+                                  f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
+                                  f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
+                  'volumes': [f'/substra/conf/{org_name}:/substra/conf/{org_name}',
+                              f'{orderer_ca}:{orderer_ca}',
+                              f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
+                              f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
+                              f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
+                              ],
+                  'depends_on': ['postgresql', 'rabbit']}
+
         scheduler = {'container_name': f'{org_name_stripped}.scheduler',
                      'hostname': f'{org_name}.scheduler',
                      'image': 'substra/celeryworker',
@@ -217,6 +245,7 @@ def generate_docker_compose_file(conf, launch_settings):
             dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
+        docker_compose['substrabac_services']['events' + org_name_stripped] = events
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
         docker_compose['substrabac_services']['dryrunner' + org_name_stripped] = dryrunner
