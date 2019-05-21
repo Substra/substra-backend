@@ -79,9 +79,9 @@ def do_populate():
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
     group.add_argument('-o', '--one-org', action='store_const', dest='nb_org', const=1,
-                       help='Launch populate with one org only')
+                       help='Launch populate with one org')
     group.add_argument('-tw', '--two-orgs', action='store_const', dest='nb_org', const=2,
-                       help='Launch populate with two orgs only')
+                       help='Launch populate with two orgs')
     group.add_argument('-th', '--three-orgs', action='store_const', dest='nb_org', const=3,
                        help='Launch populate with three orgs')
     parser.set_defaults(nb_org=2)
