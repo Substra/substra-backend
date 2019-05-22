@@ -87,6 +87,8 @@ def generate_docker_compose_file(conf, launch_settings):
         org_name = org['name']
         orderer_ca = org['orderer']['ca']
         peer = org['peer']['name']
+        tls_peer_dir = f'/substra/data/orgs/{org_name}/tls/{peer}'
+
         org_name_stripped = org_name.replace('-', '')
 
         port = BACKEND_PORT[org_name_stripped]
@@ -100,36 +102,58 @@ def generate_docker_compose_file(conf, launch_settings):
 
             django_server = f'python3 manage.py runserver 0.0.0.0:{port}'
 
+        backend_global_env = [
+            f'ORG={org_name_stripped}',
+            f'SUBSTRABAC_ORG={org_name}',
+            f'SUBSTRABAC_DEFAULT_PORT={port}',
+            'SUBSTRABAC_PEER_PORT=internal',
+
+            'PYTHONUNBUFFERED=1',
+            'DATABASE_HOST=postgresql',
+
+            f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
+            f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
+
+            # Basic auth
+            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
+            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+            f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
+            f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+
+            # HLF overwrite config from core.yaml
+            f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
+            f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}",
+            f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
+            f"CORE_PEER_MSPCONFIGPATH={org['core_peer_mspconfigpath']}",
+            f"CORE_PEER_TLS_CERT_FILE={tls_peer_dir}/server/server.crt",
+            f"CORE_PEER_TLS_KEY_FILE={tls_peer_dir}/server/server.key",
+            f"CORE_PEER_TLS_ROOTCERT_FILE={tls_peer_dir}/server/server.pem",
+            f"CORE_PEER_TLS_CLIENTCERT_FILE={tls_peer_dir}/client/client.crt",
+            f"CORE_PEER_TLS_CLIENTKEY_FILE={tls_peer_dir}/client/client.key",
+            f"CORE_PEER_TLS_CLIENTROOTCAS_FILES={tls_peer_dir}/client/client.pem",
+        ]
+
+        hlf_volumes = [
+            # config (core.yaml + substrabac/conf.json)
+            f'/substra/conf/{org_name}:/substra/conf/{org_name}:ro',
+
+            # HLF files
+            f'{orderer_ca}:{orderer_ca}:ro',
+            f'{tls_peer_dir}:{tls_peer_dir}:ro',
+            f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}:ro',
+        ]
+
         backend = {'container_name': f'{org_name_stripped}.substrabac',
                    'image': 'substra/substrabac',
                    'restart': 'unless-stopped',
                    'ports': [f'{port}:{port}'],
                    'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate; {django_server}"',
                    'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                   'environment': ['DATABASE_HOST=postgresql',
-                                   'SUBSTRABAC_PEER_PORT=internal',
-                                   f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                   f'SUBSTRABAC_ORG={org_name}',
-                                   f'SUBSTRABAC_DEFAULT_PORT={port}',
-                                   f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
-                                   'PYTHONUNBUFFERED=1',
-                                   f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-                                   f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
-                                   f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-                                   f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
-                                   f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                   f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
-                                   f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
+                   'environment': backend_global_env.copy(),
                    'volumes': ['/substra/medias:/substra/medias',
-                               '/substra/servermedias:/substra/servermedias',
                                '/substra/dryrun:/substra/dryrun',
-                               '/substra/static:/usr/src/app/substrabac/statics',
-                               f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                               f'{orderer_ca}:{orderer_ca}',
-                               f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                               f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
-                               f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                               ],
+                               '/substra/servermedias:/substra/servermedias',
+                               '/substra/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
                    'depends_on': ['postgresql', 'rabbit']}
 
         scheduler = {'container_name': f'{org_name_stripped}.scheduler',
@@ -138,27 +162,8 @@ def generate_docker_compose_file(conf, launch_settings):
                      'restart': 'unless-stopped',
                      'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                     'environment': [f'ORG={org_name_stripped}',
-                                     f'SUBSTRABAC_ORG={org_name}',
-                                     f'SUBSTRABAC_DEFAULT_PORT={port}',
-                                     'SUBSTRABAC_PEER_PORT=internal',
-                                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
-                                     'PYTHONUNBUFFERED=1',
-                                     f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-                                     f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
-                                     f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-                                     f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
-                                     'DATABASE_HOST=postgresql',
-                                     f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
-                                     f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
-                     'volumes': [f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                                 f'{orderer_ca}:{orderer_ca}',
-                                 f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                                 f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
-                                 f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                                 ],
+                     'environment': backend_global_env.copy(),
+                     'volumes': hlf_volumes,
                      'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
 
         worker = {'container_name': f'{org_name_stripped}.worker',
@@ -167,30 +172,10 @@ def generate_docker_compose_file(conf, launch_settings):
                   'restart': 'unless-stopped',
                   'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                  'environment': [f'ORG={org_name_stripped}',
-                                  f'SUBSTRABAC_ORG={org_name}',
-                                  f'SUBSTRABAC_DEFAULT_PORT={port}',
-                                  'SUBSTRABAC_PEER_PORT=internal',
-                                  f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                  f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
-                                  'PYTHONUNBUFFERED=1',
-                                  f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-                                  f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
-                                  f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-                                  f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
-                                  'DATABASE_HOST=postgresql',
-                                  f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                  f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
-                                  f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
+                  'environment': backend_global_env.copy(),
                   'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
                               '/substra/medias:/substra/medias',
-                              '/substra/servermedias:/substra/servermedias',
-                              f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                              f'{orderer_ca}:{orderer_ca}',
-                              f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                              f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
-                              f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                              ],
+                              '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
                   'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         dryrunner = {'container_name': f'{org_name_stripped}.dryrunner',
@@ -199,31 +184,11 @@ def generate_docker_compose_file(conf, launch_settings):
                      'restart': 'unless-stopped',
                      'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.dryrunner,celery --hostname {org_name}.dryrunner"',
                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                     'environment': [f'ORG={org_name_stripped}',
-                                     f'SUBSTRABAC_ORG={org_name}',
-                                     f'SUBSTRABAC_DEFAULT_PORT={port}',
-                                     'SUBSTRABAC_PEER_PORT=internal',
-                                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                     f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
-                                     'PYTHONUNBUFFERED=1',
-                                     f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-                                     f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
-                                     f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-                                     f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
-                                     'DATABASE_HOST=postgresql',
-                                     f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-                                     f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
-                                     f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}"],
+                     'environment': backend_global_env.copy(),
                      'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
-                                 '/substra/medias:/substra/medias',
-                                 '/substra/servermedias:/substra/servermedias',
                                  '/substra/dryrun:/substra/dryrun',
-                                 f'/substra/conf/{org_name}:/substra/conf/{org_name}',
-                                 f'{orderer_ca}:{orderer_ca}',
-                                 f'/substra/data/orgs/{org_name}/ca-cert.pem:/substra/data/orgs/{org_name}/ca-cert.pem',
-                                 f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}',
-                                 f'/substra/data/orgs/{org_name}/tls/{peer}:/substra/data/orgs/{org_name}/tls/{peer}',
-                                 ],
+                                 '/substra/medias:/substra/medias',
+                                 '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
                      'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
@@ -299,7 +264,7 @@ def start(conf, launch_settings, no_backup):
     print('start docker-compose', flush=True)
     call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
           os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
-    call(['docker', 'ps', '-a'])
+    call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'])
 
 
 if __name__ == "__main__":
