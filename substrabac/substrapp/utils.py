@@ -40,10 +40,12 @@ def queryLedger(options):
     core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
     peer = LEDGER['peer']
 
+    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
 
     print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
 
@@ -93,6 +95,8 @@ def invokeLedger(options, sync=False):
     chaincode_name = LEDGER['chaincode_name']
     core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
     peer = LEDGER['peer']
+    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+
     orderer = LEDGER['orderer']
     orderer_ca_file = orderer['ca']
     peer_key_file = peer['clientKey']
@@ -101,7 +105,7 @@ def invokeLedger(options, sync=False):
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
 
     print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
 
