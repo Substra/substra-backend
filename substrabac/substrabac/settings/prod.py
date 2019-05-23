@@ -16,18 +16,6 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 
 
 DEBUG = False
-
-
-@contextlib.contextmanager
-def get_event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        yield loop
-    finally:
-        loop.close()
-
-
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 os.environ['HTTPS'] = "on"
