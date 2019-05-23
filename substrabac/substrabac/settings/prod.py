@@ -53,7 +53,6 @@ BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
 MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
 
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

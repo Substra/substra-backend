@@ -97,10 +97,10 @@ def generate_docker_compose_file(conf, launch_settings):
         processes = 2 * int(cpu_count) + 1
 
         if launch_settings == 'prod':
-            django_server = f'python3 manage.py collectstatic --noinput; uwsgi --http :{port} --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master --processes {processes} --threads 2'
+            django_server = f'python3 manage.py collectstatic --noinput; DJANGO_SETTINGS_MODULE=substrabac.settings.events.prod uwsgi --http :{port} --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master --processes {processes} --threads 2'
         else:
 
-            django_server = f'python3 manage.py runserver 0.0.0.0:{port}'
+            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev python3 manage.py runserver 0.0.0.0:{port}'
 
         backend_global_env = [
             f'ORG={org_name_stripped}',
@@ -155,15 +155,6 @@ def generate_docker_compose_file(conf, launch_settings):
                                '/substra/servermedias:/substra/servermedias',
                                '/substra/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
                    'depends_on': ['postgresql', 'rabbit']}
-
-        events = {'container_name': f'{org_name_stripped}.events',
-                  'image': 'substra/substrabac',
-                  'restart': 'unless-stopped',
-                  'command': f'/bin/bash -c "python events/apps.py"',
-                  'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                  'environment': backend_global_env.copy(),
-                  'volumes': hlf_volumes.copy(),
-                  'depends_on': ['postgresql', 'rabbit']}
 
         scheduler = {'container_name': f'{org_name_stripped}.scheduler',
                      'hostname': f'{org_name}.scheduler',
@@ -226,7 +217,6 @@ def generate_docker_compose_file(conf, launch_settings):
             dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
-        docker_compose['substrabac_services']['events' + org_name_stripped] = events
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
         docker_compose['substrabac_services']['dryrunner' + org_name_stripped] = dryrunner
