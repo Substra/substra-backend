@@ -7,9 +7,6 @@ RUN apt-get install -y git curl netcat
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY ./bootstrap.sh /usr/src/
-RUN cd ../; sh bootstrap.sh; cd app
-
 COPY ./substrabac/requirements.txt /usr/src/app/.
 
 RUN pip3 install -r requirements.txt

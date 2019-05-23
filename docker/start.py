@@ -119,18 +119,6 @@ def generate_docker_compose_file(conf, launch_settings):
             f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
             f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
             f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
-
-            # HLF overwrite config from core.yaml
-            f"FABRIC_CFG_PATH_ENV={org['peer']['docker_core_dir']}",
-            f"FABRIC_LOGGING_SPEC={FABRIC_LOGGING_SPEC}",
-            f"CORE_PEER_ADDRESS_ENV={org['peer']['host']}:{org['peer']['port']['internal']}",
-            f"CORE_PEER_MSPCONFIGPATH={org['core_peer_mspconfigpath']}",
-            f"CORE_PEER_TLS_CERT_FILE={tls_peer_dir}/server/server.crt",
-            f"CORE_PEER_TLS_KEY_FILE={tls_peer_dir}/server/server.key",
-            f"CORE_PEER_TLS_ROOTCERT_FILE={tls_peer_dir}/server/server.pem",
-            f"CORE_PEER_TLS_CLIENTCERT_FILE={tls_peer_dir}/client/client.crt",
-            f"CORE_PEER_TLS_CLIENTKEY_FILE={tls_peer_dir}/client/client.key",
-            f"CORE_PEER_TLS_CLIENTROOTCAS_FILES={tls_peer_dir}/client/client.pem",
         ]
 
         hlf_volumes = [

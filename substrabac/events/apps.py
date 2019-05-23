@@ -3,6 +3,7 @@ import json
 import logging
 import multiprocessing
 import os
+import contextlib
 
 from django.apps import AppConfig
 
@@ -16,9 +17,19 @@ from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
 from substrapp.tasks import prepareTuple
-from substrapp.utils import get_hash, get_event_loop
+from substrapp.utils import get_hash
 
 LEDGER = getattr(settings, 'LEDGER', None)
+
+
+@contextlib.contextmanager
+def get_event_loop():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        yield loop
+    finally:
+        loop.close()
 
 
 def get_block_payload(block):
@@ -74,7 +85,7 @@ def wait():
         try:
             # can fail
             requestor = create_user(
-                name=requestor_config['name'],
+                name=requestor_config['name'] + '_events',
                 org=requestor_config['org'],
                 state_store=FileKeyValueStore(requestor_config['state_store']),
                 msp_id=requestor_config['msp_id'],
