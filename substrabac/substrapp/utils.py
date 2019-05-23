@@ -1,9 +1,8 @@
-import contextlib
+
 import io
 import asyncio
 import hashlib
 import json
-import glob
 import logging
 import os
 import tempfile
@@ -19,218 +18,132 @@ from rest_framework import status
 from django.conf import settings
 
 LEDGER = getattr(settings, 'LEDGER', None)
-
-from hfc.fabric import Client
-from hfc.fabric.peer import Peer
-from hfc.fabric.user import create_user
-from hfc.fabric.orderer import Orderer
-from hfc.util.keyvaluestore import FileKeyValueStore
-
-
-def clean_env_variables():
-    os.environ.pop('FABRIC_CFG_PATH', None)
-    os.environ.pop('CORE_PEER_MSPCONFIGPATH', None)
-    os.environ.pop('CORE_PEER_ADDRESS', None)
-
-
-#######
-# /!\ #
-#######
-
-@contextlib.contextmanager
-def get_event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        yield loop
-    finally:
-        loop.close()
+CLIENT = getattr(settings, 'CLIENT', None)
+REQUESTOR = getattr(settings, 'REQUESTOR', None)
+HLF_LOOP = getattr(settings, 'HLF_LOOP', None)
+asyncio.set_event_loop(HLF_LOOP)
 
 
 # careful, passing invoke parameters to queryLedger will NOT fail
 def queryLedger(fcn, args=None):
 
-    with get_event_loop() as loop:
+    if args is None:
+        args = []
 
-        if args is None:
-            args = []
+    channel_name = LEDGER['channel_name']
+    chaincode_name = LEDGER['chaincode_name']
+    peer = LEDGER['peer']
 
-        channel_name = LEDGER['channel_name']
-        chaincode_name = LEDGER['chaincode_name']
-        peer = LEDGER['peer']
-        peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+    # Get chaincode version
+    response = HLF_LOOP.run_until_complete(
+        CLIENT.query_instantiated_chaincodes(
+            requestor=REQUESTOR,
+            channel_name=channel_name,
+            peers=[peer['name']],
+            decode=True
+        ))
+    for ccs in response:
+        for cc in ccs.chaincodes:
+            if cc.name == chaincode_name:
+                chaincode_version = cc.version
 
-        requestor_config = LEDGER['client']
-
-        client = Client()
-        client.new_channel(channel_name)
-
-        requestor = create_user(name=requestor_config['name'],
-                                org=requestor_config['org'],
-                                state_store=FileKeyValueStore(requestor_config['state_store']),
-                                msp_id=requestor_config['msp_id'],
-                                key_path=glob.glob(requestor_config['key_path'])[0],
-                                cert_path=requestor_config['cert_path'])
-
-        target_peer = Peer(name=peer['name'])
-
-        # Need loop
-        target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
-                                      'grpcOptions': peer['grpcOptions'],
-                                      'tlsCACerts': {'path': peer['tlsCACerts']},
-                                      'clientKey': {'path': peer['clientKey']},
-                                      'clientCert': {'path': peer['clientCert']},
-                                      })
-
-        client._peers[peer['name']] = target_peer
-
-        # Get chaincode version
-        response = loop.run_until_complete(
-            client.query_instantiated_chaincodes(
-                requestor=requestor,
+    try:
+        # Async - need loop
+        response = HLF_LOOP.run_until_complete(
+            CLIENT.chaincode_query(
+                requestor=REQUESTOR,
                 channel_name=channel_name,
                 peers=[peer['name']],
-                decode=True
-            ))
-        for ccs in response:
-            for cc in ccs.chaincodes:
-                if cc.name == chaincode_name:
-                    chaincode_version = cc.version
+                args=args,
+                cc_name=chaincode_name,
+                cc_version=chaincode_version,
+                fcn=fcn))
+    except Exception as e:
+        st = status.HTTP_400_BAD_REQUEST
+        data = {'message': str(e)}
+    else:
+        msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
+        print(msg, flush=True)
 
+        st = status.HTTP_200_OK
+
+        # TO DO : review parsing error in case of failure
+        #         May have changed by using fabric-sdk-py
         try:
-            # Async - need loop
-            response = loop.run_until_complete(
-                client.chaincode_query(
-                    requestor=requestor,
-                    channel_name=channel_name,
-                    peers=[peer['name']],
-                    args=args,
-                    cc_name=chaincode_name,
-                    cc_version=chaincode_version,
-                    fcn=fcn))
-        except Exception as e:
+            # json transformation if needed
+            data = json.loads(response)
+        except json.decoder.JSONDecodeError:
             st = status.HTTP_400_BAD_REQUEST
-            data = {'message': str(e)}
-        else:
-            msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
-            print(msg, flush=True)
 
-            st = status.HTTP_200_OK
+            if 'access denied' in response:
+                st = status.HTTP_403_FORBIDDEN
+            elif 'no element with key' in response:
+                st = status.HTTP_404_NOT_FOUND
 
-            # TO DO : review parsing error in case of failure
-            #         May have changed by using fabric-sdk-py
-            try:
-                # json transformation if needed
-                data = json.loads(response)
-            except json.decoder.JSONDecodeError:
-                st = status.HTTP_400_BAD_REQUEST
-
-                if 'access denied' in response:
-                    st = status.HTTP_403_FORBIDDEN
-                elif 'no element with key' in response:
-                    st = status.HTTP_404_NOT_FOUND
-
-                data = {'message': response}
+            data = {'message': response}
 
     return data, st
 
 
 def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
 
-    with get_event_loop() as loop:
-        if args is None:
-            args = []
+    if args is None:
+        args = []
 
-        channel_name = LEDGER['channel_name']
-        chaincode_name = LEDGER['chaincode_name']
-        peer = LEDGER['peer']
-        peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
-        orderer = LEDGER['orderer']
+    channel_name = LEDGER['channel_name']
+    chaincode_name = LEDGER['chaincode_name']
+    peer = LEDGER['peer']
 
-        requestor_config = LEDGER['client']
+    # Get chaincode version
+    response = HLF_LOOP.run_until_complete(
+        CLIENT.query_instantiated_chaincodes(
+            requestor=REQUESTOR,
+            channel_name=channel_name,
+            peers=[peer['name']],
+            decode=True
+        ))
+    for ccs in response:
+        for cc in ccs.chaincodes:
+            if cc.name == chaincode_name:
+                chaincode_version = cc.version
 
-        client = Client()
-        client.new_channel(channel_name)
+    try:
+        # Async - need loop
+        kwargs = {
+            'requestor': REQUESTOR,
+            'channel_name': channel_name,
+            'peers': [peer['name']],
+            'args': args,
+            'cc_name': chaincode_name,
+            'cc_version': chaincode_version,
+            'fcn': fcn,
+            'wait_for_event': sync,
+            'wait_for_event_timeout': 45
+        }
+        if cc_pattern:
+            kwargs['cc_pattern'] = cc_pattern
 
-        requestor = create_user(name=requestor_config['name'],
-                                org=requestor_config['org'],
-                                state_store=FileKeyValueStore(requestor_config['state_store']),
-                                msp_id=requestor_config['msp_id'],
-                                key_path=glob.glob(requestor_config['key_path'])[0],
-                                cert_path=requestor_config['cert_path'])
+        response = HLF_LOOP.run_until_complete(CLIENT.chaincode_invoke(**kwargs))
+    except TimeoutError as e:
+        st = status.HTTP_408_REQUEST_TIMEOUT
+        data = {'message': str(e)}
+    except Exception as e:
+        st = status.HTTP_400_BAD_REQUEST
+        data = {'message': str(e)}
+    else:
+        # TO DO : review parsing error in case of failure
+        #         May have changed by using fabric-sdk-py
+        # elif 'access denied' in msg or 'authentication handshake failed' in msg:
+        #     st = status.HTTP_403_FORBIDDEN
 
-        target_peer = Peer(name=peer['name'])
-
-        # Need loop
-        target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
-                                      'grpcOptions': peer['grpcOptions'],
-                                      'tlsCACerts': {'path': peer['tlsCACerts']},
-                                      'clientKey': {'path': peer['clientKey']},
-                                      'clientCert': {'path': peer['clientCert']},
-                                      })
-        client._peers[peer['name']] = target_peer
-
-        target_orderer = Orderer(name=orderer['name'])
-
-        # Need loop
-        target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
-                                         'grpcOptions': orderer['grpcOptions'],
-                                         'tlsCACerts': {'path': orderer['ca']},
-                                         'clientKey': {'path': peer['clientKey']},  # use peer creds (mutual tls)
-                                         'clientCert': {'path': peer['clientCert']},  # use peer creds (mutual tls)
-                                         })
-        client._orderers[orderer['name']] = target_orderer
-
-        # Get chaincode version
-        response = loop.run_until_complete(
-            client.query_instantiated_chaincodes(
-                requestor=requestor,
-                channel_name=channel_name,
-                peers=[peer['name']],
-                decode=True
-            ))
-        for ccs in response:
-            for cc in ccs.chaincodes:
-                if cc.name == chaincode_name:
-                    chaincode_version = cc.version
-
+        st = status.HTTP_201_CREATED
         try:
-            # Async - need loop
-            kwargs = {
-                'requestor': requestor,
-                'channel_name': channel_name,
-                'peers': [peer['name']],
-                'args': args,
-                'cc_name': chaincode_name,
-                'cc_version': chaincode_version,
-                'fcn': fcn,
-                'wait_for_event': sync,
-                'wait_for_event_timeout': 45
-            }
-            if cc_pattern:
-                kwargs['cc_pattern'] = cc_pattern
-
-            response = loop.run_until_complete(client.chaincode_invoke(**kwargs))
-        except TimeoutError as e:
-            st = status.HTTP_408_REQUEST_TIMEOUT
-            data = {'message': str(e)}
-        except Exception as e:
+            response = json.loads(response)
+            pkhash = response.get('key', response.get('keys'))
+            data = {'pkhash': pkhash}
+        except json.decoder.JSONDecodeError:
             st = status.HTTP_400_BAD_REQUEST
-            data = {'message': str(e)}
-        else:
-            # TO DO : review parsing error in case of failure
-            #         May have changed by using fabric-sdk-py
-            # elif 'access denied' in msg or 'authentication handshake failed' in msg:
-            #     st = status.HTTP_403_FORBIDDEN
-
-            st = status.HTTP_201_CREATED
-            try:
-                response = json.loads(response)
-                pkhash = response.get('key', response.get('keys'))
-                data = {'pkhash': pkhash}
-            except json.decoder.JSONDecodeError:
-                st = status.HTTP_400_BAD_REQUEST
-                data = {'message': response}
+            data = {'message': response}
 
     return data, st
 
