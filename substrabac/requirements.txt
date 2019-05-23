@@ -26,4 +26,4 @@ rx >= 1.5.3
 sentry-sdk == 0.5.2
 six >= 1.4.0
 uwsgi == 2.0.18
-git+https://github.com/hyperledger/fabric-sdk-py.git@da79711005db8509f5c5b97f384cb19715bff75e
+git+https://github.com/hyperledger/fabric-sdk-py.git@282b4f0d19409a4686a34f5ace603e7226ef5dd3

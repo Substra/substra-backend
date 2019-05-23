@@ -80,7 +80,7 @@ LOGGING = {
         'django.request': {
             'handlers': ['mail_admins', 'error_file'],
             'level': 'INFO',
-            'propagate': True,
+            'propagate': False,
         },
     }
 }

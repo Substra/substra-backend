@@ -15,7 +15,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks import prepareTrainTuple
+from substrapp.tasks import prepareTrainTuple, prepareTestTuple
 from substrapp.utils import get_hash
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -28,7 +28,26 @@ def get_block_payload(block):
     return payload
 
 
-def onEvent(block):
+def onTesttupleEvent(block):
+    payload = get_block_payload(block)
+
+    import pprint
+    pp = pprint.PrettyPrinter(indent=4)
+    pp.pprint(payload)
+    print('_' * 100)
+
+    worker_queue = f"{LEDGER['name']}.worker"
+    # TODO check if owner is the one to run task, wait for chaincode to send full traintuple with key inside
+    try:
+        data_owner = get_hash(LEDGER['signcert'])
+    except Exception as e:
+        logging.error(e, exc_info=True)
+    else:
+        if data_owner == payload['dataset']['worker']:
+            prepareTestTuple.apply_async((payload,), queue=worker_queue)
+
+
+def onTraintupleEvent(block):
     payload = get_block_payload(block)
 
     import pprint
@@ -90,12 +109,15 @@ def wait():
         # use chaincode event
 
         # uncomment this line if you want to replay blocks from the beginning for debugging purposes
-        stream = channel_event_hub.connect(start=0, filtered=False)
-        # stream = channel_event_hub.connect(filtered=False)
+        # stream = channel_event_hub.connect(start=0, filtered=False)
+        stream = channel_event_hub.connect(filtered=False)
 
         channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                  'traintuple-creation',
-                                                 onEvent=onEvent)
+                                                 onEvent=onTraintupleEvent)
+        channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                 'testtuple-creation',
+                                                 onEvent=onTesttupleEvent)
         loop.run_until_complete(stream)
     finally:
         loop.close()
