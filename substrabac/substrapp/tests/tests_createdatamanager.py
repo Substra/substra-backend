@@ -36,14 +36,14 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
+                                                            '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
         datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
+                                                                 '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {
@@ -119,14 +119,14 @@ class CreateDataManagerTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
         datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
+                                                            '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
         datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
+                                                                 '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {

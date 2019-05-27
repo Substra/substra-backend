@@ -44,7 +44,7 @@ class ModelTests(TestCase):
 
     def test_create_data(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/train/0024308')
+        path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308')
         data_sample = DataSample.objects.create(path=path)
         self.assertEqual(data_sample.pkhash, dirhash(path, 'sha256'))
         self.assertFalse(data_sample.validated)

@@ -60,11 +60,11 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                  '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+                                  '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path2],
                 'data_manager_keys': data_manager_keys,
@@ -116,9 +116,9 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../fixtures/chunantes/datasamples/train/0024308'))
+                                  '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -170,9 +170,9 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
+                                                   '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -223,11 +223,11 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
+                                                   '../../../fixtures/chunantes/datasamples/train/0024308'))
         data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path2],
                 'data_manager_keys': data_manager_keys,
@@ -285,9 +285,9 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -325,9 +325,9 @@ class BulkCreateDataSampleTestCase(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/train/0024308'))
+                                                   '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -439,7 +439,7 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_datamanager_do_not_exist(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'files': ['./foo'],
                 'data_manager_keys': data_manager_keys,
@@ -473,7 +473,7 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_invalid_serializer(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'data_manager_keys': [self.datamanager.pk],
@@ -507,7 +507,7 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_408(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'data_manager_keys': [self.datamanager.pk],
@@ -546,7 +546,7 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_ledger_400(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'data_manager_keys': [self.datamanager.pk],
@@ -585,7 +585,7 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_400(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'data_manager_keys': [self.datamanager.pk],
