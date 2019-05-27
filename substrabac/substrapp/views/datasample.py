@@ -301,46 +301,48 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             headers = self.get_success_headers(data)
             return Response(data, status=st, headers=headers)
 
-    @action(methods=['post'], detail=False)
-    def bulk_update(self, request):
-
-        data = request.data
-
+    def validate_bulk_update(self, data):
         # validation
-        # TODO place in another method
         try:
             data_manager_keys = data.getlist('data_manager_keys', [])
         except:
-            return Response({'message': 'Please pass a valid data_manager_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
+            raise Exception('Please pass a valid data_manager_keys key param')
+        else:
+            data_manager_keys = ','.join(data_manager_keys)
+            if data_manager_keys:
+                raise Exception('Please pass a non empty data_manager_keys key param')
 
         try:
             data_sample_keys = data.getlist('data_sample_keys', [])
         except:
-            return Response({'message': 'Please pass a valid data_sample_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not len(data_sample_keys) or not len(','.join(data_sample_keys)):
-            return Response({'message': 'Please pass a non empty data_sample_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if not len(data_manager_keys) or not len(','.join(data_manager_keys)):
-            return Response({'message': 'Please pass a non empty data_manager_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
-
-        args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
-            'hashes': ','.join(data_sample_keys),
-            'dataManagerKeys': ','.join(data_manager_keys),
-        }
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = updateLedgerDataSample(args, sync=True)
-
-            # patch status for update
-            if st == status.HTTP_201_CREATED:
-                st = status.HTTP_200_OK
-            return Response(data, status=st)
+            raise Exception('Please pass a valid data_sample_keys key param')
         else:
-            # use a celery task, as we are in an http request transaction
-            updateLedgerDataSampleAsync.delay(args)
-            data = {
-                'message': 'The substra network has been notified for updating these Data'
-            }
-            st = status.HTTP_202_ACCEPTED
-            return Response(data, status=st)
+            data_sample_keys = ','.join(data_sample_keys)
+            if data_sample_keys:
+                raise Exception('Please pass a non empty data_sample_keys key param')
+
+    @action(methods=['post'], detail=False)
+    def bulk_update(self, request):
+
+        try:
+            data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            args = f'"{data_sample_keys}", "{data_manager_keys}"'
+
+            if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+                data, st = updateLedgerDataSample(args, sync=True)
+
+                # patch status for update
+                if st == status.HTTP_201_CREATED:
+                    st = status.HTTP_200_OK
+                return Response(data, status=st)
+            else:
+                # use a celery task, as we are in an http request transaction
+                updateLedgerDataSampleAsync.delay(args)
+                data = {
+                    'message': 'The substra network has been notified for updating these Data'
+                }
+                st = status.HTTP_202_ACCEPTED
+                return Response(data, status=st)
