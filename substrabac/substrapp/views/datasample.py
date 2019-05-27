@@ -84,7 +84,7 @@ def compute_dryrun(self, data, data_manager_keys):
 
             # Launch verification
             opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data_sample')   # fake_data comes with substrabac
+            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_data_sample')
 
             data_docker = 'data_dry_run'  # tag must be lowercase for docker
             data_docker_name = f'{data_docker}_{dryrun_uuid}'
