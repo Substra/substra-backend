@@ -3,8 +3,6 @@
 from __future__ import unicode_literals, absolute_import
 from rest_framework import serializers
 
-__author__ = 'guillaume'
-
 
 class DynamicFieldsModelSerializer(serializers.ModelSerializer):
     """

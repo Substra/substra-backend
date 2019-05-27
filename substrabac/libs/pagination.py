@@ -3,8 +3,6 @@
 from __future__ import unicode_literals, absolute_import
 from rest_framework.pagination import PageNumberPagination
 
-__author__ = 'guillaume'
-
 
 class LimitedPagination(PageNumberPagination):
     page_size = 30
