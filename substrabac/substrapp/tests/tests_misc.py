@@ -1,10 +1,11 @@
 from django.test import TestCase
 
 from mock import patch
-from substrapp.task_utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
+from substrapp.tasks.utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
     update_statistics
 
 from substrapp.tests.common import JobStats, Stats, gpu
+
 
 class MockDevice():
     """A mock device to temporarily suppress output to stdout

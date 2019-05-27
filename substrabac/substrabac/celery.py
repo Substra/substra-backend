@@ -20,7 +20,7 @@ app.autodiscover_tasks()
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks import prepareTrainingTask, prepareTestingTask
+    from substrapp.tasks.tasks import prepareTrainingTask, prepareTestingTask
 
     period = 3 * 3600
     sender.add_periodic_task(period, prepareTrainingTask.s(), queue='scheduler',

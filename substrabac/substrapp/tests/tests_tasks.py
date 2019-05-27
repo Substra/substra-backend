@@ -11,8 +11,8 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
-from substrapp.task_utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
-from substrapp.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
+from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
+from substrapp.tasks.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
 
 from .common import get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample, get_sample_model
 from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
@@ -115,7 +115,7 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key,
                     'algo': 'testalgo'}
 
-        with mock.patch('substrapp.tasks.get_hash') as mget_hash:
+        with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
             mget_hash.return_value = subtuple_key
             put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), algo_content)
 
@@ -145,7 +145,7 @@ class TasksTests(APITestCase):
         subtuple_key = 'testkey'
         subtuple = {'key': subtuple_key, 'algo': 'testalgo'}
 
-        with mock.patch('substrapp.tasks.get_hash') as mget_hash:
+        with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
             with open(zippath, 'rb') as content:
                 mget_hash.return_value = get_hash(zippath)
                 put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), content.read())
@@ -320,7 +320,7 @@ class TasksTests(APITestCase):
         model_type = 'model'
         subtuple = {model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
 
-        with mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file:
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = model_content, model_hash
             model_content, model_hash = get_model(subtuple)
 
@@ -342,7 +342,7 @@ class TasksTests(APITestCase):
         subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
                                  {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}
 
-        with mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file:
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.side_effect = [[models_content[0], models_hash[0]],
                                             [models_content[1], models_hash[1]]]
             models_content_res, models_hash_res = get_models(subtuple)
@@ -354,7 +354,7 @@ class TasksTests(APITestCase):
         algo_content = self.algo.read()
         algo_hash = get_hash(self.algo)
 
-        with mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file:
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = algo_content, algo_hash
             self.assertEqual((algo_content, algo_hash), get_algo({'algo': ''}))
 
@@ -363,7 +363,7 @@ class TasksTests(APITestCase):
         objective_hash = get_hash(self.script)
 
         with mock.patch('substrapp.models.Objective.objects.get') as mget, \
-                mock.patch('substrapp.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
                 mget.return_value = FakeObjective()
@@ -396,7 +396,7 @@ class TasksTests(APITestCase):
         self.assertIn('GPU Mem', result)
 
     def test_build_subtuple_folders(self):
-        with mock.patch('substrapp.tasks.getattr') as getattr:
+        with mock.patch('substrapp.tasks.tasks.getattr') as getattr:
             getattr.return_value = self.subtuple_path
 
             subtuple_key = 'test1234'
@@ -423,18 +423,18 @@ class TasksTests(APITestCase):
 
         subtuple = [{'key': 'subtuple_test'}]
 
-        with mock.patch('substrapp.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.get_hash') as mget_hash, \
-                mock.patch('substrapp.tasks.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.tasks.get_objective') as mget_objective, \
-                mock.patch('substrapp.tasks.get_algo') as mget_algo, \
-                mock.patch('substrapp.tasks.get_model') as mget_model, \
-                mock.patch('substrapp.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
-                mock.patch('substrapp.tasks.put_opener') as mput_opener, \
-                mock.patch('substrapp.tasks.put_data_sample') as mput_data_sample, \
-                mock.patch('substrapp.tasks.put_metric') as mput_metric, \
-                mock.patch('substrapp.tasks.put_algo') as mput_algo, \
-                mock.patch('substrapp.tasks.put_model') as mput_model:
+        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+                mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
+                mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
+                mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
+                mock.patch('substrapp.tasks.tasks.get_model') as mget_model, \
+                mock.patch('substrapp.tasks.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
+                mock.patch('substrapp.tasks.tasks.put_opener') as mput_opener, \
+                mock.patch('substrapp.tasks.tasks.put_data_sample') as mput_data_sample, \
+                mock.patch('substrapp.tasks.tasks.put_metric') as mput_metric, \
+                mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
+                mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
 
                 msettings.return_value = FakeSettings()
                 mget_hash.return_value = 'owkinhash'
@@ -449,12 +449,12 @@ class TasksTests(APITestCase):
                 mput_algo.return_value = 'algo'
                 mput_model.return_value = 'model'
 
-                with mock.patch('substrapp.tasks.queryLedger') as mqueryLedger:
+                with mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger:
                     mqueryLedger.return_value = 'data', 404
                     prepareTask('traintuple', 'inModels')
 
-                with mock.patch('substrapp.tasks.invokeLedger') as minvokeLedger, \
-                        mock.patch('substrapp.tasks.computeTask.apply_async') as mapply_async:
+                with mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger, \
+                        mock.patch('substrapp.tasks.tasks.computeTask.apply_async') as mapply_async:
                         minvokeLedger.return_value = 'data', 201
                         mapply_async.return_value = 'doTask'
                         prepareTask('traintuple', 'inModels')
@@ -473,9 +473,9 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key, 'inModels': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
-        with mock.patch('substrapp.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.getattr') as mgetattr, \
-                mock.patch('substrapp.tasks.invokeLedger') as minvokeLedger:
+        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+                mock.patch('substrapp.tasks.tasks.getattr') as mgetattr, \
+                mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
             msettings.return_value = FakeSettings()
             mgetattr.return_value = self.subtuple_path
             minvokeLedger.return_value = 'data', 200
@@ -491,7 +491,7 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.compute_docker') as mcompute_docker:
+            with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker:
                 mcompute_docker.return_value = 'DONE'
                 doTask(subtuple, 'traintuple')
 
@@ -509,9 +509,9 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key, 'inModels': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
-        with mock.patch('substrapp.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.getattr') as mgetattr, \
-                mock.patch('substrapp.tasks.invokeLedger') as minvokeLedger:
+        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+                mock.patch('substrapp.tasks.tasks.getattr') as mgetattr, \
+                mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
             msettings.return_value = FakeSettings()
             mgetattr.return_value = self.subtuple_path
             minvokeLedger.return_value = 'data', 200
@@ -527,9 +527,9 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.compute_docker') as mcompute_docker, \
-                    mock.patch('substrapp.tasks.prepareMaterials') as mprepareMaterials, \
-                    mock.patch('substrapp.tasks.invokeLedger') as minvokeLedger:
+            with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker, \
+                    mock.patch('substrapp.tasks.tasks.prepareMaterials') as mprepareMaterials, \
+                    mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
 
                 mcompute_docker.return_value = 'DONE'
                 mprepareMaterials.return_value = 'DONE'

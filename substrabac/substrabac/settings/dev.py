@@ -1,6 +1,7 @@
 import os
 import asyncio
 import glob
+import json
 
 from .common import *
 
@@ -22,53 +23,50 @@ DEFAULT_PORT = os.environ.get('SUBSTRABAC_DEFAULT_PORT', '8000')
 ORG_NAME = ORG.replace('-', '')
 ORG_DB_NAME = ORG.replace('-', '_').upper()
 
-try:
-    LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
-except:
-    pass
-else:
-    HLF_LOOP = asyncio.new_event_loop()
-    asyncio.set_event_loop(HLF_LOOP)
+LEDGER = json.load(open(f'/substra/conf/{ORG}/substrabac/conf.json', 'r'))
 
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-    peer = LEDGER['peer']
-    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
-    orderer = LEDGER['orderer']
+HLF_LOOP = asyncio.new_event_loop()
+asyncio.set_event_loop(HLF_LOOP)
 
-    requestor_config = LEDGER['client']
+channel_name = LEDGER['channel_name']
+chaincode_name = LEDGER['chaincode_name']
+peer = LEDGER['peer']
+peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+orderer = LEDGER['orderer']
 
-    CLIENT = Client()
-    CLIENT.new_channel(channel_name)
+requestor_config = LEDGER['client']
 
-    REQUESTOR = create_user(name=requestor_config['name'],
-                            org=requestor_config['org'],
-                            state_store=FileKeyValueStore(requestor_config['state_store']),
-                            msp_id=requestor_config['msp_id'],
-                            key_path=glob.glob(requestor_config['key_path'])[0],
-                            cert_path=requestor_config['cert_path'])
+CLIENT = Client()
+CLIENT.new_channel(channel_name)
 
-    target_peer = Peer(name=peer['name'])
+REQUESTOR = create_user(name=requestor_config['name'],
+                        org=requestor_config['org'],
+                        state_store=FileKeyValueStore(requestor_config['state_store']),
+                        msp_id=requestor_config['msp_id'],
+                        key_path=glob.glob(requestor_config['key_path'])[0],
+                        cert_path=requestor_config['cert_path'])
 
-    # Need loop
-    target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
-                                  'grpcOptions': peer['grpcOptions'],
-                                  'tlsCACerts': {'path': peer['tlsCACerts']},
-                                  'clientKey': {'path': peer['clientKey']},
-                                  'clientCert': {'path': peer['clientCert']},
-                                  })
-    CLIENT._peers[peer['name']] = target_peer
+target_peer = Peer(name=peer['name'])
 
-    target_orderer = Orderer(name=orderer['name'])
+# Need loop
+target_peer.init_with_bundle({'url': f'{peer["host"]}:{peer_port}',
+                              'grpcOptions': peer['grpcOptions'],
+                              'tlsCACerts': {'path': peer['tlsCACerts']},
+                              'clientKey': {'path': peer['clientKey']},
+                              'clientCert': {'path': peer['clientCert']},
+                              })
+CLIENT._peers[peer['name']] = target_peer
 
-    # Need loop
-    target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
-                                     'grpcOptions': orderer['grpcOptions'],
-                                     'tlsCACerts': {'path': orderer['ca']},
-                                     'clientKey': {'path': peer['clientKey']},  # use peer creds (mutual tls)
-                                     'clientCert': {'path': peer['clientCert']},  # use peer creds (mutual tls)
-                                     })
-    CLIENT._orderers[orderer['name']] = target_orderer
+target_orderer = Orderer(name=orderer['name'])
+
+# Need loop
+target_orderer.init_with_bundle({'url': f'{orderer["host"]}:{orderer["port"]}',
+                                 'grpcOptions': orderer['grpcOptions'],
+                                 'tlsCACerts': {'path': orderer['ca']},
+                                 'clientKey': {'path': peer['clientKey']},  # use peer creds (mutual tls)
+                                 'clientCert': {'path': peer['clientCert']},  # use peer creds (mutual tls)
+                                 })
+CLIENT._orderers[orderer['name']] = target_orderer
 
 
 # Database

@@ -27,7 +27,7 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 
 from substrapp.utils import queryLedger, get_hash, get_computed_hash
-from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
+from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 
 
