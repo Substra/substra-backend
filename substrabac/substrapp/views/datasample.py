@@ -305,11 +305,24 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     def bulk_update(self, request):
 
         data = request.data
-        data_manager_keys = data.getlist('data_manager_keys')
-        data_keys = data.getlist('data_sample_keys')
+
+        # validation
+        # TODO place in another method
+        try:
+            data_manager_keys = data.getlist('data_manager_keys', [])
+        except:
+            return Response({'message': 'Please pass a valid data_manager_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            data_sample_keys = data.getlist('data_sample_keys', [])
+        except:
+            return Response({'message': 'Please pass a valid data_sample_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if not len(data_sample_keys) or not len(','.join(data_sample_keys)):
+            return Response({'message': 'Please pass a non empty data_sample_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
 
         args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
-            'hashes': ','.join(data_keys),
+            'hashes': ','.join(data_sample_keys),
             'dataManagerKeys': ','.join(data_manager_keys),
         }
 
