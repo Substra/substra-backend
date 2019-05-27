@@ -240,7 +240,7 @@ def start(conf, launch_settings, no_backup):
 
     if no_backup:
         print('Clean medias directory\n')
-        call(['sh', os.path.join(dir_path, '../substrabac/scripts/clean_media.sh')])
+        call(['sh', os.path.join(dir_path, '../scripts/clean_media.sh')])
         print('Remove postgresql database\n')
         call(['rm', '-rf', '/substra/backup/postgres-data'])
         print('Remove rabbit database\n')
