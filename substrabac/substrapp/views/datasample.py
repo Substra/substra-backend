@@ -309,7 +309,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise Exception('Please pass a valid data_manager_keys key param')
         else:
             data_manager_keys = ','.join(data_manager_keys)
-            if data_manager_keys:
+            if not data_manager_keys:
                 raise Exception('Please pass a non empty data_manager_keys key param')
 
         try:
@@ -318,8 +318,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise Exception('Please pass a valid data_sample_keys key param')
         else:
             data_sample_keys = ','.join(data_sample_keys)
-            if data_sample_keys:
+            if not data_sample_keys:
                 raise Exception('Please pass a non empty data_sample_keys key param')
+
+        return data_manager_keys, data_sample_keys
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
