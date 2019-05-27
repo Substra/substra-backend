@@ -1,5 +1,3 @@
-import os
-
 from .common import *
 
 from .deps.restframework import *
