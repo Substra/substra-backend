@@ -301,30 +301,50 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             headers = self.get_success_headers(data)
             return Response(data, status=st, headers=headers)
 
+    def validate_bulk_update(self, data):
+        # validation
+        try:
+            data_manager_keys = data.getlist('data_manager_keys', [])
+        except:
+            raise Exception('Please pass a valid data_manager_keys key param')
+        else:
+            data_manager_keys = ','.join(data_manager_keys)
+            if not data_manager_keys:
+                raise Exception('Please pass a non empty data_manager_keys key param')
+
+        try:
+            data_sample_keys = data.getlist('data_sample_keys', [])
+        except:
+            raise Exception('Please pass a valid data_sample_keys key param')
+        else:
+            data_sample_keys = ','.join(data_sample_keys)
+            if not data_sample_keys:
+                raise Exception('Please pass a non empty data_sample_keys key param')
+
+        return data_manager_keys, data_sample_keys
+
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
 
-        data = request.data
-        data_manager_keys = data.getlist('data_manager_keys')
-        data_keys = data.getlist('data_sample_keys')
-
-        args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
-            'hashes': ','.join(data_keys),
-            'dataManagerKeys': ','.join(data_manager_keys),
-        }
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = updateLedgerDataSample(args, sync=True)
-
-            # patch status for update
-            if st == status.HTTP_201_CREATED:
-                st = status.HTTP_200_OK
-            return Response(data, status=st)
+        try:
+            data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # use a celery task, as we are in an http request transaction
-            updateLedgerDataSampleAsync.delay(args)
-            data = {
-                'message': 'The substra network has been notified for updating these Data'
-            }
-            st = status.HTTP_202_ACCEPTED
-            return Response(data, status=st)
+            args = f'"{data_sample_keys}", "{data_manager_keys}"'
+
+            if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+                data, st = updateLedgerDataSample(args, sync=True)
+
+                # patch status for update
+                if st == status.HTTP_201_CREATED:
+                    st = status.HTTP_200_OK
+                return Response(data, status=st)
+            else:
+                # use a celery task, as we are in an http request transaction
+                updateLedgerDataSampleAsync.delay(args)
+                data = {
+                    'message': 'The substra network has been notified for updating these Data'
+                }
+                st = status.HTTP_202_ACCEPTED
+                return Response(data, status=st)
