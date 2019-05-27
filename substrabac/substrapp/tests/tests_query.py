@@ -904,7 +904,7 @@ class AlgoQueryTests(APITestCase):
     def test_add_algo_sync_ok(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
+        with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
             algo_content = tar_file.read()
 
         # add associated objective

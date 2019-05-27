@@ -178,7 +178,7 @@ class ObjectiveViewTests(APITestCase):
             mgetObjectFromLedger.return_value = objective[0]
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/owkin/objectives/objective0/description.md'), 'rb') as f:
+                                   '../../../fixtures/owkin/objectives/objective0/description.md'), 'rb') as f:
                 content = f.read()
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
@@ -208,7 +208,7 @@ class ObjectiveViewTests(APITestCase):
         with mock.patch('substrapp.views.objective.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -218,12 +218,12 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        description_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/description.md')
-        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/metrics.py')
+        description_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/description.md')
+        metrics_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/metrics.py')
 
         pkhash = get_hash(description_path)
 
-        test_data_manager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
+        test_data_manager_key = get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
 
         data = {
             'name': 'Simplified skin lesion classification',
@@ -257,10 +257,10 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        description_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/description.md')
-        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/metrics.py')
+        description_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/description.md')
+        metrics_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/metrics.py')
 
-        test_data_manager_key = get_hash(os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
+        test_data_manager_key = get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
 
         data = {
             'name': 'Simplified skin lesion classification',
@@ -292,11 +292,11 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        metrics_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/metrics.py')
-        description_path = os.path.join(dir_path, '../../fixtures/owkin/objectives/objective0/description.md')
+        metrics_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/metrics.py')
+        description_path = os.path.join(dir_path, '../../../fixtures/owkin/objectives/objective0/description.md')
         shutil.copy(metrics_path, os.path.join(MEDIA_ROOT, 'metrics.py'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py')
+        opener_path = os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py')
 
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
@@ -415,14 +415,14 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        algo_hash = get_hash(os.path.join(dir_path, '../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
+        algo_hash = get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
         url = reverse('substrapp:algo-list')
         algo_response = [a for a in algo if a['key'] == algo_hash][0]
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.algo.requests.get') as mrequestsget:
 
             with open(os.path.join(dir_path,
-                                   '../../fixtures/chunantes/algos/algo4/description.md'), 'rb') as f:
+                                   '../../../fixtures/chunantes/algos/algo4/description.md'), 'rb') as f:
                 content = f.read()
             mgetObjectFromLedger.return_value = algo_response
 
@@ -453,7 +453,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -462,15 +462,15 @@ class AlgoViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz')
-        description_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/description.md')
+        algo_path = os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
+        description_path = os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/description.md')
 
         pkhash = get_hash(algo_path)
 
         data = {'name': 'Logistic regression',
                 'file': open(algo_path, 'rb'),
                 'description': open(description_path, 'rb'),
-                'objective_key': get_hash(os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/description.md')),
+                'objective_key': get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/objectives/objective0/description.md')),
                 'permissions': 'all'}
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
@@ -624,7 +624,7 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -726,11 +726,11 @@ class DataManagerViewTests(APITestCase):
             mgetObjectFromLedger.return_value = datamanager_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'), 'rb') as f:
+                                   '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'), 'rb') as f:
                 opener_content = f.read()
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                   '../../fixtures/chunantes/datamanagers/datamanager0/description.md'), 'rb') as f:
+                                   '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'), 'rb') as f:
                 description_content = f.read()
 
             mrequestsget.side_effect = [FakeRequest(status=status.HTTP_200_OK,
@@ -762,7 +762,7 @@ class DataManagerViewTests(APITestCase):
         with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -771,10 +771,10 @@ class DataManagerViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
         files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'),
+                                                  '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'),
                                      'rb'),
                  'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
+                                                  '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
                                      'rb')}
 
         data = {
@@ -858,7 +858,7 @@ class TraintupleViewTests(APITestCase):
         with mock.patch.object(TrainTupleViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -930,7 +930,7 @@ class TesttupleViewTests(APITestCase):
         with mock.patch('substrapp.views.testtuple.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
-            search_params = f'{get_hash(os.path.join(dir_path, "../../fixtures/owkin/objectives/objective0/description.md"))}/'
+            search_params = f'{get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))}/'
             response = self.client.get(url + search_params, **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -1023,13 +1023,13 @@ class DataViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
+        data_path1 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path2 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
 
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -1057,10 +1057,10 @@ class DataViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        data_path2 = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
+        data_path1 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path2 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -1090,11 +1090,11 @@ class DataViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
 
         pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
 
         data = {
             'file': open(data_path, 'rb'),
@@ -1121,9 +1121,9 @@ class DataViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
 
         data = {
             'file': open(data_path, 'rb'),
@@ -1149,11 +1149,11 @@ class DataViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
 
         shutil.copy(data_path, os.path.join(MEDIA_ROOT, '0024700.zip'))
 
-        opener_path = os.path.join(dir_path, '../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
+        opener_path = os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
 
         pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
 
