@@ -354,6 +354,7 @@ def prepareMaterials(subtuple, model_type):
 
 def doTask(subtuple, tuple_type):
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+    org_name = getattr(settings, 'ORG_NAME')
 
     # Federated learning variables
     fltask = None
@@ -409,26 +410,26 @@ def doTask(subtuple, tuple_type):
 
         # create the command option for algo
         if tuple_type == 'traintuple':
-            algo_command = '--train'    # main command
+            algo_command = 'train'    # main command
 
             # add list of inmodels
             if subtuple['inModels'] is not None:
                 inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
-                algo_command += f' --inmodels {" ".join(inmodels)}'
+                algo_command = f"{algo_command} {' '.join(inmodels)}"
 
             # add fltask rank for training
             if flrank is not None:
-                algo_command += f' --rank {flrank}'
+                algo_command = f"{algo_command} --rank {flrank}"
 
         elif tuple_type == 'testtuple':
-            algo_command = '--predict'    # main command
+            algo_command = 'predict'    # main command
 
             inmodels = subtuple['model']["traintupleKey"]
-            algo_command += f' --inmodels {inmodels}'
+            algo_command = f'{algo_command} {inmodels}'
 
         # local volume for fltask
         if fltask is not None and tuple_type == 'traintuple':
-            flvolume = f'local-{fltask}'
+            flvolume = f'local-{fltask}-{org_name}'
             if flrank == 0:
                 client.volumes.create(name=flvolume)
             else:
@@ -458,9 +459,8 @@ def doTask(subtuple, tuple_type):
 
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
-            url_http = 'http' if settings.DEBUG else 'https'
-            current_site = f'{getattr(settings, "SITE_HOST")}:{getattr(settings, "SITE_PORT")}'
-            end_model_file = f'{url_http}://{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+            current_site = getattr(settings, "DEFAULT_DOMAIN")
+            end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
         # compute metric task
         metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac
@@ -500,7 +500,7 @@ def doTask(subtuple, tuple_type):
 
         # Rank == -1 -> Last fl subtuple or fl throws an exception
         if flrank == -1:
-            flvolume = f'local-{fltask}'
+            flvolume = f'local-{fltask}-{org_name}'
             local_volume = client.volumes.get(volume_id=flvolume)
             try:
                 local_volume.remove(force=True)

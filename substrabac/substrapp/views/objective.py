@@ -1,8 +1,12 @@
 import docker
+import logging
 import os
 import re
 import shutil
 import tempfile
+import uuid
+
+from urllib.parse import unquote
 
 import requests
 from django.conf import settings
@@ -24,72 +28,72 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.utils import queryLedger, get_hash, get_computed_hash
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException
+from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 
 
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
 
+    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
+
+    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
+
+    metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
+    if not os.path.exists(metrics_path_dst):
+        shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
+        os.remove(metrics_path)
+
+    if not test_data_manager_key:
+        raise Exception('Cannot do a objective dryrun without a data manager key.')
+
+    datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
+    opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
+    with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
+        opener_file.write(opener_content)
+
+    # Launch verification
+    client = docker.from_env()
+    pred_path = os.path.join(subtuple_directory, 'pred')
+    opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+    metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
+    metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
+
+    metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
+    metrics_docker_name = f'{metrics_docker}_{dryrun_uuid}'
+    volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
+    client.images.build(path=metrics_path,
+                        tag=metrics_docker,
+                        rm=False)
+
+    job_args = {'image': metrics_docker,
+                'name': metrics_docker_name,
+                'cpuset_cpus': '0-0',
+                'mem_limit': '1G',
+                'command': None,
+                'volumes': volumes,
+                'shm_size': '8G',
+                'labels': ['dryrun'],
+                'detach': False,
+                'auto_remove': False,
+                'remove': False}
+
     try:
-        subtuple_directory = build_subtuple_folders({'key': pkhash})
-
-        metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
-        if not os.path.exists(metrics_path_dst):
-            shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
-            os.remove(metrics_path)
-        try:
-            datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
-        except JsonException as e:
-            raise e
-        else:
-            opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
-            with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as opener_file:
-                opener_file.write(opener_content)
-
-        # Launch verification
-        client = docker.from_env()
-        pred_path = os.path.join(subtuple_directory, 'pred')
-        opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-        metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
-        metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
-
-        metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
-        metrics_docker_name = f'{metrics_docker}_{pkhash}'
-        volumes = {pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        client.images.build(path=metrics_path,
-                            tag=metrics_docker,
-                            rm=False)
-
-        job_args = {'image': metrics_docker,
-                    'name': metrics_docker_name,
-                    'cpuset_cpus': '0-0',
-                    'mem_limit': '1G',
-                    'command': None,
-                    'volumes': volumes,
-                    'shm_size': '8G',
-                    'labels': ['dryrun'],
-                    'detach': False,
-                    'auto_remove': False,
-                    'remove': False}
-
         client.containers.run(**job_args)
-
-        # Verify that the pred file exist
-        assert os.path.exists(os.path.join(pred_path, 'perf.json'))
+        if not os.path.exists(os.path.join(pred_path, 'perf.json')):
+            raise Exception('Perf file not found')
 
     except ContainerError as e:
         raise Exception(e.stderr)
-    except Exception as e:
-        raise str(e)
+
     finally:
         try:
             container = client.containers.get(metrics_docker_name)
-            container.remove()
-        except:
-            pass
+            container.remove(force=True)
+        except BaseException as e:
+            logging.error(e, exc_info=True)
         remove_subtuple_materials(subtuple_directory)
 
 
@@ -136,8 +140,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = data.get('dryrun', False)
 
         description = data.get('description')
-        test_data_manager_key = data.get('test_data_manager_key')
-        test_data_sample_keys = data.getlist('test_data_sample_keys')
+        test_data_manager_key = request.data.get('test_data_manager_key', request.POST.get('test_data_manager_key', ''))
+
+        try:
+            test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
+        except:
+            test_data_sample_keys = request.data.get('test_data_sample_keys', request.POST.getlist('test_data_sample_keys', []))
+
         metrics = data.get('metrics')
 
         pkhash = get_hash(description)
@@ -147,103 +156,96 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            return Response({'message': e.args,
-                             'pkhash': pkhash},
-                            status=status.HTTP_400_BAD_REQUEST)
-        else:
+        except ValidationError as e:
+            st = status.HTTP_400_BAD_REQUEST
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
 
-            if dryrun:
-                try:
-                    metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
-                    with open(metrics_path, 'wb') as metrics_file:
-                        metrics_file.write(metrics.open().read())
-
-                    task = compute_dryrun.apply_async((metrics_path, test_data_manager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
-                    url_http = 'http' if settings.DEBUG else 'https'
-                    site_port = getattr(settings, "SITE_PORT", None)
-                    current_site = f'{getattr(settings, "SITE_HOST")}'
-                    if site_port:
-                        current_site = f'{current_site}:{site_port}'
-                    task_route = f'{url_http}://{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
-                    msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
-                except Exception as e:
-                    return Response({'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'},
-                                    status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
-
-            # create on db
+        if dryrun:
             try:
-                instance = self.perform_create(serializer)
-            except IntegrityError as exc:
-                try:
-                    pkhash = re.search('\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
-                except:
-                    pkhash = ''
+                metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
+                with open(metrics_path, 'wb') as metrics_file:
+                    metrics_file.write(metrics.open().read())
+
+                task = compute_dryrun.apply_async((metrics_path, test_data_manager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
+            except Exception as e:
+                return Response({'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'},
+                                status=status.HTTP_400_BAD_REQUEST)
+
+            current_site = getattr(settings, "DEFAULT_DOMAIN")
+            task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+            msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+
+            return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
+
+        # create on db
+        try:
+            instance = self.perform_create(serializer)
+        except IntegrityError as exc:
+            try:
+                pkhash = re.search(r'\(pkhash\)=\((\w+)\)', exc.args[0]).group(1)
+            except BaseException:
+                pkhash = ''
+            finally:
                 return Response({'message': 'A objective with this description file already exists.', 'pkhash': pkhash},
                                 status=status.HTTP_409_CONFLICT)
-            except Exception as exc:
-                return Response({'message': exc.args},
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # init ledger serializer
-                ledger_serializer = LedgerObjectiveSerializer(data={'test_data_sample_keys': test_data_sample_keys,
-                                                                    'test_data_manager_key': test_data_manager_key,
-                                                                    'name': data.get('name'),
-                                                                    'permissions': data.get('permissions'),
-                                                                    'metrics_name': data.get('metrics_name'),
-                                                                    'instance': instance},
-                                                              context={'request': request})
+        except Exception as exc:
+            return Response({'message': exc.args},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-                if not ledger_serializer.is_valid():
-                    # delete instance
-                    instance.delete()
-                    raise ValidationError(ledger_serializer.errors)
+        # init ledger serializer
+        ledger_serializer = LedgerObjectiveSerializer(data={'test_data_sample_keys': test_data_sample_keys,
+                                                            'test_data_manager_key': test_data_manager_key,
+                                                            'name': data.get('name'),
+                                                            'permissions': data.get('permissions'),
+                                                            'metrics_name': data.get('metrics_name'),
+                                                            'instance': instance},
+                                                      context={'request': request})
 
-                # create on ledger
-                data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
 
-                if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-                    return Response(data, status=st)
+        # create on ledger
+        data, st = ledger_serializer.create(ledger_serializer.validated_data)
 
-                headers = self.get_success_headers(serializer.data)
-                d = dict(serializer.data)
-                d.update(data)
-                return Response(d, status=st, headers=headers)
+        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
+            return Response(data, status=st)
+
+        headers = self.get_success_headers(serializer.data)
+        d = dict(serializer.data)
+        d.update(data)
+        return Response(d, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
+        # get objective description from remote node
+        url = objective['description']['storageAddress']
         try:
-            # get objective description from remote node
-            url = objective['description']['storageAddress']
-            try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except:
-                raise Exception(f'Failed to fetch {url}')
-            else:
-                if r.status_code != 200:
-                    raise Exception(f'end to end node report {r.text}')
+            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
+        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+            raise Exception(f'Failed to fetch {url}')
+        if r.status_code != status.HTTP_200_OK:
+            raise Exception(f'end to end node report {r.text}')
 
-                try:
-                    computed_hash = self.compute_hash(r.content)
-                except Exception:
-                    raise Exception('Failed to fetch description file')
-                else:
-                    if computed_hash != pk:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
+        try:
+            computed_hash = self.compute_hash(r.content)
+        except Exception:
+            raise Exception('Failed to fetch description file')
 
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
+        if computed_hash != pk:
+            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+            raise Exception(msg)
 
-                    # save/update objective in local db for later use
-                    instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
-                    instance.description.save('description.md', f)
+        f = tempfile.TemporaryFile()
+        f.write(r.content)
 
-        except Exception as e:
-            raise e
-        else:
-            return instance
+        # save/update objective in local db for later use
+        instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
+        instance.description.save('description.md', f)
+
+        return instance
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -254,45 +256,33 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
+        except ValueError:
             return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
-        else:
-            # get instance from remote node
+
+        # get instance from remote node
+        try:
+            data = getObjectFromLedger(pk, self.ledger_query_call)
+        except JsonException as e:
+            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+        except Http404:
+            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        # try to get it from local db to check if description exists
+        try:
+            instance = self.get_object()
+        except Http404:
+            instance = None
+
+        if not instance or not instance.description:
             try:
-                data = getObjectFromLedger(pk, self.ledger_query_call)
-            except JsonException as e:
-                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                error = None
-                instance = None
-                try:
-                    # try to get it from local db to check if description exists
-                    instance = self.get_object()
-                except Http404:
-                    try:
-                        instance = self.create_or_update_objective(data, pk)
-                    except Exception as e:
-                        error = e
-                else:
-                    # check if instance has description
-                    if not instance.description:
-                        try:
-                            instance = self.create_or_update_objective(data, pk)
-                        except Exception as e:
-                            error = e
-                finally:
-                    if error is not None:
-                        return Response({'message': str(error)}, status=status.HTTP_400_BAD_REQUEST)
+                instance = self.create_or_update_objective(data, pk)
+            except Exception as e:
+                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-                    # do not give access to local files address
-                    if instance is not None:
-                        serializer = self.get_serializer(instance,
-                                                         fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-                        data.update(serializer.data)
-                    else:
-                        data = {'message': 'Fail to get instance'}
-
-                    return Response(data, status=status.HTTP_200_OK)
+        # do not give access to local files address
+        serializer = self.get_serializer(
+            instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+        data.update(serializer.data)
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
@@ -300,88 +290,78 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'args': '{"Args":["queryObjectives"]}'
         })
+
+        data = [] if data is None else data
+        objectives = [data]
+
+        if st != status.HTTP_200_OK:
+            return Response(objectives, status=st)
+
         dataManagerData = None
         algoData = None
         modelData = None
 
-        # init list to return
-        if data is None:
-            data = []
-        l = [data]
+        # parse filters
+        query_params = request.query_params.get('search', None)
+        if query_params is None:
+            return Response(objectives, status=st)
 
-        if st == 200:
+        try:
+            filters = get_filters(query_params)
+        except Exception:
+            return Response(
+                {'message': f'Malformed search filters {query_params}'},
+                status=status.HTTP_400_BAD_REQUEST)
 
-            # parse filters
-            query_params = request.query_params.get('search', None)
+        # filtering
+        objectives = []
+        for idx, filter in enumerate(filters):
+            # init each list iteration to data
+            objectives.append(data)
 
-            if query_params is not None:
-                try:
-                    filters = get_filters(query_params)
-                except Exception as exc:
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # filtering, reset l to an empty array
-                    l = []
-                    for idx, filter in enumerate(filters):
-                        # init each list iteration to data
-                        l.append(data)
-                        for k, subfilters in filter.items():
-                            if k == 'objective':  # filter by own key
-                                for key, val in subfilters.items():
-                                    if key == 'metrics':  # specific to nested metrics
-                                        l[idx] = [x for x in l[idx] if x[key]['name'] in val]
-                                    else:
-                                        l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'dataset':  # select objective used by these datamanagers
-                                if not dataManagerData:
-                                    # TODO find a way to put this call in cache
-                                    dataManagerData, st = queryLedger({
-                                        'args': '{"Args":["queryDataManagers"]}'
-                                    })
-                                    if st != status.HTTP_200_OK:
-                                        return Response(dataManagerData, status=st)
-                                    if dataManagerData is None:
-                                        dataManagerData = []
+            for k, subfilters in filter.items():
+                if k == 'objective':  # filter by own key
+                    for key, val in subfilters.items():
+                        if key == 'metrics':  # specific to nested metrics
+                            objectives[idx] = [x for x in objectives[idx] if x[key]['name'] in val]
+                        else:
+                            objectives[idx] = [x for x in objectives[idx] if x[key] in val]
 
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in dataManagerData if x[key] in val]
-                                    dataManagerKeys = [x['key'] for x in filteredData]
-                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys or x['testData']['dataManagerKey'] in dataManagerKeys]
-                            elif k == 'algo':  # select objective used by these algo
-                                if not algoData:
-                                    # TODO find a way to put this call in cache
-                                    algoData, st = queryLedger({
-                                        'args': '{"Args":["queryAlgos"]}'
-                                    })
-                                    if st != status.HTTP_200_OK:
-                                        return Response(algoData, status=st)
-                                    if algoData is None:
-                                        algoData = []
+                elif k == 'dataset':  # select objective used by these datamanagers
+                    if not dataManagerData:
+                        # TODO find a way to put this call in cache
+                        dataManagerData, st = queryLedger({
+                            'args': '{"Args":["queryDataManagers"]}'
+                        })
+                        if st != status.HTTP_200_OK:
+                            return Response(dataManagerData, status=st)
+                        if dataManagerData is None:
+                            dataManagerData = []
 
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in algoData if x[key] in val]
-                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys]
-                            elif k == 'model':  # select objectives used by outModel hash
-                                if not modelData:
-                                    # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger({
-                                        'args': '{"Args":["queryTraintuples"]}'
-                                    })
-                                    if st != status.HTTP_200_OK:
-                                        return Response(modelData, status=st)
-                                    if modelData is None:
-                                        modelData = []
+                    for key, val in subfilters.items():
+                        filteredData = [x for x in dataManagerData if x[key] in val]
+                        dataManagerKeys = [x['key'] for x in filteredData]
+                        objectiveKeys = [x['objectiveKey'] for x in filteredData]
+                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or
+                                           (x['testDataset'] and x['testDataset']['dataManagerKey'] in dataManagerKeys)]
 
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
-                                    objectiveKeys = [x['objective']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in objectiveKeys]
+                elif k == 'model':  # select objectives used by outModel hash
+                    if not modelData:
+                        # TODO find a way to put this call in cache
+                        modelData, st = queryLedger({
+                            'args': '{"Args":["queryTraintuples"]}'
+                        })
+                        if st != status.HTTP_200_OK:
+                            return Response(modelData, status=st)
+                        if modelData is None:
+                            modelData = []
 
-        return Response(l, status=st)
+                    for key, val in subfilters.items():
+                        filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
+                        objectiveKeys = [x['objective']['hash'] for x in filteredData]
+                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys]
+
+        return Response(objectives, status=st)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

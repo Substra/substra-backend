@@ -80,7 +80,7 @@ It will drop the databases if they are already created, then create them and gra
 - With django migrations
 ```shell
 SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py migrate --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev```
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev
 ```
 
 ###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
@@ -143,7 +143,7 @@ Execute this command in the `substrabac/substrabac` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler, celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler

@@ -40,15 +40,16 @@ def queryLedger(options):
     core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
     peer = LEDGER['peer']
 
+    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
 
     print(f'Querying chaincode in the channel \'{channel_name}\' on the peer \'{peer["host"]}\' ...', flush=True)
 
     output = subprocess.run([os.path.join(PROJECT_ROOT, '../bin/peer'),
-                             '--logging-level', 'DEBUG',
                              'chaincode', 'query',
                              '-x',
                              '-C', channel_name,
@@ -70,7 +71,7 @@ def queryLedger(options):
         print(msg, flush=True)
     else:
         try:
-            msg = output.stderr.decode('utf-8').split('Error')[2].split('\n')[0]
+            msg = output.stderr.decode('utf-8').split('Error')[-1].split('\n')[0]
             data = {'message': msg}
         except:
             msg = output.stderr.decode('utf-8')
@@ -79,6 +80,8 @@ def queryLedger(options):
             st = status.HTTP_400_BAD_REQUEST
             if 'access denied' in msg:
                 st = status.HTTP_403_FORBIDDEN
+            elif 'no element with key' in msg:
+                st = status.HTTP_404_NOT_FOUND
 
     clean_env_variables()
 
@@ -92,6 +95,8 @@ def invokeLedger(options, sync=False):
     chaincode_name = LEDGER['chaincode_name']
     core_peer_mspconfigpath = LEDGER['core_peer_mspconfigpath']
     peer = LEDGER['peer']
+    peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+
     orderer = LEDGER['orderer']
     orderer_ca_file = orderer['ca']
     peer_key_file = peer['clientKey']
@@ -100,12 +105,11 @@ def invokeLedger(options, sync=False):
     # update config path for using right core.yaml and override msp config path
     os.environ['FABRIC_CFG_PATH'] = os.environ.get('FABRIC_CFG_PATH_ENV', peer['docker_core_dir'])
     os.environ['CORE_PEER_MSPCONFIGPATH'] = os.environ.get('CORE_PEER_MSPCONFIGPATH_ENV', core_peer_mspconfigpath)
-    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer["port"]}')
+    os.environ['CORE_PEER_ADDRESS'] = os.environ.get('CORE_PEER_ADDRESS_ENV', f'{peer["host"]}:{peer_port}')
 
     print(f'Sending invoke transaction to {peer["host"]} ...', flush=True)
 
     cmd = [os.path.join(PROJECT_ROOT, '../bin/peer'),
-           '--logging-level', 'DEBUG',
            'chaincode', 'invoke',
            '-C', channel_name,
            '-n', chaincode_name,
@@ -145,6 +149,9 @@ def invokeLedger(options, sync=False):
                 msg = msg.split('result: status:')[1].split('\n')[0].split('payload:')[1].strip().strip('"')
             except:
                 pass
+            else:
+                msg = json.loads(msg.encode('utf-8').decode('unicode_escape'))
+                msg = msg.get('key', msg.get('keys'))  # get pkhash
             finally:
                 data = {'pkhash': msg}
 

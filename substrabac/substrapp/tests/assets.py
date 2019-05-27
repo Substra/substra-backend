@@ -1,5 +1,21 @@
 objective = [
     {
+        "key": "1cdafbb018dd195690111d74916b76c96892d897ec3587c814f287946db446c3",
+        "name": "Skin Lesion Classification Objective",
+        "description": {
+            "hash": "1cdafbb018dd195690111d74916b76c96892d897ec3587c814f287946db446c3",
+            "storageAddress": "http://testserver/objective/1cdafbb018dd195690111d74916b76c96892d897ec3587c814f287946db446c3/description/"
+        },
+        "metrics": {
+            "name": "macro-average recall",
+            "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
+            "storageAddress": "http://testserver/objective/1cdafbb018dd195690111d74916b76c96892d897ec3587c814f287946db446c3/metrics/"
+        },
+        "owner": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
+        "testDataset": None,
+        "permissions": "all"
+    },
+    {
         "key": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "name": "Skin Lesion Classification Objective",
         "description": {
@@ -8,12 +24,12 @@ objective = [
         },
         "metrics": {
             "name": "macro-average recall",
-            "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+            "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
             "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "owner": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
         "testDataset": {
-            "dataManagerKey": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
+            "dataManagerKey": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "dataSampleKeys": [
                 "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf",
                 "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a"
@@ -28,15 +44,15 @@ datamanager = [
         "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "description": {
             "hash": "15863c2af1fcfee9ca6f61f04be8a0eaaf6a45e4d50c421788d450d198e580f1",
-            "storageAddress": "http://testserver/data_manager/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/description/"
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/description/"
         },
-        "key": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
+        "key": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
         "name": "ISIC 2018",
         "opener": {
-            "hash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
-            "storageAddress": "http://testserver/data_manager/59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/opener/"
+            "hash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/opener/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "owner": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "permissions": "all",
         "type": "Images"
     },
@@ -44,15 +60,15 @@ datamanager = [
         "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
         "description": {
             "hash": "258bef187a166b3fef5cb86e68c8f7e154c283a148cd5bc344fec7e698821ad3",
-            "storageAddress": "http://testserver/data_manager/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/description/"
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/description/"
         },
-        "key": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
+        "key": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
         "name": "Simplified ISIC 2018",
         "opener": {
-            "hash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
-            "storageAddress": "http://testserver/data_manager/9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528/opener/"
+            "hash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
+            "storageAddress": "http://testserver/data_manager/615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/opener/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "owner": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
         "permissions": "all",
         "type": "Images"
     }
@@ -70,38 +86,35 @@ algo = [
             "hash": "b9463411a01ea00869bdffce6e59a5c100a4e635c0a9386266cad3c77eb28e9e",
             "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/description/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
-        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
+        "owner": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "permissions": "all"
     },
     {
-        "key": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+        "key": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
         "name": "Logistic regression",
         "content": {
-            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
-            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+            "hash": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
+            "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/"
         },
         "description": {
             "hash": "124a0425b746d7072282d167b53cb6aab3a31bf1946dae89135c15b0126ebec3",
-            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/description/"
+            "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/description/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
-        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
+        "owner": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "permissions": "all"
     },
     {
-        "key": "f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284",
+        "key": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
         "name": "Random Forest",
         "content": {
-            "hash": "f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284",
-            "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/file/"
+            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
+            "storageAddress": "http://testserver/algo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/file/"
         },
         "description": {
             "hash": "4acea40c4b51996c88ef279c5c9aa41ab77b97d38c5ca167e978a98b2e402675",
-            "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/description/"
+            "storageAddress": "http://testserver/algo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/description/"
         },
-        "owner": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
-        "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
+        "owner": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "permissions": "all"
     }
 ]
@@ -113,134 +126,139 @@ traintuple = [
             "name": "Neural Network",
             "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/file/"
         },
-        "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "dataset": {
             "keys": [
-                "bcdda7da240f1de016e5c185d63027ff6536c233f7ed96d086766e99027d4e24",
+                "31510dc1d8be788f7c5d28d05714f7efb9edb667762966b9adc02eadeaacebe9",
                 "03a1f878768ea8624942d46a3b438c37992e626c2cf655023bcc3bed69d485d1"
             ],
-            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
+            "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "perf": 0,
-            "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+            "worker": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426"
         },
         "fltask": "",
         "inModels": None,
-        "key": "dfa89a184b6ba5c50daa5a7176818fe1b1c5c3b781b30b99e4d79eef036006f2",
-        "log": "[00-01-0032-456da5d]",
+        "key": "c4e3116dd3f895986b77e4d445178330630bd3f52407f10462dd4778e40090e0",
+        "log": "[00-01-0032-7cc5b61]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outModel": None,
         "permissions": "all",
         "rank": 0,
-        "status": "failed"
+        "status": "failed",
+        "tag": "My super tag"
     },
     {
         "algo": {
-            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+            "hash": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
             "name": "Logistic regression",
-            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+            "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/"
         },
-        "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "dataset": {
             "keys": [
-                "bcdda7da240f1de016e5c185d63027ff6536c233f7ed96d086766e99027d4e24",
+                "31510dc1d8be788f7c5d28d05714f7efb9edb667762966b9adc02eadeaacebe9",
                 "03a1f878768ea8624942d46a3b438c37992e626c2cf655023bcc3bed69d485d1"
             ],
-            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
+            "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "perf": 1,
-            "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+            "worker": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426"
         },
         "fltask": "",
         "inModels": None,
-        "key": "66caabaf37455cc7af8e89cac37eb0ebfdf73ac7fe4765c644ea6340c2589c0a",
-        "log": "Train - CPU:78.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+        "key": "3979576752e014adddadfc360d79c67cdccb0f4bae46936f35ce09c64e5832c8",
+        "log": "Train - CPU:173.81 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outModel": {
-            "hash": "2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de",
-            "storageAddress": "http://testserver/model/2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de/file/"
+            "hash": "592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075",
+            "storageAddress": "http://testserver/model/592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075/file/"
         },
         "permissions": "all",
         "rank": 0,
-        "status": "done"
+        "status": "done",
+        "tag": "substra"
     },
     {
         "algo": {
-            "hash": "f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284",
+            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
             "name": "Random Forest",
-            "storageAddress": "http://testserver/algo/f2d9fd38e25cd975c49f3ce7e6739846585e89635a86689b5db42ab2c0c57284/file/"
+            "storageAddress": "http://testserver/algo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/file/"
         },
-        "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+        "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "dataset": {
             "keys": [
-                "bcdda7da240f1de016e5c185d63027ff6536c233f7ed96d086766e99027d4e24",
+                "31510dc1d8be788f7c5d28d05714f7efb9edb667762966b9adc02eadeaacebe9",
                 "03a1f878768ea8624942d46a3b438c37992e626c2cf655023bcc3bed69d485d1"
             ],
-            "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
+            "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "perf": 0,
-            "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+            "worker": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426"
         },
         "fltask": "",
         "inModels": None,
-        "key": "7f4bea1afafefda207daf7c24034aab4f1db0df0575ba6b303d3d7a6df1794e7",
-        "log": "[00-01-0032-ea27bd6]",
+        "key": "c6beed3a4ee5ead0c4246faac7931a944fc2286e193454bb1b851dee0c5a5f59",
+        "log": "[00-01-0032-139c39e]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outModel": None,
         "permissions": "all",
         "rank": 0,
-        "status": "failed"
+        "status": "failed",
+        "tag": ""
     }
 ]
 
 testtuple = [
     {
-        "objective": {
-            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
-            "metrics": {
-                "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
-                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
-            }
-        },
+        "key": "b7b9291e5ff96ec7d16d38ab49915cbe15055347bb933a824887f2a76fb57c9a",
         "algo": {
             "name": "Logistic regression",
-            "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
-            "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+            "hash": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
+            "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/"
         },
-        "model": {
-            "traintupleKey": "66caabaf37455cc7af8e89cac37eb0ebfdf73ac7fe4765c644ea6340c2589c0a",
-            "hash": "2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de",
-            "storageAddress": "http://testserver/model/2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de/file/"
-        },
+        "certified": True,
+        "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
         "dataset": {
-            "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+            "worker": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7",
             "keys": [
                 "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a",
                 "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf"
             ],
-            "openerHash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
+            "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
             "perf": 0
         },
-        "certified": True,
-        "status": "done",
-        "log": "Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+        "log": "Test - CPU:179.46 % - Mem:0.09 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+        "model": {
+            "traintupleKey": "3979576752e014adddadfc360d79c67cdccb0f4bae46936f35ce09c64e5832c8",
+            "hash": "592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075",
+            "storageAddress": "http://testserver/model/592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075/file/"
+        },
+        "objective": {
+            "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
+            "metrics": {
+                "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
+                "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
+            }
+        },
         "permissions": "all",
-        "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+        "status": "done",
+        "tag": ""
     }
 ]
 
@@ -248,72 +266,75 @@ model = [
     {
         "testtuple": {
             "algo": {
-                "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+                "hash": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
                 "name": "Logistic regression",
-                "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+                "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/"
             },
             "certified": True,
-            "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+            "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
             "dataset": {
                 "keys": [
                     "17d58b67ae2028018108c9bf555fa58b2ddcfe560e0117294196e79d26140b2a",
                     "8bf3bf4f753a32f27d18c86405e7a406a83a55610d91abcca9acc525061b8ecf"
                 ],
-                "openerHash": "9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528",
+                "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
                 "perf": 0,
-                "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+                "worker": "fba9c2538319fe2b45ac7047e21b4bc7196537367814d5da7f0aae020d3be5f7"
             },
-            "key": "0cd626cf445b1e17f7fb854e696d87db65b460545aab1677920459ae8a774f4f",
-            "log": "Test - CPU:0.00 % - Mem:0.00 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+            "key": "b7b9291e5ff96ec7d16d38ab49915cbe15055347bb933a824887f2a76fb57c9a",
+            "log": "Test - CPU:179.46 % - Mem:0.09 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
             "model": {
-                "hash": "2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de",
-                "storageAddress": "http://testserver/model/2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de/file/",
-                "traintupleKey": "66caabaf37455cc7af8e89cac37eb0ebfdf73ac7fe4765c644ea6340c2589c0a"
+                "hash": "592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075",
+                "storageAddress": "http://testserver/model/592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075/file/",
+                "traintupleKey": "3979576752e014adddadfc360d79c67cdccb0f4bae46936f35ce09c64e5832c8"
             },
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                    "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "permissions": "all",
-            "status": "done"
+            "status": "done",
+            "tag": ""
         },
         "traintuple": {
             "algo": {
-                "hash": "da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b",
+                "hash": "4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7",
                 "name": "Logistic regression",
-                "storageAddress": "http://testserver/algo/da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b/file/"
+                "storageAddress": "http://testserver/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/"
             },
-            "creator": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e",
+            "creator": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426",
             "dataset": {
                 "keys": [
-                    "bcdda7da240f1de016e5c185d63027ff6536c233f7ed96d086766e99027d4e24",
+                    "31510dc1d8be788f7c5d28d05714f7efb9edb667762966b9adc02eadeaacebe9",
                     "03a1f878768ea8624942d46a3b438c37992e626c2cf655023bcc3bed69d485d1"
                 ],
-                "openerHash": "59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd",
+                "openerHash": "615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7",
                 "perf": 1,
-                "worker": "703433008d3f62dab5ffaccb3c53d723660f5f6cdac3c5dfd26ac88312b5a94e"
+                "worker": "2cb13d299b337fae2969da1ff4ddd9a2f3004be52d64f671d13d9513f5a79426"
             },
             "fltask": "",
             "inModels": None,
-            "key": "66caabaf37455cc7af8e89cac37eb0ebfdf73ac7fe4765c644ea6340c2589c0a",
-            "log": "Train - CPU:78.04 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
+            "key": "3979576752e014adddadfc360d79c67cdccb0f4bae46936f35ce09c64e5832c8",
+            "log": "Train - CPU:173.81 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB; ",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "750f622262854341bd44f55c1018949e9c119606ef5068bd7d137040a482a756",
+                    "hash": "c42dca31fbc2ebb5705643e3bb6ee666bbfd956de13dd03727f825ad8445b4d7",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "outModel": {
-                "hash": "2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de",
-                "storageAddress": "http://testserver/model/2bd56e309a7e899027a1e8b3990fd7a69986291043079d836bc2f8bcdb9ec8de/file/"
+                "hash": "592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075",
+                "storageAddress": "http://testserver/model/592242f9b162178994897c5b8aa49450a17cc395bb9bc9864b830a6cdba6a075/file/"
             },
             "permissions": "all",
             "rank": 0,
-            "status": "done"
+            "status": "done",
+            "tag": "substra"
         }
     }
 ]
+

@@ -17,7 +17,7 @@ from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerial
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException
+from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException, find_primary_key_error
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -35,14 +35,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def dryrun(self, data_opener):
 
-        mandatory_functions = {'get_X': {'folder'},
-                               'get_y': {'folder'},
-                               'save_pred': {'y_pred', 'folder'},
-                               'get_pred': {'folder'},
-                               'fake_X': {'n_sample'},
-                               'fake_y': {'n_sample'}
-                               }
-
         file = data_opener.open().read()
 
         try:
@@ -51,18 +43,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': f'Opener must be a valid python file, please review your opener file and the documentation.'},
                             status=status.HTTP_400_BAD_REQUEST)
 
-        funcs_args = {n.name: {arg.arg for arg in n.args.args} for n in node.body if isinstance(n, ast.FunctionDef)}
-
-        for mfunc, margs in mandatory_functions.items():
-            try:
-                args = funcs_args[mfunc]
-            except:
-                return Response({'message': f'Opener must have a "{mfunc}" function, please review your opener and the documentation.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                if not margs.issubset(args):
-                    return Response({'message': f'Opener function "{mfunc}" must have at least {margs} arguments, please review your opener and the documentation.'},
-                                    status=status.HTTP_400_BAD_REQUEST)
+        imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
+        if 'substratools' not in imported_module_names:
+            return Response({'message': 'Opener must import substratools, please review your opener and the documentation.'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
         return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
                         status=status.HTTP_200_OK)
@@ -85,9 +69,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            return Response({'message': e.args,
-                             'pkhash': pkhash},
-                            status=status.HTTP_400_BAD_REQUEST)
+            st = status.HTTP_400_BAD_REQUEST
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
         else:
             if dryrun:
                 return self.dryrun(data_opener)
@@ -192,6 +177,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'args': f'{{"Args":["queryDataset", "{pk}"]}}'
         })
 
+        if st == status.HTTP_404_NOT_FOUND:
+            raise Http404('Not found')
+
         if st != status.HTTP_200_OK:
             raise JsonException(data)
 
@@ -217,6 +205,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 data = self.getObjectFromLedger(pk)  # datamanager use particular query to ledger
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
             else:
                 error = None
                 instance = None
@@ -302,21 +292,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                                     else:
                                         filteredData = [x for x in objectiveData if x[key] in val]
                                     objectiveKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
-                            elif k == 'algo':  # select objective used by these algo
-                                if not algoData:
-                                    # TODO find a way to put this call in cache
-                                    algoData, st = queryLedger({
-                                        'args': '{"Args":["queryAlgos"]}'
-                                    })
-                                    if st != status.HTTP_200_OK:
-                                        return Response(algoData, status=st)
-                                    if algoData is None:
-                                        algoData = []
-
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in algoData if x[key] in val]
-                                    objectiveKeys = [x['objectiveKey'] for x in filteredData]
                                     l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
                             elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:

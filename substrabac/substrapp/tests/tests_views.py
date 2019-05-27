@@ -17,7 +17,6 @@ from substrapp.serializers import LedgerDataSampleSerializer, LedgerObjectiveSer
 from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
-from substrapp.views.algo import compute_dryrun as algo_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
 from substrapp.models import DataManager
@@ -73,6 +72,7 @@ class ViewTests(APITestCase):
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+@override_settings(DEFAULT_DOMAIN='https://localhost')
 class ObjectiveViewTests(APITestCase):
 
     def setUp(self):
@@ -132,7 +132,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
@@ -152,19 +152,6 @@ class ObjectiveViewTests(APITestCase):
                                         (datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 1)
-
-    def test_objective_list_filter_algo(self):
-        url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK),
-                                        (algo, status.HTTP_200_OK)]
-
-            url = reverse('substrapp:objective-list')
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -499,64 +486,6 @@ class AlgoViewTests(APITestCase):
         data['description'].close()
         data['file'].close()
 
-    def test_algo_create_dryrun(self):
-
-        url = reverse('substrapp:algo-list')
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz')
-        description_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/description.md')
-
-        data = {'name': 'Logistic regression',
-                'file': open(algo_path, 'rb'),
-                'description': open(description_path, 'rb'),
-                'objective_key': get_hash(os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/description.md')),
-                'permissions': 'all',
-                'dryrun': True}
-
-        with mock.patch('substrapp.views.algo.compute_dryrun.apply_async') as mdryrun_task:
-
-            mdryrun_task.return_value = FakeTask('42')
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
-
-        self.assertEqual(response.data['id'], '42')
-        self.assertEqual(response.data['message'], 'Your dry-run has been taken in account. You can follow the task execution on https://localhost/task/42/')
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-        data['description'].close()
-        data['file'].close()
-
-    def test_algo_compute_dryrun(self):
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        algo_path = os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz')
-        shutil.copy(algo_path, os.path.join(MEDIA_ROOT, 'algo.tar.gz'))
-
-        metrics_path = os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/metrics.py')
-        with open(metrics_path, 'rb') as f:
-            metrics_content = f.read()
-        metrics_pkhash = compute_hash(metrics_content)
-
-        opener_path = os.path.join(dir_path, '../../fixtures/owkin/datamanagers/datamanager0/opener.py')
-        with open(opener_path, 'rb') as f:
-            opener_content = f.read()
-        opener_pkhash = compute_hash(opener_content)
-
-        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger,\
-                mock.patch('substrapp.views.algo.get_computed_hash') as mget_computed_hash:
-            mgetObjectFromLedger.side_effect = [{'metrics': {'storageAddress': 'test'},
-                                                 'testDataset': {'dataManagerKey': 'test'}},
-                                                {'opener': {'storageAddress': 'test'}}]
-            mget_computed_hash.side_effect = [(metrics_content, metrics_pkhash), (opener_content, opener_pkhash)]
-
-            objective_key = get_hash(os.path.join(dir_path, '../../fixtures/chunantes/objectives/objective0/description.md'))
-            pkhash = get_hash(algo_path)
-
-            # Slow operation, about 45 s, will fail if no internet connection
-            algo_compute_dryrun(os.path.join(MEDIA_ROOT, 'algo.tar.gz'), objective_key, pkhash)
-
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
@@ -663,7 +592,7 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.model.requests.get') as mrequestsget, \
                 mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
-            mgetObjectFromLedger.return_value = model[0]['traintuple']
+            mgetObjectFromLedger.return_value = model[0]
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=self.model.read().encode())
@@ -674,7 +603,7 @@ class ModelViewTests(APITestCase):
             search_params = model[0]['traintuple']['outModel']['hash'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[0]['traintuple'])
+            self.assertEqual(r, model[0])
 
     def test_model_retrieve_fail(self):
 
@@ -765,18 +694,6 @@ class DataManagerViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 1)
 
-    def test_datamanager_list_filter_algo(self):
-        url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
-                                        (algo, status.HTTP_200_OK)]
-
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 2)
-
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
@@ -803,7 +720,7 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
-        datamanager_response = [d for d in datamanager if d['key'] == '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd'][0]
+        datamanager_response = [d for d in datamanager if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
         with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = datamanager_response
@@ -821,7 +738,7 @@ class DataManagerViewTests(APITestCase):
                                         FakeRequest(status=status.HTTP_200_OK,
                                                     content=description_content)]
 
-            search_params = '59300f1fec4f5cdd3a236c7260ed72bdd24691efdec63b7910ea84136123cecd/'
+            search_params = '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -870,18 +787,6 @@ class DataManagerViewTests(APITestCase):
         response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
         self.assertEqual(response.data, {'message': f'Your data opener is valid. You can remove the dryrun option.'})
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        # Will fail because metrics.py instead of opener
-        files = {'data_opener': open(os.path.join(dir_path,
-                                                  '../../fixtures/owkin/objectives/objective0/metrics.py'),
-                                     'rb'),
-                 'description': open(os.path.join(dir_path,
-                                                  '../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
-                                     'rb')}
-
-        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
-        self.assertIn('please review your opener and the documentation.', response.data['message'])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         for x in files:
             files[x].close()
@@ -1087,6 +992,7 @@ class TaskViewTests(APITestCase):
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+@override_settings(DEFAULT_DOMAIN='https://localhost')
 class DataViewTests(APITestCase):
 
     def setUp(self):
@@ -1204,7 +1110,7 @@ class DataViewTests(APITestCase):
                                     status.HTTP_201_CREATED)
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.data[0]['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['file'].close()

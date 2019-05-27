@@ -18,5 +18,3 @@ COPY ./substrabac/manage.py /usr/src/app/manage.py
 COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/substrabac /usr/src/app/substrabac
-
-RUN sed -i 's/localhost/rabbit/g' /usr/src/app/substrabac/celery.py

@@ -1,5 +1,6 @@
-import hashlib
+import json
 
+from django.http import Http404
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -42,6 +43,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         traintuple_key = request.data.get('traintuple_key', request.POST.get('traintuple_key', None))
         data_manager_key = request.data.get('data_manager_key', request.POST.get('data_manager_key', ''))
+        tag = request.data.get('tag', request.POST.get('tag', ''))
 
         try:
             test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
@@ -52,16 +54,34 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             'traintuple_key': traintuple_key,
             'data_manager_key': data_manager_key,
             'test_data_sample_keys': test_data_sample_keys,  # list of test data keys
+            'tag': tag
         }
 
         # init ledger serializer
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get testtuple pkhash of the proposal
+        # Get testtuple pkhash of the proposal with a queryLedger in case of 408 timeout
         args = serializer.get_args(serializer.validated_data)
         data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
-        pkhash = bytes.fromhex(data.rstrip()).decode('utf-8')  # fail in queryLedger because it's a string hash and not a json
+        if st == status.HTTP_200_OK:
+            pkhash = data.get('key', data.get('keys'))
+        else:
+            # If queryLedger fails, invoke will fail too so we handle the issue right now
+            try:
+                data['message'] = data['message'].split('Error')[-1]
+                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
+                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+
+                if len(pkhash) != 64:
+                    raise Exception('bad pkhash')
+                else:
+                    st = status.HTTP_409_CONFLICT
+
+                return Response({'message': data['message'].split('payload')[0],
+                                 'pkhash': pkhash}, status=st)
+            except:
+                return Response(data, status=st)
 
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
@@ -72,13 +92,16 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
             try:
-                pkhash = data['message'].replace('"', '').split('-')[
-                    -1].strip()
+                data['message'] = data['message'].split('Error')[-1]
+                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
+                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
-                if not len(pkhash) == 64:
+                if len(pkhash) != 64:
                     raise Exception('bad pkhash')
+                else:
+                    st = status.HTTP_409_CONFLICT
 
-                return Response({'message': data['message'],
+                return Response({'message': data['message'].split('payload')[0],
                                  'pkhash': pkhash}, status=st)
             except:
                 return Response(data, status=st)
@@ -92,6 +115,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         data, st = queryLedger({
             'args': '{"Args":["queryTesttuples"]}'
         })
+
+        data = data if data else []
 
         return Response(data, status=st)
 
@@ -112,5 +137,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                 data = getObjectFromLedger(pk, 'queryTesttuple')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+            except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
             else:
                 return Response(data, status=status.HTTP_200_OK)

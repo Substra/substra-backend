@@ -2,7 +2,7 @@ import hashlib
 import os
 from urllib.parse import unquote
 
-from django.http import FileResponse
+from django.http import FileResponse, Http404
 from rest_framework import status
 from rest_framework.response import Response
 
@@ -35,7 +35,7 @@ def get_filters(query_params):
             value = el[2]
 
             filter = {
-                subparent: [value]
+                subparent: [unquote(value)]
             }
 
             if not len(filters[idx]):  # create and add it
@@ -59,6 +59,9 @@ def getObjectFromLedger(pk, query):
     data, st = queryLedger({
         'args': f'{{"Args":["{query}","{pk}"]}}'
     })
+
+    if st == status.HTTP_404_NOT_FOUND:
+        raise Http404('Not found')
 
     if st != status.HTTP_200_OK:
         raise JsonException(data)
@@ -103,8 +106,39 @@ class ManageFileMixin(object):
             getObjectFromLedger(pk, self.ledger_query_call)
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
+        except Http404:
+                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
         else:
             object = self.get_object()
 
             data = getattr(object, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+
+
+def find_primary_key_error(validation_error, key_name='pkhash'):
+    detail = validation_error.detail
+
+    def find_unique_error(detail_dict):
+        for key, errors in detail_dict.items():
+                if key != key_name:
+                    continue
+                for error in errors:
+                    if error.code == 'unique':
+                        return error
+
+        return None
+
+    # according to the rest_framework documentation,
+    # validation_error.detail could be either a dict, a list or a nested
+    # data structure
+
+    if isinstance(detail, dict):
+        return find_unique_error(detail)
+    elif isinstance(detail, list):
+        for sub_detail in detail:
+            if isinstance(sub_detail, dict):
+                unique_error = find_unique_error(sub_detail)
+                if unique_error is not None:
+                    return unique_error
+
+    return None
