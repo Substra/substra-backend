@@ -476,7 +476,7 @@ def doTask(subtuple, tuple_type):
             end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
         # compute metric task
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'base_metrics')   # base metrics comes with substrabac
+        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/metrics')   # comes with substrabac
         metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
         metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
         compute_docker(client=client,

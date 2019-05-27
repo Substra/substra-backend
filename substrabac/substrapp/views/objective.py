@@ -56,7 +56,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     pred_path = os.path.join(subtuple_directory, 'pred')
     opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
     metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
-    metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_metrics')   # base metrics comes with substrabac
+    metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_metrics')
 
     metrics_docker = 'metrics_dry_run'  # tag must be lowercase for docker
     metrics_docker_name = f'{metrics_docker}_{dryrun_uuid}'
