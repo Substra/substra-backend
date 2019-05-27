@@ -23,7 +23,7 @@ from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializ
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import uncompress_path, get_dir_hash
-from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
+from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error
 
 logger = logging.getLogger('django.request')

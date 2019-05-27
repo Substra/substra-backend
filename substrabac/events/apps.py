@@ -16,7 +16,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks import prepareTuple
+from substrapp.tasks.tasks import prepareTuple
 from substrapp.utils import get_hash
 
 LEDGER = getattr(settings, 'LEDGER', None)

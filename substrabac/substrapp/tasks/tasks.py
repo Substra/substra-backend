@@ -12,8 +12,8 @@ from rest_framework.reverse import reverse
 
 from substrabac.celery import app
 from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content
-from substrapp.task_utils import ResourcesManager, compute_docker
-from substrapp.exception_handler import compute_error_code
+from substrapp.tasks.utils import ResourcesManager, compute_docker
+from substrapp.tasks.exception_handler import compute_error_code
 
 import docker
 import json
@@ -227,7 +227,7 @@ def prepareTuple(subtuple, tuple_type, model_type):
     if 'fltask' in subtuple and subtuple['fltask']:
         fltask = subtuple['fltask']
         flresults = TaskResult.objects.filter(
-            task_name='substrapp.tasks.computeTask',
+            task_name='substrapp.tasks.tasks.computeTask',
             result__icontains=f'"fltask": "{fltask}"')
 
         if flresults and flresults.count() > 0:
