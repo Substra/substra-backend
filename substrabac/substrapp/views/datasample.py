@@ -321,6 +321,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         if not len(data_sample_keys) or not len(','.join(data_sample_keys)):
             return Response({'message': 'Please pass a non empty data_sample_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
 
+        if not len(data_manager_keys) or not len(','.join(data_manager_keys)):
+            return Response({'message': 'Please pass a non empty data_manager_keys key param'}, status=status.HTTP_400_BAD_REQUEST)
+
         args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
             'hashes': ','.join(data_sample_keys),
             'dataManagerKeys': ','.join(data_manager_keys),
