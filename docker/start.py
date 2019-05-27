@@ -230,9 +230,6 @@ def stop(docker_compose=None):
     if docker_compose is not None:
         call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
-    else:
-        call(['docker-compose', '-f', os.path.join(dir_path, './docker-compose.yaml'), '--project-directory',
-              os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
 
 def start(conf, launch_settings, no_backup):
