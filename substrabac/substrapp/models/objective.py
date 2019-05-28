@@ -12,8 +12,8 @@ class Objective(TimeStamped):
     """Storage Objective table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
     validated = models.BooleanField(default=False, blank=True)
-    description = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)  # path max length to 500 instead of default 100
-    metrics = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)  # path max length to 500 instead of default 100
+    description = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
+    metrics = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""

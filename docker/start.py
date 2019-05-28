@@ -45,43 +45,53 @@ def generate_docker_compose_file(conf, launch_settings):
         import yaml
 
     # Docker compose config
-    docker_compose = {'substrabac_services': {},
-                      'substrabac_tools': {'postgresql': {'container_name': 'postgresql',
-                                                          'image': 'library/postgres:10.5',
-                                                          'restart': 'unless-stopped',
-                                                          'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                                                          'environment': [f'POSTGRES_USER={POSTGRES_USER}',
-                                                                          f'USER={USER}',
-                                                                          f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
-                                                                          f'POSTGRES_DB={POSTGRES_DB}'],
-                                                          'volumes': [
-                                                              '/substra/backup/postgres-data:/var/lib/postgresql/data',
-                                                              f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
-                                                          },
-                                           'celerybeat': {'container_name': 'celerybeat',
-                                                          'hostname': 'celerybeat',
-                                                          'image': 'substra/celerybeat',
-                                                          'restart': 'unless-stopped',
-                                                          'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; celery -A substrabac beat -l info"',
-                                                          'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                                                          'environment': ['PYTHONUNBUFFERED=1',
-                                                                          f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                                                          f'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
-                                                          'depends_on': ['postgresql', 'rabbit']
-                                                          },
-                                           'rabbit': {'container_name': 'rabbit',
-                                                      'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
-                                                      'restart': 'unless-stopped',
-                                                      'image': 'rabbitmq:3',
-                                                      'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                                                      'environment': [f'RABBITMQ_DEFAULT_USER={RABBITMQ_DEFAULT_USER}',
-                                                                      f'RABBITMQ_DEFAULT_PASS={RABBITMQ_DEFAULT_PASS}',
-                                                                      f'HOSTNAME={RABBITMQ_HOSTNAME}',
-                                                                      f'RABBITMQ_NODENAME={RABBITMQ_NODENAME}'],
-                                                      'volumes': ['/substra/backup/rabbit-data:/var/lib/rabbitmq']
-                                                      },
-                                           },
-                      'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
+    docker_compose = {
+        'substrabac_services': {},
+        'substrabac_tools': {
+            'postgresql': {
+                'container_name': 'postgresql',
+                'image': 'library/postgres:10.5',
+                'restart': 'unless-stopped',
+                'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                'environment': [
+                    f'POSTGRES_USER={POSTGRES_USER}',
+                    f'USER={USER}',
+                    f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
+                    f'POSTGRES_DB={POSTGRES_DB}'],
+                'volumes': [
+                    '/substra/backup/postgres-data:/var/lib/postgresql/data',
+                    f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
+            },
+            'celerybeat': {
+                'container_name': 'celerybeat',
+                'hostname': 'celerybeat',
+                'image': 'substra/celerybeat',
+                'restart': 'unless-stopped',
+                'command': '/bin/bash -c "while ! { nc -z rabbit 5672 2>&1; }; do sleep 1; done; '
+                           'while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done; '
+                           'celery -A substrabac beat -l info"',
+                'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                'environment': [
+                    'PYTHONUNBUFFERED=1',
+                    f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
+                    f'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
+                'depends_on': ['postgresql', 'rabbit']
+            },
+            'rabbit': {
+                'container_name': 'rabbit',
+                'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
+                'restart': 'unless-stopped',
+                'image': 'rabbitmq:3',
+                'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                'environment': [
+                    f'RABBITMQ_DEFAULT_USER={RABBITMQ_DEFAULT_USER}',
+                    f'RABBITMQ_DEFAULT_PASS={RABBITMQ_DEFAULT_PASS}',
+                    f'HOSTNAME={RABBITMQ_HOSTNAME}',
+                    f'RABBITMQ_NODENAME={RABBITMQ_NODENAME}'],
+                'volumes': ['/substra/backup/rabbit-data:/var/lib/rabbitmq']
+            },
+        },
+        'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
     for org in conf:
         org_name = org['name']
@@ -97,10 +107,13 @@ def generate_docker_compose_file(conf, launch_settings):
         processes = 2 * int(cpu_count) + 1
 
         if launch_settings == 'prod':
-            django_server = f'python3 manage.py collectstatic --noinput; DJANGO_SETTINGS_MODULE=substrabac.settings.events.prod uwsgi --http :{port} --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master --processes {processes} --threads 2'
+            django_server = f'python3 manage.py collectstatic --noinput; '\
+                            f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.prod uwsgi --http :{port} ' \
+                            f'--module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics ' \
+                            f'--master --processes {processes} --threads 2'
         else:
-
-            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev python3 manage.py runserver 0.0.0.0:{port}'
+            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev ' \
+                            f'python3 manage.py runserver 0.0.0.0:{port}'
 
         backend_global_env = [
             f'ORG={org_name_stripped}',
@@ -131,53 +144,70 @@ def generate_docker_compose_file(conf, launch_settings):
             f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}:ro',
         ]
 
-        backend = {'container_name': f'{org_name_stripped}.substrabac',
-                   'image': 'substra/substrabac',
-                   'restart': 'unless-stopped',
-                   'ports': [f'{port}:{port}'],
-                   'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; yes | python manage.py migrate; {django_server}"',
-                   'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                   'environment': backend_global_env.copy(),
-                   'volumes': ['/substra/medias:/substra/medias',
-                               '/substra/dryrun:/substra/dryrun',
-                               '/substra/servermedias:/substra/servermedias',
-                               '/substra/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
-                   'depends_on': ['postgresql', 'rabbit']}
+        backend = {
+            'container_name': f'{org_name_stripped}.substrabac',
+            'image': 'substra/substrabac',
+            'restart': 'unless-stopped',
+            'ports': [f'{port}:{port}'],
+            'command': f'/bin/bash -c "while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; '
+                       f'yes | python manage.py migrate; {django_server}"',
+            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+            'environment': backend_global_env.copy(),
+            'volumes': [
+                '/substra/medias:/substra/medias',
+                '/substra/dryrun:/substra/dryrun',
+                '/substra/servermedias:/substra/servermedias',
+                '/substra/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
+            'depends_on': ['postgresql', 'rabbit']}
 
-        scheduler = {'container_name': f'{org_name_stripped}.scheduler',
-                     'hostname': f'{org_name}.scheduler',
-                     'image': 'substra/celeryworker',
-                     'restart': 'unless-stopped',
-                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
-                     'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                     'environment': backend_global_env.copy(),
-                     'volumes': hlf_volumes,
-                     'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
+        scheduler = {
+            'container_name': f'{org_name_stripped}.scheduler',
+            'hostname': f'{org_name}.scheduler',
+            'image': 'substra/celeryworker',
+            'restart': 'unless-stopped',
+            'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; '
+                       f'while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; '
+                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
+                       f'-Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
+            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+            'environment': backend_global_env.copy(),
+            'volumes': hlf_volumes,
+            'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
 
-        worker = {'container_name': f'{org_name_stripped}.worker',
-                  'hostname': f'{org_name}.worker',
-                  'image': 'substra/celeryworker',
-                  'restart': 'unless-stopped',
-                  'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
-                  'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                  'environment': backend_global_env.copy(),
-                  'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
-                              '/substra/medias:/substra/medias',
-                              '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
-                  'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
+        worker = {
+            'container_name': f'{org_name_stripped}.worker',
+            'hostname': f'{org_name}.worker',
+            'image': 'substra/celeryworker',
+            'restart': 'unless-stopped',
+            'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; '
+                       f'while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; '
+                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
+                       f'-Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
+            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+            'environment': backend_global_env.copy(),
+            'volumes': [
+                '/var/run/docker.sock:/var/run/docker.sock',
+                '/substra/medias:/substra/medias',
+                '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
+            'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
-        dryrunner = {'container_name': f'{org_name_stripped}.dryrunner',
-                     'hostname': f'{org_name}.dryrunner',
-                     'image': 'substra/celeryworker',
-                     'restart': 'unless-stopped',
-                     'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; celery -A substrabac worker -l info -n {org_name_stripped} -Q {org_name},{org_name}.dryrunner,celery --hostname {org_name}.dryrunner"',
-                     'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                     'environment': backend_global_env.copy(),
-                     'volumes': ['/var/run/docker.sock:/var/run/docker.sock',
-                                 '/substra/dryrun:/substra/dryrun',
-                                 '/substra/medias:/substra/medias',
-                                 '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
-                     'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
+        dryrunner = {
+            'container_name': f'{org_name_stripped}.dryrunner',
+            'hostname': f'{org_name}.dryrunner',
+            'image': 'substra/celeryworker',
+            'restart': 'unless-stopped',
+            'command': f'/bin/bash -c "while ! {{ nc -z rabbit 5672 2>&1; }}; do sleep 1; done; '
+                       f'while ! {{ nc -z postgresql 5432 2>&1; }}; do sleep 1; done; '
+                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
+                       f'-Q {org_name},{org_name}.dryrunner,celery --hostname {org_name}.dryrunner"',
+            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+            'environment': backend_global_env.copy(),
+            'volumes': [
+                '/var/run/docker.sock:/var/run/docker.sock',
+                '/substra/dryrun:/substra/dryrun',
+                '/substra/medias:/substra/medias',
+                '/substra/servermedias:/substra/servermedias'] + hlf_volumes,
+            'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):

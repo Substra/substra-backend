@@ -28,7 +28,8 @@ class InvalidException(Exception):
 
 # check if not already in data sample list
 def check(file_or_path, pkhash, data_sample):
-    err_msg = 'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. %s and %s are the same'
+    err_msg = 'Your data sample archives/paths contain same files leading to same pkhash, ' \
+              'please review the content of your achives/paths. %s and %s are the same'
     for x in data_sample:
         if pkhash == x['pkhash']:
             if 'file' in x:
@@ -101,7 +102,7 @@ def bulk_create_data_sample(data):
 
 
 class Command(BaseCommand):
-    help = '''
+    help = '''  # noqa
     Bulk create data sample
     paths is a list of archives or paths to directories
     python ./manage.py bulkcreatedatasample '{"paths": ["./data1.zip", "./data2.zip", "./train/data", "./train/data2"], "data_manager_keys": ["9a832ed6cee6acf7e33c3acffbc89cebf10ef503b690711bdee048b873daf528"], "test_only": false}'
@@ -119,11 +120,11 @@ class Command(BaseCommand):
         args = options['data']
         try:
             data = json.loads(args)
-        except:
+        except Exception:
             try:
                 with open(args, 'r') as f:
                     data = json.load(f)
-            except:
+            except Exception:
                 raise CommandError('Invalid args. Please review help')
         else:
             if not isinstance(data, dict):
@@ -145,5 +146,6 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(str(e))
         else:
-            msg = f'Successfully added data samples via bulk with status code {st} and data: {json.dumps(res, indent=4)}'
+            msg = f'Successfully added data samples via bulk with status code {st} and data: ' \
+                  f'{json.dumps(res, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))

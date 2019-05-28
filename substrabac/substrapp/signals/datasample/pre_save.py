@@ -7,7 +7,7 @@ from checksumdir import dirhash
 from django.conf import settings
 from django.core.files import File
 
-from substrapp.utils import uncompress_content, create_directory
+from substrapp.utils import uncompress_content
 
 
 def create_hard_links(base_dir, directory):
@@ -53,7 +53,7 @@ def data_sample_pre_save(sender, instance, **kwargs):
         try:
             p = normpath(instance.path)
             create_hard_links(p, directory)
-        except Exception as e:
+        except Exception:
             pass
         else:
             # override path for getting our hardlink

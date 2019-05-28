@@ -8,6 +8,7 @@ from .util import createLedgerDataSample, updateLedgerDataSample
 def createLedgerDataSampleAsync(args, pkhashes):
     return createLedgerDataSample(args, pkhashes)
 
+
 @shared_task
 def updateLedgerDataSampleAsync(args):
     return updateLedgerDataSample(args)

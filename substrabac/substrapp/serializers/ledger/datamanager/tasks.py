@@ -8,6 +8,7 @@ from .util import createLedgerDataManager, updateLedgerDataManager
 def createLedgerDataManagerAsync(args, pkhash):
     return createLedgerDataManager(args, pkhash)
 
+
 @shared_task
 def updateLedgerDataManagerAsync(args):
     return updateLedgerDataManager(args)

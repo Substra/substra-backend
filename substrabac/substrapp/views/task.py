@@ -15,12 +15,13 @@ class TaskViewSet(ViewSet):
             data = {
                 'status': res.status
             }
-        except:
+        except Exception:
             return Response({'message': 'Can\'t get task status'}, status=status.HTTP_400_BAD_REQUEST)
         else:
             if not res.successful():
                 if res.status == 'PENDING':
-                    data['message'] = 'Task is either waiting, does not exist in this context or has been removed after 24h'
+                    data['message'] = 'Task is either waiting, ' \
+                                      'does not exist in this context or has been removed after 24h'
                 else:
                     data['message'] = res.traceback
             else:

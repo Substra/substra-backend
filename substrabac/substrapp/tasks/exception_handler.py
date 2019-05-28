@@ -22,7 +22,7 @@ EXCEPTIONS_UUID_LENGTH = 7
 if os.path.exists(EXCEPTION_PATH):
     try:
         EXCEPTIONS_MAP = json.load(open(EXCEPTION_PATH))
-    except:
+    except Exception:
         # The json may be corrupted
         EXCEPTIONS_MAP = dict()
 else:

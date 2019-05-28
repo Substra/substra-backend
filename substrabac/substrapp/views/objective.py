@@ -6,8 +6,6 @@ import shutil
 import tempfile
 import uuid
 
-from urllib.parse import unquote
-
 import requests
 from django.conf import settings
 from django.db import IntegrityError
@@ -28,7 +26,8 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.utils import queryLedger, get_hash, get_computed_hash
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
+from substrapp.views.utils import (get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException,
+                                   find_primary_key_error)
 
 
 @app.task(bind=True, ignore_result=False)
@@ -112,29 +111,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return serializer.save()
 
     def create(self, request, *args, **kwargs):
-        """
-        Create a new Objective \n
-            TODO add info about what has to be posted\n
-        - Example with curl (on localhost): \n
-            curl -u username:password -H "Content-Type: application/json"\
-            -X POST\
-            -d '{"name": "tough objective", "permissions": "all", "metrics_name": 'accuracy', "test_data":
-            ["data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
-            "data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389"],\
-                "files": {"description.md": '#My tough objective',\
-                'metrics.py': 'def AUC_score(y_true, y_pred):\n\treturn 1'}}'\
-                http://127.0.0.1:8000/substrapp/objective/ \n
-            Use double quotes for the json, simple quotes don't work.\n
-        - Example with the python package requests (on localhost): \n
-            requests.post('http://127.0.0.1:8000/objective/',
-                          #auth=('username', 'password'),
-                          data={'name': 'MSI classification', 'permissions': 'all', 'metrics_name': 'accuracy', 'test_data_sample_keys': ['da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc']},
-                          files={'description': open('description.md', 'rb'), 'metrics': open('metrics.py', 'rb')},
-                          headers={'Accept': 'application/json;version=0.0'}) \n
-        ---
-        response_serializer: ObjectiveSerializer
-        """
-
         data = request.data
 
         dryrun = data.get('dryrun', False)
@@ -144,8 +120,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             test_data_sample_keys = request.data.getlist('test_data_sample_keys', [])
-        except:
-            test_data_sample_keys = request.data.get('test_data_sample_keys', request.POST.getlist('test_data_sample_keys', []))
+        except Exception:
+            test_data_sample_keys = request.data.get('test_data_sample_keys',
+                                                     request.POST.getlist('test_data_sample_keys', []))
 
         metrics = data.get('metrics')
 
@@ -168,10 +145,12 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 with open(metrics_path, 'wb') as metrics_file:
                     metrics_file.write(metrics.open().read())
 
-                task = compute_dryrun.apply_async((metrics_path, test_data_manager_key, pkhash), queue=f"{settings.LEDGER['name']}.dryrunner")
+                task = compute_dryrun.apply_async((metrics_path, test_data_manager_key, pkhash),
+                                                  queue=f"{settings.LEDGER['name']}.dryrunner")
             except Exception as e:
-                return Response({'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'},
-                                status=status.HTTP_400_BAD_REQUEST)
+                return Response({
+                    'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             current_site = getattr(settings, "DEFAULT_DOMAIN")
             task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
@@ -235,7 +214,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             raise Exception('Failed to fetch description file')
 
         if computed_hash != pk:
-            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+            msg = 'computed hash is not the same as the hosted file. ' \
+                  'Please investigate for default of synchronization, corruption, or hacked'
             raise Exception(msg)
 
         f = tempfile.TemporaryFile()

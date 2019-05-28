@@ -3,15 +3,14 @@ import json
 from subprocess import PIPE, Popen as popen
 import time
 
-from django.conf import settings
-
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 # Use substra shell SDK
 try:
     popen(['substra'], stdout=PIPE).communicate()[0]
-except:
-    print('Substrabac SDK is not installed, please run pip install git+https://github.com/SubstraFoundation/substrabacSDK.git@master')
+except BaseException:
+    print('Substrabac SDK is not installed, please run pip install '
+          'git+https://github.com/SubstraFoundation/substrabacSDK.git@master')
 else:
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     username = "owkestra"
@@ -19,7 +18,9 @@ else:
     auth = []
     if username is not None and password is not None:
         auth = [username, password]
-    res = popen(['substra', 'config', 'https://substra.owkin.com:9000', '0.0', '--profile=owkin', '--config=/tmp/.substrabac'] + auth, stdout=PIPE).communicate()[0]
+    res = popen(['substra', 'config', 'https://substra.owkin.com:9000', '0.0',
+                 '--profile=owkin', '--config=/tmp/.substrabac'] + auth,
+                stdout=PIPE).communicate()[0]
 
     print('create data manager with owkin org')
     # create data manager with owkin org
@@ -27,7 +28,8 @@ else:
         "name": "ISIC 2018",
         "data_opener": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/dataset/isic2018/opener.py",
         "type": "Images",
-        "description": "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/dataset/isic2018/description.md",
+        "description":
+            "/Users/kelvin/Substra/substra-challenge/skin-lesion-classification/dataset/isic2018/description.md",
         "permissions": "all",
         "challenge_keys": []
     })
@@ -39,7 +41,6 @@ else:
     print(json.dumps(res_data, indent=2))
 
     # Register Data on substrabac docker
-    # python3 manage.py bulkcreatedata /substra/datasets/isic2018/train_data.json; python3 manage.py bulkcreatedata /substra/datasets/isic2018/test_data.json
 
     print('You have to register data manually')
     input("When it is done, press Enter to continue...")

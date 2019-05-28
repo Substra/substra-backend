@@ -92,7 +92,7 @@ def wait():
                 key_path=glob.glob(requestor_config['key_path'])[0],
                 cert_path=requestor_config['cert_path']
             )
-        except:
+        except BaseException:
             pass
         else:
             channel_event_hub = channel.newChannelEventHub(target_peer,

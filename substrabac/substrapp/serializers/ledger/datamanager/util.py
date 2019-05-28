@@ -12,7 +12,7 @@ def createLedgerDataManager(args, pkhash, sync=False):
     # if not created on ledger, delete from local db, else pass to validated true
     try:
         instance = DataManager.objects.get(pk=pkhash)
-    except:
+    except Exception:
         pass
     else:
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):

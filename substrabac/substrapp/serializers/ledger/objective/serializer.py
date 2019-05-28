@@ -31,10 +31,10 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        # args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {
+        # args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {  # noqa
         #     'name': name,
         #     'descriptionHash': get_hash(instance.description),
-        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
+        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
         #     'metricsName': metrics_name,
         #     'metricsHash': get_hash(instance.metrics),
         #     'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
@@ -59,7 +59,8 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             # use a celery task, as we are in an http request transaction
             createLedgerObjectiveAsync.delay(args, instance.pkhash)
             data = {
-                'message': 'Objective added in local db waiting for validation. The substra network has been notified for adding this Objective'
+                'message': 'Objective added in local db waiting for validation. '
+                           'The substra network has been notified for adding this Objective'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

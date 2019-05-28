@@ -4,7 +4,6 @@ import zipfile
 
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import serializers
 from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import model_meta
@@ -26,7 +25,7 @@ class FileValidator(object):
 
         try:
             data.file.seek(0)
-        except:
+        except Exception:
             raise ValidationError(self.error_messages['open'])
         else:
             try:

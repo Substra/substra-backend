@@ -105,7 +105,7 @@ class ManageFileMixin(object):
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
-                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
         else:
             object = self.get_object()
 
@@ -118,11 +118,11 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
 
     def find_unique_error(detail_dict):
         for key, errors in detail_dict.items():
-                if key != key_name:
-                    continue
-                for error in errors:
-                    if error.code == 'unique':
-                        return error
+            if key != key_name:
+                continue
+            for error in errors:
+                if error.code == 'unique':
+                    return error
 
         return None
 
