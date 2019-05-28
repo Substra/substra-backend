@@ -33,6 +33,8 @@ pipeline {
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
             dir("substrabac") {
+              sh "pip install flake8"
+              sh "flake8"
               sh "pip install -r requirements.txt"
               sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
               sh "coverage report"

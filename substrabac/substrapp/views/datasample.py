@@ -116,7 +116,7 @@ def compute_dryrun(self, data, data_manager_keys):
         try:
             container = client.containers.get(data_docker_name)
             container.remove()
-        except:
+        except Exception:
             logger.error('Could not remove containers')
         remove_subtuple_materials(subtuple_directory)
         for data_sample in data:
@@ -145,7 +145,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
 
         if datamanager_count != len(data_manager_keys):
-            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}')
+            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. '
+                            f'Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
     def commit(serializer, ledger_data):
@@ -189,7 +190,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             except KeyError:
                 pass
             else:
-                raise Exception(f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {existing["file"]} are the same')
+                raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
+                                f'please review the content of your achives. '
+                                f'Archives {file} and {existing["file"]} are the same')
             data[pkhash] = {
                 'pkhash': pkhash,
                 'file': file
@@ -208,7 +211,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # paths, should be directories
         for path in paths:
             if not os.path.isdir(path):
-                raise Exception(f'One of your paths does not exist, is not a directory or is not an absolute path: {path}')
+                raise Exception(f'One of your paths does not exist, '
+                                f'is not a directory or is not an absolute path: {path}')
             pkhash = dirhash(path, 'sha256')
             try:
                 existing = data[pkhash]
@@ -216,7 +220,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 pass
             else:
                 # existing can be a dict with a field path or file
-                raise Exception(f'Your data sample directory contain same files leading to same pkhash. Invalid path: {path}.')
+                raise Exception(f'Your data sample directory contain same files leading to same pkhash. '
+                                f'Invalid path: {path}.')
 
             data[pkhash] = {
                 'pkhash': pkhash,

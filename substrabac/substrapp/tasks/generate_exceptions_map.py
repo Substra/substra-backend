@@ -6,9 +6,16 @@ import json
 # Modules to inspect
 os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.prod'
 
-import docker.errors, requests.exceptions, celery.exceptions, tarfile, \
-    django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,\
-    rest_framework.exceptions
+import docker.errors
+import requests.exceptions
+import celery.exceptions
+import tarfile
+import django.core.exceptions
+import django.urls
+import django.db
+import django.http
+import django.db.transaction
+import rest_framework.exceptions
 
 MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
            django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,

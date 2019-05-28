@@ -31,7 +31,7 @@ def get_objective(subtuple):
     try:
         # get objective from local db
         objective = Objective.objects.get(pk=objectiveHash)
-    except:
+    except Exception:
         objective = None
     finally:
         if objective is None or not objective.metrics:
@@ -88,7 +88,7 @@ def put_model(subtuple, subtuple_directory, model_content):
 
         try:
             model = Model.objects.get(pk=subtuple['model']['hash'])
-        except:  # write it to local disk
+        except Exception:  # write it to local disk
             with open(model_dst_path, 'wb') as f:
                 f.write(model_content)
         else:
@@ -111,7 +111,7 @@ def put_models(subtuple, subtuple_directory, models_content):
 
             try:
                 model = Model.objects.get(pk=subtuple_model['hash'])
-            except:  # write it to local disk
+            except Exception:  # write it to local disk
                 with open(model_dst_path, 'wb') as f:
                     f.write(model_content)
             else:
@@ -235,7 +235,13 @@ def prepareTuple(subtuple, tuple_type, model_type):
 
     try:
         # Log Start of the Subtuple
-        start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
+
+        start_type = None
+        if tuple_type == 'traintuple':
+            start_type = 'logStartTrain'
+        elif tuple_type == 'testtuple':
+            start_type = 'logStartTest'
+
         data, st = invokeLedger(fcn=start_type,
                                 args=[f'{subtuple["key"]}'],
                                 sync=True)
@@ -255,8 +261,6 @@ def prepareTuple(subtuple, tuple_type, model_type):
 
 
 def prepareTask(tuple_type, model_type):
-    from django_celery_results.models import TaskResult
-
     try:
         data_owner = get_hash(settings.LEDGER['signcert'])
     except Exception as e:
@@ -288,7 +292,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     try:
         worker = self.request.hostname.split('@')[1]
         queue = self.request.delivery_info['routing_key']
-    except:
+    except Exception:
         worker = f"{settings.LEDGER['name']}.worker"
         queue = f"{settings.LEDGER['name']}"
 
@@ -517,7 +521,7 @@ def doTask(subtuple, tuple_type):
             local_volume = client.volumes.get(volume_id=flvolume)
             try:
                 local_volume.remove(force=True)
-            except:
+            except Exception:
                 logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
 
     return result

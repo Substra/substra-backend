@@ -12,7 +12,8 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
+from substrapp.views.utils import (get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException,
+                                   find_primary_key_error)
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -82,7 +83,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             url = algo['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except:
+            except Exception:
                 raise Exception(f'Failed to fetch {url}')
             else:
                 if r.status_code != 200:
@@ -94,7 +95,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     raise Exception('Failed to fetch description file')
                 else:
                     if computed_hash != algo['description']['hash']:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        msg = 'computed hash is not the same as the hosted file. ' \
+                              'Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
                     f = tempfile.TemporaryFile()
@@ -117,7 +119,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
+        except Exception:
             return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
         else:
             # get instance from remote node
@@ -151,7 +153,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
                     # do not give access to local files address
                     if instance is not None:
-                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        serializer = self.get_serializer(
+                            instance,
+                            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                         data.update(serializer.data)
                     else:
                         data = {'message': 'Fail to get instance'}
@@ -167,7 +171,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # init list to return
         if data is None:
             data = []
-        l = [data]
+        data_samples_list = [data]
 
         if st == 200:
 
@@ -177,20 +181,20 @@ class AlgoViewSet(mixins.CreateModelMixin,
             if query_params is not None:
                 try:
                     filters = get_filters(query_params)
-                except Exception as exc:
+                except Exception:
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
                 else:
                     # filtering, reinit l to empty array
-                    l = []
+                    data_samples_list = []
                     for idx, filter in enumerate(filters):
                         # init each list iteration to data
-                        l.append(data)
+                        data_samples_list.append(data)
                         for k, subfilters in filter.items():
                             if k == 'algo':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x[key] in val]
+                                    data_samples_list[idx] = [x for x in data_samples_list[idx] if x[key] in val]
                             elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
@@ -201,11 +205,12 @@ class AlgoViewSet(mixins.CreateModelMixin,
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
+                                    filteredData = [x for x in modelData
+                                                    if x['outModel'] is not None and x['outModel'][key] in val]
                                     algoKeys = [x['algo']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['key'] in algoKeys]
+                                    data_samples_list[idx] = [x for x in data_samples_list[idx] if x['key'] in algoKeys]
 
-        return Response(l, status=st)
+        return Response(data_samples_list, status=st)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):

@@ -39,17 +39,20 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         try:
             node = ast.parse(file)
-        except:
-            return Response({'message': f'Opener must be a valid python file, please review your opener file and the documentation.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        except BaseException:
+            return Response({
+                'message': f'Opener must be a valid python file, please review your opener file and the documentation.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
         if 'substratools' not in imported_module_names:
-            return Response({'message': 'Opener must import substratools, please review your opener and the documentation.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'message': 'Opener must import substratools, please review your opener and the documentation.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-        return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
-                        status=status.HTTP_200_OK)
+        return Response({
+            'message': f'Your data opener is valid. You can remove the dryrun option.'
+        }, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         data = request.data
@@ -112,14 +115,15 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         # create instance if does not exist
         if not instance:
-            instance, created = DataManager.objects.update_or_create(pkhash=pk, name=datamanager['name'], validated=True)
+            instance, created = DataManager.objects.update_or_create(
+                pkhash=pk, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
             try:
                 url = datamanager['opener']['storageAddress']
                 try:
                     r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-                except:
+                except BaseException:
                     raise Exception(f'Failed to fetch {url}')
                 else:
                     if r.status_code != 200:
@@ -131,7 +135,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                         raise Exception('Failed to fetch opener file')
                     else:
                         if computed_hash != pk:
-                            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                            msg = 'computed hash is not the same as the hosted file. ' \
+                                  'Please investigate for default of synchronization, corruption, or hacked'
                             raise Exception(msg)
 
                         f = tempfile.TemporaryFile()
@@ -148,7 +153,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             url = datamanager['description']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-            except:
+            except BaseException:
                 raise Exception(f'Failed to fetch {url}')
             else:
                 if r.status_code != status.HTTP_200_OK:
@@ -160,7 +165,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                     raise Exception('Failed to fetch description file')
                 else:
                     if computed_hash != datamanager['description']['hash']:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        msg = 'computed hash is not the same as the hosted file. ' \
+                              'Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
                     f = tempfile.TemporaryFile()
@@ -195,7 +201,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
+        except BaseException:
             return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
         else:
             # get instance from remote node
@@ -229,7 +235,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
                     # do not give access to local files address
                     if instance is not None:
-                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        serializer = self.get_serializer(
+                            instance,
+                            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                         data.update(serializer.data)
                     else:
                         data = {'message': 'Fail to get instance'}
@@ -246,7 +254,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         # init list to return
         if data is None:
             data = []
-        l = [data]
+        data_managers_list = [data]
 
         if st == 200:
 
@@ -256,20 +264,20 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             if query_params is not None:
                 try:
                     filters = get_filters(query_params)
-                except Exception as exc:
+                except Exception:
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
                 else:
                     # filtering, reinit l to empty array
-                    l = []
+                    data_managers_list = []
                     for idx, filter in enumerate(filters):
                         # init each list iteration to data
-                        l.append(data)
+                        data_managers_list.append(data)
                         for k, subfilters in filter.items():
                             if k == 'dataset':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x[key] in val]
+                                    data_managers_list[idx] = [x for x in data_managers_list[idx] if x[key] in val]
                             elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
@@ -285,7 +293,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                                     else:
                                         filteredData = [x for x in objectiveData if x[key] in val]
                                     objectiveKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                                    data_managers_list[idx] = [x for x in data_managers_list[idx]
+                                                               if x['objectiveKey'] in objectiveKeys]
                             elif k == 'model':  # select objectives used by outModel hash
                                 if not modelData:
                                     # TODO find a way to put this call in cache
@@ -296,11 +305,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                                         modelData = []
 
                                 for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
+                                    filteredData = [x for x in modelData
+                                                    if x['outModel'] is not None and x['outModel'][key] in val]
                                     objectiveKeys = [x['objective']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
+                                    data_managers_list[idx] = [x for x in data_managers_list[idx]
+                                                               if x['objectiveKey'] in objectiveKeys]
 
-        return Response(l, status=st)
+        return Response(data_managers_list, status=st)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):
@@ -314,7 +325,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
+        except BaseException:
             return Response({'message': f'Wrong pk {pk}'},
                             status.HTTP_400_BAD_REQUEST)
         else:
@@ -328,7 +339,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
             try:
                 int(pk, 16)  # test if pk is correct (hexadecimal)
-            except:
+            except BaseException:
                 return Response({'message': f'Objective Key is wrong: {pk}'},
                                 status.HTTP_400_BAD_REQUEST)
             else:

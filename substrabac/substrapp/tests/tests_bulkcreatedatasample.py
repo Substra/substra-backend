@@ -59,12 +59,13 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
-        data_path2 = os.path.normpath(os.path.join(dir_path,
-                                  '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+        data_path1 = os.path.normpath(
+            os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+        data_path2 = os.path.normpath(
+            os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path2],
                 'data_manager_keys': data_manager_keys,
@@ -106,7 +107,8 @@ class BulkCreateDataSampleTestCase(TestCase):
                     }
                 ]
                 data = json.dumps(out_data, indent=4)
-                wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                wanted_output = f'Successfully added data samples via bulk with status code ' \
+                                f'{status.HTTP_201_CREATED} and data: {data}'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -115,10 +117,11 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                  '../../../fixtures/chunantes/datasamples/train/0024308'))
+        data_path1 = os.path.normpath(
+            os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -160,7 +163,8 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code ' \
+                                    f'{status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -172,7 +176,8 @@ class BulkCreateDataSampleTestCase(TestCase):
         data_path1 = os.path.normpath(os.path.join(dir_path,
                                                    '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -213,7 +218,8 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code ' \
+                                    f'{status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -227,7 +233,8 @@ class BulkCreateDataSampleTestCase(TestCase):
         data_path2 = os.path.normpath(os.path.join(dir_path,
                                                    '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path2],
                 'data_manager_keys': data_manager_keys,
@@ -275,7 +282,8 @@ class BulkCreateDataSampleTestCase(TestCase):
                         },
                     ]
                     data = json.dumps(out_data, indent=4)
-                    wanted_output = f'Successfully added data samples via bulk with status code {status.HTTP_201_CREATED} and data: {data}'
+                    wanted_output = f'Successfully added data samples via bulk with status code ' \
+                                    f'{status.HTTP_201_CREATED} and data: {data}'
                     self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -287,7 +295,8 @@ class BulkCreateDataSampleTestCase(TestCase):
         data_path1 = os.path.normpath(os.path.join(dir_path,
                                                    '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -315,7 +324,9 @@ class BulkCreateDataSampleTestCase(TestCase):
 
                 output = err.getvalue().strip()
 
-                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and 0024700.zip are the same'
+                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, ' \
+                                f'please review the content of your achives/paths. ' \
+                                f'{data_path1} and 0024700.zip are the same'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -327,7 +338,8 @@ class BulkCreateDataSampleTestCase(TestCase):
         data_path1 = os.path.normpath(os.path.join(dir_path,
                                                    '../../../fixtures/chunantes/datasamples/train/0024308'))
 
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'paths': [data_path1, data_path1],
                 'data_manager_keys': data_manager_keys,
@@ -355,7 +367,9 @@ class BulkCreateDataSampleTestCase(TestCase):
 
                 output = err.getvalue().strip()
 
-                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, please review the content of your achives/paths. {data_path1} and {data_path1} are the same'
+                wanted_output = f'Your data sample archives/paths contain same files leading to same pkhash, ' \
+                                f'please review the content of your achives/paths. ' \
+                                f'{data_path1} and {data_path1} are the same'
                 self.assertEqual(wanted_output, output)
             finally:
                 sys.stdout = saved_stdout
@@ -416,7 +430,8 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: ['bar']"
+        wanted_output = "One or more datamanager keys provided do not exist in local substrabac database. "\
+                        "Please create them before. DataManager keys: ['bar']"
 
         self.assertEqual(wanted_output, output)
 
@@ -439,7 +454,8 @@ class BulkCreateDataSampleTestCase(TestCase):
     def test_bulkcreatedatasample_datamanager_do_not_exist(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_manager_keys = [get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))]
 
         data = {'files': ['./foo'],
                 'data_manager_keys': data_manager_keys,
@@ -451,7 +467,8 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = f"One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}"
+        wanted_output = f"One or more datamanager keys provided do not exist in local substrabac database. " \
+                        f"Please create them before. DataManager keys: {data_manager_keys}"
 
         self.assertEqual(wanted_output, output)
 
@@ -472,8 +489,8 @@ class BulkCreateDataSampleTestCase(TestCase):
 
     def test_bulkcreatedatasample_invalid_serializer(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+        data_path1 = os.path.normpath(
+            os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
 
         data = {'paths': [data_path1],
                 'data_manager_keys': [self.datamanager.pk],
@@ -485,7 +502,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
-                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
+                      mock_open(read_data=self.data_sample_file.read())), \
                 patch(
                     'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
                     spec=True) as mDataSampleSerializer:
@@ -519,7 +536,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
-                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
+                      mock_open(read_data=self.data_sample_file.read())), \
                 patch(
                     'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
                     spec=True) as mDataSampleSerializer, \
@@ -558,7 +575,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
-                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
+                      mock_open(read_data=self.data_sample_file.read())), \
                 patch(
                     'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
                     spec=True) as mDataSampleSerializer, \
@@ -597,7 +614,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         with patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
-                      mock_open(read_data=self.data_sample_file.read())) as mopen, \
+                      mock_open(read_data=self.data_sample_file.read())), \
                 patch(
                     'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
                     spec=True) as mDataSampleSerializer, \

@@ -46,7 +46,9 @@ class LedgerTestTupleSerializer(serializers.Serializer):
             createLedgerTesttupleAsync.delay(args)
 
             data = {
-                'message': 'The substra network has been notified for adding this Testtuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'
+                'message': 'The substra network has been notified for adding this Testtuple. '
+                           'Please be aware you won\'t get return values from the ledger. '
+                           'You will need to check manually'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

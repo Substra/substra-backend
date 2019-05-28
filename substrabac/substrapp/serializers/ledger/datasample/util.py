@@ -11,7 +11,7 @@ def createLedgerDataSample(args, pkhashes, sync=False):
     #  if not created on ledger, delete from local db, else pass to validated true
     try:
         instances = DataSample.objects.filter(pk__in=pkhashes)
-    except:
+    except Exception:
         pass
     else:
 

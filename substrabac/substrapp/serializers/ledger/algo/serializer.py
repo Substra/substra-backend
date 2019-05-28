@@ -23,7 +23,7 @@ class LedgerAlgoSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        # args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(permissions)s"' % {
+        # args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(permissions)s"' % {  # noqa
         #     'name': name,
         #     'algoHash': get_hash(instance.file),
         #     'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
@@ -45,7 +45,8 @@ class LedgerAlgoSerializer(serializers.Serializer):
             # use a celery task, as we are in an http request transaction
             createLedgerAlgoAsync.delay(args, instance.pkhash)
             data = {
-                'message': 'Algo added in local db waiting for validation. The substra network has been notified for adding this Algo'
+                'message': 'Algo added in local db waiting for validation. '
+                           'The substra network has been notified for adding this Algo'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

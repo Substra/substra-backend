@@ -27,13 +27,13 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        # args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {
+        # args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {  # noqa
         #     'name': name,
         #     'openerHash': get_hash(instance.data_opener),
         #     'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
         #     'type': type,
         #     'descriptionHash': get_hash(instance.description),
-        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
+        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),  # noqa
         #     'objectiveKey': objective_key,
         #     'permissions': permissions
         # }
@@ -56,7 +56,8 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             createLedgerDataManagerAsync.delay(args, instance.pkhash)
 
             data = {
-                'message': 'DataManager added in local db waiting for validation. The substra network has been notified for adding this DataManager'
+                'message': 'DataManager added in local db waiting for validation. '
+                           'The substra network has been notified for adding this DataManager'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

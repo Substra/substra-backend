@@ -89,7 +89,8 @@ def update_statistics(task_statistics, stats, gpu_stats):
 
         if 'cpu_stats' in stats and stats['cpu_stats']['cpu_usage'].get('total_usage', None):
             # Compute CPU usage in %
-            delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] - stats['precpu_stats']['cpu_usage']['total_usage'])
+            delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] -
+                                 stats['precpu_stats']['cpu_usage']['total_usage'])
             delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
             total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
 
@@ -177,7 +178,8 @@ def monitoring_task(client, task_args):
     t._result += f" GB - GPU:{t._stats['gpu']['max']:.2f} % - GPU Mem:{t._stats['gpu_memory']['max']:.2f} GB"
 
 
-def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command, remove_image=True):
+def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
+                   remove_image=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):

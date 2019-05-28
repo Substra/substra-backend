@@ -35,15 +35,15 @@ class CreateDataManagerTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
-        data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+        data_path1 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+        data_path2 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
-        datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
+        datamanager_opener_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
+        datamanager_description_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {
@@ -68,15 +68,13 @@ class CreateDataManagerTestCase(TestCase):
                     'substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
             mdatamanagercreate.return_value = ({
-                                               'pkhash': datamanager_pk,
-                                               'validated': True
-                                           },
-                                           status.HTTP_201_CREATED)
+                'pkhash': datamanager_pk,
+                'validated': True
+            }, status.HTTP_201_CREATED)
             mdatacreate.return_value = ({
-                                            'pkhash': [pkhash1, pkhash2],
-                                            'validated': True
-                                        },
-                                        status.HTTP_201_CREATED)
+                'pkhash': [pkhash1, pkhash2],
+                'validated': True
+            }, status.HTTP_201_CREATED)
             mcheck_datamanagers.return_value = True
 
             saved_stdout = sys.stdout
@@ -89,9 +87,9 @@ class CreateDataManagerTestCase(TestCase):
                 output = out.getvalue().strip()
 
                 datamanager_out = {
-                        "pkhash": datamanager_pk,
-                        "validated": True
-                    }
+                    "pkhash": datamanager_pk,
+                    "validated": True
+                }
 
                 data_out = [
                     {
@@ -108,9 +106,12 @@ class CreateDataManagerTestCase(TestCase):
 
                 datamanager = json.dumps(datamanager_out, indent=4)
                 data = json.dumps(data_out, indent=4)
-                datamanager_wanted_output = f'Successfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
-                data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
-                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data to this datamanager now\n{data_wanted_output}')
+                datamanager_wanted_output = f'Successfully added datamanager with status code ' \
+                                            f'{status.HTTP_201_CREATED} and result: {datamanager}'
+                data_wanted_output = f'Successfully bulk added data samples with status code ' \
+                                     f'{status.HTTP_201_CREATED} and result: {data}'
+                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data to this datamanager now'
+                                         f'\n{data_wanted_output}')
             finally:
                 sys.stdout = saved_stdout
 
@@ -118,15 +119,15 @@ class CreateDataManagerTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
-        data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+        data_path1 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+        data_path2 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
-        datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
+        datamanager_opener_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
+        datamanager_description_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
 
         data = {
             'data_manager': {
@@ -150,14 +151,12 @@ class CreateDataManagerTestCase(TestCase):
                     'substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
             mdatamanagercreate.return_value = ({
-                                               'message': 'datamanager already exists',
-                                           },
-                                           status.HTTP_409_CONFLICT)
+                'message': 'datamanager already exists',
+            }, status.HTTP_409_CONFLICT)
             mdatacreate.return_value = ({
-                                            'pkhash': [pkhash1, pkhash2],
-                                            'validated': True
-                                        },
-                                        status.HTTP_201_CREATED)
+                'pkhash': [pkhash1, pkhash2],
+                'validated': True
+            }, status.HTTP_201_CREATED)
             mcheck_datamanagers.return_value = True
 
             saved_stdout = sys.stdout
@@ -173,8 +172,8 @@ class CreateDataManagerTestCase(TestCase):
                 err_output = err.getvalue().strip()
 
                 datamanager_out = {
-                        "message": 'datamanager already exists',
-                    }
+                    "message": 'datamanager already exists',
+                }
 
                 data_out = [
                     {
@@ -191,7 +190,8 @@ class CreateDataManagerTestCase(TestCase):
 
                 datamanager = json.dumps(datamanager_out, indent=2)
                 data = json.dumps(data_out, indent=4)
-                data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
+                data_wanted_output = f'Successfully bulk added data samples with status code ' \
+                                     f'{status.HTTP_201_CREATED} and result: {data}'
                 self.assertEqual(output, f'Will add data to this datamanager now\n{data_wanted_output}')
                 self.assertEqual(err_output, datamanager)
             finally:

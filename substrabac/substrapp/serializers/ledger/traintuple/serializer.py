@@ -31,7 +31,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         in_models_keys = validated_data.get('in_models_keys')
         tag = validated_data.get('tag', '')
 
-        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
+        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {  # noqa
         #     'algoKey': algo_key,
         #     'associatedObjective': objective_key,
         #     'inModels': ','.join(in_models_keys),
@@ -65,7 +65,9 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             createLedgerTraintupleAsync.delay(args)
 
             data = {
-                'message': 'The substra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'
+                'message': 'The substra network has been notified for adding this Traintuple. '
+                           'Please be aware you won\'t get return values from the ledger. '
+                           'You will need to check manually'
             }
             st = status.HTTP_202_ACCEPTED
             return data, st

@@ -12,9 +12,12 @@ from rest_framework.test import APITestCase
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
-from substrapp.tasks.tasks import build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener, put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask, computeTask
+from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
+                                   put_model, put_models, put_algo, put_metric, put_data_sample, prepareTask, doTask,
+                                   computeTask)
 
-from .common import get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample, get_sample_model
+from .common import (get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample,
+                     get_sample_model)
 from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
 
 import zipfile
@@ -212,10 +215,14 @@ class TasksTests(APITestCase):
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
-            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+            self.assertTrue(os.path.islink(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
 
     def test_put_data_tar(self):
 
@@ -240,10 +247,14 @@ class TasksTests(APITestCase):
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
-            self.assertTrue(os.path.islink(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+            self.assertTrue(os.path.islink(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+            self.assertTrue(os.path.exists(os.path.join(
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
 
     def test_put_model(self):
 
@@ -366,13 +377,13 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
-                mget.return_value = FakeObjective()
-                mget_remote_file.return_value = metrics_content, objective_hash
-                mupdate_or_create.return_value = FakeObjective(), True
+            mget.return_value = FakeObjective()
+            mget_remote_file.return_value = metrics_content, objective_hash
+            mupdate_or_create.return_value = FakeObjective(), True
 
-                objective = get_objective({'objective': {'hash': objective_hash,
-                                           'metrics': ''}})
-                self.assertTrue(isinstance(objective, FakeObjective))
+            objective = get_objective({'objective': {'hash': objective_hash,
+                                       'metrics': ''}})
+            self.assertTrue(isinstance(objective, FakeObjective))
 
     def test_compute_docker(self):
         cpu_set, gpu_set = None, None
@@ -436,28 +447,28 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
                 mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
 
-                msettings.return_value = FakeSettings()
-                mget_hash.return_value = 'owkinhash'
-                mqueryLedger.return_value = subtuple, 200
-                mget_objective.return_value = 'objective'
-                mget_algo.return_value = 'algo', 'algo_hash'
-                mget_model.return_value = 'model', 'model_hash'
-                mbuild_subtuple_folders.return_value = MEDIA_ROOT
-                mput_opener.return_value = 'opener'
-                mput_data_sample.return_value = 'data'
-                mput_metric.return_value = 'metric'
-                mput_algo.return_value = 'algo'
-                mput_model.return_value = 'model'
+            msettings.return_value = FakeSettings()
+            mget_hash.return_value = 'owkinhash'
+            mqueryLedger.return_value = subtuple, 200
+            mget_objective.return_value = 'objective'
+            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_model.return_value = 'model', 'model_hash'
+            mbuild_subtuple_folders.return_value = MEDIA_ROOT
+            mput_opener.return_value = 'opener'
+            mput_data_sample.return_value = 'data'
+            mput_metric.return_value = 'metric'
+            mput_algo.return_value = 'algo'
+            mput_model.return_value = 'model'
 
-                with mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger:
-                    mqueryLedger.return_value = 'data', 404
-                    prepareTask('traintuple', 'inModels')
+            with mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger:
+                mqueryLedger.return_value = 'data', 404
+                prepareTask('traintuple', 'inModels')
 
-                with mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger, \
-                        mock.patch('substrapp.tasks.tasks.computeTask.apply_async') as mapply_async:
-                        minvokeLedger.return_value = 'data', 201
-                        mapply_async.return_value = 'doTask'
-                        prepareTask('traintuple', 'inModels')
+            with mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger, \
+                    mock.patch('substrapp.tasks.tasks.computeTask.apply_async') as mapply_async:
+                minvokeLedger.return_value = 'data', 201
+                mapply_async.return_value = 'doTask'
+                prepareTask('traintuple', 'inModels')
 
     def test_doTask(self):
 

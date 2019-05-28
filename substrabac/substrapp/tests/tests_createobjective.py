@@ -35,19 +35,19 @@ class CreateObjectiveTestCase(TestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path1 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
-        data_path2 = os.path.normpath(os.path.join(dir_path,
-                                                   '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
+        data_path1 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip'))
+        data_path2 = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip'))
 
-        datamanager_opener_path = os.path.normpath(os.path.join(dir_path,
-                                                                '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
-        datamanager_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                     '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
-        objective_metrics_path = os.path.normpath(os.path.join(dir_path,
-                                                            '../../../fixtures/chunantes/objectives/objective0/metrics.py'))
-        objective_description_path = os.path.normpath(os.path.join(dir_path,
-                                                                 '../../../fixtures/chunantes/objectives/objective0/description.md'))
+        datamanager_opener_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))
+        datamanager_description_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/description.md'))
+        objective_metrics_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/objectives/objective0/metrics.py'))
+        objective_description_path = os.path.normpath(os.path.join(
+            dir_path, '../../../fixtures/chunantes/objectives/objective0/description.md'))
 
         data = {
             'objective': {
@@ -79,20 +79,17 @@ class CreateObjectiveTestCase(TestCase):
                 patch('substrapp.views.datasample.DataSampleViewSet.check_datamanagers') as mcheck_datamanagers:
 
             mobjectivecreate.return_value = ({
-                                               'pkhash': objective_pk,
-                                               'validated': True
-                                           },
-                                           status.HTTP_201_CREATED)
+                'pkhash': objective_pk,
+                'validated': True
+            }, status.HTTP_201_CREATED)
             mdatamanagercreate.return_value = ({
-                                               'pkhash': datamanager_pk,
-                                               'validated': True
-                                           },
-                                           status.HTTP_201_CREATED)
+                'pkhash': datamanager_pk,
+                'validated': True
+            }, status.HTTP_201_CREATED)
             mdatacreate.return_value = ({
-                                            'pkhash': [pkhash1, pkhash2],
-                                            'validated': True
-                                        },
-                                        status.HTTP_201_CREATED)
+                'pkhash': [pkhash1, pkhash2],
+                'validated': True
+            }, status.HTTP_201_CREATED)
 
             mcheck_datamanagers.return_value = True
 
@@ -111,9 +108,9 @@ class CreateObjectiveTestCase(TestCase):
                 }
 
                 datamanager_out = {
-                        "pkhash": datamanager_pk,
-                        "validated": True
-                    }
+                    "pkhash": datamanager_pk,
+                    "validated": True
+                }
 
                 data_out = [
                     {
@@ -131,9 +128,14 @@ class CreateObjectiveTestCase(TestCase):
                 datamanager = json.dumps(datamanager_out, indent=4)
                 data = json.dumps(data_out, indent=4)
                 objective = json.dumps(objective_out, indent=4)
-                datamanager_wanted_output = f'Successfully added datamanager with status code {status.HTTP_201_CREATED} and result: {datamanager}'
-                data_wanted_output = f'Successfully bulk added data samples with status code {status.HTTP_201_CREATED} and result: {data}'
-                objective_wanted_output = f'Successfully added objective with status code {status.HTTP_201_CREATED} and result: {objective}'
-                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data samples to this datamanager now\n{data_wanted_output}\nWill add objective to this datamanager now\n{objective_wanted_output}')
+                datamanager_wanted_output = f'Successfully added datamanager with status code ' \
+                                            f'{status.HTTP_201_CREATED} and result: {datamanager}'
+                data_wanted_output = f'Successfully bulk added data samples with status code ' \
+                                     f'{status.HTTP_201_CREATED} and result: {data}'
+                objective_wanted_output = f'Successfully added objective with status code ' \
+                                          f'{status.HTTP_201_CREATED} and result: {objective}'
+                self.assertEqual(output, f'{datamanager_wanted_output}\nWill add data samples to this datamanager now'
+                                         f'\n{data_wanted_output}\nWill add objective to this datamanager now'
+                                         f'\n{objective_wanted_output}')
             finally:
                 sys.stdout = saved_stdout

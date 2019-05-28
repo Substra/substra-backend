@@ -35,7 +35,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             url = traintuple['outModel']['storageAddress']
             try:
                 r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except:
+            except Exception:
                 raise Exception(f'Failed to fetch {url}')
             else:
                 if r.status_code != 200:
@@ -47,7 +47,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     raise Exception('Failed to fetch outModel file')
                 else:
                     if computed_hash != pk:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        msg = 'computed hash is not the same as the hosted file. ' \
+                              'Please investigate for default of synchronization, corruption, or hacked'
                         raise Exception(msg)
 
                     f = tempfile.TemporaryFile()
@@ -70,7 +71,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         try:
             int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
+        except Exception:
             return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
         else:
             # get instance from remote node
@@ -106,7 +107,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
                     # do not give access to local files address
                     if instance is not None:
-                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                        serializer = self.get_serializer(
+                            instance,
+                            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                         data.update(serializer.data)
                     else:
                         data = {'message': 'Fail to get instance'}
@@ -124,7 +127,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # init list to return
         if data is None:
             data = []
-        l = [data]
+        models_list = [data]
 
         if st == 200:
             # parse filters
@@ -133,22 +136,24 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             if query_params is not None:
                 try:
                     filters = get_filters(query_params)
-                except Exception as exc:
+                except Exception:
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
                 else:
                     # filtering, reinit l to empty array
-                    l = []
+                    models_list = []
                     for idx, filter in enumerate(filters):
                         # init each list iteration to data
                         if data is None:
                             data = []
-                        l.append(data)
+                        models_list.append(data)
                         for k, subfilters in filter.items():
                             if k == 'model':  # filter by own key
                                 for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['outModel'] is not None and x['traintuple']['outModel']['hash'] in val]
+                                    models_list[idx] = [x for x in models_list[idx]
+                                                        if x['traintuple']['outModel'] is not None and
+                                                        x['traintuple']['outModel']['hash'] in val]
                             elif k == 'algo':  # select model used by these algo
                                 if not algoData:
                                     # TODO find a way to put this call in cache
@@ -161,7 +166,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in algoData if x[key] in val]
                                     algoHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['algo']['hash'] in algoHashes]
+                                    models_list[idx] = [x for x in models_list[idx]
+                                                        if x['traintuple']['algo']['hash'] in algoHashes]
                             elif k == 'dataset':  # select model which trainData.openerHash is
                                 if not dataManagerData:
                                     # TODO find a way to put this call in cache
@@ -174,7 +180,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                 for key, val in subfilters.items():
                                     filteredData = [x for x in dataManagerData if x[key] in val]
                                     datamanagerHashes = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['dataset']['openerHash'] in datamanagerHashes]
+                                    models_list[idx] = [
+                                        x for x in models_list[idx]
+                                        if x['traintuple']['dataset']['openerHash'] in datamanagerHashes]
                             elif k == 'objective':  # select objective used by these datamanagers
                                 if not objectiveData:
                                     # TODO find a way to put this call in cache
@@ -190,9 +198,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                                     else:
                                         filteredData = [x for x in objectiveData if x[key] in val]
                                     objectiveKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['traintuple']['objective']['hash'] in objectiveKeys]
+                                    models_list[idx] = [x for x in models_list[idx]
+                                                        if x['traintuple']['objective']['hash'] in objectiveKeys]
 
-        return Response(l, status=st)
+        return Response(models_list, status=st)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):

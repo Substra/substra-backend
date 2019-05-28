@@ -152,8 +152,10 @@ class ObjectiveQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
-            mcreate.return_value = {'message': 'Objective added in local db waiting for validation. \
-                                     The substra network has been notified for adding this Objective'}, status.HTTP_202_ACCEPTED
+            mcreate.return_value = ({
+                'message': 'Objective added in local db waiting for validation.'
+                           'The substra network has been notified for adding this Objective'
+            }, status.HTTP_202_ACCEPTED)
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -243,7 +245,6 @@ class ObjectiveQueryTests(APITestCase):
                                 compute_hash(response.getvalue()))
             self.assertEqual(self.objective_metrics_filename,
                              response.filename)
-            # self.assertEqual(r, f'http://testserver/media/objectives/{objective.pkhash}/{self.objective_metrics_filename}')
 
     def test_get_objective_metrics_no_version(self):
         objective = Objective.objects.create(
@@ -276,7 +277,7 @@ class DataManagerQueryTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
-        self.data_opener_filename = get_sample_datamanager()
+            self.data_opener_filename = get_sample_datamanager()
 
     def tearDown(self):
         try:
@@ -300,8 +301,9 @@ class DataManagerQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDataManagerSerializer, 'create') as mcreate:
-            mcreate.return_value = {
-                                       'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'}, status.HTTP_201_CREATED
+            mcreate.return_value = ({
+                'pkhash': 'da920c804c4724f1ce7bd0484edcf4aafa209d5bd54e2e89972c087a487cbe02'
+            }, status.HTTP_201_CREATED)
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -327,8 +329,10 @@ class DataManagerQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch.object(LedgerDataManagerSerializer, 'create') as mcreate:
-            mcreate.return_value = {'message': 'DataManager added in local db waiting for validation. \
-                                     The substra network has been notified for adding this DataManager'}, status.HTTP_202_ACCEPTED
+            mcreate.return_value = ({
+                'message': 'DataManager added in local db waiting for validation.'
+                           'The substra network has been notified for adding this DataManager'
+            }, status.HTTP_202_ACCEPTED)
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -391,10 +395,10 @@ class DataSampleQueryTests(APITestCase):
         self.data_tar_file, self.data_tar_file_filename = get_sample_tar_data_sample()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
-        self.data_opener_filename = get_sample_datamanager()
+            self.data_opener_filename = get_sample_datamanager()
 
         self.data_description2, self.data_description_filename2, self.data_data_opener2, \
-        self.data_opener_filename2 = get_sample_datamanager2()
+            self.data_opener_filename2 = get_sample_datamanager2()
 
     def tearDown(self):
         try:
@@ -422,9 +426,10 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.return_value = {
-                                       'pkhash': '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553',
-                                       'validated': True}, status.HTTP_201_CREATED
+            mcreate.return_value = ({
+                'pkhash': '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553',
+                'validated': True
+            }, status.HTTP_201_CREATED)
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -491,8 +496,10 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.return_value = {'message': 'Data added in local db waiting for validation. \
-                                     The substra network has been notified for adding this Data'}, status.HTTP_202_ACCEPTED
+            mcreate.return_value = ({
+                'message': 'Data added in local db waiting for validation.'
+                           'The substra network has been notified for adding this Data'
+            }, status.HTTP_202_ACCEPTED)
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -508,8 +515,10 @@ class DataSampleQueryTests(APITestCase):
 
         response = self.client.post(url, data, format='multipart', **extra)
         r = response.json()
-        self.assertEqual(r['message'],
-                         "One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: ['toto']")
+        self.assertEqual(
+            r['message'],
+            "One or more datamanager keys provided do not exist in local substrabac database. "
+            "Please create them before. DataManager keys: ['toto']")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         datamanager_name = 'slide opener'
@@ -612,7 +621,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = {'pkhash': get_hash(file_mock), 'validated': False}, status.HTTP_408_REQUEST_TIMEOUT
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
@@ -699,7 +708,11 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
             self.assertEqual(DataSample.objects.count(), 0)
-            self.assertEqual(r['message'], f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file_mock2.name} and {file_mock.name} are the same')
+            self.assertEqual(
+                r['message'],
+                f'Your data sample archives contain same files leading to same pkhash, '
+                f'please review the content of your achives. '
+                f'Archives {file_mock2.name} and {file_mock.name} are the same')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_400(self):
@@ -724,7 +737,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
             mcreate.return_value = 'Failed', status.HTTP_400_BAD_REQUEST
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
@@ -754,7 +767,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch.object(DataSampleViewSet, 'get_serializer') as mget_serializer:
+                mock.patch.object(DataSampleViewSet, 'get_serializer') as mget_serializer:
             mocked_serializer = MagicMock(DataSampleSerializer)
             mocked_serializer.is_valid.return_value = True
             mocked_serializer.save.side_effect = Exception('Failed')
@@ -789,7 +802,8 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-            mock.patch('substrapp.views.datasample.LedgerDataSampleSerializer', spec=True) as mLedgerDataSampleSerializer:
+                mock.patch('substrapp.views.datasample.LedgerDataSampleSerializer',
+                           spec=True) as mLedgerDataSampleSerializer:
             mocked_LedgerDataSampleSerializer = MagicMock()
             mocked_LedgerDataSampleSerializer.is_valid.return_value = False
             mocked_LedgerDataSampleSerializer.errors = 'Failed'
@@ -888,12 +902,12 @@ class AlgoQueryTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.objective_description, self.objective_description_filename, \
-        self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
         self.algo, self.algo_filename = get_sample_algo()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
-        self.data_opener_filename = get_sample_datamanager()
+            self.data_opener_filename = get_sample_datamanager()
 
     def tearDown(self):
         try:
@@ -949,8 +963,10 @@ class AlgoQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.return_value = {'message': 'Algo added in local db waiting for validation. \
-                                     The substra network has been notified for adding this Algo'}, status.HTTP_202_ACCEPTED
+            mcreate.return_value = ({
+                'message': 'Algo added in local db waiting for validation.'
+                           'The substra network has been notified for adding this Algo'
+            }, status.HTTP_202_ACCEPTED)
             response = self.client.post(url, data, format='multipart', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
@@ -972,7 +988,7 @@ class AlgoQueryTests(APITestCase):
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
             mcreate.return_value = {
-                                       'message': 'Fail to add algo. Objective does not exist'}, status.HTTP_400_BAD_REQUEST
+                'message': 'Fail to add algo. Objective does not exist'}, status.HTTP_400_BAD_REQUEST
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -1084,7 +1100,7 @@ class TraintupleQueryTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.objective_description, self.objective_description_filename, \
-        self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
     def tearDown(self):
         try:
@@ -1100,15 +1116,14 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_sample_keys': [
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'data_manager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'objective_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'rank': -1,
-                'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'in_models_keys': [
-                    '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']}
+        data = {
+            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'data_manager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'objective_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'rank': -1,
+            'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'in_models_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -1118,8 +1133,10 @@ class TraintupleQueryTests(APITestCase):
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
             mqueryLedger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
-            mcreate.return_value = {'message': 'Traintuple added in local db waiting for validation. \
-                                     The substra network has been notified for adding this Traintuple'}, status.HTTP_202_ACCEPTED
+            mcreate.return_value = ({
+                'message': 'Traintuple added in local db waiting for validation.'
+                           'The substra network has been notified for adding this Traintuple'
+            }, status.HTTP_202_ACCEPTED)
 
             response = self.client.post(url, data, format='multipart', **extra)
 
@@ -1129,9 +1146,10 @@ class TraintupleQueryTests(APITestCase):
     def test_add_traintuple_ko(self):
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_sample_keys': [
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {
+            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
+        }
 
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -1156,11 +1174,11 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_sample_keys': [
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {
+            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+            'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
 
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -1175,11 +1193,11 @@ class TraintupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:traintuple-list')
 
-        data = {'train_data_sample_keys': [
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-                'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-                'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+        data = {
+            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
+            'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }

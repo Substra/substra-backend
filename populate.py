@@ -298,8 +298,6 @@ def do_populate():
 
     testtuple_key = get_or_create(data, org_1, 'testtuple')
 
-
-
     client.set_config(org_1)
     res_t = client.get('testtuple', testtuple_key)
     print(colored(json.dumps(res_t, indent=2), 'yellow'))
