@@ -2,8 +2,7 @@ import os
 import json
 import docker
 from django.test import TestCase
-from substrapp.tasks.generate_exceptions_map import exception_tree, find_exception, MODULES
-from substrapp.tasks.exception_handler import compute_error_code, get_exception_code
+from substrapp.tasks.exception_handler import compute_error_code, get_exception_code, generate_exceptions_map
 
 
 class ExceptionTests(TestCase):
@@ -16,21 +15,8 @@ class ExceptionTests(TestCase):
 
     def test_exception_map(self):
 
-        # Build the exception map from local configuration
-        exceptions_classes = set()
-
-        # Get exceptions of modules
-        for errors_module in MODULES:
-            exceptions_classes.update(find_exception(errors_module))
-
-        # Get exceptions from python
-        exception_tree(BaseException, exceptions_classes)
-
         # Build the exception map
-        exception_map = dict()
-        for code_exception, exception_name in enumerate(exceptions_classes, start=1):
-            exception_map[exception_name] = f'{code_exception:04d}'
-
+        exception_map = generate_exceptions_map(append=False)
         # Exception map reference
         EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../tasks/exceptions.json')
         reference_exception_map = json.load(open(EXCEPTION_PATH))
