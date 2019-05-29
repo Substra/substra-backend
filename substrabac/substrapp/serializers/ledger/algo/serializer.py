@@ -18,12 +18,16 @@ class LedgerAlgoSerializer(serializers.Serializer):
         permissions = validated_data.get('permissions')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
-        # current_site = Site.objects.get_current()
+        host = ''
+        protocol = 'http://'
         request = self.context.get('request', None)
-        protocol = 'https://' if request.is_secure() else 'http://'
-        host = '' if request is None else request.get_host()
 
-        # args = '"%(name)s", "%(algoHash)s", "%(storageAddress)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(permissions)s"' % {  # noqa
+        if request:
+            protocol = 'https://' if request.is_secure() else 'http://'
+            host = request.get_host()
+
+        # Json
+        # args = {
         #     'name': name,
         #     'algoHash': get_hash(instance.file),
         #     'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
@@ -32,12 +36,14 @@ class LedgerAlgoSerializer(serializers.Serializer):
         #     'permissions': permissions
         # }
 
-        args = [name,
-                get_hash(instance.file),
-                protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
-                get_hash(instance.description),
-                protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
-                permissions]
+        args = [
+            name,
+            get_hash(instance.file),
+            protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
+            get_hash(instance.description),
+            protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
+            permissions,
+        ]
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerAlgo(args, instance.pkhash, sync=True)
@@ -48,5 +54,4 @@ class LedgerAlgoSerializer(serializers.Serializer):
                 'message': 'Algo added in local db waiting for validation. '
                            'The substra network has been notified for adding this Algo'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+            return data, status.HTTP_202_ACCEPTED

@@ -26,12 +26,16 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
-        # current_site = Site.objects.get_current()
+        host = ''
+        protocol = 'http://'
         request = self.context.get('request', None)
-        protocol = 'https://' if request.is_secure() else 'http://'
-        host = '' if request is None else request.get_host()
 
-        # args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {  # noqa
+        if request:
+            protocol = 'https://' if request.is_secure() else 'http://'
+            host = request.get_host()
+
+        # Json
+        # args = {
         #     'name': name,
         #     'descriptionHash': get_hash(instance.description),
         #     'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
@@ -62,5 +66,4 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                 'message': 'Objective added in local db waiting for validation. '
                            'The substra network has been notified for adding this Objective'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+            return data, status.HTTP_202_ACCEPTED

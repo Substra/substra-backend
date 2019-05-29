@@ -18,7 +18,8 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         data_manager_keys = validated_data.get('data_manager_keys')
         test_only = validated_data.get('test_only')
 
-        # args = '"%(hashes)s", "%(dataManagerKeys)s", "%(testOnly)s"' % {
+        # Json
+        # args = {
         #     'hashes': ','.join([x.pk for x in instances]),
         #     'dataManagerKeys': ','.join([x for x in data_manager_keys]),
         #     'testOnly': json.dumps(test_only),
@@ -39,5 +40,4 @@ class LedgerDataSampleSerializer(serializers.Serializer):
                 'message': 'Data samples added in local db waiting for validation. '
                            'The substra network has been notified for adding this Data'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+            return data, status.HTTP_202_ACCEPTED

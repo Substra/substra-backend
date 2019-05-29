@@ -28,17 +28,18 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
-        in_models_keys = validated_data.get('in_models_keys')
+        in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
 
-        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {  # noqa
+        # Json
+        # args = {
         #     'algoKey': algo_key,
         #     'associatedObjective': objective_key,
         #     'inModels': ','.join(in_models_keys),
         #     'dataManagerKey': data_manager_key,
         #     'dataSampleKeys': ','.join(train_data_sample_keys),
         #     'FLtask': FLtask_key,
-        #     'rank': rank,
+        #     'rank': str(rank),
         #     'tag': tag
         # }
 
@@ -63,11 +64,9 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerTraintupleAsync.delay(args)
-
             data = {
                 'message': 'The substra network has been notified for adding this Traintuple. '
                            'Please be aware you won\'t get return values from the ledger. '
                            'You will need to check manually'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+            return data, status.HTTP_202_ACCEPTED

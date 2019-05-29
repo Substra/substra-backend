@@ -20,7 +20,8 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
         tag = validated_data.get('tag', '')
 
-        # args = '"%(traintupleKey)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(tag)s"' % {
+        # Json
+        # args = {
         #     'traintupleKey': traintuple_key,
         #     'dataManagerKey': data_manager_key,
         #     'dataSampleKeys': ','.join(test_data_sample_keys),
@@ -44,11 +45,9 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerTesttupleAsync.delay(args)
-
             data = {
                 'message': 'The substra network has been notified for adding this Testtuple. '
                            'Please be aware you won\'t get return values from the ledger. '
                            'You will need to check manually'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+            return data, status.HTTP_202_ACCEPTED
