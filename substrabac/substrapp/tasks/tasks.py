@@ -6,6 +6,7 @@ import tempfile
 from os import path
 
 from checksumdir import dirhash
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework import status
 from rest_framework.reverse import reverse
@@ -26,143 +27,124 @@ import logging
 def get_objective(subtuple):
     from substrapp.models import Objective
 
-    # check if objective exists and its metrics is not null
     objectiveHash = subtuple['objective']['hash']
 
+    objective = None
     try:
-        # get objective from local db
         objective = Objective.objects.get(pk=objectiveHash)
-    except Exception:
-        objective = None
-    finally:
-        if objective is None or not objective.metrics:
-            # get objective metrics
-            try:
-                content, computed_hash = get_remote_file(subtuple['objective']['metrics'])
-            except Exception as e:
-                raise e
+    except ObjectDoesNotExist:
+        pass
 
-            objective, created = Objective.objects.update_or_create(pkhash=objectiveHash, validated=True)
+    # get objective from ledger as it is not available in local db and store it in local db
+    if objective is None or not objective.metrics:
+        content, computed_hash = get_remote_file(subtuple['objective']['metrics'])
 
-            try:
-                f = tempfile.TemporaryFile()
-                f.write(content)
-                objective.metrics.save('metrics.py', f)  # update objective in local db for later use
-            except Exception as e:
-                logging.error('Failed to save objective metrics in local db for later use')
-                raise e
+        objective, _ = Objective.objects.update_or_create(pkhash=objectiveHash, validated=True)
+
+        tmp_file = tempfile.TemporaryFile()
+        tmp_file.write(content)
+        objective.metrics.save('metrics.py', tmp_file)
 
     return objective
 
 
 def get_algo(subtuple):
-    algo_content, algo_computed_hash = get_remote_file(subtuple['algo'])
-    return algo_content, algo_computed_hash
+    algo_content, _ = get_remote_file(subtuple['algo'])
+    return algo_content
+
+
+def _get_model(model):
+    model_content, _ = get_remote_file(model, model['traintupleKey'])
+    return model_content
 
 
 def get_model(subtuple):
-    model_content, model_computed_hash = None, None
-
-    if subtuple.get('model', None) is not None:
-        model_content, model_computed_hash = get_remote_file(subtuple['model'], subtuple['model']['traintupleKey'])
-
-    return model_content, model_computed_hash
+    if 'model' in subtuple:
+        return _get_model(subtuple['model'])
+    else:
+        return None
 
 
 def get_models(subtuple):
-    models_content, models_computed_hash = [], []
+    input_models = subtuple.get('inModels', [])
+    return [_get_model(item) for item in input_models]
 
-    if subtuple.get('inModels', None) is not None:
-        for subtuple_model in subtuple['inModels']:
-            model_content, model_computed_hash = get_remote_file(subtuple_model, subtuple_model['traintupleKey'])
-            models_content.append(model_content)
-            models_computed_hash.append(model_computed_hash)
 
-    return models_content, models_computed_hash
+def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
+    if not model_content:
+        raise Exception('Model content should not be empty')
+
+    from substrapp.models import Model
+
+    # store a model in local subtuple directory from input model content
+    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_key}')
+    model = None
+    try:
+        model = Model.objects.get(pk=model_hash)
+    except ObjectDoesNotExist:  # write it to local disk
+        with open(model_dst_path, 'wb') as f:
+            f.write(model_content)
+    else:
+        # verify that local db model file is not corrupted
+        if get_hash(model.file.path, traintuple_key) != model_hash:
+            raise Exception('Model Hash in Subtuple is not the same as in local db')
+
+        if not os.path.exists(model_dst_path):
+            os.link(model.file.path, model_dst_path)
+        else:
+            # verify that local subtuple model file is not corrupted
+            if get_hash(model_dst_path, traintuple_key) != model_hash:
+                raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
 def put_model(subtuple, subtuple_directory, model_content):
-    if model_content is not None:
-        from substrapp.models import Model
-
-        model_dst_path = path.join(subtuple_directory, f'model/{subtuple["model"]["traintupleKey"]}')
-
-        try:
-            model = Model.objects.get(pk=subtuple['model']['hash'])
-        except Exception:  # write it to local disk
-            with open(model_dst_path, 'wb') as f:
-                f.write(model_content)
-        else:
-            if get_hash(model.file.path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
-                raise Exception('Model Hash in Subtuple is not the same as in local db')
-
-            if not os.path.exists(model_dst_path):
-                os.link(model.file.path, model_dst_path)
-            else:
-                if get_hash(model_dst_path, subtuple["model"]["traintupleKey"]) != subtuple['model']['hash']:
-                    raise Exception('Model Hash in Subtuple is not the same as in local medias')
+    return _put_model(subtuple, subtuple_directory, model_content, subtuple['model']['hash'],
+                      subtuple['model']['traintupleKey'])
 
 
 def put_models(subtuple, subtuple_directory, models_content):
-    if models_content:
-        from substrapp.models import Model
+    if not models_content:
+        raise Exception('Models content should not be empty')
 
-        for model_content, subtuple_model in zip(models_content, subtuple['inModels']):
-            model_dst_path = path.join(subtuple_directory, f'model/{subtuple_model["traintupleKey"]}')
-
-            try:
-                model = Model.objects.get(pk=subtuple_model['hash'])
-            except Exception:  # write it to local disk
-                with open(model_dst_path, 'wb') as f:
-                    f.write(model_content)
-            else:
-                if get_hash(model.file.path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
-                    raise Exception('Model Hash in Subtuple is not the same as in local db')
-
-                if not os.path.exists(model_dst_path):
-                    os.link(model.file.path, model_dst_path)
-                else:
-                    if get_hash(model_dst_path, subtuple_model["traintupleKey"]) != subtuple_model['hash']:
-                        raise Exception('Model Hash in Subtuple is not the same as in local medias')
+    for model_content, model in zip(models_content, subtuple['inModels']):
+        _put_model(model, subtuple_directory, model_content, model['hash'], model['traintupleKey'])
 
 
 def put_opener(subtuple, subtuple_directory):
     from substrapp.models import DataManager
+    data_opener_hash = subtuple['dataset']['openerHash']
 
-    try:
-        datamanager = DataManager.objects.get(pk=subtuple['dataset']['openerHash'])
-    except Exception as e:
-        raise e
+    datamanager = DataManager.objects.get(pk=data_opener_hash)
 
-    data_opener_hash = get_hash(datamanager.data_opener.path)
-    if data_opener_hash != subtuple['dataset']['openerHash']:
+    # verify that local db opener file is not corrupted
+    if get_hash(datamanager.data_opener.path) != data_opener_hash:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
     opener_dst_path = path.join(subtuple_directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
         os.link(datamanager.data_opener.path, opener_dst_path)
+    else:
+        # verify that local subtuple data opener file is not corrupted
+        if get_hash(opener_dst_path) != data_opener_hash:
+            raise Exception('DataOpener Hash in Subtuple is not the same as in local medias')
 
 
 def put_data_sample(subtuple, subtuple_directory):
     from substrapp.models import DataSample
 
     for data_sample_key in subtuple['dataset']['keys']:
-        try:
-            data_sample = DataSample.objects.get(pk=data_sample_key)
-        except Exception as e:
-            raise e
-        else:
-            data_sample_hash = dirhash(data_sample.path, 'sha256')
-            if data_sample_hash != data_sample_key:
-                raise Exception('Data Sample Hash in Subtuple is not the same as in local db')
+        data_sample = DataSample.objects.get(pk=data_sample_key)
+        data_sample_hash = dirhash(data_sample.path, 'sha256')
+        if data_sample_hash != data_sample_key:
+            raise Exception('Data Sample Hash in Subtuple is not the same as in local db')
 
-            # create a symlink on the folder containing data
-            try:
-                subtuple_data_directory = path.join(subtuple_directory, 'data', data_sample_key)
-                os.symlink(data_sample.path, subtuple_data_directory)
-            except Exception as e:
-                logging.error(e, exc_info=True)
-                raise Exception('Failed to create sym link for subtuple data sample')
+        # create a symlink on the folder containing data
+        subtuple_data_directory = path.join(subtuple_directory, 'data', data_sample_key)
+        try:
+            os.symlink(data_sample.path, subtuple_data_directory)
+        except OSError as e:
+            logging.exception(e)
+            raise Exception('Failed to create sym link for subtuple data sample')
 
 
 def put_metric(subtuple_directory, objective):
@@ -172,11 +154,7 @@ def put_metric(subtuple_directory, objective):
 
 
 def put_algo(subtuple_directory, algo_content):
-    try:
-        uncompress_content(algo_content, subtuple_directory)
-    except Exception as e:
-        logging.error('Fail to uncompress algo file')
-        raise e
+    uncompress_content(algo_content, subtuple_directory)
 
 
 def build_subtuple_folders(subtuple):
@@ -193,21 +171,20 @@ def remove_subtuple_materials(subtuple_directory):
     try:
         shutil.rmtree(subtuple_directory)
     except Exception as e:
-        logging.error(e)
+        logging.exception(e)
 
 
-def fail(key, err_msg, tuple_type):
-    # Log Fail TrainTest
+def log_fail_subtuple(key, err_msg, tuple_type):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
     data, st = invokeLedger(fcn=fail_type,
                             args=[f'{key}', f'{err_msg}'],
                             sync=True)
 
-    if st is not status.HTTP_201_CREATED:
+    if st != status.HTTP_201_CREATED:
         logging.error(data, exc_info=True)
-
-    logging.info('Successfully passed the subtuple to failed')
+    else:
+        logging.info('Successfully passed the subtuple to failed')
     return data
 
 
@@ -258,7 +235,7 @@ def prepareTuple(subtuple, tuple_type, model_type):
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        return fail(subtuple['key'], error_code, tuple_type)
+        return log_fail_subtuple(subtuple['key'], error_code, tuple_type)
 
 
 def prepareTask(tuple_type, model_type):
@@ -305,7 +282,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        fail(subtuple['key'], error_code, tuple_type)
+        log_fail_subtuple(subtuple['key'], error_code, tuple_type)
         return result
 
     logging.info(f'Prepare Task success {tuple_type}')
@@ -315,7 +292,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        fail(subtuple['key'], error_code, tuple_type)
+        log_fail_subtuple(subtuple['key'], error_code, tuple_type)
         return result
     else:
         # Invoke ledger to log success
@@ -343,31 +320,23 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 
 def prepareMaterials(subtuple, model_type):
     # get subtuple components
-    try:
-        objective = get_objective(subtuple)
-        algo_content, algo_computed_hash = get_algo(subtuple)
-        if model_type == 'model':
-            model_content, model_computed_hash = get_model(subtuple)  # can return None, None
-        if model_type == 'inModels':
-            models_content, models_computed_hash = get_models(subtuple)  # can return [], []
-
-    except Exception as e:
-        raise e
+    objective = get_objective(subtuple)
+    algo_content = get_algo(subtuple)
+    if model_type == 'model':
+        model_content = get_model(subtuple)
+    elif model_type == 'inModels':
+        models_content = get_models(subtuple)
 
     # create subtuple
-    try:
-        subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
-        put_opener(subtuple, subtuple_directory)
-        put_data_sample(subtuple, subtuple_directory)
-        put_metric(subtuple_directory, objective)
-        put_algo(subtuple_directory, algo_content)
-        if model_type == 'model':  # testtuple
-            put_model(subtuple, subtuple_directory, model_content)
-        if model_type == 'inModels':  # traintuple
-            put_models(subtuple, subtuple_directory, models_content)
-
-    except Exception as e:
-        raise e
+    subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
+    put_opener(subtuple, subtuple_directory)
+    put_data_sample(subtuple, subtuple_directory)
+    put_metric(subtuple_directory, objective)
+    put_algo(subtuple_directory, algo_content)
+    if model_type == 'model':  # testtuple
+        put_model(subtuple, subtuple_directory, model_content)
+    elif model_type == 'inModels':  # traintuple
+        put_models(subtuple, subtuple_directory, models_content)
 
 
 def doTask(subtuple, tuple_type):
@@ -473,7 +442,7 @@ def doTask(subtuple, tuple_type):
             except Exception as e:
                 error_code = compute_error_code(e)
                 logging.error(error_code, exc_info=True)
-                return fail(subtuple['key'], error_code, tuple_type)
+                return log_fail_subtuple(subtuple['key'], error_code, tuple_type)
 
             with open(end_model_path, 'rb') as f:
                 instance.file.save('model', f)
