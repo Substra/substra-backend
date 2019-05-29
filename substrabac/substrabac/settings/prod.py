@@ -1,11 +1,12 @@
 import os
 
 from .common import *
-from .ledger import *
 
 from .deps.restframework import *
 from .deps.cors import *
 from .deps.raven import *
+from .deps.org import *
+from .deps.ledger import *
 
 
 DEBUG = False
@@ -15,10 +16,13 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 os.environ['HTTPS'] = "on"
 os.environ['wsgi.url_scheme'] = 'https'
 
-ORG = os.environ.get('SUBSTRABAC_ORG', 'substra')
-DEFAULT_PORT = os.environ.get('SUBSTRABAC_DEFAULT_PORT', '8000')
-ORG_NAME = ORG.replace('-', '')
-ORG_DB_NAME = ORG.replace('-', '_').upper()
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
+
+# deactivate when public
+BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
+BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
+MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -37,19 +41,11 @@ DATABASES = {
 MEDIA_ROOT = f'/substra/medias/{ORG_NAME}'
 DRYRUN_ROOT = f'/substra/dryrun/{ORG}'
 
-STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
-SITE_ID = 1
 SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
-
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
 
-# deactivate when public
-BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
-BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
-MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
 
 LOGGING = {
     'version': 1,

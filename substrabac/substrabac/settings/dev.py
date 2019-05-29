@@ -1,19 +1,14 @@
 import os
 
 from .common import *
-from .ledger import *
 
 from .deps.restframework import *
 from .deps.cors import *
+from .deps.org import *
+from .deps.ledger import *
 
 
 DEBUG = True
-
-ORG = os.environ.get('SUBSTRABAC_ORG', 'substra')
-DEFAULT_PORT = os.environ.get('SUBSTRABAC_DEFAULT_PORT', '8000')
-ORG_NAME = ORG.replace('-', '')
-ORG_DB_NAME = ORG.replace('-', '_').upper()
-
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
@@ -35,10 +30,8 @@ DRYRUN_ROOT = os.environ.get('DRYRUN_ROOT', os.path.join(PROJECT_ROOT, f'dryrun/
 if not os.path.exists(DRYRUN_ROOT):
     os.makedirs(DRYRUN_ROOT, exist_ok=True)
 
-SITE_ID = 1
 SITE_HOST = f'{ORG_NAME}.substrabac'
 SITE_PORT = DEFAULT_PORT
-
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
 
 LOGGING = {
