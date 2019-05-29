@@ -59,15 +59,19 @@ def _get_model(model):
 
 
 def get_model(subtuple):
-    if 'model' in subtuple:
-        return _get_model(subtuple['model'])
+    model = subtuple.get('model')
+    if model:
+        return _get_model(model)
     else:
         return None
 
 
 def get_models(subtuple):
-    input_models = subtuple.get('inModels', [])
-    return [_get_model(item) for item in input_models]
+    input_models = subtuple.get('inModels')
+    if input_models:
+        return [_get_model(item) for item in input_models]
+    else:
+        return []
 
 
 def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
@@ -335,7 +339,7 @@ def prepareMaterials(subtuple, model_type):
     put_algo(subtuple_directory, algo_content)
     if model_type == 'model':  # testtuple
         put_model(subtuple, subtuple_directory, model_content)
-    elif model_type == 'inModels':  # traintuple
+    elif model_type == 'inModels' and models_content:  # traintuple
         put_models(subtuple, subtuple_directory, models_content)
 
 
