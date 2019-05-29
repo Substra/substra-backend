@@ -4,8 +4,8 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTestTupleSerializer
-from substrapp.utils import queryLedger
-from substrapp.views.utils import getObjectFromLedger, JsonException
+from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.utils import JsonException
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
@@ -13,6 +13,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        GenericViewSet):
     serializer_class = LedgerTestTupleSerializer
+    ledger_query_call = 'queryTesttuple'
 
     def get_queryset(self):
         queryset = []
@@ -107,7 +108,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk, 'queryTesttuple')
+                data = getObjectFromLedger(pk, self.ledger_query_call)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             except Http404:

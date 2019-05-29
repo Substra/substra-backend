@@ -11,8 +11,9 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import (get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException,
+from substrapp.utils import get_hash, JsonException
+from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.views.utils import (get_filters, ComputeHashMixin, ManageFileMixin,
                                    find_primary_key_error)
 
 

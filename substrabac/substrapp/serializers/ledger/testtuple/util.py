@@ -1,7 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 
 
-from substrapp.utils import invokeLedger
+from substrapp.ledger_utils import invokeLedger
 
 
 def createLedgerTesttuple(args, sync=False):

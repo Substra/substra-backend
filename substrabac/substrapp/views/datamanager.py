@@ -16,8 +16,9 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException, find_primary_key_error
+from substrapp.utils import get_hash, JsonException
+from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, find_primary_key_error
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -177,21 +178,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def getObjectFromLedger(self, pk):
-        # get instance from remote node
-        data, st = queryLedger(fcn='queryDataset', args=[f'{pk}'])
-
-        if st == status.HTTP_404_NOT_FOUND:
-            raise Http404('Not found')
-
-        if st != status.HTTP_200_OK:
-            raise JsonException(data)
-
-        if data['permissions'] == 'all':
-            return data
-        else:
-            raise Exception('Not Allowed')
-
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -206,7 +192,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         else:
             # get instance from remote node
             try:
-                data = self.getObjectFromLedger(pk)  # datamanager use particular query to ledger
+                data = getObjectFromLedger(pk, 'queryDataset')
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             except Http404:
