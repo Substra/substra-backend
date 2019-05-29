@@ -10,14 +10,16 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DataManagerViewSet, TrainTupleViewSet, TestTupleViewSet, DataSampleViewSet
+from substrapp.views import TrainTupleViewSet, TestTupleViewSet, DataSampleViewSet
 
 from substrapp.serializers import LedgerDataSampleSerializer, LedgerObjectiveSerializer, LedgerAlgoSerializer
 
-from substrapp.views.utils import JsonException, ComputeHashMixin, getObjectFromLedger
+from substrapp.utils import JsonException
+from substrapp.views.utils import ComputeHashMixin
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
+from substrapp.ledger_utils import getObjectFromLedger
 
 from substrapp.models import DataManager
 
@@ -55,13 +57,13 @@ class ViewTests(APITestCase):
 
     def test_utils_getObjectFromLedger(self):
 
-        with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
+        with mock.patch('substrapp.ledger_utils.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
             data = getObjectFromLedger('', 'queryObjective')
 
             self.assertEqual(data, objective)
 
-        with mock.patch('substrapp.views.utils.queryLedger') as mqueryLedger:
+        with mock.patch('substrapp.ledger_utils.queryLedger') as mqueryLedger:
             mqueryLedger.side_effect = [('', status.HTTP_400_BAD_REQUEST)]
             with self.assertRaises(JsonException):
                 getObjectFromLedger('', 'queryAllObjective')
@@ -730,7 +732,7 @@ class DataManagerViewTests(APITestCase):
         url = reverse('substrapp:data_manager-list')
         datamanager_response = [d for d in datamanager
                                 if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
-        with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
+        with mock.patch('substrapp.views.datamanager.getObjectFromLedger') as mgetObjectFromLedger, \
                 mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = datamanager_response
 
@@ -768,7 +770,7 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch('substrapp.views.datamanager.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
@@ -844,7 +846,7 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_retrieve(self):
 
-        with mock.patch.object(TrainTupleViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.return_value = traintuple[0]
             url = reverse('substrapp:traintuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
@@ -867,7 +869,7 @@ class TraintupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch.object(TrainTupleViewSet, 'getObjectFromLedger') as mgetObjectFromLedger:
+        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
             mgetObjectFromLedger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))

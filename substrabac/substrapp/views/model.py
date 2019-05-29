@@ -11,10 +11,9 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
-# from hfc.fabric import Client
-# cli = Client(net_profile="../network.json")
-from substrapp.utils import queryLedger
-from substrapp.views.utils import get_filters, ComputeHashMixin, getObjectFromLedger, CustomFileResponse, JsonException
+from substrapp.utils import JsonException
+from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.views.utils import get_filters, ComputeHashMixin, CustomFileResponse
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
@@ -23,6 +22,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                    GenericViewSet):
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
+    ledger_query_call = 'queryModelDetails'
 
     # permission_classes = (permissions.IsAuthenticated,)
 
@@ -76,7 +76,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         else:
             # get instance from remote node
             try:
-                data = getObjectFromLedger(pk, 'queryModelDetails')
+                data = getObjectFromLedger(pk, self.ledger_query_call)
             except JsonException as e:
                 return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
             except Http404:

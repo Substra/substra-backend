@@ -239,8 +239,10 @@ class ObjectiveQueryTests(APITestCase):
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
+            print(self.objective_metrics)
             response = self.client.get(
                 f'/objective/{objective.pkhash}/metrics/', **extra)
+
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertNotEqual(objective.pkhash,
                                 compute_hash(response.getvalue()))

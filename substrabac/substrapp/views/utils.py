@@ -6,13 +6,7 @@ from django.http import FileResponse, Http404
 from rest_framework import status
 from rest_framework.response import Response
 
-from substrapp.utils import queryLedger
-
-
-class JsonException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-        super(JsonException, self).__init__()
+from substrapp.ledger_utils import getObjectFromLedger
 
 
 def get_filters(query_params):
@@ -52,22 +46,6 @@ def get_filters(query_params):
                     filters[idx].update({parent: filter})
 
     return filters
-
-
-def getObjectFromLedger(pk, query):
-    # get instance from remote node
-    data, st = queryLedger(fcn=query, args=[f'{pk}'])
-
-    if st == status.HTTP_404_NOT_FOUND:
-        raise Http404('Not found')
-
-    if st != status.HTTP_200_OK:
-        raise JsonException(data)
-
-    if 'permissions' not in data or data['permissions'] == 'all':
-        return data
-    else:
-        raise Exception('Not Allowed')
 
 
 class ComputeHashMixin(object):

@@ -3,7 +3,7 @@ from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp.models import Algo
-from substrapp.utils import invokeLedger
+from substrapp.ledger_utils import invokeLedger
 
 
 def createLedgerAlgo(args, pkhash, sync=False):

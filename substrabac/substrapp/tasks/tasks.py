@@ -11,7 +11,8 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.utils import queryLedger, invokeLedger, get_hash, create_directory, get_remote_file, uncompress_content
+from substrapp.ledger_utils import queryLedger, invokeLedger
+from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
 
