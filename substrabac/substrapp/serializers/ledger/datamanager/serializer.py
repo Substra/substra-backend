@@ -10,7 +10,7 @@ from .tasks import createLedgerDataManagerAsync
 
 class LedgerDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
-    data_type = serializers.CharField(max_length=30)
+    type = serializers.CharField(max_length=30)
     objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
     permissions = serializers.CharField(min_length=1, max_length=60)
 
