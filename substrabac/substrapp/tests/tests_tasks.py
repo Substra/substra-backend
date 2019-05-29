@@ -333,10 +333,9 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = model_content, model_hash
-            model_content, model_hash = get_model(subtuple)
+            model_content = get_model(subtuple)
 
         self.assertIsNotNone(model_content)
-        self.assertIsNotNone(model_hash)
 
     def test_get_models(self):
         model_content = self.model.read().encode()
@@ -356,10 +355,9 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.side_effect = [[models_content[0], models_hash[0]],
                                             [models_content[1], models_hash[1]]]
-            models_content_res, models_hash_res = get_models(subtuple)
+            models_content_res = get_models(subtuple)
 
         self.assertEqual(models_content_res, models_content)
-        self.assertIsNotNone(models_hash_res, models_hash)
 
     def test_get_algo(self):
         algo_content = self.algo.read()
@@ -367,7 +365,7 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
             mget_remote_file.return_value = algo_content, algo_hash
-            self.assertEqual((algo_content, algo_hash), get_algo({'algo': ''}))
+            self.assertEqual(algo_content, get_algo({'algo': ''}))
 
     def test_get_objective(self):
         metrics_content = self.script.read()
