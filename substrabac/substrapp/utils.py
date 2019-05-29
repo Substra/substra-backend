@@ -18,10 +18,8 @@ from rest_framework import status
 from django.conf import settings
 
 LEDGER = getattr(settings, 'LEDGER', None)
-CLIENT = getattr(settings, 'CLIENT', None)
-REQUESTOR = getattr(settings, 'REQUESTOR', None)
-HLF_LOOP = getattr(settings, 'HLF_LOOP', None)
-asyncio.set_event_loop(HLF_LOOP)
+if LEDGER:
+    asyncio.set_event_loop(LEDGER['hfc']['loop'])
 
 
 # careful, passing invoke parameters to queryLedger will NOT fail
@@ -30,14 +28,17 @@ def queryLedger(fcn, args=None):
     if args is None:
         args = []
 
+    peer = LEDGER['peer']
+    loop = LEDGER['hfc']['loop']
+    client = LEDGER['hfc']['client']
+    requestor = LEDGER['hfc']['requestor']
     channel_name = LEDGER['channel_name']
     chaincode_name = LEDGER['chaincode_name']
-    peer = LEDGER['peer']
 
     # Get chaincode version
-    response = HLF_LOOP.run_until_complete(
-        CLIENT.query_instantiated_chaincodes(
-            requestor=REQUESTOR,
+    response = loop.run_until_complete(
+        client.query_instantiated_chaincodes(
+            requestor=requestor,
             channel_name=channel_name,
             peers=[peer['name']],
             decode=True
@@ -49,9 +50,9 @@ def queryLedger(fcn, args=None):
 
     try:
         # Async - need loop
-        response = HLF_LOOP.run_until_complete(
-            CLIENT.chaincode_query(
-                requestor=REQUESTOR,
+        response = loop.run_until_complete(
+            client.chaincode_query(
+                requestor=requestor,
                 channel_name=channel_name,
                 peers=[peer['name']],
                 args=args,
@@ -90,14 +91,17 @@ def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
     if args is None:
         args = []
 
+    peer = LEDGER['peer']
+    loop = LEDGER['hfc']['loop']
+    client = LEDGER['hfc']['client']
+    requestor = LEDGER['hfc']['requestor']
     channel_name = LEDGER['channel_name']
     chaincode_name = LEDGER['chaincode_name']
-    peer = LEDGER['peer']
 
     # Get chaincode version
-    response = HLF_LOOP.run_until_complete(
-        CLIENT.query_instantiated_chaincodes(
-            requestor=REQUESTOR,
+    response = loop.run_until_complete(
+        client.query_instantiated_chaincodes(
+            requestor=requestor,
             channel_name=channel_name,
             peers=[peer['name']],
             decode=True
@@ -110,7 +114,7 @@ def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
     try:
         # Async - need loop
         kwargs = {
-            'requestor': REQUESTOR,
+            'requestor': requestor,
             'channel_name': channel_name,
             'peers': [peer['name']],
             'args': args,
@@ -123,7 +127,7 @@ def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
         if cc_pattern:
             kwargs['cc_pattern'] = cc_pattern
 
-        response = HLF_LOOP.run_until_complete(CLIENT.chaincode_invoke(**kwargs))
+        response = loop.run_until_complete(client.chaincode_invoke(**kwargs))
     except TimeoutError as e:
         st = status.HTTP_408_REQUEST_TIMEOUT
         data = {'message': str(e)}

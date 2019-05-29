@@ -32,6 +32,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 # APITestCase
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class ObjectiveQueryTests(APITestCase):
 
     def setUp(self):
@@ -270,6 +271,7 @@ class ObjectiveQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class DataManagerQueryTests(APITestCase):
 
     def setUp(self):
@@ -383,6 +385,7 @@ class DataManagerQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class DataSampleQueryTests(APITestCase):
 
     def setUp(self):
@@ -895,6 +898,7 @@ class DataSampleQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoQueryTests(APITestCase):
 
     def setUp(self):
@@ -1093,6 +1097,7 @@ class AlgoQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class TraintupleQueryTests(APITestCase):
 
     def setUp(self):
