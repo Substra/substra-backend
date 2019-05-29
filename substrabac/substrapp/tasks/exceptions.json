@@ -480,5 +480,7 @@
     "error": "0480",
     "gaierror": "0481",
     "herror": "0482",
-    "timeout": "0483"
+    "timeout": "0483",
+    "MessageNacked": "0484",
+    "PkgResourcesDeprecationWarning": "0485"
 }
