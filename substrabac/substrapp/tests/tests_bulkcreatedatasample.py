@@ -71,6 +71,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                 'data_manager_keys': data_manager_keys,
                 'test_only': False}
 
+        # dir hash
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
@@ -127,7 +128,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                 'data_manager_keys': data_manager_keys,
                 'test_only': False}
 
-        pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
+        pkhash1 = get_hash(data_path1)
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
@@ -183,7 +184,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                 'data_manager_keys': data_manager_keys,
                 'test_only': False}
 
-        pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
+        pkhash1 = get_hash(data_path1)
 
         with patch.object(DataManager.objects, 'filter') as mdatamanager, \
                 patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
@@ -240,6 +241,7 @@ class BulkCreateDataSampleTestCase(TestCase):
                 'data_manager_keys': data_manager_keys,
                 'test_only': False}
 
+        # dir hash
         pkhash1 = 'e3644123451975be20909fcfd9c664a0573d9bfe04c5021625412d78c3536f1c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 

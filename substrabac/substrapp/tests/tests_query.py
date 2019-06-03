@@ -45,6 +45,10 @@ class ObjectiveQueryTests(APITestCase):
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_datamanager()
 
+        self.test_data_sample_keys = [
+            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
+            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389']
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
@@ -65,9 +69,7 @@ class ObjectiveQueryTests(APITestCase):
         data = {
             'name': 'tough objective',
             'test_data_manager_key': get_hash(self.data_data_opener),
-            'test_data_sample_keys': [
-                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'description': desc,
             'metrics': metrics,
             'permissions': 'all',
@@ -140,9 +142,7 @@ class ObjectiveQueryTests(APITestCase):
         data = {
             'name': 'tough objective',
             'test_data_manager_key': get_hash(self.data_data_opener),
-            'test_data_sample_keys': [
-                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'description': self.objective_description,
             'metrics': self.objective_metrics,
             'permissions': 'all',
@@ -187,9 +187,7 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_data_sample_keys': [
-                'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'description': description,
             'metrics': metrics,
         }
@@ -212,9 +210,7 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {
             'name': 'tough objective',
-            'test_data_sample_keys': [
-                'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-                'data_5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389'],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'description': description,
             'metrics': metrics,
         }
@@ -1109,6 +1105,9 @@ class TraintupleQueryTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
+        self.train_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
+        self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
+
     def tearDown(self):
         try:
             shutil.rmtree(MEDIA_ROOT)
@@ -1124,13 +1123,13 @@ class TraintupleQueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {
-            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'data_manager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'objective_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
             'rank': -1,
-            'FLtask_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'in_models_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']}
+            'FLtask_key': self.fake_key,
+            'in_models_keys': [self.fake_key]}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -1154,8 +1153,8 @@ class TraintupleQueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {
-            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'model_key': self.fake_key
         }
 
         extra = {
@@ -1182,10 +1181,10 @@ class TraintupleQueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {
-            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-            'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'datamanager_key': self.fake_key,
+            'model_key': self.fake_key,
+            'algo_key': self.fake_key}
 
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -1201,10 +1200,10 @@ class TraintupleQueryTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
 
         data = {
-            'train_data_sample_keys': ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422'],
-            'datamanager_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'model_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088',
-            'algo_key': '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'}
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'datamanager_key': self.fake_key,
+            'model_key': self.fake_key,
+            'algo_key': self.fake_key}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
         }

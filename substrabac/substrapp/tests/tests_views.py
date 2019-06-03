@@ -84,6 +84,11 @@ class ObjectiveViewTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
+        self.test_data_sample_keys = [
+            "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
+            "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
+        ]
+
         self.extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
@@ -235,10 +240,7 @@ class ObjectiveViewTests(APITestCase):
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
             'permissions': 'all',
-            'test_data_sample_keys': [
-                "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
-                "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
-            ],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'test_data_manager_key': test_data_manager_key
         }
 
@@ -273,10 +275,7 @@ class ObjectiveViewTests(APITestCase):
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
             'permissions': 'all',
-            'test_data_sample_keys': [
-                "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
-                "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
-            ],
+            'test_data_sample_keys': self.test_data_sample_keys,
             'test_data_manager_key': test_data_manager_key,
             'dryrun': True
         }
@@ -1042,6 +1041,7 @@ class DataViewTests(APITestCase):
         data_path1 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
 
+        # dir hash
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
@@ -1113,6 +1113,7 @@ class DataViewTests(APITestCase):
 
         data_path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
 
+        # dir hash
         pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data_manager_keys = [
@@ -1181,7 +1182,7 @@ class DataViewTests(APITestCase):
 
         opener_path = os.path.join(dir_path, '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
 
-        pkhash = '62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a'
+        pkhash = get_hash(data_path)
 
         data = {
             'filepath': os.path.join(MEDIA_ROOT, '0024700.zip'),
