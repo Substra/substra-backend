@@ -26,10 +26,7 @@ class CreateObjectiveTestCase(TestCase):
         self.maxDiff = None
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_createobjective(self):
 
