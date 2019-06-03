@@ -72,13 +72,15 @@ def queryLedger(fcn, args=None):
                 st = status.HTTP_404_NOT_FOUND
 
             data = {'message': response}
-        # TODO: get 409 from the chaincode
-        if 'tkey' in data['message']:
-            pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
-            if len(pkhash) == 64:
-                st = status.HTTP_409_CONFLICT
-                data['pkhash'] = pkhash
+    # TODO: get 409 from the chaincode
+    if 'message' in data and 'tkey' in data['message']:
+        pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+
+        if len(pkhash) == 64:
+            st = status.HTTP_409_CONFLICT
+            data['pkhash'] = pkhash
+
     return data, st
 
 
@@ -160,11 +162,12 @@ def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
         except json.decoder.JSONDecodeError:
             st = status.HTTP_400_BAD_REQUEST
             data = {'message': response}
-        # TODO: get 409 from the chaincode
-        if 'tkey' in data['message']:
-            pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
-            if len(pkhash) == 64:
-                st = status.HTTP_409_CONFLICT
-                data['pkhash'] = pkhash
+    # TODO: get 409 from the chaincode
+    if 'message' in data and 'tkey' in data['message']:
+        pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+        if len(pkhash) == 64:
+            st = status.HTTP_409_CONFLICT
+            data['pkhash'] = pkhash
+
     return data, st
