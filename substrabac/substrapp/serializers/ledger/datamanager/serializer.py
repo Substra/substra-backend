@@ -27,16 +27,27 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {
-            'name': name,
-            'openerHash': get_hash(instance.data_opener),
-            'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
-            'type': type,
-            'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
-            'objectiveKey': objective_key,
-            'permissions': permissions
-        }
+        # args = '"%(name)s", "%(openerHash)s", "%(openerStorageAddress)s", "%(type)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(objectiveKey)s", "%(permissions)s"' % {
+        #     'name': name,
+        #     'openerHash': get_hash(instance.data_opener),
+        #     'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+        #     'type': type,
+        #     'descriptionHash': get_hash(instance.description),
+        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
+        #     'objectiveKey': objective_key,
+        #     'permissions': permissions
+        # }
+
+        args = [
+            name,
+            get_hash(instance.data_opener),
+            protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            type,
+            get_hash(instance.description),
+            protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
+            objective_key,
+            permissions
+        ]
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerDataManager(args, instance.pkhash, sync=True)

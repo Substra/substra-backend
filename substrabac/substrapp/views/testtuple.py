@@ -1,5 +1,3 @@
-import json
-
 from django.http import Http404
 from rest_framework import mixins, status
 from rest_framework.response import Response
@@ -63,25 +61,22 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         # Get testtuple pkhash of the proposal with a queryLedger in case of 408 timeout
         args = serializer.get_args(serializer.validated_data)
-        data, st = queryLedger({'args': '{"Args":["createTesttuple", ' + args + ']}'})
+        data, st = queryLedger(fcn='createTesttuple', args=args)
+
         if st == status.HTTP_200_OK:
             pkhash = data.get('key', data.get('keys'))
         else:
             # If queryLedger fails, invoke will fail too so we handle the issue right now
-            try:
-                data['message'] = data['message'].split('Error')[-1]
-                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
-                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+            if 'tkey' in data['message']:
+                pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
                 if len(pkhash) != 64:
                     raise Exception('bad pkhash')
                 else:
                     st = status.HTTP_409_CONFLICT
 
-                return Response({'message': data['message'].split('payload')[0],
-                                 'pkhash': pkhash}, status=st)
-            except:
-                return Response(data, status=st)
+            return Response({'message': data['message'],
+                             'pkhash': pkhash}, status=st)
 
         # create on ledger
         data, st = serializer.create(serializer.validated_data)
@@ -91,20 +86,16 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                              'pkhash': pkhash}, status=st)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-            try:
-                data['message'] = data['message'].split('Error')[-1]
-                msg = json.loads(data['message'].split('payload:')[-1].strip().strip('"').encode('utf-8').decode('unicode_escape'))
-                pkhash = msg['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+            if 'tkey' in data['message']:
+                pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
                 if len(pkhash) != 64:
                     raise Exception('bad pkhash')
                 else:
                     st = status.HTTP_409_CONFLICT
 
-                return Response({'message': data['message'].split('payload')[0],
-                                 'pkhash': pkhash}, status=st)
-            except:
-                return Response(data, status=st)
+            return Response({'message': data['message'],
+                             'pkhash': pkhash}, status=st)
 
         headers = self.get_success_headers(serializer.data)
         return Response(data, status=st, headers=headers)
@@ -112,9 +103,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryTesttuples"]}'
-        })
+        data, st = queryLedger(fcn='queryTesttuples', args=[])
 
         data = data if data else []
 

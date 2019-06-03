@@ -5,7 +5,4 @@ from substrapp.utils import invokeLedger
 
 
 def createLedgerTesttuple(args, sync=False):
-    options = {
-        'args': '{"Args":["createTesttuple", ' + args + ']}'
-    }
-    return invokeLedger(options, sync)
+    return invokeLedger(fcn='createTesttuple', args=args, sync=sync)

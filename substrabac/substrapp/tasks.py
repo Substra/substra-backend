@@ -199,9 +199,9 @@ def fail(key, err_msg, tuple_type):
     # Log Fail TrainTest
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
-    data, st = invokeLedger({
-        'args': f'{{"Args":["{fail_type}","{key}","{err_msg}"]}}'
-    }, sync=True)
+    data, st = invokeLedger(fcn=fail_type,
+                            args=[f'{key}', f'{err_msg}'],
+                            sync=True)
 
     if st is not status.HTTP_201_CREATED:
         logging.error(data, exc_info=True)
@@ -217,6 +217,43 @@ manager.start()
 resources_manager = manager.ResourcesManager()
 
 
+@app.task(ignore_result=False)
+def prepareTuple(subtuple, tuple_type, model_type):
+    from django_celery_results.models import TaskResult
+
+    fltask = None
+    worker_queue = f"{settings.LEDGER['name']}.worker"
+
+    if 'fltask' in subtuple and subtuple['fltask']:
+        fltask = subtuple['fltask']
+        flresults = TaskResult.objects.filter(
+            task_name='substrapp.tasks.computeTask',
+            result__icontains=f'"fltask": "{fltask}"')
+
+        if flresults and flresults.count() > 0:
+            worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
+
+    try:
+        # Log Start of the Subtuple
+        start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
+        data, st = invokeLedger(fcn=start_type,
+                                args=[f'{subtuple["key"]}'],
+                                sync=True)
+
+        if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+            logging.error(
+                f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+        else:
+            computeTask.apply_async(
+                (tuple_type, subtuple, model_type, fltask),
+                queue=worker_queue)
+
+    except Exception as e:
+        error_code = compute_error_code(e)
+        logging.error(error_code, exc_info=True)
+        return fail(subtuple['key'], error_code, tuple_type)
+
+
 def prepareTask(tuple_type, model_type):
     from django_celery_results.models import TaskResult
 
@@ -225,44 +262,14 @@ def prepareTask(tuple_type, model_type):
     except Exception as e:
         logging.error(e, exc_info=True)
     else:
-        subtuples, st = queryLedger({
-            'args': f'{{"Args":["queryFilter","{tuple_type}~worker~status","{data_owner},todo"]}}'
-        })
+
+        subtuples, st = queryLedger(fcn="queryFilter",
+                                    args=[f'{tuple_type}~worker~status',
+                                          f'{data_owner},todo'])
 
         if st == status.HTTP_200_OK and subtuples is not None:
             for subtuple in subtuples:
-
-                fltask = None
-                worker_queue = f"{settings.LEDGER['name']}.worker"
-
-                if 'fltask' in subtuple and subtuple['fltask']:
-                    fltask = subtuple['fltask']
-                    flresults = TaskResult.objects.filter(
-                        task_name='substrapp.tasks.computeTask',
-                        result__icontains=f'"fltask": "{fltask}"')
-
-                    if flresults and flresults.count() > 0:
-                        worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
-
-                try:
-                    # Log Start of the Subtuple
-                    start_type = 'logStartTrain' if tuple_type == 'traintuple' else 'logStartTest' if tuple_type == 'testtuple' else None
-                    data, st = invokeLedger({
-                        'args': f'{{"Args":["{start_type}","{subtuple["key"]}"]}}'
-                    }, sync=True)
-
-                    if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-                        logging.error(
-                            f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
-                    else:
-                        computeTask.apply_async(
-                            (tuple_type, subtuple, model_type, fltask),
-                            queue=worker_queue)
-
-                except Exception as e:
-                    error_code = compute_error_code(e)
-                    logging.error(error_code, exc_info=True)
-                    return fail(subtuple['key'], error_code, tuple_type)
+                prepareTuple(subtuple, tuple_type, model_type)
 
 
 @app.task(bind=True, ignore_result=True)
@@ -308,13 +315,19 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
     else:
         # Invoke ledger to log success
         if tuple_type == 'traintuple':
-            invoke_args = f'{{"Args":["logSuccessTrain","{subtuple["key"]}", "{res["end_model_file_hash"]}, {res["end_model_file"]}","{res["global_perf"]}","Train - {res["job_task_log"]}; "]}}'
-        elif tuple_type == 'testtuple':
-            invoke_args = f'{{"Args":["logSuccessTest","{subtuple["key"]}","{res["global_perf"]}","Test - {res["job_task_log"]}; "]}}'
+            invoke_fcn = 'logSuccessTrain'
+            invoke_args = [f'{subtuple["key"]}',
+                           f'{res["end_model_file_hash"]}, {res["end_model_file"]}',
+                           f'{res["global_perf"]}',
+                           f'Train - {res["job_task_log"]};']
 
-        data, st = invokeLedger({
-            'args': invoke_args
-        }, sync=True)
+        elif tuple_type == 'testtuple':
+            invoke_fcn = 'logSuccessTest'
+            invoke_args = [f'{subtuple["key"]}',
+                           f'{res["global_perf"]}',
+                           f'Test - {res["job_task_log"]};']
+
+        data, st = invokeLedger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             logging.error('Failed to invoke ledger on logSuccess')

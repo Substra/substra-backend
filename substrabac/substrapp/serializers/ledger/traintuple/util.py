@@ -5,7 +5,4 @@ from substrapp.utils import invokeLedger
 
 
 def createLedgerTraintuple(args, sync=False):
-    options = {
-        'args': '{"Args":["createTraintuple", ' + args + ']}'
-    }
-    return invokeLedger(options, sync)
+    return invokeLedger(fcn='createTraintuple', args=args, cc_pattern='traintuple-creation', sync=sync)

@@ -27,7 +27,7 @@ def debug_task(self):
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks import prepareTrainingTask, prepareTestingTask
 
-    period = 10
+    period = 3 * 3600
     sender.add_periodic_task(period, prepareTrainingTask.s(), queue='scheduler',
                              name='query Traintuples to prepare train task on todo traintuples')
     sender.add_periodic_task(period, prepareTestingTask.s(), queue='scheduler',
