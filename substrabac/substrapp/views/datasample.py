@@ -310,7 +310,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # validation
         try:
             data_manager_keys = data.getlist('data_manager_keys', [])
-        except:
+        except Exception:
             raise Exception('Please pass a valid data_manager_keys key param')
         else:
             data_manager_keys = ','.join(data_manager_keys)
@@ -319,7 +319,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         try:
             data_sample_keys = data.getlist('data_sample_keys', [])
-        except:
+        except Exception:
             raise Exception('Please pass a valid data_sample_keys key param')
         else:
             data_sample_keys = ','.join(data_sample_keys)
