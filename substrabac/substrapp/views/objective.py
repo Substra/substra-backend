@@ -287,9 +287,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         # can modify result by interrogating `request.version`
 
-        data, st = queryLedger({
-            'args': '{"Args":["queryObjectives"]}'
-        })
+        data, st = queryLedger(fcn='queryObjectives', args=[])
 
         data = [] if data is None else data
         objectives = [data]
@@ -298,7 +296,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response(objectives, status=st)
 
         dataManagerData = None
-        algoData = None
         modelData = None
 
         # parse filters
@@ -330,9 +327,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 elif k == 'dataset':  # select objective used by these datamanagers
                     if not dataManagerData:
                         # TODO find a way to put this call in cache
-                        dataManagerData, st = queryLedger({
-                            'args': '{"Args":["queryDataManagers"]}'
-                        })
+                        dataManagerData, st = queryLedger(fcn='queryDataManagers', args=[])
                         if st != status.HTTP_200_OK:
                             return Response(dataManagerData, status=st)
                         if dataManagerData is None:
@@ -348,9 +343,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 elif k == 'model':  # select objectives used by outModel hash
                     if not modelData:
                         # TODO find a way to put this call in cache
-                        modelData, st = queryLedger({
-                            'args': '{"Args":["queryTraintuples"]}'
-                        })
+                        modelData, st = queryLedger(fcn='queryTraintuples', args=[])
                         if st != status.HTTP_200_OK:
                             return Response(modelData, status=st)
                         if modelData is None:

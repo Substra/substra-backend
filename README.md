@@ -154,14 +154,15 @@ DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l i
 
 ## Launch the servers
 
-Go in the `substrabac` folder and run the server locally:
+Go in the `substrabac` folder and run the server locally:  
+:warning: <p style="color: red">Be very careful, --settings is different here, `events` is needed.</p>
  ```
- SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.dev
- SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.dev
+ SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.events.dev
+ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.events.dev
  ```
 
 
-## Test with unit and functionnal tests
+## Test with unit and functional tests
 
 ```
     DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test

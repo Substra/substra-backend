@@ -31,16 +31,27 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         protocol = 'https://' if request.is_secure() else 'http://'
         host = '' if request is None else request.get_host()
 
-        args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {
-            'name': name,
-            'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
-            'metricsName': metrics_name,
-            'metricsHash': get_hash(instance.metrics),
-            'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
-            'testDataSample': f'{test_data_manager_key}:{",".join([x for x in test_data_sample_keys])}',
-            'permissions': permissions
-        }
+        # args = '"%(name)s", "%(descriptionHash)s", "%(descriptionStorageAddress)s", "%(metricsName)s", "%(metricsHash)s", "%(metricsStorageAddress)s", "%(testDataSample)s", "%(permissions)s"' % {
+        #     'name': name,
+        #     'descriptionHash': get_hash(instance.description),
+        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
+        #     'metricsName': metrics_name,
+        #     'metricsHash': get_hash(instance.metrics),
+        #     'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
+        #     'testDataSample': f'{test_data_manager_key}:{",".join([x for x in test_data_sample_keys])}',
+        #     'permissions': permissions
+        # }
+
+        args = [
+            name,
+            get_hash(instance.description),
+            protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),
+            metrics_name,
+            get_hash(instance.metrics),
+            protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
+            f'{test_data_manager_key}:{",".join([x for x in test_data_sample_keys])}',
+            permissions
+        ]
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerObjective(args, instance.pkhash, sync=True)

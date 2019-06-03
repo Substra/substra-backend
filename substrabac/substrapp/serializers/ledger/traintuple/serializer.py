@@ -11,6 +11,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False)
+    rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     FLtask_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
@@ -30,16 +31,27 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         in_models_keys = validated_data.get('in_models_keys')
         tag = validated_data.get('tag', '')
 
-        args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
-            'algoKey': algo_key,
-            'associatedObjective': objective_key,
-            'inModels': ','.join(in_models_keys),
-            'dataManagerKey': data_manager_key,
-            'dataSampleKeys': ','.join(train_data_sample_keys),
-            'FLtask': FLtask_key,
-            'rank': rank,
-            'tag': tag
-        }
+        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
+        #     'algoKey': algo_key,
+        #     'associatedObjective': objective_key,
+        #     'inModels': ','.join(in_models_keys),
+        #     'dataManagerKey': data_manager_key,
+        #     'dataSampleKeys': ','.join(train_data_sample_keys),
+        #     'FLtask': FLtask_key,
+        #     'rank': rank,
+        #     'tag': tag
+        # }
+
+        args = [
+            algo_key,
+            objective_key,
+            ','.join([x for x in in_models_keys]),
+            data_manager_key,
+            ','.join([x for x in train_data_sample_keys]),
+            FLtask_key,
+            str(rank),
+            tag,
+        ]
 
         return args
 

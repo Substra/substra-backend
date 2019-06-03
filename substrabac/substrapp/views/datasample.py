@@ -331,8 +331,15 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            args = f'"{data_sample_keys}", "{data_manager_keys}"'
+            # args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
+            #     'hashes': ','.join(data_sample_keys),
+            #     'dataManagerKeys': ','.join(data_manager_keys),
+            # }
 
+            args = [
+                ','.join(data_sample_keys),
+                ','.join(data_manager_keys)
+            ]
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
                 data, st = updateLedgerDataSample(args, sync=True)
 

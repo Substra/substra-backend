@@ -7,10 +7,7 @@ from substrapp.utils import invokeLedger
 
 def createLedgerAlgo(args, pkhash, sync=False):
 
-    options = {
-        'args': '{"Args":["registerAlgo", ' + args + ']}'
-    }
-    data, st = invokeLedger(options, sync)
+    data, st = invokeLedger(fcn='registerAlgo', args=args, sync=sync)
 
     #  if not created on ledger, delete from local db, else pass to validated true
     try:

@@ -6,10 +6,7 @@ from substrapp.utils import invokeLedger
 
 
 def createLedgerDataSample(args, pkhashes, sync=False):
-    options = {
-        'args': '{"Args":["registerDataSample", ' + args + ']}'
-    }
-    data, st = invokeLedger(options, sync)
+    data, st = invokeLedger(fcn='registerDataSample', args=args, sync=sync)
 
     #  if not created on ledger, delete from local db, else pass to validated true
     try:
@@ -32,9 +29,5 @@ def createLedgerDataSample(args, pkhashes, sync=False):
 
 
 def updateLedgerDataSample(args, sync=False):
-    options = {
-        'args': '{"Args":["updateDataSample", ' + args + ']}'
-    }
-    data, st = invokeLedger(options, sync)
-
+    data, st = invokeLedger(fcn='updateDataSample', args=args, sync=sync)
     return data, st
