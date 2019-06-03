@@ -4,8 +4,8 @@ source =
     ./substrapp/
 
 omit =
-    ./substrapp/apps.py
-    ./substrapp/serializers/ledger/*
+    #./substrapp/serializers/ledger/*
+    ./substrapp/tests/generate_assets.py
 
 [report]
 # Regexes for lines to exclude from consideration
@@ -17,19 +17,9 @@ exclude_lines =
     def __repr__
     if self\.debug
 
-    # Don't complain if tests don't hit defensive assertion code:
-    # raise
-
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
-
-    # Don't complain if exception code isn't run:
-    logging
-    # except:
-    # except Exception
-    # except FileNotFoundError
-    EXCEPTIONS_MAP = dict()
 
     # Don't complain if no gpu during test
     if gpu_set
@@ -38,10 +28,5 @@ exclude_lines =
     if 'environment' in job_args
 
     # Ignore functions
-    # def queryLedger
-    # def invokeLedger
-    # def getObjectFromLedger
     def prepareTrainingTask
     def prepareTestingTask
-    # class CustomFileResponse
-    # class ManageFileMixin
