@@ -32,13 +32,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 # APITestCase
 class ViewTests(APITestCase):
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_data_sample_path_view(self):
         self.assertEqual('tutu', path_leaf('/toto/tata/tutu'))
         self.assertEqual('toto', path_leaf('/toto/'))
@@ -98,10 +91,7 @@ class ObjectiveViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -339,10 +329,7 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -515,10 +502,7 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -660,10 +644,7 @@ class DataManagerViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -823,10 +804,7 @@ class TraintupleViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -896,10 +874,7 @@ class TesttupleViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -969,10 +944,7 @@ class TaskViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 
@@ -1026,10 +998,7 @@ class DataViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
         self.logger.setLevel(self.previous_level)
 

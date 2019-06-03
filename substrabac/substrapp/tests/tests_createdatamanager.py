@@ -26,10 +26,7 @@ class CreateDataManagerTestCase(TestCase):
             os.makedirs(MEDIA_ROOT)
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_createdatamanager(self):
 

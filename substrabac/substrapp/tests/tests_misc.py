@@ -19,12 +19,6 @@ class MockDevice():
 class MiscTests(TestCase):
     """Misc tests"""
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_cpu_sets(self):
         cpu_count = 16
         for concurrency in range(1, cpu_count + 1, 1):

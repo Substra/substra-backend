@@ -46,10 +46,7 @@ class TasksTests(APITestCase):
         self.ResourcesManager = ResourcesManager()
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_create_directory(self):
         directory = './test/'
@@ -121,13 +118,6 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
             mget_hash.return_value = subtuple_key
             put_algo(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'), algo_content)
-
-        def tree_printer(root):
-            for root, dirs, files in os.walk(root):
-                for d in dirs:
-                    print(os.path.join(root, d))
-                for f in files:
-                    print(os.path.join(root, f))
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/algo.py')))
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/Dockerfile')))

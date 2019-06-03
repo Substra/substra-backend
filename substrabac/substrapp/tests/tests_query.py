@@ -50,10 +50,7 @@ class ObjectiveQueryTests(APITestCase):
             '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389']
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def add_default_data_manager(self):
         DataManager.objects.create(name='slide opener',
@@ -280,10 +277,7 @@ class DataManagerQueryTests(APITestCase):
             self.data_opener_filename = get_sample_datamanager()
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_add_datamanager_sync_ok(self):
         url = reverse('substrapp:data_manager-list')
@@ -402,10 +396,7 @@ class DataSampleQueryTests(APITestCase):
             self.data_opener_filename2 = get_sample_datamanager2()
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_add_data_sample_sync_ok(self):
 
@@ -912,10 +903,7 @@ class AlgoQueryTests(APITestCase):
             self.data_opener_filename = get_sample_datamanager()
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_add_algo_sync_ok(self):
 
@@ -1109,10 +1097,7 @@ class TraintupleQueryTests(APITestCase):
         self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_add_traintuple_ok(self):
         # Add associated objective

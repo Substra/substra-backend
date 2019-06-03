@@ -50,10 +50,7 @@ class BulkCreateDataSampleTestCase(TestCase):
         self.data_sample_file, self.data_sample_file_filename = get_sample_zip_data_sample()
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_bulkcreatedatasample(self):
 

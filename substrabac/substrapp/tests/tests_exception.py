@@ -7,12 +7,6 @@ from substrapp.tasks.exception_handler import compute_error_code, get_exception_
 
 class ExceptionTests(TestCase):
 
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
     def test_exception_map(self):
 
         # Build the exception map

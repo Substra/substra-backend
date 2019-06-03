@@ -19,10 +19,7 @@ class ModelTests(TestCase):
     """Model tests"""
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_create_objective(self):
         description, _, metrics, _ = get_sample_objective()
