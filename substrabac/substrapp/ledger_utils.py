@@ -12,8 +12,8 @@ if LEDGER:
     asyncio.set_event_loop(LEDGER['hfc']['loop'])
 
 
-# careful, passing invoke parameters to queryLedger will NOT fail
-def queryLedger(fcn, args=None):
+# careful, passing invoke parameters to query_ledger will NOT fail
+def query_ledger(fcn, args=None):
 
     if args is None:
         args = []
@@ -81,12 +81,15 @@ def queryLedger(fcn, args=None):
             st = status.HTTP_409_CONFLICT
             data['pkhash'] = pkhash
 
+    if 'permissions' in data and data['permissions'] != 'all':
+        raise Exception('Not Allowed')
+
     return data, st
 
 
-def getObjectFromLedger(pk, query):
+def get_object_from_ledger(pk, query):
     # get instance from remote node
-    data, st = queryLedger(fcn=query, args=[f'{pk}'])
+    data, st = query_ledger(fcn=query, args=[f'{pk}'])
 
     if st == status.HTTP_404_NOT_FOUND:
         raise Http404('Not found')
@@ -94,13 +97,10 @@ def getObjectFromLedger(pk, query):
     if st != status.HTTP_200_OK:
         raise JsonException(data)
 
-    if 'permissions' not in data or data['permissions'] == 'all':
-        return data
-    else:
-        raise Exception('Not Allowed')
+    return data
 
 
-def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
+def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
 
     if args is None:
         args = []

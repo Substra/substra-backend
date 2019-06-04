@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.ledger_utils import queryLedger, invokeLedger
+from substrapp.ledger_utils import query_ledger, invoke_ledger
 from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
@@ -181,9 +181,10 @@ def remove_subtuple_materials(subtuple_directory):
 def log_fail_subtuple(key, err_msg, tuple_type):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
-    data, st = invokeLedger(fcn=fail_type,
-                            args=[f'{key}', f'{err_msg}'],
-                            sync=True)
+    data, st = invoke_ledger(
+        fcn=fail_type,
+        args=[f'{key}', f'{err_msg}'],
+        sync=True)
 
     if st != status.HTTP_201_CREATED:
         logging.error(data, exc_info=True)
@@ -224,9 +225,10 @@ def prepareTuple(subtuple, tuple_type, model_type):
         elif tuple_type == 'testtuple':
             start_type = 'logStartTest'
 
-        data, st = invokeLedger(fcn=start_type,
-                                args=[f'{subtuple["key"]}'],
-                                sync=True)
+        data, st = invoke_ledger(
+            fcn=start_type,
+            args=[f'{subtuple["key"]}'],
+            sync=True)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             logging.error(
@@ -249,9 +251,9 @@ def prepareTask(tuple_type, model_type):
         logging.error(e, exc_info=True)
     else:
 
-        subtuples, st = queryLedger(fcn="queryFilter",
-                                    args=[f'{tuple_type}~worker~status',
-                                          f'{data_owner},todo'])
+        subtuples, st = query_ledger(
+            fcn="queryFilter",
+            args=[f'{tuple_type}~worker~status', f'{data_owner},todo'])
 
         if st == status.HTTP_200_OK and subtuples is not None:
             for subtuple in subtuples:
@@ -313,7 +315,7 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
                            f'{res["global_perf"]}',
                            f'Test - {res["job_task_log"]};']
 
-        data, st = invokeLedger(fcn=invoke_fcn, args=invoke_args, sync=True)
+        data, st = invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
             logging.error('Failed to invoke ledger on logSuccess')

@@ -6,7 +6,6 @@ import shutil
 import tempfile
 import uuid
 
-import requests
 from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
@@ -23,8 +22,8 @@ from substrabac.celery import app
 from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
-from substrapp.ledger_utils import queryLedger, getObjectFromLedger
-from substrapp.utils import get_hash, get_computed_hash, JsonException
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger
+from substrapp.utils import get_hash, get_computed_hash, JsonException, get_from_node
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk
 from substrapp.views.filters_utils import filter_list
@@ -128,17 +127,12 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # get description from remote node
         url = objective['description']['storageAddress']
-        try:
-            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-            raise Exception(f'Failed to fetch {url}')
-        else:
-            if r.status_code != status.HTTP_200_OK:
-                raise Exception(f'end to end node report {r.text}')
+
+        response = get_from_node(url)
 
         # verify description received has a good pkhash
         try:
-            computed_hash = self.compute_hash(r.content)
+            computed_hash = self.compute_hash(response.content)
         except Exception:
             raise Exception('Failed to fetch description file')
         else:
@@ -149,7 +143,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
-        tmp_description.write(r.content)
+        tmp_description.write(response.content)
         instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
         instance.description.save('description.md', tmp_description)
 
@@ -166,7 +160,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # get instance from remote node
         try:
-            data = getObjectFromLedger(pk, self.ledger_query_call)
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
@@ -194,7 +188,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
 
-        data, st = queryLedger(fcn='queryObjectives', args=[])
+        data, st = query_ledger(fcn='queryObjectives', args=[])
         data = data if data else []
 
         objectives_list = [data]
@@ -249,7 +243,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
     if not test_data_manager_key:
         raise Exception('Cannot do a objective dryrun without a data manager key.')
 
-    datamanager = getObjectFromLedger(test_data_manager_key, 'queryDataManager')
+    datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
     opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
     with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as file:
         file.write(opener_content)

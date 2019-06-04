@@ -13,6 +13,7 @@ import zipfile
 from checksumdir import dirhash
 
 from django.conf import settings
+from rest_framework import status
 
 
 class JsonException(Exception):
@@ -80,18 +81,11 @@ def get_computed_hash(url, key=None):
     if settings.DEBUG:
         kwargs.update({'verify': False})
 
-    try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
-    except Exception:
-        raise Exception(f'Failed to check hash due to failed file fetching {url}')
-    else:
-        if r.status_code != 200:
-            raise Exception(
-                f'Url: {url} to fetch file returned status code: {r.status_code}')
+    response = get_from_node(url, **kwargs)
 
-        computedHash = compute_hash(r.content, key)
+    computedHash = compute_hash(response.content, key)
 
-        return r.content, computedHash
+    return response.content, computedHash
 
 
 def get_remote_file(object, key=None):
@@ -135,3 +129,21 @@ def uncompress_content(archive_content, to_directory):
             tar.close()
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
+
+
+class NodeError(Exception):
+    pass
+
+
+def get_from_node(url, **kwargs):
+
+    try:
+        response = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        raise NodeError(f'Failed to fetch {url}') from e
+    else:
+        if response.status_code != status.HTTP_200_OK:
+            logging.error(response.text)
+            raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+
+    return response

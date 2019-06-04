@@ -1,7 +1,6 @@
 import ast
 import tempfile
 import logging
-import requests
 from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
@@ -16,8 +15,8 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import get_hash, JsonException
-from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.utils import get_hash, JsonException, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger
 from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
                                    validate_pk)
 from substrapp.views.filters_utils import filter_list
@@ -120,16 +119,11 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         if not instance.data_opener:
             url = datamanager['opener']['storageAddress']
-            try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-            except Exception as e:
-                raise Exception(f'Failed to fetch {url}') from e
 
-            if r.status_code != 200:
-                raise Exception(f'end to end node report {r.text}')
+            response = get_from_node(url)
 
             try:
-                computed_hash = self.compute_hash(r.content)
+                computed_hash = self.compute_hash(response.content)
             except Exception as e:
                 raise Exception('Failed to fetch opener file') from e
 
@@ -139,7 +133,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 raise Exception(msg)
 
             f = tempfile.TemporaryFile()
-            f.write(r.content)
+            f.write(response.content)
 
             # save/update data_opener in local db for later use
             instance.data_opener.save('opener.py', f)
@@ -147,15 +141,11 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         # do the same for description
         if not instance.description:
             url = datamanager['description']['storageAddress']
-            try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-            except Exception as e:
-                raise Exception(f'Failed to fetch {url}') from e
-            if r.status_code != status.HTTP_200_OK:
-                raise Exception(f'end to end node report {r.text}')
+
+            response = get_from_node(url)
 
             try:
-                computed_hash = self.compute_hash(r.content)
+                computed_hash = self.compute_hash(response.content)
             except Exception as e:
                 raise Exception('Failed to fetch description file') from e
 
@@ -165,7 +155,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 raise Exception(msg)
 
             f = tempfile.TemporaryFile()
-            f.write(r.content)
+            f.write(response.content)
 
             # save/update description in local db for later use
             instance.description.save('description.md', f)
@@ -183,7 +173,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         # get instance from remote node
         try:
-            data = getObjectFromLedger(pk, 'queryDataset')
+            data = get_object_from_ledger(pk, 'queryDataset')
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
@@ -212,7 +202,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
 
-        data, st = queryLedger(fcn='queryDataManagers', args=[])
+        data, st = query_ledger(fcn='queryDataManagers', args=[])
         data = data if data else []
 
         data_managers_list = [data]

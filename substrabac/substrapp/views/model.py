@@ -1,7 +1,6 @@
 import os
 import tempfile
 import logging
-import requests
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -11,8 +10,8 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
-from substrapp.utils import JsonException
-from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.utils import JsonException, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger
 from substrapp.views.utils import ComputeHashMixin, CustomFileResponse, validate_pk
 from substrapp.views.filters_utils import filter_list
 
@@ -32,17 +31,12 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         # get model from remote node
         url = traintuple['outModel']['storageAddress']
-        try:
-            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-        except Exception:
-            raise Exception(f'Failed to fetch {url}')
-        else:
-            if r.status_code != 200:
-                raise Exception(f'end to end node report {r.text}')
+
+        response = get_from_node(url)
 
         # verify model received has a good pkhash
         try:
-            computed_hash = self.compute_hash(r.content, traintuple['key'])
+            computed_hash = self.compute_hash(response.content, traintuple['key'])
         except Exception:
             raise Exception('Failed to fetch outModel file')
         else:
@@ -53,7 +47,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
-        tmp_model.write(r.content)
+        tmp_model.write(response.content)
         instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
         instance.file.save('model', tmp_model)
 
@@ -70,7 +64,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         # get instance from remote node
         try:
-            data = getObjectFromLedger(pk, self.ledger_query_call)
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
@@ -99,7 +93,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
 
-        data, st = queryLedger(fcn='queryModels', args=[])
+        data, st = query_ledger(fcn='queryModels', args=[])
         data = data if data else []
 
         models_list = [data]
@@ -130,5 +124,5 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     def details(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
-        data, st = queryLedger(fcn='queryModelDetails', args=[f'{pk}'])
+        data, st = query_ledger(fcn='queryModelDetails', args=[f'{pk}'])
         return Response(data, st)

@@ -3,12 +3,12 @@ from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp.models import DataSample
-from substrapp.ledger_utils import invokeLedger
+from substrapp.ledger_utils import invoke_ledger
 
 
 def createLedgerDataSample(args, pkhashes, sync=False):
 
-    data, st = invokeLedger(fcn='registerDataSample', args=args, sync=sync)
+    data, st = invoke_ledger(fcn='registerDataSample', args=args, sync=sync)
 
     try:
         instances = DataSample.objects.filter(pk__in=pkhashes)
@@ -28,4 +28,4 @@ def createLedgerDataSample(args, pkhashes, sync=False):
 
 
 def updateLedgerDataSample(args, sync=False):
-    return invokeLedger(fcn='updateDataSample', args=args, sync=sync)
+    return invoke_ledger(fcn='updateDataSample', args=args, sync=sync)

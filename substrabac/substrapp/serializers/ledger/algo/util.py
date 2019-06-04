@@ -3,12 +3,12 @@ from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp.models import Algo
-from substrapp.ledger_utils import invokeLedger
+from substrapp.ledger_utils import invoke_ledger
 
 
 def createLedgerAlgo(args, pkhash, sync=False):
 
-    data, st = invokeLedger(fcn='registerAlgo', args=args, sync=sync)
+    data, st = invoke_ledger(fcn='registerAlgo', args=args, sync=sync)
 
     try:
         instance = Algo.objects.get(pk=pkhash)

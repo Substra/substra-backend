@@ -3,7 +3,7 @@ from urllib.parse import unquote
 from rest_framework import status
 from rest_framework.response import Response
 
-from substrapp.ledger_utils import queryLedger
+from substrapp.ledger_utils import query_ledger
 
 
 FILTER_QUERIES = {
@@ -96,7 +96,7 @@ def filter_list(object_type, data, query_params):
                 # Filter by other asset
 
                 # Get other asset list
-                filtering_data, st = queryLedger(fcn=FILTER_QUERIES[filter_key], args=[])
+                filtering_data, st = query_ledger(fcn=FILTER_QUERIES[filter_key], args=[])
                 if st != status.HTTP_200_OK:
                     return Response(filtering_data, status=st)
                 filtering_data = filtering_data if filtering_data else []

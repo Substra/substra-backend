@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTestTupleSerializer
-from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger
 from substrapp.utils import JsonException
 from substrapp.views.utils import validate_pk
 
@@ -34,9 +34,9 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get testtuple pkhash to handle 408 timeout in invokeLedger
+        # Get testtuple pkhash to handle 408 timeout in invoke_ledger
         args = serializer.get_args(serializer.validated_data)
-        data, st = queryLedger(fcn='createTesttuple', args=args)
+        data, st = query_ledger(fcn='createTesttuple', args=args)
         if st == status.HTTP_409_CONFLICT:
             return Response({'message': data['message'],
                              'pkhash': data['pkhash']}, status=st)
@@ -53,7 +53,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        data, st = queryLedger(fcn='queryTesttuples', args=[])
+        data, st = query_ledger(fcn='queryTesttuples', args=[])
         data = data if data else []
         return Response(data, status=st)
 
@@ -68,7 +68,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         # get instance from remote node
         try:
-            data = getObjectFromLedger(pk, self.ledger_query_call)
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
