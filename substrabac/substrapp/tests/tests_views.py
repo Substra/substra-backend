@@ -145,7 +145,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
@@ -158,7 +158,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
@@ -371,10 +371,10 @@ class AlgoViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 1)
 
-    def test_algo_list_filter_datamanager(self):
+    def test_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
@@ -382,12 +382,12 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), len(algo))
+            self.assertIn('Malformed search filters', r['message'])
 
-    def test_algo_list_filter_objective(self):
+    def test_algo_list_filter_objective_fail(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
@@ -395,12 +395,12 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 3)
+            self.assertIn('Malformed search filters', r['message'])
 
     def test_algo_list_filter_model(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
@@ -551,7 +551,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_filter_datamanager(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
@@ -564,7 +564,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
@@ -577,7 +577,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(algo, status.HTTP_200_OK)]
 
@@ -695,7 +695,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
@@ -708,7 +708,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_filter_model(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
             mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
             mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
             pkhash = model[0]['traintuple']['outModel']['hash']

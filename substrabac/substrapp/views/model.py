@@ -14,7 +14,7 @@ from substrapp.serializers import ModelSerializer
 from substrapp.utils import JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
 from substrapp.views.utils import ComputeHashMixin, CustomFileResponse, validate_pk
-from substrapp.views.filters import filter_list
+from substrapp.views.filters_utils import filter_list
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
