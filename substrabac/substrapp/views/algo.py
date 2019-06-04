@@ -86,7 +86,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except Exception as e:
             raise Exception(f'Failed to fetch {url}') from e
 
-        if r.status_code != 200:
+        if r.status_code != status.HTTP_200_OK:
             logging.error(f'Request failed: {r.text}')
             raise Exception(f'Failed to fetch {url}: invalid status code {r.status_code}')
 
