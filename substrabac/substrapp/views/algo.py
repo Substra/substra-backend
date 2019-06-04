@@ -140,11 +140,12 @@ class AlgoViewSet(mixins.CreateModelMixin,
                 logging.exception(e)
                 return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-        # do not give access to local files address
-        serializer = self.get_serializer(
-            instance,
-            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+        # For security reason, do not give access to local file address
+        # Restrain data to some fields
+        # TODO: do we need to send creation date and/or last modified date ?
+        serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
+
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
