@@ -144,9 +144,10 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK),
-                                        (datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -156,9 +157,10 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK),
-                                        (traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -371,9 +373,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_datamanager(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
-                                        (datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -383,9 +386,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_objective(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
-                                        (objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -395,9 +399,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_model(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK),
-                                        (traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -545,9 +550,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_datamanager(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
-                                        (datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253AISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -557,9 +563,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
-                                        (objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -569,9 +576,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK),
-                                        (algo, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(algo, status.HTTP_200_OK)]
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
@@ -686,9 +694,10 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
-                                        (objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -698,9 +707,10 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_model(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK),
-                                        (traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.views.filters.queryLedger') as mqueryLedger2:
+            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)

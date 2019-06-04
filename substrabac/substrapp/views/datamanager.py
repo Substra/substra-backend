@@ -1,6 +1,6 @@
 import ast
 import tempfile
-
+import logging
 import requests
 from django.conf import settings
 from django.http import Http404
@@ -18,7 +18,8 @@ from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManage
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import get_hash, JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
-from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, find_primary_key_error
+from substrapp.views.utils import ManageFileMixin, ComputeHashMixin, find_primary_key_error
+from substrapp.views.filters import filter_list
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -231,71 +232,28 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
 
         data, st = queryLedger(fcn='queryDataManagers', args=[])
-        objectiveData = None
-        modelData = None
+        data = data if data else []
 
-        # init list to return
-        if data is None:
-            data = []
         data_managers_list = [data]
 
-        if st == 200:
+        if st == status.HTTP_200_OK:
 
             # parse filters
             query_params = request.query_params.get('search', None)
 
             if query_params is not None:
                 try:
-                    filters = get_filters(query_params)
-                except Exception:
+                    data_managers_list = filter_list(
+                        object_type='dataset',
+                        data=data,
+                        query_params=query_params)
+                except Exception as e:
+                    logging.exception(e)
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # filtering, reinit l to empty array
-                    data_managers_list = []
-                    for idx, filter in enumerate(filters):
-                        # init each list iteration to data
-                        data_managers_list.append(data)
-                        for k, subfilters in filter.items():
-                            if k == 'dataset':  # filter by own key
-                                for key, val in subfilters.items():
-                                    data_managers_list[idx] = [x for x in data_managers_list[idx] if x[key] in val]
-                            elif k == 'objective':  # select objective used by these datamanagers
-                                if not objectiveData:
-                                    # TODO find a way to put this call in cache
-                                    objectiveData, st = queryLedger(fcn='queryObjectives', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(objectiveData, status=st)
-                                    if objectiveData is None:
-                                        objectiveData = []
-
-                                for key, val in subfilters.items():
-                                    if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
-                                    else:
-                                        filteredData = [x for x in objectiveData if x[key] in val]
-                                    objectiveKeys = [x['key'] for x in filteredData]
-                                    data_managers_list[idx] = [x for x in data_managers_list[idx]
-                                                               if x['objectiveKey'] in objectiveKeys]
-                            elif k == 'model':  # select objectives used by outModel hash
-                                if not modelData:
-                                    # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger(fcn='queryTraintuples', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(modelData, status=st)
-                                    if modelData is None:
-                                        modelData = []
-
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData
-                                                    if x['outModel'] is not None and x['outModel'][key] in val]
-                                    objectiveKeys = [x['objective']['hash'] for x in filteredData]
-                                    data_managers_list[idx] = [x for x in data_managers_list[idx]
-                                                               if x['objectiveKey'] in objectiveKeys]
 
         return Response(data_managers_list, status=st)
 
