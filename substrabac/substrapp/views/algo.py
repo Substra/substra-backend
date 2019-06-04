@@ -14,7 +14,7 @@ from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash, JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error
-from substrapp.views.filters import filter_list
+from substrapp.views.filters_utils import filter_list
 
 
 class AlgoViewSet(mixins.CreateModelMixin,

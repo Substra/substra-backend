@@ -27,8 +27,7 @@ from substrapp.ledger_utils import queryLedger, getObjectFromLedger
 from substrapp.utils import get_hash, get_computed_hash, JsonException
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error
-
-from substrapp.views.filters import filter_list
+from substrapp.views.filters_utils import filter_list
 
 
 @app.task(bind=True, ignore_result=False)

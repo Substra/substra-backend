@@ -19,7 +19,7 @@ from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManag
 from substrapp.utils import get_hash, JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
 from substrapp.views.utils import ManageFileMixin, ComputeHashMixin, find_primary_key_error
-from substrapp.views.filters import filter_list
+from substrapp.views.filters_utils import filter_list
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,

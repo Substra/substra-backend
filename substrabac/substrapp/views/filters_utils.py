@@ -34,7 +34,6 @@ def get_filters(query_params):
 
         for subfilter in subfilters:
             el = subfilter.split(':')
-
             # get parent
             parent = el[0]
             subparent = el[1]
