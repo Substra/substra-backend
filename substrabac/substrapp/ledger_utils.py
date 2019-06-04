@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import json
 
 from rest_framework import status
@@ -171,3 +172,65 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
             data['pkhash'] = pkhash
 
     return data, st
+
+
+def log_fail_tuple(tuple_type, tuple_key, err_msg):
+    err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
+
+    fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
+
+    data, st = invoke_ledger(
+        fcn=fail_type,
+        args=[f'{tuple_key}', f'{err_msg}'],
+        sync=True)
+
+    return data, st
+
+
+def log_success_tuple(tuple_type, tuple_key, res):
+    if tuple_type == 'traintuple':
+        invoke_fcn = 'logSuccessTrain'
+        # TODO: will be replace by a dict
+        invoke_args = [f'{tuple_key}',
+                       f'{res["end_model_file_hash"]}, {res["end_model_file"]}',
+                       f'{res["global_perf"]}',
+                       f'Train - {res["job_task_log"]};']
+
+    elif tuple_type == 'testtuple':
+        invoke_fcn = 'logSuccessTest'
+        # TODO: will be replace by a dict
+        invoke_args = [f'{tuple_key}',
+                       f'{res["global_perf"]}',
+                       f'Test - {res["job_task_log"]};']
+    else:
+        raise NotImplementedError()
+
+    data, st = invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+
+    return data, st
+
+
+def log_start_tuple(tuple_type, tuple_key):
+    start_type = None
+
+    if tuple_type == 'traintuple':
+        start_type = 'logStartTrain'
+    elif tuple_type == 'testtuple':
+        start_type = 'logStartTest'
+    else:
+        raise NotImplementedError()
+
+    data, st = invoke_ledger(
+        fcn=start_type,
+        args=[f'{tuple_key}'],
+        sync=True)
+
+    return data, st
+
+
+def query_tuples(tuple_type, data_owner):
+    tuples, st = query_ledger(
+        fcn="queryFilter",
+        args=[f'{tuple_type}~worker~status', f'{data_owner},todo'])
+
+    return tuples, st
