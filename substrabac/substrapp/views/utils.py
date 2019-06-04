@@ -88,3 +88,18 @@ def validate_pk(pk):
         int(pk, 16)  # test if pk is correct (hexadecimal)
     except ValueError:
         raise Exception(f'Wrong pk {pk}')
+
+
+class LedgerException(Exception):
+    def __init__(self, data, st):
+        self.data = data
+        self.st = st
+        super(LedgerException).__init__()
+
+
+class ValidationException(Exception):
+    def __init__(self, data, pkhash, st):
+        self.data = data
+        self.pkhash = pkhash
+        self.st = st
+        super(ValidationException).__init__()

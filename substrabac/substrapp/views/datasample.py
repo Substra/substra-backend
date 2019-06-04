@@ -24,111 +24,13 @@ from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import uncompress_path, get_dir_hash
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import find_primary_key_error
+from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException
 
 logger = logging.getLogger('django.request')
 
 
-def path_leaf(path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
-
-
-class LedgerException(Exception):
-    def __init__(self, data, st):
-        self.data = data
-        self.st = st
-        super(LedgerException).__init__()
-
-
-class ValidationException(Exception):
-    def __init__(self, data, pkhash, st):
-        self.data = data
-        self.pkhash = pkhash
-        self.st = st
-        super(ValidationException).__init__()
-
-
-@app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data, data_manager_keys):
-    from shutil import copy
-    from substrapp.models import DataManager
-
-    client = docker.from_env()
-
-    # Name of the dry-run subtuple (not important)
-    pkhash = data[0]['pkhash']
-    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
-    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
-    data_path = os.path.join(subtuple_directory, 'data')
-    volumes = {}
-
-    try:
-
-        for data_sample in data:
-            # uncompress only for file
-            if 'file' in data_sample:
-                try:
-                    uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
-                except Exception as e:
-                    raise e
-            # for all data paths, we need to create symbolic links inside data_path
-            # and add real path to volume bind docker
-            elif 'path' in data_sample:
-                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
-                volumes.update({data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}})
-
-        for datamanager_key in data_manager_keys:
-            datamanager = DataManager.objects.get(pk=datamanager_key)
-            copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
-
-            # Launch verification
-            opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_data_sample')
-
-            data_docker = 'data_dry_run'  # tag must be lowercase for docker
-            data_docker_name = f'{data_docker}_{dryrun_uuid}'
-
-            volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
-                            opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
-
-            client.images.build(path=data_sample_docker_path,
-                                tag=data_docker,
-                                rm=False)
-
-            job_args = {'image': data_docker,
-                        'name': data_docker_name,
-                        'cpuset_cpus': '0-0',
-                        'mem_limit': '1G',
-                        'command': None,
-                        'volumes': volumes,
-                        'shm_size': '8G',
-                        'labels': ['dryrun'],
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-            client.containers.run(**job_args)
-
-    except ContainerError as e:
-        raise Exception(e.stderr)
-    finally:
-        try:
-            container = client.containers.get(data_docker_name)
-            container.remove()
-        except Exception:
-            logger.error('Could not remove containers')
-        remove_subtuple_materials(subtuple_directory)
-        for data_sample in data:
-            if 'file' in data_sample and os.path.exists(data_sample['file']):
-                os.remove(data_sample['file'])
-
-
 class DataSampleViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
-                        # mixins.UpdateModelMixin,
-                        # mixins.DestroyModelMixin,
-                        # mixins.ListModelMixin,
                         GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
@@ -150,7 +52,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     @staticmethod
     def commit(serializer, ledger_data):
-        instances = serializer.save()  # can raise
+        instances = serializer.save()
         # init ledger serializer
         ledger_data.update({'instances': instances})
         ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
@@ -360,3 +262,87 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 }
                 st = status.HTTP_202_ACCEPTED
                 return Response(data, status=st)
+
+
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
+
+
+@app.task(bind=True, ignore_result=False)
+def compute_dryrun(self, data_samples, data_manager_keys):
+    from shutil import copy
+    from substrapp.models import DataManager
+
+    client = docker.from_env()
+
+    # Name of the dry-run subtuple (not important)
+    pkhash = data_samples[0]['pkhash']
+    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
+    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
+    data_path = os.path.join(subtuple_directory, 'data')
+    volumes = {}
+
+    try:
+        for data_sample in data_samples:
+            # uncompress only for file
+            if 'file' in data_sample:
+                uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
+            # for all data paths, we need to create symbolic links inside data_path
+            # and add real path to volume bind docker
+            elif 'path' in data_sample:
+                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
+                volumes.update({
+                    data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
+                })
+
+        for datamanager_key in data_manager_keys:
+            datamanager = DataManager.objects.get(pk=datamanager_key)
+            copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
+
+            opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_data_sample')
+
+            data_docker = 'data_dry_run'
+            data_docker_name = f'{data_docker}_{dryrun_uuid}'
+
+            volumes.update({
+                data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
+            })
+
+            client.images.build(path=data_sample_docker_path,
+                                tag=data_docker,
+                                rm=False)
+
+            job_args = {
+                'image': data_docker,
+                'name': data_docker_name,
+                'cpuset_cpus': '0-0',
+                'mem_limit': '1G',
+                'command': None,
+                'volumes': volumes,
+                'shm_size': '8G',
+                'labels': ['dryrun'],
+                'detach': False,
+                'auto_remove': False,
+                'remove': False,
+            }
+
+            client.containers.run(**job_args)
+
+    except ContainerError as e:
+        raise Exception(e.stderr)
+
+    finally:
+        try:
+            container = client.containers.get(data_docker_name)
+            container.remove()
+        except Exception:
+            logger.error('Could not remove containers')
+
+        remove_subtuple_materials(subtuple_directory)
+
+        for data_sample in data_samples:
+            if 'file' in data_sample and os.path.exists(data_sample['file']):
+                os.remove(data_sample['file'])
