@@ -1,5 +1,5 @@
 import tempfile
-
+import logging
 import requests
 
 from django.http import Http404
@@ -13,8 +13,8 @@ from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash, JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
-from substrapp.views.utils import (get_filters, ComputeHashMixin, ManageFileMixin,
-                                   find_primary_key_error)
+from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error
+from substrapp.views.filters import filter_list
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -164,54 +164,29 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
-
         data, st = queryLedger(fcn='queryAlgos', args=[])
-        modelData = None
+        data = data if data else []
 
-        # init list to return
-        if data is None:
-            data = []
-        data_samples_list = [data]
+        algos_list = [data]
 
-        if st == 200:
+        if st == status.HTTP_200_OK:
 
             # parse filters
             query_params = request.query_params.get('search', None)
 
             if query_params is not None:
                 try:
-                    filters = get_filters(query_params)
-                except Exception:
+                    algos_list = filter_list(
+                        object_type='algo',
+                        data=data,
+                        query_params=query_params)
+                except Exception as e:
+                    logging.exception(e)
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # filtering, reinit l to empty array
-                    data_samples_list = []
-                    for idx, filter in enumerate(filters):
-                        # init each list iteration to data
-                        data_samples_list.append(data)
-                        for k, subfilters in filter.items():
-                            if k == 'algo':  # filter by own key
-                                for key, val in subfilters.items():
-                                    data_samples_list[idx] = [x for x in data_samples_list[idx] if x[key] in val]
-                            elif k == 'model':  # select objectives used by outModel hash
-                                if not modelData:
-                                    # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger(fcn='queryTraintuples', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(modelData, status=st)
-                                    if modelData is None:
-                                        modelData = []
 
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData
-                                                    if x['outModel'] is not None and x['outModel'][key] in val]
-                                    algoKeys = [x['algo']['hash'] for x in filteredData]
-                                    data_samples_list[idx] = [x for x in data_samples_list[idx] if x['key'] in algoKeys]
-
-        return Response(data_samples_list, status=st)
+        return Response(algos_list, status=st)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):

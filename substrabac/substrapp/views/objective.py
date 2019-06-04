@@ -26,8 +26,9 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
 from substrapp.utils import get_hash, get_computed_hash, JsonException
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import (get_filters, ComputeHashMixin, ManageFileMixin,
-                                   find_primary_key_error)
+from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error
+
+from substrapp.views.filters import filter_list
 
 
 @app.task(bind=True, ignore_result=False)
@@ -265,76 +266,29 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
 
         data, st = queryLedger(fcn='queryObjectives', args=[])
+        data = data if data else []
 
-        data = [] if data is None else data
-        objectives = [data]
+        objectives_list = [data]
 
-        if st != status.HTTP_200_OK:
-            return Response(objectives, status=st)
+        if st == status.HTTP_200_OK:
+            # parse filters
+            query_params = request.query_params.get('search', None)
 
-        dataManagerData = None
-        modelData = None
+            if query_params is not None:
+                try:
+                    objectives_list = filter_list(
+                        object_type='objective',
+                        data=data,
+                        query_params=query_params)
+                except Exception as e:
+                    logging.exception(e)
+                    return Response(
+                        {'message': f'Malformed search filters {query_params}'},
+                        status=status.HTTP_400_BAD_REQUEST)
 
-        # parse filters
-        query_params = request.query_params.get('search', None)
-        if query_params is None:
-            return Response(objectives, status=st)
-
-        try:
-            filters = get_filters(query_params)
-        except Exception:
-            return Response(
-                {'message': f'Malformed search filters {query_params}'},
-                status=status.HTTP_400_BAD_REQUEST)
-
-        # filtering
-        objectives = []
-        for idx, filter in enumerate(filters):
-            # init each list iteration to data
-            objectives.append(data)
-
-            for k, subfilters in filter.items():
-                if k == 'objective':  # filter by own key
-                    for key, val in subfilters.items():
-                        if key == 'metrics':  # specific to nested metrics
-                            objectives[idx] = [x for x in objectives[idx] if x[key]['name'] in val]
-                        else:
-                            objectives[idx] = [x for x in objectives[idx] if x[key] in val]
-
-                elif k == 'dataset':  # select objective used by these datamanagers
-                    if not dataManagerData:
-                        # TODO find a way to put this call in cache
-                        dataManagerData, st = queryLedger(fcn='queryDataManagers', args=[])
-                        if st != status.HTTP_200_OK:
-                            return Response(dataManagerData, status=st)
-                        if dataManagerData is None:
-                            dataManagerData = []
-
-                    for key, val in subfilters.items():
-                        filteredData = [x for x in dataManagerData if x[key] in val]
-                        dataManagerKeys = [x['key'] for x in filteredData]
-                        objectiveKeys = [x['objectiveKey'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys or
-                                           (x['testDataset'] and x['testDataset']['dataManagerKey'] in dataManagerKeys)]
-
-                elif k == 'model':  # select objectives used by outModel hash
-                    if not modelData:
-                        # TODO find a way to put this call in cache
-                        modelData, st = queryLedger(fcn='queryTraintuples', args=[])
-                        if st != status.HTTP_200_OK:
-                            return Response(modelData, status=st)
-                        if modelData is None:
-                            modelData = []
-
-                    for key, val in subfilters.items():
-                        filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
-                        objectiveKeys = [x['objective']['hash'] for x in filteredData]
-                        objectives[idx] = [x for x in objectives[idx] if x['key'] in objectiveKeys]
-
-        return Response(objectives, status=st)
+        return Response(objectives_list, status=st)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

@@ -1,6 +1,6 @@
 import os
 import tempfile
-
+import logging
 import requests
 from django.http import Http404
 from rest_framework import status, mixins
@@ -13,7 +13,8 @@ from substrapp.serializers import ModelSerializer
 
 from substrapp.utils import JsonException
 from substrapp.ledger_utils import queryLedger, getObjectFromLedger
-from substrapp.views.utils import get_filters, ComputeHashMixin, CustomFileResponse
+from substrapp.views.utils import ComputeHashMixin, CustomFileResponse, validate_pk
+from substrapp.views.filters import filter_list
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
@@ -30,193 +31,111 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         if traintuple['outModel'] is None:
             raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
 
+        # Get model from remote node
+        url = traintuple['outModel']['storageAddress']
         try:
-            # get objective description from remote node
-            url = traintuple['outModel']['storageAddress']
-            try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except Exception:
-                raise Exception(f'Failed to fetch {url}')
-            else:
-                if r.status_code != 200:
-                    raise Exception(f'end to end node report {r.text}')
-
-                try:
-                    computed_hash = self.compute_hash(r.content, traintuple['key'])
-                except Exception:
-                    raise Exception('Failed to fetch outModel file')
-                else:
-                    if computed_hash != pk:
-                        msg = 'computed hash is not the same as the hosted file. ' \
-                              'Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
-
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
-
-                    # save/update objective in local db for later use
-                    instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
-                    instance.file.save('model', f)
-        except Exception as e:
-            raise e
+            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
+        except Exception:
+            raise Exception(f'Failed to fetch {url}')
         else:
-            return instance
+            if r.status_code != 200:
+                raise Exception(f'end to end node report {r.text}')
+
+        # Verify model received has a good pkhash
+        try:
+            computed_hash = self.compute_hash(r.content, traintuple['key'])
+        except Exception:
+            raise Exception('Failed to fetch outModel file')
+        else:
+            if computed_hash != pk:
+                msg = 'computed hash is not the same as the hosted file. ' \
+                      'Please investigate for default of synchronization, corruption, or hacked'
+                raise Exception(msg)
+
+        # Write model in local db for later use
+        tmp_model = tempfile.TemporaryFile()
+        tmp_model.write(r.content)
+        instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
+        instance.file.save('model', tmp_model)
+
+        return instance
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
-        if len(pk) != 64:
-            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
-
         try:
-            int(pk, 16)  # test if pk is correct (hexadecimal)
-        except Exception:
-            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
+            validate_pk(pk)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+
+        # get instance from remote node
+        try:
+            data = getObjectFromLedger(pk, self.ledger_query_call)
+        except JsonException as e:
+            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+        except Http404:
+            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
         else:
-            # get instance from remote node
+            # Try to get it from local db, else create it in local db
             try:
-                data = getObjectFromLedger(pk, self.ledger_query_call)
-            except JsonException as e:
-                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
+                instance = self.get_object()
             except Http404:
-                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
-            else:
-                error = None
-                instance = None
                 try:
-                    # try to get it from local db to check if description exists
-                    instance = self.get_object()
-                except Http404:
+                    instance = self.create_or_update_model(data['traintuple'],
+                                                           data['traintuple']['outModel']['hash'])
+                except Exception as e:
+                    Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                if not instance.file:
                     try:
                         instance = self.create_or_update_model(data['traintuple'],
                                                                data['traintuple']['outModel']['hash'])
                     except Exception as e:
-                        error = e
-                else:
-                    # check if instance has file
-                    if not instance.file:
-                        try:
-                            instance = self.create_or_update_model(data['traintuple'],
-                                                                   data['traintuple']['outModel']['hash'])
-                        except Exception as e:
-                            error = e
-                finally:
-                    if error is not None:
-                        return Response({'message': str(error)}, status=status.HTTP_400_BAD_REQUEST)
+                        Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-                    # do not give access to local files address
-                    if instance is not None:
-                        serializer = self.get_serializer(
-                            instance,
-                            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-                        data.update(serializer.data)
-                    else:
-                        data = {'message': 'Fail to get instance'}
+            # For security reason, do not give access to local file address
+            # Restrain data to some fields
+            # TODO: do we need to send creation date and/or last modified date
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
+            data.update(serializer.data)
 
-                    return Response(data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
 
         data, st = queryLedger(fcn='queryModels', args=[])
-        algoData = None
-        objectiveData = None
-        dataManagerData = None
+        data = data if data else []
 
-        # init list to return
-        if data is None:
-            data = []
         models_list = [data]
 
-        if st == 200:
+        if st == status.HTTP_200_OK:
             # parse filters
             query_params = request.query_params.get('search', None)
 
             if query_params is not None:
                 try:
-                    filters = get_filters(query_params)
-                except Exception:
+                    models_list = filter_list(
+                        object_type='model',
+                        data=data,
+                        query_params=query_params)
+                except Exception as e:
+                    logging.exception(e)
                     return Response(
                         {'message': f'Malformed search filters {query_params}'},
                         status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # filtering, reinit l to empty array
-                    models_list = []
-                    for idx, filter in enumerate(filters):
-                        # init each list iteration to data
-                        if data is None:
-                            data = []
-                        models_list.append(data)
-                        for k, subfilters in filter.items():
-                            if k == 'model':  # filter by own key
-                                for key, val in subfilters.items():
-                                    models_list[idx] = [x for x in models_list[idx]
-                                                        if x['traintuple']['outModel'] is not None and
-                                                        x['traintuple']['outModel']['hash'] in val]
-                            elif k == 'algo':  # select model used by these algo
-                                if not algoData:
-                                    # TODO find a way to put this call in cache
-                                    algoData, st = queryLedger(fcn='queryAlgos', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(algoData, status=st)
-
-                                    if algoData is None:
-                                        algoData = []
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in algoData if x[key] in val]
-                                    algoHashes = [x['key'] for x in filteredData]
-                                    models_list[idx] = [x for x in models_list[idx]
-                                                        if x['traintuple']['algo']['hash'] in algoHashes]
-                            elif k == 'dataset':  # select model which trainData.openerHash is
-                                if not dataManagerData:
-                                    # TODO find a way to put this call in cache
-                                    dataManagerData, st = queryLedger(fcn='queryDataManagers', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(dataManagerData, status=st)
-
-                                    if dataManagerData is None:
-                                        dataManagerData = []
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in dataManagerData if x[key] in val]
-                                    datamanagerHashes = [x['key'] for x in filteredData]
-                                    models_list[idx] = [
-                                        x for x in models_list[idx]
-                                        if x['traintuple']['dataset']['openerHash'] in datamanagerHashes]
-                            elif k == 'objective':  # select objective used by these datamanagers
-                                if not objectiveData:
-                                    # TODO find a way to put this call in cache
-                                    objectiveData, st = queryLedger(fcn='queryObjectives', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(objectiveData, status=st)
-
-                                    if objectiveData is None:
-                                        objectiveData = []
-                                for key, val in subfilters.items():
-                                    if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
-                                    else:
-                                        filteredData = [x for x in objectiveData if x[key] in val]
-                                    objectiveKeys = [x['key'] for x in filteredData]
-                                    models_list[idx] = [x for x in models_list[idx]
-                                                        if x['traintuple']['objective']['hash'] in objectiveKeys]
 
         return Response(models_list, status=st)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        object = self.get_object()
-
-        # TODO query model permissions
-
-        data = getattr(object, 'file')
+        model_object = self.get_object()
+        data = getattr(model_object, 'file')
         return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 
     @action(detail=True)
     def details(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
-
         data, st = queryLedger(fcn='queryModelDetails', args=[f'{pk}'])
-
         return Response(data, st)
