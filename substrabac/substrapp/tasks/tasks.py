@@ -12,8 +12,9 @@ from rest_framework import status
 from rest_framework.reverse import reverse
 
 from substrabac.celery import app
-from substrapp.ledger_utils import query_ledger, invoke_ledger
 from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
+from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
+                                    query_tuples)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -162,9 +163,10 @@ def put_algo(subtuple_directory, algo_content):
 
 
 def build_subtuple_folders(subtuple):
-    # create a folder named subtuple['key'] im /medias/subtuple with 5 folders opener, data, model, pred, metrics
+    # create a folder named `subtuple['key']` in /medias/subtuple/ with 5 subfolders opener, data, model, pred, metrics
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
     create_directory(subtuple_directory)
+
     for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
         create_directory(path.join(subtuple_directory, folder))
 
@@ -178,21 +180,6 @@ def remove_subtuple_materials(subtuple_directory):
         logging.exception(e)
 
 
-def log_fail_subtuple(key, err_msg, tuple_type):
-    err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
-    fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
-    data, st = invoke_ledger(
-        fcn=fail_type,
-        args=[f'{key}', f'{err_msg}'],
-        sync=True)
-
-    if st != status.HTTP_201_CREATED:
-        logging.error(data, exc_info=True)
-    else:
-        logging.info('Successfully passed the subtuple to failed')
-    return data
-
-
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
 BaseManager.register('ResourcesManager', ResourcesManager)
 manager = BaseManager()
@@ -200,8 +187,32 @@ manager.start()
 resources_manager = manager.ResourcesManager()
 
 
+@app.task(bind=True, ignore_result=True)
+def prepare_training_task(self):
+    prepare_task('traintuple', 'inModels')
+
+
+@app.task(ignore_result=True)
+def prepare_testing_task():
+    prepare_task('testtuple', 'model')
+
+
+def prepare_task(tuple_type):
+    try:
+        data_owner = get_hash(settings.LEDGER['signcert'])
+    except Exception as e:
+        logging.exception(e)
+    else:
+
+        tuples, st = query_tuples(tuple_type, data_owner)
+
+        if st == status.HTTP_200_OK and tuples is not None:
+            for subtuple in tuples:
+                prepare_tuple(subtuple, tuple_type)
+
+
 @app.task(ignore_result=False)
-def prepareTuple(subtuple, tuple_type, model_type):
+def prepare_tuple(subtuple, tuple_type):
     from django_celery_results.models import TaskResult
 
     fltask = None
@@ -210,68 +221,36 @@ def prepareTuple(subtuple, tuple_type, model_type):
     if 'fltask' in subtuple and subtuple['fltask']:
         fltask = subtuple['fltask']
         flresults = TaskResult.objects.filter(
-            task_name='substrapp.tasks.tasks.computeTask',
+            task_name='substrapp.tasks.tasks.compute_task',
             result__icontains=f'"fltask": "{fltask}"')
 
         if flresults and flresults.count() > 0:
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
     try:
-        # Log Start of the Subtuple
-
-        start_type = None
-        if tuple_type == 'traintuple':
-            start_type = 'logStartTrain'
-        elif tuple_type == 'testtuple':
-            start_type = 'logStartTest'
-
-        data, st = invoke_ledger(
-            fcn=start_type,
-            args=[f'{subtuple["key"]}'],
-            sync=True)
+        data, st = log_start_tuple(tuple_type, subtuple['key'])
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-            logging.error(
-                f'Failed to invoke ledger on prepareTask {tuple_type}. Error: {data}')
+            raise Exception(
+                f'Failed to invoke ledger on prepare_task {tuple_type}. Error: {data}')
         else:
-            computeTask.apply_async(
-                (tuple_type, subtuple, model_type, fltask),
+            compute_task.apply_async(
+                (tuple_type, subtuple, fltask),
                 queue=worker_queue)
 
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        return log_fail_subtuple(subtuple['key'], error_code, tuple_type)
+        data, st = log_fail_tuple(tuple_type, subtuple['key'], error_code)
 
+        if st != status.HTTP_201_CREATED:
+            logging.error(data, exc_info=True)
 
-def prepareTask(tuple_type, model_type):
-    try:
-        data_owner = get_hash(settings.LEDGER['signcert'])
-    except Exception as e:
-        logging.error(e, exc_info=True)
-    else:
-
-        subtuples, st = query_ledger(
-            fcn="queryFilter",
-            args=[f'{tuple_type}~worker~status', f'{data_owner},todo'])
-
-        if st == status.HTTP_200_OK and subtuples is not None:
-            for subtuple in subtuples:
-                prepareTuple(subtuple, tuple_type, model_type)
-
-
-@app.task(bind=True, ignore_result=True)
-def prepareTrainingTask(self):
-    prepareTask('traintuple', 'inModels')
-
-
-@app.task(ignore_result=True)
-def prepareTestingTask():
-    prepareTask('testtuple', 'model')
+        return data, st
 
 
 @app.task(bind=True, ignore_result=False)
-def computeTask(self, tuple_type, subtuple, model_type, fltask):
+def compute_task(self, tuple_type, subtuple, fltask):
 
     try:
         worker = self.request.hostname.split('@')[1]
@@ -282,70 +261,56 @@ def computeTask(self, tuple_type, subtuple, model_type, fltask):
 
     result = {'worker': worker, 'queue': queue, 'fltask': fltask}
 
-    # Get materials
     try:
-        prepareMaterials(subtuple, model_type)
+        prepare_materials(subtuple, tuple_type)
+        res = do_task(subtuple, tuple_type)
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        log_fail_subtuple(subtuple['key'], error_code, tuple_type)
+
+        data, st = log_fail_tuple(tuple_type, subtuple['key'], error_code)
+
+        if st != status.HTTP_201_CREATED:
+            logging.error(data, exc_info=True)
+
         return result
 
-    logging.info(f'Prepare Task success {tuple_type}')
+    data, st = log_success_tuple(tuple_type, subtuple['key'], res)
 
-    try:
-        res = doTask(subtuple, tuple_type)
-    except Exception as e:
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-        log_fail_subtuple(subtuple['key'], error_code, tuple_type)
-        return result
-    else:
-        # Invoke ledger to log success
-        if tuple_type == 'traintuple':
-            invoke_fcn = 'logSuccessTrain'
-            invoke_args = [f'{subtuple["key"]}',
-                           f'{res["end_model_file_hash"]}, {res["end_model_file"]}',
-                           f'{res["global_perf"]}',
-                           f'Train - {res["job_task_log"]};']
-
-        elif tuple_type == 'testtuple':
-            invoke_fcn = 'logSuccessTest'
-            invoke_args = [f'{subtuple["key"]}',
-                           f'{res["global_perf"]}',
-                           f'Test - {res["job_task_log"]};']
-
-        data, st = invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
-
-        if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-            logging.error('Failed to invoke ledger on logSuccess')
-            logging.error(data)
+    if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
+        logging.error('Failed to invoke ledger on logSuccess')
+        logging.error(data)
 
     return result
 
 
-def prepareMaterials(subtuple, model_type):
+def prepare_materials(subtuple, tuple_type):
+
     # get subtuple components
     objective = get_objective(subtuple)
     algo_content = get_algo(subtuple)
-    if model_type == 'model':
+    if tuple_type == 'testtuple':
         model_content = get_model(subtuple)
-    elif model_type == 'inModels':
+    elif tuple_type == 'traintuple':
         models_content = get_models(subtuple)
+    else:
+        raise NotImplementedError()
 
     # create subtuple
-    subtuple_directory = build_subtuple_folders(subtuple)  # do not put anything in pred folder
+    subtuple_directory = build_subtuple_folders(subtuple)
     put_opener(subtuple, subtuple_directory)
     put_data_sample(subtuple, subtuple_directory)
     put_metric(subtuple_directory, objective)
     put_algo(subtuple_directory, algo_content)
-    if model_type == 'model':  # testtuple
+    if tuple_type == 'testtuple':
         put_model(subtuple, subtuple_directory, model_content)
-    elif model_type == 'inModels' and models_content:  # traintuple
+    elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
+    logging.info(f'Prepare materials for {tuple_type} task: success ')
 
-def doTask(subtuple, tuple_type):
+
+def do_task(subtuple, tuple_type):
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
     org_name = getattr(settings, 'ORG_NAME')
 
@@ -357,136 +322,23 @@ def doTask(subtuple, tuple_type):
         fltask = subtuple['fltask']
         flrank = int(subtuple['rank'])
 
-    # Computation
+    client = docker.from_env()
+
     try:
-        # Job log
-        job_task_log = ''
-
-        # Setup Docker Client
-        client = docker.from_env()
-
-        # subtuple setup
-        model_path = path.join(subtuple_directory, 'model')
-        data_path = path.join(subtuple_directory, 'data')
-
-        ##########################################
-        # RESOLVE SYMLINKS
-        # TO DO:
-        #   - Verify that real paths are safe
-        #   - Try to see if it's clean to do that
-        ##########################################
-        symlinks_volume = {}
-        for subfolder in os.listdir(data_path):
-            real_path = os.path.realpath(os.path.join(data_path, subfolder))
-            symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
-
-        ##########################################
-
-        pred_path = path.join(subtuple_directory, 'pred')
-        opener_file = path.join(subtuple_directory, 'opener/opener.py')
-        metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
-        volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-                   pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-                   metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
-                   opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-        # compute algo task
-        algo_path = path.join(subtuple_directory)
-        algo_docker = f'algo_{tuple_type}'.lower()  # tag must be lowercase for docker
-        algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
-        model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
-
-        if fltask is not None and flrank != -1:
-            remove_image = False
-        else:
-            remove_image = True
-
-        # create the command option for algo
-        if tuple_type == 'traintuple':
-            algo_command = 'train'    # main command
-
-            # add list of inmodels
-            if subtuple['inModels'] is not None:
-                inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
-                algo_command = f"{algo_command} {' '.join(inmodels)}"
-
-            # add fltask rank for training
-            if flrank is not None:
-                algo_command = f"{algo_command} --rank {flrank}"
-
-        elif tuple_type == 'testtuple':
-            algo_command = 'predict'    # main command
-
-            inmodels = subtuple['model']["traintupleKey"]
-            algo_command = f'{algo_command} {inmodels}'
-
-        # local volume for fltask
-        if fltask is not None and tuple_type == 'traintuple':
-            flvolume = f'local-{fltask}-{org_name}'
-            if flrank == 0:
-                client.volumes.create(name=flvolume)
-            else:
-                client.volumes.get(volume_id=flvolume)
-
-            model_volume[flvolume] = {'bind': '/sandbox/local', 'mode': 'rw'}
-
-        job_task_log = compute_docker(client=client,
-                                      resources_manager=resources_manager,
-                                      dockerfile_path=algo_path,
-                                      image_name=algo_docker,
-                                      container_name=algo_docker_name,
-                                      volumes={**volumes, **model_volume, **symlinks_volume},
-                                      command=algo_command,
-                                      remove_image=remove_image)
-        # save model in database
-        if tuple_type == 'traintuple':
-            from substrapp.models import Model
-            end_model_path = path.join(subtuple_directory, 'model/model')
-            end_model_file_hash = get_hash(end_model_path, subtuple['key'])
-            try:
-                instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
-            except Exception as e:
-                error_code = compute_error_code(e)
-                logging.error(error_code, exc_info=True)
-                return log_fail_subtuple(subtuple['key'], error_code, tuple_type)
-
-            with open(end_model_path, 'rb') as f:
-                instance.file.save('model', f)
-            current_site = getattr(settings, "DEFAULT_DOMAIN")
-            end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
-
-        # compute metric task
-        metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/metrics')   # comes with substrabac
-        metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
-        metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
-        compute_docker(client=client,
-                       resources_manager=resources_manager,
-                       dockerfile_path=metrics_path,
-                       image_name=metrics_docker,
-                       container_name=metrics_docker_name,
-                       volumes={**volumes, **symlinks_volume},
-                       command=None,
-                       remove_image=remove_image)
-
-        # load performance
-        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
-            perf = json.load(perf_file)
-        global_perf = perf['all']
-
+        result = _do_task(
+            client,
+            subtuple_directory,
+            tuple_type,
+            subtuple,
+            fltask,
+            flrank,
+            org_name
+        )
     except Exception as e:
         # If an exception is thrown set flrank == -1 (we stop the fl training)
         if fltask is not None:
             flrank = -1
-
         raise e
-    else:
-        result = {'global_perf': global_perf,
-                  'job_task_log': job_task_log}
-
-        if tuple_type == 'traintuple':
-            result['end_model_file_hash'] = end_model_file_hash
-            result['end_model_file'] = end_model_file
-
     finally:
         # Clean subtuple materials
         remove_subtuple_materials(subtuple_directory)
@@ -499,5 +351,128 @@ def doTask(subtuple, tuple_type):
                 local_volume.remove(force=True)
             except Exception:
                 logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
+
+    return result
+
+
+def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, org_name):
+    # Job log
+    job_task_log = ''
+
+    # subtuple setup
+    model_path = path.join(subtuple_directory, 'model')
+    data_path = path.join(subtuple_directory, 'data')
+
+    ##########################################
+    # RESOLVE SYMLINKS
+    # TO DO:
+    #   - Verify that real paths are safe
+    #   - Try to see if it's clean to do that
+    ##########################################
+    symlinks_volume = {}
+    for subfolder in os.listdir(data_path):
+        real_path = os.path.realpath(os.path.join(data_path, subfolder))
+        symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+    ##########################################
+
+    pred_path = path.join(subtuple_directory, 'pred')
+    opener_file = path.join(subtuple_directory, 'opener/opener.py')
+    metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
+    volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+               pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
+               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+
+    # compute algo task
+    algo_path = path.join(subtuple_directory)
+    algo_docker = f'algo_{tuple_type}'.lower()  # tag must be lowercase for docker
+    algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
+    model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
+
+    if fltask is not None and flrank != -1:
+        remove_image = False
+    else:
+        remove_image = True
+
+    # create the command option for algo
+    if tuple_type == 'traintuple':
+        algo_command = 'train'    # main command
+
+        # add list of inmodels
+        if subtuple['inModels'] is not None:
+            inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+            algo_command = f"{algo_command} {' '.join(inmodels)}"
+
+        # add fltask rank for training
+        if flrank is not None:
+            algo_command = f"{algo_command} --rank {flrank}"
+
+    elif tuple_type == 'testtuple':
+        algo_command = 'predict'    # main command
+
+        inmodels = subtuple['model']["traintupleKey"]
+        algo_command = f'{algo_command} {inmodels}'
+
+    # local volume for fltask
+    if fltask is not None and tuple_type == 'traintuple':
+        flvolume = f'local-{fltask}-{org_name}'
+        if flrank == 0:
+            client.volumes.create(name=flvolume)
+        else:
+            client.volumes.get(volume_id=flvolume)
+
+        model_volume[flvolume] = {'bind': '/sandbox/local', 'mode': 'rw'}
+
+    job_task_log = compute_docker(
+        client=client,
+        resources_manager=resources_manager,
+        dockerfile_path=algo_path,
+        image_name=algo_docker,
+        container_name=algo_docker_name,
+        volumes={**volumes, **model_volume, **symlinks_volume},
+        command=algo_command,
+        remove_image=remove_image
+    )
+
+    # save model in database
+    if tuple_type == 'traintuple':
+        from substrapp.models import Model
+        end_model_path = path.join(subtuple_directory, 'model/model')
+        end_model_file_hash = get_hash(end_model_path, subtuple['key'])
+        instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+
+        with open(end_model_path, 'rb') as f:
+            instance.file.save('model', f)
+        current_site = getattr(settings, "DEFAULT_DOMAIN")
+        end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+
+    # compute metric task
+    metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/metrics')   # comes with substrabac
+    metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
+    metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
+    compute_docker(
+        client=client,
+        resources_manager=resources_manager,
+        dockerfile_path=metrics_path,
+        image_name=metrics_docker,
+        container_name=metrics_docker_name,
+        volumes={**volumes, **symlinks_volume},
+        command=None,
+        remove_image=remove_image
+    )
+
+    # load performance
+    with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
+        perf = json.load(perf_file)
+
+    global_perf = perf['all']
+
+    result = {'global_perf': global_perf,
+              'job_task_log': job_task_log}
+
+    if tuple_type == 'traintuple':
+        result['end_model_file_hash'] = end_model_file_hash
+        result['end_model_file'] = end_model_file
 
     return result

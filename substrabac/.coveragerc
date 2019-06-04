@@ -29,5 +29,5 @@ exclude_lines =
     if 'environment' in job_args
 
     # Ignore functions
-    def prepareTrainingTask
-    def prepareTestingTask
+    def prepare_training_task
+    def prepare_testing_task
