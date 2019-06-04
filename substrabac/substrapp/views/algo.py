@@ -1,6 +1,5 @@
 import tempfile
 import logging
-import requests
 
 from django.http import Http404
 from rest_framework import status, mixins
@@ -11,8 +10,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import get_hash, JsonException
-from substrapp.ledger_utils import queryLedger, getObjectFromLedger
+from substrapp.utils import get_hash, JsonException, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger
 from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
                                    validate_pk)
 from substrapp.views.filters_utils import filter_list
@@ -81,17 +80,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def create_or_update_algo(self, algo, pk):
         # get algo description from remote node
         url = algo['description']['storageAddress']
-        try:
-            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-        except Exception as e:
-            raise Exception(f'Failed to fetch {url}') from e
 
-        if r.status_code != status.HTTP_200_OK:
-            logging.error(f'Request failed: {r.text}')
-            raise Exception(f'Failed to fetch {url}: invalid status code {r.status_code}')
+        response = get_from_node(url)
 
         try:
-            computed_hash = self.compute_hash(r.content)
+            computed_hash = self.compute_hash(response.content)
         except Exception as e:
             raise Exception('Failed to fetch description file') from e
 
@@ -101,7 +94,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             raise Exception(msg)
 
         f = tempfile.TemporaryFile()
-        f.write(r.content)
+        f.write(response.content)
 
         # save/update objective in local db for later use
         instance, created = Algo.objects.update_or_create(pkhash=pk, validated=True)
@@ -120,7 +113,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         # get instance from remote node
         try:
-            data = getObjectFromLedger(pk, self.ledger_query_call)
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except JsonException as e:
             return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
@@ -149,7 +142,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        data, st = queryLedger(fcn='queryAlgos', args=[])
+        data, st = query_ledger(fcn='queryAlgos', args=[])
         data = data if data else []
 
         algos_list = [data]

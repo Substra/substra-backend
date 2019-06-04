@@ -227,8 +227,8 @@ class ObjectiveQueryTests(APITestCase):
             description=self.objective_description,
             metrics=self.objective_metrics)
         with mock.patch(
-                'substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = self.objective_metrics
+                'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = self.objective_metrics
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
@@ -876,8 +876,8 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch(
-                'substrapp.serializers.ledger.datasample.util.invokeLedger') as minvokeLedger:
-            minvokeLedger.return_value = {'keys': [
+                'substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = {'keys': [
                 d.pkhash]}, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
@@ -1054,8 +1054,8 @@ class AlgoQueryTests(APITestCase):
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.algo)
         with mock.patch(
-                'substrapp.views.utils.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = self.algo
+                'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = self.algo
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
@@ -1120,10 +1120,10 @@ class TraintupleQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerTrainTupleSerializer, 'create') as mcreate, \
-                mock.patch('substrapp.views.traintuple.queryLedger') as mqueryLedger:
+                mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
-            mqueryLedger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
+            mquery_ledger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
             mcreate.return_value = ({
                 'message': 'Traintuple added in local db waiting for validation.'
                            'The substra network has been notified for adding this Traintuple'

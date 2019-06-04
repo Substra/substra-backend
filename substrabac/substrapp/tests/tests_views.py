@@ -19,7 +19,7 @@ from substrapp.views.utils import ComputeHashMixin
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
-from substrapp.ledger_utils import getObjectFromLedger
+from substrapp.ledger_utils import get_object_from_ledger
 
 from substrapp.models import DataManager
 
@@ -48,18 +48,18 @@ class ViewTests(APITestCase):
         self.assertEqual(myfilehash, compute.compute_hash(myfile))
         self.assertEqual(myfilehashwithkey, compute.compute_hash(myfile, key))
 
-    def test_utils_getObjectFromLedger(self):
+    def test_utils_get_object_from_ledger(self):
 
-        with mock.patch('substrapp.ledger_utils.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
-            data = getObjectFromLedger('', 'queryObjective')
+        with mock.patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            data = get_object_from_ledger('', 'queryObjective')
 
             self.assertEqual(data, objective)
 
-        with mock.patch('substrapp.ledger_utils.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [('', status.HTTP_400_BAD_REQUEST)]
+        with mock.patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [('', status.HTTP_400_BAD_REQUEST)]
             with self.assertRaises(JsonException):
-                getObjectFromLedger('', 'queryAllObjective')
+                get_object_from_ledger('', 'queryAllObjective')
 
 
 # APITestCase
@@ -97,9 +97,9 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_empty(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(None, status.HTTP_200_OK),
-                                        (['ISIC'], status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
+                                         (['ISIC'], status.HTTP_200_OK)]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -111,8 +111,8 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=challenERRORge'
             response = self.client.get(url + search_params, **self.extra)
@@ -122,8 +122,8 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_name(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -133,8 +133,8 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Ametrics%253Amacro-average%2520recall'
             response = self.client.get(url + search_params, **self.extra)
@@ -144,10 +144,10 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -157,10 +157,10 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
-        with mock.patch('substrapp.views.objective.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(objective, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -172,9 +172,9 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_retrieve(self):
         url = reverse('substrapp:objective-list')
 
-        with mock.patch('substrapp.views.objective.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.objective.requests.get') as mrequestsget:
-            mgetObjectFromLedger.return_value = objective[0]
+        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger, \
+                mock.patch('substrapp.views.objective.get_from_node') as mrequestsget:
+            mget_object_from_ledger.return_value = objective[0]
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../../fixtures/owkin/objectives/objective0/description.md'), 'rb') as f:
@@ -204,8 +204,8 @@ class ObjectiveViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.objective.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'
@@ -303,7 +303,7 @@ class ObjectiveViewTests(APITestCase):
 
         test_data_manager_key = compute_hash(opener_content)
 
-        with mock.patch('substrapp.views.objective.getObjectFromLedger') as mdatamanager,\
+        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mdatamanager,\
                 mock.patch('substrapp.views.objective.get_computed_hash') as mopener:
             mdatamanager.return_value = {'opener': {'storageAddress': 'test'}}
             mopener.return_value = (opener_content, pkhash)
@@ -337,9 +337,9 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_empty(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(None, status.HTTP_200_OK),
-                                        (['ISIC'], status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
+                                         (['ISIC'], status.HTTP_200_OK)]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -351,8 +351,8 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_fail(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
 
             search_params = '?search=algERRORo'
             response = self.client.get(url + search_params, **self.extra)
@@ -362,8 +362,8 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_name(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
@@ -373,10 +373,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -386,10 +386,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_objective_fail(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -399,10 +399,10 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_model(self):
         url = reverse('substrapp:algo-list')
-        with mock.patch('substrapp.views.algo.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(algo, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(traintuple, status.HTTP_200_OK)]
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -416,13 +416,13 @@ class AlgoViewTests(APITestCase):
         algo_hash = get_hash(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
         url = reverse('substrapp:algo-list')
         algo_response = [a for a in algo if a['key'] == algo_hash][0]
-        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.algo.requests.get') as mrequestsget:
+        with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger, \
+                mock.patch('substrapp.views.algo.get_from_node') as mrequestsget:
 
             with open(os.path.join(dir_path,
                                    '../../../fixtures/chunantes/algos/algo4/description.md'), 'rb') as f:
                 content = f.read()
-            mgetObjectFromLedger.return_value = algo_response
+            mget_object_from_ledger.return_value = algo_response
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=content)
@@ -448,8 +448,8 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'
@@ -513,9 +513,9 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_empty(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(None, status.HTTP_200_OK),
-                                        (['ISIC'], status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
+                                         (['ISIC'], status.HTTP_200_OK)]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -527,8 +527,8 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_fail(self):
 
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
 
             url = reverse('substrapp:model-list')
             search_params = '?search=modeERRORl'
@@ -538,8 +538,8 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_hash(self):
 
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             url = reverse('substrapp:model-list')
@@ -550,10 +550,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_datamanager(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253AISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -563,10 +563,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -576,10 +576,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
-        with mock.patch('substrapp.views.model.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(model, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(algo, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(algo, status.HTTP_200_OK)]
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
@@ -589,10 +589,10 @@ class ModelViewTests(APITestCase):
 
     def test_model_retrieve(self):
 
-        with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.model.requests.get') as mrequestsget, \
+        with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger, \
+                mock.patch('substrapp.views.model.get_from_node') as mrequestsget, \
                 mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
-            mgetObjectFromLedger.return_value = model[0]
+            mget_object_from_ledger.return_value = model[0]
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=self.model.read().encode())
@@ -621,8 +621,8 @@ class ModelViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'
@@ -658,9 +658,9 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_empty(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(None, status.HTTP_200_OK),
-                                        (['ISIC'], status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
+                                         (['ISIC'], status.HTTP_200_OK)]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -672,8 +672,8 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_fail(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataseERRORt'
             response = self.client.get(url + search_params, **self.extra)
@@ -683,8 +683,8 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_name(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(datamanager, status.HTTP_200_OK)]
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -694,10 +694,10 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(objective, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(objective, status.HTTP_200_OK)]
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -707,10 +707,10 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_model(self):
         url = reverse('substrapp:data_manager-list')
-        with mock.patch('substrapp.views.datamanager.queryLedger') as mqueryLedger, \
-                mock.patch('substrapp.views.filters_utils.queryLedger') as mqueryLedger2:
-            mqueryLedger.side_effect = [(datamanager, status.HTTP_200_OK)]
-            mqueryLedger2.side_effect = [(traintuple, status.HTTP_200_OK)]
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mquery_ledger2.side_effect = [(traintuple, status.HTTP_200_OK)]
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
@@ -722,9 +722,9 @@ class DataManagerViewTests(APITestCase):
         url = reverse('substrapp:data_manager-list')
         datamanager_response = [d for d in datamanager
                                 if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
-        with mock.patch('substrapp.views.datamanager.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
-            mgetObjectFromLedger.return_value = datamanager_response
+        with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger, \
+                mock.patch('substrapp.views.datamanager.get_from_node') as mrequestsget:
+            mget_object_from_ledger.return_value = datamanager_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'), 'rb') as f:
@@ -760,8 +760,8 @@ class DataManagerViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.datamanager.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'
@@ -824,8 +824,8 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_list_empty(self):
         url = reverse('substrapp:traintuple-list')
-        with mock.patch('substrapp.views.traintuple.queryLedger') as mqueryLedger:
-            mqueryLedger.return_value = ([[]], status.HTTP_200_OK)
+        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = ([[]], status.HTTP_200_OK)
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -833,8 +833,8 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_retrieve(self):
 
-        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = traintuple[0]
+        with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = traintuple[0]
             url = reverse('substrapp:traintuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
             response = self.client.get(url + search_params, **self.extra)
@@ -856,8 +856,8 @@ class TraintupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.traintuple.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'
@@ -894,8 +894,8 @@ class TesttupleViewTests(APITestCase):
 
     def test_testtuple_list_empty(self):
         url = reverse('substrapp:testtuple-list')
-        with mock.patch('substrapp.views.testtuple.queryLedger') as mqueryLedger:
-            mqueryLedger.return_value = ([[]], status.HTTP_200_OK)
+        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = ([[]], status.HTTP_200_OK)
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -903,8 +903,8 @@ class TesttupleViewTests(APITestCase):
 
     def test_testtuple_retrieve(self):
 
-        with mock.patch('substrapp.views.testtuple.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.return_value = testtuple[0]
+        with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = testtuple[0]
             url = reverse('substrapp:testtuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
             response = self.client.get(url + search_params, **self.extra)
@@ -926,8 +926,8 @@ class TesttupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.testtuple.getObjectFromLedger') as mgetObjectFromLedger:
-            mgetObjectFromLedger.side_effect = JsonException('TEST')
+        with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.side_effect = JsonException('TEST')
 
             file_hash = get_hash(os.path.join(dir_path, "../../../fixtures/owkin/objectives/objective0/description.md"))
             search_params = f'{file_hash}/'

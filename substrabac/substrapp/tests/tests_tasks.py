@@ -424,7 +424,7 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
-                mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger, \
+                mock.patch('substrapp.tasks.tasks.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
                 mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
                 mock.patch('substrapp.tasks.tasks.get_model') as mget_model, \
@@ -437,7 +437,7 @@ class TasksTests(APITestCase):
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
-            mqueryLedger.return_value = subtuple, 200
+            mquery_ledger.return_value = subtuple, 200
             mget_objective.return_value = 'objective'
             mget_algo.return_value = 'algo', 'algo_hash'
             mget_model.return_value = 'model', 'model_hash'
@@ -448,13 +448,13 @@ class TasksTests(APITestCase):
             mput_algo.return_value = 'algo'
             mput_model.return_value = 'model'
 
-            with mock.patch('substrapp.tasks.tasks.queryLedger') as mqueryLedger:
-                mqueryLedger.return_value = 'data', 404
+            with mock.patch('substrapp.tasks.tasks.query_ledger') as mquery_ledger:
+                mquery_ledger.return_value = 'data', 404
                 prepareTask('traintuple', 'inModels')
 
-            with mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger, \
+            with mock.patch('substrapp.tasks.tasks.invoke_ledger') as minvoke_ledger, \
                     mock.patch('substrapp.tasks.tasks.computeTask.apply_async') as mapply_async:
-                minvokeLedger.return_value = 'data', 201
+                minvoke_ledger.return_value = 'data', 201
                 mapply_async.return_value = 'doTask'
                 prepareTask('traintuple', 'inModels')
 
@@ -474,10 +474,10 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.getattr') as mgetattr, \
-                mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
+                mock.patch('substrapp.tasks.tasks.invoke_ledger') as minvoke_ledger:
             msettings.return_value = FakeSettings()
             mgetattr.return_value = self.subtuple_path
-            minvokeLedger.return_value = 'data', 200
+            minvoke_ledger.return_value = 'data', 200
 
             for name in ['opener', 'metrics']:
                 with open(os.path.join(subtuple_directory, f'{name}/{name}.py'), 'w') as f:
@@ -510,10 +510,10 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.getattr') as mgetattr, \
-                mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
+                mock.patch('substrapp.tasks.tasks.invoke_ledger') as minvoke_ledger:
             msettings.return_value = FakeSettings()
             mgetattr.return_value = self.subtuple_path
-            minvokeLedger.return_value = 'data', 200
+            minvoke_ledger.return_value = 'data', 200
 
             for name in ['opener', 'metrics']:
                 with open(os.path.join(subtuple_directory, f'{name}/{name}.py'), 'w') as f:
@@ -528,10 +528,10 @@ class TasksTests(APITestCase):
 
             with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker, \
                     mock.patch('substrapp.tasks.tasks.prepareMaterials') as mprepareMaterials, \
-                    mock.patch('substrapp.tasks.tasks.invokeLedger') as minvokeLedger:
+                    mock.patch('substrapp.tasks.tasks.invoke_ledger') as minvoke_ledger:
 
                 mcompute_docker.return_value = 'DONE'
                 mprepareMaterials.return_value = 'DONE'
-                minvokeLedger.return_value = 'data', 201
+                minvoke_ledger.return_value = 'data', 201
 
                 computeTask('traintuple', subtuple, 'inModels', None)

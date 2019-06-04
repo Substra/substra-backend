@@ -3,12 +3,12 @@ from rest_framework import status
 from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp.models import DataManager
-from substrapp.ledger_utils import invokeLedger
+from substrapp.ledger_utils import invoke_ledger
 
 
 def createLedgerDataManager(args, pkhash, sync=False):
 
-    data, st = invokeLedger(fcn='registerDataManager', args=args, sync=sync)
+    data, st = invoke_ledger(fcn='registerDataManager', args=args, sync=sync)
 
     try:
         instance = DataManager.objects.get(pk=pkhash)
@@ -29,4 +29,4 @@ def createLedgerDataManager(args, pkhash, sync=False):
 
 
 def updateLedgerDataManager(args, sync=False):
-    return invokeLedger(fcn='updateDataManager', args=args, sync=sync)
+    return invoke_ledger(fcn='updateDataManager', args=args, sync=sync)

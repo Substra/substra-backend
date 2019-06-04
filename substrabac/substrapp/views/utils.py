@@ -5,7 +5,7 @@ from django.http import FileResponse, Http404
 from rest_framework import status
 from rest_framework.response import Response
 
-from substrapp.ledger_utils import getObjectFromLedger
+from substrapp.ledger_utils import get_object_from_ledger
 
 
 class ComputeHashMixin(object):
@@ -39,7 +39,7 @@ class ManageFileMixin(object):
         # TODO get cert for permissions check
 
         try:
-            getObjectFromLedger(pk, self.ledger_query_call)
+            get_object_from_ledger(pk, self.ledger_query_call)
         except Exception as e:
             return Response(e, status=status.HTTP_400_BAD_REQUEST)
         except Http404:
