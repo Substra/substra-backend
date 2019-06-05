@@ -1,5 +1,4 @@
 import asyncio
-import logging
 import json
 
 from rest_framework import status
@@ -74,16 +73,17 @@ def query_ledger(fcn, args=None):
 
             data = {'message': response}
 
-    # TODO: get 409 from the chaincode
-    if 'message' in data and 'tkey' in data['message']:
-        pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+    if data is not None:
+        # TODO: get 409 from the chaincode
+        if 'message' in data and 'tkey' in data['message']:
+            pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
 
-        if len(pkhash) == 64:
-            st = status.HTTP_409_CONFLICT
-            data['pkhash'] = pkhash
+            if len(pkhash) == 64:
+                st = status.HTTP_409_CONFLICT
+                data['pkhash'] = pkhash
 
-    if 'permissions' in data and data['permissions'] != 'all':
-        raise Exception('Not Allowed')
+        if 'permissions' in data and data['permissions'] != 'all':
+            raise Exception('Not Allowed')
 
     return data, st
 

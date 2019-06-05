@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import multiprocessing
 import os
 import contextlib
@@ -38,24 +37,25 @@ def get_block_payload(block):
             'extension']['events']['payload'])
     return payload
 
-_edef on_tupleEvent(block):
+
+def on_tuple_event(block):
     payload = get_block_payload(block)
 
     worker_queue = f"{LEDGER['name']}.worker"
-    try:
-        data_owner = get_hash(LEDGER['signcert'])
-    except Exception as e:
-        logging.error(e, exc_info=True)
-    else:
-        if data_owner == payload['dataset']['worker']:
-            tuple_type = None
-            if 'inModels' in payload:
-                tuple_type = 'traintuple'
-            elif 'model' in payload:
-                tuple_type = 'testtuple'
+    data_owner = get_hash(LEDGER['signcert'])
 
-            if tuple_type is not None:
-                prepare_tuple.apply_async((payload, tuple_type), queue=worker_queue)
+    if data_owner == payload['dataset']['worker']:
+        tuple_type = None
+        if 'inModels' in payload:
+            tuple_type = 'traintuple'
+        elif 'model' in payload:
+            tuple_type = 'testtuple'
+
+        if tuple_type is not None:
+            prepare_tuple.apply_async(
+                (payload, tuple_type),
+                task_id=payload['key'],
+                queue=worker_queue)
 
 
 def wait():
