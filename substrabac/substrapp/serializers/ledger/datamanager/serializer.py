@@ -36,7 +36,8 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
             'type': data_type,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description',
+                                                                   args=[instance.pk]),
             'objectiveKey': objective_key,
             'permissions': permissions
         }
