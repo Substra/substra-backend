@@ -20,20 +20,12 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
         tag = validated_data.get('tag', '')
 
-        # Json
-        # args = {
-        #     'traintupleKey': traintuple_key,
-        #     'dataManagerKey': data_manager_key,
-        #     'dataSampleKeys': ','.join(test_data_sample_keys),
-        #     'tag': tag
-        # }
-
-        args = [
-            traintuple_key,
-            data_manager_key,
-            ','.join([x for x in test_data_sample_keys]),
-            tag
-        ]
+        args = {
+            'traintupleKey': traintuple_key,
+            'dataManagerKey': data_manager_key,
+            'dataSampleKeys': ','.join(test_data_sample_keys),
+            'tag': tag
+        }
 
         return args
 
