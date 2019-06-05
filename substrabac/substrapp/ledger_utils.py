@@ -203,7 +203,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'hash': f'{res["end_model_file_hash"]}',
                 'storageAddress': f'{res["end_model_file"]}',
             },
-            'perf': f'{res["global_perf"]}',
+            'perf': float(res["global_perf"]),
             'log': f'Train - {res["job_task_log"]};',
         }
 
@@ -211,7 +211,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
         invoke_fcn = 'logSuccessTest'
         invoke_args = {
             'key': tuple_key,
-            'perf': f'{res["global_perf"]}',
+            'perf': float(res["global_perf"]),
             'log': f'Test - {res["job_task_log"]};',
         }
 
