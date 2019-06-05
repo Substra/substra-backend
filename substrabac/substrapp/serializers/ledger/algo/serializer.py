@@ -26,24 +26,14 @@ class LedgerAlgoSerializer(serializers.Serializer):
             protocol = 'https://' if request.is_secure() else 'http://'
             host = request.get_host()
 
-        # Json
-        # args = {
-        #     'name': name,
-        #     'algoHash': get_hash(instance.file),
-        #     'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
-        #     'descriptionHash': get_hash(instance.description),
-        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
-        #     'permissions': permissions
-        # }
-
-        args = [
-            name,
-            get_hash(instance.file),
-            protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
-            get_hash(instance.description),
-            protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
-            permissions,
-        ]
+        args = {
+            'name': name,
+            'hash': get_hash(instance.file),
+            'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
+            'descriptionHash': get_hash(instance.description),
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
+            'permissions': permissions
+        }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerAlgo(args, instance.pkhash, sync=True)
