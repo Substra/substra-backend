@@ -232,7 +232,6 @@ class ObjectiveQueryTests(APITestCase):
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            print(self.objective_metrics)
             response = self.client.get(
                 f'/objective/{objective.pkhash}/metrics/', **extra)
 
@@ -1131,7 +1130,6 @@ class TraintupleQueryTests(APITestCase):
 
             response = self.client.post(url, data, format='multipart', **extra)
 
-            print(response.json())
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_traintuple_ko(self):
