@@ -10,17 +10,16 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import DataSampleViewSet
 
 from substrapp.serializers import LedgerDataSampleSerializer
 
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
-from substrapp.utils import get_hash
+from substrapp.utils import get_hash, uncompress_content
 
 from substrapp.models import DataManager
 
 from ..common import get_sample_datamanager
-from ..common import FakeFilterDataManager, FakeTask, FakeDataManager
+from ..common import FakeFilterDataManager, FakeDataManager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -88,6 +87,12 @@ class DataSampleViewTests(APITestCase):
         for x in data['files']:
             data[x].close()
 
+    @override_settings(
+        task_eager_propagates=True,
+        task_always_eager=True,
+        broker_url='memory://',
+        backend='memory'
+    )
     def test_data_create_bulk_dryrun(self):
         url = reverse('substrapp:data_sample-list')
 
@@ -96,8 +101,9 @@ class DataSampleViewTests(APITestCase):
         data_path1 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        opener_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
+
+        data_manager_keys = [get_hash(opener_path)]
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -109,17 +115,14 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(DataSampleViewSet, 'dryrun_task') as mdryrun_task:
-
+                mock.patch.object(DataManager.objects, 'get') as mgetdatamanager:
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mdryrun_task.return_value = (
-                FakeTask('42'),
-                'Your dry-run has been taken in account. You can follow the task execution on localhost')
+            mgetdatamanager.return_value = FakeDataManager(opener_path)
+
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['id'], '42')
-        self.assertEqual(response.data['message'],
-                         'Your dry-run has been taken in account. You can follow the task execution on localhost')
+        self.assertIn('Your dry-run has been taken in account. You can follow the task execution on ',
+                      response.data['message'])
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
         for x in data['files']:
@@ -157,16 +160,58 @@ class DataSampleViewTests(APITestCase):
 
         data['file'].close()
 
+    def test_data_create_path(self):
+        url = reverse('substrapp:data_sample-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_zip_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path = os.path.join(MEDIA_ROOT, '0024700')
+
+        with open(data_zip_path, 'rb') as data_zip:
+            uncompress_content(data_zip.read(), data_path)
+
+        # dir hash
+        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+
+        data = {
+            'path': data_path,
+            'data_manager_keys': data_manager_keys,
+            'test_only': False
+        }
+
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+
+            mdatamanager.return_value = FakeFilterDataManager(1)
+            mcreate.return_value = ({'keys': [pkhash]},
+                                    status.HTTP_201_CREATED)
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data[0]['pkhash'], pkhash)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+
+    @override_settings(
+        task_eager_propagates=True,
+        task_always_eager=True,
+        broker_url='memory://',
+        backend='memory'
+    )
     def test_data_create_dryrun(self):
 
         url = reverse('substrapp:data_sample-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.tar.gz')
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+        opener_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
+
+        data_manager_keys = [get_hash(opener_path)]
 
         data = {
             'file': open(data_path, 'rb'),
@@ -176,17 +221,13 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(DataSampleViewSet, 'dryrun_task') as mdryrun_task:
-
+                mock.patch.object(DataManager.objects, 'get') as mgetdatamanager:
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mdryrun_task.return_value = (
-                FakeTask('42'),
-                'Your dry-run has been taken in account. You can follow the task execution on localhost')
+            mgetdatamanager.return_value = FakeDataManager(opener_path)
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['id'], '42')
-        self.assertEqual(response.data['message'],
-                         'Your dry-run has been taken in account. You can follow the task execution on localhost')
+        self.assertIn('Your dry-run has been taken in account. You can follow the task execution on ',
+                      response.data['message'])
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
         data['file'].close()
