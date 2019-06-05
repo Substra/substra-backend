@@ -28,4 +28,8 @@ def createLedgerDataSample(args, pkhashes, sync=False):
 
 
 def updateLedgerDataSample(args, sync=False):
+    args = {
+        'hashes': args[0],
+        'dataManagerKeys': args[1],
+    }
     return invoke_ledger(fcn='updateDataSample', args=args, sync=sync)

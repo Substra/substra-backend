@@ -30,28 +30,17 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             protocol = 'https://' if request.is_secure() else 'http://'
             host = request.get_host()
 
-        # Json
-        # args = {
-        #     'name': name,
-        #     'openerHash': get_hash(instance.data_opener),
-        #     'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
-        #     'type': data_type,
-        #     'descriptionHash': get_hash(instance.description),
-        #     'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),  # noqa
-        #     'objectiveKey': objective_key,
-        #     'permissions': permissions
-        # }
-
-        args = [
-            name,
-            get_hash(instance.data_opener),
-            protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
-            data_type,
-            get_hash(instance.description),
-            protocol + host + reverse('substrapp:data_manager-description', args=[instance.pk]),
-            objective_key,
-            permissions
-        ]
+        args = {
+            'name': name,
+            'openerHash': get_hash(instance.data_opener),
+            'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'type': data_type,
+            'descriptionHash': get_hash(instance.description),
+            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description',
+                                                                   args=[instance.pk]),
+            'objectiveKey': objective_key,
+            'permissions': permissions
+        }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             return createLedgerDataManager(args, instance.pkhash, sync=True)
