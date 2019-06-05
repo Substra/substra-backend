@@ -53,6 +53,10 @@ class DataSampleQueryTests(APITestCase):
                                    description=self.data_description,
                                    data_opener=self.data_data_opener)
 
+        DataManager.objects.create(name='slide opener',
+                                   description=self.data_description2,
+                                   data_opener=self.data_data_opener2)
+
     def get_default_datasample_data(self):
         expected_hash = get_dir_hash(self.data_file.file)
         self.data_file.file.seek(0)
@@ -103,16 +107,14 @@ class DataSampleQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
+            'data_manager_keys': [get_hash(self.data_data_opener), get_hash(self.data_data_opener2)],
             'test_only': True,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
-                mock.patch('substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
-            mget_validators.return_value = []
+        with mock.patch('substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
             self.data_file.seek(0)
             self.data_file_2.seek(0)
             ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': True}

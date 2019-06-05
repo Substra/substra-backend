@@ -15,7 +15,7 @@ from substrapp.serializers import LedgerAlgoSerializer
 from substrapp.utils import get_hash, compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_sample_algo
+    get_sample_algo, get_sample_algo_zip
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -32,6 +32,7 @@ class AlgoQueryTests(APITestCase):
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
         self.algo, self.algo_filename = get_sample_algo()
+        self.algo_zip, self.algo_filename_zip = get_sample_algo_zip()
 
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_datamanager()
@@ -56,9 +57,22 @@ class AlgoQueryTests(APITestCase):
 
         return expected_hash, data
 
+    def get_default_algo_data_zip(self):
+        expected_hash = get_hash(self.algo_zip)
+
+        data = {
+            'file': self.algo_zip,
+            'description': self.data_description,  # fake it
+            'name': 'super top algo',
+            'objective_key': get_hash(self.objective_description),
+            'permissions': 'all'
+        }
+
+        return expected_hash, data
+
     def test_add_algo_sync_ok(self):
         self.add_default_objective()
-        pkhash, data = self.get_default_algo_data()
+        pkhash, data = self.get_default_algo_data_zip()
 
         url = reverse('substrapp:algo-list')
         extra = {
@@ -76,7 +90,7 @@ class AlgoQueryTests(APITestCase):
             self.assertEqual(r['description'],
                              f'http://testserver/media/algos/{r["pkhash"]}/{self.data_description_filename}')
             self.assertEqual(r['file'],
-                             f'http://testserver/media/algos/{r["pkhash"]}/{self.algo_filename}')
+                             f'http://testserver/media/algos/{r["pkhash"]}/{self.algo_filename_zip}')
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
