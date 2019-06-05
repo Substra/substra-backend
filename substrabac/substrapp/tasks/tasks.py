@@ -189,26 +189,25 @@ resources_manager = manager.ResourcesManager()
 
 @app.task(bind=True, ignore_result=True)
 def prepare_training_task(self):
-    prepare_task('traintuple', 'inModels')
+    prepare_task('traintuple')
 
 
 @app.task(ignore_result=True)
 def prepare_testing_task():
-    prepare_task('testtuple', 'model')
+    prepare_task('testtuple')
 
 
 def prepare_task(tuple_type):
-    try:
-        data_owner = get_hash(settings.LEDGER['signcert'])
-    except Exception as e:
-        logging.exception(e)
-    else:
+    data_owner = get_hash(settings.LEDGER['signcert'])
+    worker_queue = f"{settings.LEDGER['name']}.worker"
+    tuples, st = query_tuples(tuple_type, data_owner)
 
-        tuples, st = query_tuples(tuple_type, data_owner)
-
-        if st == status.HTTP_200_OK and tuples is not None:
-            for subtuple in tuples:
-                prepare_tuple(subtuple, tuple_type)
+    if st == status.HTTP_200_OK and tuples is not None:
+        for subtuple in tuples:
+            prepare_tuple.apply_async(
+                (subtuple, tuple_type),
+                task_id=subtuple['key'],
+                queue=worker_queue)
 
 
 @app.task(ignore_result=False)
@@ -231,8 +230,12 @@ def prepare_tuple(subtuple, tuple_type):
         data, st = log_start_tuple(tuple_type, subtuple['key'])
 
         if st not in (status.HTTP_201_CREATED, status.HTTP_408_REQUEST_TIMEOUT):
-            raise Exception(
-                f'Failed to invoke ledger on prepare_task {tuple_type}. Error: {data}')
+            # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
+            # in case of multiple instances of substrabac running for the same organisation
+            # So prepare_tuple tasks are ignored if it cannot log_start_tuple
+            # TODO: find a way to handle this special case to avoid silent failure in other cases.
+            e = Exception(f'Failed to invoke ledger on prepare_task {tuple_type}. Error: {data}')
+            logging.exception(e)
         else:
             compute_task.apply_async(
                 (tuple_type, subtuple, fltask),

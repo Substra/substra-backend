@@ -411,6 +411,12 @@ class TasksTests(APITestCase):
 
             self.assertTrue(5, nb_subfolders)
 
+    @override_settings(
+        task_eager_propagates=True,
+        task_always_eager=True,
+        broker_url='memory://',
+        backend='memory'
+    )
     def test_prepare_tasks(self):
 
         class FakeSettings(object):
@@ -449,13 +455,13 @@ class TasksTests(APITestCase):
             mput_algo.return_value = 'algo'
             mput_model.return_value = 'model'
 
-            with mock.patch('substrapp.tasks.tasks.query_tuples') as mquery_tuples:
-                mquery_tuples.return_value = 'data', 404
+            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
+                mlog_start_tuple.return_value = 'data', 404
                 prepare_task('traintuple')
 
-            with mock.patch('substrapp.tasks.tasks.log_success_tuple') as mlog_success_tuple, \
+            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
                     mock.patch('substrapp.tasks.tasks.compute_task.apply_async') as mapply_async:
-                mlog_success_tuple.return_value = 'data', 201
+                mlog_start_tuple.return_value = 'data', 201
                 mapply_async.return_value = 'do_task'
                 prepare_task('traintuple')
 

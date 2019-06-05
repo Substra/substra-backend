@@ -117,7 +117,7 @@ def generate_docker_compose_file(conf, launch_settings):
                             f'--master --processes {processes} --threads 2'
         else:
             django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev ' \
-                            f'python3 manage.py runserver 0.0.0.0:{port}'
+                            f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
             f'ORG={org_name_stripped}',
