@@ -17,6 +17,8 @@ def query_ledger(fcn, args=None):
 
     if args is None:
         args = []
+    else:
+        args = [json.dumps(args)]
 
     peer = LEDGER['peer']
     loop = LEDGER['hfc']['loop']
@@ -90,7 +92,7 @@ def query_ledger(fcn, args=None):
 
 def get_object_from_ledger(pk, query):
     # get instance from remote node
-    data, st = query_ledger(fcn=query, args=[f'{pk}'])
+    data, st = query_ledger(fcn=query, args={'key': pk})
 
     if st == status.HTTP_404_NOT_FOUND:
         raise Http404('Not found')
@@ -105,6 +107,8 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
 
     if args is None:
         args = []
+    else:
+        args = [json.dumps(args)]
 
     peer = LEDGER['peer']
     loop = LEDGER['hfc']['loop']
@@ -181,7 +185,10 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
 
     data, st = invoke_ledger(
         fcn=fail_type,
-        args=[f'{tuple_key}', f'{err_msg}'],
+        args={
+            'key': tuple_key,
+            'log': err_msg,
+        },
         sync=True)
 
     return data, st
@@ -190,18 +197,24 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
 def log_success_tuple(tuple_type, tuple_key, res):
     if tuple_type == 'traintuple':
         invoke_fcn = 'logSuccessTrain'
-        # TODO: will be replace by a dict
-        invoke_args = [f'{tuple_key}',
-                       f'{res["end_model_file_hash"]}, {res["end_model_file"]}',
-                       f'{res["global_perf"]}',
-                       f'Train - {res["job_task_log"]};']
+        invoke_args = {
+            'key': tuple_key,
+            'outModel': {
+                'hash': f'{res["end_model_file_hash"]}',
+                'storageAddress': f'{res["end_model_file"]}',
+            },
+            'perf': f'{res["global_perf"]}',
+            'log': f'Train - {res["job_task_log"]};',
+        }
 
     elif tuple_type == 'testtuple':
         invoke_fcn = 'logSuccessTest'
-        # TODO: will be replace by a dict
-        invoke_args = [f'{tuple_key}',
-                       f'{res["global_perf"]}',
-                       f'Test - {res["job_task_log"]};']
+        invoke_args = {
+            'key': tuple_key,
+            'perf': f'{res["global_perf"]}',
+            'log': f'Test - {res["job_task_log"]};',
+        }
+
     else:
         raise NotImplementedError()
 
@@ -222,7 +235,7 @@ def log_start_tuple(tuple_type, tuple_key):
 
     data, st = invoke_ledger(
         fcn=start_type,
-        args=[f'{tuple_key}'],
+        args={'key': tuple_key},
         sync=True)
 
     return data, st
@@ -231,6 +244,9 @@ def log_start_tuple(tuple_type, tuple_key):
 def query_tuples(tuple_type, data_owner):
     tuples, st = query_ledger(
         fcn="queryFilter",
-        args=[f'{tuple_type}~worker~status', f'{data_owner},todo'])
-
+        args={
+            'indexName': f'{tuple_type}~worker~status',
+            'attributes': f'{data_owner},todo'
+        }
+    )
     return tuples, st
