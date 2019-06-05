@@ -84,6 +84,18 @@ class AlgoViewTests(APITestCase):
 
             self.assertEqual(len(r[0]), 1)
 
+    def test_algo_list_filter_dual(self):
+        url = reverse('substrapp:algo-list')
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+
+            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
+            search_params += f'%2Calgo%253Aowner%253A{algo[0]["owner"]}'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 1)
+
     def test_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
