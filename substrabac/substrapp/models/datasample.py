@@ -3,10 +3,6 @@ from django.db import models
 from substrapp.utils import get_hash
 
 
-def upload_to(instance, filename):
-    return 'datasamples/{0}/{1}'.format(instance.pk, filename)
-
-
 class DataSample(models.Model):
     """Storage Data table"""
     pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
