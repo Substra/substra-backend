@@ -25,7 +25,7 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerDataSample(args, [x.pk for x in instances], sync=True)
+            data = createLedgerDataSample(args, [x.pk for x in instances], sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerDataSampleAsync.delay(args, [x.pk for x in instances])
@@ -33,4 +33,5 @@ class LedgerDataSampleSerializer(serializers.Serializer):
                 'message': 'Data samples added in local db waiting for validation. '
                            'The substra network has been notified for adding this Data'
             }
-            return data, status.HTTP_202_ACCEPTED
+
+        return data

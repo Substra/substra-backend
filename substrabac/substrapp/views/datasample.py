@@ -24,7 +24,9 @@ from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import uncompress_path, get_dir_hash
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException
+from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
+    get_success_create_code
+from substrapp.ledger_utils import LedgerError, LedgerTimeout
 
 logger = logging.getLogger('django.request')
 
@@ -64,14 +66,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-        if st == status.HTTP_408_REQUEST_TIMEOUT:
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'message': str(e)}
             data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-            raise LedgerException(data, st)
+            raise LedgerException(data, e.status)
+        except LedgerError as e:
+            raise LedgerException({'message': str(e)}, e.status)
 
-        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-            raise LedgerException(data, st)
+        st = get_success_create_code()
 
         # update validated to True in response
         if 'pkhash' in data and data['validated']:
@@ -201,7 +205,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
-            return Response({'message': e.data}, status=e.st)
+            return Response({'message': str(e)}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -248,12 +252,13 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 ','.join(data_manager_keys)
             ]
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                data, st = updateLedgerDataSample(args, sync=True)
+                try:
+                    data = updateLedgerDataSample(args, sync=True)
+                except LedgerError as e:
+                    return Response({'message': str(e)}, status=e.st)
 
-                # patch status for update
-                if st == status.HTTP_201_CREATED:
-                    st = status.HTTP_200_OK
-                return Response(data, status=st)
+                return Response(data, status=status.HTTP_200_OK)
+
             else:
                 # use a celery task, as we are in an http request transaction
                 updateLedgerDataSampleAsync.delay(args)

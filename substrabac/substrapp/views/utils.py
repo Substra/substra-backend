@@ -1,11 +1,13 @@
 import hashlib
 import os
 
-from django.http import FileResponse, Http404
-from rest_framework import status
+from django.http import FileResponse
 from rest_framework.response import Response
 
-from substrapp.ledger_utils import get_object_from_ledger
+from substrapp.ledger_utils import get_object_from_ledger, LedgerError
+
+from django.conf import settings
+from rest_framework import status
 
 
 class ComputeHashMixin(object):
@@ -40,14 +42,12 @@ class ManageFileMixin(object):
 
         try:
             get_object_from_ledger(pk, self.ledger_query_call)
-        except Exception as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
         else:
-            object = self.get_object()
+            obj = self.get_object()
 
-            data = getattr(object, field)
+            data = getattr(obj, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 
 
@@ -103,3 +103,10 @@ class ValidationException(Exception):
         self.pkhash = pkhash
         self.st = st
         super(ValidationException).__init__()
+
+
+def get_success_create_code():
+    if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+        return status.HTTP_201_CREATED
+    else:
+        return status.HTTP_202_ACCEPTED

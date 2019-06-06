@@ -10,8 +10,8 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
-from substrapp.utils import JsonException, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger
+from substrapp.utils import get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
 from substrapp.views.utils import ComputeHashMixin, CustomFileResponse, validate_pk
 from substrapp.views.filters_utils import filter_list
 
@@ -65,10 +65,8 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # get instance from remote node
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
-        except JsonException as e:
-            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
         # Try to get it from local db, else create it in local db
         try:
@@ -92,27 +90,31 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
+        try:
+            data = query_ledger(fcn='queryModels', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
-        data, st = query_ledger(fcn='queryModels', args=[])
         data = data if data else []
 
         models_list = [data]
 
-        if st == status.HTTP_200_OK:
-            query_params = request.query_params.get('search', None)
-            if query_params is not None:
-                try:
-                    models_list = filter_list(
-                        object_type='model',
-                        data=data,
-                        query_params=query_params)
-                except Exception as e:
-                    logging.exception(e)
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        query_params = request.query_params.get('search', None)
+        if query_params is not None:
+            try:
+                models_list = filter_list(
+                    object_type='model',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(models_list, status=st)
+        return Response(models_list, status=status.HTTP_200_OK)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
@@ -124,5 +126,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     def details(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
-        data, st = query_ledger(fcn='queryModelDetails', args=[f'{pk}'])
-        return Response(data, st)
+
+        try:
+            data = query_ledger(fcn='queryModelDetails', args=[f'{pk}'])
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
+
+        return Response(data, status=status.HTTP_200_OK)

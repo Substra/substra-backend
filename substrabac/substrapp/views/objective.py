@@ -22,10 +22,11 @@ from substrabac.celery import app
 from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
 from substrapp.utils import get_hash, get_computed_hash, JsonException, get_from_node
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk
+from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
+    get_success_create_code
 from substrapp.views.filters_utils import filter_list
 
 
@@ -112,16 +113,18 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             instance.delete()
             raise ValidationError(ledger_serializer.errors)
 
-        ledger_data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        # create on ledger
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
-        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-            return Response(ledger_data, status=st)
-
+        st = get_success_create_code()
         # return response with local db and ledger data information
         headers = self.get_success_headers(serializer.data)
-        data = dict(serializer.data)    # local db data
-        data.update(ledger_data)   # ledger data
-        return Response(data, status=st, headers=headers)
+        d = dict(serializer.data)    # local db data
+        d.update(data)   # ledger data
+        return Response(d, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
 
@@ -161,10 +164,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # get instance from remote node
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
-        except JsonException as e:
-            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
         # try to get it from local db to check if description exists
         try:
@@ -187,27 +188,31 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
+        try:
+            data = query_ledger(fcn='queryObjectives', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
-        data, st = query_ledger(fcn='queryObjectives', args=[])
         data = data if data else []
 
         objectives_list = [data]
 
-        if st == status.HTTP_200_OK:
-            query_params = request.query_params.get('search', None)
-            if query_params is not None:
-                try:
-                    objectives_list = filter_list(
-                        object_type='objective',
-                        data=data,
-                        query_params=query_params)
-                except Exception as e:
-                    logging.exception(e)
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
+        query_params = request.query_params.get('search', None)
+        if query_params is not None:
+            try:
+                objectives_list = filter_list(
+                    object_type='objective',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(objectives_list, status=st)
+        return Response(objectives_list, status=status.HTTP_200_OK)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):
@@ -244,6 +249,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         raise Exception('Cannot do a objective dryrun without a data manager key.')
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
+
     opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
     with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as file:
         file.write(opener_content)
