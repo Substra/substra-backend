@@ -3,18 +3,20 @@ import shutil
 import mock
 import time
 import uuid
+from unittest.mock import MagicMock
 
 from django.test import override_settings
 from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
+from django_celery_results.models import TaskResult
 
 from substrapp.models import DataSample
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
                                    put_model, put_models, put_algo, put_metric, put_data_sample, prepare_task, do_task,
-                                   compute_task)
+                                   compute_task, remove_subtuple_materials, prepare_materials)
 
 from .common import (get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample,
                      get_sample_model)
@@ -53,7 +55,14 @@ class TasksTests(APITestCase):
         directory = './test/'
         create_directory(directory)
         self.assertTrue(os.path.exists(directory))
-        shutil.rmtree(directory)
+        remove_subtuple_materials(directory)
+        self.assertFalse(os.path.exists(directory))
+
+        # Remove a second time, it should not raise exception
+        try:
+            remove_subtuple_materials(directory)
+        except Exception:
+            self.fail('`remove_subtuple_materials` raised Exception unexpectedly!')
 
     def test_get_computed_hash(self):
         with mock.patch('substrapp.utils.requests.get') as mget:
@@ -166,6 +175,8 @@ class TasksTests(APITestCase):
             f.write(self.script.read())
         self.assertTrue(os.path.exists(filepath))
 
+        opener_hash = get_hash(filepath)
+
         opener_directory = os.path.join(self.subtuple_path, 'opener')
         create_directory(opener_directory)
 
@@ -177,9 +188,22 @@ class TasksTests(APITestCase):
                 put_opener({'dataset': {'openerHash': 'HASH'}}, self.subtuple_path)
 
             # test work
-            put_opener({'dataset': {'openerHash': get_hash(filepath)}}, self.subtuple_path)
+            put_opener({'dataset': {'openerHash': opener_hash}}, self.subtuple_path)
 
-        self.assertTrue(os.path.exists(os.path.join(opener_directory, 'opener.py')))
+            opener_path = os.path.join(opener_directory, 'opener.py')
+            self.assertTrue(os.path.exists(opener_path))
+
+            # test corrupted
+
+            os.remove(opener_path)
+            shutil.copyfile(filepath, opener_path)
+
+            # Corrupted
+            with open(opener_path, 'a+') as f:
+                f.write('corrupted')
+
+            with self.assertRaises(Exception):
+                put_opener({'dataset': {'openerHash': opener_hash}}, self.subtuple_path)
 
     def test_put_data_sample_zip(self):
 
@@ -194,9 +218,9 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
             mget.return_value = data_sample
 
-            subtuple_direcory = build_subtuple_folders(subtuple)
+            subtuple_directory = build_subtuple_folders(subtuple)
 
-            put_data_sample(subtuple, subtuple_direcory)
+            put_data_sample(subtuple, subtuple_directory)
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data sample
             self.assertFalse(
@@ -215,6 +239,32 @@ class TasksTests(APITestCase):
             self.assertTrue(os.path.exists(os.path.join(
                 MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
 
+    def test_put_data_sample_zip_fail(self):
+
+        data_sample = DataSample(pkhash='foo', path=self.data_sample)
+        data_sample.save()
+
+        subtuple = {
+            'key': 'bar',
+            'dataset': {'keys': ['fake_pk']}
+        }
+
+        subtuple2 = {
+            'key': 'bar',
+            'dataset': {'keys': [data_sample.pk]}
+        }
+
+        with mock.patch('substrapp.models.DataSample.objects.get') as mget:
+            mget.return_value = data_sample
+
+            subtuple_directory = build_subtuple_folders(subtuple)
+
+            with self.assertRaises(Exception):
+                put_data_sample(subtuple, subtuple_directory)
+
+            with self.assertRaises(Exception):
+                put_data_sample(subtuple2, '/fake/directory/failure')
+
     def test_put_data_tar(self):
 
         data_sample = DataSample(pkhash='foo', path=self.data_sample_tar)
@@ -228,9 +278,9 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
             mget.return_value = data_sample
 
-            subtuple_direcory = build_subtuple_folders(subtuple)
+            subtuple_directory = build_subtuple_folders(subtuple)
 
-            put_data_sample(subtuple, subtuple_direcory)
+            put_data_sample(subtuple, subtuple_directory)
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
@@ -263,7 +313,20 @@ class TasksTests(APITestCase):
         model_path = os.path.join(model_directory, traintupleKey)
         self.assertTrue(os.path.exists(model_path))
 
-        os.rename(model_path, model_path + '-local')
+        shutil.copyfile(model_path, model_path + '-local')
+
+        # Corrupted
+        with open(model_path, 'a+') as f:
+            f.write('corrupted')
+
+        with mock.patch('substrapp.models.Model.objects.get') as mget:
+            mget.return_value = FakeModel(model_path + '-local')
+            with self.assertRaises(Exception):
+                put_model({'model': {'hash': model_hash, 'traintupleKey': traintupleKey}},
+                          self.subtuple_path, model_content)
+
+        os.remove(model_path)
+
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path + '-local')
             put_model(subtuple, self.subtuple_path, model_content)
@@ -272,7 +335,11 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path)
             with self.assertRaises(Exception):
-                put_model({'model': {'hash': 'fail-hash'}}, self.subtuple_path, model_content)
+                put_model({'model': {'hash': 'fail-hash', 'traintupleKey': traintupleKey}},
+                          self.subtuple_path, model_content)
+
+        with self.assertRaises(Exception):
+            put_model(subtuple, self.subtuple_path, None)
 
     def test_put_models(self):
 
@@ -315,6 +382,9 @@ class TasksTests(APITestCase):
             with self.assertRaises(Exception):
                 put_models({'inModels': [{'hash': 'hash'}]}, self.subtuple_path, model_content)
 
+        with self.assertRaises(Exception):
+            put_models({'model': {'hash': 'fail-hash'}}, self.subtuple_path, None)
+
     def test_get_model(self):
         model_content = self.model.read().encode()
         traintupleKey = compute_hash(model_content)
@@ -327,6 +397,8 @@ class TasksTests(APITestCase):
             model_content = get_model(subtuple)
 
         self.assertIsNotNone(model_content)
+
+        self.assertIsNone(get_model({}))
 
     def test_get_models(self):
         model_content = self.model.read().encode()
@@ -350,6 +422,8 @@ class TasksTests(APITestCase):
 
         self.assertEqual(models_content_res, models_content)
 
+        self.assertEqual(len(get_models({})), 0)
+
     def test_get_algo(self):
         algo_content = self.algo.read()
         algo_hash = get_hash(self.algo)
@@ -359,11 +433,18 @@ class TasksTests(APITestCase):
             self.assertEqual(algo_content, get_algo({'algo': ''}))
 
     def test_get_objective(self):
-        metrics_content = self.script.read()
+        metrics_content = self.script.read().encode('utf-8')
         objective_hash = get_hash(self.script)
 
-        with mock.patch('substrapp.models.Objective.objects.get') as mget, \
-                mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+        with mock.patch('substrapp.models.Objective.objects.get') as mget:
+
+            mget.return_value = FakeObjective()
+
+            objective = get_objective({'objective': {'hash': objective_hash,
+                                       'metrics': ''}})
+            self.assertTrue(isinstance(objective, FakeObjective))
+
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
             mget.return_value = FakeObjective()
@@ -427,9 +508,10 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test'}]
+        subtuple = [{'key': 'subtuple_test', 'fltask': 'flkey'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+                mock.patch.object(TaskResult.objects, 'filter') as mtaskresult, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
                 mock.patch('substrapp.tasks.tasks.query_tuples') as mquery_tuples, \
                 mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
@@ -440,6 +522,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.put_data_sample') as mput_data_sample, \
                 mock.patch('substrapp.tasks.tasks.put_metric') as mput_metric, \
                 mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
+                mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
                 mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
 
             msettings.return_value = FakeSettings()
@@ -454,6 +537,18 @@ class TasksTests(APITestCase):
             mput_metric.return_value = 'metric'
             mput_algo.return_value = 'algo'
             mput_model.return_value = 'model'
+
+            mock_filter = MagicMock()
+            mock_filter.count.return_value = 1
+            mtaskresult.return_value = mock_filter
+
+            mjson_loads.return_value = {'worker': 'worker'}
+
+            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
+                    mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
+                mlog_start_tuple.side_effect = Exception("Test")
+                mlog_fail_tuple.return_value = 'data', 404
+                prepare_task('traintuple')
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
                 mlog_start_tuple.return_value = 'data', 404
@@ -532,11 +627,62 @@ class TasksTests(APITestCase):
                 f.write("MODEL")
 
             with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker, \
+                    mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
                     mock.patch('substrapp.tasks.tasks.prepare_materials') as mprepare_materials, \
                     mock.patch('substrapp.tasks.tasks.log_success_tuple') as mlog_success_tuple:
 
                 mcompute_docker.return_value = 'DONE'
                 mprepare_materials.return_value = 'DONE'
-                mlog_success_tuple.return_value = 'data', 201
+                mdo_task.return_value = 'DONE'
 
+                mlog_success_tuple.return_value = 'data', 201
                 compute_task('traintuple', subtuple, None)
+
+                mlog_success_tuple.return_value = 'data', 404
+                compute_task('traintuple', subtuple, None)
+
+                with mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
+                    mdo_task.side_effect = Exception("Test")
+                    mlog_fail_tuple.return_value = 'data', 404
+                    compute_task('traintuple', subtuple, None)
+
+    def test_prepare_materials(self):
+
+        class FakeSettings(object):
+            def __init__(self):
+                self.LEDGER = {'signcert': 'signcert',
+                               'org': 'owkin',
+                               'peer': 'peer'}
+
+                self.MEDIA_ROOT = MEDIA_ROOT
+
+        subtuple = [{'key': 'subtuple_test', 'fltask': 'flkey'}]
+
+        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+                mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
+                mock.patch('substrapp.tasks.tasks.query_tuples') as mquery_tuples, \
+                mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
+                mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
+                mock.patch('substrapp.tasks.tasks.get_model') as mget_model, \
+                mock.patch('substrapp.tasks.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
+                mock.patch('substrapp.tasks.tasks.put_opener') as mput_opener, \
+                mock.patch('substrapp.tasks.tasks.put_data_sample') as mput_data_sample, \
+                mock.patch('substrapp.tasks.tasks.put_metric') as mput_metric, \
+                mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
+                mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
+
+            msettings.return_value = FakeSettings()
+            mget_hash.return_value = 'owkinhash'
+            mquery_tuples.return_value = subtuple, 200
+            mget_objective.return_value = 'objective'
+            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_model.return_value = 'model', 'model_hash'
+            mbuild_subtuple_folders.return_value = MEDIA_ROOT
+            mput_opener.return_value = 'opener'
+            mput_data_sample.return_value = 'data'
+            mput_metric.return_value = 'metric'
+            mput_algo.return_value = 'algo'
+            mput_model.return_value = 'model'
+
+            prepare_materials(subtuple[0], 'traintuple')
+            prepare_materials(subtuple[0], 'testtuple')
