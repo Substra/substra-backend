@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 
 from django.conf import settings
 from rest_framework.reverse import reverse
@@ -43,7 +43,7 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerDataManager(args, instance.pkhash, sync=True)
+            data = createLedgerDataManager(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerDataManagerAsync.delay(args, instance.pkhash)
@@ -52,4 +52,5 @@ class LedgerDataManagerSerializer(serializers.Serializer):
                 'message': 'DataManager added in local db waiting for validation. '
                            'The substra network has been notified for adding this DataManager'
             }
-            return data, status.HTTP_202_ACCEPTED
+
+        return data

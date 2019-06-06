@@ -10,10 +10,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import get_hash, JsonException, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger
+from substrapp.utils import get_hash, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
 from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
-                                   validate_pk)
+                                   validate_pk, get_success_create_code)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -67,14 +67,16 @@ class AlgoViewSet(mixins.CreateModelMixin,
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
-        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-            return Response(data, status=st)
-
+        st = get_success_create_code()
         headers = self.get_success_headers(serializer.data)
         d = dict(serializer.data)
         d.update(data)
+
         return Response(d, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
@@ -114,10 +116,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # get instance from remote node
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
-        except JsonException as e:
-            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
 
         # try to get it from local db to check if description exists
         try:
@@ -142,29 +142,33 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        data, st = query_ledger(fcn='queryAlgos', args=[])
+        try:
+            data = query_ledger(fcn='queryAlgos', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e)}, status=e.status)
+
         data = data if data else []
 
         algos_list = [data]
 
-        if st == status.HTTP_200_OK:
+        # parse filters
+        query_params = request.query_params.get('search', None)
 
-            # parse filters
-            query_params = request.query_params.get('search', None)
+        if query_params is not None:
+            try:
+                algos_list = filter_list(
+                    object_type='algo',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-            if query_params is not None:
-                try:
-                    algos_list = filter_list(
-                        object_type='algo',
-                        data=data,
-                        query_params=query_params)
-                except Exception as e:
-                    logging.exception(e)
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(algos_list, status=st)
+        return Response(algos_list, status=status.HTTP_200_OK)
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):

@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 # from django.contrib.sites.models import Site
 from django.conf import settings
 from rest_framework.reverse import reverse
@@ -46,7 +46,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerObjective(args, instance.pkhash, sync=True)
+            data = createLedgerObjective(args, instance.pkhash, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerObjectiveAsync.delay(args, instance.pkhash)
@@ -54,4 +54,5 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                 'message': 'Objective added in local db waiting for validation. '
                            'The substra network has been notified for adding this Objective'
             }
-            return data, status.HTTP_202_ACCEPTED
+
+        return data
