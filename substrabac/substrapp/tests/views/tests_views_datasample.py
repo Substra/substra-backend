@@ -194,7 +194,6 @@ class DataSampleViewTests(APITestCase):
         self.assertEqual(response.data[0]['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-
     @override_settings(
         task_eager_propagates=True,
         task_always_eager=True,
