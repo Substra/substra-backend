@@ -6,6 +6,13 @@ from substrapp.tasks.utils import get_cpu_sets, get_gpu_sets, ExceptionThread, \
 
 from substrapp.tests.common import JobStats, Stats, gpu
 
+from rest_framework import status
+from django.http import Http404
+from substrapp.utils import JsonException
+
+from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
+    log_success_tuple, query_tuples
+
 
 class MockDevice():
     """A mock device to temporarily suppress output to stdout
@@ -69,3 +76,64 @@ class MiscTests(TestCase):
         self.assertNotEqual(job_statistics['memory']['max'], 0)
         self.assertNotEqual(job_statistics['cpu']['max'], 0)
         self.assertNotEqual(job_statistics['netio']['rx'], 0)
+
+    def test_get_object_from_ledger(self):
+        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = {'key': 'pk'}, status.HTTP_404_NOT_FOUND
+
+            self.assertRaises(Http404, get_object_from_ledger, 'pk', 'fake_query')
+
+        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = {'key': 'pk'}, status.HTTP_400_BAD_REQUEST
+            self.assertRaises(JsonException, get_object_from_ledger, 'pk', 'fake_query')
+
+        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = {'key': 'pk'}, status.HTTP_200_OK
+            data = get_object_from_ledger('pk', 'good_query')
+            self.assertEqual(data['key'], 'pk')
+
+    def test_log_fail_tuple(self):
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            data, st = log_fail_tuple('traintuple', 'pk', 'error_msg')
+
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            data, st = log_fail_tuple('testtuple', 'pk', 'error_msg')
+
+    def test_log_start_tuple(self):
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            data, st = log_start_tuple('traintuple', 'pk')
+
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            data, st = log_start_tuple('testtuple', 'pk')
+
+    def test_log_success_tuple(self):
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            res = {
+                'end_model_file_hash': 'hash',
+                'end_model_file': 'storageAddress',
+                'global_perf': '0.99',
+                'job_task_log': 'log',
+            }
+            data, st = log_success_tuple('traintuple', 'pk', res)
+
+        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = None, status.HTTP_200_OK
+            res = {
+                'global_perf': '0.99',
+                'job_task_log': 'log',
+            }
+            data, st = log_success_tuple('testtuple', 'pk', res)
+
+    def test_query_tuples(self):
+        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = None, status.HTTP_200_OK
+            data, st = query_tuples('traintuple', 'data_owner')
+
+        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = None, status.HTTP_200_OK
+            data, st = query_tuples('testtuple', 'data_owner')
