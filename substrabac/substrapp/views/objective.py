@@ -23,7 +23,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.utils import get_hash, get_computed_hash, JsonException, get_from_node
+from substrapp.utils import get_hash, get_computed_hash, get_from_node
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code
