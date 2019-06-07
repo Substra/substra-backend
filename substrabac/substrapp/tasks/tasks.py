@@ -186,8 +186,8 @@ manager.start()
 resources_manager = manager.ResourcesManager()
 
 
-@app.task(bind=True, ignore_result=True)
-def prepare_training_task(self):
+@app.task(ignore_result=True)
+def prepare_training_task():
     prepare_task('traintuple')
 
 

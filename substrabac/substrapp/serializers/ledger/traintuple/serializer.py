@@ -25,7 +25,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         data_manager_key = validated_data.get('data_manager_key')
         objective_key = validated_data.get('objective_key')
         rank = validated_data.get('rank', '')
-        rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
+        rank = '' if rank is None else str(rank)
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys', [])
@@ -38,7 +38,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': ','.join([x for x in train_data_sample_keys]),
             'flTask': FLtask_key,
-            'rank': str(rank),
+            'rank': rank,
             'tag': tag
         }
 
