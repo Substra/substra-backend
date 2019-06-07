@@ -15,10 +15,10 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import get_hash, JsonException, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger
+from substrapp.utils import get_hash, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
 from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
-                                   validate_pk)
+                                   validate_pk, get_success_create_code)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -101,13 +101,17 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
-        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-            return Response(data, status=st)
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        st = get_success_create_code()
 
         headers = self.get_success_headers(serializer.data)
         d = dict(serializer.data)
         d.update(data)
+
         return Response(d, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):
@@ -174,10 +178,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         # get instance from remote node
         try:
             data = get_object_from_ledger(pk, 'queryDataset')
-        except JsonException as e:
-            return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-            return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
 
         # try to get it from local db to check if description exists
         try:
@@ -202,29 +204,33 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
 
-        data, st = query_ledger(fcn='queryDataManagers', args=[])
+        try:
+            data = query_ledger(fcn='queryDataManagers', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
         data = data if data else []
 
         data_managers_list = [data]
 
-        if st == status.HTTP_200_OK:
+        # parse filters
+        query_params = request.query_params.get('search', None)
 
-            # parse filters
-            query_params = request.query_params.get('search', None)
+        if query_params is not None:
+            try:
+                data_managers_list = filter_list(
+                    object_type='dataset',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-            if query_params is not None:
-                try:
-                    data_managers_list = filter_list(
-                        object_type='dataset',
-                        data=data,
-                        query_params=query_params)
-                except Exception as e:
-                    logging.exception(e)
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(data_managers_list, status=st)
+        return Response(data_managers_list, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):
@@ -235,17 +241,18 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             validate_pk(pk)
         except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         objective_key = request.data.get('objective_key')
         args = [pk, objective_key]
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data, st = updateLedgerDataManager(args, sync=True)
-            # patch status for update
-            if st == status.HTTP_201_CREATED:
-                st = status.HTTP_200_OK
-            return Response(data, status=st)
+            try:
+                data = updateLedgerDataManager(args, sync=True)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+
+            return Response(data, status=status.HTTP_200_OK)
 
         else:
             # use a celery task, as we are in an http request transaction

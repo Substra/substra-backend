@@ -12,9 +12,9 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import TrainTupleViewSet, TestTupleViewSet
 
-from substrapp.utils import JsonException
 from substrapp.utils import get_hash
 
+from substrapp.ledger_utils import LedgerError
 
 from ..assets import traintuple, testtuple
 
@@ -50,7 +50,7 @@ class TraintupleViewTests(APITestCase):
     def test_traintuple_list_empty(self):
         url = reverse('substrapp:traintuple-list')
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = ([[]], status.HTTP_200_OK)
+            mquery_ledger.return_value = [[]]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -82,7 +82,7 @@ class TraintupleViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = JsonException('TEST')
+            mget_object_from_ledger.side_effect = LedgerError('Test')
 
             file_hash = get_hash(os.path.join(dir_path,
                                               "../../../../fixtures/owkin/objectives/objective0/description.md"))
@@ -121,7 +121,7 @@ class TesttupleViewTests(APITestCase):
     def test_testtuple_list_empty(self):
         url = reverse('substrapp:testtuple-list')
         with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = ([[]], status.HTTP_200_OK)
+            mquery_ledger.return_value = [[]]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -153,7 +153,7 @@ class TesttupleViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = JsonException('TEST')
+            mget_object_from_ledger.side_effect = LedgerError('Test')
 
             file_hash = get_hash(os.path.join(dir_path,
                                               "../../../../fixtures/owkin/objectives/objective0/description.md"))

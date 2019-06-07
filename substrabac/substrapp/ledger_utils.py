@@ -1,15 +1,46 @@
 import asyncio
 import json
+import logging
 
-from rest_framework import status
 from django.conf import settings
-from django.http import Http404
-
-from substrapp.utils import JsonException
+from rest_framework import status
 
 LEDGER = getattr(settings, 'LEDGER', None)
 if LEDGER:
     asyncio.set_event_loop(LEDGER['hfc']['loop'])
+
+
+class LedgerError(Exception):
+    status = status.HTTP_400_BAD_REQUEST
+
+    def __init__(self, msg):
+        super(LedgerError, self).__init__()
+        self.msg = msg
+
+
+class LedgerConflict(LedgerError):
+
+    status = status.HTTP_409_CONFLICT
+
+    def __init__(self, msg, pkhash):
+        super(LedgerConflict, self).__init__(msg)
+        self.pkhash = pkhash
+
+
+class LedgerTimeout(LedgerError):
+    status = status.HTTP_408_REQUEST_TIMEOUT
+
+
+class LedgerForbidden(LedgerError):
+    status = status.HTTP_403_FORBIDDEN
+
+
+class LedgerNotFound(LedgerError):
+    status = status.HTTP_404_NOT_FOUND
+
+
+class LedgerBadResponse(LedgerError):
+    pass
 
 
 def call_ledger(call_type, fcn, args=None, kwargs=None):
@@ -58,55 +89,34 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
     try:
         response = loop.run_until_complete(chaincode_calls[call_type](**params))
     except TimeoutError as e:
-        # Only for invoke
-        st = status.HTTP_408_REQUEST_TIMEOUT
-        data = {'message': str(e)}
+        raise LedgerTimeout(str(e))
     except Exception as e:
-        st = status.HTTP_400_BAD_REQUEST
-        data = {'message': str(e)}
-    else:
+        logging.exception(e)
+        raise LedgerError(str(e))
 
-        if call_type == 'invoke':
-            st = status.HTTP_201_CREATED
-        elif call_type == 'query':
-            st = status.HTTP_200_OK
+    # Sanity check of the response:
+    if 'access denied' in response:
+        raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+    elif 'no element with key' in response:
+        raise LedgerNotFound(f'No element founded for {(fcn, args)}')
+    elif 'tkey' in response:
+        pkhash = response.replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+        if len(pkhash) == 64:
+            raise LedgerConflict(msg='Asset conflict', pkhash=pkhash)
         else:
-            raise NotImplementedError()
+            raise LedgerBadResponse(response)
 
-        # TO DO : review parsing error in case of failure
-        #         May have changed by using fabric-sdk-py
+    # Deserialize the stringified json
+    try:
+        response = json.loads(response)
+    except json.decoder.JSONDecodeError:
+        raise LedgerBadResponse(response)
 
-        try:
-            response = json.loads(response)
-            if call_type == 'invoke':
-                pkhash = response.get('key', response.get('keys'))
-                data = {'pkhash': pkhash}
-            elif call_type == 'query':
-                data = response
-            else:
-                raise NotImplementedError()
-        except json.decoder.JSONDecodeError:
-            st = status.HTTP_400_BAD_REQUEST
+    # Check permissions
+    if 'permissions' in response and response['permissions'] != 'all':
+        raise LedgerForbidden('Not allowed')
 
-            if 'access denied' in response:
-                st = status.HTTP_403_FORBIDDEN
-            elif 'no element with key' in response:
-                st = status.HTTP_404_NOT_FOUND
-
-            data = {'message': response}
-
-    if data is not None:
-        # TODO: get 409 from the chaincode
-        if 'message' in data and 'tkey' in data['message']:
-            pkhash = data['message'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
-            if len(pkhash) == 64:
-                st = status.HTTP_409_CONFLICT
-                data['pkhash'] = pkhash
-
-        if 'permissions' in data and data['permissions'] != 'all':
-            raise Exception('Not Allowed')
-
-        return data, st
+    return response
 
 
 def query_ledger(fcn, args=None):
@@ -122,20 +132,13 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
     if cc_pattern:
         params['cc_pattern'] = cc_pattern
 
-    return call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
+    response = call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
+
+    return {'pkhash': response.get('key', response.get('keys'))}
 
 
 def get_object_from_ledger(pk, query):
-    # get instance from remote node
-    data, st = query_ledger(fcn=query, args={'key': pk})
-
-    if st == status.HTTP_404_NOT_FOUND:
-        raise Http404('Not found')
-
-    if st != status.HTTP_200_OK:
-        raise JsonException(data)
-
-    return data
+    return query_ledger(fcn=query, args={'key': pk})
 
 
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
@@ -143,15 +146,13 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
 
     fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
 
-    data, st = invoke_ledger(
+    return invoke_ledger(
         fcn=fail_type,
         args={
             'key': tuple_key,
             'log': err_msg,
         },
         sync=True)
-
-    return data, st
 
 
 def log_success_tuple(tuple_type, tuple_key, res):
@@ -178,9 +179,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
     else:
         raise NotImplementedError()
 
-    data, st = invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
-
-    return data, st
+    return invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
 def log_start_tuple(tuple_type, tuple_key):
@@ -193,20 +192,21 @@ def log_start_tuple(tuple_type, tuple_key):
     else:
         raise NotImplementedError()
 
-    data, st = invoke_ledger(
+    return invoke_ledger(
         fcn=start_type,
         args={'key': tuple_key},
         sync=True)
 
-    return data, st
-
 
 def query_tuples(tuple_type, data_owner):
-    tuples, st = query_ledger(
+    data = query_ledger(
         fcn="queryFilter",
         args={
             'indexName': f'{tuple_type}~worker~status',
             'attributes': f'{data_owner},todo'
         }
     )
-    return tuples, st
+
+    data = [] if data is None else data
+
+    return data

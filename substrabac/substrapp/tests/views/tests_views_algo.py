@@ -13,7 +13,8 @@ from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerAlgoSerializer
 
-from substrapp.utils import JsonException
+from substrapp.ledger_utils import LedgerError
+
 from substrapp.utils import get_hash
 
 from ..common import get_sample_algo
@@ -28,6 +29,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoViewTests(APITestCase):
 
     def setUp(self):
@@ -51,8 +53,7 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_empty(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
-                                         (['ISIC'], status.HTTP_200_OK)]
+            mquery_ledger.side_effect = [None, ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -65,7 +66,7 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_filter_fail(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
 
             search_params = '?search=algERRORo'
             response = self.client.get(url + search_params, **self.extra)
@@ -76,7 +77,7 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_filter_name(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
@@ -87,7 +88,7 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_filter_dual(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             search_params += f'%2Calgo%253Aowner%253A{algo[0]["owner"]}'
@@ -100,8 +101,8 @@ class AlgoViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
+            mquery_ledger2.return_value = datamanager
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -113,8 +114,8 @@ class AlgoViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
+            mquery_ledger2.return_value = objective
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -126,8 +127,8 @@ class AlgoViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(algo, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(traintuple, status.HTTP_200_OK)]
+            mquery_ledger.return_value = algo
+            mquery_ledger2.return_value = traintuple
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -174,7 +175,7 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = JsonException('TEST')
+            mget_object_from_ledger.side_effect = LedgerError('TEST')
 
             file_hash = get_hash(os.path.join(dir_path,
                                               "../../../../fixtures/owkin/objectives/objective0/description.md"))
@@ -201,8 +202,7 @@ class AlgoViewTests(APITestCase):
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
 
-            mcreate.return_value = ({},
-                                    status.HTTP_201_CREATED)
+            mcreate.return_value = {}
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 

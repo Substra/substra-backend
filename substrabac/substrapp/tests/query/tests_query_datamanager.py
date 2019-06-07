@@ -19,6 +19,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataManagerQueryTests(APITestCase):
 
@@ -53,8 +54,8 @@ class DataManagerQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datamanager.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = ({'pkhash': pkhash}, status.HTTP_201_CREATED)
+        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = {'pkhash': pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -82,11 +83,11 @@ class DataManagerQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datamanager.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = ({
+        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = {
                 'message': 'DataManager added in local db waiting for validation.'
                            'The substra network has been notified for adding this DataManager'
-            }, status.HTTP_202_ACCEPTED)
+            }
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
