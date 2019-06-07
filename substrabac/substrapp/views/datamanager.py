@@ -244,15 +244,17 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         objective_key = request.data.get('objective_key')
-        args = [pk, objective_key]
+        args = {
+            'dataManagerKey': pk,
+            'objectiveKey': objective_key,
+        }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             try:
                 data = updateLedgerDataManager(args, sync=True)
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
-
-            return Response(data, status=status.HTTP_200_OK)
+            st = status.HTTP_200_OK
 
         else:
             # use a celery task, as we are in an http request transaction
@@ -261,7 +263,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 'message': 'The substra network has been notified for updating this DataManager'
             }
             st = status.HTTP_202_ACCEPTED
-            return Response(data, status=st)
+
+        return Response(data, status=st)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

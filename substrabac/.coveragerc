@@ -4,7 +4,6 @@ source =
     ./substrapp/
 
 omit =
-    #./substrapp/serializers/ledger/*
     ./substrapp/tests/generate_assets.py
     ./substrapp/management/*
 

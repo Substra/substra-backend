@@ -13,7 +13,7 @@ from rest_framework.reverse import reverse
 from substrabac.celery import app
 from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
-                                    query_tuples, LedgerTimeout, LedgerError)
+                                    query_tuples, LedgerError)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -225,20 +225,15 @@ def prepare_tuple(subtuple, tuple_type):
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
     try:
-        compute = True
         try:
             log_start_tuple(tuple_type, subtuple['key'])
-        except LedgerTimeout:
-            pass
         except LedgerError as e:
             # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
             # in case of multiple instances of substrabac running for the same organisation
             # So prepare_tuple tasks are ignored if it cannot log_start_tuple
             # TODO: find a way to handle this special case to avoid silent failure in other cases.
             logging.exception(e)
-            compute = False
-
-        if compute:
+        else:
             compute_task.apply_async(
                 (tuple_type, subtuple, fltask),
                 queue=worker_queue)
