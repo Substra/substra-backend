@@ -19,6 +19,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class TraintupleQueryTests(APITestCase):
 
@@ -59,8 +60,8 @@ class TraintupleQueryTests(APITestCase):
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
-            minvoke_ledger.return_value = ({'pkhash': raw_pkhash}, status.HTTP_201_CREATED)
+            mquery_ledger.return_value = {'key': raw_pkhash}
+            minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
 
@@ -97,7 +98,7 @@ class TraintupleQueryTests(APITestCase):
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
+            mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='multipart', **extra)
@@ -206,8 +207,8 @@ class TesttupleQueryTests(APITestCase):
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
-            minvoke_ledger.return_value = ({'pkhash': raw_pkhash}, status.HTTP_201_CREATED)
+            mquery_ledger.return_value = {'key': raw_pkhash}
+            minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
 
@@ -240,7 +241,7 @@ class TesttupleQueryTests(APITestCase):
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = ({'key': raw_pkhash}, status.HTTP_200_OK)
+            mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='multipart', **extra)

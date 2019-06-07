@@ -66,7 +66,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         # Try to get it from local db, else create it in local db
         try:
@@ -93,7 +93,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = query_ledger(fcn='queryModels', args=[])
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         data = data if data else []
 
@@ -107,7 +107,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
-                return Response({'message': str(e)}, status=e.status)
+                return Response({'message': str(e.msg)}, status=e.status)
             except Exception as e:
                 logging.exception(e)
                 return Response(
@@ -130,6 +130,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = query_ledger(fcn='queryModelDetails', args=[f'{pk}'])
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         return Response(data, status=status.HTTP_200_OK)

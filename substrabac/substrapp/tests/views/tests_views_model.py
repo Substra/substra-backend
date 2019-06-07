@@ -10,7 +10,8 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.utils import JsonException
+from substrapp.ledger_utils import LedgerError
+
 from substrapp.utils import get_hash
 
 from ..common import get_sample_model
@@ -47,8 +48,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_empty(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
-                                         (['ISIC'], status.HTTP_200_OK)]
+            mquery_ledger.side_effect = [None, ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -61,7 +61,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_filter_fail(self):
 
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
+            mquery_ledger.return_value = model
 
             url = reverse('substrapp:model-list')
             search_params = '?search=modeERRORl'
@@ -72,7 +72,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_filter_hash(self):
 
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
+            mquery_ledger.return_value = model
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             url = reverse('substrapp:model-list')
@@ -85,8 +85,8 @@ class ModelViewTests(APITestCase):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mquery_ledger.return_value = model
+            mquery_ledger2.return_value = datamanager
 
             search_params = '?search=dataset%253Aname%253AISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -98,8 +98,8 @@ class ModelViewTests(APITestCase):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger.return_value = model
+            mquery_ledger2.return_value = objective
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -111,8 +111,8 @@ class ModelViewTests(APITestCase):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(model, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(algo, status.HTTP_200_OK)]
+            mquery_ledger.return_value = model
+            mquery_ledger2.return_value = algo
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
             response = self.client.get(url + search_params, **self.extra)
@@ -155,7 +155,7 @@ class ModelViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = JsonException('TEST')
+            mget_object_from_ledger.side_effect = LedgerError('TEST')
 
             file_hash = get_hash(os.path.join(dir_path,
                                               "../../../../fixtures/owkin/objectives/objective0/description.md"))

@@ -43,7 +43,7 @@ class ManageFileMixin(object):
         try:
             get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
         else:
             obj = self.get_object()
 

@@ -69,11 +69,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            data = {'message': str(e)}
-            data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerError as e:
-            raise LedgerException({'message': str(e)}, e.status)
+            raise LedgerException(str(e.msg), e.status)
 
         st = get_success_create_code()
 
@@ -205,7 +204,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
-            return Response({'message': str(e)}, status=e.st)
+            return Response({'message': e.data}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
@@ -255,7 +254,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 try:
                     data = updateLedgerDataSample(args, sync=True)
                 except LedgerError as e:
-                    return Response({'message': str(e)}, status=e.st)
+                    return Response({'message': str(e.msg)}, status=e.st)
 
                 return Response(data, status=status.HTTP_200_OK)
 

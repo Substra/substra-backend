@@ -13,7 +13,8 @@ from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerObjectiveSerializer
 
-from substrapp.utils import JsonException
+from substrapp.ledger_utils import LedgerError
+
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
@@ -31,6 +32,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(DEFAULT_DOMAIN='https://localhost')
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class ObjectiveViewTests(APITestCase):
 
     def setUp(self):
@@ -61,8 +63,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_empty(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(None, status.HTTP_200_OK),
-                                         (['ISIC'], status.HTTP_200_OK)]
+            mquery_ledger.side_effect = [None, ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -75,7 +76,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger.return_value = objective
 
             search_params = '?search=challenERRORge'
             response = self.client.get(url + search_params, **self.extra)
@@ -86,7 +87,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_name(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger.return_value = objective
 
             search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
             response = self.client.get(url + search_params, **self.extra)
@@ -97,7 +98,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
+            mquery_ledger.return_value = objective
 
             search_params = '?search=objective%253Ametrics%253Amacro-average%2520recall'
             response = self.client.get(url + search_params, **self.extra)
@@ -109,8 +110,8 @@ class ObjectiveViewTests(APITestCase):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(datamanager, status.HTTP_200_OK)]
+            mquery_ledger.return_value = objective
+            mquery_ledger2.return_value = datamanager
 
             search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
             response = self.client.get(url + search_params, **self.extra)
@@ -122,8 +123,8 @@ class ObjectiveViewTests(APITestCase):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.side_effect = [(objective, status.HTTP_200_OK)]
-            mquery_ledger2.side_effect = [(traintuple, status.HTTP_200_OK)]
+            mquery_ledger.return_value = objective
+            mquery_ledger2.return_value = traintuple
 
             pkhash = model[0]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
@@ -168,7 +169,7 @@ class ObjectiveViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = JsonException('TEST')
+            mget_object_from_ledger.side_effect = LedgerError('TEST')
 
             file_hash = get_hash(os.path.join(dir_path,
                                               "../../../../fixtures/owkin/objectives/objective0/description.md"))
@@ -202,8 +203,7 @@ class ObjectiveViewTests(APITestCase):
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:
 
-            mcreate.return_value = ({},
-                                    status.HTTP_201_CREATED)
+            mcreate.return_value = {}
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
