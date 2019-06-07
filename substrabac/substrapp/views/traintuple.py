@@ -42,9 +42,9 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         try:
             data = query_ledger(fcn='createTraintuple', args=args)
         except LedgerConflict as e:
-            return Response({'message': str(e), 'pkhash': e.pkhash}, status=e.status)
+            return Response({'message': str(e.msg), 'pkhash': e.pkhash}, status=e.status)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         pkhash = data.get('key')
 
@@ -52,7 +52,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         try:
             data = serializer.create(serializer.validated_data)
         except LedgerError as e:
-            return Response({'message': str(e), 'pkhash': pkhash}, status=e.status)
+            return Response({'message': str(e.msg), 'pkhash': pkhash}, status=e.status)
 
         st = get_success_create_code()
 
@@ -64,7 +64,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         try:
             data = query_ledger(fcn='queryTraintuples', args=[])
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         data = data if data else []
 
@@ -83,6 +83,6 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
         else:
             return Response(data, status=status.HTTP_200_OK)

@@ -29,6 +29,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(DEFAULT_DOMAIN='https://localhost')
+@override_settings(LEDGER_SYNC_ENABLED=True)
 class DataSampleViewTests(APITestCase):
 
     def setUp(self):
@@ -78,8 +79,7 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = ({'keys': [pkhash1, pkhash2]},
-                                    status.HTTP_201_CREATED)
+            mcreate.return_value = {'keys': [pkhash1, pkhash2]}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
         self.assertEqual([r['pkhash'] for r in response.data], [pkhash1, pkhash2])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -151,8 +151,7 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = ({'keys': [pkhash]},
-                                    status.HTTP_201_CREATED)
+            mcreate.return_value = {'keys': [pkhash]}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
         self.assertEqual(response.data[0]['pkhash'], pkhash)
@@ -187,8 +186,7 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = ({'keys': [pkhash]},
-                                    status.HTTP_201_CREATED)
+            mcreate.return_value = {'keys': [pkhash]}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
         self.assertEqual(response.data[0]['pkhash'], pkhash)

@@ -13,6 +13,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import Objective, Algo
 from substrapp.serializers import LedgerAlgoSerializer
 from substrapp.utils import get_hash, compute_hash
+from substrapp.ledger_utils import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
     get_sample_algo, get_sample_algo_zip
@@ -21,6 +22,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoQueryTests(APITestCase):
 
@@ -79,8 +81,8 @@ class AlgoQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.algo.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': pkhash}, status.HTTP_201_CREATED
+        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = {'pkhash': pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -108,11 +110,11 @@ class AlgoQueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch('substrapp.serializers.ledger.algo.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = ({
+        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = {
                 'message': 'Algo added in local db waiting for validation.'
                            'The substra network has been notified for adding this Algo'
-            }, status.HTTP_202_ACCEPTED)
+            }
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
@@ -140,8 +142,7 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.return_value = {
-                'message': 'Fail to add algo. Objective does not exist'}, status.HTTP_400_BAD_REQUEST
+            mcreate.side_effect = LedgerError('Fail to add algo. Objective does not exist')
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()

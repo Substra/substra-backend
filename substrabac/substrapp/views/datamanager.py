@@ -104,7 +104,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(ledger_serializer.validated_data)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         st = get_success_create_code()
 
@@ -179,7 +179,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             data = get_object_from_ledger(pk, 'queryDataset')
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         # try to get it from local db to check if description exists
         try:
@@ -207,7 +207,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             data = query_ledger(fcn='queryDataManagers', args=[])
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         data = data if data else []
 
@@ -223,7 +223,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
-                return Response({'message': str(e)}, status=e.status)
+                return Response({'message': str(e.msg)}, status=e.status)
             except Exception as e:
                 logging.exception(e)
                 return Response(
@@ -250,7 +250,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             try:
                 data = updateLedgerDataManager(args, sync=True)
             except LedgerError as e:
-                return Response({'message': str(e)}, status=e.status)
+                return Response({'message': str(e.msg)}, status=e.status)
 
             return Response(data, status=status.HTTP_200_OK)
 

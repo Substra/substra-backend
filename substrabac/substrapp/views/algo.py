@@ -70,7 +70,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(ledger_serializer.validated_data)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         st = get_success_create_code()
         headers = self.get_success_headers(serializer.data)
@@ -117,7 +117,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             data = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         # try to get it from local db to check if description exists
         try:
@@ -145,7 +145,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             data = query_ledger(fcn='queryAlgos', args=[])
         except LedgerError as e:
-            return Response({'message': str(e)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
         data = data if data else []
 
@@ -161,7 +161,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
-                return Response({'message': str(e)}, status=e.status)
+                return Response({'message': str(e.msg)}, status=e.status)
             except Exception as e:
                 logging.exception(e)
                 return Response(
