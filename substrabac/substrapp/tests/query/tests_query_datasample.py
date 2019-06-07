@@ -18,6 +18,7 @@ from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
 from substrapp.utils import get_hash, get_dir_hash
+from substrapp.ledger_utils import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
 from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sample_script, \
@@ -27,6 +28,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataSampleQueryTests(APITestCase):
 
@@ -78,11 +80,11 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = ({
+        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
+            mcreate_ledger_assets.return_value = {
                 'pkhash': pkhash,
                 'validated': True
-            }, status.HTTP_201_CREATED)
+            }
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -114,14 +116,15 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
             self.data_file.seek(0)
             self.data_file_2.seek(0)
             ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': True}
-            minvoke_ledger.return_value = ledger_data, status.HTTP_201_CREATED
+            mcreate_ledger_assets.return_value = ledger_data
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
+
             self.assertEqual(len(r), 2)
             self.assertEqual(r[0]['pkhash'], get_dir_hash(file_mock))
             self.assertTrue(r[0]['path'].endswith(f'/datasamples/{get_dir_hash(file_mock)}'))
@@ -143,14 +146,10 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = ({
-                'message': 'Data added in local db waiting for validation.'
-                           'The substra network has been notified for adding this Data'
-            }, status.HTTP_202_ACCEPTED)
+        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
+            mcreate_ledger_assets.return_value = ''
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-
             self.assertEqual(r[0]['pkhash'], pkhash)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -260,11 +259,13 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.return_value = {'pkhash': get_hash(file_mock), 'validated': False}, status.HTTP_408_REQUEST_TIMEOUT
+            mcreate.side_effect = LedgerTimeout('Timeout')
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r['message'], {'pkhash': [get_dir_hash(file_mock)], 'validated': False})
+            self.assertEqual(
+                r['message'],
+                {'pkhash': [get_dir_hash(file_mock)], 'validated': False})
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
@@ -295,8 +296,8 @@ class DataSampleQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': False}
-            mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
+            # ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': False}
+            mcreate.side_effect = LedgerTimeout('Timeout')
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -365,7 +366,7 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.return_value = 'Failed', status.HTTP_400_BAD_REQUEST
+            mcreate.side_effect = LedgerError('Failed')
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -499,7 +500,7 @@ class DataSampleQueryTests(APITestCase):
         with mock.patch(
                 'substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {'keys': [
-                d.pkhash]}, status.HTTP_200_OK
+                d.pkhash]}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()

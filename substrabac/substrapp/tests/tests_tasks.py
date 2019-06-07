@@ -12,6 +12,7 @@ from rest_framework.test import APITestCase
 from django_celery_results.models import TaskResult
 
 from substrapp.models import DataSample
+from substrapp.ledger_utils import LedgerError, LedgerBadResponse
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
@@ -527,7 +528,7 @@ class TasksTests(APITestCase):
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
-            mquery_tuples.return_value = subtuple, 200
+            mquery_tuples.return_value = subtuple
             mget_objective.return_value = 'objective'
             mget_algo.return_value = 'algo', 'algo_hash'
             mget_model.return_value = 'model', 'model_hash'
@@ -546,12 +547,12 @@ class TasksTests(APITestCase):
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
                     mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
-                mlog_start_tuple.side_effect = Exception("Test")
-                mlog_fail_tuple.return_value = 'data', 404
+                mlog_start_tuple.side_effect = LedgerError("Test")
+                mlog_fail_tuple.return_value = 'data'
                 prepare_task('traintuple')
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
-                mlog_start_tuple.return_value = 'data', 404
+                mlog_start_tuple.side_effect = LedgerBadResponse('Bad Response')
                 prepare_task('traintuple')
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \

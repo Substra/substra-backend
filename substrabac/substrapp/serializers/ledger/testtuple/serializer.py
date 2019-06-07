@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 
 from django.conf import settings
 
@@ -33,7 +33,7 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerTesttuple(args, sync=True)
+            data = createLedgerTesttuple(args, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerTesttupleAsync.delay(args)
@@ -42,4 +42,5 @@ class LedgerTestTupleSerializer(serializers.Serializer):
                            'Please be aware you won\'t get return values from the ledger. '
                            'You will need to check manually'
             }
-            return data, status.HTTP_202_ACCEPTED
+
+        return data
