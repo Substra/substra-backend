@@ -127,8 +127,11 @@ def query_ledger(fcn, args=None):
 def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
     params = {
         'wait_for_event': sync,
-        'wait_for_event_timeout': 45,
     }
+
+    if sync:
+        params['wait_for_event_timeout'] = 45
+
     if cc_pattern:
         params['cc_pattern'] = cc_pattern
 
@@ -161,8 +164,8 @@ def log_success_tuple(tuple_type, tuple_key, res):
         invoke_args = {
             'key': tuple_key,
             'outModel': {
-                'hash': f'{res["end_model_file_hash"]}',
-                'storageAddress': f'{res["end_model_file"]}',
+                'hash': res["end_model_file_hash"],
+                'storageAddress': res["end_model_file"],
             },
             'perf': float(res["global_perf"]),
             'log': f'Train - {res["job_task_log"]};',
@@ -192,10 +195,13 @@ def log_start_tuple(tuple_type, tuple_key):
     else:
         raise NotImplementedError()
 
-    return invoke_ledger(
-        fcn=start_type,
-        args={'key': tuple_key},
-        sync=True)
+    try:
+        invoke_ledger(
+            fcn=start_type,
+            args={'key': tuple_key},
+            sync=True)
+    except LedgerTimeout:
+        pass
 
 
 def query_tuples(tuple_type, data_owner):

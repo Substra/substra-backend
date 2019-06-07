@@ -16,8 +16,4 @@ def createLedgerDataManager(args, pkhash, sync=False):
 
 
 def updateLedgerDataManager(args, sync=False):
-    args = {
-        'dataManagerKey': args[0],
-        'objectiveKey': args[1],
-    }
     return invoke_ledger(fcn='updateDataManager', args=args, sync=sync)

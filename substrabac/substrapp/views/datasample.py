@@ -241,22 +241,17 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
-            #     'hashes': ','.join(data_sample_keys),
-            #     'dataManagerKeys': ','.join(data_manager_keys),
-            # }
-
-            args = [
-                ','.join(data_sample_keys),
-                ','.join(data_manager_keys)
-            ]
+            args = {
+                'hashes': ','.join(data_sample_keys),
+                'dataManagerKeys': ','.join(data_manager_keys),
+            }
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
                 try:
                     data = updateLedgerDataSample(args, sync=True)
                 except LedgerError as e:
                     return Response({'message': str(e.msg)}, status=e.st)
 
-                return Response(data, status=status.HTTP_200_OK)
+                st = status.HTTP_200_OK
 
             else:
                 # use a celery task, as we are in an http request transaction
@@ -265,7 +260,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                     'message': 'The substra network has been notified for updating these Data'
                 }
                 st = status.HTTP_202_ACCEPTED
-                return Response(data, status=st)
+
+            return Response(data, status=st)
 
 
 def path_leaf(path):
