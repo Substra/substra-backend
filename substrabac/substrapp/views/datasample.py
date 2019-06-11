@@ -212,30 +212,24 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             return Response(data, status=st, headers=headers)
 
     def validate_bulk_update(self, data):
-        # validation
         try:
-            data_manager_keys = data.getlist('data_manager_keys', [])
-        except Exception:
-            raise Exception('Please pass a valid data_manager_keys key param')
-        else:
-            data_manager_keys = ','.join(data_manager_keys)
-            if not data_manager_keys:
-                raise Exception('Please pass a non empty data_manager_keys key param')
+            data_manager_keys = data.getlist('data_manager_keys')
+        except KeyError:
+            data_manager_keys = []
+        if not data_manager_keys:
+            raise Exception('Please pass a non empty data_manager_keys key param')
 
         try:
-            data_sample_keys = data.getlist('data_sample_keys', [])
-        except Exception:
-            raise Exception('Please pass a valid data_sample_keys key param')
-        else:
-            data_sample_keys = ','.join(data_sample_keys)
-            if not data_sample_keys:
-                raise Exception('Please pass a non empty data_sample_keys key param')
+            data_sample_keys = data.getlist('data_sample_keys')
+        except KeyError:
+            data_sample_keys = []
+        if not data_sample_keys:
+            raise Exception('Please pass a non empty data_sample_keys key param')
 
         return data_manager_keys, data_sample_keys
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
-
         try:
             data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
         except Exception as e:
@@ -245,6 +239,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 'hashes': ','.join(data_sample_keys),
                 'dataManagerKeys': ','.join(data_manager_keys),
             }
+
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
                 try:
                     data = updateLedgerDataSample(args, sync=True)
