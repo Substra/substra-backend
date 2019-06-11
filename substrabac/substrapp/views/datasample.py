@@ -161,7 +161,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             task, msg = self.dryrun_task(data_dry_run, data_manager_keys)
         except Exception as e:
-            return Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
+            raise Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
             return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
 
