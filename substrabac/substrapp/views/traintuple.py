@@ -4,7 +4,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
-from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException, ValidationException
+from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
