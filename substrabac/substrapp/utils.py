@@ -70,19 +70,7 @@ def compute_hash(bytes, key=None):
 
 
 def get_computed_hash(url, key=None):
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-
-    kwargs = {}
-
-    if username is not None and password is not None:
-        kwargs.update({'auth': (username, password)})
-
-    if settings.DEBUG:
-        kwargs.update({'verify': False})
-
-    response = get_from_node(url, **kwargs)
-
+    response = get_from_node(url)
     computedHash = compute_hash(response.content, key)
 
     return response.content, computedHash
@@ -135,10 +123,22 @@ class NodeError(Exception):
     pass
 
 
-def get_from_node(url, **kwargs):
+def get_from_node(url):
+
+    kwargs = {
+        'headers': {'Accept': 'application/json;version=0.0'},
+    }
+
+    username = getattr(settings, 'BASICAUTH_USERNAME', None)
+    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+    if username is not None and password is not None:
+        kwargs['auth'] = (username, password)
+
+    if settings.DEBUG:
+        kwargs['verify'] = False
 
     try:
-        response = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
+        response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
     else:
