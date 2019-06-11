@@ -53,41 +53,41 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return instance
 
-    def retrieve(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-
+    def _retrieve(self, pk):
+        validate_pk(pk)
         # get instance from remote node
-        try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+        data = get_object_from_ledger(pk, self.ledger_query_call)
 
         # Try to get it from local db, else create it in local db
         try:
             instance = self.get_object()
         except Http404:
             instance = None
-
-        if not instance or not instance.file:
-            try:
+        finally:
+            if not instance or not instance.file:
                 instance = self.create_or_update_model(data['traintuple'],
                                                        data['traintuple']['outModel']['hash'])
-            except Exception as e:
-                Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # For security reason, do not give access to local file address
-        # Restrain data to some fields
-        # TODO: do we need to send creation date and/or last modified date ?
-        serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
-        data.update(serializer.data)
+                # For security reason, do not give access to local file address
+                # Restrain data to some fields
+                # TODO: do we need to send creation date and/or last modified date ?
+                serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
+                data.update(serializer.data)
 
-        return Response(data, status=status.HTTP_200_OK)
+                return data
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            data = self._retrieve(pk)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         try:

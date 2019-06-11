@@ -22,11 +22,11 @@ from substrabac.celery import app
 from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
 from substrapp.utils import get_hash, get_computed_hash, get_from_node
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
-    get_success_create_code
+    get_success_create_code, ValidationException, LedgerException
 from substrapp.views.filters_utils import filter_list
 
 
@@ -44,46 +44,25 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def create(self, request, *args, **kwargs):
-        metrics = request.data.get('metrics')
-        description = request.data.get('description')
-        pkhash = get_hash(description)
-        test_data_manager_key = request.data.get('test_data_manager_key', '')
-
-        # try to serialize in local db to check that it is valid
-        serializer = self.get_serializer(data={'pkhash': pkhash,
-                                               'metrics': metrics,
-                                               'description': description})
+    def handle_dryrun(self, pkhash, metrics, test_data_manager_key):
         try:
-            serializer.is_valid(raise_exception=True)
-        except ValidationError as e:
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            else:
-                st = status.HTTP_400_BAD_REQUEST
-            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
+            metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
+            with open(metrics_path, 'wb') as metrics_file:
+                metrics_file.write(metrics.open().read())
+            task = compute_dryrun.apply_async(
+                (metrics_path, test_data_manager_key, pkhash),
+                queue=f"{settings.LEDGER['name']}.dryrunner"
+            )
+        except Exception as e:
+            raise Exception('Could not launch objective creation with dry-run on this instance: {str(e)}')
+        else:
+            current_site = getattr(settings, "DEFAULT_DOMAIN")
+            task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
+            msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
-        # perform dry run if requested
-        if request.data.get('dryrun', False):
-            try:
-                metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
-                with open(metrics_path, 'wb') as metrics_file:
-                    metrics_file.write(metrics.open().read())
-                task = compute_dryrun.apply_async(
-                    (metrics_path, test_data_manager_key, pkhash),
-                    queue=f"{settings.LEDGER['name']}.dryrunner"
-                )
-            except Exception as e:
-                return Response({
-                    'message': f'Could not launch objective creation with dry-run on this instance: {str(e)}'
-                }, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                current_site = getattr(settings, "DEFAULT_DOMAIN")
-                task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
-                msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
+            return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
 
-                return Response({'id': task.id, 'message': msg}, status=status.HTTP_202_ACCEPTED)
-
+    def commit(self, serializer, ledger_data):
         # create on local db
         try:
             instance = self.perform_create(serializer)
@@ -92,39 +71,79 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 pkhash = re.search(r'\(pkhash\)=\((\w+)\)', e.args[0]).group(1)
             except IndexError:
                 pkhash = ''
-            return Response({'message': 'A objective with this description file already exists.', 'pkhash': pkhash},
-                            status=status.HTTP_409_CONFLICT)
+            return {'message': 'A objective with this description file already exists.', 'pkhash': pkhash}, status.HTTP_409_CONFLICT
         except Exception as e:
-            return Response({'message': e.args},
-                            status=status.HTTP_400_BAD_REQUEST)
+            raise Exception(e.args)
 
-        # create on ledger db
-        ledger_serializer = LedgerObjectiveSerializer(
-            data={'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
-                  'test_data_manager_key': test_data_manager_key,
-                  'name': request.data.get('name'),
-                  'permissions': request.data.get('permissions'),
-                  'metrics_name': request.data.get('metrics_name'),
-                  'instance': instance},
-            context={'request': request}
-        )
+        # init ledger serializer
+        ledger_data.update({'instance': instance})
+        ledger_serializer = LedgerObjectiveSerializer(data=ledger_data)
 
         if not ledger_serializer.is_valid():
+            # delete instance
             instance.delete()
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
         try:
             data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            raise LedgerException(data, e.status)
         except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+            raise LedgerException(str(e.msg), e.status)
 
         st = get_success_create_code()
-        # return response with local db and ledger data information
-        headers = self.get_success_headers(serializer.data)
-        d = dict(serializer.data)    # local db data
-        d.update(data)   # ledger data
-        return Response(d, status=st, headers=headers)
+
+        d = dict(serializer.data)
+        d.update(data)
+
+        return d, st
+
+    def _create(self, request, metrics, description, test_data_manager_key, dryrun):
+        pkhash = get_hash(description)
+        serializer = self.get_serializer(data={'pkhash': pkhash,
+                                               'metrics': metrics,
+                                               'description': description})
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
+            if find_primary_key_error(e):
+                st = status.HTTP_409_CONFLICT
+            raise ValidationException(e.args, pkhash, st)
+        else:
+            if dryrun:
+                return self.handle_dryrun(pkhash, metrics, test_data_manager_key)
+
+            # create on ledger + db
+            ledger_data = {'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
+                  'test_data_manager_key': test_data_manager_key,
+                  'name': request.data.get('name'),
+                  'permissions': request.data.get('permissions'),
+                  'metrics_name': request.data.get('metrics_name'),
+            }
+            data, st = self.commit(serializer, ledger_data)
+            return data, st
+
+    def create(self, request, *args, **kwargs):
+        metrics = request.data.get('metrics')
+        description = request.data.get('description')
+        test_data_manager_key = request.data.get('test_data_manager_key', '')
+        dryrun = request.data.get('dryrun', False)
+
+        try:
+            data, st = self._create(request, metrics, description, test_data_manager_key, dryrun)
+        except ValidationException as e:
+            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except LedgerException as e:
+            return Response({'message': e.data}, status=e.st)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            headers = self.get_success_headers(data)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
 
@@ -152,20 +171,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def retrieve(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-
+    def _retrieve(self, pk):
+        validate_pk(pk)
         # get instance from remote node
-        try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+        data = get_object_from_ledger(pk, self.ledger_query_call)
 
         # try to get it from local db to check if description exists
         try:
@@ -185,7 +194,20 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return data
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            data = self._retrieve(pk)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         try:
