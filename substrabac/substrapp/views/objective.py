@@ -125,7 +125,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                            'metrics_name': request.data.get('metrics_name'),
                            }
             data = self.commit(serializer, ledger_data)
-            return data
+            st = get_success_create_code()
+            return data, st
 
     def create(self, request, *args, **kwargs):
         metrics = request.data.get('metrics')
@@ -134,7 +135,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         dryrun = request.data.get('dryrun', False)
 
         try:
-            data = self._create(request, metrics, description, test_data_manager_key, dryrun)
+            data, st = self._create(request, metrics, description, test_data_manager_key, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -143,7 +144,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):

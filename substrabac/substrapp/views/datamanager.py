@@ -104,14 +104,17 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 'type': request.data.get('type'),
                 'objective_keys': request.data.getlist('objective_keys'),
             }
-            return self.commit(serializer, ledger_data)
+
+            data = self.commit(serializer, ledger_data)
+            st = get_success_create_code()
+            return data, st
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
         data_opener = request.data.get('data_opener')
 
         try:
-            data = self._create(request, data_opener, dryrun)
+            data, st = self._create(request, data_opener, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -120,7 +123,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):
