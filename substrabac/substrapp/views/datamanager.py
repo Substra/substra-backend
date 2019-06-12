@@ -16,9 +16,9 @@ from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerial
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import get_hash, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
 from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code)
+                                   validate_pk, get_success_create_code, ValidationException, LedgerException)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -35,31 +35,58 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def dryrun(self, data_opener):
+    def handle_dryrun(self, data_opener):
 
         file = data_opener.open().read()
 
         try:
             node = ast.parse(file)
         except BaseException:
-            return Response({
-                'message': f'Opener must be a valid python file, please review your opener file and the documentation.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            raise Exception('Opener must be a valid python file, please review your opener file and the documentation.')
 
         imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
         if 'substratools' not in imported_module_names:
-            return Response({
-                'message': 'Opener must import substratools, please review your opener and the documentation.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            err_msg = 'Opener must import substratools, please review your opener and the documentation.'
+            return {'message': err_msg}, status.HTTP_400_BAD_REQUEST
 
-        return Response({
-            'message': f'Your data opener is valid. You can remove the dryrun option.'
-        }, status=status.HTTP_200_OK)
+        return {'message': f'Your data opener is valid. You can remove the dryrun option.'}, status.HTTP_200_OK
 
-    def create(self, request, *args, **kwargs):
-        dryrun = request.data.get('dryrun', False)
-        data_opener = request.data.get('data_opener')
+    def commit(self, serializer, request):
+        # create on ledger + db
+        ledger_data = {
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions'),
+            'type': request.data.get('type'),
+            'objective_keys': request.data.getlist('objective_keys'),
+        }
 
+        # create on db
+        instance = self.perform_create(serializer)
+        # init ledger serializer
+        ledger_data.update({'instance': instance})
+        ledger_serializer = LedgerDataManagerSerializer(data=ledger_data,
+                                                        context={'request': request})
+
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
+
+        # create on ledger
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            raise LedgerException(data, e.status)
+        except LedgerError as e:
+            raise LedgerException(str(e.msg), e.status)
+
+        d = dict(serializer.data)
+        d.update(data)
+
+        return d
+
+    def _create(self, request, data_opener, dryrun):
         pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -74,45 +101,30 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
+            raise ValidationException(e.args, pkhash, st)
+        else:
+            if dryrun:
+                return self.handle_dryrun(data_opener)
 
-        if dryrun:
-            return self.dryrun(data_opener)
+            data = self.commit(serializer, request)
+            st = get_success_create_code()
+            return data, st
 
-        # create on db
+    def create(self, request, *args, **kwargs):
+        dryrun = request.data.get('dryrun', False)
+        data_opener = request.data.get('data_opener')
+
         try:
-            instance = self.perform_create(serializer)
+            data, st = self._create(request, data_opener, dryrun)
+        except ValidationException as e:
+            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except LedgerException as e:
+            return Response({'message': e.data}, status=e.st)
         except Exception as e:
-            return Response({'message': e.args},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # init ledger serializer
-        ledger_serializer = LedgerDataManagerSerializer(data={
-            'name': request.data.get('name'),
-            'permissions': request.data.get('permissions'),
-            'type': request.data.get('type'),
-            'objective_keys': request.data.getlist('objective_keys'),
-            'instance': instance
-        }, context={'request': request})
-
-        if not ledger_serializer.is_valid():
-            # delete instance
-            instance.delete()
-            raise ValidationError(ledger_serializer.errors)
-
-        # create on ledger
-        try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
-        st = get_success_create_code()
-
-        headers = self.get_success_headers(serializer.data)
-        d = dict(serializer.data)
-        d.update(data)
-
-        return Response(d, status=st, headers=headers)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            headers = self.get_success_headers(data)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):
 
@@ -166,41 +178,38 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def retrieve(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-
+    def _retrieve(self, pk):
+        validate_pk(pk)
         # get instance from remote node
-        try:
-            data = get_object_from_ledger(pk, 'queryDataset')
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
+        data = get_object_from_ledger(pk, 'queryDataset')
         # try to get it from local db to check if description exists
         try:
             instance = self.get_object()
         except Http404:
             instance = None
-
-        # check if instance has description or data_opener
-        if not instance or not instance.description or not instance.data_opener:
-            try:
+        finally:
+            # check if instance has description or data_opener
+            if not instance or not instance.description or not instance.data_opener:
                 instance = self.create_or_update_datamanager(instance, data, pk)
-            except Exception as e:
-                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        # do not give access to local files address
-        serializer = self.get_serializer(
-            instance,
-            fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-        data.update(serializer.data)
+            # do not give access to local files address
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+            data.update(serializer.data)
 
-        return Response(data, status=status.HTTP_200_OK)
+            return data
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            data = self._retrieve(pk)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
 

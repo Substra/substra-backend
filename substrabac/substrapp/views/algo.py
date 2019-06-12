@@ -11,9 +11,9 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
 from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code)
+                                   validate_pk, get_success_create_code, LedgerException, ValidationException)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -30,9 +30,39 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def create(self, request, *args, **kwargs):
+    def commit(self, serializer, request):
+        # create on db
+        instance = self.perform_create(serializer)
 
-        file = request.data.get('file')
+        ledger_data = {
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions', 'all'),
+        }
+
+        # init ledger serializer
+        ledger_data.update({'instance': instance})
+        ledger_serializer = LedgerAlgoSerializer(data=ledger_data,
+                                                 context={'request': request})
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
+
+        # create on ledger
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            raise LedgerException(data, e.status)
+        except LedgerError as e:
+            raise LedgerException(str(e.msg), e.status)
+
+        d = dict(serializer.data)
+        d.update(data)
+
+        return d
+
+    def _create(self, request, file):
         pkhash = get_hash(file)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -46,38 +76,26 @@ class AlgoViewSet(mixins.CreateModelMixin,
             st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
+            raise ValidationException(e.args, pkhash, st)
+        else:
+            # create on ledger + db
+            return self.commit(serializer, request)
 
-        # create on db
+    def create(self, request, *args, **kwargs):
+        file = request.data.get('file')
+
         try:
-            instance = self.perform_create(serializer)
+            data = self._create(request, file)
+        except ValidationException as e:
+            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except LedgerException as e:
+            return Response({'message': e.data}, status=e.st)
         except Exception as e:
-            return Response({'message': e.args},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # init ledger serializer
-        ledger_serializer = LedgerAlgoSerializer(data={
-            'name': request.data.get('name'),
-            'permissions': request.data.get('permissions', 'all'),
-            'instance': instance
-        }, context={'request': request})
-        if not ledger_serializer.is_valid():
-            # delete instance
-            instance.delete()
-            raise ValidationError(ledger_serializer.errors)
-
-        # create on ledger
-        try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
-        st = get_success_create_code()
-        headers = self.get_success_headers(serializer.data)
-        d = dict(serializer.data)
-        d.update(data)
-
-        return Response(d, status=st, headers=headers)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            headers = self.get_success_headers(data)
+            st = get_success_create_code()
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
         # get algo description from remote node
@@ -104,42 +122,40 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def retrieve(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-
-        # get instance from remote node
-        try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+    def _retrieve(self, pk):
+        validate_pk(pk)
+        data = get_object_from_ledger(pk, self.ledger_query_call)
 
         # try to get it from local db to check if description exists
         try:
             instance = self.get_object()
         except Http404:
             instance = None
-
-        # check if instance has description
-        if not instance or not instance.description:
-            try:
+        finally:
+            # check if instance has description
+            if not instance or not instance.description:
                 instance = self.create_or_update_algo(data, pk)
-            except Exception as e:
-                logging.exception(e)
-                return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
-        # For security reason, do not give access to local file address
-        # Restrain data to some fields
-        # TODO: do we need to send creation date and/or last modified date ?
-        serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
-        data.update(serializer.data)
+            # For security reason, do not give access to local file address
+            # Restrain data to some fields
+            # TODO: do we need to send creation date and/or last modified date ?
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
+            data.update(serializer.data)
 
-        return Response(data, status=status.HTTP_200_OK)
+            return data
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            data = self._retrieve(pk)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        except Exception as e:
+            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         try:

@@ -23,6 +23,7 @@ from ..common import FakeFilterDataManager, FakeDataManager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
+
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(DRYRUN_ROOT=MEDIA_ROOT)
