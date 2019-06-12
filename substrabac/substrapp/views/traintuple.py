@@ -53,7 +53,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
-            raise LedgerException(str(e.msg), e.status)
+            raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             pkhash = data.get('key')
             return self.commit(serializer, pkhash)
@@ -62,7 +62,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         try:
             data = self._create(request)
         except LedgerException as e:
-            return Response({'message': e.data}, status=e.st)
+            return Response(e.data, status=e.st)
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
