@@ -55,7 +55,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 queue=f"{settings.LEDGER['name']}.dryrunner"
             )
         except Exception as e:
-            raise Exception('Could not launch objective creation with dry-run on this instance: {str(e)}')
+            raise Exception(f'Could not launch objective creation with dry-run on this instance: {str(e)}')
         else:
             current_site = getattr(settings, "DEFAULT_DOMAIN")
             task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
