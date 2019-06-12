@@ -23,112 +23,16 @@ from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializ
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import uncompress_path, get_dir_hash
-from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import find_primary_key_error
+from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
+from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
+    get_success_create_code
+from substrapp.ledger_utils import LedgerError, LedgerTimeout
 
 logger = logging.getLogger('django.request')
 
 
-def path_leaf(path):
-    head, tail = ntpath.split(path)
-    return tail or ntpath.basename(head)
-
-
-class LedgerException(Exception):
-    def __init__(self, data, st):
-        self.data = data
-        self.st = st
-        super(LedgerException).__init__()
-
-
-class ValidationException(Exception):
-    def __init__(self, data, pkhash, st):
-        self.data = data
-        self.pkhash = pkhash
-        self.st = st
-        super(ValidationException).__init__()
-
-
-@app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data, data_manager_keys):
-    from shutil import copy
-    from substrapp.models import DataManager
-
-    client = docker.from_env()
-
-    # Name of the dry-run subtuple (not important)
-    pkhash = data[0]['pkhash']
-    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
-    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
-    data_path = os.path.join(subtuple_directory, 'data')
-    volumes = {}
-
-    try:
-
-        for data_sample in data:
-            # uncompress only for file
-            if 'file' in data_sample:
-                try:
-                    uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
-                except Exception as e:
-                    raise e
-            # for all data paths, we need to create symbolic links inside data_path
-            # and add real path to volume bind docker
-            elif 'path' in data_sample:
-                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
-                volumes.update({data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}})
-
-        for datamanager_key in data_manager_keys:
-            datamanager = DataManager.objects.get(pk=datamanager_key)
-            copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
-
-            # Launch verification
-            opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'fake_data_sample')   # fake_data comes with substrabac
-
-            data_docker = 'data_dry_run'  # tag must be lowercase for docker
-            data_docker_name = f'{data_docker}_{dryrun_uuid}'
-
-            volumes.update({data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
-                            opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}})
-
-            client.images.build(path=data_sample_docker_path,
-                                tag=data_docker,
-                                rm=False)
-
-            job_args = {'image': data_docker,
-                        'name': data_docker_name,
-                        'cpuset_cpus': '0-0',
-                        'mem_limit': '1G',
-                        'command': None,
-                        'volumes': volumes,
-                        'shm_size': '8G',
-                        'labels': ['dryrun'],
-                        'detach': False,
-                        'auto_remove': False,
-                        'remove': False}
-
-            client.containers.run(**job_args)
-
-    except ContainerError as e:
-        raise Exception(e.stderr)
-    finally:
-        try:
-            container = client.containers.get(data_docker_name)
-            container.remove()
-        except:
-            logger.error('Could not remove containers')
-        remove_subtuple_materials(subtuple_directory)
-        for data_sample in data:
-            if 'file' in data_sample and os.path.exists(data_sample['file']):
-                os.remove(data_sample['file'])
-
-
 class DataSampleViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
-                        # mixins.UpdateModelMixin,
-                        # mixins.DestroyModelMixin,
-                        # mixins.ListModelMixin,
                         GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
@@ -145,11 +49,12 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
 
         if datamanager_count != len(data_manager_keys):
-            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. Please create them before. DataManager keys: {data_manager_keys}')
+            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. '
+                            f'Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
     def commit(serializer, ledger_data):
-        instances = serializer.save()  # can raise
+        instances = serializer.save()
         # init ledger serializer
         ledger_data.update({'instances': instances})
         ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
@@ -161,14 +66,15 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise ValidationError(ledger_serializer.errors)
 
         # create on ledger
-        data, st = ledger_serializer.create(ledger_serializer.validated_data)
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            raise LedgerException(data, e.status)
+        except LedgerError as e:
+            raise LedgerException(str(e.msg), e.status)
 
-        if st == status.HTTP_408_REQUEST_TIMEOUT:
-            data.update({'pkhash': [x['pkhash'] for x in serializer.data]})
-            raise LedgerException(data, st)
-
-        if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED):
-            raise LedgerException(data, st)
+        st = get_success_create_code()
 
         # update validated to True in response
         if 'pkhash' in data and data['validated']:
@@ -189,7 +95,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             except KeyError:
                 pass
             else:
-                raise Exception(f'Your data sample archives contain same files leading to same pkhash, please review the content of your achives. Archives {file} and {existing["file"]} are the same')
+                raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
+                                f'please review the content of your achives. '
+                                f'Archives {file} and {existing["file"]} are the same')
             data[pkhash] = {
                 'pkhash': pkhash,
                 'file': file
@@ -208,7 +116,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # paths, should be directories
         for path in paths:
             if not os.path.isdir(path):
-                raise Exception(f'One of your paths does not exist, is not a directory or is not an absolute path: {path}')
+                raise Exception(f'One of your paths does not exist, '
+                                f'is not a directory or is not an absolute path: {path}')
             pkhash = dirhash(path, 'sha256')
             try:
                 existing = data[pkhash]
@@ -216,7 +125,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 pass
             else:
                 # existing can be a dict with a field path or file
-                raise Exception(f'Your data sample directory contain same files leading to same pkhash. Invalid path: {path}.')
+                raise Exception(f'Your data sample directory contain same files leading to same pkhash. '
+                                f'Invalid path: {path}.')
 
             data[pkhash] = {
                 'pkhash': pkhash,
@@ -251,7 +161,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             task, msg = self.dryrun_task(data_dry_run, data_manager_keys)
         except Exception as e:
-            return Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
+            raise Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
             return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
 
@@ -302,51 +212,42 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             return Response(data, status=st, headers=headers)
 
     def validate_bulk_update(self, data):
-        # validation
         try:
-            data_manager_keys = data.getlist('data_manager_keys', [])
-        except:
-            raise Exception('Please pass a valid data_manager_keys key param')
-        else:
-            data_manager_keys = ','.join(data_manager_keys)
-            if not data_manager_keys:
-                raise Exception('Please pass a non empty data_manager_keys key param')
+            data_manager_keys = data.getlist('data_manager_keys')
+        except KeyError:
+            data_manager_keys = []
+        if not data_manager_keys:
+            raise Exception('Please pass a non empty data_manager_keys key param')
 
         try:
-            data_sample_keys = data.getlist('data_sample_keys', [])
-        except:
-            raise Exception('Please pass a valid data_sample_keys key param')
-        else:
-            data_sample_keys = ','.join(data_sample_keys)
-            if not data_sample_keys:
-                raise Exception('Please pass a non empty data_sample_keys key param')
+            data_sample_keys = data.getlist('data_sample_keys')
+        except KeyError:
+            data_sample_keys = []
+        if not data_sample_keys:
+            raise Exception('Please pass a non empty data_sample_keys key param')
 
         return data_manager_keys, data_sample_keys
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
-
         try:
             data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # args = '"%(hashes)s", "%(dataManagerKeys)s"' % {
-            #     'hashes': ','.join(data_sample_keys),
-            #     'dataManagerKeys': ','.join(data_manager_keys),
-            # }
+            args = {
+                'hashes': ','.join(data_sample_keys),
+                'dataManagerKeys': ','.join(data_manager_keys),
+            }
 
-            args = [
-                ','.join(data_sample_keys),
-                ','.join(data_manager_keys)
-            ]
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                data, st = updateLedgerDataSample(args, sync=True)
+                try:
+                    data = updateLedgerDataSample(args, sync=True)
+                except LedgerError as e:
+                    return Response({'message': str(e.msg)}, status=e.st)
 
-                # patch status for update
-                if st == status.HTTP_201_CREATED:
-                    st = status.HTTP_200_OK
-                return Response(data, status=st)
+                st = status.HTTP_200_OK
+
             else:
                 # use a celery task, as we are in an http request transaction
                 updateLedgerDataSampleAsync.delay(args)
@@ -354,4 +255,89 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                     'message': 'The substra network has been notified for updating these Data'
                 }
                 st = status.HTTP_202_ACCEPTED
-                return Response(data, status=st)
+
+            return Response(data, status=st)
+
+
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
+
+
+@app.task(bind=True, ignore_result=False)
+def compute_dryrun(self, data_samples, data_manager_keys):
+    from shutil import copy
+    from substrapp.models import DataManager
+
+    client = docker.from_env()
+
+    # Name of the dry-run subtuple (not important)
+    pkhash = data_samples[0]['pkhash']
+    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
+    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
+    data_path = os.path.join(subtuple_directory, 'data')
+    volumes = {}
+
+    try:
+        for data_sample in data_samples:
+            # uncompress only for file
+            if 'file' in data_sample:
+                uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
+            # for all data paths, we need to create symbolic links inside data_path
+            # and add real path to volume bind docker
+            elif 'path' in data_sample:
+                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
+                volumes.update({
+                    data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
+                })
+
+        for datamanager_key in data_manager_keys:
+            datamanager = DataManager.objects.get(pk=datamanager_key)
+            copy(datamanager.data_opener.path, os.path.join(subtuple_directory, 'opener/opener.py'))
+
+            opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
+            data_sample_docker_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_data_sample')
+
+            data_docker = 'data_dry_run'
+            data_docker_name = f'{data_docker}_{dryrun_uuid}'
+
+            volumes.update({
+                data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
+            })
+
+            client.images.build(path=data_sample_docker_path,
+                                tag=data_docker,
+                                rm=False)
+
+            job_args = {
+                'image': data_docker,
+                'name': data_docker_name,
+                'cpuset_cpus': '0-0',
+                'mem_limit': '1G',
+                'command': None,
+                'volumes': volumes,
+                'shm_size': '8G',
+                'labels': ['dryrun'],
+                'detach': False,
+                'auto_remove': False,
+                'remove': False,
+            }
+
+            client.containers.run(**job_args)
+
+    except ContainerError as e:
+        raise Exception(e.stderr)
+
+    finally:
+        try:
+            container = client.containers.get(data_docker_name)
+            container.remove()
+        except Exception:
+            logger.error('Could not remove containers')
+
+        remove_subtuple_materials(subtuple_directory)
+
+        for data_sample in data_samples:
+            if 'file' in data_sample and os.path.exists(data_sample['file']):
+                os.remove(data_sample['file'])

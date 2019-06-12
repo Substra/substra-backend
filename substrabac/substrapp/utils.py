@@ -1,8 +1,6 @@
 
 import io
-import asyncio
 import hashlib
-import json
 import logging
 import os
 import tempfile
@@ -13,139 +11,15 @@ import tarfile
 import zipfile
 
 from checksumdir import dirhash
-from rest_framework import status
 
 from django.conf import settings
-
-LEDGER = getattr(settings, 'LEDGER', None)
-CLIENT = getattr(settings, 'CLIENT', None)
-REQUESTOR = getattr(settings, 'REQUESTOR', None)
-HLF_LOOP = getattr(settings, 'HLF_LOOP', None)
-asyncio.set_event_loop(HLF_LOOP)
+from rest_framework import status
 
 
-# careful, passing invoke parameters to queryLedger will NOT fail
-def queryLedger(fcn, args=None):
-
-    if args is None:
-        args = []
-
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-    peer = LEDGER['peer']
-
-    # Get chaincode version
-    response = HLF_LOOP.run_until_complete(
-        CLIENT.query_instantiated_chaincodes(
-            requestor=REQUESTOR,
-            channel_name=channel_name,
-            peers=[peer['name']],
-            decode=True
-        ))
-    for ccs in response:
-        for cc in ccs.chaincodes:
-            if cc.name == chaincode_name:
-                chaincode_version = cc.version
-
-    try:
-        # Async - need loop
-        response = HLF_LOOP.run_until_complete(
-            CLIENT.chaincode_query(
-                requestor=REQUESTOR,
-                channel_name=channel_name,
-                peers=[peer['name']],
-                args=args,
-                cc_name=chaincode_name,
-                cc_version=chaincode_version,
-                fcn=fcn))
-    except Exception as e:
-        st = status.HTTP_400_BAD_REQUEST
-        data = {'message': str(e)}
-    else:
-        msg = f'Query of channel \'{channel_name}\' on the peer \'{peer["host"]}\' was successful\n'
-        print(msg, flush=True)
-
-        st = status.HTTP_200_OK
-
-        # TO DO : review parsing error in case of failure
-        #         May have changed by using fabric-sdk-py
-        try:
-            # json transformation if needed
-            data = json.loads(response)
-        except json.decoder.JSONDecodeError:
-            st = status.HTTP_400_BAD_REQUEST
-
-            if 'access denied' in response:
-                st = status.HTTP_403_FORBIDDEN
-            elif 'no element with key' in response:
-                st = status.HTTP_404_NOT_FOUND
-
-            data = {'message': response}
-
-    return data, st
-
-
-def invokeLedger(fcn, args=None, cc_pattern=None, sync=False):
-
-    if args is None:
-        args = []
-
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-    peer = LEDGER['peer']
-
-    # Get chaincode version
-    response = HLF_LOOP.run_until_complete(
-        CLIENT.query_instantiated_chaincodes(
-            requestor=REQUESTOR,
-            channel_name=channel_name,
-            peers=[peer['name']],
-            decode=True
-        ))
-    for ccs in response:
-        for cc in ccs.chaincodes:
-            if cc.name == chaincode_name:
-                chaincode_version = cc.version
-
-    try:
-        # Async - need loop
-        kwargs = {
-            'requestor': REQUESTOR,
-            'channel_name': channel_name,
-            'peers': [peer['name']],
-            'args': args,
-            'cc_name': chaincode_name,
-            'cc_version': chaincode_version,
-            'fcn': fcn,
-            'wait_for_event': sync,
-            'wait_for_event_timeout': 45
-        }
-        if cc_pattern:
-            kwargs['cc_pattern'] = cc_pattern
-
-        response = HLF_LOOP.run_until_complete(CLIENT.chaincode_invoke(**kwargs))
-    except TimeoutError as e:
-        st = status.HTTP_408_REQUEST_TIMEOUT
-        data = {'message': str(e)}
-    except Exception as e:
-        st = status.HTTP_400_BAD_REQUEST
-        data = {'message': str(e)}
-    else:
-        # TO DO : review parsing error in case of failure
-        #         May have changed by using fabric-sdk-py
-        # elif 'access denied' in msg or 'authentication handshake failed' in msg:
-        #     st = status.HTTP_403_FORBIDDEN
-
-        st = status.HTTP_201_CREATED
-        try:
-            response = json.loads(response)
-            pkhash = response.get('key', response.get('keys'))
-            data = {'pkhash': pkhash}
-        except json.decoder.JSONDecodeError:
-            st = status.HTTP_400_BAD_REQUEST
-            data = {'message': response}
-
-    return data, st
+class JsonException(Exception):
+    def __init__(self, msg):
+        self.msg = msg
+        super(JsonException, self).__init__()
 
 
 def get_dir_hash(archive_content):
@@ -196,36 +70,18 @@ def compute_hash(bytes, key=None):
 
 
 def get_computed_hash(url, key=None):
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+    response = get_from_node(url)
+    computedHash = compute_hash(response.content, key)
 
-    kwargs = {}
-
-    if username is not None and password is not None:
-        kwargs.update({'auth': (username, password)})
-
-    if settings.DEBUG:
-        kwargs.update({'verify': False})
-
-    try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
-    except:
-        raise Exception(f'Failed to check hash due to failed file fetching {url}')
-    else:
-        if r.status_code != 200:
-            raise Exception(
-                f'Url: {url} to fetch file returned status code: {r.status_code}')
-
-        computedHash = compute_hash(r.content, key)
-
-        return r.content, computedHash
+    return response.content, computedHash
 
 
 def get_remote_file(object, key=None):
     content, computed_hash = get_computed_hash(object['storageAddress'], key)
 
     if computed_hash != object['hash']:
-        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+        msg = 'computed hash is not the same as the hosted file.' \
+              'Please investigate for default of synchronization, corruption, or hacked'
         raise Exception(msg)
 
     return content, computed_hash
@@ -261,3 +117,33 @@ def uncompress_content(archive_content, to_directory):
             tar.close()
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
+
+
+class NodeError(Exception):
+    pass
+
+
+def get_from_node(url):
+
+    kwargs = {
+        'headers': {'Accept': 'application/json;version=0.0'},
+    }
+
+    username = getattr(settings, 'BASICAUTH_USERNAME', None)
+    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+    if username is not None and password is not None:
+        kwargs['auth'] = (username, password)
+
+    if settings.DEBUG:
+        kwargs['verify'] = False
+
+    try:
+        response = requests.get(url, **kwargs)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        raise NodeError(f'Failed to fetch {url}') from e
+    else:
+        if response.status_code != status.HTTP_200_OK:
+            logging.error(response.text)
+            raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+
+    return response

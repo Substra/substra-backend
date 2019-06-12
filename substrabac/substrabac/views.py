@@ -49,7 +49,7 @@ class SchemaGenerator(schemas.SchemaGenerator):
             if len(a) == 2:
                 try:
                     yaml_doc = yaml.load(a[1])
-                except:
+                except BaseException:
                     pass
                 else:
                     if 'desc' in yaml_doc:

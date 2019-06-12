@@ -1,6 +1,7 @@
-import os
+from .common import *  # noqa
 
-from .common import *
+from .deps.restframework import *  # noqa
+from .deps.cors import *  # noqa
 
-from .deps.restframework import *
-from .deps.cors import *
+import logging
+logging.disable(logging.CRITICAL)

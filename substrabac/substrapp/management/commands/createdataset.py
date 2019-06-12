@@ -19,7 +19,7 @@ def path_leaf(path):
 
 
 class Command(BaseCommand):
-    help = '''
+    help = '''  # noqa
     create dataset
     python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdataset dataset.json
@@ -37,11 +37,11 @@ class Command(BaseCommand):
         args = options['data_input']
         try:
             data_input = json.loads(args)
-        except:
+        except Exception:
             try:
                 with open(args, 'r') as f:
                     data_input = json.load(f)
-            except:
+            except Exception:
                 raise CommandError('Invalid args. Please review help')
         else:
             if not isinstance(data_input, dict):
@@ -98,7 +98,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all', # forced, TODO changed when permissions are available
+                          'permissions': 'all',  # forced, TODO changed when permissions are available
                           'type': data_manager['type'],
                           'objective_keys': data_manager.get('objective_keys', []),
                           'instance': instance},
@@ -120,7 +120,8 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Successfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added datamanager with status code {st} and result: ' \
+                              f'{json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
         # Try to add data even if datamanager creation failed

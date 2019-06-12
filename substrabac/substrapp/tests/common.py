@@ -3,6 +3,7 @@ import os
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
+
 class gpu():
     """Fake gpu"""
 
@@ -167,19 +168,11 @@ def get_sample_datamanager2():
     return description, description_filename, data_opener, data_opener_filename
 
 
-def get_sample_data_sample():
-    file_content = "0\n1\n2"
-    file_filename = "file.csv"
-    file = get_temporary_text_file(file_content, file_filename)
-
-    return file, file_filename
-
-
 def get_sample_zip_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/datasample4/0024900.zip'), 'rb') as zip_file:
+    with open(os.path.join(dir_path, '../../../fixtures/owkin/datasamples/datasample4/0024900.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -193,7 +186,7 @@ def get_sample_zip_data_sample_2():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/test/0024901.zip'), 'rb') as zip_file:
+    with open(os.path.join(dir_path, '../../../fixtures/owkin/datasamples/test/0024901.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -207,7 +200,8 @@ def get_sample_tar_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz'), 'rb') as tar_file:
+    with open(os.path.join(
+            dir_path, '../../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,
@@ -221,7 +215,21 @@ def get_sample_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
+    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
+        flength = f.write(tar_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename,
+                                'application/tar+gzip', flength, None)
+    file.seek(0)
+
+    return file, file_filename
+
+
+def get_sample_algo_zip():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.tar.gz"
+    f = BytesIO()
+    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo0/algo.zip'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
     file = InMemoryUploadedFile(f, None, file_filename,

@@ -13,10 +13,10 @@ from django.utils.deconstruct import deconstructible
 @deconstructible
 class FileValidator(object):
     error_messages = {
-      'open': ("Cannot handle this file object."),
-      'compressed': ("Ensure this file is an archive (zip or tar.* compressed file)."),
-      'docker': ("Ensure your archive contains a Dockerfile."),
-      'file': ("Ensure your archive contains at least one algo file (for instance algo.py)."),
+        'open': ("Cannot handle this file object."),
+        'compressed': ("Ensure this file is an archive (zip or tar.* compressed file)."),
+        'docker': ("Ensure your archive contains a Dockerfile."),
+        'file': ("Ensure your archive contains at least one algo file (for instance algo.py)."),
     }
 
     def validate_archive(self, files):
@@ -31,7 +31,7 @@ class FileValidator(object):
         archive = None
         try:
             data.file.seek(0)
-        except:
+        except Exception:
             raise ValidationError(self.error_messages['open'])
         else:
             try:
