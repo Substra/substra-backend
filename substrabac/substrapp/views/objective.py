@@ -8,7 +8,6 @@ import uuid
 
 from urllib.parse import unquote
 
-import requests
 from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
@@ -26,7 +25,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 
-from substrapp.utils import queryLedger, get_hash, get_computed_hash
+from substrapp.utils import queryLedger, get_hash, get_computed_hash, get_from_node
 from substrapp.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 
@@ -222,12 +221,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def create_or_update_objective(self, objective, pk):
         # get objective description from remote node
         url = objective['description']['storageAddress']
-        try:
-            r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-        except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
-            raise Exception(f'Failed to fetch {url}')
-        if r.status_code != status.HTTP_200_OK:
-            raise Exception(f'end to end node report {r.text}')
+        r = get_from_node(url)
 
         try:
             computed_hash = self.compute_hash(r.content)

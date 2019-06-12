@@ -1,7 +1,6 @@
 import os
 import tempfile
 
-import requests
 from django.http import Http404
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -13,7 +12,7 @@ from substrapp.serializers import ModelSerializer
 
 # from hfc.fabric import Client
 # cli = Client(net_profile="../network.json")
-from substrapp.utils import queryLedger
+from substrapp.utils import queryLedger, get_from_node
 from substrapp.views.utils import get_filters, ComputeHashMixin, getObjectFromLedger, CustomFileResponse, JsonException
 
 
@@ -33,29 +32,23 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             # get objective description from remote node
             url = traintuple['outModel']['storageAddress']
+            r = get_from_node(url)
+
             try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except:
-                raise Exception(f'Failed to fetch {url}')
+                computed_hash = self.compute_hash(r.content, traintuple['key'])
+            except Exception:
+                raise Exception('Failed to fetch outModel file')
             else:
-                if r.status_code != 200:
-                    raise Exception(f'end to end node report {r.text}')
+                if computed_hash != pk:
+                    msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                    raise Exception(msg)
 
-                try:
-                    computed_hash = self.compute_hash(r.content, traintuple['key'])
-                except Exception:
-                    raise Exception('Failed to fetch outModel file')
-                else:
-                    if computed_hash != pk:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
+                f = tempfile.TemporaryFile()
+                f.write(r.content)
 
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
-
-                    # save/update objective in local db for later use
-                    instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
-                    instance.file.save('model', f)
+                # save/update objective in local db for later use
+                instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
+                instance.file.save('model', f)
         except Exception as e:
             raise e
         else:

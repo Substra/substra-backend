@@ -174,7 +174,7 @@ class ObjectiveViewTests(APITestCase):
         url = reverse('substrapp:objective-list')
 
         with mock.patch('substrapp.views.objective.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.objective.requests.get') as mrequestsget:
+                mock.patch('substrapp.utils.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = objective[0]
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -419,7 +419,7 @@ class AlgoViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         algo_response = [a for a in algo if a['key'] == algo_hash][0]
         with mock.patch('substrapp.views.algo.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.algo.requests.get') as mrequestsget:
+                mock.patch('substrapp.utils.requests.get') as mrequestsget:
 
             with open(os.path.join(dir_path,
                                    '../../fixtures/chunantes/algos/algo4/description.md'), 'rb') as f:
@@ -590,7 +590,7 @@ class ModelViewTests(APITestCase):
     def test_model_retrieve(self):
 
         with mock.patch('substrapp.views.model.getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.model.requests.get') as mrequestsget, \
+                mock.patch('substrapp.utils.requests.get') as mrequestsget, \
                 mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
             mgetObjectFromLedger.return_value = model[0]
 
@@ -722,7 +722,7 @@ class DataManagerViewTests(APITestCase):
         url = reverse('substrapp:data_manager-list')
         datamanager_response = [d for d in datamanager if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
         with mock.patch.object(DataManagerViewSet, 'getObjectFromLedger') as mgetObjectFromLedger, \
-                mock.patch('substrapp.views.datamanager.requests.get') as mrequestsget:
+                mock.patch('substrapp.utils.requests.get') as mrequestsget:
             mgetObjectFromLedger.return_value = datamanager_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),

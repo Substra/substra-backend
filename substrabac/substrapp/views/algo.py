@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import queryLedger, get_hash
+from substrapp.utils import queryLedger, get_hash, get_from_node
 from substrapp.views.utils import get_filters, getObjectFromLedger, ComputeHashMixin, ManageFileMixin, JsonException, find_primary_key_error
 
 
@@ -80,29 +80,23 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             # get algo description from remote node
             url = algo['description']['storageAddress']
+            r = get_from_node(url)
+
             try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})  # TODO pass cert
-            except:
-                raise Exception(f'Failed to fetch {url}')
+                computed_hash = self.compute_hash(r.content)
+            except Exception:
+                raise Exception('Failed to fetch description file')
             else:
-                if r.status_code != 200:
-                    raise Exception(f'end to end node report {r.text}')
+                if computed_hash != algo['description']['hash']:
+                    msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                    raise Exception(msg)
 
-                try:
-                    computed_hash = self.compute_hash(r.content)
-                except Exception:
-                    raise Exception('Failed to fetch description file')
-                else:
-                    if computed_hash != algo['description']['hash']:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
+                f = tempfile.TemporaryFile()
+                f.write(r.content)
 
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
-
-                    # save/update objective in local db for later use
-                    instance, created = Algo.objects.update_or_create(pkhash=pk, validated=True)
-                    instance.description.save('description.md', f)
+                # save/update objective in local db for later use
+                instance, created = Algo.objects.update_or_create(pkhash=pk, validated=True)
+                instance.description.save('description.md', f)
         except Exception as e:
             raise e
         else:

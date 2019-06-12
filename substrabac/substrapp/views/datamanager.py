@@ -1,7 +1,6 @@
 import ast
 import tempfile
 
-import requests
 from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
@@ -16,7 +15,7 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import queryLedger, get_hash
+from substrapp.utils import queryLedger, get_hash, get_from_node
 from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException, find_primary_key_error
 
 
@@ -117,28 +116,22 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.data_opener:
             try:
                 url = datamanager['opener']['storageAddress']
+                r = get_from_node(url)
+
                 try:
-                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-                except:
-                    raise Exception(f'Failed to fetch {url}')
+                    computed_hash = self.compute_hash(r.content)
+                except Exception:
+                    raise Exception('Failed to fetch opener file')
                 else:
-                    if r.status_code != 200:
-                        raise Exception(f'end to end node report {r.text}')
+                    if computed_hash != pk:
+                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                        raise Exception(msg)
 
-                    try:
-                        computed_hash = self.compute_hash(r.content)
-                    except Exception:
-                        raise Exception('Failed to fetch opener file')
-                    else:
-                        if computed_hash != pk:
-                            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                            raise Exception(msg)
+                    f = tempfile.TemporaryFile()
+                    f.write(r.content)
 
-                        f = tempfile.TemporaryFile()
-                        f.write(r.content)
-
-                        # save/update data_opener in local db for later use
-                        instance.data_opener.save('opener.py', f)
+                    # save/update data_opener in local db for later use
+                    instance.data_opener.save('opener.py', f)
 
             except Exception as e:
                 raise e
@@ -146,28 +139,22 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.description:
             # do the same for description
             url = datamanager['description']['storageAddress']
+            r = get_from_node(url)
+
             try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-            except:
-                raise Exception(f'Failed to fetch {url}')
+                computed_hash = self.compute_hash(r.content)
+            except Exception:
+                raise Exception('Failed to fetch description file')
             else:
-                if r.status_code != status.HTTP_200_OK:
-                    raise Exception(f'end to end node report {r.text}')
+                if computed_hash != datamanager['description']['hash']:
+                    msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
+                    raise Exception(msg)
 
-                try:
-                    computed_hash = self.compute_hash(r.content)
-                except Exception:
-                    raise Exception('Failed to fetch description file')
-                else:
-                    if computed_hash != datamanager['description']['hash']:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
+                f = tempfile.TemporaryFile()
+                f.write(r.content)
 
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
-
-                    # save/update description in local db for later use
-                    instance.description.save('description.md', f)
+                # save/update description in local db for later use
+                instance.description.save('description.md', f)
 
         return instance
 

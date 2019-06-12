@@ -208,29 +208,9 @@ def compute_hash(bytes, key=None):
 
 
 def get_computed_hash(url, key=None):
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-
-    kwargs = {}
-
-    if username is not None and password is not None:
-        kwargs.update({'auth': (username, password)})
-
-    if settings.DEBUG:
-        kwargs.update({'verify': False})
-
-    try:
-        r = requests.get(url, headers={'Accept': 'application/json;version=0.0'}, **kwargs)
-    except:
-        raise Exception(f'Failed to check hash due to failed file fetching {url}')
-    else:
-        if r.status_code != 200:
-            raise Exception(
-                f'Url: {url} to fetch file returned status code: {r.status_code}')
-
-        computedHash = compute_hash(r.content, key)
-
-        return r.content, computedHash
+    r = get_from_node(url)
+    computedHash = compute_hash(r.content, key)
+    return r.content, computedHash
 
 
 def get_remote_file(object, key=None):
@@ -273,3 +253,28 @@ def uncompress_content(archive_content, to_directory):
             tar.close()
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
+
+
+def get_from_node(url):
+
+    kwargs = {
+        'headers': {'Accept': 'application/json;version=0.0'},
+    }
+
+    username = getattr(settings, 'BASICAUTH_USERNAME', None)
+    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
+    if username is not None and password is not None:
+        kwargs['auth'] = (username, password)
+
+    if settings.DEBUG:
+        kwargs['verify'] = False
+
+    try:
+        response = requests.get(url, **kwargs)
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
+        raise Exception(f'Failed to fetch {url}') from e
+    else:
+        if response.status_code != status.HTTP_200_OK:
+            logging.error(response.text)
+            raise Exception(f'Url: {url} returned status code: {response.status_code}')
+    return response
