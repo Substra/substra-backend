@@ -63,7 +63,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
             return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
 
-    def commit(self, serializer, ledger_data):
+    def commit(self, serializer, request):
         # create on local db
         try:
             instance = self.perform_create(serializer)
@@ -78,8 +78,16 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             raise Exception(e.args)
 
         # init ledger serializer
+        ledger_data = {
+            'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
+            'test_data_manager_key': request.data.get('test_data_manager_key', ''),
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions'),
+            'metrics_name': request.data.get('metrics_name'),
+        }
         ledger_data.update({'instance': instance})
-        ledger_serializer = LedgerObjectiveSerializer(data=ledger_data)
+        ledger_serializer = LedgerObjectiveSerializer(data=ledger_data,
+                                                      context={'request': request})
 
         if not ledger_serializer.is_valid():
             # delete instance
@@ -100,7 +108,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         return d
 
-    def _create(self, request, metrics, description, test_data_manager_key, dryrun):
+    def _create(self, request, dryrun):
+        metrics = request.data.get('metrics')
+        description = request.data.get('description')
+        test_data_manager_key = request.data.get('test_data_manager_key', '')
+
         pkhash = get_hash(description)
         serializer = self.get_serializer(data={'pkhash': pkhash,
                                                'metrics': metrics,
@@ -118,24 +130,15 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 return self.handle_dryrun(pkhash, metrics, test_data_manager_key)
 
             # create on ledger + db
-            ledger_data = {'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
-                           'test_data_manager_key': test_data_manager_key,
-                           'name': request.data.get('name'),
-                           'permissions': request.data.get('permissions'),
-                           'metrics_name': request.data.get('metrics_name'),
-                           }
-            data = self.commit(serializer, ledger_data)
+            data = self.commit(serializer, request)
             st = get_success_create_code()
             return data, st
 
     def create(self, request, *args, **kwargs):
-        metrics = request.data.get('metrics')
-        description = request.data.get('description')
-        test_data_manager_key = request.data.get('test_data_manager_key', '')
         dryrun = request.data.get('dryrun', False)
 
         try:
-            data, st = self._create(request, metrics, description, test_data_manager_key, dryrun)
+            data, st = self._create(request, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:

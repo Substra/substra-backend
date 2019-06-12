@@ -51,12 +51,21 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return {'message': f'Your data opener is valid. You can remove the dryrun option.'}, status.HTTP_200_OK
 
-    def commit(self, serializer, ledger_data):
+    def commit(self, serializer, request):
+        # create on ledger + db
+        ledger_data = {
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions'),
+            'type': request.data.get('type'),
+            'objective_keys': request.data.getlist('objective_keys'),
+        }
+
         # create on db
         instance = self.perform_create(serializer)
         # init ledger serializer
         ledger_data.update({'instance': instance})
-        ledger_serializer = LedgerDataManagerSerializer(data=ledger_data)
+        ledger_serializer = LedgerDataManagerSerializer(data=ledger_data,
+                                                        context={'request': request})
 
         if not ledger_serializer.is_valid():
             # delete instance
@@ -97,15 +106,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             if dryrun:
                 return self.handle_dryrun(data_opener)
 
-            # create on ledger + db
-            ledger_data = {
-                'name': request.data.get('name'),
-                'permissions': request.data.get('permissions'),
-                'type': request.data.get('type'),
-                'objective_keys': request.data.getlist('objective_keys'),
-            }
-
-            data = self.commit(serializer, ledger_data)
+            data = self.commit(serializer, request)
             st = get_success_create_code()
             return data, st
 
