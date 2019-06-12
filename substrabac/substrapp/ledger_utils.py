@@ -113,7 +113,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         raise LedgerBadResponse(response)
 
     # Check permissions
-    if 'permissions' in response and response['permissions'] != 'all':
+    if response and 'permissions' in response and response['permissions'] != 'all':
         raise LedgerForbidden('Not allowed')
 
     return response
