@@ -863,7 +863,7 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'data_manager_keys': [datamanager.pkhash, datamanager2.pkhash],
-            'data_keys': [d.pkhash],
+            'data_sample_keys': [d.pkhash],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
