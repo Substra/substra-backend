@@ -46,9 +46,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
         if 'substratools' not in imported_module_names:
-            return {
-                       'message': 'Opener must import substratools, please review your opener and the documentation.'
-                   }, status.HTTP_400_BAD_REQUEST
+            err_msg = 'Opener must import substratools, please review your opener and the documentation.'
+            return {'message': err_msg}, status.HTTP_400_BAD_REQUEST
 
         return {'message': f'Your data opener is valid. You can remove the dryrun option.'}, status.HTTP_200_OK
 

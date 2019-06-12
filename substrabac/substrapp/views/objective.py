@@ -39,6 +39,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
     ledger_query_call = 'queryObjective'
+
     # permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
@@ -71,7 +72,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 pkhash = re.search(r'\(pkhash\)=\((\w+)\)', e.args[0]).group(1)
             except IndexError:
                 pkhash = ''
-            return {'message': 'A objective with this description file already exists.', 'pkhash': pkhash}, status.HTTP_409_CONFLICT
+            err_msg = 'A objective with this description file already exists.'
+            return {'message': err_msg, 'pkhash': pkhash}, status.HTTP_409_CONFLICT
         except Exception as e:
             raise Exception(e.args)
 
@@ -119,11 +121,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
             # create on ledger + db
             ledger_data = {'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
-                  'test_data_manager_key': test_data_manager_key,
-                  'name': request.data.get('name'),
-                  'permissions': request.data.get('permissions'),
-                  'metrics_name': request.data.get('metrics_name'),
-            }
+                           'test_data_manager_key': test_data_manager_key,
+                           'name': request.data.get('name'),
+                           'permissions': request.data.get('permissions'),
+                           'metrics_name': request.data.get('metrics_name'),
+                           }
             data, st = self.commit(serializer, ledger_data)
             return data, st
 
@@ -257,7 +259,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
-
     dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
 
     subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
