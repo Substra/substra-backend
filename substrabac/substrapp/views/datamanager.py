@@ -1,7 +1,6 @@
 import ast
 import tempfile
-
-import requests
+import logging
 from django.conf import settings
 from django.http import Http404
 from rest_framework import status, mixins
@@ -16,8 +15,11 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import queryLedger, get_hash
-from substrapp.views.utils import get_filters, ManageFileMixin, ComputeHashMixin, JsonException, find_primary_key_error
+from substrapp.utils import get_hash, get_from_node
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
+from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
+                                   validate_pk, get_success_create_code, ValidationException, LedgerException)
+from substrapp.views.filters_utils import filter_list
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -33,37 +35,64 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def dryrun(self, data_opener):
+    def handle_dryrun(self, data_opener):
 
         file = data_opener.open().read()
 
         try:
             node = ast.parse(file)
-        except:
-            return Response({'message': f'Opener must be a valid python file, please review your opener file and the documentation.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+        except BaseException:
+            raise Exception('Opener must be a valid python file, please review your opener file and the documentation.')
 
         imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
         if 'substratools' not in imported_module_names:
-            return Response({'message': 'Opener must import substratools, please review your opener and the documentation.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            err_msg = 'Opener must import substratools, please review your opener and the documentation.'
+            return {'message': err_msg}, status.HTTP_400_BAD_REQUEST
 
-        return Response({'message': f'Your data opener is valid. You can remove the dryrun option.'},
-                        status=status.HTTP_200_OK)
+        return {'message': f'Your data opener is valid. You can remove the dryrun option.'}, status.HTTP_200_OK
 
-    def create(self, request, *args, **kwargs):
-        data = request.data
+    def commit(self, serializer, request):
+        # create on ledger + db
+        ledger_data = {
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions'),
+            'type': request.data.get('type'),
+            'objective_keys': request.data.getlist('objective_keys'),
+        }
 
-        dryrun = data.get('dryrun', False)
+        # create on db
+        instance = self.perform_create(serializer)
+        # init ledger serializer
+        ledger_data.update({'instance': instance})
+        ledger_serializer = LedgerDataManagerSerializer(data=ledger_data,
+                                                        context={'request': request})
 
-        data_opener = data.get('data_opener')
+        if not ledger_serializer.is_valid():
+            # delete instance
+            instance.delete()
+            raise ValidationError(ledger_serializer.errors)
 
+        # create on ledger
+        try:
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerTimeout as e:
+            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            raise LedgerException(data, e.status)
+        except LedgerError as e:
+            raise LedgerException(str(e.msg), e.status)
+
+        d = dict(serializer.data)
+        d.update(data)
+
+        return d
+
+    def _create(self, request, data_opener, dryrun):
         pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'data_opener': data_opener,
-            'description': data.get('description'),
-            'name': data.get('name'),
+            'description': request.data.get('description'),
+            'name': request.data.get('name'),
         })
 
         try:
@@ -72,235 +101,145 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            return Response({'message': e.args, 'pkhash': pkhash}, status=st)
+            raise ValidationException(e.args, pkhash, st)
         else:
             if dryrun:
-                return self.dryrun(data_opener)
+                return self.handle_dryrun(data_opener)
 
-            # create on db
-            try:
-                instance = self.perform_create(serializer)
-            except Exception as e:
-                return Response({'message': e.args},
-                                status=status.HTTP_400_BAD_REQUEST)
-            else:
-                # init ledger serializer
-                ledger_serializer = LedgerDataManagerSerializer(data={'name': data.get('name'),
-                                                                      'permissions': data.get('permissions'),
-                                                                      'type': data.get('type'),
-                                                                      'objective_keys': data.getlist('objective_keys'),
-                                                                      'instance': instance},
-                                                                context={'request': request})
+            data = self.commit(serializer, request)
+            st = get_success_create_code()
+            return data, st
 
-                if not ledger_serializer.is_valid():
-                    # delete instance
-                    instance.delete()
-                    raise ValidationError(ledger_serializer.errors)
+    def create(self, request, *args, **kwargs):
+        dryrun = request.data.get('dryrun', False)
+        data_opener = request.data.get('data_opener')
 
-                # create on ledger
-                data, st = ledger_serializer.create(ledger_serializer.validated_data)
-
-                if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):
-                    return Response(data, status=st)
-
-                headers = self.get_success_headers(serializer.data)
-                d = dict(serializer.data)
-                d.update(data)
-                return Response(d, status=st, headers=headers)
+        try:
+            data, st = self._create(request, data_opener, dryrun)
+        except ValidationException as e:
+            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except LedgerException as e:
+            return Response({'message': e.data}, status=e.st)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            headers = self.get_success_headers(data)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):
 
         # create instance if does not exist
         if not instance:
-            instance, created = DataManager.objects.update_or_create(pkhash=pk, name=datamanager['name'], validated=True)
+            instance, created = DataManager.objects.update_or_create(
+                pkhash=pk, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
+            url = datamanager['opener']['storageAddress']
+
+            response = get_from_node(url)
+
             try:
-                url = datamanager['opener']['storageAddress']
-                try:
-                    r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-                except:
-                    raise Exception(f'Failed to fetch {url}')
-                else:
-                    if r.status_code != 200:
-                        raise Exception(f'end to end node report {r.text}')
-
-                    try:
-                        computed_hash = self.compute_hash(r.content)
-                    except Exception:
-                        raise Exception('Failed to fetch opener file')
-                    else:
-                        if computed_hash != pk:
-                            msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                            raise Exception(msg)
-
-                        f = tempfile.TemporaryFile()
-                        f.write(r.content)
-
-                        # save/update data_opener in local db for later use
-                        instance.data_opener.save('opener.py', f)
-
+                computed_hash = self.compute_hash(response.content)
             except Exception as e:
-                raise e
+                raise Exception('Failed to fetch opener file') from e
 
+            if computed_hash != pk:
+                msg = 'computed hash is not the same as the hosted file. ' \
+                      'Please investigate for default of synchronization, corruption, or hacked'
+                raise Exception(msg)
+
+            f = tempfile.TemporaryFile()
+            f.write(response.content)
+
+            # save/update data_opener in local db for later use
+            instance.data_opener.save('opener.py', f)
+
+        # do the same for description
         if not instance.description:
-            # do the same for description
             url = datamanager['description']['storageAddress']
+
+            response = get_from_node(url)
+
             try:
-                r = requests.get(url, headers={'Accept': 'application/json;version=0.0'})
-            except:
-                raise Exception(f'Failed to fetch {url}')
-            else:
-                if r.status_code != status.HTTP_200_OK:
-                    raise Exception(f'end to end node report {r.text}')
+                computed_hash = self.compute_hash(response.content)
+            except Exception as e:
+                raise Exception('Failed to fetch description file') from e
 
-                try:
-                    computed_hash = self.compute_hash(r.content)
-                except Exception:
-                    raise Exception('Failed to fetch description file')
-                else:
-                    if computed_hash != datamanager['description']['hash']:
-                        msg = 'computed hash is not the same as the hosted file. Please investigate for default of synchronization, corruption, or hacked'
-                        raise Exception(msg)
+            if computed_hash != datamanager['description']['hash']:
+                msg = 'computed hash is not the same as the hosted file. ' \
+                      'Please investigate for default of synchronization, corruption, or hacked'
+                raise Exception(msg)
 
-                    f = tempfile.TemporaryFile()
-                    f.write(r.content)
+            f = tempfile.TemporaryFile()
+            f.write(response.content)
 
-                    # save/update description in local db for later use
-                    instance.description.save('description.md', f)
+            # save/update description in local db for later use
+            instance.description.save('description.md', f)
 
         return instance
 
-    def getObjectFromLedger(self, pk):
+    def _retrieve(self, pk):
+        validate_pk(pk)
         # get instance from remote node
-        data, st = queryLedger(fcn='queryDataset', args=[f'{pk}'])
+        data = get_object_from_ledger(pk, 'queryDataset')
+        # try to get it from local db to check if description exists
+        try:
+            instance = self.get_object()
+        except Http404:
+            instance = None
+        finally:
+            # check if instance has description or data_opener
+            if not instance or not instance.description or not instance.data_opener:
+                instance = self.create_or_update_datamanager(instance, data, pk)
 
-        if st == status.HTTP_404_NOT_FOUND:
-            raise Http404('Not found')
+            # do not give access to local files address
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+            data.update(serializer.data)
 
-        if st != status.HTTP_200_OK:
-            raise JsonException(data)
-
-        if data['permissions'] == 'all':
             return data
-        else:
-            raise Exception('Not Allowed')
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
-        if len(pk) != 64:
-            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
-
         try:
-            int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
-            return Response({'message': f'Wrong pk {pk}'}, status.HTTP_400_BAD_REQUEST)
+            data = self._retrieve(pk)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            # get instance from remote node
-            try:
-                data = self.getObjectFromLedger(pk)  # datamanager use particular query to ledger
-            except JsonException as e:
-                return Response(e.msg, status=status.HTTP_400_BAD_REQUEST)
-            except Http404:
-                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
-            else:
-                error = None
-                instance = None
-                try:
-                    # try to get it from local db to check if description exists
-                    instance = self.get_object()
-                except Http404:
-                    try:
-                        instance = self.create_or_update_datamanager(instance, data, pk)
-                    except Exception as e:
-                        error = e
-                else:
-                    # check if instance has description or data_opener
-                    if not instance.description or not instance.data_opener:
-                        try:
-                            instance = self.create_or_update_datamanager(instance, data, pk)
-                        except Exception as e:
-                            error = e
-                finally:
-                    if error is not None:
-                        return Response({'message': str(error)}, status=status.HTTP_400_BAD_REQUEST)
-
-                    # do not give access to local files address
-                    if instance is not None:
-                        serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-                        data.update(serializer.data)
-                    else:
-                        data = {'message': 'Fail to get instance'}
-
-                    return Response(data, status=status.HTTP_200_OK)
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        # can modify result by interrogating `request.version`
 
-        data, st = queryLedger(fcn='queryDataManagers', args=[])
-        objectiveData = None
-        modelData = None
+        try:
+            data = query_ledger(fcn='queryDataManagers', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
 
-        # init list to return
-        if data is None:
-            data = []
-        l = [data]
+        data = data if data else []
 
-        if st == 200:
+        data_managers_list = [data]
 
-            # parse filters
-            query_params = request.query_params.get('search', None)
+        # parse filters
+        query_params = request.query_params.get('search', None)
 
-            if query_params is not None:
-                try:
-                    filters = get_filters(query_params)
-                except Exception as exc:
-                    return Response(
-                        {'message': f'Malformed search filters {query_params}'},
-                        status=status.HTTP_400_BAD_REQUEST)
-                else:
-                    # filtering, reinit l to empty array
-                    l = []
-                    for idx, filter in enumerate(filters):
-                        # init each list iteration to data
-                        l.append(data)
-                        for k, subfilters in filter.items():
-                            if k == 'dataset':  # filter by own key
-                                for key, val in subfilters.items():
-                                    l[idx] = [x for x in l[idx] if x[key] in val]
-                            elif k == 'objective':  # select objective used by these datamanagers
-                                if not objectiveData:
-                                    # TODO find a way to put this call in cache
-                                    objectiveData, st = queryLedger(fcn='queryObjectives', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(objectiveData, status=st)
-                                    if objectiveData is None:
-                                        objectiveData = []
+        if query_params is not None:
+            try:
+                data_managers_list = filter_list(
+                    object_type='dataset',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
 
-                                for key, val in subfilters.items():
-                                    if key == 'metrics':  # specific to nested metrics
-                                        filteredData = [x for x in objectiveData if x[key]['name'] in val]
-                                    else:
-                                        filteredData = [x for x in objectiveData if x[key] in val]
-                                    objectiveKeys = [x['key'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
-                            elif k == 'model':  # select objectives used by outModel hash
-                                if not modelData:
-                                    # TODO find a way to put this call in cache
-                                    modelData, st = queryLedger(fcn='queryTraintuples', args=[])
-                                    if st != status.HTTP_200_OK:
-                                        return Response(modelData, status=st)
-                                    if modelData is None:
-                                        modelData = []
-
-                                for key, val in subfilters.items():
-                                    filteredData = [x for x in modelData if x['outModel'] is not None and x['outModel'][key] in val]
-                                    objectiveKeys = [x['objective']['hash'] for x in filteredData]
-                                    l[idx] = [x for x in l[idx] if x['objectiveKey'] in objectiveKeys]
-
-        return Response(l, status=st)
+        return Response(data_managers_list, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):
@@ -308,52 +247,33 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
-        if len(pk) != 64:
-            return Response({'message': f'Wrong pk {pk}'},
-                            status.HTTP_400_BAD_REQUEST)
-
         try:
-            int(pk, 16)  # test if pk is correct (hexadecimal)
-        except:
-            return Response({'message': f'Wrong pk {pk}'},
-                            status.HTTP_400_BAD_REQUEST)
-        else:
+            validate_pk(pk)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            data = request.data
-            objective_key = data.get('objective_key')
+        objective_key = request.data.get('objective_key')
+        args = {
+            'dataManagerKey': pk,
+            'objectiveKey': objective_key,
+        }
 
-            if len(pk) != 64:
-                return Response({'message': f'Objective Key is wrong: {pk}'},
-                                status.HTTP_400_BAD_REQUEST)
-
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
             try:
-                int(pk, 16)  # test if pk is correct (hexadecimal)
-            except:
-                return Response({'message': f'Objective Key is wrong: {pk}'},
-                                status.HTTP_400_BAD_REQUEST)
-            else:
-                # args = '"%(dataManagerKey)s", "%(objectiveKey)s"' % {
-                #     'dataManagerKey': pk,
-                #     'objectiveKey': objective_key,
-                # }
+                data = updateLedgerDataManager(args, sync=True)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+            st = status.HTTP_200_OK
 
-                args = [pk, objective_key]
+        else:
+            # use a celery task, as we are in an http request transaction
+            updateLedgerDataManagerAsync.delay(args)
+            data = {
+                'message': 'The substra network has been notified for updating this DataManager'
+            }
+            st = status.HTTP_202_ACCEPTED
 
-                if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                    data, st = updateLedgerDataManager(args, sync=True)
-
-                    # patch status for update
-                    if st == status.HTTP_201_CREATED:
-                        st = status.HTTP_200_OK
-                    return Response(data, status=st)
-                else:
-                    # use a celery task, as we are in an http request transaction
-                    updateLedgerDataManagerAsync.delay(args)
-                    data = {
-                        'message': 'The substra network has been notified for updating this DataManager'
-                    }
-                    st = status.HTTP_202_ACCEPTED
-                    return Response(data, status=st)
+        return Response(data, status=st)
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

@@ -1,73 +1,13 @@
 import hashlib
 import os
-from urllib.parse import unquote
 
-from django.http import FileResponse, Http404
-from rest_framework import status
+from django.http import FileResponse
 from rest_framework.response import Response
 
-from substrapp.utils import queryLedger
+from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 
-
-class JsonException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-        super(JsonException, self).__init__()
-
-
-def get_filters(query_params):
-    filters = []
-    groups = query_params.split('-OR-')
-    for idx, group in enumerate(groups):
-
-        # init
-        filters.append({})
-
-        # get number of subfilters and decode them
-        subfilters = [unquote(x) for x in group.split(',')]
-
-        for subfilter in subfilters:
-            el = subfilter.split(':')
-
-            # get parent
-            parent = el[0]
-            subparent = el[1]
-            value = el[2]
-
-            filter = {
-                subparent: [unquote(value)]
-            }
-
-            if not len(filters[idx]):  # create and add it
-                filters[idx] = {
-                    parent: filter
-                }
-            else:  # add it
-                if parent in filters[idx]:  # add
-                    if el[1] in filters[idx][parent]:  # concat in subparent
-                        filters[idx][parent][subparent].extend([value])
-                    else:  # add new subparent
-                        filters[idx][parent].update(filter)
-                else:  # create
-                    filters[idx].update({parent: filter})
-
-    return filters
-
-
-def getObjectFromLedger(pk, query):
-    # get instance from remote node
-    data, st = queryLedger(fcn=query, args=[f'{pk}'])
-
-    if st == status.HTTP_404_NOT_FOUND:
-        raise Http404('Not found')
-
-    if st != status.HTTP_200_OK:
-        raise JsonException(data)
-
-    if 'permissions' not in data or data['permissions'] == 'all':
-        return data
-    else:
-        raise Exception('Not Allowed')
+from django.conf import settings
+from rest_framework import status
 
 
 class ComputeHashMixin(object):
@@ -101,15 +41,13 @@ class ManageFileMixin(object):
         # TODO get cert for permissions check
 
         try:
-            getObjectFromLedger(pk, self.ledger_query_call)
-        except Exception as e:
-            return Response(e, status=status.HTTP_400_BAD_REQUEST)
-        except Http404:
-                return Response(f'No element with key {pk}', status=status.HTTP_404_NOT_FOUND)
+            get_object_from_ledger(pk, self.ledger_query_call)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
         else:
-            object = self.get_object()
+            obj = self.get_object()
 
-            data = getattr(object, field)
+            data = getattr(obj, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 
 
@@ -118,11 +56,11 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
 
     def find_unique_error(detail_dict):
         for key, errors in detail_dict.items():
-                if key != key_name:
-                    continue
-                for error in errors:
-                    if error.code == 'unique':
-                        return error
+            if key != key_name:
+                continue
+            for error in errors:
+                if error.code == 'unique':
+                    return error
 
         return None
 
@@ -140,3 +78,35 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
                     return unique_error
 
     return None
+
+
+def validate_pk(pk):
+    if len(pk) != 64:
+        raise Exception(f'Wrong pk {pk}')
+
+    try:
+        int(pk, 16)  # test if pk is correct (hexadecimal)
+    except ValueError:
+        raise Exception(f'Wrong pk {pk}')
+
+
+class LedgerException(Exception):
+    def __init__(self, data, st):
+        self.data = data
+        self.st = st
+        super(LedgerException).__init__()
+
+
+class ValidationException(Exception):
+    def __init__(self, data, pkhash, st):
+        self.data = data
+        self.pkhash = pkhash
+        self.st = st
+        super(ValidationException).__init__()
+
+
+def get_success_create_code():
+    if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+        return status.HTTP_201_CREATED
+    else:
+        return status.HTTP_202_ACCEPTED

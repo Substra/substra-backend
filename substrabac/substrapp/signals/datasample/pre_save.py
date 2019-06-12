@@ -7,7 +7,7 @@ from checksumdir import dirhash
 from django.conf import settings
 from django.core.files import File
 
-from substrapp.utils import uncompress_content, create_directory
+from substrapp.utils import uncompress_content
 
 
 def create_hard_links(base_dir, directory):
@@ -29,31 +29,33 @@ def data_sample_pre_save(sender, instance, **kwargs):
             instance.path.seek(0)
             uncompress_content(content, directory)
         except Exception as e:
-            logging.info(e)
+            logging.exception(e)
             raise e
         else:
-            # calculate new hash
+            # compute new hash
             sha256hash = dirhash(directory, 'sha256')
             # rename directory to new hash if does not exist
             new_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples', sha256hash)
             try:
                 rename(directory, new_directory)
-            except Exception as e:
-                # directory already exists with same exact data sample inside
+            except OSError as e:
+                # new_directory already exists with same exact data sample inside
                 # created by a previous save, delete directory entitled pkhash
                 # for avoiding duplicates
                 shutil.rmtree(directory)
-                logging.error(e, exc_info=True)
+                logging.exception(e)
 
             # override defaults
             instance.pkhash = sha256hash
             instance.path = new_directory
+
     # make an hardlink on all files if a path
     else:
+        # try to make an hard link to keep a free copy of the data
+        # if not possible, keep the real path location
         try:
-            p = normpath(instance.path)
-            create_hard_links(p, directory)
-        except Exception as e:
+            create_hard_links(normpath(instance.path), directory)
+        except Exception:
             pass
         else:
             # override path for getting our hardlink

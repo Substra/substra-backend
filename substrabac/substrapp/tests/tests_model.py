@@ -19,10 +19,7 @@ class ModelTests(TestCase):
     """Model tests"""
 
     def tearDown(self):
-        try:
-            shutil.rmtree(MEDIA_ROOT)
-        except FileNotFoundError:
-            pass
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_create_objective(self):
         description, _, metrics, _ = get_sample_objective()
@@ -44,7 +41,7 @@ class ModelTests(TestCase):
 
     def test_create_data(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(dir_path, '../../fixtures/chunantes/datasamples/train/0024308')
+        path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308')
         data_sample = DataSample.objects.create(path=path)
         self.assertEqual(data_sample.pkhash, dirhash(path, 'sha256'))
         self.assertFalse(data_sample.validated)

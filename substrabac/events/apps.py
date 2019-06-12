@@ -1,6 +1,5 @@
 import asyncio
 import json
-import logging
 import multiprocessing
 import os
 import contextlib
@@ -16,7 +15,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks import prepareTuple
+from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_hash
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -39,24 +38,24 @@ def get_block_payload(block):
     return payload
 
 
-def onTupleEvent(block):
+def on_tuple_event(block):
     payload = get_block_payload(block)
 
     worker_queue = f"{LEDGER['name']}.worker"
-    try:
-        data_owner = get_hash(LEDGER['signcert'])
-    except Exception as e:
-        logging.error(e, exc_info=True)
-    else:
-        if data_owner == payload['dataset']['worker']:
-            tuple_type, model_type = (None, None)
-            if 'inModels' in payload:
-                tuple_type, model_type = ('traintuple', 'inModels')
-            elif 'model' in payload:
-                tuple_type, model_type = ('testtuple', 'model')
+    data_owner = get_hash(LEDGER['signcert'])
 
-            if tuple_type is not None and model_type is not None:
-                prepareTuple.apply_async((payload, tuple_type, model_type), queue=worker_queue)
+    if data_owner == payload['dataset']['worker']:
+        tuple_type = None
+        if 'inModels' in payload:
+            tuple_type = 'traintuple'
+        elif 'model' in payload:
+            tuple_type = 'testtuple'
+
+        if tuple_type is not None:
+            prepare_tuple.apply_async(
+                (payload, tuple_type),
+                task_id=payload['key'],
+                queue=worker_queue)
 
 
 def wait():
@@ -92,7 +91,7 @@ def wait():
                 key_path=glob.glob(requestor_config['key_path'])[0],
                 cert_path=requestor_config['cert_path']
             )
-        except:
+        except BaseException:
             pass
         else:
             channel_event_hub = channel.newChannelEventHub(target_peer,
@@ -106,10 +105,10 @@ def wait():
 
             channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                      'traintuple-creation',
-                                                     onEvent=onTupleEvent)
+                                                     onEvent=on_tuple_event)
             channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                      'testtuple-creation',
-                                                     onEvent=onTupleEvent)
+                                                     onEvent=on_tuple_event)
             loop.run_until_complete(stream)
 
 

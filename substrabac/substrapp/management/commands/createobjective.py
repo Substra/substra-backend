@@ -5,11 +5,10 @@ from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 from rest_framework import status
 
-from substrapp.management.commands.bulkcreatedatasample import \
-    bulk_create_data_sample, InvalidException
+from substrapp.management.commands.bulkcreatedatasample import bulk_create_data_sample, InvalidException
 from substrapp.management.utils.localRequest import LocalRequest
-from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer, \
-     LedgerObjectiveSerializer, ObjectiveSerializer
+from substrapp.serializers import (DataManagerSerializer, LedgerDataManagerSerializer,
+                                   LedgerObjectiveSerializer, ObjectiveSerializer)
 from substrapp.utils import get_hash
 from substrapp.views.datasample import LedgerException
 
@@ -20,7 +19,7 @@ def path_leaf(path):
 
 
 class Command(BaseCommand):
-    help = '''
+    help = '''  # noqa
     create objective
     python ./manage.py createobjective '{"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}'
     python ./manage.py createobjective objective.json
@@ -37,11 +36,11 @@ class Command(BaseCommand):
         args = options['data_input']
         try:
             data_input = json.loads(args)
-        except:
+        except Exception:
             try:
                 with open(args, 'r') as f:
                     data_input = json.load(f)
-            except:
+            except Exception:
                 raise CommandError('Invalid args. Please review help')
         else:
             if not isinstance(data_input, dict):
@@ -120,7 +119,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all', # forced, TODO changed when permissions are available
+                          'permissions': 'all',
                           'type': data_manager['type'],
                           'instance': instance},
                     context={'request': LocalRequest()})
@@ -140,7 +139,8 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Successfully added datamanager with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added datamanager with status code {st} and result: ' \
+                              f'{json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))
 
         # Try to add data even if datamanager creation failed
@@ -162,7 +162,8 @@ class Command(BaseCommand):
         except Exception as e:
             self.stderr.write(str(e))
         else:
-            msg = f'Successfully bulk added data samples with status code {st} and result: {json.dumps(res_data, indent=4)}'
+            msg = f'Successfully bulk added data samples with status code {st} and result: ' \
+                  f'{json.dumps(res_data, indent=4)}'
             self.stdout.write(self.style.SUCCESS(msg))
             data_sample_pkhashes = [x['pkhash'] for x in res_data]
 
@@ -228,5 +229,6 @@ class Command(BaseCommand):
                     else:
                         d = dict(serializer.data)
                         d.update(res)
-                        msg = f'Successfully added objective with status code {st} and result: {json.dumps(res, indent=4)}'
+                        msg = f'Successfully added objective with status code {st} and result: ' \
+                              f'{json.dumps(res, indent=4)}'
                         self.stdout.write(self.style.SUCCESS(msg))

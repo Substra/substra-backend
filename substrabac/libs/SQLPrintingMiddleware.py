@@ -4,7 +4,6 @@ from django.core.exceptions import MiddlewareNotUsed
 from django.conf import settings
 from django.db import connection
 
-__author__ = 'guillaume'
 
 """
 Originally code was taken from http://djangosnippets.org/snippets/290/

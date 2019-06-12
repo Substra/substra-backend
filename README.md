@@ -122,9 +122,6 @@ docker build -t substra-model .
 
 ## Getting started 2: Linking the app with Hyperledger Fabric
 
-### Get Fabric binaries
-
-Run `./boostrap.sh`
 
 ### Make the subtra-network available to the app
 

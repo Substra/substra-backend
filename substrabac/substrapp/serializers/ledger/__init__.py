@@ -1,7 +1,7 @@
 # encoding: utf-8
 
 from .objective.serializer import LedgerObjectiveSerializer
-from .model import LedgerModelSerializer
+from .model.serializer import LedgerModelSerializer
 from .datasample.serializer import LedgerDataSampleSerializer
 from .algo.serializer import LedgerAlgoSerializer
 from .traintuple.serializer import LedgerTrainTupleSerializer

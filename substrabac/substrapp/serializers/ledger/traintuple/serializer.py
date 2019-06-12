@@ -1,4 +1,4 @@
-from rest_framework import serializers, status
+from rest_framework import serializers
 
 from django.conf import settings
 
@@ -25,33 +25,22 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         data_manager_key = validated_data.get('data_manager_key')
         objective_key = validated_data.get('objective_key')
         rank = validated_data.get('rank', '')
-        rank = '' if rank is None else rank  # rank should be an integer or empty string, not None
+        rank = '' if rank is None else str(rank)
         FLtask_key = validated_data.get('FLtask_key', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
-        in_models_keys = validated_data.get('in_models_keys')
+        in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
 
-        # args = '"%(algoKey)s", "%(associatedObjective)s", "%(inModels)s", "%(dataManagerKey)s", "%(dataSampleKeys)s", "%(FLtask)s", "%(rank)s", "%(tag)s"' % {
-        #     'algoKey': algo_key,
-        #     'associatedObjective': objective_key,
-        #     'inModels': ','.join(in_models_keys),
-        #     'dataManagerKey': data_manager_key,
-        #     'dataSampleKeys': ','.join(train_data_sample_keys),
-        #     'FLtask': FLtask_key,
-        #     'rank': rank,
-        #     'tag': tag
-        # }
-
-        args = [
-            algo_key,
-            objective_key,
-            ','.join([x for x in in_models_keys]),
-            data_manager_key,
-            ','.join([x for x in train_data_sample_keys]),
-            FLtask_key,
-            str(rank),
-            tag,
-        ]
+        args = {
+            'algoKey': algo_key,
+            'objectiveKey': objective_key,
+            'inModels': ','.join([x for x in in_models_keys]),
+            'dataManagerKey': data_manager_key,
+            'dataSampleKeys': ','.join([x for x in train_data_sample_keys]),
+            'flTask': FLtask_key,
+            'rank': rank,
+            'tag': tag
+        }
 
         return args
 
@@ -59,13 +48,14 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            return createLedgerTraintuple(args, sync=True)
+            data = createLedgerTraintuple(args, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
             createLedgerTraintupleAsync.delay(args)
-
             data = {
-                'message': 'The substra network has been notified for adding this Traintuple. Please be aware you won\'t get return values from the ledger. You will need to check manually'
+                'message': 'The substra network has been notified for adding this Traintuple. '
+                           'Please be aware you won\'t get return values from the ledger. '
+                           'You will need to check manually'
             }
-            st = status.HTTP_202_ACCEPTED
-            return data, st
+
+        return data
