@@ -72,12 +72,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             raise LedgerException(str(e.msg), e.status)
 
-        st = get_success_create_code()
-
         d = dict(serializer.data)
         d.update(data)
 
-        return d, st
+        return d
 
     def _create(self, request, data_opener, dryrun):
         pkhash = get_hash(data_opener)
@@ -106,15 +104,14 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 'type': request.data.get('type'),
                 'objective_keys': request.data.getlist('objective_keys'),
             }
-            data, st = self.commit(serializer, ledger_data)
-            return data, st
+            return self.commit(serializer, ledger_data)
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
         data_opener = request.data.get('data_opener')
 
         try:
-            data, st = self._create(request, data_opener, dryrun)
+            data = self._create(request, data_opener, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -123,6 +120,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):

@@ -51,19 +51,16 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             raise LedgerException(str(e.msg), e.status)
         else:
             pkhash = data.get('key')
-            data = self.commit(serializer, pkhash)
-
-            st = get_success_create_code()
-
-            return data, st
+            return self.commit(serializer, pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
-            data, st = self._create(request)
+            data = self._create(request)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:
             headers = self.get_success_headers(data)
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
