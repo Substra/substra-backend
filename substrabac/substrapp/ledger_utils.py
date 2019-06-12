@@ -70,26 +70,13 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
 
-        # Get chaincode version
-        response = loop.run_until_complete(
-            client.query_instantiated_chaincodes(
-                requestor=requestor,
-                channel_name=channel_name,
-                peers=[peer['name']],
-                decode=True
-            ))
-        for ccs in response:
-            for cc in ccs.chaincodes:
-                if cc.name == chaincode_name:
-                    chaincode_version = cc.version
-
         params = {
             'requestor': requestor,
             'channel_name': channel_name,
             'peers': [peer['name']],
             'args': args,
             'cc_name': chaincode_name,
-            'cc_version': chaincode_version,
+            'cc_version': 'substra',
             'fcn': fcn
         }
 
