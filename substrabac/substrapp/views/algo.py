@@ -51,12 +51,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             raise LedgerException(str(e.msg), e.status)
 
-        st = get_success_create_code()
-
         d = dict(serializer.data)
         d.update(data)
 
-        return d, st
+        return d
 
     def _create(self, request, file):
         pkhash = get_hash(file)
@@ -79,14 +77,13 @@ class AlgoViewSet(mixins.CreateModelMixin,
                 'name': request.data.get('name'),
                 'permissions': request.data.get('permissions', 'all'),
             }
-            data, st = self.commit(serializer, ledger_data)
-            return data, st
+            return self.commit(serializer, ledger_data)
 
     def create(self, request, *args, **kwargs):
         file = request.data.get('file')
 
         try:
-            data, st = self._create(request, file)
+            data = self._create(request, file)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -95,6 +92,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_algo(self, algo, pk):
