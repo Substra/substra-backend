@@ -30,13 +30,19 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def commit(self, serializer, ledger_data):
+    def commit(self, serializer, request):
         # create on db
         instance = self.perform_create(serializer)
 
+        ledger_data = {
+            'name': request.data.get('name'),
+            'permissions': request.data.get('permissions', 'all'),
+        }
+
         # init ledger serializer
         ledger_data.update({'instance': instance})
-        ledger_serializer = LedgerAlgoSerializer(data=ledger_data)
+        ledger_serializer = LedgerAlgoSerializer(data=ledger_data,
+                                                 context={'request': request})
         if not ledger_serializer.is_valid():
             # delete instance
             instance.delete()
@@ -73,11 +79,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             raise ValidationException(e.args, pkhash, st)
         else:
             # create on ledger + db
-            ledger_data = {
-                'name': request.data.get('name'),
-                'permissions': request.data.get('permissions', 'all'),
-            }
-            return self.commit(serializer, ledger_data)
+            return self.commit(serializer, request)
 
     def create(self, request, *args, **kwargs):
         file = request.data.get('file')
