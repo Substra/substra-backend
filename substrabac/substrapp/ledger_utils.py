@@ -1,13 +1,11 @@
-import asyncio
 import json
 import logging
+import contextlib
 
 from django.conf import settings
 from rest_framework import status
 
 LEDGER = getattr(settings, 'LEDGER', None)
-if LEDGER:
-    asyncio.set_event_loop(LEDGER['hfc']['loop'])
 
 
 class LedgerError(Exception):
@@ -43,80 +41,92 @@ class LedgerBadResponse(LedgerError):
     pass
 
 
-def call_ledger(call_type, fcn, args=None, kwargs=None):
-    if not args:
-        args = []
-    else:
-        args = [json.dumps(args)]
-
-    peer = LEDGER['peer']
-    loop = LEDGER['hfc']['loop']
-    client = LEDGER['hfc']['client']
-    chaincode_calls = {
-        'invoke': client.chaincode_invoke,
-        'query': client.chaincode_query,
-    }
-    requestor = LEDGER['hfc']['requestor']
-    channel_name = LEDGER['channel_name']
-    chaincode_name = LEDGER['chaincode_name']
-
-    # Get chaincode version
-    response = loop.run_until_complete(
-        client.query_instantiated_chaincodes(
-            requestor=requestor,
-            channel_name=channel_name,
-            peers=[peer['name']],
-            decode=True
-        ))
-    for ccs in response:
-        for cc in ccs.chaincodes:
-            if cc.name == chaincode_name:
-                chaincode_version = cc.version
-
-    params = {
-        'requestor': requestor,
-        'channel_name': channel_name,
-        'peers': [peer['name']],
-        'args': args,
-        'cc_name': chaincode_name,
-        'cc_version': chaincode_version,
-        'fcn': fcn
-    }
-
-    if kwargs is not None and isinstance(kwargs, dict):
-        params.update(kwargs)
-
+@contextlib.contextmanager
+def get_hfc():
+    loop, client = LEDGER['hfc']()
     try:
-        response = loop.run_until_complete(chaincode_calls[call_type](**params))
-    except TimeoutError as e:
-        raise LedgerTimeout(str(e))
-    except Exception as e:
-        logging.exception(e)
-        raise LedgerError(str(e))
+        yield (loop, client)
+    finally:
+        loop.close()
+        del client
 
-    # Sanity check of the response:
-    if 'access denied' in response:
-        raise LedgerForbidden(f'Access denied for {(fcn, args)}')
-    elif 'no element with key' in response:
-        raise LedgerNotFound(f'No element founded for {(fcn, args)}')
-    elif 'tkey' in response:
-        pkhash = response.replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
-        if len(pkhash) == 64:
-            raise LedgerConflict(msg='Asset conflict', pkhash=pkhash)
+
+def call_ledger(call_type, fcn, args=None, kwargs=None):
+
+    with get_hfc() as (loop, client):
+        if not args:
+            args = []
         else:
+            args = [json.dumps(args)]
+
+        peer = LEDGER['peer']
+        requestor = LEDGER['hfc_requestor']
+
+        chaincode_calls = {
+            'invoke': client.chaincode_invoke,
+            'query': client.chaincode_query,
+        }
+
+        channel_name = LEDGER['channel_name']
+        chaincode_name = LEDGER['chaincode_name']
+
+        # Get chaincode version
+        response = loop.run_until_complete(
+            client.query_instantiated_chaincodes(
+                requestor=requestor,
+                channel_name=channel_name,
+                peers=[peer['name']],
+                decode=True
+            ))
+        for ccs in response:
+            for cc in ccs.chaincodes:
+                if cc.name == chaincode_name:
+                    chaincode_version = cc.version
+
+        params = {
+            'requestor': requestor,
+            'channel_name': channel_name,
+            'peers': [peer['name']],
+            'args': args,
+            'cc_name': chaincode_name,
+            'cc_version': chaincode_version,
+            'fcn': fcn
+        }
+
+        if kwargs is not None and isinstance(kwargs, dict):
+            params.update(kwargs)
+
+        try:
+            response = loop.run_until_complete(chaincode_calls[call_type](**params))
+        except TimeoutError as e:
+            raise LedgerTimeout(str(e))
+        except Exception as e:
+            logging.exception(e)
+            raise LedgerError(str(e))
+
+        # Sanity check of the response:
+        if 'access denied' in response:
+            raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+        elif 'no element with key' in response:
+            raise LedgerNotFound(f'No element founded for {(fcn, args)}')
+        elif 'tkey' in response:
+            pkhash = response.replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+            if len(pkhash) == 64:
+                raise LedgerConflict(msg='Asset conflict', pkhash=pkhash)
+            else:
+                raise LedgerBadResponse(response)
+
+        # Deserialize the stringified json
+        try:
+            response = json.loads(response)
+        except json.decoder.JSONDecodeError:
             raise LedgerBadResponse(response)
 
-    # Deserialize the stringified json
-    try:
-        response = json.loads(response)
-    except json.decoder.JSONDecodeError:
-        raise LedgerBadResponse(response)
+        # Check permissions
+        if response and 'permissions' in response and response['permissions'] != 'all':
+            raise LedgerForbidden('Not allowed')
 
-    # Check permissions
-    if response and 'permissions' in response and response['permissions'] != 'all':
-        raise LedgerForbidden('Not allowed')
-
-    return response
+        return response
 
 
 def query_ledger(fcn, args=None):
