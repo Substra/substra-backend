@@ -49,7 +49,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             err_msg = 'Opener must import substratools, please review your opener and the documentation.'
             return {'message': err_msg}, status.HTTP_400_BAD_REQUEST
 
-        return {'message': f'Your data opener is valid. You can remove the dryrun option.'}, status.HTTP_200_OK
+        return {'message': f'Your data opener is valid. You can remove the dryrun option.'}
 
     def commit(self, serializer, request):
         # create on ledger + db
@@ -106,16 +106,23 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             if dryrun:
                 return self.handle_dryrun(data_opener)
 
-            data = self.commit(serializer, request)
+            # create on ledger + db
+            return self.commit(serializer, request)
+
+    def _get_create_status(self, dryrun):
+        if dryrun:
+            st = status.HTTP_200_OK
+        else:
             st = get_success_create_code()
-            return data, st
+
+        return st
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
         data_opener = request.data.get('data_opener')
 
         try:
-            data, st = self._create(request, data_opener, dryrun)
+            data = self._create(request, data_opener, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -124,6 +131,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
+            st = self._get_create_status(dryrun)
             return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):

@@ -61,7 +61,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
             msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
 
-            return {'id': task.id, 'message': msg}, status.HTTP_202_ACCEPTED
+            return {'id': task.id, 'message': msg}
 
     def commit(self, serializer, request):
         # create on local db
@@ -130,15 +130,21 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 return self.handle_dryrun(pkhash, metrics, test_data_manager_key)
 
             # create on ledger + db
-            data = self.commit(serializer, request)
+            return self.commit(serializer, request)
+
+    def _get_create_status(self, dryrun):
+        if dryrun:
+            st = status.HTTP_202_ACCEPTED
+        else:
             st = get_success_create_code()
-            return data, st
+
+        return st
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
 
         try:
-            data, st = self._create(request, dryrun)
+            data = self._create(request, dryrun)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -147,6 +153,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
+            st = self._get_create_status(dryrun)
             return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
