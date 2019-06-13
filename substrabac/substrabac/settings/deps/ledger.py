@@ -90,19 +90,7 @@ def get_hfc_client():
 
     client._peers[LEDGER['peer']['name']] = target_peer
 
-    target_orderer = Orderer(name=LEDGER['orderer']['name'])
-
-    # Need loop
-    target_orderer.init_with_bundle({
-        'url': f'{LEDGER["orderer"]["host"]}:{LEDGER["orderer"]["port"]}',
-        'grpcOptions': LEDGER['orderer']['grpcOptions'],
-        'tlsCACerts': {'path': LEDGER['orderer']['ca']},
-        'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
-        'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
-    })
-
-    client._orderers[LEDGER['orderer']['name']] = target_orderer
-
+    # Discovery loading
     channel = client.get_channel(LEDGER['channel_name'])
     results = loop.run_until_complete(
         channel._discovery(
@@ -118,10 +106,9 @@ def get_hfc_client():
     for msp_id, msp_info in results['config']['msps'].items():
         msp_tls_root_certs[msp_id] = msp_info['tls_root_certs'].pop()
 
+    # Load one peer per msp for endorsement transaction
     for msp in results['members']:
-
         if msp and msp[0]['mspid'] != LEDGER['client']['msp_id']:
-            # add one peer per msp
             peer_info = msp[0]
             peer = Peer(name=peer_info['mspid'])
 
@@ -142,6 +129,30 @@ def get_hfc_client():
                 })
 
             client._peers[peer_info['mspid']] = peer
+
+    # Load one orderer
+    orderer_mspid, orderer_info = list(results['config']['orderers'].items())[0]
+    orderer_endpoint = f'{orderer_info[0]["host"]}:{orderer_info[0]["port"]}'
+
+    target_orderer = Orderer(name=orderer_mspid)
+
+    with tempfile.NamedTemporaryFile() as tls_root_cert:
+        tls_root_cert.write(msp_tls_root_certs[orderer_mspid])
+        tls_root_cert.flush()
+
+        # Need loop
+        target_orderer.init_with_bundle({
+            'url': orderer_endpoint,
+            'grpcOptions': {
+                'grpc-max-send-message-length': 15,
+                'grpc.ssl_target_name_override': orderer_info[0]['host']
+            },
+            'tlsCACerts': {'path': tls_root_cert.name},
+            'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
+            'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
+        })
+
+    client._orderers[orderer_mspid] = target_orderer
 
     return loop, client
 
