@@ -76,7 +76,6 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             'peers': [peer['name']],
             'args': args,
             'cc_name': chaincode_name,
-            'cc_version': 'substra',
             'fcn': fcn
         }
 
