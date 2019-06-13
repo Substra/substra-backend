@@ -99,7 +99,6 @@ def generate_docker_compose_file(conf, launch_settings):
 
     for org in conf:
         org_name = org['name']
-        orderer_ca = org['orderer']['ca']
         peer = org['peer']['name']
         tls_peer_dir = f'{SUBSTRA_FOLDER}/data/orgs/{org_name}/tls/{peer}'
 
@@ -145,7 +144,6 @@ def generate_docker_compose_file(conf, launch_settings):
             f'{SUBSTRA_FOLDER}/conf/{org_name}:{SUBSTRA_FOLDER}/conf/{org_name}:ro',
 
             # HLF files
-            f'{orderer_ca}:{orderer_ca}:ro',
             f'{tls_peer_dir}:{tls_peer_dir}:ro',
             f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}:ro',
         ]
