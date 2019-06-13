@@ -70,10 +70,15 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
 
+        peers = {
+            'invoke': client._peers.keys(),
+            'query': [peer['name']],
+        }
+
         params = {
             'requestor': requestor,
             'channel_name': channel_name,
-            'peers': [peer['name']],
+            'peers': peers[call_type],
             'args': args,
             'cc_name': chaincode_name,
             'fcn': fcn
