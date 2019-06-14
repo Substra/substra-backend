@@ -1,5 +1,6 @@
 
 import os
+import base64
 import asyncio
 import glob
 import json
@@ -76,7 +77,9 @@ def update_client_with_discovery(client, discovery_results):
     # Get all msp tls root cert files
     tls_root_certs = {}
     for mspid, msp_info in discovery_results['config']['msps'].items():
-        tls_root_certs[mspid] = msp_info['tls_root_certs'].pop()
+        tls_root_certs[mspid] = base64.decodebytes(
+            msp_info['tls_root_certs'].pop().encode()
+        )
 
     # Load one peer per msp for endorsing transaction
     for msp in discovery_results['members']:
