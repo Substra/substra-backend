@@ -38,8 +38,20 @@ def get_block_payload(block):
     return payload
 
 
+def print_status(block, event='CREATED'):
+
+    meta = None
+    if 'metadata' in block:
+        if 'metadata' in block['metadata']:
+            if len(block['metadata']['metadata']):
+                meta = block['metadata']['metadata'][-1]
+    print(event, '', meta)
+
+
 def on_tuple_event(block):
     payload = get_block_payload(block)
+
+    print_status(block, 'READY')
 
     worker_queue = f"{LEDGER['name']}.worker"
     data_owner = get_hash(LEDGER['signcert'])
@@ -104,11 +116,19 @@ def wait():
             stream = channel_event_hub.connect(filtered=False)
 
             channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                     'traintuple-creation',
+                                                     'traintuple-ready',
                                                      onEvent=on_tuple_event)
             channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                     'testtuple-creation',
+                                                     'testtuple-ready',
                                                      onEvent=on_tuple_event)
+
+            channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                     'traintuple-created',
+                                                     onEvent=print_status)
+            channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                     'testtuple-created',
+                                                     onEvent=print_status)
+
             loop.run_until_complete(stream)
 
 
