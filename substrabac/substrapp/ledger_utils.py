@@ -60,7 +60,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             args = [json.dumps(args)]
 
         peer = LEDGER['peer']
-        requestor = LEDGER['hfc_requestor']
+        requestor = LEDGER['requestor']
 
         chaincode_calls = {
             'invoke': client.chaincode_invoke,

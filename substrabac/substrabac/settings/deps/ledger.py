@@ -22,7 +22,7 @@ LEDGER_SYNC_ENABLED = True
 
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
 
-LEDGER['hfc_requestor'] = create_user(
+LEDGER['requestor'] = create_user(
     name=LEDGER['client']['name'],
     org=LEDGER['client']['org'],
     state_store=FileKeyValueStore(LEDGER['client']['state_store']),
@@ -30,43 +30,6 @@ LEDGER['hfc_requestor'] = create_user(
     key_path=glob.glob(LEDGER['client']['key_path'])[0],
     cert_path=LEDGER['client']['cert_path']
 )
-
-
-def process_discovery(response):
-    results = {}
-    results['members'] = []
-
-    for res in response.results:
-        if res.config_result:
-            results['config'] = process_config_result(res.config_result)
-
-        if res.members:
-            members = process_members(res.members)
-            results['members'].extend(members)
-
-    return results
-
-
-def process_config_result(config_result):
-
-    results = {'msps': {},
-               'orderers': {}}
-
-    for msp_name in config_result.msps:
-        results['msps'][msp_name] = decode_fabric_MSP_config(config_result.msps[msp_name].SerializeToString())
-
-    for orderer_msp in config_result.orderers:
-        results['orderers'][orderer_msp] = decode_fabric_endpoints(config_result.orderers[orderer_msp].endpoint)
-
-    return results
-
-
-def process_members(members):
-    peers = []
-    for msp_name in members.peers_by_org:
-        peers.append(decode_fabric_peers_info(members.peers_by_org[msp_name].peers))
-
-    return peers
 
 
 def get_hfc_client():
@@ -77,46 +40,54 @@ def get_hfc_client():
     client = Client()
     client.new_channel(LEDGER['channel_name'])
 
-    target_peer = Peer(name=LEDGER['peer']['name'])
-
-    # Need loop
-    target_peer.init_with_bundle({
+    # Add peer from substrabac ledger config file
+    peer = Peer(name=LEDGER['peer']['name'])
+    peer.init_with_bundle({
         'url': f'{LEDGER["peer"]["host"]}:{PEER_PORT}',
         'grpcOptions': LEDGER['peer']['grpcOptions'],
         'tlsCACerts': {'path': LEDGER['peer']['tlsCACerts']},
         'clientKey': {'path': LEDGER['peer']['clientKey']},
         'clientCert': {'path': LEDGER['peer']['clientCert']},
     })
+    client._peers[LEDGER['peer']['name']] = peer
 
-    client._peers[LEDGER['peer']['name']] = target_peer
-
-    # Discovery loading
+    # Discover orderers and peers from channel discovery
     channel = client.get_channel(LEDGER['channel_name'])
     results = loop.run_until_complete(
         channel._discovery(
-            LEDGER['hfc_requestor'],
-            client._peers[LEDGER['peer']['name']],
+            LEDGER['requestor'],
+            peer,
             config=True,
             local=False
         )
     )
-    results = process_discovery(results)
+    results = deserialize_discovery(results)
 
-    msp_tls_root_certs = {}
-    for msp_id, msp_info in results['config']['msps'].items():
-        msp_tls_root_certs[msp_id] = msp_info['tls_root_certs'].pop()
+    update_client_with_discovery(client, results)
 
-    # Load one peer per msp for endorsement transaction
-    for msp in results['members']:
-        if msp and msp[0]['mspid'] != LEDGER['client']['msp_id']:
-            peer_info = msp[0]
+    return loop, client
+
+
+LEDGER['hfc'] = get_hfc_client
+
+
+def update_client_with_discovery(client, discovery_results):
+
+    # Get all msp tls root cert files
+    tls_root_certs = {}
+    for mspid, msp_info in discovery_results['config']['msps'].items():
+        tls_root_certs[mspid] = msp_info['tls_root_certs'].pop()
+
+    # Load one peer per msp for endorsing transaction
+    for msp in discovery_results['members']:
+        peer_info = msp[0]
+        if peer_info['mspid'] != LEDGER['client']['msp_id']:
             peer = Peer(name=peer_info['mspid'])
 
             with tempfile.NamedTemporaryFile() as tls_root_cert:
-                tls_root_cert.write(msp_tls_root_certs[peer_info['mspid']])
+                tls_root_cert.write(tls_root_certs[peer_info['mspid']])
                 tls_root_cert.flush()
 
-                # Need loop
                 peer.init_with_bundle({
                     'url': peer_info['endpoint'],
                     'grpcOptions': {
@@ -130,19 +101,18 @@ def get_hfc_client():
 
             client._peers[peer_info['mspid']] = peer
 
-    # Load one orderer
-    orderer_mspid, orderer_info = list(results['config']['orderers'].items())[0]
-    orderer_endpoint = f'{orderer_info[0]["host"]}:{orderer_info[0]["port"]}'
+    # Load one orderer for broadcasting transaction
+    orderer_mspid, orderer_info = list(discovery_results['config']['orderers'].items())[0]
 
-    target_orderer = Orderer(name=orderer_mspid)
+    orderer = Orderer(name=orderer_mspid)
 
     with tempfile.NamedTemporaryFile() as tls_root_cert:
-        tls_root_cert.write(msp_tls_root_certs[orderer_mspid])
+        tls_root_cert.write(tls_root_certs[orderer_mspid])
         tls_root_cert.flush()
 
         # Need loop
-        target_orderer.init_with_bundle({
-            'url': orderer_endpoint,
+        orderer.init_with_bundle({
+            'url': f"{orderer_info[0]['host']}:{orderer_info[0]['port']}",
             'grpcOptions': {
                 'grpc-max-send-message-length': 15,
                 'grpc.ssl_target_name_override': orderer_info[0]['host']
@@ -152,9 +122,50 @@ def get_hfc_client():
             'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
         })
 
-    client._orderers[orderer_mspid] = target_orderer
-
-    return loop, client
+    client._orderers[orderer_mspid] = orderer
 
 
-LEDGER['hfc'] = get_hfc_client
+def deserialize_discovery(response):
+    results = {
+        'config': None,
+        'members': []
+    }
+
+    for res in response.results:
+        if res.config_result:
+            results['config'] = deserialize_config(res.config_result)
+
+        if res.members:
+            results['members'].extend(deserialize_members(res.members))
+
+    return results
+
+
+def deserialize_config(config_result):
+
+    results = {'msps': {},
+               'orderers': {}}
+
+    for mspid in config_result.msps:
+        results['msps'][mspid] = decode_fabric_MSP_config(
+            config_result.msps[mspid].SerializeToString()
+        )
+
+    for mspid in config_result.orderers:
+        results['orderers'][mspid] = decode_fabric_endpoints(
+            config_result.orderers[mspid].endpoint
+        )
+
+    return results
+
+
+def deserialize_members(members):
+    peers = []
+
+    for mspid in members.peers_by_org:
+        peer = decode_fabric_peers_info(
+            members.peers_by_org[mspid].peers
+        )
+        peers.append(peer)
+
+    return peers
