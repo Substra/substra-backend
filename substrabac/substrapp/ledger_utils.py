@@ -37,6 +37,10 @@ class LedgerNotFound(LedgerError):
     status = status.HTTP_404_NOT_FOUND
 
 
+class LedgerMVCCError(LedgerError):
+    status = status.HTTP_412_PRECONDITION_FAILED
+
+
 class LedgerBadResponse(LedgerError):
     pass
 
@@ -111,7 +115,11 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-            raise LedgerBadResponse(response)
+
+            if response == 'MVCC_READ_CONFLICT':
+                raise LedgerMVCCError(response)
+            else:
+                raise LedgerBadResponse(response)
 
         # Check permissions
         if response and 'permissions' in response and response['permissions'] != 'all':
