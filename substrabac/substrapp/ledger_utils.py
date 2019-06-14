@@ -51,8 +51,8 @@ def get_hfc():
     try:
         yield (loop, client)
     finally:
-        loop.close()
         del client
+        loop.close()
 
 
 def call_ledger(call_type, fcn, args=None, kwargs=None):
