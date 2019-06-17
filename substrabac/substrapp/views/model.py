@@ -55,26 +55,30 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def _retrieve(self, pk):
         validate_pk(pk)
-        # get instance from remote node
+
         data = get_object_from_ledger(pk, self.ledger_query_call)
+        if not data or not data.get('traintuple'):
+            raise Exception('Invalid model: missing traintuple field')
+        if data['traintuple'].get('status') != "done":
+            raise Exception("Invalid model: traintuple must be at status done")
 
         # Try to get it from local db, else create it in local db
         try:
             instance = self.get_object()
         except Http404:
             instance = None
-        finally:
-            if not instance or not instance.file:
-                instance = self.create_or_update_model(data['traintuple'],
-                                                       data['traintuple']['outModel']['hash'])
 
-                # For security reason, do not give access to local file address
-                # Restrain data to some fields
-                # TODO: do we need to send creation date and/or last modified date ?
-                serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
-                data.update(serializer.data)
+        if not instance or not instance.file:
+            instance = self.create_or_update_model(data['traintuple'],
+                                                   data['traintuple']['outModel']['hash'])
 
-                return data
+            # For security reason, do not give access to local file address
+            # Restrain data to some fields
+            # TODO: do we need to send creation date and/or last modified date ?
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
+            data.update(serializer.data)
+
+            return data
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -83,8 +87,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = self._retrieve(pk)
         except LedgerError as e:
+            logging.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
+            logging.exception(e)
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
