@@ -128,7 +128,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = query_ledger(fcn='queryModelDetails', args=[f'{pk}'])
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
