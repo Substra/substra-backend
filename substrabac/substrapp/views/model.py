@@ -55,8 +55,12 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def _retrieve(self, pk):
         validate_pk(pk)
-        # get instance from remote node
+
         data = get_object_from_ledger(pk, self.ledger_query_call)
+        if not data or not data.get('traintuple'):
+            raise Exception('Invalid model: missing traintuple field')
+        if data['traintuple'].get('status') != "done":
+            raise Exception("Invalid model: traintuple must be at status done")
 
         # Try to get it from local db, else create it in local db
         try:
@@ -83,8 +87,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = self._retrieve(pk)
         except LedgerError as e:
+            logging.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
+            logging.exception(e)
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
