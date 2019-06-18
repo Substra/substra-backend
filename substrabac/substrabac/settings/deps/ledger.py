@@ -91,8 +91,13 @@ def update_client_with_discovery(client, discovery_results):
                 tls_root_cert.write(tls_root_certs[peer_info['mspid']])
                 tls_root_cert.flush()
 
+                url = peer_info['endpoint']
+                external_port = os.environ.get('SUBSTRABAC_PEER_PORT_EXTERNAL', None)
+                # use case for external development
+                if external_port:
+                    url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"
                 peer.init_with_bundle({
-                    'url': peer_info['endpoint'],
+                    'url': url,
                     'grpcOptions': {
                         'grpc-max-send-message-length': 15,
                         'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0]
