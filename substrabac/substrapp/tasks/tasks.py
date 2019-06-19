@@ -9,6 +9,7 @@ from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework.reverse import reverse
+from celery.result import AsyncResult
 
 from substrabac.celery import app
 from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
@@ -202,10 +203,16 @@ def prepare_task(tuple_type):
     tuples = query_tuples(tuple_type, data_owner)
 
     for subtuple in tuples:
-        prepare_tuple.apply_async(
-            (subtuple, tuple_type),
-            task_id=subtuple['key'],
-            queue=worker_queue)
+        tkey = subtuple['key']
+        # Verify that tuple task does not already exist
+        if AsyncResult(tkey).state == 'PENDING':
+            prepare_tuple.apply_async(
+                (subtuple, tuple_type),
+                task_id=tkey,
+                queue=worker_queue
+            )
+        else:
+            print(f'[Scheduler] Tuple task ({tkey}) already exists')
 
 
 @app.task(ignore_result=False)
