@@ -40,7 +40,6 @@ def generate_docker_compose_file(conf, launch_settings):
 
     # CELERY
     CELERY_BROKER_URL = f'amqp://{RABBITMQ_DEFAULT_USER}:{RABBITMQ_DEFAULT_PASS}@{RABBITMQ_DOMAIN}:{RABBITMQ_PORT}//'
-
     try:
         from ruamel import yaml
     except ImportError:
@@ -85,7 +84,7 @@ def generate_docker_compose_file(conf, launch_settings):
                 'container_name': 'rabbit',
                 'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
                 'restart': 'unless-stopped',
-                'image': 'rabbitmq:3',
+                'image': 'rabbitmq:3-management',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
                     f'RABBITMQ_DEFAULT_USER={RABBITMQ_DEFAULT_USER}',
@@ -94,6 +93,18 @@ def generate_docker_compose_file(conf, launch_settings):
                     f'RABBITMQ_NODENAME={RABBITMQ_NODENAME}'],
                 'volumes': [f'{SUBSTRA_FOLDER}/backup/rabbit-data:/var/lib/rabbitmq']
             },
+            'flower': {
+                'container_name': f'flower',
+                'hostname': f'flower',
+                'ports': ['5555:5555'],
+                'image': 'substra/flower',
+                'restart': 'unless-stopped',
+                'command': 'celery flower -A substrabac',
+                'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+                'environment': [f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
+                                'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
+                'depends_on': ['rabbit', 'postgresql']
+            }
         },
         'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
