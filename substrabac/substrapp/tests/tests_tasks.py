@@ -12,7 +12,7 @@ from rest_framework.test import APITestCase
 from django_celery_results.models import TaskResult
 
 from substrapp.models import DataSample
-from substrapp.ledger_utils import LedgerError, LedgerBadResponse
+from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
@@ -524,6 +524,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.put_metric') as mput_metric, \
                 mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
                 mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
+                mock.patch('substrapp.tasks.tasks.AsyncResult') as masyncres, \
                 mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
 
             msettings.return_value = FakeSettings()
@@ -539,20 +540,16 @@ class TasksTests(APITestCase):
             mput_algo.return_value = 'algo'
             mput_model.return_value = 'model'
 
+            masyncres.return_value.state = 'PENDING'
+
             mock_filter = MagicMock()
             mock_filter.count.return_value = 1
             mtaskresult.return_value = mock_filter
 
             mjson_loads.return_value = {'worker': 'worker'}
 
-            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
-                    mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
-                mlog_start_tuple.side_effect = LedgerError("Test")
-                mlog_fail_tuple.return_value = 'data'
-                prepare_task('traintuple')
-
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
-                mlog_start_tuple.side_effect = LedgerBadResponse('Bad Response')
+                mlog_start_tuple.side_effect = LedgerStatusError('Bad Response')
                 prepare_task('traintuple')
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
