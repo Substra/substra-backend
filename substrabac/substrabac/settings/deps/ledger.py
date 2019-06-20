@@ -59,9 +59,11 @@ def get_hfc_client():
             LEDGER['requestor'],
             peer,
             config=True,
-            local=False
+            local=False,
+            interests=[{'chaincodes': [{'name': LEDGER['chaincode_name']}]}]
         )
     )
+
     results = deserialize_discovery(results)
 
     update_client_with_discovery(client, results)
@@ -136,15 +138,19 @@ def update_client_with_discovery(client, discovery_results):
 def deserialize_discovery(response):
     results = {
         'config': None,
-        'members': []
+        'members': [],
+        'cc_query_res': None
     }
 
     for res in response.results:
-        if res.config_result:
+        if res.config_result and res.config_result.msps and res.config_result.orderers:
             results['config'] = deserialize_config(res.config_result)
 
         if res.members:
             results['members'].extend(deserialize_members(res.members))
+
+        if res.cc_query_res and res.cc_query_res.content:
+            results['cc_query_res'] = deserialize_cc_query_res(res.cc_query_res)
 
     return results
 
@@ -177,3 +183,34 @@ def deserialize_members(members):
         peers.append(peer)
 
     return peers
+
+
+def deserialize_cc_query_res(cc_query_res):
+    cc_queries = []
+
+    for cc_query_content in cc_query_res.content:
+        cc_query = {
+            'chaincode': cc_query_content.chaincode,
+            'endorsers_by_groups': {},
+            'layouts': []
+        }
+
+        for group in cc_query_content.endorsers_by_groups:
+            peers = decode_fabric_peers_info(
+                cc_query_content.endorsers_by_groups[group].peers
+            )
+
+            cc_query['endorsers_by_groups'][group] = peers
+
+        for layout_content in cc_query_content.layouts:
+            layout = {
+                'quantities_by_group': {
+                    group: int(layout_content.quantities_by_group[group])
+                    for group in layout_content.quantities_by_group
+                }
+            }
+            cc_query['layouts'].append(layout)
+
+        cc_queries.append(cc_query)
+
+    return cc_queries
