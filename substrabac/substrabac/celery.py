@@ -1,7 +1,8 @@
 from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
-
+from celery import current_app
+from celery.signals import after_task_publish
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'substrabac.settings.prod')
@@ -27,3 +28,14 @@ def setup_periodic_tasks(sender, **kwargs):
                              name='query Traintuples to prepare train task on todo traintuples')
     sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler',
                              name='query Testuples to prepare test task on todo testuples')
+
+
+@after_task_publish.connect
+def update_task_state(sender=None, headers=None, body=None, **kwargs):
+    # Change task.status to 'WAITING' for all tasks which are sent in.
+    # This allows one to distinguish between PENDING tasks which have been
+    # sent in and tasks which do not exist. State will change to
+    # SUCCESS, FAILURE, etc. once the process terminates.
+    task = current_app.tasks.get(sender)
+    backend = task.backend if task else current_app.backend
+    backend.store_result(headers['id'], None, 'WAITING')
