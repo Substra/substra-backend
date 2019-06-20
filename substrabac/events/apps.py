@@ -19,6 +19,8 @@ from hfc.protos.peer.transaction_pb2 import TxValidationCode
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_hash
 
+from celery.result import AsyncResult
+
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
@@ -79,11 +81,15 @@ def on_tuple_ready(block):
     data_owner = get_hash(LEDGER['signcert'])
 
     if data_owner == payload['dataset']['worker'] and tuple_type is not None:
-        prepare_tuple.apply_async(
-            (payload, tuple_type),
-            task_id=payload['key'],
-            queue=worker_queue
-        )
+        tkey = payload['key']
+        if AsyncResult(tkey).state == 'PENDING':
+            prepare_tuple.apply_async(
+                (payload, tuple_type),
+                task_id=tkey,
+                queue=worker_queue
+            )
+        else:
+            print(f'[ChaincodeEvent] Tuple task ({tkey}) already exists')
 
 
 def wait():

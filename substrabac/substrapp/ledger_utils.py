@@ -12,8 +12,11 @@ class LedgerError(Exception):
     status = status.HTTP_400_BAD_REQUEST
 
     def __init__(self, msg):
-        super(LedgerError, self).__init__()
+        super(LedgerError, self).__init__(msg)
         self.msg = msg
+
+    def __repr__(self):
+        return self.msg
 
 
 class LedgerConflict(LedgerError):
@@ -23,6 +26,9 @@ class LedgerConflict(LedgerError):
     def __init__(self, msg, pkhash):
         super(LedgerConflict, self).__init__(msg)
         self.pkhash = pkhash
+
+    def __repr__(self):
+        return self.msg
 
 
 class LedgerTimeout(LedgerError):
@@ -42,6 +48,10 @@ class LedgerMVCCError(LedgerError):
 
 
 class LedgerBadResponse(LedgerError):
+    pass
+
+
+class LedgerStatusError(LedgerError):
     pass
 
 
@@ -118,6 +128,8 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
 
             if response == 'MVCC_READ_CONFLICT':
                 raise LedgerMVCCError(response)
+            elif 'cannot change status' in response:
+                raise LedgerStatusError(response)
             else:
                 raise LedgerBadResponse(response)
 
