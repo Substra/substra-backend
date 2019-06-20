@@ -9,11 +9,13 @@ from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework.reverse import reverse
+from celery.result import AsyncResult
+from celery.exceptions import Ignore
 
 from substrabac.celery import app
 from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
-                                    query_tuples, LedgerError)
+                                    query_tuples, LedgerError, LedgerStatusError)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -202,10 +204,16 @@ def prepare_task(tuple_type):
     tuples = query_tuples(tuple_type, data_owner)
 
     for subtuple in tuples:
-        prepare_tuple.apply_async(
-            (subtuple, tuple_type),
-            task_id=subtuple['key'],
-            queue=worker_queue)
+        tkey = subtuple['key']
+        # Verify that tuple task does not already exist
+        if AsyncResult(tkey).state == 'PENDING':
+            prepare_tuple.apply_async(
+                (subtuple, tuple_type),
+                task_id=tkey,
+                queue=worker_queue
+            )
+        else:
+            print(f'[Scheduler] Tuple task ({tkey}) already exists')
 
 
 @app.task(ignore_result=False)
@@ -225,26 +233,22 @@ def prepare_tuple(subtuple, tuple_type):
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
     try:
-        try:
-            log_start_tuple(tuple_type, subtuple['key'])
-        except LedgerError as e:
-            # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
-            # in case of multiple instances of substrabac running for the same organisation
-            # So prepare_tuple tasks are ignored if it cannot log_start_tuple
-            # TODO: find a way to handle this special case to avoid silent failure in other cases.
-            logging.exception(e)
-        else:
-            compute_task.apply_async(
-                (tuple_type, subtuple, fltask),
-                queue=worker_queue)
+        log_start_tuple(tuple_type, subtuple['key'])
+    except LedgerStatusError as e:
+        # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
+        # in case of multiple instances of substrabac running for the same organisation
+        # So prepare_tuple tasks are ignored if it cannot log_start_tuple
+        logging.exception(e)
+        raise Ignore()
 
+    try:
+        compute_task.apply_async(
+            (tuple_type, subtuple, fltask),
+            queue=worker_queue)
     except Exception as e:
         error_code = compute_error_code(e)
         logging.error(error_code, exc_info=True)
-        try:
-            log_fail_tuple(tuple_type, subtuple['key'], error_code)
-        except LedgerError as e:
-            logging.exception(e)
+        log_fail_tuple(tuple_type, subtuple['key'], error_code)
 
 
 @app.task(bind=True, ignore_result=False)

@@ -14,11 +14,26 @@ from hfc.fabric import Client
 from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
+from hfc.protos.peer.transaction_pb2 import TxValidationCode
 
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_hash
 
+from celery.result import AsyncResult
+
 LEDGER = getattr(settings, 'LEDGER', None)
+
+
+def get_tuple_type(payload):
+
+    tuple_type = None
+
+    if 'inModels' in payload:
+        tuple_type = 'traintuple'
+    elif 'model' in payload:
+        tuple_type = 'testtuple'
+
+    return tuple_type
 
 
 @contextlib.contextmanager
@@ -38,24 +53,43 @@ def get_block_payload(block):
     return payload
 
 
-def on_tuple_event(block):
+def log_tuple_status(block, tuple_type, key, event_type):
+
+    try:
+        meta = block['metadata']['metadata'][-1]
+        if isinstance(meta, list):
+            meta = int(meta.pop())
+        status = TxValidationCode.Name(meta)
+    except Exception:
+        print(f'[ChaincodeEvent] Received {tuple_type} "{event_type}" (key: "{key}")')
+    else:
+        print(f'[ChaincodeEvent] Received {tuple_type} "{event_type}" (key: "{key}") with status: {status}')
+
+
+def on_tuple_created(block):
     payload = get_block_payload(block)
+    tuple_type = get_tuple_type(payload)
+    log_tuple_status(block, tuple_type, payload['key'], 'created')
+
+
+def on_tuple_ready(block):
+    payload = get_block_payload(block)
+    tuple_type = get_tuple_type(payload)
+    log_tuple_status(block, tuple_type, payload['key'], 'ready')
 
     worker_queue = f"{LEDGER['name']}.worker"
     data_owner = get_hash(LEDGER['signcert'])
 
-    if data_owner == payload['dataset']['worker']:
-        tuple_type = None
-        if 'inModels' in payload:
-            tuple_type = 'traintuple'
-        elif 'model' in payload:
-            tuple_type = 'testtuple'
-
-        if tuple_type is not None:
+    if data_owner == payload['dataset']['worker'] and tuple_type is not None:
+        tkey = payload['key']
+        if AsyncResult(tkey).state == 'PENDING':
             prepare_tuple.apply_async(
                 (payload, tuple_type),
-                task_id=payload['key'],
-                queue=worker_queue)
+                task_id=tkey,
+                queue=worker_queue
+            )
+        else:
+            print(f'[ChaincodeEvent] Tuple task ({tkey}) already exists')
 
 
 def wait():
@@ -104,11 +138,19 @@ def wait():
             stream = channel_event_hub.connect(filtered=False)
 
             channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                     'traintuple-creation',
-                                                     onEvent=on_tuple_event)
+                                                     'traintuple-ready',
+                                                     onEvent=on_tuple_ready)
             channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                     'testtuple-creation',
-                                                     onEvent=on_tuple_event)
+                                                     'testtuple-ready',
+                                                     onEvent=on_tuple_ready)
+
+            channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                     'traintuple-created',
+                                                     onEvent=on_tuple_created)
+            channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                     'testtuple-created',
+                                                     onEvent=on_tuple_created)
+
             loop.run_until_complete(stream)
 
 
