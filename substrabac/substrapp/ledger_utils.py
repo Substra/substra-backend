@@ -106,13 +106,15 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except TimeoutError as e:
             raise LedgerTimeout(str(e))
         except Exception as e:
+            if 'access denied' in e.details():
+                raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+
             logging.exception(e)
             raise LedgerError(str(e))
 
         # Sanity check of the response:
-        if 'access denied' in response:
-            raise LedgerForbidden(f'Access denied for {(fcn, args)}')
-        elif 'no element with key' in response:
+
+        if 'no element with key' in response:
             raise LedgerNotFound(f'No element founded for {(fcn, args)}')
         elif 'tkey' in response:
             pkhash = response.replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
