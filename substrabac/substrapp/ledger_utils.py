@@ -23,7 +23,7 @@ class LedgerResponseError(LedgerError):
 
     @classmethod
     def from_response(cls, response):
-        return LedgerResponseError(response.get("error"))
+        return LedgerResponseError(response['error'])
 
 
 class LedgerConflict(LedgerResponseError):
@@ -39,8 +39,8 @@ class LedgerConflict(LedgerResponseError):
 
     @classmethod
     def from_response(cls, response):
-        pkhash = response["error"].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
-        return LedgerConflict(response.get("error"), pkhash=pkhash)
+        pkhash = response['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+        return LedgerConflict(response['error'], pkhash=pkhash)
 
 
 class LedgerTimeout(LedgerError):
@@ -142,8 +142,8 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             status.HTTP_404_NOT_FOUND: LedgerNotFound,
             status.HTTP_409_CONFLICT: LedgerConflict,
         }
-        if response and "error" in response:
-            status_code = response.get("status", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        if response and 'error' in response:
+            status_code = response['status']
             exception_class = status_to_exception.get(status_code, LedgerBadResponse)
             raise exception_class.from_response(response)
         # Check permissions
