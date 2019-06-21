@@ -84,6 +84,8 @@ def do_populate():
                        help='Launch populate with two orgs')
     group.add_argument('-th', '--three-orgs', action='store_const', dest='nb_org', const=3,
                        help='Launch populate with three orgs')
+    parser.add_argument('-a', '--archive', action='store_true',
+                        help='Launch populate with archive data samples only')
     parser.set_defaults(nb_org=2)
     args = vars(parser.parse_args())
 
@@ -113,21 +115,34 @@ def do_populate():
     ####################################################
 
     train_data_sample_keys = []
-    print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
-    data_samples_path = ['./fixtures/chunantes/datasamples/train/0024306',
-                         './fixtures/chunantes/datasamples/train/0024307']
-    for d in data_samples_path:
-        try:
-            shutil.copytree(os.path.join(dir_path, d),
-                            os.path.join(server_path, d))
-        except FileExistsError:
-            pass
-    data = {
-        'paths': [os.path.join(server_path, d) for d in data_samples_path],
-        'data_manager_keys': [data_manager_org1_key],
-        'test_only': False,
-    }
-    train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=True)
+
+    if not args['archive']:
+        print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
+        data_samples_path = ['./fixtures/chunantes/datasamples/train/0024306',
+                             './fixtures/chunantes/datasamples/train/0024307']
+        for d in data_samples_path:
+            try:
+                shutil.copytree(os.path.join(dir_path, d),
+                                os.path.join(server_path, d))
+            except FileExistsError:
+                pass
+        data = {
+            'paths': [os.path.join(server_path, d) for d in data_samples_path],
+            'data_manager_keys': [data_manager_org1_key],
+            'test_only': False,
+        }
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=True)
+    else:
+        print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
+        data = {
+            'paths': [
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
+            ],
+            'data_manager_keys': [data_manager_org1_key],
+            'test_only': False,
+        }
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=False)
 
     ####################################################
 
