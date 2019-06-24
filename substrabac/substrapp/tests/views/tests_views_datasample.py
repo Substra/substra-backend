@@ -160,6 +160,41 @@ class DataSampleViewTests(APITestCase):
 
         data['file'].close()
 
+    def test_data_create_parent_path(self):
+        url = reverse('substrapp:data_sample-list')
+
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+
+        data_zip_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
+        data_parent_path = os.path.join(MEDIA_ROOT, 'data_samples')
+        data_path = os.path.join(data_parent_path, '0024700')
+
+        with open(data_zip_path, 'rb') as data_zip:
+            uncompress_content(data_zip.read(), data_path)
+
+        # dir hash
+        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+
+        data_manager_keys = [
+            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
+
+        data = {
+            'path': data_parent_path,
+            'data_manager_keys': data_manager_keys,
+            'test_only': False,
+            'multiple': True,
+        }
+
+        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+
+            mdatamanager.return_value = FakeFilterDataManager(1)
+            mcreate.return_value = {'keys': [pkhash]}
+            response = self.client.post(url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.data[0]['pkhash'], pkhash)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
     def test_data_create_path(self):
         url = reverse('substrapp:data_sample-list')
 

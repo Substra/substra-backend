@@ -117,6 +117,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             if path is not None:
                 paths = [path]
 
+            recursive_dir = request.POST.get('multiple', 'false').lower() == 'true'
+            if recursive_dir:
+                # list all directories from parent directories
+                parent_paths = paths
+                paths = []
+                for parent_path in parent_paths:
+                    subdirs = next(os.walk(parent_path))[1]
+                    subdirs = [os.path.join(parent_path, s) for s in subdirs]
+                    paths.extend(subdirs)
+
             # paths, should be directories
             for path in paths:
                 if not os.path.isdir(path):
