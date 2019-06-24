@@ -86,54 +86,58 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def compute_data(self, request):
         data = {}
-        # files, should be archive
-        for k, file in request.FILES.items():
-            pkhash = get_dir_hash(file)  # can raise
-            # check pkhash does not belong to the list
-            try:
-                existing = data[pkhash]
-            except KeyError:
-                pass
-            else:
-                raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
-                                f'please review the content of your achives. '
-                                f'Archives {file} and {existing["file"]} are the same')
-            data[pkhash] = {
-                'pkhash': pkhash,
-                'file': file
-            }
 
-        # path/paths case
-        path = request.POST.get('path', None)
-        paths = request.POST.getlist('paths', [])
+        # files can be uploaded inside the HTTP request or can already be
+        # available on local disk
+        if len(request.FILES) > 0:
 
-        if path and paths:
-            raise Exception('Cannot use path and paths together.')
+            for k, file in request.FILES.items():
+                pkhash = get_dir_hash(file)
+                try:
+                    existing = data[pkhash]
+                except KeyError:
+                    pass
+                else:
+                    raise Exception(
+                        f'Your data sample archives contain same files leading to same pkhash, '
+                        f'please review the content of your achives. '
+                        f'Archives {file} and {existing["file"]} are the same')
 
-        if path is not None:
-            paths = [path]
+                data[pkhash] = {
+                    'pkhash': pkhash,
+                    'file': file
+                }
 
-        # paths, should be directories
-        for path in paths:
-            if not os.path.isdir(path):
-                raise Exception(f'One of your paths does not exist, '
-                                f'is not a directory or is not an absolute path: {path}')
-            pkhash = dirhash(path, 'sha256')
-            try:
-                existing = data[pkhash]
-            except KeyError:
-                pass
-            else:
-                # existing can be a dict with a field path or file
-                raise Exception(f'Your data sample directory contain same files leading to same pkhash. '
-                                f'Invalid path: {path}.')
+        else:  # files must be available on local filesystem
+            path = request.POST.get('path')
+            paths = request.POST.getlist('paths')
 
-            data[pkhash] = {
-                'pkhash': pkhash,
-                'path': normpath(path)
-            }
+            if path and paths:
+                raise Exception('Cannot use path and paths together.')
+            if path is not None:
+                paths = [path]
 
-        if not data:  # data empty
+            # paths, should be directories
+            for path in paths:
+                if not os.path.isdir(path):
+                    raise Exception(f'One of your paths does not exist, '
+                                    f'is not a directory or is not an absolute path: {path}')
+                pkhash = dirhash(path, 'sha256')
+                try:
+                    existing = data[pkhash]
+                except KeyError:
+                    pass
+                else:
+                    # existing can be a dict with a field path or file
+                    raise Exception(f'Your data sample directory contain same files leading to same pkhash. '
+                                    f'Invalid path: {path}.')
+
+                data[pkhash] = {
+                    'pkhash': pkhash,
+                    'path': normpath(path)
+                }
+
+        if not data:
             raise Exception(f'No data sample provided.')
 
         return list(data.values())
