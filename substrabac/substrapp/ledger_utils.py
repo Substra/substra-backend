@@ -106,7 +106,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except TimeoutError as e:
             raise LedgerTimeout(str(e))
         except Exception as e:
-            if 'access denied' in e.details():
+            if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
             logging.exception(e)
