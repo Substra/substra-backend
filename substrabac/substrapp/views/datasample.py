@@ -26,13 +26,14 @@ from substrapp.utils import uncompress_path, get_dir_hash
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
-from substrapp.ledger_utils import LedgerError, LedgerTimeout
+from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout
 
 logger = logging.getLogger('django.request')
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
                         mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
                         GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
@@ -210,6 +211,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             return Response(data, status=st, headers=headers)
+
+    def list(self, request, *args, **kwargs):
+        try:
+            data = query_ledger(fcn='queryDataSamples', args=[])
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        data = data if data else []
+
+        return Response(data, status=status.HTTP_200_OK)
 
     def validate_bulk_update(self, data):
         try:
