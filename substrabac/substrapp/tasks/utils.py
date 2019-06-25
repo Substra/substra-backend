@@ -5,6 +5,8 @@ import threading
 import time
 
 import logging
+
+from subprocess import check_output
 from django.conf import settings
 
 DOCKER_LABEL = 'substra_task'
@@ -264,9 +266,6 @@ class ExceptionThread(threading.Thread):
 class ResourcesManager():
 
     __concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
-    __memory_mb = int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))
-    __memory_mb_per_task = __memory_mb // __concurrency
-
     __cpu_count = os.cpu_count()
     __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
 
@@ -280,7 +279,11 @@ class ResourcesManager():
 
     @classmethod
     def memory_limit_mb(cls):
-        return cls.__memory_mb_per_task
+        try:
+            return int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2)) // cls.__concurrency
+        except ValueError:
+            # fixes macOS issue https://github.com/SubstraFoundation/substrabac/issues/262
+            return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // cls.__concurrency
 
     @classmethod
     def get_cpu_gpu_sets(cls):
