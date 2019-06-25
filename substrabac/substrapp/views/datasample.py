@@ -125,6 +125,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 for parent_path in parent_paths:
                     subdirs = next(os.walk(parent_path))[1]
                     subdirs = [os.path.join(parent_path, s) for s in subdirs]
+                    if not subdirs:
+                        raise Exception(
+                            f'No data sample directories in folder {parent_path}')
                     paths.extend(subdirs)
 
             # paths, should be directories
