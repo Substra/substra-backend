@@ -40,6 +40,8 @@ class LedgerConflict(LedgerResponseError):
     @classmethod
     def from_response(cls, response):
         pkhash = response['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+        if 'tkey: ' not in response['error'] or len(pkhash) != 64:
+            return LedgerBadResponse(response['error'])
         return LedgerConflict(response['error'], pkhash=pkhash)
 
 
@@ -65,6 +67,14 @@ class LedgerBadResponse(LedgerResponseError):
 
 class LedgerStatusError(LedgerError):
     pass
+
+
+STATUS_TO_EXCEPTION = {
+    status.HTTP_400_BAD_REQUEST: LedgerBadResponse,
+    status.HTTP_403_FORBIDDEN: LedgerForbidden,
+    status.HTTP_404_NOT_FOUND: LedgerNotFound,
+    status.HTTP_409_CONFLICT: LedgerConflict,
+}
 
 
 @contextlib.contextmanager
@@ -136,15 +146,9 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             else:
                 raise LedgerBadResponse(response)
 
-        status_to_exception = {
-            status.HTTP_400_BAD_REQUEST: LedgerBadResponse,
-            status.HTTP_403_FORBIDDEN: LedgerForbidden,
-            status.HTTP_404_NOT_FOUND: LedgerNotFound,
-            status.HTTP_409_CONFLICT: LedgerConflict,
-        }
         if response and 'error' in response:
             status_code = response['status']
-            exception_class = status_to_exception.get(status_code, LedgerBadResponse)
+            exception_class = STATUS_TO_EXCEPTION.get(status_code, LedgerBadResponse)
             raise exception_class.from_response(response)
         # Check permissions
         if response and 'permissions' in response and response['permissions'] != 'all':
