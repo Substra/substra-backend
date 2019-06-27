@@ -19,7 +19,14 @@ class LedgerError(Exception):
         return self.msg
 
 
-class LedgerConflict(LedgerError):
+class LedgerResponseError(LedgerError):
+
+    @classmethod
+    def from_response(cls, response):
+        return LedgerResponseError(response['error'])
+
+
+class LedgerConflict(LedgerResponseError):
 
     status = status.HTTP_409_CONFLICT
 
@@ -30,16 +37,23 @@ class LedgerConflict(LedgerError):
     def __repr__(self):
         return self.msg
 
+    @classmethod
+    def from_response(cls, response):
+        pkhash = response['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
+        if 'tkey: ' not in response['error'] or len(pkhash) != 64:
+            return LedgerBadResponse(response['error'])
+        return LedgerConflict(response['error'], pkhash=pkhash)
+
 
 class LedgerTimeout(LedgerError):
     status = status.HTTP_408_REQUEST_TIMEOUT
 
 
-class LedgerForbidden(LedgerError):
+class LedgerForbidden(LedgerResponseError):
     status = status.HTTP_403_FORBIDDEN
 
 
-class LedgerNotFound(LedgerError):
+class LedgerNotFound(LedgerResponseError):
     status = status.HTTP_404_NOT_FOUND
 
 
@@ -47,12 +61,20 @@ class LedgerMVCCError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
-class LedgerBadResponse(LedgerError):
+class LedgerBadResponse(LedgerResponseError):
     pass
 
 
 class LedgerStatusError(LedgerError):
     pass
+
+
+STATUS_TO_EXCEPTION = {
+    status.HTTP_400_BAD_REQUEST: LedgerBadResponse,
+    status.HTTP_403_FORBIDDEN: LedgerForbidden,
+    status.HTTP_404_NOT_FOUND: LedgerNotFound,
+    status.HTTP_409_CONFLICT: LedgerConflict,
+}
 
 
 @contextlib.contextmanager
@@ -112,17 +134,6 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             logging.exception(e)
             raise LedgerError(str(e))
 
-        # Sanity check of the response:
-
-        if 'no element with key' in response:
-            raise LedgerNotFound(f'No element founded for {(fcn, args)}')
-        elif 'tkey' in response:
-            pkhash = response.replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
-            if len(pkhash) == 64:
-                raise LedgerConflict(msg='Asset conflict', pkhash=pkhash)
-            else:
-                raise LedgerBadResponse(response)
-
         # Deserialize the stringified json
         try:
             response = json.loads(response)
@@ -135,6 +146,10 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             else:
                 raise LedgerBadResponse(response)
 
+        if response and 'error' in response:
+            status_code = response['status']
+            exception_class = STATUS_TO_EXCEPTION.get(status_code, LedgerBadResponse)
+            raise exception_class.from_response(response)
         # Check permissions
         if response and 'permissions' in response and response['permissions'] != 'all':
             raise LedgerForbidden('Not allowed')
