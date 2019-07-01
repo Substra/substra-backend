@@ -117,7 +117,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             if path is not None:
                 paths = [path]
 
-            recursive_dir = request.POST.get('multiple', 'false').lower() == 'true'
+            recursive_dir = str(request.POST.get('multiple', 'false')).lower() == 'true'
             if recursive_dir:
                 # list all directories from parent directories
                 parent_paths = paths
