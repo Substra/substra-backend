@@ -48,7 +48,7 @@ class ModelViewTests(APITestCase):
     def test_model_list_empty(self):
         url = reverse('substrapp:model-list')
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [None, ['ISIC']]
+            mquery_ledger.side_effect = [[], ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
