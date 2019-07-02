@@ -226,8 +226,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data = data if data else []
-
         data_managers_list = [data]
 
         # parse filters
