@@ -111,9 +111,6 @@ def generate_docker_compose_file(conf, launch_settings):
 
     for org in conf:
         org_name = org['name']
-        peer = org['peer']['name']
-        tls_peer_dir = f'{SUBSTRA_FOLDER}/data/orgs/{org_name}/tls/{peer}'
-
         org_name_stripped = org_name.replace('-', '')
 
         port = BACKEND_PORT[org_name_stripped]
@@ -156,9 +153,12 @@ def generate_docker_compose_file(conf, launch_settings):
             f'{SUBSTRA_FOLDER}/conf/{org_name}:{SUBSTRA_FOLDER}/conf/{org_name}:ro',
 
             # HLF files
-            f'{tls_peer_dir}:{tls_peer_dir}:ro',
             f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}:ro',
         ]
+
+        # HLF files
+        for tls_key in ['tlsCACerts', 'clientCert', 'clientKey']:
+            hlf_volumes.append(f'{org["peer"][tls_key]}:{org["peer"][tls_key]}:ro')
 
         backend = {
             'container_name': f'{org_name_stripped}.substrabac',
