@@ -101,8 +101,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data = data if data else []
-
         models_list = [data]
 
         query_params = request.query_params.get('search', None)

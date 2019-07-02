@@ -163,8 +163,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data = data if data else []
-
         algos_list = [data]
 
         # parse filters

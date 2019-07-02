@@ -69,14 +69,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
-
         try:
             data = query_ledger(fcn='queryTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-
-        data = data if data else []
-
         return Response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, pk):
