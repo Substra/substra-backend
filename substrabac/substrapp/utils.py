@@ -4,7 +4,9 @@ import hashlib
 import logging
 import os
 import tempfile
+from os import path
 from os.path import isfile, isdir
+import shutil
 
 import requests
 import tarfile
@@ -22,7 +24,7 @@ class JsonException(Exception):
         super(JsonException, self).__init__()
 
 
-def get_dir_hash(archive_content):
+def get_dir_hash_only(archive_content):
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             content = archive_content.read()
@@ -33,6 +35,28 @@ def get_dir_hash(archive_content):
             raise e
         else:
             return dirhash(temp_dir, 'sha256')
+
+
+def get_dir_hash(archive_content):
+
+    try:
+        content = archive_content.read()
+        archive_content.seek(0)
+    except Exception as e:
+        logging.error(e)
+        raise e
+
+    datasamples_file_hash = compute_hash(content)
+    datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                 'datasamples/{0}'.format(datasamples_file_hash))
+    try:
+        uncompress_content(content, datasamples_path)
+    except Exception as e:
+        shutil.rmtree(datasamples_path, ignore_errors=True)
+        logging.error(e)
+        raise e
+    else:
+        return dirhash(datasamples_path, 'sha256'), datasamples_path
 
 
 def get_hash(file, key=None):
