@@ -23,6 +23,7 @@ def data_sample_pre_save(sender, instance, **kwargs):
     directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.pk))
 
     # uncompress file if an archive
+    # Should not be necessary with get_dir_hash
     if isinstance(instance.path, File):
         try:
             content = instance.path.read()

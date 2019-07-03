@@ -5,6 +5,7 @@ import docker
 import os
 import ntpath
 import uuid
+import shutil
 
 from checksumdir import dirhash
 from django.conf import settings
@@ -30,6 +31,18 @@ from substrapp.views.utils import find_primary_key_error, LedgerException, Valid
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout
 
 logger = logging.getLogger('django.request')
+
+
+class DataSamplesPathsFromFilesRemoval(object):
+    def __enter__(self):
+        global datasamples_paths_from_files
+        datasamples_paths_from_files = []
+
+    def __exit__(self, exc_type, exc_val, traceback):
+        global datasamples_paths_from_files
+        # Remove gpath as they are hard linked with pre save signals
+        for gpath in datasamples_paths_from_files:
+            shutil.rmtree(gpath, ignore_errors=True)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
@@ -93,27 +106,31 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return serializer.data, st
 
     def compute_data(self, request):
+
         data = {}
 
         # files can be uploaded inside the HTTP request or can already be
         # available on local disk
         if len(request.FILES) > 0:
+            pkhash_map = {}
+            global datasamples_paths_from_files
 
             for k, file in request.FILES.items():
-                pkhash = get_dir_hash(file)
+                # Get dir hash uncompress the file into a directory
+                pkhash, datasamples_path_from_file = get_dir_hash(file)  # can raise
+                datasamples_paths_from_files.append(datasamples_path_from_file)
+                # check pkhash does not belong to the list
                 try:
-                    existing = data[pkhash]
+                    data[pkhash]
                 except KeyError:
-                    pass
+                    pkhash_map[pkhash] = file
                 else:
-                    raise Exception(
-                        f'Your data sample archives contain same files leading to same pkhash, '
-                        f'please review the content of your achives. '
-                        f'Archives {file} and {existing["file"]} are the same')
-
+                    raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
+                                    f'please review the content of your achives. '
+                                    f'Archives {file} and {pkhash_map[pkhash]} are the same')
                 data[pkhash] = {
                     'pkhash': pkhash,
-                    'file': file
+                    'path': datasamples_path_from_file
                 }
 
         else:  # files must be available on local filesystem
@@ -146,7 +163,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                                     f'is not a directory or is not an absolute path: {path}')
                 pkhash = dirhash(path, 'sha256')
                 try:
-                    existing = data[pkhash]
+                    data[pkhash]
                 except KeyError:
                     pass
                 else:
@@ -193,32 +210,33 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
-        if not data_manager_keys:
-            raise Exception("missing or empty field 'data_manager_keys'")
+        with DataSamplesPathsFromFilesRemoval():
+            if not data_manager_keys:
+                raise Exception("missing or empty field 'data_manager_keys'")
 
-        self.check_datamanagers(data_manager_keys)  # can raise
+            self.check_datamanagers(data_manager_keys)  # can raise
 
-        computed_data = self.compute_data(request)
+            computed_data = self.compute_data(request)
 
-        serializer = self.get_serializer(data=computed_data, many=True)
+            serializer = self.get_serializer(data=computed_data, many=True)
 
-        try:
-            serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            pkhashes = [x['pkhash'] for x in computed_data]
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhashes, st)
-        else:
-            if dryrun:
-                return self.handle_dryrun(computed_data, data_manager_keys)
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                pkhashes = [x['pkhash'] for x in computed_data]
+                st = status.HTTP_400_BAD_REQUEST
+                if find_primary_key_error(e):
+                    st = status.HTTP_409_CONFLICT
+                raise ValidationException(e.args, pkhashes, st)
+            else:
+                if dryrun:
+                    return self.handle_dryrun(computed_data, data_manager_keys)
 
-            # create on ledger + db
-            ledger_data = {'test_only': test_only,
-                           'data_manager_keys': data_manager_keys}
-            data, st = self.commit(serializer, ledger_data)
-            return data, st
+                # create on ledger + db
+                ledger_data = {'test_only': test_only,
+                               'data_manager_keys': data_manager_keys}
+                data, st = self.commit(serializer, ledger_data)
+                return data, st
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
