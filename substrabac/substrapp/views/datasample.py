@@ -24,7 +24,7 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
-from substrapp.utils import uncompress_path, get_dir_hash
+from substrapp.utils import uncompress_path, store_datasamples_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
@@ -34,15 +34,20 @@ logger = logging.getLogger('django.request')
 
 
 class DataSamplesPathsFromFilesRemoval(object):
+
+    def __init__(self):
+        self.datasamples_paths_from_files = []
+
     def __enter__(self):
-        global datasamples_paths_from_files
-        datasamples_paths_from_files = []
+        return self
 
     def __exit__(self, exc_type, exc_val, traceback):
-        global datasamples_paths_from_files
         # Remove gpath as they are hard linked with pre save signals
-        for gpath in datasamples_paths_from_files:
+        for gpath in self.datasamples_paths_from_files:
             shutil.rmtree(gpath, ignore_errors=True)
+
+    def add_path(self, path):
+        self.datasamples_paths_from_files.append(path)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
@@ -105,7 +110,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return serializer.data, st
 
-    def compute_data(self, request):
+    def compute_data(self, request, remover):
 
         data = {}
 
@@ -117,8 +122,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
             for k, file in request.FILES.items():
                 # Get dir hash uncompress the file into a directory
-                pkhash, datasamples_path_from_file = get_dir_hash(file)  # can raise
-                datasamples_paths_from_files.append(datasamples_path_from_file)
+                pkhash, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
+                remover.add_path(datasamples_path_from_file)
                 # check pkhash does not belong to the list
                 try:
                     data[pkhash]
@@ -210,13 +215,13 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
-        with DataSamplesPathsFromFilesRemoval():
+        with DataSamplesPathsFromFilesRemoval() as remover:
             if not data_manager_keys:
                 raise Exception("missing or empty field 'data_manager_keys'")
 
             self.check_datamanagers(data_manager_keys)  # can raise
 
-            computed_data = self.compute_data(request)
+            computed_data = self.compute_data(request, remover)
 
             serializer = self.get_serializer(data=computed_data, many=True)
 
