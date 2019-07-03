@@ -10,7 +10,7 @@ from rest_framework import status
 
 from substrapp.serializers.datasample import DataSampleSerializer
 from substrapp.views import DataSampleViewSet
-from substrapp.utils import get_dir_hash_only
+from substrapp.utils import get_dir_hash
 from substrapp.views.datasample import LedgerException
 
 
@@ -49,7 +49,7 @@ def map_data_sample(paths):
                 with open(file_or_path, 'rb') as f:
                     filename = path_leaf(file_or_path)
                     file = ContentFile(f.read(), filename)
-                    pkhash = get_dir_hash_only(file)
+                    pkhash = get_dir_hash(file)
 
                     check(file_or_path, pkhash, data_sample)
 

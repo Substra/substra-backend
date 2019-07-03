@@ -24,11 +24,11 @@ class JsonException(Exception):
         super(JsonException, self).__init__()
 
 
-def get_dir_hash_only(archive_content):
+def get_dir_hash(archive_object):
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            content = archive_content.read()
-            archive_content.seek(0)
+            content = archive_object.read()
+            archive_object.seek(0)
             uncompress_content(content, temp_dir)
         except Exception as e:
             logging.error(e)
@@ -37,11 +37,11 @@ def get_dir_hash_only(archive_content):
             return dirhash(temp_dir, 'sha256')
 
 
-def get_dir_hash(archive_content):
+def store_datasamples_archive(archive_object):
 
     try:
-        content = archive_content.read()
-        archive_content.seek(0)
+        content = archive_object.read()
+        archive_object.seek(0)
     except Exception as e:
         logging.error(e)
         raise e
