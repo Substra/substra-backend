@@ -253,3 +253,16 @@ class DataSampleViewTests(APITestCase):
         with mock.patch.object(DataManager.objects, 'get') as mdatamanager:
             mdatamanager.return_value = FakeDataManager(opener_path)
             data_sample_compute_dryrun(data_files, data_manager_keys)
+
+    def test_datasamples_list(self):
+        url = reverse('substrapp:data_sample-list')
+        with mock.patch('substrapp.views.datasample.query_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [None, ['DataSampleA', 'DataSampleB']]
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, [])
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, ['DataSampleA', 'DataSampleB'])
