@@ -72,7 +72,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerError as e:
+            instance.delete()
             raise LedgerException(str(e.msg), e.status)
+        except Exception:
+            instance.delete()
+            raise
 
         st = get_success_create_code()
 
