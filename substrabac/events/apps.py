@@ -24,18 +24,6 @@ from celery.result import AsyncResult
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
-def get_tuple_type(payload):
-
-    tuple_type = None
-
-    if 'inModels' in payload:
-        tuple_type = 'traintuple'
-    elif 'model' in payload:
-        tuple_type = 'testtuple'
-
-    return tuple_type
-
-
 @contextlib.contextmanager
 def get_event_loop():
     loop = asyncio.new_event_loop()
@@ -53,37 +41,30 @@ def get_block_payload(block):
     return payload
 
 
-def log_tuple_status(status, tuple_type, key, event_type):
-    print(f'[ChaincodeEvent] Received {tuple_type} "{event_type}" (key: "{key}") with status: {status}')
-
-
-def on_tuples_updated(block):
+def on_tuples(block):
     try:
         meta = block['metadata']['metadata'][-1]
         if isinstance(meta, list):
             meta = int(meta.pop())
-        status = TxValidationCode.Name(meta)
+        tx_validation_code = TxValidationCode.Name(meta)
     except Exception:
-        status = None
+        tx_validation_code = None
 
     payload = get_block_payload(block)
-    for tuple_type, values in payload.items():
-        for key, _tuples in values.items():
-            if key == 'created':
-                for _tuple in _tuples:
-                    on_tuple_created(status, _tuple, tuple_type)
 
-            if key == 'ready':
-                for _tuple in _tuples:
-                    on_tuple_ready(status, _tuple, tuple_type)
+    for tuple_type, _tuples in payload.items():
+        for _tuple in _tuples:
+            tuple_key = _tuple['key']
+            tuple_status = _tuple['status']
 
+            print(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
+                  f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
 
-def on_tuple_created(status, _tuple, tuple_type):
-    log_tuple_status(status, tuple_type, _tuple['key'], 'created')
+            if tuple_status == 'todo':
+                launch_tuple(_tuple, tuple_type)
 
 
-def on_tuple_ready(status, _tuple, tuple_type):
-    log_tuple_status(status, tuple_type, _tuple['key'], 'ready')
+def launch_tuple(_tuple, tuple_type):
 
     worker_queue = f"{LEDGER['name']}.worker"
     data_owner = get_hash(LEDGER['signcert'])
@@ -147,7 +128,7 @@ def wait():
 
             channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                      'tuples-updated',
-                                                     onEvent=on_tuples_updated)
+                                                     onEvent=on_tuples)
             loop.run_until_complete(stream)
 
 
