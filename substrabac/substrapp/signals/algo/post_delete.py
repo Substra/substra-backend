@@ -8,4 +8,5 @@ def algo_post_delete(sender, instance, **kwargs):
     instance.description.delete(False)
 
     directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'algos/{0}'.format(instance.pk))
-    shutil.rmtree(directory)
+    if path.exists(directory):
+        shutil.rmtree(directory)
