@@ -5,6 +5,9 @@ import contextlib
 from django.conf import settings
 from rest_framework import status
 
+from hfc.protos.peer.proposal_response_pb2 import ProposalResponse
+
+
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
@@ -87,6 +90,25 @@ def get_hfc():
         loop.close()
 
 
+def _exception_get_proposal_responses(e):
+    if (
+        e.args and
+        isinstance(e.args[0], list) and
+        e.args[0] and
+        all([isinstance(r, ProposalResponse) for r in e.args[0]])
+    ):
+        return e.args[0]
+    else:
+        return None
+
+
+def _proposal_responses_find_error(proposal_responses):
+    for p in proposal_responses:
+        if p.response.status != 200:
+            return p
+    return None
+
+
 def call_ledger(call_type, fcn, args=None, kwargs=None):
 
     with get_hfc() as (loop, client):
@@ -128,17 +150,24 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except TimeoutError as e:
             raise LedgerTimeout(str(e))
         except Exception as e:
-            if hasattr(e, 'details') and 'access denied' in e.details():
-                raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+            # XXX When the chaincode responds with a status code different than
+            #     200 a standard python Exception is raised with all the
+            #     responses in protobuf format as first argument. To handle
+            #     properly theses exceptions, check raised exception and parse
+            #     protobuf responses. This should be handled properly in the
+            #     fabric-sdk-py.
+            proposal_responses = _exception_get_proposal_responses(e)
 
-            logging.exception(e)
-            raise LedgerError(str(e))
+            if not proposal_responses:
+                logging.exception(e)
+                raise LedgerError(str(e))
+            pb_error = _proposal_responses_find_error(proposal_responses)
+            response = pb_error.response.message
 
         # Deserialize the stringified json
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-
             if response == 'MVCC_READ_CONFLICT':
                 raise LedgerMVCCError(response)
             elif 'cannot change status' in response:
