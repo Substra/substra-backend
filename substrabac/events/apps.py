@@ -21,6 +21,8 @@ from substrapp.utils import get_hash
 
 from celery.result import AsyncResult
 
+import logging
+
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
@@ -57,8 +59,8 @@ def on_tuples(block):
             tuple_key = _tuple['key']
             tuple_status = _tuple['status']
 
-            print(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
-                  f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
+            logging.info(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
+                         f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
 
             if tuple_status == 'todo':
                 launch_tuple(_tuple, tuple_type)
