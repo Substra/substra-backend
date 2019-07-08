@@ -94,7 +94,6 @@ def _exception_get_proposal_responses(e):
     if (
         e.args and
         isinstance(e.args[0], list) and
-        e.args[0] and
         all([isinstance(r, ProposalResponse) for r in e.args[0]])
     ):
         return e.args[0]
