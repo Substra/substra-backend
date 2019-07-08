@@ -152,7 +152,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             # XXX When the chaincode responds with a status code different than
             #     200 a standard python Exception is raised with all the
             #     responses in protobuf format as first argument. To handle
-            #     properly theses exceptions, check raised exception and parse
+            #     properly these exceptions, check raised exception and parse
             #     protobuf responses. This should be handled properly in the
             #     fabric-sdk-py.
             proposal_responses = _exception_get_proposal_responses(e)
