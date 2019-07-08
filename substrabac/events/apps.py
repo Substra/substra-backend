@@ -55,15 +55,16 @@ def on_tuples(block):
     payload = get_block_payload(block)
 
     for tuple_type, _tuples in payload.items():
-        for _tuple in _tuples:
-            tuple_key = _tuple['key']
-            tuple_status = _tuple['status']
+        if _tuples:
+            for _tuple in _tuples:
+                tuple_key = _tuple['key']
+                tuple_status = _tuple['status']
 
-            logging.info(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
-                         f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
+                logging.info(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
+                             f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
 
-            if tuple_status == 'todo':
-                launch_tuple(_tuple, tuple_type)
+                if tuple_status == 'todo':
+                    launch_tuple(_tuple, tuple_type)
 
 
 def launch_tuple(_tuple, tuple_type):
