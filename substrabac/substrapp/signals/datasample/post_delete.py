@@ -7,4 +7,5 @@ from django.conf import settings
 def data_sample_post_delete(sender, instance, **kwargs):
     # remove created folder
     directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples', instance.pk)
-    rmtree(directory)
+    if path.exists(directory):
+        rmtree(directory)
