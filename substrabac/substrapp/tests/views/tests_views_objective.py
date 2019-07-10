@@ -63,7 +63,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_empty(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [None, ['ISIC']]
+            mquery_ledger.side_effect = [[], ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()

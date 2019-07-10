@@ -50,7 +50,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_empty(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [None, ['ISIC']]
+            mquery_ledger.side_effect = [[], ['ISIC']]
 
             response = self.client.get(url, **self.extra)
             r = response.json()
