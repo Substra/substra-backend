@@ -230,8 +230,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data = data if data else []
-
         objectives_list = [data]
 
         query_params = request.query_params.get('search', None)
