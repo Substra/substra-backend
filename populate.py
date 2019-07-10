@@ -56,7 +56,7 @@ def get_or_create(data, profile, asset, dryrun=False, register=False):
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
     try:
-        r = client.update('dataset', data_manager_key, data)
+        r = client.update('data_manager', data_manager_key, data)
 
     except substra.exceptions.AlreadyExists as e:
         r = e.response.json()
@@ -110,7 +110,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': 'all',
     }
-    data_manager_org1_key = get_or_create(data, org_1, 'dataset', dryrun=True)
+    data_manager_org1_key = get_or_create(data, org_1, 'data_manager', dryrun=True)
 
     ####################################################
 
@@ -154,7 +154,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
         'permissions': 'all'
     }
-    data_manager_org0_key = get_or_create(data, org_0, 'dataset')
+    data_manager_org0_key = get_or_create(data, org_0, 'data_manager')
 
     ####################################################
 
