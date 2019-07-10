@@ -280,6 +280,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         os.remove(metrics_path)
 
     if not test_data_manager_key:
+        remove_subtuple_materials(subtuple_directory)
         raise Exception('Cannot do a objective dryrun without a data manager key.')
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
