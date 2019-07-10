@@ -39,7 +39,7 @@ def get_hfc_client():
     asyncio.set_event_loop(loop)
 
     client = Client()
-    client.new_channel(LEDGER['channel_name'])
+    channel = client.new_channel(LEDGER['channel_name'])
 
     # Add peer from substrabac ledger config file
     peer = Peer(name=LEDGER['peer']['name'])
@@ -53,7 +53,6 @@ def get_hfc_client():
     client._peers[LEDGER['peer']['name']] = peer
 
     # Discover orderers and peers from channel discovery
-    channel = client.get_channel(LEDGER['channel_name'])
     results = loop.run_until_complete(
         channel._discovery(
             LEDGER['requestor'],
