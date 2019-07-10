@@ -149,6 +149,9 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except TimeoutError as e:
             raise LedgerTimeout(str(e))
         except Exception as e:
+            if hasattr(e, 'details') and 'access denied' in e.details():
+                raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+
             # XXX When the chaincode responds with a status code different than
             #     200 a standard python Exception is raised with all the
             #     responses in protobuf format as first argument. To handle
@@ -160,7 +163,12 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             if not proposal_responses:
                 logging.exception(e)
                 raise LedgerError(str(e))
+
             pb_error = _proposal_responses_find_error(proposal_responses)
+            if not pb_error:
+                logging.exception(e)
+                raise LedgerError(str(e))
+
             response = pb_error.response.message
 
         # Deserialize the stringified json
