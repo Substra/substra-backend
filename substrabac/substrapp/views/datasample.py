@@ -24,30 +24,13 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
-from substrapp.utils import uncompress_path, store_datasamples_archive
+from substrapp.utils import store_datasamples_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout
 
 logger = logging.getLogger('django.request')
-
-
-class DataSamplesPathsFromFilesRemoval(object):
-
-    def __init__(self):
-        self.datasamples_paths_from_files = []
-
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_val, traceback):
-        # Remove gpath as they are hard linked with pre save signals
-        for gpath in self.datasamples_paths_from_files:
-            shutil.rmtree(gpath, ignore_errors=True)
-
-    def add_path(self, path):
-        self.datasamples_paths_from_files.append(path)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
@@ -110,7 +93,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return serializer.data, st
 
-    def compute_data(self, request, remover):
+    def compute_data(self, request, paths_to_remove):
 
         data = {}
 
@@ -118,12 +101,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # available on local disk
         if len(request.FILES) > 0:
             pkhash_map = {}
-            global datasamples_paths_from_files
 
             for k, file in request.FILES.items():
                 # Get dir hash uncompress the file into a directory
                 pkhash, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
-                remover.add_path(datasamples_path_from_file)
+                paths_to_remove.append(datasamples_path_from_file)
                 # check pkhash does not belong to the list
                 try:
                     data[pkhash]
@@ -187,27 +169,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return list(data.values())
 
     def handle_dryrun(self, data, data_manager_keys):
-        data_dry_run = []
-
-        # write uploaded file to disk
-        for d in data:
-            pkhash = d['pkhash']
-            if 'file' in d:
-                file_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'),
-                                         f'data_{pkhash}.zip')
-                with open(file_path, 'wb') as f:
-                    f.write(d['file'].open().read())
-
-                data_dry_run.append({
-                    'pkhash': pkhash,
-                    'file': file_path
-                })
-
-            if 'path' in d:
-                data_dry_run.append(d)
-
         try:
-            task, msg = self.dryrun_task(data_dry_run, data_manager_keys)
+            task, msg = self.dryrun_task(data, data_manager_keys)
         except Exception as e:
             raise Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
@@ -215,13 +178,15 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
-        with DataSamplesPathsFromFilesRemoval() as remover:
+        paths_to_remove = []
+
+        try:
             if not data_manager_keys:
                 raise Exception("missing or empty field 'data_manager_keys'")
 
             self.check_datamanagers(data_manager_keys)  # can raise
 
-            computed_data = self.compute_data(request, remover)
+            computed_data = self.compute_data(request, paths_to_remove)
 
             serializer = self.get_serializer(data=computed_data, many=True)
 
@@ -242,6 +207,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                                'data_manager_keys': data_manager_keys}
                 data, st = self.commit(serializer, ledger_data)
                 return data, st
+        finally:
+            for gpath in paths_to_remove:
+                shutil.rmtree(gpath, ignore_errors=True)
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
@@ -339,16 +307,12 @@ def compute_dryrun(self, data_samples, data_manager_keys):
 
     try:
         for data_sample in data_samples:
-            # uncompress only for file
-            if 'file' in data_sample:
-                uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
             # for all data paths, we need to create symbolic links inside data_path
             # and add real path to volume bind docker
-            elif 'path' in data_sample:
-                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
-                volumes.update({
-                    data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
-                })
+            os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
+            volumes.update({
+                data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
+            })
 
         for datamanager_key in data_manager_keys:
             datamanager = DataManager.objects.get(pk=datamanager_key)

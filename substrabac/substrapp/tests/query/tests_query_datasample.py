@@ -17,7 +17,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
-from substrapp.utils import get_hash, get_dir_hash
+from substrapp.utils import get_hash, get_dir_hash, store_datasamples_archive
 from substrapp.ledger_utils import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
@@ -194,7 +194,9 @@ class DataSampleQueryTests(APITestCase):
         file_mock.read = MagicMock(return_value=self.data_file.file.read())
         file_mock.open = MagicMock(return_value=file_mock)
 
-        d = DataSample(path=file_mock)
+        _, datasamples_path_from_file = store_datasamples_archive(file_mock)
+
+        d = DataSample(path=datasamples_path_from_file)
         # trigger pre save
         d.save()
 
