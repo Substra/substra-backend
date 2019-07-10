@@ -1,4 +1,5 @@
 import os
+import io
 import shutil
 import logging
 
@@ -14,9 +15,11 @@ from rest_framework.test import APITestCase
 from substrapp.serializers import LedgerDataSampleSerializer
 
 from substrapp.views.datasample import path_leaf, compute_dryrun as data_sample_compute_dryrun
-from substrapp.utils import get_hash, uncompress_content
+from substrapp.utils import get_hash, uncompress_content, store_datasamples_archive
 
 from substrapp.models import DataManager
+
+from django.core.files.uploadedfile import InMemoryUploadedFile
 
 from ..common import get_sample_datamanager
 from ..common import FakeFilterDataManager, FakeDataManager
@@ -275,10 +278,20 @@ class DataSampleViewTests(APITestCase):
 
         opener_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py')
 
-        pkhash = get_hash(data_path)
+        file_filename = "file.zip"
+
+        archive_data = io.BytesIO()
+        with open(os.path.join(data_path), 'rb') as zip_file:
+            alen = archive_data.write(zip_file.read())
+
+        archive_object = InMemoryUploadedFile(archive_data, None, file_filename,
+                                              'application/zip', alen, None)
+        archive_object.seek(0)
+
+        pkhash, datasamples_path_from_file = store_datasamples_archive(archive_object)
 
         data = {
-            'filepath': os.path.join(MEDIA_ROOT, '0024700.zip'),
+            'path': datasamples_path_from_file,
             'pkhash': pkhash,
         }
 

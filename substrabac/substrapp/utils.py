@@ -48,7 +48,7 @@ def store_datasamples_archive(archive_object):
 
     datasamples_file_hash = compute_hash(content)
     datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                 'datasamples/{0}'.format(datasamples_file_hash))
+                                 f'datasamples/{datasamples_file_hash}')
     try:
         uncompress_content(content, datasamples_path)
     except Exception as e:

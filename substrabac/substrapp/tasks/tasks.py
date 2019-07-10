@@ -142,6 +142,7 @@ def put_data_sample(subtuple, subtuple_directory):
         data_sample = DataSample.objects.get(pk=data_sample_key)
         data_sample_hash = dirhash(data_sample.path, 'sha256')
         if data_sample_hash != data_sample_key:
+            print(data_sample_hash, data_sample_key)
             raise Exception('Data Sample Hash in Subtuple is not the same as in local db')
 
         # create a symlink on the folder containing data
