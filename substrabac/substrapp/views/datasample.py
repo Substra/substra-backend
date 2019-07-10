@@ -12,6 +12,7 @@ from docker.errors import ContainerError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.reverse import reverse
@@ -124,7 +125,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             if path is not None:
                 paths = [path]
 
-            recursive_dir = str(request.POST.get('multiple', 'false')).lower() == 'true'
+            recursive_dir_field = BooleanField()
+            recursive_dir = recursive_dir_field.to_internal_value(request.data.get('multiple', 'false'))
             if recursive_dir:
                 # list all directories from parent directories
                 parent_paths = paths
