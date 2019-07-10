@@ -1,11 +1,8 @@
 import json
-import logging
 import contextlib
 
 from django.conf import settings
 from rest_framework import status
-
-from hfc.protos.peer.proposal_response_pb2 import ProposalResponse
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -90,24 +87,6 @@ def get_hfc():
         loop.close()
 
 
-def _exception_get_proposal_responses(e):
-    if (
-        e.args and
-        isinstance(e.args[0], list) and
-        all([isinstance(r, ProposalResponse) for r in e.args[0]])
-    ):
-        return e.args[0]
-    else:
-        return None
-
-
-def _proposal_responses_find_error(proposal_responses):
-    for p in proposal_responses:
-        if p.response.status != 200:
-            return p
-    return None
-
-
 def call_ledger(call_type, fcn, args=None, kwargs=None):
 
     with get_hfc() as (loop, client):
@@ -152,24 +131,10 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
-            # XXX When the chaincode responds with a status code different than
-            #     200 a standard python Exception is raised with all the
-            #     responses in protobuf format as first argument. To handle
-            #     properly these exceptions, check raised exception and parse
-            #     protobuf responses. This should be handled properly in the
-            #     fabric-sdk-py.
-            proposal_responses = _exception_get_proposal_responses(e)
-
-            if not proposal_responses:
-                logging.exception(e)
+            try:  # get first failed response from list of protobuf ProposalResponse
+                response = [r for r in e.args[0] if r.response.status != 200][0].response.message
+            except Exception:
                 raise LedgerError(str(e))
-
-            pb_error = _proposal_responses_find_error(proposal_responses)
-            if not pb_error:
-                logging.exception(e)
-                raise LedgerError(str(e))
-
-            response = pb_error.response.message
 
         # Deserialize the stringified json
         try:
