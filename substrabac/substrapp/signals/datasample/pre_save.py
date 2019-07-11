@@ -1,16 +1,7 @@
-from os import path, link, walk, makedirs
+from os import path, link
 from os.path import normpath
-
+import shutil
 from django.conf import settings
-
-
-def create_hard_links(base_dir, directory):
-    makedirs(directory, exist_ok=True)
-    for root, subdirs, files in walk(base_dir):
-        for file in files:
-            link(path.join(root, file), path.join(directory, file))
-        for subdir in subdirs:
-            create_hard_links(root, subdir)
 
 
 def data_sample_pre_save(sender, instance, **kwargs):
@@ -19,9 +10,9 @@ def data_sample_pre_save(sender, instance, **kwargs):
     # try to make an hard link to keep a free copy of the data
     # if not possible, keep the real path location
     try:
-        create_hard_links(normpath(instance.path), directory)
+        shutil.copytree(normpath(instance.path), directory, copy_function=link)
     except Exception:
-        pass
+        shutil.rmtree(directory, ignore_errors=True)
     else:
         # override path for getting our hardlink
         instance.path = directory

@@ -298,8 +298,6 @@ class DataSampleQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            # ledger_data = {'pkhash': [get_dir_hash(file_mock),
-            #                           get_dir_hash(file_mock2)], 'validated': False}
             mcreate.side_effect = LedgerTimeout('Timeout')
 
             response = self.client.post(url, data, format='multipart', **extra)
