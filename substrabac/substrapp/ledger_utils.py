@@ -1,9 +1,9 @@
 import json
-import logging
 import contextlib
 
 from django.conf import settings
 from rest_framework import status
+
 
 LEDGER = getattr(settings, 'LEDGER', None)
 
@@ -131,14 +131,15 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
-            logging.exception(e)
-            raise LedgerError(str(e))
+            try:  # get first failed response from list of protobuf ProposalResponse
+                response = [r for r in e.args[0] if r.response.status != 200][0].response.message
+            except Exception:
+                raise LedgerError(str(e))
 
         # Deserialize the stringified json
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-
             if response == 'MVCC_READ_CONFLICT':
                 raise LedgerMVCCError(response)
             elif 'cannot change status' in response:
