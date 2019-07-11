@@ -23,7 +23,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
-from substrapp.utils import get_hash, get_computed_hash, get_from_node
+from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException
@@ -47,7 +47,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def handle_dryrun(self, pkhash, metrics, test_data_manager_key):
         try:
-            metrics_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'), f'metrics_{pkhash}.py')
+            dryrun_directory = os.path.join(getattr(settings, 'MEDIA_ROOT'), 'dryrun')
+            create_directory(dryrun_directory)
+
+            metrics_path = os.path.join(dryrun_directory, f'metrics_{pkhash}.py')
+
             with open(metrics_path, 'wb') as metrics_file:
                 metrics_file.write(metrics.open().read())
             task = compute_dryrun.apply_async(

@@ -169,6 +169,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return list(data.values())
 
     def handle_dryrun(self, data, data_manager_keys):
+
         try:
             task, msg = self.dryrun_task(data, data_manager_keys)
         except Exception as e:
@@ -178,6 +179,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
+        # compute_data will uncompress data archives to paths which will be
+        # hardlinked thanks to datasample pre_save signal. In case of dryrun
+        # we must keep those references, which will be removed by the dryrun tasks.
+        # In all other cases, we need to remove those references.
+
         paths_to_remove = []
 
         try:
@@ -186,6 +192,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
             self.check_datamanagers(data_manager_keys)  # can raise
 
+            # will uncompress data archives to paths
             computed_data = self.compute_data(request, paths_to_remove)
 
             serializer = self.get_serializer(data=computed_data, many=True)
@@ -205,11 +212,14 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
                                'data_manager_keys': data_manager_keys}
-                data, st = self.commit(serializer, ledger_data)
+                data, st = self.commit(serializer, ledger_data)  # pre_save signal executed
                 return data, st
         finally:
-            for gpath in paths_to_remove:
-                shutil.rmtree(gpath, ignore_errors=True)
+            if not dryrun:
+                # Remove the reference paths of uncompressed data archive as they were all
+                # harlinked in the commit. We must keep them for the dryrun case
+                for gpath in paths_to_remove:
+                    shutil.rmtree(gpath, ignore_errors=True)
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
@@ -325,7 +335,7 @@ def compute_dryrun(self, data_samples, data_manager_keys):
             data_docker_name = f'{data_docker}_{dryrun_uuid}'
 
             volumes.update({
-                data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                 opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
             })
 
@@ -361,6 +371,7 @@ def compute_dryrun(self, data_samples, data_manager_keys):
 
         remove_subtuple_materials(subtuple_directory)
 
+        # Clean dryrun materials
         for data_sample in data_samples:
-            if 'file' in data_sample and os.path.exists(data_sample['file']):
-                os.remove(data_sample['file'])
+            # Remove all possible data (data in servermedias is read-only)
+            shutil.rmtree(data_sample['path'], ignore_errors=True)

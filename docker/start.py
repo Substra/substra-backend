@@ -170,9 +170,8 @@ def generate_docker_compose_file(conf, launch_settings):
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': [
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias',
-                f'{SUBSTRA_FOLDER}/dryrun:{SUBSTRA_FOLDER}/dryrun',
-                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias',
+                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro',
                 f'{SUBSTRA_FOLDER}/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
             'depends_on': ['postgresql', 'rabbit']}
 
@@ -201,8 +200,8 @@ def generate_docker_compose_file(conf, launch_settings):
             'environment': backend_global_env.copy(),
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias',
-                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias'] + hlf_volumes,
+                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
             'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         dryrunner = {
@@ -217,9 +216,8 @@ def generate_docker_compose_file(conf, launch_settings):
             'environment': backend_global_env.copy(),
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
-                f'{SUBSTRA_FOLDER}/dryrun:{SUBSTRA_FOLDER}/dryrun',
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias',
-                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias'] + hlf_volumes,
+                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
             'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
@@ -228,14 +226,9 @@ def generate_docker_compose_file(conf, launch_settings):
 
         if launch_settings == 'dev':
             media_root = f'MEDIA_ROOT={SUBSTRA_FOLDER}/medias/{org_name_stripped}'
-            dryrun_root = f'DRYRUN_ROOT={SUBSTRA_FOLDER}/dryrun/{org_name}'
-
             worker['environment'].append(media_root)
             dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
-
-            dryrunner['environment'].append(dryrun_root)
-            backend['environment'].append(dryrun_root)
         else:
             default_domain = os.environ.get('SUBSTRABAC_DEFAULT_DOMAIN', '')
             if default_domain:

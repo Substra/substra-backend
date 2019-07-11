@@ -229,7 +229,6 @@ class TasksTests(APITestCase):
             # check folder has been correctly renamed with pk of directory containing uncompressed data sample
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            # dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
             self.assertTrue(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
@@ -290,7 +289,6 @@ class TasksTests(APITestCase):
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            # dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists
