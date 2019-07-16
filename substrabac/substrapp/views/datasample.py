@@ -184,14 +184,14 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # we must keep those references, which will be removed by the dryrun tasks.
         # In all other cases, we need to remove those references.
 
+        if not data_manager_keys:
+            raise Exception("missing or empty field 'data_manager_keys'")
+
+        self.check_datamanagers(data_manager_keys)  # can raise
+
         paths_to_remove = []
 
         try:
-            if not data_manager_keys:
-                raise Exception("missing or empty field 'data_manager_keys'")
-
-            self.check_datamanagers(data_manager_keys)  # can raise
-
             # will uncompress data archives to paths
             computed_data = self.compute_data(request, paths_to_remove)
 
