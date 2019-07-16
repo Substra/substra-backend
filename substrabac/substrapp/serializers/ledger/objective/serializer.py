@@ -41,7 +41,10 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
             'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
-            'testDataset': f'{test_data_manager_key}:{",".join([x for x in test_data_sample_keys])}',
+            'testDataset': {
+                'dataManagerKey': test_data_manager_key,
+                'dataSampleKeys': test_data_sample_keys,
+            },
             'permissions': permissions
         }
 
