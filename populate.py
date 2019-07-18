@@ -21,12 +21,12 @@ def setup_config():
     client.create_config('clb', 'http://clb.substrabac:8002', '0.0')
 
 
-def get_or_create(data, profile, asset, dryrun=False, register=False):
+def get_or_create(data, profile, asset, dryrun=False, local=True):
 
     client.set_config(profile)
 
     method_kwargs = {}
-    if register:
+    if not local:
         method_kwargs['local'] = False
 
     method = getattr(client, f'add_{asset}')
@@ -135,18 +135,18 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=True)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, local=False)
     else:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
             'paths': [
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307')
             ],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=False)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True)
 
     ####################################################
 
@@ -165,8 +165,8 @@ def do_populate():
     print('register test data')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
@@ -178,8 +178,8 @@ def do_populate():
     print('register test data 2')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
@@ -191,8 +191,8 @@ def do_populate():
     print('register test data 3')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
