@@ -5,6 +5,7 @@ import docker
 import os
 import ntpath
 import uuid
+import shutil
 
 from checksumdir import dirhash
 from django.conf import settings
@@ -23,7 +24,7 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
 from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
 from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
-from substrapp.utils import uncompress_path, get_dir_hash
+from substrapp.utils import store_datasamples_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
@@ -92,28 +93,31 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return serializer.data, st
 
-    def compute_data(self, request):
+    def compute_data(self, request, paths_to_remove):
+
         data = {}
 
         # files can be uploaded inside the HTTP request or can already be
         # available on local disk
         if len(request.FILES) > 0:
+            pkhash_map = {}
 
             for k, file in request.FILES.items():
-                pkhash = get_dir_hash(file)
+                # Get dir hash uncompress the file into a directory
+                pkhash, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
+                paths_to_remove.append(datasamples_path_from_file)
+                # check pkhash does not belong to the list
                 try:
-                    existing = data[pkhash]
+                    data[pkhash]
                 except KeyError:
-                    pass
+                    pkhash_map[pkhash] = file
                 else:
-                    raise Exception(
-                        f'Your data sample archives contain same files leading to same pkhash, '
-                        f'please review the content of your achives. '
-                        f'Archives {file} and {existing["file"]} are the same')
-
+                    raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
+                                    f'please review the content of your achives. '
+                                    f'Archives {file} and {pkhash_map[pkhash]} are the same')
                 data[pkhash] = {
                     'pkhash': pkhash,
-                    'file': file
+                    'path': datasamples_path_from_file
                 }
 
         else:  # files must be available on local filesystem
@@ -146,7 +150,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                                     f'is not a directory or is not an absolute path: {path}')
                 pkhash = dirhash(path, 'sha256')
                 try:
-                    existing = data[pkhash]
+                    data[pkhash]
                 except KeyError:
                     pass
                 else:
@@ -165,27 +169,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         return list(data.values())
 
     def handle_dryrun(self, data, data_manager_keys):
-        data_dry_run = []
-
-        # write uploaded file to disk
-        for d in data:
-            pkhash = d['pkhash']
-            if 'file' in d:
-                file_path = os.path.join(getattr(settings, 'DRYRUN_ROOT'),
-                                         f'data_{pkhash}.zip')
-                with open(file_path, 'wb') as f:
-                    f.write(d['file'].open().read())
-
-                data_dry_run.append({
-                    'pkhash': pkhash,
-                    'file': file_path
-                })
-
-            if 'path' in d:
-                data_dry_run.append(d)
 
         try:
-            task, msg = self.dryrun_task(data_dry_run, data_manager_keys)
+            task, msg = self.dryrun_task(data, data_manager_keys)
         except Exception as e:
             raise Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
@@ -193,32 +179,47 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, data_manager_keys, test_only, dryrun):
 
+        # compute_data will uncompress data archives to paths which will be
+        # hardlinked thanks to datasample pre_save signal. In case of dryrun
+        # we must keep those references, which will be removed by the dryrun tasks.
+        # In all other cases, we need to remove those references.
+
         if not data_manager_keys:
             raise Exception("missing or empty field 'data_manager_keys'")
 
         self.check_datamanagers(data_manager_keys)  # can raise
 
-        computed_data = self.compute_data(request)
-
-        serializer = self.get_serializer(data=computed_data, many=True)
+        paths_to_remove = []
 
         try:
-            serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            pkhashes = [x['pkhash'] for x in computed_data]
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhashes, st)
-        else:
-            if dryrun:
-                return self.handle_dryrun(computed_data, data_manager_keys)
+            # will uncompress data archives to paths
+            computed_data = self.compute_data(request, paths_to_remove)
 
-            # create on ledger + db
-            ledger_data = {'test_only': test_only,
-                           'data_manager_keys': data_manager_keys}
-            data, st = self.commit(serializer, ledger_data)
-            return data, st
+            serializer = self.get_serializer(data=computed_data, many=True)
+
+            try:
+                serializer.is_valid(raise_exception=True)
+            except Exception as e:
+                pkhashes = [x['pkhash'] for x in computed_data]
+                st = status.HTTP_400_BAD_REQUEST
+                if find_primary_key_error(e):
+                    st = status.HTTP_409_CONFLICT
+                raise ValidationException(e.args, pkhashes, st)
+            else:
+                if dryrun:
+                    return self.handle_dryrun(computed_data, data_manager_keys)
+
+                # create on ledger + db
+                ledger_data = {'test_only': test_only,
+                               'data_manager_keys': data_manager_keys}
+                data, st = self.commit(serializer, ledger_data)  # pre_save signal executed
+                return data, st
+        finally:
+            if not dryrun:
+                # Remove the reference paths of uncompressed data archive as they were all
+                # harlinked in the commit. We must keep them for the dryrun case
+                for gpath in paths_to_remove:
+                    shutil.rmtree(gpath, ignore_errors=True)
 
     def create(self, request, *args, **kwargs):
         dryrun = request.data.get('dryrun', False)
@@ -316,16 +317,12 @@ def compute_dryrun(self, data_samples, data_manager_keys):
 
     try:
         for data_sample in data_samples:
-            # uncompress only for file
-            if 'file' in data_sample:
-                uncompress_path(data_sample['file'], os.path.join(data_path, data_sample['pkhash']))
             # for all data paths, we need to create symbolic links inside data_path
             # and add real path to volume bind docker
-            elif 'path' in data_sample:
-                os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
-                volumes.update({
-                    data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
-                })
+            os.symlink(data_sample['path'], os.path.join(data_path, data_sample['pkhash']))
+            volumes.update({
+                data_sample['path']: {'bind': data_sample['path'], 'mode': 'ro'}
+            })
 
         for datamanager_key in data_manager_keys:
             datamanager = DataManager.objects.get(pk=datamanager_key)
@@ -338,7 +335,7 @@ def compute_dryrun(self, data_samples, data_manager_keys):
             data_docker_name = f'{data_docker}_{dryrun_uuid}'
 
             volumes.update({
-                data_path: {'bind': '/sandbox/data', 'mode': 'rw'},
+                data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                 opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
             })
 
@@ -374,6 +371,7 @@ def compute_dryrun(self, data_samples, data_manager_keys):
 
         remove_subtuple_materials(subtuple_directory)
 
+        # Clean dryrun materials
         for data_sample in data_samples:
-            if 'file' in data_sample and os.path.exists(data_sample['file']):
-                os.remove(data_sample['file'])
+            # Remove all possible data (data in servermedias is read-only)
+            shutil.rmtree(data_sample['path'], ignore_errors=True)

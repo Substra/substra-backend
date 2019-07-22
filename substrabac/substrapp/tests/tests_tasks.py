@@ -13,6 +13,7 @@ from django_celery_results.models import TaskResult
 
 from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
+from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
@@ -208,7 +209,9 @@ class TasksTests(APITestCase):
 
     def test_put_data_sample_zip(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample)
+        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
+
+        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
         data_sample.save()
 
         subtuple = {
@@ -226,7 +229,6 @@ class TasksTests(APITestCase):
             # check folder has been correctly renamed with pk of directory containing uncompressed data sample
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
             self.assertTrue(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
@@ -268,7 +270,9 @@ class TasksTests(APITestCase):
 
     def test_put_data_tar(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample_tar)
+        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
+
+        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
         data_sample.save()
 
         subtuple = {
@@ -285,7 +289,6 @@ class TasksTests(APITestCase):
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            dir_pkhash = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
 
             # check subtuple folder has been created and sym links exists

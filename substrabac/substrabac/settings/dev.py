@@ -25,10 +25,7 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, f'medias/{ORG_NAME}'))
-DRYRUN_ROOT = os.environ.get('DRYRUN_ROOT', os.path.join(PROJECT_ROOT, f'dryrun/{ORG}'))
 
-if not os.path.exists(DRYRUN_ROOT):
-    os.makedirs(DRYRUN_ROOT, exist_ok=True)
 
 SITE_HOST = f'{ORG_NAME}.substrabac'
 SITE_PORT = DEFAULT_PORT
