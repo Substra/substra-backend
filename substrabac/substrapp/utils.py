@@ -4,11 +4,14 @@ import hashlib
 import logging
 import os
 import tempfile
+from os import path
 from os.path import isfile, isdir
+import shutil
 
 import requests
 import tarfile
 import zipfile
+import uuid
 
 from checksumdir import dirhash
 
@@ -22,17 +25,42 @@ class JsonException(Exception):
         super(JsonException, self).__init__()
 
 
-def get_dir_hash(archive_content):
+def get_dir_hash(archive_object):
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
-            content = archive_content.read()
-            archive_content.seek(0)
+            content = archive_object.read()
+            archive_object.seek(0)
             uncompress_content(content, temp_dir)
         except Exception as e:
             logging.error(e)
             raise e
         else:
             return dirhash(temp_dir, 'sha256')
+
+
+def store_datasamples_archive(archive_object):
+
+    try:
+        content = archive_object.read()
+        archive_object.seek(0)
+    except Exception as e:
+        logging.error(e)
+        raise e
+
+    # Temporary directory for uncompress
+    datasamples_uuid = uuid.uuid4().hex
+    tmp_datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                     f'datasamples/{datasamples_uuid}')
+    try:
+        uncompress_content(content, tmp_datasamples_path)
+    except Exception as e:
+        shutil.rmtree(tmp_datasamples_path, ignore_errors=True)
+        logging.error(e)
+        raise e
+    else:
+        # return the directory hash of the uncompressed file and the path of
+        # the temporary directory. The removal should be handled externally.
+        return dirhash(tmp_datasamples_path, 'sha256'), tmp_datasamples_path
 
 
 def get_hash(file, key=None):
