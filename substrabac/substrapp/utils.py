@@ -46,17 +46,22 @@ def store_datasamples_archive(archive_object):
         logging.error(e)
         raise e
 
-    datasamples_file_hash = compute_hash(content)
-    datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                 f'datasamples/{datasamples_file_hash}')
+    # Temporary directory for uncompress
+    # We take here the hash of the file content to have a common unique id
+    # but we can take a uuid instead.
+    datasamples_uuid = compute_hash(content)
+    tmp_datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
+                                     f'datasamples/{datasamples_uuid}')
     try:
-        uncompress_content(content, datasamples_path)
+        uncompress_content(content, tmp_datasamples_path)
     except Exception as e:
-        shutil.rmtree(datasamples_path, ignore_errors=True)
+        shutil.rmtree(tmp_datasamples_path, ignore_errors=True)
         logging.error(e)
         raise e
     else:
-        return dirhash(datasamples_path, 'sha256'), datasamples_path
+        # return the directory hash of the uncompressed file and the path of
+        # the temporary directory. The removal should be handled externally.
+        return dirhash(tmp_datasamples_path, 'sha256'), tmp_datasamples_path
 
 
 def get_hash(file, key=None):
