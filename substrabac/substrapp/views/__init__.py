@@ -8,7 +8,8 @@ from .algo import AlgoViewSet
 from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
 from .task import TaskViewSet
+from .computeplan import ComputePlanViewSet
 
 __all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'ObjectiveViewSet', 'ModelViewSet',
            'AlgoViewSet', 'TrainTupleViewSet', 'TestTupleViewSet',
-           'TaskViewSet']
+           'TaskViewSet', 'ComputePlanViewSet']
