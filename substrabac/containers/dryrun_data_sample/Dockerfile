@@ -1,4 +1,4 @@
-FROM eu.gcr.io/substra-208412/substratools
+FROM eu.gcr.io/substra-208412/substratools:0.0.1
 
 RUN apt-get update; apt-get install -y build-essential libssl-dev  python3 python3-dev python3-pip
 RUN pip3 install --upgrade pip
