@@ -11,6 +11,7 @@ import shutil
 import requests
 import tarfile
 import zipfile
+import uuid
 
 from checksumdir import dirhash
 
@@ -47,9 +48,7 @@ def store_datasamples_archive(archive_object):
         raise e
 
     # Temporary directory for uncompress
-    # We take here the hash of the file content to have a common unique id
-    # but we can take a uuid instead.
-    datasamples_uuid = compute_hash(content)
+    datasamples_uuid = uuid.uuid4().hex
     tmp_datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
                                      f'datasamples/{datasamples_uuid}')
     try:
