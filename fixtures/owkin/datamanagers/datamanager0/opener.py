@@ -78,7 +78,7 @@ class MyOpener(tools.Opener):
         """Make and return the ISIC like labels as np arrays."""
         return np.eye(CLASSES)[np.arange(n_sample) % CLASSES].astype('uint8')
 
-    def save_pred(self, y_pred, path):
+    def save_predictions(self, y_pred, path):
         """Save prediction in path
 
         :param y_pred: predicted target variable vector
@@ -91,7 +91,7 @@ class MyOpener(tools.Opener):
             writer = csv.writer(f)
             writer.writerows(y_pred)
 
-    def get_pred(self, path):
+    def get_predictions(self, path):
         """Get predictions which were saved using the save_pred function
 
         :param folder: path to the folder where the previously predicted target variable vector has been saved
