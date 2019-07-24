@@ -1,9 +1,10 @@
 import os
 import json
-from substra_sdk_py import Client
+from substra import Client
 
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+dir_path = os.path.dirname(__file__)
+assets_path = os.path.join(dir_path, 'assets.py')
 
 
 def main():
@@ -14,16 +15,16 @@ def main():
     client.set_config('owkin')
 
     assets = {}
-    assets['objective'] = json.dumps(client.list('objective'), indent=4)
-    assets['datamanager'] = json.dumps(client.list('data_manager'), indent=4)
-    assets['algo'] = json.dumps(client.list('algo'), indent=4)
-    assets['traintuple'] = json.dumps(client.list('traintuple'), indent=4)
-    assets['testtuple'] = json.dumps(client.list('testtuple'), indent=4)
+    assets['objective'] = json.dumps(client.list_objective(), indent=4)
+    assets['datamanager'] = json.dumps(client.list_dataset(), indent=4)
+    assets['algo'] = json.dumps(client.list_algo(), indent=4)
+    assets['traintuple'] = json.dumps(client.list_traintuple(), indent=4)
+    assets['testtuple'] = json.dumps(client.list_testtuple(), indent=4)
 
-    assets['model'] = json.dumps([res for res in client.list('model')
+    assets['model'] = json.dumps([res for res in client._list('model')
                                   if ('traintuple' in res and 'testtuple' in res)], indent=4)
 
-    with open(os.path.join(dir_path, '../substrapp/tests/assets.py'), 'w') as f:
+    with open(assets_path, 'w') as f:
         for k, v in assets.items():
             v = v.replace('owkin.substrabac:8000', 'testserver')
             v = v.replace('chunantes.substrabac:8001', 'testserver')
