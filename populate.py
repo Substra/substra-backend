@@ -4,7 +4,7 @@ import json
 import shutil
 import time
 
-import substra_sdk_py as substra
+import substra
 
 from termcolor import colored
 
@@ -21,16 +21,20 @@ def setup_config():
     client.create_config('clb', 'http://clb.substrabac:8002', '0.0')
 
 
-def get_or_create(data, profile, asset, dryrun=False, register=False):
+def get_or_create(data, profile, asset, dryrun=False, local=True):
 
     client.set_config(profile)
 
-    method = client.add if not register else client.register
+    method_kwargs = {}
+    if not local:
+        method_kwargs['local'] = False
+
+    method = getattr(client, f'add_{asset}')
 
     if dryrun:
         print('dryrun')
         try:
-            r = method(asset, data, dryrun=True)
+            r = method(data, dryrun=True, **method_kwargs)
         except substra.exceptions.AlreadyExists as e:
             r = e.response.json()
             print(colored(json.dumps(r, indent=2), 'cyan'))
@@ -39,7 +43,7 @@ def get_or_create(data, profile, asset, dryrun=False, register=False):
 
     print('real')
     try:
-        r = method(asset, data)
+        r = method(data, **method_kwargs)
 
     except substra.exceptions.AlreadyExists as e:
         r = e.response.json()
@@ -56,7 +60,7 @@ def get_or_create(data, profile, asset, dryrun=False, register=False):
 def update_datamanager(data_manager_key, data, profile):
     client.set_config(profile)
     try:
-        r = client.update('dataset', data_manager_key, data)
+        r = client.update_dataset(data_manager_key, data)
 
     except substra.exceptions.AlreadyExists as e:
         r = e.response.json()
@@ -131,18 +135,18 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=True)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, local=False)
     else:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
             'paths': [
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306.zip'),
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307.zip')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307')
             ],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, register=False)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True)
 
     ####################################################
 
@@ -161,8 +165,8 @@ def do_populate():
     print('register test data')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024900'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024901')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
@@ -174,8 +178,8 @@ def do_populate():
     print('register test data 2')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024902'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024903')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
@@ -187,8 +191,8 @@ def do_populate():
     print('register test data 3')
     data = {
         'paths': [
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904.zip'),
-            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905.zip')
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024904'),
+            os.path.join(dir_path, './fixtures/owkin/datasamples/test/0024905')
         ],
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
@@ -302,7 +306,7 @@ def do_populate():
     ####################################################
 
     client.set_config(org_1)
-    res = client.get('traintuple', traintuple_key)
+    res = client.get_traintuple(traintuple_key)
     print(colored(json.dumps(res, indent=2), 'green'))
 
     # create testtuple
@@ -314,7 +318,7 @@ def do_populate():
     testtuple_key = get_or_create(data, org_1, 'testtuple')
 
     client.set_config(org_1)
-    res_t = client.get('testtuple', testtuple_key)
+    res_t = client.get_testtuple(testtuple_key)
     print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
     testtuple_status = None
@@ -323,8 +327,8 @@ def do_populate():
     client.set_config(org_1)
 
     while traintuple_status not in ('done', 'failed') or testtuple_status not in ('done', 'failed'):
-        res = client.get('traintuple', traintuple_key)
-        res_t = client.get('testtuple', testtuple_key)
+        res = client.get_traintuple(traintuple_key)
+        res_t = client.get_testtuple(testtuple_key)
         if traintuple_status != res['status'] or testtuple_status != res_t['status']:
             traintuple_status = res['status']
             testtuple_status = res_t['status']
