@@ -111,7 +111,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
         datamanager_response = [d for d in datamanager
-                                if d['key'] == '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'][0]
+                                if d['key'] == '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'][0]
         with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.datamanager.get_from_node') as mrequestsget:
             mget_object_from_ledger.return_value = datamanager_response
@@ -130,7 +130,7 @@ class DataManagerViewTests(APITestCase):
                                         FakeRequest(status=status.HTTP_200_OK,
                                                     content=description_content)]
 
-            search_params = '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7/'
+            search_params = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

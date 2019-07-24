@@ -66,7 +66,7 @@ class CreateObjectiveTestCase(TestCase):
         }
 
         objective_pk = 'd5002e1cd50bd5de5341df8a7b7d11b6437154b3b08f531c9b8f93889855c66f'
-        datamanager_pk = '615ce631b93c185b492dfc97ed5dea27430d871fa4e50678bab3c79ce2ec6cb7'
+        datamanager_pk = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'
         pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
