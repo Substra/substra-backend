@@ -74,7 +74,7 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model
 
-            pkhash = model[0]['traintuple']['outModel']['hash']
+            pkhash = model[1]['traintuple']['outModel']['hash']
             url = reverse('substrapp:model-list')
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
@@ -92,7 +92,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 3)
 
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
@@ -105,7 +105,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 3)
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
@@ -125,18 +125,18 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.model.get_from_node') as mrequestsget, \
                 mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
-            mget_object_from_ledger.return_value = model[0]
+            mget_object_from_ledger.return_value = model[1]
 
             mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
                                                     content=self.model.read().encode())
 
-            mcomputed_hash.return_value = model[0]['traintuple']['outModel']['hash']
+            mcomputed_hash.return_value = model[1]['traintuple']['outModel']['hash']
 
             url = reverse('substrapp:model-list')
-            search_params = model[0]['traintuple']['outModel']['hash'] + '/'
+            search_params = model[1]['traintuple']['outModel']['hash'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[0])
+            self.assertEqual(r, model[1])
 
     def test_model_retrieve_fail(self):
 
