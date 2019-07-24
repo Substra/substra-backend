@@ -20,7 +20,7 @@ BACKEND_PORT = {
     'clb': 8002
 }
 
-SUBSTRA_FOLDER = '/substra'
+SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 
 
 def generate_docker_compose_file(conf, launch_settings):
