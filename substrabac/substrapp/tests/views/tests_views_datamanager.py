@@ -101,7 +101,7 @@ class DataManagerViewTests(APITestCase):
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = datamanager
             mquery_ledger2.return_value = traintuple
-            pkhash = model[0]['traintuple']['outModel']['hash']
+            pkhash = model[1]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()

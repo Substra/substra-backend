@@ -90,7 +90,7 @@ class AlgoViewTests(APITestCase):
             mquery_ledger.return_value = algo
 
             search_params = '?search=algo%253Aname%253ALogistic%2520regression'
-            search_params += f'%2Calgo%253Aowner%253A{algo[0]["owner"]}'
+            search_params += f'%2Calgo%253Aowner%253A{algo[2]["owner"]}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -129,7 +129,7 @@ class AlgoViewTests(APITestCase):
             mquery_ledger.return_value = algo
             mquery_ledger2.return_value = traintuple
 
-            pkhash = model[0]['traintuple']['outModel']['hash']
+            pkhash = model[1]['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
