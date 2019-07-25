@@ -55,6 +55,7 @@ def generate_docker_compose_file(conf, launch_settings):
         'substrabac_tools': {
             'postgresql': {
                 'container_name': 'postgresql',
+                'labels': ['substra'],
                 'image': 'library/postgres:10.5',
                 'restart': 'unless-stopped',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
@@ -69,6 +70,7 @@ def generate_docker_compose_file(conf, launch_settings):
             },
             'celerybeat': {
                 'container_name': 'celerybeat',
+                'labels': ['substra'],
                 'hostname': 'celerybeat',
                 'image': 'substra/celerybeat',
                 'restart': 'unless-stopped',
@@ -83,6 +85,7 @@ def generate_docker_compose_file(conf, launch_settings):
             },
             'rabbit': {
                 'container_name': 'rabbit',
+                'labels': ['substra'],
                 'hostname': 'rabbitmq',     # Must be set to be able to recover from volume
                 'restart': 'unless-stopped',
                 'image': 'rabbitmq:3-management',
@@ -96,6 +99,7 @@ def generate_docker_compose_file(conf, launch_settings):
             },
             'flower': {
                 'container_name': f'flower',
+                'labels': ['substra'],
                 'hostname': f'flower',
                 'ports': ['5555:5555'],
                 'image': 'substra/flower',
@@ -162,6 +166,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         backend = {
             'container_name': f'{org_name_stripped}.substrabac',
+            'labels': ['substra'],
             'image': 'substra/substrabac',
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
@@ -177,6 +182,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         scheduler = {
             'container_name': f'{org_name_stripped}.scheduler',
+            'labels': ['substra'],
             'hostname': f'{org_name}.scheduler',
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
@@ -190,6 +196,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         worker = {
             'container_name': f'{org_name_stripped}.worker',
+            'labels': ['substra'],
             'hostname': f'{org_name}.worker',
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
@@ -206,6 +213,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
         dryrunner = {
             'container_name': f'{org_name_stripped}.dryrunner',
+            'labels': ['substra'],
             'hostname': f'{org_name}.dryrunner',
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
@@ -286,7 +294,8 @@ def start(conf, launch_settings, no_backup):
     print('start docker-compose', flush=True)
     call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
           os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
-    call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}'])
+    call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}',
+          '--filter', 'label=substra'])
 
 
 if __name__ == "__main__":
