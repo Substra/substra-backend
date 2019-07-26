@@ -111,7 +111,7 @@ pipeline {
 
     stage('Test with substra-network') {
       steps {
-        build job: 'substra-network/dev', parameters: [string(name: 'BACKEND', value: env.BRANCH_NAME)], propagate: true
+        build job: 'substra-network/PR-82', parameters: [string(name: 'BACKEND', value: env.BRANCH_NAME)], propagate: true
       }
     }
 
