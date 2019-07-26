@@ -56,7 +56,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'postgresql': {
                 'container_name': 'postgresql',
                 'labels': ['substra'],
-                'image': 'library/postgres:10.5',
+                'image': 'substra/postgresql',
                 'restart': 'unless-stopped',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
@@ -65,8 +65,7 @@ def generate_docker_compose_file(conf, launch_settings):
                     f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
                     f'POSTGRES_DB={POSTGRES_DB}'],
                 'volumes': [
-                    f'{SUBSTRA_FOLDER}/backup/postgres-data:/var/lib/postgresql/data',
-                    f'{dir_path}/postgresql/init.sh:/docker-entrypoint-initdb.d/init.sh'],
+                    f'{SUBSTRA_FOLDER}/backup/postgres-data:/var/lib/postgresql/data'],
             },
             'celerybeat': {
                 'container_name': 'celerybeat',
