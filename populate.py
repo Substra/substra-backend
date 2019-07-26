@@ -9,7 +9,9 @@ import substra
 from termcolor import colored
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
-server_path = '/substra/servermedias'
+
+SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
+server_path = f'{SUBSTRA_FOLDER}/servermedias'
 
 client = substra.Client()
 
@@ -354,3 +356,4 @@ if __name__ == '__main__':
             error_message = json.dumps(error, indent=2)
         print(colored(str(e), 'red'))
         print(colored(error_message, 'red'))
+        exit(1)
