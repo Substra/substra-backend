@@ -4,11 +4,13 @@ import os
 from django.http import FileResponse
 from rest_framework.response import Response
 
+from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 
 from django.conf import settings
 from rest_framework import status
 
+LEDGER = getattr(settings, 'LEDGER', None)
 
 class ComputeHashMixin(object):
     def compute_hash(self, file, key=None):
@@ -34,18 +36,36 @@ class CustomFileResponse(FileResponse):
 
 
 class ManageFileMixin(object):
-    def manage_file(self, field):
+    def manage_file(self, field, user=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
         # TODO get cert for permissions check
 
         try:
-            get_object_from_ledger(pk, self.ledger_query_call)
+            x = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
             obj = self.get_object()
+
+            # comment me for testing
+            if user is not None:
+                username = user['name']
+                pwd = user['pass']
+
+            # for testing
+            # username = 'chu-nantes'
+            # pwd = 'chu-nantespw'
+
+            # TODO how to handle self permissions aka []
+
+            if x['permissions'] != 'all':
+                csr = get_csr( LEDGER['hfc_ca']['pkey'], username)
+                enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
+                hashed_modulus = get_hashed_modulus(enrollment.cert)
+                if not LEDGER['map'][hashed_modulus] in x['permissions']:
+                    raise Exception('Permission denied')
 
             data = getattr(obj, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))

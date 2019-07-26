@@ -1,10 +1,19 @@
-
+import hashlib
 import os
 import base64
 import asyncio
 import glob
 import json
 import tempfile
+
+import OpenSSL
+from Crypto.Util import asn1
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509 import NameOID
+from hfc.fabric_ca.caservice import ca_service
 
 from .org import ORG
 
@@ -69,8 +78,84 @@ def get_hfc_client():
 
     return loop, client
 
+def get_hashed_modulus(cert):
+    cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
+    pub = cert.get_pubkey()
+    pub_asn1=OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pub)
+    pub_der=asn1.DerSequence()
+    pub_der.decode(pub_asn1)
+
+    modulus = pub_der[1]
+    hashed_modulus = hashlib.sha256(str(modulus).encode()).hexdigest()
+
+    return hashed_modulus
+
+def get_pkey():
+    return rsa.generate_private_key(
+        public_exponent=65537,
+        key_size=2048,
+        backend=default_backend())
+
+# TODO use dynamic data, and remove default
+def get_csr(pkey,
+            c_name,
+            country_name='FR',
+            st_name='Loire Atlantique',
+            locality_name='Nantes',
+            o_name='owkin',
+            dns_name='rca-owkin'):
+    csr = x509.CertificateSigningRequestBuilder().subject_name(x509.Name([
+        # Provide various details about who we are.
+        x509.NameAttribute(NameOID.COUNTRY_NAME, country_name),
+        x509.NameAttribute(NameOID.STATE_OR_PROVINCE_NAME, st_name),
+        x509.NameAttribute(NameOID.LOCALITY_NAME, locality_name),
+        x509.NameAttribute(NameOID.ORGANIZATION_NAME, o_name),
+        x509.NameAttribute(NameOID.COMMON_NAME, c_name),
+    ])).add_extension(
+        # Describe what sites we want this certificate for.
+        x509.SubjectAlternativeName([
+            # Describe what sites we want this certificate for.
+            x509.DNSName(dns_name),
+        ]),
+        critical=False,
+        # Sign the CSR with our private key.
+    ).sign(pkey, hashes.SHA256(), default_backend())
+
+    return csr
+
+
+def get_hfc_ca_client(pkey):
+    LEDGER['map'] = {} # init our mapping for external orgs
+
+    target = f"https://{LEDGER['ca']['host']}:{LEDGER['ca']['port'][os.environ.get('SUBSTRABAC_CA_PORT', 'external')]}"
+    cacli = ca_service(target=target,
+                       ca_certs_path=LEDGER['ca']['certfile'][os.environ.get('SUBSTRABAC_CA_CERT', 'external')],
+                       ca_name=LEDGER['ca']['name'])
+
+    # create mapping of known cert
+    external_path = LEDGER['external']['path']
+    with open(external_path, 'r+') as f:
+        data = json.load(f)
+
+        for permission_name in data.keys():
+            # enroll user to get cert
+            for username in data[permission_name].keys():
+                pwd = data[permission_name][username]
+
+                csr = get_csr(pkey, username)
+                enrollment = cacli.enroll(username, pwd, csr=csr)
+                hashed_modulus = get_hashed_modulus(enrollment.cert)
+                LEDGER['map'][hashed_modulus] = permission_name # TODO put in db
+
+    return cacli
+
+pkey = get_pkey()
 
 LEDGER['hfc'] = get_hfc_client
+LEDGER['hfc_ca'] = {
+    'client': get_hfc_ca_client(pkey),
+    'pkey': pkey
+}
 
 
 def update_client_with_discovery(client, discovery_results):
