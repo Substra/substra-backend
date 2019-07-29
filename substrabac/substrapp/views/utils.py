@@ -5,6 +5,7 @@ import os
 from django.http import FileResponse
 from rest_framework.response import Response
 
+from authent.models import InternalAuthent
 from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError, LedgerForbidden, LedgerUnauthorized
 
@@ -52,7 +53,6 @@ class ManageFileMixin(object):
         else:
             obj = self.get_object()
 
-            # TODO, will be replace by a session_id cookie
             username = self.request.COOKIES.get('username', None)
             pwd = self.request.COOKIES.get('pwd', None)
 
@@ -72,7 +72,7 @@ class ManageFileMixin(object):
                         raise LedgerForbidden('Not allowed')
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
-                        if not LEDGER['map'][hashed_modulus] in permissions:
+                        if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
                             raise LedgerUnauthorized('Permission denied')
 
                     data = getattr(obj, field)

@@ -41,6 +41,84 @@ LEDGER['requestor'] = create_user(
     cert_path=LEDGER['client']['cert_path']
 )
 
+def deserialize_config(config_result):
+
+    results = {'msps': {},
+               'orderers': {}}
+
+    for mspid in config_result.msps:
+        results['msps'][mspid] = decode_fabric_MSP_config(
+            config_result.msps[mspid].SerializeToString()
+        )
+
+    for mspid in config_result.orderers:
+        results['orderers'][mspid] = decode_fabric_endpoints(
+            config_result.orderers[mspid].endpoint
+        )
+
+    return results
+
+
+def deserialize_members(members):
+    peers = []
+
+    for mspid in members.peers_by_org:
+        peer = decode_fabric_peers_info(
+            members.peers_by_org[mspid].peers
+        )
+        peers.append(peer)
+
+    return peers
+
+
+def deserialize_cc_query_res(cc_query_res):
+    cc_queries = []
+
+    for cc_query_content in cc_query_res.content:
+        cc_query = {
+            'chaincode': cc_query_content.chaincode,
+            'endorsers_by_groups': {},
+            'layouts': []
+        }
+
+        for group in cc_query_content.endorsers_by_groups:
+            peers = decode_fabric_peers_info(
+                cc_query_content.endorsers_by_groups[group].peers
+            )
+
+            cc_query['endorsers_by_groups'][group] = peers
+
+        for layout_content in cc_query_content.layouts:
+            layout = {
+                'quantities_by_group': {
+                    group: int(layout_content.quantities_by_group[group])
+                    for group in layout_content.quantities_by_group
+                }
+            }
+            cc_query['layouts'].append(layout)
+
+        cc_queries.append(cc_query)
+
+    return cc_queries
+
+def deserialize_discovery(response):
+    results = {
+        'config': None,
+        'members': [],
+        'cc_query_res': None
+    }
+
+    for res in response.results:
+        if res.config_result and res.config_result.msps and res.config_result.orderers:
+            results['config'] = deserialize_config(res.config_result)
+
+        if res.members:
+            results['members'].extend(deserialize_members(res.members))
+
+        if res.cc_query_res and res.cc_query_res.content:
+            results['cc_query_res'] = deserialize_cc_query_res(res.cc_query_res)
+
+    return results
 
 def get_hfc_client():
 
@@ -78,6 +156,7 @@ def get_hfc_client():
 
     return loop, client
 
+
 def get_hashed_modulus(cert):
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
     pub = cert.get_pubkey()
@@ -90,11 +169,15 @@ def get_hashed_modulus(cert):
 
     return hashed_modulus
 
+
+# TODO, careful, will be regenerated on every launch of the server
+# will modify csr and all modulus
 def get_pkey():
     return rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
         backend=default_backend())
+
 
 # TODO use dynamic data, and remove default
 def get_csr(pkey,
@@ -124,36 +207,20 @@ def get_csr(pkey,
     return csr
 
 
-def get_hfc_ca_client(pkey):
-    LEDGER['map'] = {} # init our mapping for external orgs
-
+def get_hfc_ca_client():
     target = f"https://{LEDGER['ca']['host']}:{LEDGER['ca']['port'][os.environ.get('SUBSTRABAC_CA_PORT', 'external')]}"
     cacli = ca_service(target=target,
                        ca_certs_path=LEDGER['ca']['certfile'][os.environ.get('SUBSTRABAC_CA_CERT', 'external')],
                        ca_name=LEDGER['ca']['name'])
 
-    # create mapping of known cert
-    external_path = LEDGER['external']['path']
-    with open(external_path, 'r+') as f:
-        data = json.load(f)
-
-        for permission_name in data.keys():
-            # enroll user to get cert
-            for username in data[permission_name].keys():
-                pwd = data[permission_name][username]
-
-                csr = get_csr(pkey, username)
-                enrollment = cacli.enroll(username, pwd, csr=csr)
-                hashed_modulus = get_hashed_modulus(enrollment.cert)
-                LEDGER['map'][hashed_modulus] = permission_name # TODO put in db
-
     return cacli
+
 
 pkey = get_pkey()
 
 LEDGER['hfc'] = get_hfc_client
 LEDGER['hfc_ca'] = {
-    'client': get_hfc_ca_client(pkey),
+    'client': get_hfc_ca_client(),
     'pkey': pkey
 }
 
@@ -218,83 +285,3 @@ def update_client_with_discovery(client, discovery_results):
 
     client._orderers[orderer_mspid] = orderer
 
-
-def deserialize_discovery(response):
-    results = {
-        'config': None,
-        'members': [],
-        'cc_query_res': None
-    }
-
-    for res in response.results:
-        if res.config_result and res.config_result.msps and res.config_result.orderers:
-            results['config'] = deserialize_config(res.config_result)
-
-        if res.members:
-            results['members'].extend(deserialize_members(res.members))
-
-        if res.cc_query_res and res.cc_query_res.content:
-            results['cc_query_res'] = deserialize_cc_query_res(res.cc_query_res)
-
-    return results
-
-
-def deserialize_config(config_result):
-
-    results = {'msps': {},
-               'orderers': {}}
-
-    for mspid in config_result.msps:
-        results['msps'][mspid] = decode_fabric_MSP_config(
-            config_result.msps[mspid].SerializeToString()
-        )
-
-    for mspid in config_result.orderers:
-        results['orderers'][mspid] = decode_fabric_endpoints(
-            config_result.orderers[mspid].endpoint
-        )
-
-    return results
-
-
-def deserialize_members(members):
-    peers = []
-
-    for mspid in members.peers_by_org:
-        peer = decode_fabric_peers_info(
-            members.peers_by_org[mspid].peers
-        )
-        peers.append(peer)
-
-    return peers
-
-
-def deserialize_cc_query_res(cc_query_res):
-    cc_queries = []
-
-    for cc_query_content in cc_query_res.content:
-        cc_query = {
-            'chaincode': cc_query_content.chaincode,
-            'endorsers_by_groups': {},
-            'layouts': []
-        }
-
-        for group in cc_query_content.endorsers_by_groups:
-            peers = decode_fabric_peers_info(
-                cc_query_content.endorsers_by_groups[group].peers
-            )
-
-            cc_query['endorsers_by_groups'][group] = peers
-
-        for layout_content in cc_query_content.layouts:
-            layout = {
-                'quantities_by_group': {
-                    group: int(layout_content.quantities_by_group[group])
-                    for group in layout_content.quantities_by_group
-                }
-            }
-            cc_query['layouts'].append(layout)
-
-        cc_queries.append(cc_query)
-
-    return cc_queries
