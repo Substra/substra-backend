@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import zipfile
 
 import mock
 
@@ -24,6 +25,16 @@ from ..common import FakeRequest, FakeTask
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
+
+
+def zip_folder(path, destination):
+    zipf = zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            abspath = os.path.join(root, f)
+            archive_path = os.path.relpath(abspath, start=path)
+            zipf.write(abspath, arcname=archive_path)
+    zipf.close()
 
 
 # APITestCase
@@ -253,11 +264,13 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        metrics_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/metrics.py')
-        description_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/description.md')
-        shutil.copy(metrics_path, os.path.join(MEDIA_ROOT, 'metrics.py'))
+        objective_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/')
+        description_path = os.path.join(objective_path, 'description.md')
+        zip_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
 
         opener_path = os.path.join(dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py')
+
+        zip_folder(objective_path, zip_path)
 
         with open(opener_path, 'rb') as f:
             opener_content = f.read()
@@ -270,4 +283,4 @@ class ObjectiveViewTests(APITestCase):
                 mock.patch('substrapp.views.objective.get_computed_hash') as mopener:
             mdatamanager.return_value = {'opener': {'storageAddress': 'test'}}
             mopener.return_value = (opener_content, pkhash)
-            objective_compute_dryrun(os.path.join(MEDIA_ROOT, 'metrics.py'), test_data_manager_key, pkhash)
+            objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
