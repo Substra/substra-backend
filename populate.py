@@ -18,14 +18,14 @@ client = substra.Client()
 
 def setup_config():
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-    client.create_config('owkin', 'http://owkin.substrabac:8000', '0.0')
-    client.create_config('chunantes', 'http://chunantes.substrabac:8001', '0.0')
-    client.create_config('clb', 'http://clb.substrabac:8002', '0.0')
+    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
+    client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0')
+    client.add_profile('clb', 'http://clb.substrabac:8002', '0.0')
 
 
 def get_or_create(data, profile, asset, dryrun=False, local=True):
 
-    client.set_config(profile)
+    client.set_profile(profile)
 
     method_kwargs = {}
     if not local:
@@ -60,7 +60,7 @@ def get_or_create(data, profile, asset, dryrun=False, local=True):
 
 
 def update_datamanager(data_manager_key, data, profile):
-    client.set_config(profile)
+    client.set_profile(profile)
     try:
         r = client.update_dataset(data_manager_key, data)
 
@@ -307,7 +307,7 @@ def do_populate():
 
     ####################################################
 
-    client.set_config(org_1)
+    client.set_profile(org_1)
     res = client.get_traintuple(traintuple_key)
     print(colored(json.dumps(res, indent=2), 'green'))
 
@@ -319,14 +319,14 @@ def do_populate():
 
     testtuple_key = get_or_create(data, org_1, 'testtuple')
 
-    client.set_config(org_1)
+    client.set_profile(org_1)
     res_t = client.get_testtuple(testtuple_key)
     print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
     testtuple_status = None
     traintuple_status = None
 
-    client.set_config(org_1)
+    client.set_profile(org_1)
 
     while traintuple_status not in ('done', 'failed') or testtuple_status not in ('done', 'failed'):
         res = client.get_traintuple(traintuple_key)
