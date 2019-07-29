@@ -5,6 +5,13 @@ pipeline {
     buildDiscarder(logRotator(numToKeepStr: '5'))
   }
 
+  parameters {
+    booleanParam(name: 'E2E', defaultValue: false, description: 'Launch E2E test')
+    string(name: 'CLI', defaultValue: 'dev', description: 'substra-cli branch')
+    string(name: 'CHAINCODE', defaultValue: 'dev', description: 'chaincode branch')
+
+  }
+
   agent none
 
   stages {
@@ -108,5 +115,18 @@ pipeline {
         }
       }
     }
+
+    stage('Test with substra-network') {
+      when {
+        expression { return params.E2E }
+      }
+
+      steps {
+        build job: 'substra-network/dev', parameters: [string(name: 'BACKEND', value: env.CHANGE_BRANCH),
+                                                       string(name: 'CHAINCODE', value: params.CHAINCODE),
+                                                       string(name: 'CLI', value: params.CLI)], propagate: true
+      }
+    }
+
   }
 }
