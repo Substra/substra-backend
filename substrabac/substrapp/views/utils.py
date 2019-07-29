@@ -1,11 +1,12 @@
 import hashlib
+import json
 import os
 
 from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
-from substrapp.ledger_utils import get_object_from_ledger, LedgerError
+from substrapp.ledger_utils import get_object_from_ledger, LedgerError, LedgerForbidden, LedgerUnauthorized
 
 from django.conf import settings
 from rest_framework import status
@@ -36,11 +37,13 @@ class CustomFileResponse(FileResponse):
 
 
 class ManageFileMixin(object):
-    def manage_file(self, field, user=None):
+    def manage_file(self, field):
+
+        # test with
+        # curl --cookie "username=chu-nantes;pwd=chu-nantespw" --header "Accept:text/html;version=0.0, */*;version=0.0"  -XGET http://owkin.substrabac:8000/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/
+
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
-
-        # TODO get cert for permissions check
 
         try:
             x = get_object_from_ledger(pk, self.ledger_query_call)
@@ -49,26 +52,31 @@ class ManageFileMixin(object):
         else:
             obj = self.get_object()
 
-            # comment me for testing
-            if user is not None:
-                username = user['name']
-                pwd = user['pass']
-
-            # for testing
-            # username = 'chu-nantes'
-            # pwd = 'chu-nantespw'
+            # TODO, will be replace by a session_id cookie
+            username = self.request.COOKIES.get('username', None)
+            pwd = self.request.COOKIES.get('pwd', None)
 
             # TODO how to handle self permissions aka []
-
             if x['permissions'] != 'all':
-                csr = get_csr( LEDGER['hfc_ca']['pkey'], username)
-                enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
-                hashed_modulus = get_hashed_modulus(enrollment.cert)
-                if not LEDGER['map'][hashed_modulus] in x['permissions']:
-                    raise Exception('Permission denied')
+                if username is None or pwd is None:
+                    raise Exception('Missing user')
+                try:
+                    permissions = json.loads(x['permissions'])
+                except:
+                    raise Exception('cannot load asset permissions')
+                else:
+                    csr = get_csr( LEDGER['hfc_ca']['pkey'], username)
+                    try:
+                        enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
+                    except:
+                        raise LedgerForbidden('Not allowed')
+                    else:
+                        hashed_modulus = get_hashed_modulus(enrollment.cert)
+                        if not LEDGER['map'][hashed_modulus] in permissions:
+                            raise LedgerUnauthorized('Permission denied')
 
-            data = getattr(obj, field)
-            return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+                    data = getattr(obj, field)
+                    return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 
 
 def find_primary_key_error(validation_error, key_name='pkhash'):

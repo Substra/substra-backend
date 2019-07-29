@@ -279,7 +279,7 @@ def do_populate():
         'name': 'Logistic regression',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
-        'permissions': 'all',
+        'permissions': f'["{org_2}", "{org_1}"]',
     }
     algo_key = get_or_create(data, org_2, 'algo')
 

@@ -53,6 +53,9 @@ class LedgerForbidden(LedgerResponseError):
     status = status.HTTP_403_FORBIDDEN
 
 
+class LedgerUnauthorized(LedgerResponseError):
+    status = status.HTTP_401_UNAUTHORIZED
+
 class LedgerNotFound(LedgerResponseError):
     status = status.HTTP_404_NOT_FOUND
 
@@ -152,8 +155,8 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             exception_class = STATUS_TO_EXCEPTION.get(status_code, LedgerBadResponse)
             raise exception_class.from_response(response)
         # Check permissions
-        if response and 'permissions' in response and response['permissions'] != 'all':
-            raise LedgerForbidden('Not allowed')
+        # if response and 'permissions' in response and response['permissions'] != 'all':
+        #     raise LedgerForbidden('Not allowed')
 
         return response
 
