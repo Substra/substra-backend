@@ -28,7 +28,7 @@ from substrapp.utils import store_datasamples_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
-from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout
+from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
 
 logger = logging.getLogger('django.request')
 
@@ -74,6 +74,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
