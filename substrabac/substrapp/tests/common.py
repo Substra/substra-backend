@@ -267,6 +267,9 @@ class FakeMetrics(object):
     def save(self, p, f):
         return
 
+    def read(self, *args, **kwargs):
+        return b'foo'
+
 
 class FakeObjective(object):
     def __init__(self, filepath='path'):

@@ -2,7 +2,6 @@ import docker
 import logging
 import os
 import re
-import shutil
 import tempfile
 import uuid
 
@@ -23,7 +22,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory
+from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory, uncompress_path
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException
@@ -50,10 +49,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             dryrun_directory = os.path.join(getattr(settings, 'MEDIA_ROOT'), 'dryrun')
             create_directory(dryrun_directory)
 
-            metrics_path = os.path.join(dryrun_directory, f'metrics_{pkhash}.py')
+            metrics_path = os.path.join(dryrun_directory, f'metrics_{pkhash}.archive')
 
-            with open(metrics_path, 'wb') as metrics_file:
-                metrics_file.write(metrics.open().read())
+            with open(metrics_path, 'wb') as fh:
+                fh.write(metrics.open().read())
             task = compute_dryrun.apply_async(
                 (metrics_path, test_data_manager_key, pkhash),
                 queue=f"{settings.LEDGER['name']}.dryrunner"
@@ -124,9 +123,12 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         test_data_manager_key = request.data.get('test_data_manager_key', '')
 
         pkhash = get_hash(description)
-        serializer = self.get_serializer(data={'pkhash': pkhash,
-                                               'metrics': metrics,
-                                               'description': description})
+
+        serializer = self.get_serializer(data={
+            'pkhash': pkhash,
+            'metrics': metrics,
+            'description': description,
+        })
 
         try:
             serializer.is_valid(raise_exception=True)
@@ -275,38 +277,33 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
+def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
+    if not test_data_manager_key:
+        raise Exception('Cannot do a objective dryrun without a data manager key.')
+
     dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
 
     subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
+    metrics_path = f'{subtuple_directory}/metrics'
+    uncompress_path(archive_path, metrics_path)
 
-    metrics_path_dst = os.path.join(subtuple_directory, 'metrics/metrics.py')
-    if not os.path.exists(metrics_path_dst):
-        shutil.copy2(metrics_path, os.path.join(subtuple_directory, 'metrics/metrics.py'))
-        os.remove(metrics_path)
-
-    if not test_data_manager_key:
-        remove_subtuple_materials(subtuple_directory)
-        raise Exception('Cannot do a objective dryrun without a data manager key.')
+    os.remove(archive_path)
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
 
     opener_content, opener_computed_hash = get_computed_hash(datamanager['opener']['storageAddress'])
-    with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as file:
-        file.write(opener_content)
+    with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as fh:
+        fh.write(opener_content)
 
     # Launch verification
     client = docker.from_env()
     pred_path = os.path.join(subtuple_directory, 'pred')
     opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-    metrics_file = os.path.join(subtuple_directory, 'metrics/metrics.py')
-    metrics_path = os.path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/dryrun_metrics')
 
     metrics_docker = 'metrics_dry_run'
     metrics_docker_name = f'{metrics_docker}_{dryrun_uuid}'
     volumes = {
         pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-        metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
         opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
     client.images.build(path=metrics_path,
@@ -318,7 +315,7 @@ def compute_dryrun(self, metrics_path, test_data_manager_key, pkhash):
         'name': metrics_docker_name,
         'cpuset_cpus': '0-0',
         'mem_limit': '1G',
-        'command': None,
+        'command': '--dry-run',
         'volumes': volumes,
         'shm_size': '8G',
         'labels': ['dryrun'],

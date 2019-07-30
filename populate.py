@@ -2,7 +2,9 @@ import argparse
 import os
 import json
 import shutil
+import tempfile
 import time
+import zipfile
 
 import substra
 
@@ -21,6 +23,16 @@ def setup_config():
     client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
     client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0')
     client.add_profile('clb', 'http://clb.substrabac:8002', '0.0')
+
+
+def zip_folder(path, destination):
+    zipf = zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(path):
+        for f in files:
+            abspath = os.path.join(root, f)
+            archive_path = os.path.relpath(abspath, start=path)
+            zipf.write(abspath, arcname=archive_path)
+    zipf.close()
 
 
 def get_or_create(data, profile, asset, dryrun=False, local=True):
@@ -213,31 +225,42 @@ def do_populate():
 
     ####################################################
 
-    print('register objective')
-    data = {
-        'name': 'Skin Lesion Classification Objective',
-        'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
-        'metrics_name': 'macro-average recall',
-        'metrics': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/metrics.py'),
-        'permissions': 'all',
-        'test_data_sample_keys': test_data_sample_keys,
-        'test_data_manager_key': data_manager_org0_key
-    }
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        print('register objective')
+        objective_path = os.path.join(
+            dir_path, './fixtures/chunantes/objectives/objective0/')
 
-    objective_key = get_or_create(data, org_0, 'objective', dryrun=True)
+        zip_path = os.path.join(tmp_dir, 'metrics.zip')
+        zip_folder(objective_path, zip_path)
+        data = {
+            'name': 'Skin Lesion Classification Objective',
+            'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
+            'metrics_name': 'macro-average recall',
+            'metrics': zip_path,
+            'permissions': 'all',
+            'test_data_sample_keys': test_data_sample_keys,
+            'test_data_manager_key': data_manager_org0_key
+        }
 
-    ####################################################
+        objective_key = get_or_create(data, org_0, 'objective', dryrun=True)
 
-    print('register objective without data manager and data sample')
-    data = {
-        'name': 'Skin Lesion Classification Objective',
-        'description': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/description.md'),
-        'metrics_name': 'macro-average recall',
-        'metrics': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/metrics.py'),
-        'permissions': 'all'
-    }
+        ####################################################
 
-    get_or_create(data, org_0, 'objective', dryrun=True)
+        print('register objective without data manager and data sample')
+        objective_path = os.path.join(
+            dir_path, './fixtures/chunantes/objectives/objective0/')
+
+        zip_path = os.path.join(tmp_dir, 'metrics2.zip')
+        zip_folder(objective_path, zip_path)
+        data = {
+            'name': 'Skin Lesion Classification Objective',
+            'description': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/description.md'),
+            'metrics_name': 'macro-average recall',
+            'metrics': zip_path,
+            'permissions': 'all'
+        }
+
+        get_or_create(data, org_0, 'objective', dryrun=True)
 
     ####################################################
 

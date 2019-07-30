@@ -31,11 +31,10 @@ def get_objective(subtuple):
 
     objectiveHash = subtuple['objective']['hash']
 
-    objective = None
     try:
         objective = Objective.objects.get(pk=objectiveHash)
     except ObjectDoesNotExist:
-        pass
+        objective = None
 
     # get objective from ledger as it is not available in local db and store it in local db
     if objective is None or not objective.metrics:
@@ -45,9 +44,9 @@ def get_objective(subtuple):
 
         tmp_file = tempfile.TemporaryFile()
         tmp_file.write(content)
-        objective.metrics.save('metrics.py', tmp_file)
+        objective.metrics.save('metrics.archive', tmp_file)
 
-    return objective
+    return objective.metrics.read()
 
 
 def get_algo(subtuple):
@@ -153,10 +152,9 @@ def put_data_sample(subtuple, subtuple_directory):
             raise Exception('Failed to create sym link for subtuple data sample')
 
 
-def put_metric(subtuple_directory, objective):
-    metrics_dst_path = path.join(subtuple_directory, 'metrics/metrics.py')
-    if not os.path.exists(metrics_dst_path):
-        os.link(objective.metrics.path, metrics_dst_path)
+def put_metric(subtuple_directory, metrics_content):
+    metrics_dst_path = path.join(subtuple_directory, 'metrics/')
+    uncompress_content(metrics_content, metrics_dst_path)
 
 
 def put_algo(subtuple_directory, algo_content):
@@ -288,7 +286,7 @@ def compute_task(self, tuple_type, subtuple, fltask):
 def prepare_materials(subtuple, tuple_type):
 
     # get subtuple components
-    objective = get_objective(subtuple)
+    metrics_content = get_objective(subtuple)
     algo_content = get_algo(subtuple)
     if tuple_type == 'testtuple':
         model_content = get_model(subtuple)
@@ -301,7 +299,7 @@ def prepare_materials(subtuple, tuple_type):
     subtuple_directory = build_subtuple_folders(subtuple)
     put_opener(subtuple, subtuple_directory)
     put_data_sample(subtuple, subtuple_directory)
-    put_metric(subtuple_directory, objective)
+    put_metric(subtuple_directory, metrics_content)
     put_algo(subtuple_directory, algo_content)
     if tuple_type == 'testtuple':
         put_model(subtuple, subtuple_directory, model_content)
@@ -379,10 +377,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, o
 
     pred_path = path.join(subtuple_directory, 'pred')
     opener_file = path.join(subtuple_directory, 'opener/opener.py')
-    metrics_file = path.join(subtuple_directory, 'metrics/metrics.py')
     volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
                pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               metrics_file: {'bind': '/sandbox/metrics/__init__.py', 'mode': 'ro'},
                opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
 
     # compute algo task
@@ -449,7 +445,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, o
         end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
     # compute metric task
-    metrics_path = path.join(getattr(settings, 'PROJECT_ROOT'), 'containers/metrics')   # comes with substrabac
+    metrics_path = f'{subtuple_directory}/metrics'
     metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
     metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
     compute_docker(
