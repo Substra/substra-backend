@@ -162,6 +162,16 @@ def do_populate():
     }
     data_manager_org0_key = get_or_create(data, org_0, 'dataset')
 
+    print(f'create datamanager, test data and objective on {org_1} (should say "already exists")')
+    data = {
+        'name': 'Simplified ISIC 2018',
+        'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
+        'type': 'Images',
+        'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
+        'permissions': 'all'
+    }
+    get_or_create(data, org_1, 'dataset')
+
     ####################################################
 
     print('register test data')

@@ -16,7 +16,7 @@ from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerial
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import get_hash, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException)
 from substrapp.views.filters_utils import filter_list
@@ -78,6 +78,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
