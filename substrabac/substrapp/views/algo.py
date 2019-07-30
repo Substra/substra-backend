@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash, get_from_node
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException)
 from substrapp.views.filters_utils import filter_list
@@ -54,6 +54,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)

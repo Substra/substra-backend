@@ -22,7 +22,7 @@ from substrabac.celery import app
 from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout
+from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
@@ -104,6 +104,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
