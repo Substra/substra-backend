@@ -158,16 +158,26 @@ class TasksTests(APITestCase):
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/{filename}')))
 
     def test_put_metric(self):
-
-        filepath = os.path.join(self.subtuple_path, self.script_filename)
+        filename = 'metrics.py'
+        filepath = os.path.join(self.subtuple_path, filename)
         with open(filepath, 'w') as f:
-            f.write(self.script.read())
+            f.write('Hello World')
         self.assertTrue(os.path.exists(filepath))
 
-        metrics_directory = os.path.join(self.subtuple_path, 'metrics/')
+        zipname = 'sample.zip'
+        zippath = os.path.join(self.subtuple_path, zipname)
+        with zipfile.ZipFile(zippath, mode='w') as zf:
+            zf.write(filepath, arcname=filename)
+        self.assertTrue(os.path.exists(zippath))
+
+        metrics_directory = os.path.join(self.subtuple_path)
         create_directory(metrics_directory)
 
-        put_metric(self.subtuple_path, FakeObjective(filepath))
+        with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
+            with open(zippath, 'rb') as content:
+                mget_hash.return_value = 'hash_value'
+                put_metric(metrics_directory, content.read())
+
         self.assertTrue(os.path.exists(os.path.join(metrics_directory, 'metrics.py')))
 
     def test_put_opener(self):
@@ -446,7 +456,8 @@ class TasksTests(APITestCase):
 
             objective = get_objective({'objective': {'hash': objective_hash,
                                        'metrics': ''}})
-            self.assertTrue(isinstance(objective, FakeObjective))
+            self.assertTrue(isinstance(objective, bytes))
+            self.assertEqual(objective, b'foo')
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
@@ -457,7 +468,8 @@ class TasksTests(APITestCase):
 
             objective = get_objective({'objective': {'hash': objective_hash,
                                        'metrics': ''}})
-            self.assertTrue(isinstance(objective, FakeObjective))
+            self.assertTrue(isinstance(objective, bytes))
+            self.assertEqual(objective, b'foo')
 
     def test_compute_docker(self):
         cpu_set, gpu_set = None, None
