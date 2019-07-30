@@ -41,7 +41,7 @@ class ManageFileMixin(object):
     def manage_file(self, field):
 
         # test with
-        # curl --cookie "username=chu-nantes;pwd=chu-nantespw" --header "Accept:text/html;version=0.0, */*;version=0.0"  -XGET http://owkin.substrabac:8000/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/
+        # curl --cookie "username=chu-nantes;password=chu-nantespw" --header "Accept:text/html;version=0.0, */*;version=0.0"  -XGET http://owkin.substrabac:8000/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/
 
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -53,11 +53,11 @@ class ManageFileMixin(object):
         else:
             obj = self.get_object()
 
-            username = self.request.COOKIES.get('username', None)
-            pwd = self.request.COOKIES.get('pwd', None)
-
             # TODO how to handle self permissions aka []
             if x['permissions'] != 'all':
+                username = self.request.COOKIES.get('username', None)
+                pwd = self.request.COOKIES.get('password', None)
+
                 if username is None or pwd is None:
                     raise Exception('Missing user')
                 try:
@@ -72,11 +72,16 @@ class ManageFileMixin(object):
                         raise LedgerForbidden('Not allowed')
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
+                        print(username)
+                        print(pwd)
+                        print(permissions)
+                        print(hashed_modulus)
+                        print(InternalAuthent.objects.all())
                         if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
                             raise LedgerUnauthorized('Permission denied')
 
-                    data = getattr(obj, field)
-                    return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+            data = getattr(obj, field)
+            return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 
 
 def find_primary_key_error(validation_error, key_name='pkhash'):

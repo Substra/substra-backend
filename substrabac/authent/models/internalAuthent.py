@@ -8,5 +8,4 @@ class InternalAuthent(models.Model):
     modulus = models.CharField(max_length=64)
 
     def __str__(self):
-        # TODO
-        return self.permission.name
+        return f'internal authent with permission {self.permission.name} and modulus {self.modulus}'

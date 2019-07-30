@@ -7,6 +7,7 @@ import tempfile
 from os import path
 from os.path import isfile, isdir
 import shutil
+from urllib.parse import urlparse
 
 import requests
 import tarfile
@@ -16,6 +17,7 @@ import uuid
 from checksumdir import dirhash
 
 from django.conf import settings
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 
 
@@ -152,10 +154,22 @@ class NodeError(Exception):
 
 
 def get_from_node(url):
+    from authent.models import ExternalAuthent, Node
 
     kwargs = {
         'headers': {'Accept': 'application/json;version=0.0'},
     }
+
+    # get external user for this node
+    parsed_uri = urlparse(url)
+    try:
+        n = Node.objects.get(name=parsed_uri.netloc)
+    except ObjectDoesNotExist:
+        pass
+    else:
+        e = ExternalAuthent.objects.get(node=n)
+        cookies = {'username': e.username, 'password': e.password}
+        kwargs['cookies'] = cookies
 
     username = getattr(settings, 'BASICAUTH_USERNAME', None)
     password = getattr(settings, 'BASICAUTH_PASSWORD', None)

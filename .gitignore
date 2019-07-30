@@ -108,6 +108,7 @@ venv.bak/
 
 #secret files
 SECRET
+PKEY
 
 # conf from substra-network
 substrabac/substrapp/**/conf

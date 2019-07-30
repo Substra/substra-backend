@@ -10,7 +10,7 @@ import OpenSSL
 from Crypto.Util import asn1
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
-from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509 import NameOID
 from hfc.fabric_ca.caservice import ca_service
@@ -24,6 +24,8 @@ from hfc.fabric.orderer import Orderer
 from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_peers_info, decode_fabric_endpoints
 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
 LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabac/conf.json')
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
@@ -170,13 +172,42 @@ def get_hashed_modulus(cert):
     return hashed_modulus
 
 
-# TODO, careful, will be regenerated on every launch of the server
-# will modify csr and all modulus
-def get_pkey():
-    return rsa.generate_private_key(
+
+def write_pkey_key(path):
+    pkey = rsa.generate_private_key(
         public_exponent=65537,
         key_size=2048,
         backend=default_backend())
+    data = pkey.private_bytes(encoding=serialization.Encoding.PEM,
+                              format=serialization.PrivateFormat.PKCS8,
+                              encryption_algorithm=serialization.NoEncryption())
+    with open(path, 'wb+') as f:
+        f.write(data)
+    return pkey
+
+# SECURITY WARNING: keep the private key used in production secret!
+# TODO will be override if docker is restarted, need to be passed as a volume
+PKEY_FILE = os.path.normpath(os.path.join(PROJECT_ROOT, 'PKEY'))
+
+# KEY CONFIGURATION
+# Try to load the PKEY from our PKEY_FILE. If that fails, then generate
+# a random PKEY and save it into our PKEY_FILE for future loading. If
+# everything fails, then just raise an exception.
+try:
+    pkey = open(PKEY_FILE, 'rb').read().strip()
+except IOError:
+    try:
+        pkey = write_pkey_key(PKEY_FILE)
+    except IOError:
+        raise Exception(f'Cannot open file `{PKEY_FILE}` for writing.')
+else:
+        pkey = serialization.load_pem_private_key(
+            pkey,
+            password=None,
+            backend=default_backend()
+        )
+
+# END KEY CONFIGURATION
 
 
 # TODO use dynamic data, and remove default
@@ -215,8 +246,6 @@ def get_hfc_ca_client():
 
     return cacli
 
-
-pkey = get_pkey()
 
 LEDGER['hfc'] = get_hfc_client
 LEDGER['hfc_ca'] = {
