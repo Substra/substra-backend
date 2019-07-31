@@ -40,8 +40,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
 
-    def dryrun_task(self, data, data_manager_keys):
-        task = compute_dryrun.apply_async((data, data_manager_keys),
+    def dryrun_task(self, data, data_manager_keys, paths_to_remove):
+        task = compute_dryrun.apply_async((data, data_manager_keys, paths_to_remove),
                                           queue=f"{settings.LEDGER['name']}.dryrunner")
         current_site = getattr(settings, "DEFAULT_DOMAIN")
         task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
@@ -170,10 +170,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return list(data.values())
 
-    def handle_dryrun(self, data, data_manager_keys):
+    def handle_dryrun(self, data, data_manager_keys, paths_to_remove):
 
         try:
-            task, msg = self.dryrun_task(data, data_manager_keys)
+            task, msg = self.dryrun_task(data, data_manager_keys, paths_to_remove)
         except Exception as e:
             raise Exception(f'Could not launch data creation with dry-run on this instance: {str(e)}')
         else:
@@ -209,7 +209,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 raise ValidationException(e.args, pkhashes, st)
             else:
                 if dryrun:
-                    return self.handle_dryrun(computed_data, data_manager_keys)
+                    return self.handle_dryrun(computed_data, data_manager_keys, paths_to_remove)
 
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
@@ -304,7 +304,7 @@ def path_leaf(path):
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, data_samples, data_manager_keys):
+def compute_dryrun(self, data_samples, data_manager_keys, paths_to_remove):
     from shutil import copy
     from substrapp.models import DataManager
 
@@ -374,6 +374,6 @@ def compute_dryrun(self, data_samples, data_manager_keys):
         remove_subtuple_materials(subtuple_directory)
 
         # Clean dryrun materials
-        for data_sample in data_samples:
+        for path in paths_to_remove:
             # Remove all possible data (data in servermedias is read-only)
-            shutil.rmtree(data_sample['path'], ignore_errors=True)
+            shutil.rmtree(path, ignore_errors=True)
