@@ -65,7 +65,7 @@ class ManageFileMixin(object):
                 except:
                     raise Exception('cannot load asset permissions')
                 else:
-                    csr = get_csr( LEDGER['hfc_ca']['pkey'], username)
+                    csr = get_csr(LEDGER['hfc_ca']['pkey'], username)
                     try:
                         enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
                     except:

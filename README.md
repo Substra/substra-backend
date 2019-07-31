@@ -158,6 +158,26 @@ Go in the `substrabac` folder and run the server locally:
  SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.events.dev
  ```
 
+## Working with permissions
+
+If your populate.py includes specific permission, they need to be created in local db for future checks.
+
+
+Run this command for creating internal users (users who want to to download files),  
+it will register a hashed modulus related to a permission.
+
+```
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin python manage.py init_internal_users
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes python manage.py init_internal_users
+```
+
+Run these commands to for creating external users (nodes that connects to external nodes)
+```
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin python manage.py add_external_user owkin owkinpw chunantes.substrabac:8001
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin python manage.py add_external_user user-owkin user-owkinpw owkin.substrabac:8000
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes python manage.py add_external_user chu-nantes chu-nantespw owkin.substrabac:8000
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes python manage.py add_external_user user-chu-nantes user-chu-nantespw chunantes.substrabac:8001
+```
 
 ## Test with unit and functional tests
 
