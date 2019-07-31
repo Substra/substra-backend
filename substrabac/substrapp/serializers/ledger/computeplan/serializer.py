@@ -19,32 +19,68 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
 
+class ComputePlanTesttupleSerializer(serializers.Serializer):
+    traintuple_id = serializers.CharField(min_length=1, max_length=64)
+    testtuple_id = serializers.CharField(min_length=1, max_length=64)
+    data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
+    test_data_sample_keys = serializers.ListField(
+        child=serializers.CharField(min_length=64, max_length=64),
+        min_length=0,
+        required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+
+
 class LedgerComputePlanSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
     traintuples = ComputePlanTraintupleSerializer(many=True)
+    testtuples = ComputePlanTesttupleSerializer(many=True)
 
-    def get_args(self, validated_data):
-        algo_key = validated_data.get('algo_key')
-        objective_key = validated_data.get('objective_key')
+    def get_args(self, data):
+        # convert snake case fields to camel case fields to match chaincode expected inputs
         traintuples = []
+        for data_traintuple in data['traintuples']:
+            traintuple = {
+                'dataManagerKey': data_traintuple['data_manager_key'],
+                'dataSampleKeys': data_traintuple['train_data_sample_keys'],
+                'id': data_traintuple['traintuple_id'],
+            }
+            try:
+                traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
+            except KeyError:
+                pass
+            try:
+                traintuple['tag'] = data_traintuple['tag']
+            except KeyError:
+                pass
+            traintuples.append(traintuple)
 
-        for traintuple in validated_data.get('traintuples', []):
-            traintuples.append({
-                'dataManagerKey': traintuple.get('data_manager_key'),
-                'dataSampleKeys': traintuple.get('train_data_sample_keys', []),
-                'id': traintuple.get('traintuple_id'),
-                'inModelIds': traintuple.get('in_models_ids'),
-                'tag': traintuple.get('tag'),
-            })
+        testtuples = []
+        for data_testtuple in data['testtuples']:
+            testtuple = {
+                'testtupleID': data_testtuple['testtuple_id'],
+                'traintupleID': data_testtuple['traintuple_id'],
+            }
+            try:
+                testtuple['tag'] = data_testtuple['tag']
+            except KeyError:
+                pass
+            try:
+                testtuple['dataManagerKey'] = data_testtuple['data_manager_key']
+            except KeyError:
+                pass
+            try:
+                testtuple['dataSampleKeys'] = data_testtuple['test_data_sample_keys']
+            except KeyError:
+                pass
+            testtuples.append(testtuple)
 
-        args = {
-            'algoKey': algo_key,
-            'objectiveKey': objective_key,
+        return {
+            'algoKey': data['algo_key'],
+            'objectiveKey': data['objective_key'],
             'traintuples': traintuples,
+            'testtuples': testtuples,
         }
-
-        return args
 
     def create(self, validated_data):
         args = self.get_args(validated_data)
