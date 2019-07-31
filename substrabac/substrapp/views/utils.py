@@ -72,11 +72,6 @@ class ManageFileMixin(object):
                         raise LedgerForbidden('Not allowed')
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
-                        print(username)
-                        print(pwd)
-                        print(permissions)
-                        print(hashed_modulus)
-                        print(InternalAuthent.objects.all())
                         if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
                             raise LedgerUnauthorized('Permission denied')
 

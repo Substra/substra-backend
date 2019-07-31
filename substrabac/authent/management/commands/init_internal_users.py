@@ -41,7 +41,4 @@ class Command(BaseCommand):
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
                         # get or create internal authent
-                        print(username)
-                        print(pwd)
-                        print(hashed_modulus)
                         i, _ = InternalAuthent.objects.get_or_create(permission=p, modulus=hashed_modulus)
