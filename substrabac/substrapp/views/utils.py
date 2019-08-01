@@ -51,8 +51,6 @@ class ManageFileMixin(object):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
-            obj = self.get_object()
-
             # TODO how to handle self permissions aka []
             if x['permissions'] != 'all':
                 username = self.request.COOKIES.get('username', None)
@@ -75,6 +73,7 @@ class ManageFileMixin(object):
                         if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
                             raise LedgerUnauthorized('Permission denied')
 
+            obj = self.get_object()
             data = getattr(obj, field)
             return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
 

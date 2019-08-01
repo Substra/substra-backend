@@ -27,7 +27,9 @@ from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_pee
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
 
-LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabac/conf.json')
+SUBSTRA_PATH = os.environ.get('SUBSTRA_PATH', '/substra')
+
+LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'{SUBSTRA_PATH}/conf/{ORG}/substrabac/conf.json')
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 
 LEDGER_SYNC_ENABLED = True
