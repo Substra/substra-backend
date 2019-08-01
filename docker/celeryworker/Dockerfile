@@ -14,4 +14,5 @@ RUN pip3 install -r requirements.txt
 COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/containers /usr/src/app/containers
 COPY ./substrabac/substrapp /usr/src/app/substrapp
+COPY ./substrabac/authent /usr/src/app/authent
 COPY ./substrabac/substrabac /usr/src/app/substrabac

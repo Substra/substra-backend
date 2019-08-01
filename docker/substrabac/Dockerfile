@@ -15,4 +15,5 @@ COPY ./substrabac/manage.py /usr/src/app/manage.py
 COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/events /usr/src/app/events
+COPY ./substrabac/authent /usr/src/app/authent
 COPY ./substrabac/substrabac /usr/src/app/substrabac
