@@ -21,7 +21,6 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
-    testtuple_id = serializers.CharField(min_length=1, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
     test_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
@@ -58,7 +57,6 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         testtuples = []
         for data_testtuple in data['testtuples']:
             testtuple = {
-                'testtupleID': data_testtuple['testtuple_id'],
                 'traintupleID': data_testtuple['traintuple_id'],
             }
             try:
