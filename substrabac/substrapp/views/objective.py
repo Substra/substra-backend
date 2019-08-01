@@ -279,6 +279,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
     if not test_data_manager_key:
+        os.remove(archive_path)
         raise Exception('Cannot do a objective dryrun without a data manager key.')
 
     dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
@@ -286,7 +287,6 @@ def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
     subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
     metrics_path = f'{subtuple_directory}/metrics'
     uncompress_path(archive_path, metrics_path)
-
     os.remove(archive_path)
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
