@@ -18,7 +18,6 @@ ipython-genutils==0.2.0
 mock==2.0.0
 psycopg2-binary==2.7.4
 protobuf == 3.6.0
-pycrypto == 2.6.1
 pycryptodomex >= 3.4.2
 pyOpenSSL == 19.0.0
 pysha3 == 1.0b1
