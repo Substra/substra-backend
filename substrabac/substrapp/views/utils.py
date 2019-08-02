@@ -58,7 +58,7 @@ class ManageFileMixin(object):
                 pwd = self.request.COOKIES.get('password', None)
 
                 if username is None or pwd is None:
-                    raise Exception('Missing user')
+                    raise Exception('Missing cookies username/password')
                 try:
                     permissions = json.loads(x['permissions'])
                 except Exception as e:
