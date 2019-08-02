@@ -7,6 +7,7 @@ import time
 import zipfile
 
 import substra
+from substra.sdk.exceptions import HTTPError
 
 from termcolor import colored
 
@@ -376,11 +377,14 @@ def do_populate():
 
         time.sleep(3)
 
+    if traintuple_status == 'failed' or testtuple_status == 'failed':
+        raise Exception('Failed on tuples process')
+
 
 if __name__ == '__main__':
     try:
         do_populate()
-    except substra.exceptions.HTTPError as e:
+    except HTTPError as e:
         try:
             error = e.response.json()
         except Exception:
@@ -389,4 +393,8 @@ if __name__ == '__main__':
             error_message = json.dumps(error, indent=2)
         print(colored(str(e), 'red'))
         print(colored(error_message, 'red'))
+        exit(1)
+    except Exception as e:
+        print(colored(str(e), 'red'))
+        time.sleep(9999)
         exit(1)
