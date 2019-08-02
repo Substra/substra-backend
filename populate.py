@@ -396,5 +396,4 @@ if __name__ == '__main__':
         exit(1)
     except Exception as e:
         print(colored(str(e), 'red'))
-        time.sleep(9999)
         exit(1)
