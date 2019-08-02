@@ -42,8 +42,8 @@ pipeline {
             dir("substrabac") {
               sh "pip install flake8"
               sh "flake8"
-              sh "pip install -r requirements.txt"
               sh "sleep 9999"
+              sh "pip install -r requirements.txt"
               sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
               sh "coverage report"
               sh "coverage html"
