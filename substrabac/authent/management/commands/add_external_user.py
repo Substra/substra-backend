@@ -24,4 +24,3 @@ class Command(BaseCommand):
 
         # get or create external authent
         e, _ = ExternalAuthent.objects.get_or_create(node=n, username=username, password=pwd)
-

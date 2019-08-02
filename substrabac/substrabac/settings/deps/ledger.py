@@ -45,6 +45,7 @@ LEDGER['requestor'] = create_user(
     cert_path=LEDGER['client']['cert_path']
 )
 
+
 def deserialize_config(config_result):
 
     results = {'msps': {},
@@ -105,6 +106,7 @@ def deserialize_cc_query_res(cc_query_res):
 
     return cc_queries
 
+
 def deserialize_discovery(response):
     results = {
         'config': None,
@@ -123,6 +125,7 @@ def deserialize_discovery(response):
             results['cc_query_res'] = deserialize_cc_query_res(res.cc_query_res)
 
     return results
+
 
 def get_hfc_client():
 
@@ -164,15 +167,14 @@ def get_hfc_client():
 def get_hashed_modulus(cert):
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
     pub = cert.get_pubkey()
-    pub_asn1=OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pub)
-    pub_der=asn1.DerSequence()
+    pub_asn1 = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pub)
+    pub_der = asn1.DerSequence()
     pub_der.decode(pub_asn1)
 
     modulus = pub_der[1]
     hashed_modulus = hashlib.sha256(str(modulus).encode()).hexdigest()
 
     return hashed_modulus
-
 
 
 def write_pkey_key(path):
@@ -186,6 +188,7 @@ def write_pkey_key(path):
     with open(path, 'wb+') as f:
         f.write(data)
     return pkey
+
 
 # SECURITY WARNING: keep the private key used in production secret!
 # TODO will be override if docker is restarted, need to be passed as a volume
@@ -315,4 +318,3 @@ def update_client_with_discovery(client, discovery_results):
         })
 
     client._orderers[orderer_mspid] = orderer
-

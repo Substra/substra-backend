@@ -14,6 +14,7 @@ from rest_framework import status
 
 LEDGER = getattr(settings, 'LEDGER', None)
 
+
 class ComputeHashMixin(object):
     def compute_hash(self, file, key=None):
 
@@ -41,7 +42,7 @@ class ManageFileMixin(object):
     def manage_file(self, field):
 
         # test with
-        # curl --cookie "username=chu-nantes;password=chu-nantespw" --header "Accept:text/html;version=0.0, */*;version=0.0"  -XGET http://owkin.substrabac:8000/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/
+        # curl --cookie "username=chu-nantes;password=chu-nantespw" --header "Accept:text/html;version=0.0, */*;version=0.0"  -XGET http://owkin.substrabac:8000/algo/4cc53726e01f7e3864a6cf9da24d9cef04a7cbd7fd2892765ff76931dd4628e7/file/ # noqa
 
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -60,14 +61,14 @@ class ManageFileMixin(object):
                     raise Exception('Missing user')
                 try:
                     permissions = json.loads(x['permissions'])
-                except:
-                    raise Exception('cannot load asset permissions')
+                except Exception as e:
+                    raise Exception(f'cannot load asset permissions, error: {str(e)}')
                 else:
                     csr = get_csr(LEDGER['hfc_ca']['pkey'], username)
                     try:
                         enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
-                    except:
-                        raise LedgerForbidden('Not allowed')
+                    except Exception as e:
+                        raise LedgerForbidden(f'Not allowed, error: {str(e)}')
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
                         if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):

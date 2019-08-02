@@ -56,6 +56,7 @@ class LedgerForbidden(LedgerResponseError):
 class LedgerUnauthorized(LedgerResponseError):
     status = status.HTTP_401_UNAUTHORIZED
 
+
 class LedgerNotFound(LedgerResponseError):
     status = status.HTTP_404_NOT_FOUND
 

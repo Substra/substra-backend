@@ -40,8 +40,8 @@ class Command(BaseCommand):
                     csr = get_csr(pkey, username)
                     try:
                         enrollment = cacli.enroll(username, pwd, csr=csr)
-                    except:
-                        pass
+                    except Exception as e:
+                        print(str(e))
                     else:
                         hashed_modulus = get_hashed_modulus(enrollment.cert)
                         # get or create internal authent

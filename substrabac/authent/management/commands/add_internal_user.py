@@ -36,4 +36,3 @@ class Command(BaseCommand):
         hashed_modulus = get_hashed_modulus(enrollment.cert)
         # get or create internal authent
         i, _ = InternalAuthent.objects.get_or_create(permission=p, modulus=hashed_modulus)
-
