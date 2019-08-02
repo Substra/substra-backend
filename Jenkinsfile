@@ -37,12 +37,13 @@ pipeline {
             sh "apt update"
             sh "apt install curl && mkdir -p /tmp/download && curl -L https://download.docker.com/linux/static/stable/x86_64/docker-18.06.3-ce.tgz | tar -xz -C /tmp/download && mv /tmp/download/docker/docker /usr/local/bin/"
             sh "docker login -u _json_key --password-stdin https://eu.gcr.io/substra-208412/ < /secret/kaniko-secret.json"
-            sh "apt install -y gcc python-dev python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
+            sh "apt install -y gcc python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
             dir("substrabac") {
               sh "pip install flake8"
               sh "flake8"
               sh "pip install -r requirements.txt"
+              sh "sleep 9999"
               sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
               sh "coverage report"
               sh "coverage html"
