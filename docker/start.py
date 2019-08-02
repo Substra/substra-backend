@@ -157,6 +157,7 @@ def generate_docker_compose_file(conf, launch_settings):
 
             # HLF files
             f'{org["core_peer_mspconfigpath"]}:{org["core_peer_mspconfigpath"]}:ro',
+            f'{org["ca"]["certfile"]["external"]}:{org["ca"]["certfile"]["external"]}:ro',
         ]
 
         # HLF files
