@@ -240,64 +240,63 @@ def get_hfc_ca_client():
 
 
 def update_client_with_discovery(client, discovery_results):
+    # Get all msp tls root cert files
+    tls_root_certs = {}
+    for mspid, msp_info in discovery_results['config']['msps'].items():
+        tls_root_certs[mspid] = base64.decodebytes(
+            msp_info['tls_root_certs'].pop().encode()
+        )
 
-        # Get all msp tls root cert files
-        tls_root_certs = {}
-        for mspid, msp_info in discovery_results['config']['msps'].items():
-            tls_root_certs[mspid] = base64.decodebytes(
-                msp_info['tls_root_certs'].pop().encode()
-            )
+    # Load one peer per msp for endorsing transaction
+    for msp in discovery_results['members']:
+        peer_info = msp[0]
+        if peer_info['mspid'] != LEDGER['client']['msp_id']:
+            peer = Peer(name=peer_info['mspid'])
 
-        # Load one peer per msp for endorsing transaction
-        for msp in discovery_results['members']:
-            peer_info = msp[0]
-            if peer_info['mspid'] != LEDGER['client']['msp_id']:
-                peer = Peer(name=peer_info['mspid'])
+            with tempfile.NamedTemporaryFile() as tls_root_cert:
+                tls_root_cert.write(tls_root_certs[peer_info['mspid']])
+                tls_root_cert.flush()
 
-                with tempfile.NamedTemporaryFile() as tls_root_cert:
-                    tls_root_cert.write(tls_root_certs[peer_info['mspid']])
-                    tls_root_cert.flush()
+                url = peer_info['endpoint']
+                external_port = os.environ.get('SUBSTRABAC_PEER_PORT_EXTERNAL', None)
+                # use case for external development
+                if external_port:
+                    url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"
+                peer.init_with_bundle({
+                    'url': url,
+                    'grpcOptions': {
+                        'grpc-max-send-message-length': 15,
+                        'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0]
+                    },
+                    'tlsCACerts': {'path': tls_root_cert.name},
+                    'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
+                    'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
+                })
 
-                    url = peer_info['endpoint']
-                    external_port = os.environ.get('SUBSTRABAC_PEER_PORT_EXTERNAL', None)
-                    # use case for external development
-                    if external_port:
-                        url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"
-                    peer.init_with_bundle({
-                        'url': url,
-                        'grpcOptions': {
-                            'grpc-max-send-message-length': 15,
-                            'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0]
-                        },
-                        'tlsCACerts': {'path': tls_root_cert.name},
-                        'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
-                        'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
-                    })
+            client._peers[peer_info['mspid']] = peer
 
-                client._peers[peer_info['mspid']] = peer
+    # Load one orderer for broadcasting transaction
+    orderer_mspid, orderer_info = list(discovery_results['config']['orderers'].items())[0]
 
-        # Load one orderer for broadcasting transaction
-        orderer_mspid, orderer_info = list(discovery_results['config']['orderers'].items())[0]
+    orderer = Orderer(name=orderer_mspid)
 
-        orderer = Orderer(name=orderer_mspid)
+    with tempfile.NamedTemporaryFile() as tls_root_cert:
+        tls_root_cert.write(tls_root_certs[orderer_mspid])
+        tls_root_cert.flush()
 
-        with tempfile.NamedTemporaryFile() as tls_root_cert:
-            tls_root_cert.write(tls_root_certs[orderer_mspid])
-            tls_root_cert.flush()
+        # Need loop
+        orderer.init_with_bundle({
+            'url': f"{orderer_info[0]['host']}:{orderer_info[0]['port']}",
+            'grpcOptions': {
+                'grpc-max-send-message-length': 15,
+                'grpc.ssl_target_name_override': orderer_info[0]['host']
+            },
+            'tlsCACerts': {'path': tls_root_cert.name},
+            'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
+            'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
+        })
 
-            # Need loop
-            orderer.init_with_bundle({
-                'url': f"{orderer_info[0]['host']}:{orderer_info[0]['port']}",
-                'grpcOptions': {
-                    'grpc-max-send-message-length': 15,
-                    'grpc.ssl_target_name_override': orderer_info[0]['host']
-                },
-                'tlsCACerts': {'path': tls_root_cert.name},
-                'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
-                'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
-            })
-
-        client._orderers[orderer_mspid] = orderer
+    client._orderers[orderer_mspid] = orderer
 
 
 if not os.path.exists(LEDGER_CONFIG_FILE):
