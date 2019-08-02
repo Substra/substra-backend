@@ -215,7 +215,7 @@ class ObjectiveQueryTests(APITestCase):
 
         with mock.patch(
                 'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = self.objective_metrics
+            mget_object_from_ledger.return_value = {'permissions': 'all'}
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
