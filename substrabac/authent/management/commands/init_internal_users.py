@@ -25,7 +25,7 @@ class Command(BaseCommand):
         SUBSTRA_PATH = os.environ.get('SUBSTRA_PATH', '/substra')
         ORG = os.environ.get('SUBSTRABAC_ORG', 'substra')
         USERS_FILE = os.environ.get('USERS_FILE', f'{SUBSTRA_PATH}/conf/{ORG}/substrabac/users-list.json')
-        with open(USERS_FILE, 'r+') as f:
+        with open(USERS_FILE, 'r') as f:
             data = json.load(f)
 
             for permission_name in data.keys():
