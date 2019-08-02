@@ -49,7 +49,6 @@ else:
         cert_path=LEDGER['client']['cert_path']
     )
 
-
     def deserialize_config(config_result):
 
         results = {'msps': {},
@@ -67,7 +66,6 @@ else:
 
         return results
 
-
     def deserialize_members(members):
         peers = []
 
@@ -78,7 +76,6 @@ else:
             peers.append(peer)
 
         return peers
-
 
     def deserialize_cc_query_res(cc_query_res):
         cc_queries = []
@@ -110,7 +107,6 @@ else:
 
         return cc_queries
 
-
     def deserialize_discovery(response):
         results = {
             'config': None,
@@ -129,7 +125,6 @@ else:
                 results['cc_query_res'] = deserialize_cc_query_res(res.cc_query_res)
 
         return results
-
 
     def get_hfc_client():
 
@@ -167,7 +162,6 @@ else:
 
         return loop, client
 
-
     def get_hashed_modulus(cert):
         cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
         pub = cert.get_pubkey()
@@ -180,7 +174,6 @@ else:
 
         return hashed_modulus
 
-
     def write_pkey_key(path):
         pkey = rsa.generate_private_key(
             public_exponent=65537,
@@ -192,7 +185,6 @@ else:
         with open(path, 'wb+') as f:
             f.write(data)
         return pkey
-
 
     # SECURITY WARNING: keep the private key used in production secret!
     # TODO will be override if docker is restarted, need to be passed as a volume
@@ -217,7 +209,6 @@ else:
         )
 
     # END KEY CONFIGURATION
-
 
     # TODO use dynamic data, and remove default
     def get_csr(pkey,
@@ -246,22 +237,20 @@ else:
 
         return csr
 
-
     def get_hfc_ca_client():
-        target = f"https://{LEDGER['ca']['host']}:{LEDGER['ca']['port'][os.environ.get('SUBSTRABAC_CA_PORT', 'external')]}"
+        port = LEDGER['ca']['port'][os.environ.get('SUBSTRABAC_CA_PORT', 'external')]
+        target = f"https://{LEDGER['ca']['host']}:{port}"
         cacli = ca_service(target=target,
                            ca_certs_path=LEDGER['ca']['certfile'][os.environ.get('SUBSTRABAC_CA_CERT', 'external')],
                            ca_name=LEDGER['ca']['name'])
 
         return cacli
 
-
     LEDGER['hfc'] = get_hfc_client
     LEDGER['hfc_ca'] = {
         'client': get_hfc_ca_client(),
         'pkey': pkey
     }
-
 
     def update_client_with_discovery(client, discovery_results):
 
