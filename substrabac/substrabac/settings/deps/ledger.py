@@ -206,11 +206,11 @@ except IOError:
     except IOError:
         raise Exception(f'Cannot open file `{PKEY_FILE}` for writing.')
 else:
-        pkey = serialization.load_pem_private_key(
-            pkey,
-            password=None,
-            backend=default_backend()
-        )
+    pkey = serialization.load_pem_private_key(
+        pkey,
+        password=None,
+        backend=default_backend()
+    )
 
 # END KEY CONFIGURATION
 
