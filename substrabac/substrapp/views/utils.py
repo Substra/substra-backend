@@ -12,6 +12,8 @@ from substrapp.ledger_utils import get_object_from_ledger, LedgerError, LedgerFo
 from django.conf import settings
 from rest_framework import status
 
+from substrapp.utils import get_hash
+
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
@@ -52,27 +54,39 @@ class ManageFileMixin(object):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
-            # TODO how to handle self permissions aka []
             if x['permissions'] != 'all':
                 username = self.request.COOKIES.get('username', None)
                 pwd = self.request.COOKIES.get('password', None)
 
-                if username is None or pwd is None:
-                    raise Exception('Missing cookies username/password')
-                try:
-                    permissions = json.loads(x['permissions'])
-                except Exception as e:
-                    raise Exception(f'cannot load asset permissions, error: {str(e)}')
+                # owner permissions
+                # TODO check referrer, if not self, raise Permission Denied
+                # TODO should be avoided
+                if x['permissions'] == '[]':
+                    # get owner of asset
+                    asset_owner = x['owner']
+                    # get node owner
+                    self_owner = get_hash(settings.LEDGER['signcert'])
+
+                    # check if Node user is owner
+                    if asset_owner != self_owner:
+                        raise LedgerUnauthorized('Permission denied')
                 else:
-                    csr = get_csr(LEDGER['hfc_ca']['pkey'], username)
+                    if username is None or pwd is None:
+                        raise Exception('Missing cookies username/password')
                     try:
-                        enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
+                        permissions = json.loads(x['permissions'])
                     except Exception as e:
-                        raise LedgerForbidden(f'Not allowed, error: {str(e)}')
+                        raise Exception(f'cannot load asset permissions, error: {str(e)}')
                     else:
-                        hashed_modulus = get_hashed_modulus(enrollment.cert)
-                        if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
-                            raise LedgerUnauthorized('Permission denied')
+                        csr = get_csr(LEDGER['hfc_ca']['pkey'], username)
+                        try:
+                            enrollment = LEDGER['hfc_ca']['client'].enroll(username, pwd, csr=csr)
+                        except Exception as e:
+                            raise LedgerForbidden(f'Not allowed, error: {str(e)}')
+                        else:
+                            hashed_modulus = get_hashed_modulus(enrollment.cert)
+                            if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
+                                raise LedgerUnauthorized('Permission denied')
 
             obj = self.get_object()
             data = getattr(obj, field)
