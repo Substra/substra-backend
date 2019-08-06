@@ -1,11 +1,15 @@
-import json
 import contextlib
+import functools
+import json
+import logging
+import time
 
 from django.conf import settings
 from rest_framework import status
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
+logger = logging.getLogger(__name__)
 
 
 class LedgerError(Exception):
@@ -75,6 +79,32 @@ STATUS_TO_EXCEPTION = {
     status.HTTP_404_NOT_FOUND: LedgerNotFound,
     status.HTTP_409_CONFLICT: LedgerConflict,
 }
+
+
+def retry_on_mvcc_error(delay=1, nbtries=5, backoff=2):
+    def _retry(fn):
+        @functools.wraps(fn)
+        def _wrapper(*args, **kwargs):
+            if not getattr(settings, 'LEDGER_MVCC_RETRY', False):
+                return fn(*args, **kwargs)
+
+            _delay = delay
+            _nbtries = nbtries
+            _backoff = backoff
+
+            while True:
+                try:
+                    return fn(*args, **kwargs)
+                except LedgerMVCCError as e:
+                    _nbtries -= 1
+                    if not nbtries:
+                        raise
+                    _delay *= _backoff
+                    time.sleep(_delay)
+                    logger.warning(f'Function {fn.__name__} failed: {e} retrying in {_delay}s')
+
+        return _wrapper
+    return _retry
 
 
 @contextlib.contextmanager
@@ -183,6 +213,7 @@ def get_object_from_ledger(pk, query):
     return query_ledger(fcn=query, args={'key': pk})
 
 
+@retry_on_mvcc_error()
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
 
@@ -197,6 +228,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
         sync=True)
 
 
+@retry_on_mvcc_error()
 def log_success_tuple(tuple_type, tuple_key, res):
     if tuple_type == 'traintuple':
         invoke_fcn = 'logSuccessTrain'
@@ -224,6 +256,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
     return invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
+@retry_on_mvcc_error()
 def log_start_tuple(tuple_type, tuple_key):
     start_type = None
 
