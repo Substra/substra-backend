@@ -61,6 +61,7 @@ class ManageFileMixin(object):
                 # owner permissions
                 # TODO check referrer, if not self, raise Permission Denied
                 # TODO should be avoided
+                # signcert can expire, asset owner should be done on modulus
                 if x['permissions'] == '[]':
                     # get owner of asset
                     asset_owner = x['owner']
