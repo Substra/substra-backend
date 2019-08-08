@@ -59,11 +59,11 @@ class ManageFileMixin(object):
                 pwd = self.request.COOKIES.get('password', None)
 
                 # owner permissions
-                # TODO check referrer, if not self, raise Permission Denied
-                # TODO should be avoided
-                # signcert can expire, asset owner should be done on modulus
+                # :warning: signcert can expire, asset owner should be done on modulus
                 if x['permissions'] == '[]':
                     # get owner of asset
+                    if not self.request.is_authenticated:  # has to be from own isolated user
+                        raise LedgerUnauthorized('Permission denied')
                     asset_owner = x['owner']
                     # get node owner
                     self_owner = get_hash(settings.LEDGER['signcert'])
@@ -71,6 +71,8 @@ class ManageFileMixin(object):
                     # check if Node user is owner
                     if asset_owner != self_owner:
                         raise LedgerUnauthorized('Permission denied')
+
+                    raise LedgerUnauthorized('Permission denied')
                 else:
                     if username is None or pwd is None:
                         raise Exception('Missing cookies username/password')
