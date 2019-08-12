@@ -44,14 +44,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'dataSampleKeys': data_traintuple['train_data_sample_keys'],
                 'id': data_traintuple['traintuple_id'],
             }
-            try:
+            if 'in_models_ids' in data_traintuple:
                 traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
-            except KeyError:
-                pass
-            try:
+            if 'tag' in data_traintuple:
                 traintuple['tag'] = data_traintuple['tag']
-            except KeyError:
-                pass
+
             traintuples.append(traintuple)
 
         testtuples = []
@@ -59,18 +56,13 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             testtuple = {
                 'traintupleID': data_testtuple['traintuple_id'],
             }
-            try:
+            if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
-            except KeyError:
-                pass
-            try:
+            if 'data_manager_key' in data_testtuple:
                 testtuple['dataManagerKey'] = data_testtuple['data_manager_key']
-            except KeyError:
-                pass
-            try:
+            if 'test_data_sample_keys' in data_testtuple:
                 testtuple['dataSampleKeys'] = data_testtuple['test_data_sample_keys']
-            except KeyError:
-                pass
+
             testtuples.append(testtuple)
 
         return {
