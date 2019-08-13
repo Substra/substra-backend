@@ -163,7 +163,7 @@ def query_ledger(fcn, args=None):
     return call_ledger('query', fcn=fcn, args=args)
 
 
-def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
+def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
     params = {
         'wait_for_event': sync,
     }
@@ -176,7 +176,10 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
 
     response = call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
 
-    return {'pkhash': response.get('key', response.get('keys'))}
+    if only_pkhash:
+        return {'pkhash': response.get('key', response.get('keys'))}
+    else:
+        return response
 
 
 def get_object_from_ledger(pk, query):

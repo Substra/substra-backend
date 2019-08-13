@@ -23,7 +23,7 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         args = {
             'traintupleKey': traintuple_key,
             'dataManagerKey': data_manager_key,
-            'dataSampleKeys': ','.join(test_data_sample_keys),
+            'dataSampleKeys': test_data_sample_keys,
             'tag': tag
         }
 
