@@ -19,8 +19,8 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         test_only = validated_data.get('test_only')
 
         args = {
-            'hashes': ','.join([x.pk for x in instances]),
-            'dataManagerKeys': ','.join([x for x in data_manager_keys]),
+            'hashes': [x.pk for x in instances],
+            'dataManagerKeys': [x for x in data_manager_keys],
             'testOnly': json.dumps(test_only),
         }
 

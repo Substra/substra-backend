@@ -34,9 +34,9 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         args = {
             'algoKey': algo_key,
             'objectiveKey': objective_key,
-            'inModels': ','.join([x for x in in_models_keys]),
+            'inModels': in_models_keys,
             'dataManagerKey': data_manager_key,
-            'dataSampleKeys': ','.join([x for x in train_data_sample_keys]),
+            'dataSampleKeys': train_data_sample_keys,
             'flTask': FLtask_key,
             'rank': rank,
             'tag': tag

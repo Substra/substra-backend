@@ -275,8 +275,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             args = {
-                'hashes': ','.join(data_sample_keys),
-                'dataManagerKeys': ','.join(data_manager_keys),
+                'hashes': data_sample_keys,
+                'dataManagerKeys': data_manager_keys,
             }
 
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
