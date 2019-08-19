@@ -138,7 +138,7 @@ traintuple = [
             "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
             "perf": 0
         },
-        "fltask": "",
+        "compute_plan_id": "",
         "inModels": None,
         "log": "[00-01-0032-8a01ed9]",
         "objective": {
@@ -171,7 +171,7 @@ traintuple = [
             "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
             "perf": 1
         },
-        "fltask": "",
+        "compute_plan_id": "",
         "inModels": None,
         "log": "Train - CPU:268.84 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB;",
         "objective": {
@@ -207,7 +207,7 @@ traintuple = [
             "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
             "perf": 0
         },
-        "fltask": "",
+        "compute_plan_id": "",
         "inModels": None,
         "log": "[00-01-0032-4647065]",
         "objective": {
@@ -282,7 +282,7 @@ model = [
                 "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
                 "perf": 0
             },
-            "fltask": "",
+            "compute_plan_id": "",
             "inModels": None,
             "log": "[00-01-0032-8a01ed9]",
             "objective": {
@@ -330,7 +330,7 @@ model = [
                 "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
                 "perf": 1
             },
-            "fltask": "",
+            "compute_plan_id": "",
             "inModels": None,
             "log": "Train - CPU:268.84 % - Mem:0.11 GB - GPU:0.00 % - GPU Mem:0.00 GB;",
             "objective": {
@@ -403,7 +403,7 @@ model = [
                 "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
                 "perf": 0
             },
-            "fltask": "",
+            "compute_plan_id": "",
             "inModels": None,
             "log": "[00-01-0032-4647065]",
             "objective": {
