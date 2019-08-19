@@ -218,14 +218,14 @@ def prepare_task(tuple_type):
 def prepare_tuple(subtuple, tuple_type):
     from django_celery_results.models import TaskResult
 
-    fltask = None
+    compute_plan_id = None
     worker_queue = f"{settings.LEDGER['name']}.worker"
 
-    if 'fltask' in subtuple and subtuple['fltask']:
-        fltask = subtuple['fltask']
+    if 'computePlanID' in subtuple and subtuple['computePlanID']:
+        compute_plan_id = subtuple['computePlanID']
         flresults = TaskResult.objects.filter(
             task_name='substrapp.tasks.tasks.compute_task',
-            result__icontains=f'"fltask": "{fltask}"')
+            result__icontains=f'"computePlanID": "{compute_plan_id}"')
 
         if flresults and flresults.count() > 0:
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -241,7 +241,7 @@ def prepare_tuple(subtuple, tuple_type):
 
     try:
         compute_task.apply_async(
-            (tuple_type, subtuple, fltask),
+            (tuple_type, subtuple, compute_plan_id),
             queue=worker_queue)
     except Exception as e:
         error_code = compute_error_code(e)
@@ -250,7 +250,7 @@ def prepare_tuple(subtuple, tuple_type):
 
 
 @app.task(bind=True, ignore_result=False)
-def compute_task(self, tuple_type, subtuple, fltask):
+def compute_task(self, tuple_type, subtuple, compute_plan_id):
 
     try:
         worker = self.request.hostname.split('@')[1]
@@ -259,7 +259,7 @@ def compute_task(self, tuple_type, subtuple, fltask):
         worker = f"{settings.LEDGER['name']}.worker"
         queue = f"{settings.LEDGER['name']}"
 
-    result = {'worker': worker, 'queue': queue, 'fltask': fltask}
+    result = {'worker': worker, 'queue': queue, 'computePlanID': compute_plan_id}
 
     try:
         prepare_materials(subtuple, tuple_type)
@@ -314,11 +314,11 @@ def do_task(subtuple, tuple_type):
     org_name = getattr(settings, 'ORG_NAME')
 
     # Federated learning variables
-    fltask = None
+    compute_plan_id = None
     flrank = None
 
-    if 'fltask' in subtuple and subtuple['fltask']:
-        fltask = subtuple['fltask']
+    if 'computePlanID' in subtuple and subtuple['computePlanID']:
+        compute_plan_id = subtuple['computePlanID']
         flrank = int(subtuple['rank'])
 
     client = docker.from_env()
@@ -329,13 +329,13 @@ def do_task(subtuple, tuple_type):
             subtuple_directory,
             tuple_type,
             subtuple,
-            fltask,
+            compute_plan_id,
             flrank,
             org_name
         )
     except Exception as e:
         # If an exception is thrown set flrank == -1 (we stop the fl training)
-        if fltask is not None:
+        if compute_plan_id is not None:
             flrank = -1
         raise e
     finally:
@@ -344,7 +344,7 @@ def do_task(subtuple, tuple_type):
 
         # Rank == -1 -> Last fl subtuple or fl throws an exception
         if flrank == -1:
-            flvolume = f'local-{fltask}-{org_name}'
+            flvolume = f'local-{compute_plan_id}-{org_name}'
             local_volume = client.volumes.get(volume_id=flvolume)
             try:
                 local_volume.remove(force=True)
@@ -354,7 +354,7 @@ def do_task(subtuple, tuple_type):
     return result
 
 
-def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, org_name):
+def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, flrank, org_name):
     # Job log
     job_task_log = ''
 
@@ -387,7 +387,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, o
     algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
     model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
-    if fltask is not None and flrank != -1:
+    if compute_plan_id is not None and flrank != -1:
         remove_image = False
     else:
         remove_image = True
@@ -401,7 +401,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, o
             inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
             algo_command = f"{algo_command} {' '.join(inmodels)}"
 
-        # add fltask rank for training
+        # add compute_plan_id rank for training
         if flrank is not None:
             algo_command = f"{algo_command} --rank {flrank}"
 
@@ -411,9 +411,9 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, fltask, flrank, o
         inmodels = subtuple['model']["traintupleKey"]
         algo_command = f'{algo_command} {inmodels}'
 
-    # local volume for fltask
-    if fltask is not None and tuple_type == 'traintuple':
-        flvolume = f'local-{fltask}-{org_name}'
+    # local volume for compute_plan_id
+    if compute_plan_id is not None and tuple_type == 'traintuple':
+        flvolume = f'local-{compute_plan_id}-{org_name}'
         if flrank == 0:
             client.volumes.create(name=flvolume)
         else:
