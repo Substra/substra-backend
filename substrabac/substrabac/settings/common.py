@@ -64,6 +64,11 @@ INSTALLED_APPS = [
 BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
 
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'libs.authentication.SettingsBackend',
+]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -73,7 +78,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
-    'libs.BasicAuthMiddleware.BasicAuthMiddleware',
 ]
 
 ROOT_URLCONF = 'substrabac.urls'
