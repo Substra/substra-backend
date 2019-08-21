@@ -5,3 +5,5 @@ from .deps.cors import *  # noqa
 
 import logging
 logging.disable(logging.CRITICAL)
+
+MIDDLEWARE.remove('libs.BasicAuthMiddleware.BasicAuthMiddleware')
