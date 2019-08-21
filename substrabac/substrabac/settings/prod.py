@@ -19,11 +19,6 @@ os.environ['wsgi.url_scheme'] = 'https'
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
-# deactivate when public
-BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', None)
-BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', None)
-MIDDLEWARE += ['libs.BasicAuthMiddleware.BasicAuthMiddleware']
-
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
@@ -39,7 +34,6 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', f'/substra/medias/{ORG_NAME}')
-
 SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
