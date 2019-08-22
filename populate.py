@@ -149,7 +149,7 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True, local=False)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_samples', dryrun=True, local=False)
     else:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
@@ -160,7 +160,7 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_sample', dryrun=True)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_samples', dryrun=True)
 
     ####################################################
 
@@ -195,7 +195,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    test_data_sample_keys = get_or_create(data, org_0, 'data_sample')
+    test_data_sample_keys = get_or_create(data, org_0, 'data_samples')
 
     ####################################################
 
@@ -208,7 +208,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    get_or_create(data, org_0, 'data_sample')
+    get_or_create(data, org_0, 'data_samples')
 
     ####################################################
 
@@ -221,7 +221,7 @@ def do_populate():
         'data_manager_keys': [data_manager_org0_key],
         'test_only': True,
     }
-    get_or_create(data, org_0, 'data_sample')
+    get_or_create(data, org_0, 'data_samples')
 
     ####################################################
 
