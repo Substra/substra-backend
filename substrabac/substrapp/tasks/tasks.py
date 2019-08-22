@@ -13,7 +13,7 @@ from celery.result import AsyncResult
 from celery.exceptions import Ignore
 
 from substrabac.celery import app
-from substrapp.utils import get_hash, create_directory, get_remote_file, uncompress_content
+from substrapp.utils import get_hash, get_owner, create_directory, get_remote_file, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
@@ -197,7 +197,7 @@ def prepare_testing_task():
 
 
 def prepare_task(tuple_type):
-    data_owner = get_hash(settings.LEDGER['signcert'])
+    data_owner = get_owner()
     worker_queue = f"{settings.LEDGER['name']}.worker"
     tuples = query_tuples(tuple_type, data_owner)
 
