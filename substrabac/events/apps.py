@@ -17,7 +17,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.protos.peer.transaction_pb2 import TxValidationCode
 
 from substrapp.tasks.tasks import prepare_tuple
-from substrapp.utils import get_hash
+from substrapp.utils import get_owner
 
 from celery.result import AsyncResult
 
@@ -70,7 +70,7 @@ def on_tuples(block):
 def launch_tuple(_tuple, tuple_type):
 
     worker_queue = f"{LEDGER['name']}.worker"
-    data_owner = get_hash(LEDGER['signcert'])
+    data_owner = get_owner()
 
     if data_owner == _tuple['dataset']['worker'] and tuple_type is not None:
         tkey = _tuple['key']
