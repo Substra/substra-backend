@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'rest_framework',
     'substrapp',
+    'node',
 ]
 
 BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
