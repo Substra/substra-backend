@@ -540,7 +540,8 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.put_algo') as mput_algo, \
                 mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
                 mock.patch('substrapp.tasks.tasks.AsyncResult') as masyncres, \
-                mock.patch('substrapp.tasks.tasks.put_model') as mput_model:
+                mock.patch('substrapp.tasks.tasks.put_model') as mput_model, \
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner:
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
@@ -554,6 +555,7 @@ class TasksTests(APITestCase):
             mput_metric.return_value = 'metric'
             mput_algo.return_value = 'algo'
             mput_model.return_value = 'model'
+            get_owner.return_value = 'foo'
 
             masyncres.return_value.state = 'PENDING'
 
