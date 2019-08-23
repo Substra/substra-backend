@@ -20,6 +20,8 @@ BACKEND_PORT = {
     'clb': 8002
 }
 
+BACKEND_AUTH = ('foo', 'bar')
+
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 
 
@@ -145,8 +147,8 @@ def generate_docker_compose_file(conf, launch_settings):
             f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
 
             # Basic auth
-            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', BACKEND_AUTH[0])}",
+            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', BACKEND_AUTH[1])}",
             f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
             f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
         ]
