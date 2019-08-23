@@ -278,6 +278,26 @@ def get_sample_model():
     return model, model_filename
 
 
+DEFAULT_PERMISSIONS = {
+    'process': {
+        'public': True,
+        'authorizedIDs': [],
+    }
+}
+
+
+def get_sample_algo_metadata():
+    return {
+        'permissions': DEFAULT_PERMISSIONS,
+    }
+
+
+def get_sample_objective_metadata():
+    return {
+        'permissions': DEFAULT_PERMISSIONS,
+    }
+
+
 class FakeContainer(object):
     def __init__(self):
         self.c_stats = Stats.get_stats()
