@@ -16,7 +16,7 @@ from substrapp.utils import get_hash, compute_hash
 from substrapp.ledger_utils import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_sample_algo, get_sample_algo_zip
+    get_sample_algo, get_sample_algo_zip, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -25,6 +25,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoQueryTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

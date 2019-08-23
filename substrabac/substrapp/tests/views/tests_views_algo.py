@@ -17,7 +17,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import get_hash
 
-from ..common import get_sample_algo
+from ..common import get_sample_algo, AuthenticatedClient
 from ..common import FakeRequest
 from ..assets import objective, datamanager, algo, traintuple, model
 
@@ -30,6 +30,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
