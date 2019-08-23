@@ -1,4 +1,4 @@
-from django.core.management.base import BaseCommand, CommandError
+from django.core.management.base import BaseCommand
 from node.models import Node, IncomingNode
 
 
@@ -9,7 +9,10 @@ class Command(BaseCommand):
         parser.add_argument('node_id')
 
     def handle(self, *args, **options):
-        incoming_node, created = IncomingNode.objects.get_or_create(node_id=options['node_id'], secret=Node.generate_secret())
+        incoming_node, created = IncomingNode.objects.get_or_create(
+            node_id=options['node_id'],
+            secret=Node.generate_secret()
+        )
 
         if not created:
             self.stdout.write(self.style.NOTICE(f'node with id {incoming_node.node_id} already exists'))
