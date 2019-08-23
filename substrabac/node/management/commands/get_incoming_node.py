@@ -17,9 +17,9 @@ class Command(BaseCommand):
         self.stdout.write(pretty("_" * 64, "_" * 128))
 
         if options['node_id']:
-            outgoing_node = IncomingNode.objects.get(node_id=options['node_id'])
-            self.stdout.write(self.style.SUCCESS(pretty(outgoing_node.node_id, outgoing_node.secret)))
+            incoming_node = IncomingNode.objects.get(node_id=options['node_id'])
+            self.stdout.write(self.style.SUCCESS(pretty(incoming_node.node_id, incoming_node.secret)))
         else:
-            outgoing_nodes = IncomingNode.objects.all()
-            for node in outgoing_nodes:
+            incoming_nodes = IncomingNode.objects.all()
+            for node in incoming_nodes:
                 self.stdout.write(self.style.SUCCESS(pretty(node.node_id, node.secret)))

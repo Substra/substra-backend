@@ -68,6 +68,7 @@ BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'libs.authentication.SettingsBackend',
+    'node.authentication.NodeBackend',
 ]
 
 MIDDLEWARE = [
