@@ -186,8 +186,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.manage_file('file')
+        return self.download_file(request, 'file')
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):
-        return self.manage_file('description')
+        return self.download_file(request, 'description')

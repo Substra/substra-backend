@@ -247,11 +247,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):
-        return self.manage_file('description')
+        return self.download_file(request, 'description')
 
     @action(detail=True)
     def metrics(self, request, *args, **kwargs):
-        return self.manage_file('metrics')
+        return self.download_file(request, 'metrics')
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):
