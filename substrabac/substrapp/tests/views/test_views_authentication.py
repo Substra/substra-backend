@@ -1,5 +1,3 @@
-import base64
-
 from rest_framework import status
 from rest_framework.test import APITestCase
 from node.models import IncomingNode

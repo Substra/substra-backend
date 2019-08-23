@@ -1,6 +1,5 @@
 import mock
 
-from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.views.utils import ComputeHashMixin
@@ -13,6 +12,7 @@ from ..assets import objective
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
+
 
 class ViewTests(APITestCase):
     client_class = AuthenticatedClient
