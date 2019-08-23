@@ -13,11 +13,8 @@ class NodeBackend:
         if not node_id or not secret:
             return None
 
-        incoming_node = IncomingNode.objects.get(node_id=node_id)
-        if not incoming_node:
-            return None
-
-        if node_id == incoming_node.node_id and secret == incoming_node.secret:
+        incoming_node_exists = IncomingNode.objects.filter(node_id=node_id, secret=secret).exists()
+        if incoming_node_exists:
             return User(node_id)
 
         return None
