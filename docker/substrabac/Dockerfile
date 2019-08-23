@@ -16,3 +16,4 @@ COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/events /usr/src/app/events
 COPY ./substrabac/substrabac /usr/src/app/substrabac
+COPY ./substrabac/node /usr/src/app/node
