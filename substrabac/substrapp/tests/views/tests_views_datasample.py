@@ -21,8 +21,7 @@ from substrapp.models import DataManager
 
 from django.core.files.uploadedfile import InMemoryUploadedFile
 
-from ..common import get_sample_datamanager
-from ..common import FakeFilterDataManager, FakeDataManager
+from ..common import get_sample_datamanager, FakeFilterDataManager, FakeDataManager, AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -34,6 +33,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(DEFAULT_DOMAIN='https://localhost')
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataSampleViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

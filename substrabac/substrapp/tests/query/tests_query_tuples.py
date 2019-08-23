@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import Objective
 from substrapp.utils import get_hash
 
-from ..common import get_sample_objective
+from ..common import get_sample_objective, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -22,6 +22,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class TraintupleQueryTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -173,6 +174,7 @@ class TraintupleQueryTests(APITestCase):
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class TesttupleQueryTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

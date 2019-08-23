@@ -1,8 +1,6 @@
 import os
 
 from .common import *
-
-from .deps.restframework import *
 from .deps.cors import *
 from .deps.org import *
 from .deps.ledger import *

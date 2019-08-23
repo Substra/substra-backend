@@ -14,8 +14,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 
-from ..common import get_sample_datamanager
-from ..common import FakeRequest
+from ..common import get_sample_datamanager, FakeRequest, AuthenticatedClient
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -26,6 +25,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataManagerViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

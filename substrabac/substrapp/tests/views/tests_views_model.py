@@ -14,8 +14,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import get_hash
 
-from ..common import get_sample_model
-from ..common import FakeRequest
+from ..common import get_sample_model, FakeRequest, AuthenticatedClient
 from ..assets import objective, datamanager, algo, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -25,6 +24,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class ModelViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

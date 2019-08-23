@@ -15,7 +15,7 @@ from substrapp.models import Objective, DataManager
 from substrapp.utils import get_hash, compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_temporary_text_file
+    get_temporary_text_file, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -24,6 +24,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class ObjectiveQueryTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

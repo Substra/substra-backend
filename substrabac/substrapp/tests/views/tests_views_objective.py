@@ -19,9 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
-
-from ..common import get_sample_objective
-from ..common import FakeRequest, FakeTask
+from ..common import get_sample_objective, FakeRequest, FakeTask, AuthenticatedClient
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -44,6 +42,7 @@ def zip_folder(path, destination):
 @override_settings(DEFAULT_DOMAIN='https://localhost')
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class ObjectiveViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
