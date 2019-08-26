@@ -17,7 +17,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=dict(request.data))
         serializer.is_valid(raise_exception=True)
 
-        # get fltask to handle 408 timeout in next invoke ledger request
+        # get compute_plan_id to handle 408 timeout in next invoke ledger request
         args = serializer.get_args(serializer.validated_data)
         try:
             ledger_response = query_ledger(fcn='createComputePlan', args=args)
@@ -26,11 +26,11 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             return Response(error, status=e.status)
 
         # create compute plan in ledger
-        fltask = ledger_response.get('fltask')
+        compute_plan_id = ledger_response.get('computePlanID')
         try:
             data = serializer.create(serializer.validated_data)
         except LedgerError as e:
-            error = {'message': str(e.msg), 'fltask': fltask}
+            error = {'message': str(e.msg), 'computePlanID': compute_plan_id}
             return Response(error, status=e.status)
 
         # send successful response

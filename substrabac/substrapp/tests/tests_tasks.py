@@ -524,7 +524,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'fltask': 'flkey'}]
+        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch.object(TaskResult.objects, 'filter') as mtaskresult, \
@@ -671,7 +671,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'fltask': 'flkey'}]
+        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
