@@ -1,10 +1,10 @@
-import hashlib
 import os
 
 from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
+from substrapp.utils import compute_hash
 
 from django.conf import settings
 from rest_framework import status
@@ -12,18 +12,7 @@ from rest_framework import status
 
 class ComputeHashMixin(object):
     def compute_hash(self, file, key=None):
-
-        sha256_hash = hashlib.sha256()
-        if isinstance(file, str):
-            file = file.encode()
-
-        if key is not None and isinstance(key, str):
-            file += key.encode()
-
-        sha256_hash.update(file)
-        computedHash = sha256_hash.hexdigest()
-
-        return computedHash
+        return compute_hash(file, key)
 
 
 class CustomFileResponse(FileResponse):

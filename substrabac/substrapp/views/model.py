@@ -10,15 +10,14 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 
-from substrapp.utils import get_from_node
+from substrapp.utils import get_remote_file
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import ComputeHashMixin, CustomFileResponse, validate_pk
+from substrapp.views.utils import CustomFileResponse, validate_pk
 from substrapp.views.filters_utils import filter_list
 
 
 class ModelViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
-                   ComputeHashMixin,
                    GenericViewSet):
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
@@ -32,22 +31,11 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # get model from remote node
         url = traintuple['outModel']['storageAddress']
 
-        response = get_from_node(url)
-
-        # verify model received has a good pkhash
-        try:
-            computed_hash = self.compute_hash(response.content, traintuple['key'])
-        except Exception:
-            raise Exception('Failed to fetch outModel file')
-        else:
-            if computed_hash != pk:
-                msg = 'computed hash is not the same as the hosted file. ' \
-                      'Please investigate for default of synchronization, corruption, or hacked'
-                raise Exception(msg)
+        content, _ = get_remote_file(url, traintuple['creator'], traintuple['key'])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
-        tmp_model.write(response.content)
+        tmp_model.write(content)
         instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
         instance.file.save('model', tmp_model)
 
