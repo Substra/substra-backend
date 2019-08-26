@@ -17,6 +17,8 @@ from checksumdir import dirhash
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import status
+from node.models import OutgoingNode
+from requests.auth import HTTPBasicAuth
 
 
 class JsonException(Exception):
@@ -190,22 +192,21 @@ class NodeError(Exception):
     pass
 
 
-def get_from_node(url):
+def get_from_node(url, node_id):
 
     kwargs = {
         'headers': {'Accept': 'application/json;version=0.0'},
     }
 
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-    if username is not None and password is not None:
-        kwargs['auth'] = (username, password)
+    try:
+        outgoing = OutgoingNode.objects.get(node_id=node_id)
+    except OutgoingNode.DoesNotExist:
+        raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-    if settings.DEBUG:
-        kwargs['verify'] = False
+    assert(node_id != get_owner())
 
     try:
-        response = requests.get(url, **kwargs)
+        response = requests.get(url, auth=HTTPBasicAuth(username, secret), **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
     else:
