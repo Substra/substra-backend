@@ -104,24 +104,6 @@ def compute_hash(bytes, key=None):
     return sha256_hash.hexdigest()
 
 
-def get_computed_hash(url, key=None):
-    response = get_from_node(url)
-    computedHash = compute_hash(response.content, key)
-
-    return response.content, computedHash
-
-
-def get_remote_file(object, key=None):
-    content, computed_hash = get_computed_hash(object['storageAddress'], key)
-
-    if computed_hash != object['hash']:
-        msg = 'computed hash is not the same as the hosted file.' \
-              'Please investigate for default of synchronization, corruption, or hacked'
-        raise Exception(msg)
-
-    return content, computed_hash
-
-
 def create_directory(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -203,10 +185,8 @@ def get_from_node(url, node_id):
     except OutgoingNode.DoesNotExist:
         raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-    assert(node_id != get_owner())
-
     try:
-        response = requests.get(url, auth=HTTPBasicAuth(username, secret), **kwargs)
+        response = requests.get(url, auth=HTTPBasicAuth(outgoing.node_id, outgoing.secret), **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
     else:
@@ -215,3 +195,15 @@ def get_from_node(url, node_id):
             raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     return response
+
+
+def get_remote_file(url, node_id, content_hash):
+    response = get_from_node(url, node_id)
+    computed_hash = compute_hash(response.content)
+
+    if computed_hash != content_hash:
+        msg = 'computed hash is not the same as the hosted file.' \
+              'Please investigate for default of synchronization or corruption'
+        raise Exception(msg)
+
+    return response.content, computed_hash

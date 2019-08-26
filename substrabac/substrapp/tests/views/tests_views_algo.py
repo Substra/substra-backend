@@ -18,7 +18,6 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 from ..common import get_sample_algo, AuthenticatedClient
-from ..common import FakeRequest
 from ..assets import objective, datamanager, algo, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -143,15 +142,14 @@ class AlgoViewTests(APITestCase):
         url = reverse('substrapp:algo-list')
         algo_response = [a for a in algo if a['key'] == algo_hash][0]
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.algo.get_from_node') as mrequestsget:
+                mock.patch('substrapp.views.algo.get_remote_file') as get_remote_file:
 
             with open(os.path.join(dir_path,
                                    '../../../../fixtures/chunantes/algos/algo4/description.md'), 'rb') as f:
                 content = f.read()
             mget_object_from_ledger.return_value = algo_response
 
-            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
-                                                    content=content)
+            get_remote_file.return_value = content, algo_hash
 
             search_params = f'{algo_hash}/'
             response = self.client.get(url + search_params, **self.extra)

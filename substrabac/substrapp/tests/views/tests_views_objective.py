@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
-from ..common import get_sample_objective, FakeRequest, FakeTask, AuthenticatedClient
+from ..common import get_sample_objective, FakeTask, AuthenticatedClient
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -146,17 +146,18 @@ class ObjectiveViewTests(APITestCase):
         url = reverse('substrapp:objective-list')
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.objective.get_from_node') as mrequestsget:
+                mock.patch('substrapp.views.objective.get_remote_file') as get_remote_file:
             mget_object_from_ledger.return_value = objective[0]
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../../../fixtures/owkin/objectives/objective0/description.md'), 'rb') as f:
                 content = f.read()
 
-            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
-                                                    content=content)
+            get_remote_file.return_value = (content, '')
 
-            search_params = f'{compute_hash(content)}/'
+            pkhash = compute_hash(content)
+            search_params = f'{pkhash}/'
+
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -289,7 +290,13 @@ class ObjectiveViewTests(APITestCase):
         test_data_manager_key = compute_hash(opener_content)
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mdatamanager,\
-                mock.patch('substrapp.views.objective.get_computed_hash') as mopener:
-            mdatamanager.return_value = {'opener': {'storageAddress': 'test'}}
-            mopener.return_value = (opener_content, pkhash)
+                mock.patch('substrapp.views.objective.get_remote_file') as get_remote_file:
+            mdatamanager.return_value = {
+                'opener': {
+                    'storageAddress': 'test',
+                    'hash': pkhash
+                },
+                'owner': 'external_node_id'
+            }
+            get_remote_file.return_value = (opener_content, pkhash)
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
