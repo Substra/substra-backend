@@ -174,19 +174,20 @@ class NodeError(Exception):
     pass
 
 
-def get_from_node(url, node_id):
+def _get_from_node(url, node_id):
+    # This handle worker node authentication
+    if node_id == get_owner():
+        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
+    else:
+        try:
+            outgoing = OutgoingNode.objects.get(node_id=node_id)
+        except OutgoingNode.DoesNotExist:
+            raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-    kwargs = {
-        'headers': {'Accept': 'application/json;version=0.0'},
-    }
+        auth = HTTPBasicAuth(outgoing.node_id, outgoing.secret)
 
     try:
-        outgoing = OutgoingNode.objects.get(node_id=node_id)
-    except OutgoingNode.DoesNotExist:
-        raise NodeError(f'Unauthorized to call node_id: {node_id}')
-
-    try:
-        response = requests.get(url, auth=HTTPBasicAuth(outgoing.node_id, outgoing.secret), **kwargs)
+        response = requests.get(url, auth=auth, headers={'Accept': 'application/json;version=0.0'})
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
     else:
@@ -198,7 +199,7 @@ def get_from_node(url, node_id):
 
 
 def get_remote_file(url, node_id, content_hash):
-    response = get_from_node(url, node_id)
+    response = _get_from_node(url, node_id)
     computed_hash = compute_hash(response.content)
 
     if computed_hash != content_hash:

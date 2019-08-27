@@ -80,18 +80,18 @@ class TasksTests(APITestCase):
                        }
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
-                mock.patch('substrapp.utils.get_from_node') as get_from_node:
+                mock.patch('substrapp.utils.requests.get') as request_get:
             get_owner.return_value = 'external_node_id'
-            get_from_node.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
+            request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             content_remote, pkhash_remote = get_remote_file(remote_file, 'external_node_id', pkhash)
             self.assertEqual(pkhash_remote, get_hash(self.script))
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
-                mock.patch('substrapp.utils.get_from_node') as get_from_node:
+                mock.patch('substrapp.utils.requests.get') as request_get:
             get_owner.return_value = 'external_node_id'
-            get_from_node.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
+            request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             with self.assertRaises(Exception):
                 get_remote_file(remote_file, 'external_node_id', 'fake_pkhash')  # contents (by pkhash) are different
