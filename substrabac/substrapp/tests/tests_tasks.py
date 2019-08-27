@@ -424,7 +424,6 @@ class TasksTests(APITestCase):
         traintupleKey2 = compute_hash(models_content[1])
         model_hash2 = compute_hash(models_content[1], traintupleKey2)
 
-        models_hash = [model_hash, model_hash2]
         model_type = 'inModels'
         subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
                                  {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}

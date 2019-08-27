@@ -23,10 +23,11 @@ from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
-from node.models import OutgoingNode
 
 
 def _authenticate_worker(node_id):
+    from node.models import OutgoingNode
+
     # This handle worker node authentication
     # WARN: This should use a different authentication
     #       Backend (WorkerBackend for example) to be able
