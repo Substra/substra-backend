@@ -22,10 +22,10 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.utils import get_hash, create_directory, uncompress_path, get_remote_file, is_archive
+from substrapp.utils import get_hash, create_directory, uncompress_path, is_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
-    get_success_create_code, ValidationException, LedgerException
+    get_success_create_code, ValidationException, LedgerException, get_remote_asset
 from substrapp.views.filters_utils import filter_list
 
 
@@ -176,7 +176,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # get description from remote node
         url = objective['description']['storageAddress']
 
-        content, _ = get_remote_file(url, objective['owner'], pk)
+        content = get_remote_asset(url, objective['owner'], pk)
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
@@ -279,7 +279,7 @@ def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
     os.remove(archive_path)
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
-    opener_content, opener_computed_hash = get_remote_file(
+    opener_content = get_remote_asset(
         datamanager['opener']['storageAddress'],
         datamanager['owner'],
         datamanager['opener']['hash'],
