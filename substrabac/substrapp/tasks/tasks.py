@@ -45,9 +45,7 @@ def _authenticate_worker(node_id):
 
 
 def _get_asset_content(url, node_id, content_hash):
-    content, _ = get_remote_file(url, _authenticate_worker(node_id), content_hash)
-
-    return content
+    return get_remote_file(url, _authenticate_worker(node_id), content_hash)
 
 
 def get_objective(subtuple):

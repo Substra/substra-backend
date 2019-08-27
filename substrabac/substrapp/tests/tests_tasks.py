@@ -84,8 +84,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote, pkhash_remote = get_remote_file(remote_file, 'external_node_id', pkhash)
-            self.assertEqual(pkhash_remote, get_hash(self.script))
+            content_remote = get_remote_file(remote_file, 'external_node_id', pkhash)
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
@@ -406,7 +405,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
-            mget_remote_file.return_value = model_content, model_hash
+            mget_remote_file.return_value = model_content
             get_owner.return_value = assets.traintuple[1]['creator']
             get_object_from_ledger.return_value = assets.traintuple[1]  # uses index 1 to have a set value of outModel
             model_content = get_model(subtuple)
@@ -433,8 +432,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks._authenticate_worker'),\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'):
-            mget_remote_file.side_effect = [[models_content[0], models_hash[0]],
-                                            [models_content[1], models_hash[1]]]
+            mget_remote_file.side_effect = (models_content[0], models_content[1])
             models_content_res = get_models(subtuple)
 
         self.assertEqual(models_content_res, models_content)
@@ -455,7 +453,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file,\
                 mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
-            mget_remote_file.return_value = algo_content, algo_hash
+            mget_remote_file.return_value = algo_content
             get_owner.return_value = assets.algo[0]['owner']
             get_object_from_ledger.return_value = assets.algo[0]
 
@@ -481,7 +479,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
             mget.return_value = FakeObjective()
-            mget_remote_file.return_value = metrics_content, objective_hash
+            mget_remote_file.return_value = metrics_content
             mupdate_or_create.return_value = FakeObjective(), True
 
             objective = get_objective({'objective': {'hash': objective_hash,
