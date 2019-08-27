@@ -24,7 +24,7 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash, create_directory, uncompress_path, is_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
+from substrapp.views.utils import ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException, get_remote_asset
 from substrapp.views.filters_utils import filter_list
 
@@ -32,7 +32,6 @@ from substrapp.views.filters_utils import filter_list
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
-                       ComputeHashMixin,
                        ManageFileMixin,
                        GenericViewSet):
     queryset = Objective.objects.all()

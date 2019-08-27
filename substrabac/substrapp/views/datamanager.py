@@ -17,7 +17,7 @@ from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManage
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
+from substrapp.views.utils import (ManageFileMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException,
                                    get_remote_asset)
 from substrapp.views.filters_utils import filter_list
@@ -26,7 +26,6 @@ from substrapp.views.filters_utils import filter_list
 class DataManagerViewSet(mixins.CreateModelMixin,
                          mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
-                         ComputeHashMixin,
                          ManageFileMixin,
                          GenericViewSet):
     queryset = DataManager.objects.all()
