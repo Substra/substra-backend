@@ -146,14 +146,14 @@ class ObjectiveViewTests(APITestCase):
         url = reverse('substrapp:objective-list')
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.objective.get_remote_file') as get_remote_file:
+                mock.patch('substrapp.views.objective.get_remote_asset') as get_remote_asset:
             mget_object_from_ledger.return_value = objective[0]
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                    '../../../../fixtures/owkin/objectives/objective0/description.md'), 'rb') as f:
                 content = f.read()
 
-            get_remote_file.return_value = (content, '')
+            get_remote_asset.return_value = content
 
             pkhash = compute_hash(content)
             search_params = f'{pkhash}/'
@@ -290,7 +290,7 @@ class ObjectiveViewTests(APITestCase):
         test_data_manager_key = compute_hash(opener_content)
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mdatamanager,\
-                mock.patch('substrapp.views.objective.get_remote_file') as get_remote_file:
+                mock.patch('substrapp.views.objective.get_remote_asset') as get_remote_asset:
             mdatamanager.return_value = {
                 'opener': {
                     'storageAddress': 'test',
@@ -298,5 +298,5 @@ class ObjectiveViewTests(APITestCase):
                 },
                 'owner': 'external_node_id'
             }
-            get_remote_file.return_value = (opener_content, pkhash)
+            get_remote_asset.return_value = opener_content
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)

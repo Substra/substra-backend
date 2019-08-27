@@ -9,10 +9,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
-
-from substrapp.utils import get_remote_file
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import CustomFileResponse, validate_pk
+from substrapp.views.utils import CustomFileResponse, validate_pk, get_remote_asset
 from substrapp.views.filters_utils import filter_list
 
 
@@ -31,7 +29,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # get model from remote node
         url = traintuple['outModel']['storageAddress']
 
-        content, _ = get_remote_file(url, traintuple['creator'], traintuple['key'])
+        content = get_remote_asset(url, traintuple['creator'], traintuple['key'])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()

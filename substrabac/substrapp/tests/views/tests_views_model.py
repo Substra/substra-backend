@@ -123,10 +123,10 @@ class ModelViewTests(APITestCase):
     def test_model_retrieve(self):
 
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.model.get_remote_file') as get_remote_file:
+                mock.patch('substrapp.views.model.get_remote_asset') as get_remote_asset:
             mget_object_from_ledger.return_value = model[1]
 
-            get_remote_file.return_value = (self.model.read().encode(), "")
+            get_remote_asset.return_value = self.model.read().encode()
 
             url = reverse('substrapp:model-list')
             search_params = model[1]['traintuple']['outModel']['hash'] + '/'

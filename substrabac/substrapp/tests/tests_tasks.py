@@ -404,8 +404,10 @@ class TasksTests(APITestCase):
         subtuple = {model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
             mget_remote_file.return_value = model_content, model_hash
+            get_owner.return_value = assets.traintuple[1]['creator']
             get_object_from_ledger.return_value = assets.traintuple[1]  # uses index 1 to have a set value of outModel
             model_content = get_model(subtuple)
 
@@ -429,6 +431,7 @@ class TasksTests(APITestCase):
                                  {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks._authenticate_worker'),\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'):
             mget_remote_file.side_effect = [[models_content[0], models_hash[0]],
                                             [models_content[1], models_hash[1]]]
@@ -450,8 +453,10 @@ class TasksTests(APITestCase):
         }
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file,\
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
             mget_remote_file.return_value = algo_content, algo_hash
+            get_owner.return_value = assets.algo[0]['owner']
             get_object_from_ledger.return_value = assets.algo[0]
 
             data = get_algo(subtuple)
@@ -472,6 +477,7 @@ class TasksTests(APITestCase):
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \
+                mock.patch('substrapp.tasks.tasks._authenticate_worker'),\
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
             mget.return_value = FakeObjective()

@@ -17,8 +17,6 @@ from checksumdir import dirhash
 from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import status
-from node.models import OutgoingNode
-from requests.auth import HTTPBasicAuth
 
 
 class JsonException(Exception):
@@ -174,18 +172,7 @@ class NodeError(Exception):
     pass
 
 
-def _get_from_node(url, node_id):
-    # This handle worker node authentication
-    if node_id == get_owner():
-        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
-    else:
-        try:
-            outgoing = OutgoingNode.objects.get(node_id=node_id)
-        except OutgoingNode.DoesNotExist:
-            raise NodeError(f'Unauthorized to call node_id: {node_id}')
-
-        auth = HTTPBasicAuth(outgoing.node_id, outgoing.secret)
-
+def _get_from_node(url, auth):
     try:
         response = requests.get(url, auth=auth, headers={'Accept': 'application/json;version=0.0'})
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
@@ -198,8 +185,8 @@ def _get_from_node(url, node_id):
     return response
 
 
-def get_remote_file(url, node_id, content_hash):
-    response = _get_from_node(url, node_id)
+def get_remote_file(url, auth, content_hash):
+    response = _get_from_node(url, auth)
     computed_hash = compute_hash(response.content)
 
     if computed_hash != content_hash:

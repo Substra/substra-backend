@@ -10,10 +10,11 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import get_hash, get_remote_file, is_archive
+from substrapp.utils import get_hash, is_archive
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code, LedgerException, ValidationException)
+                                   validate_pk, get_success_create_code, LedgerException, ValidationException,
+                                   get_remote_asset)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -111,7 +112,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # get algo description from remote node
         url = algo['description']['storageAddress']
 
-        content, _ = get_remote_file(url, algo['owner'], algo['description']['hash'])
+        content = get_remote_asset(url, algo['owner'], algo['description']['hash'])
 
         f = tempfile.TemporaryFile()
         f.write(content)

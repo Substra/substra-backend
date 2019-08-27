@@ -4,10 +4,28 @@ from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
-from substrapp.utils import compute_hash
+from substrapp.utils import compute_hash, NodeError, get_remote_file
+from node.models import OutgoingNode
 
 from django.conf import settings
 from rest_framework import status
+from requests.auth import HTTPBasicAuth
+
+
+def authenticate_outgoing_request(node_id):
+    try:
+        outgoing = OutgoingNode.objects.get(node_id=node_id)
+    except OutgoingNode.DoesNotExist:
+        raise NodeError(f'Unauthorized to call node_id: {node_id}')
+
+    return HTTPBasicAuth(outgoing.node_id, outgoing.secret)
+
+
+def get_remote_asset(url, node_id, content_hash):
+    auth = authenticate_outgoing_request(node_id)
+    content, _ = get_remote_file(url, auth, content_hash)
+
+    return content
 
 
 class ComputeHashMixin(object):
