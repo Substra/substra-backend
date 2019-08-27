@@ -3,7 +3,6 @@ import mock
 from rest_framework.test import APITestCase
 
 from substrapp.views.datasample import path_leaf
-from substrapp.utils import compute_hash
 from substrapp.ledger_utils import get_object_from_ledger
 
 
