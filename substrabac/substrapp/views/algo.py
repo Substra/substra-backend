@@ -12,7 +12,7 @@ from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash, is_archive
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (ComputeHashMixin, ManageFileMixin, find_primary_key_error,
+from substrapp.views.utils import (ManageFileMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset)
 from substrapp.views.filters_utils import filter_list
@@ -21,7 +21,6 @@ from substrapp.views.filters_utils import filter_list
 class AlgoViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
-                  ComputeHashMixin,
                   ManageFileMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()

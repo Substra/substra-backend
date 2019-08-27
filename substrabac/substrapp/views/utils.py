@@ -4,7 +4,7 @@ from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
-from substrapp.utils import compute_hash, NodeError, get_remote_file
+from substrapp.utils import NodeError, get_remote_file
 from node.models import OutgoingNode
 
 from django.conf import settings
@@ -25,11 +25,6 @@ def get_remote_asset(url, node_id, content_hash):
     auth = authenticate_outgoing_request(node_id)
 
     return get_remote_file(url, auth, content_hash)
-
-
-class ComputeHashMixin(object):
-    def compute_hash(self, file, key=None):
-        return compute_hash(file, key)
 
 
 class CustomFileResponse(FileResponse):
