@@ -23,9 +23,8 @@ def authenticate_outgoing_request(node_id):
 
 def get_remote_asset(url, node_id, content_hash):
     auth = authenticate_outgoing_request(node_id)
-    content, _ = get_remote_file(url, auth, content_hash)
 
-    return content
+    return get_remote_file(url, auth, content_hash)
 
 
 class ComputeHashMixin(object):

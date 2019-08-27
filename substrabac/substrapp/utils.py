@@ -194,4 +194,4 @@ def get_remote_file(url, auth, content_hash):
               'Please investigate for default of synchronization or corruption'
         raise Exception(msg)
 
-    return response.content, computed_hash
+    return response.content
