@@ -20,7 +20,7 @@ from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
 from ..common import get_sample_objective, FakeTask, AuthenticatedClient
-from ..assets import objective, datamanager, traintuple, model
+from ..assets import objective, datamanager, traintuple, model, leaderboard
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -300,3 +300,12 @@ class ObjectiveViewTests(APITestCase):
             }
             get_remote_asset.return_value = opener_content
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
+
+    def test_objective_leaderboard(self):
+        url = reverse('substrapp:objective-leaderboard', args=[leaderboard['objective']['key']])
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = leaderboard
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(list(r.keys()), ['objective', 'testtuples'])
