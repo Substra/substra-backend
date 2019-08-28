@@ -309,3 +309,27 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(list(r.keys()), ['objective', 'testtuples'])
+
+    def test_objective_leaderboard_sort(self):
+        url = reverse('substrapp:objective-leaderboard', args=[leaderboard['objective']['key']])
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = leaderboard
+
+            self.client.get(url, data={'sort': 'desc'}, **self.extra)
+            mquery_ledger.assert_called_with(
+                fcn='getObjectiveLeaderboard',
+                args={
+                    'key': leaderboard['objective']['key'],
+                    'AscendingSort': False,
+                })
+
+            self.client.get(url, data={'sort': 'asc'}, **self.extra)
+            mquery_ledger.assert_called_with(
+                fcn='getObjectiveLeaderboard',
+                args={
+                    'key': leaderboard['objective']['key'],
+                    'AscendingSort': True,
+                })
+
+        response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
