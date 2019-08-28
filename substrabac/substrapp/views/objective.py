@@ -263,6 +263,17 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
 
+    @action(detail=True, methods=['GET'])
+    def leaderboard(self, request, pk):
+        validate_pk(pk)
+
+        try:
+            leaderboard = query_ledger(fcn='getObjectiveLeaderboard', args={'key': pk})
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        return Response(leaderboard, status=status.HTTP_200_OK)
+
 
 @app.task(bind=True, ignore_result=False)
 def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):

@@ -40,6 +40,50 @@ objective = [
     }
 ]
 
+leaderboard = {
+    "objective": {
+        "description": {
+            "hash": "5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
+            "storageAddress": "https://toto/objective/222/description"
+        },
+        "key": "5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
+        "metrics": {
+            "hash": "4a1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379",
+            "name": "accuracy",
+            "storageAddress": "https://toto/objective/222/metrics"
+        },
+        "name": "MSI classification",
+        "owner": "ec722969cb64200ab6638f68ac538e40abab5b19a6485661042a1061c4612776",
+        "permissions": {
+            "process": {
+                "authorizedIDs": [],
+                "public": True
+            }
+        },
+        "testDataset": {
+            "dataManagerKey": "da1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc",
+            "dataSampleKeys": [
+                "bb1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc",
+                "bb2bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc"
+            ],
+            "worker": ""
+        },
+    },
+    "testtuples": [
+        {
+            "algo": {
+                "hash": "fd1bb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482dcc",
+                "name": "hog + svm",
+                "storageAddress": "https://toto/algo/222/algo"},
+            "perf": 0.5,
+            "model": {
+                "hash": "eedbb7c31f62244c0f3a761cc168804227115793d01c270021fe3f7935482eed",
+                "storageAddress": "https://substrabac/model/toto",
+                "traintupleKey": "4ef2002b70fdeb9d91679a98eb74a74edb7db852cd064209807f79d5dfd22cd6"},
+        },
+    ]
+}
+
 datamanager = [
     {
         "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
