@@ -4,7 +4,7 @@ from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
-from substrapp.utils import NodeError, get_remote_file
+from substrapp.utils import NodeError, get_remote_file, get_owner
 from node.models import OutgoingNode
 
 from django.conf import settings
@@ -18,13 +18,12 @@ def authenticate_outgoing_request(node_id):
     except OutgoingNode.DoesNotExist:
         raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-    return HTTPBasicAuth(outgoing.node_id, outgoing.secret)
+    return HTTPBasicAuth(get_owner(), outgoing.secret)
 
 
-def get_remote_asset(url, node_id, content_hash):
+def get_remote_asset(url, node_id, content_hash, salt=None):
     auth = authenticate_outgoing_request(node_id)
-
-    return get_remote_file(url, auth, content_hash)
+    return get_remote_file(url, auth, content_hash, salt=salt)
 
 
 class CustomFileResponse(FileResponse):

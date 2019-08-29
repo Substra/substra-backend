@@ -185,13 +185,9 @@ def _get_from_node(url, auth):
     return response
 
 
-def get_remote_file(url, auth, content_hash):
+def get_remote_file(url, auth, content_hash, salt=None):
     response = _get_from_node(url, auth)
-    computed_hash = compute_hash(response.content)
-
+    computed_hash = compute_hash(response.content, key=salt)
     if computed_hash != content_hash:
-        msg = 'computed hash is not the same as the hosted file.' \
-              'Please investigate for default of synchronization or corruption'
-        raise Exception(msg)
-
+        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
     return response.content
