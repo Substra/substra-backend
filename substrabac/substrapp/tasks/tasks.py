@@ -28,11 +28,13 @@ from substrapp.tasks.exception_handler import compute_error_code
 def _authenticate_worker(node_id):
     from node.models import OutgoingNode
 
+    owner = get_owner()
+
     # This handle worker node authentication
     # WARN: This should use a different authentication
     #       Backend (WorkerBackend for example) to be able
     #       to differiciate regural node users from workers
-    if node_id == get_owner():
+    if node_id == owner:
         auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
     else:
         try:
@@ -40,13 +42,13 @@ def _authenticate_worker(node_id):
         except OutgoingNode.DoesNotExist:
             raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-        auth = HTTPBasicAuth(outgoing.node_id, outgoing.secret)
+        auth = HTTPBasicAuth(owner, outgoing.secret)
 
     return auth
 
 
-def _get_asset_content(url, node_id, content_hash):
-    return get_remote_file(url, _authenticate_worker(node_id), content_hash)
+def _get_asset_content(url, node_id, content_hash, salt=None):
+    return get_remote_file(url, _authenticate_worker(node_id), content_hash, salt=salt)
 
 
 def get_objective(subtuple):
@@ -66,7 +68,7 @@ def get_objective(subtuple):
         content = _get_asset_content(
             objective_metadata['metrics']['storageAddress'],
             objective_metadata['owner'],
-            objective_hash,
+            objective_metadata['metrics']['hash'],
         )
 
         objective, _ = Objective.objects.update_or_create(pkhash=objective_hash, validated=True)
@@ -85,7 +87,7 @@ def get_algo(subtuple):
     algo_content = _get_asset_content(
         algo_metadata['content']['storageAddress'],
         algo_metadata['owner'],
-        algo_hash,
+        algo_metadata['content']['hash'],
     )
 
     return algo_content
@@ -98,7 +100,8 @@ def _get_model(model):
     model_content = _get_asset_content(
         traintuple_metadata['outModel']['storageAddress'],
         traintuple_metadata['creator'],
-        traintuple_hash
+        traintuple_metadata['outModel']['hash'],
+        salt=traintuple_hash,
     )
 
     return model_content
