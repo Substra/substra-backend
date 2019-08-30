@@ -10,18 +10,14 @@ class Command(BaseCommand):
         parser.add_argument('secret', nargs='?', default=Node.generate_secret())
 
     def handle(self, *args, **options):
-        outgoing_node, created = OutgoingNode.objects.get_or_create(
-            node_id=options['node_id'],
-            secret=Node.generate_secret()
-        )
-
-        if not created:
-            self.stdout.write(self.style.NOTICE(f'node with id {outgoing_node.node_id} already exists'))
+        if OutgoingNode.objects.filter(node_id=options['node_id']).exists():
+            self.stdout.write(self.style.NOTICE(f'node with id {options["node_id"]} already exists'))
         else:
-            outgoing_node, created = OutgoingNode.objects.get_or_create(
+            outgoing_node = OutgoingNode.objects.create(
                 node_id=options['node_id'],
                 secret=options['secret'],
             )
-            self.stdout.write(self.style.SUCCESS('node successfully created'))
+
+            self.stdout.write(self.style.SUCCESS('outgoing node successfully created'))
             self.stdout.write(f'node_id={outgoing_node.node_id}')
             self.stdout.write(f'secret={outgoing_node.secret}')
