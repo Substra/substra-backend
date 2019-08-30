@@ -33,7 +33,7 @@ def _authenticate_worker(node_id):
     # This handle worker node authentication
     # WARN: This should use a different authentication
     #       Backend (WorkerBackend for example) to be able
-    #       to differiciate regural node users from workers
+    #       to differentiate regular node users from workers
     if node_id == owner:
         auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
     else:
