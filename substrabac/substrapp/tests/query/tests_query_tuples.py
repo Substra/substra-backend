@@ -50,7 +50,7 @@ class TraintupleQueryTests(APITestCase):
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
-            'FLtask_key': self.fake_key,
+            'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -88,7 +88,7 @@ class TraintupleQueryTests(APITestCase):
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
-            'FLtask_key': self.fake_key,
+            'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
