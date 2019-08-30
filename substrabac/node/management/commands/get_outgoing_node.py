@@ -17,8 +17,12 @@ class Command(BaseCommand):
         self.stdout.write(pretty("_" * 64, "_" * 128))
 
         if options['node_id']:
-            outgoing_node = OutgoingNode.objects.get(node_id=options['node_id'])
-            self.stdout.write(self.style.SUCCESS(pretty(outgoing_node.node_id, outgoing_node.secret)))
+            try:
+                outgoing_node = OutgoingNode.objects.get(node_id=options['node_id'])
+            except OutgoingNode.DoesNotExist:
+                self.stdout.write(self.style.ERROR(f'Node with id {options["node_id"]} does not exist'))
+            else:
+                self.stdout.write(self.style.SUCCESS(pretty(outgoing_node.node_id, outgoing_node.secret)))
         else:
             outgoing_nodes = OutgoingNode.objects.all()
             for node in outgoing_nodes:
