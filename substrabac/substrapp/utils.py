@@ -172,7 +172,7 @@ class NodeError(Exception):
     pass
 
 
-def _get_from_node(url, auth):
+def get_remote_file(url, auth, content_hash, salt=None):
     try:
         response = requests.get(url, auth=auth, headers={'Accept': 'application/json;version=0.0'})
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
@@ -182,11 +182,6 @@ def _get_from_node(url, auth):
             logging.error(response.text)
             raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    return response
-
-
-def get_remote_file(url, auth, content_hash, salt=None):
-    response = _get_from_node(url, auth)
     computed_hash = compute_hash(response.content, key=salt)
     if computed_hash != content_hash:
         raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
