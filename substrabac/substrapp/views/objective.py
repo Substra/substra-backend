@@ -275,8 +275,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             leaderboard = query_ledger(fcn='getObjectiveLeaderboard', args={
-                'key': pk,
-                'AscendingSort': sort == 'asc',
+                'objectiveKey': pk,
+                'ascendingSort': sort == 'asc',
             })
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
