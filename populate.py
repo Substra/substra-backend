@@ -20,9 +20,9 @@ client = substra.Client()
 
 def setup_config():
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-    client.add_profile('owkin', 'http://substrabac.peer-1', '0.0')
-    client.add_profile('chunantes', 'http://substrabac.peer-2', '0.0')
-    client.add_profile('clb', 'http://substrabac.peer-3', '0.0')
+    client.add_profile('owkin', 'http://substrabac.node-1', '0.0')
+    client.add_profile('chunantes', 'http://substrabac.node-2', '0.0')
+    client.add_profile('clb', 'http://substrabac.node-3', '0.0')
 
 
 def zip_folder(path, destination):
