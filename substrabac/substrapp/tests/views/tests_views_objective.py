@@ -20,7 +20,7 @@ from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
 from ..common import get_sample_objective, FakeTask, AuthenticatedClient
-from ..assets import objective, datamanager, traintuple, model, leaderboard
+from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -301,34 +301,25 @@ class ObjectiveViewTests(APITestCase):
             get_remote_asset.return_value = opener_content
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
 
-    def test_objective_leaderboard(self):
-        url = reverse('substrapp:objective-leaderboard', args=[leaderboard['objective']['key']])
-        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = leaderboard
-
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(list(r.keys()), ['objective', 'testtuples'])
-
     def test_objective_leaderboard_sort(self):
-        url = reverse('substrapp:objective-leaderboard', args=[leaderboard['objective']['key']])
+        url = reverse('substrapp:objective-leaderboard', args=[objective[0]['key']])
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = leaderboard
+            mquery_ledger.return_value = {}
 
             self.client.get(url, data={'sort': 'desc'}, **self.extra)
             mquery_ledger.assert_called_with(
                 fcn='getObjectiveLeaderboard',
                 args={
-                    'key': leaderboard['objective']['key'],
-                    'AscendingSort': False,
+                    'objectiveKey': objective[0]['key'],
+                    'ascendingSort': False,
                 })
 
             self.client.get(url, data={'sort': 'asc'}, **self.extra)
             mquery_ledger.assert_called_with(
                 fcn='getObjectiveLeaderboard',
                 args={
-                    'key': leaderboard['objective']['key'],
-                    'AscendingSort': True,
+                    'objectiveKey': objective[0]['key'],
+                    'ascendingSort': True,
                 })
 
         response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
