@@ -12,13 +12,17 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 
 
-def authenticate_outgoing_request(node_id):
+def authenticate_outgoing_request(outgoing_node_id):
     try:
-        outgoing = OutgoingNode.objects.get(node_id=node_id)
+        outgoing = OutgoingNode.objects.get(node_id=outgoing_node_id)
     except OutgoingNode.DoesNotExist:
-        raise NodeError(f'Unauthorized to call node_id: {node_id}')
+        raise NodeError(f'Unauthorized to call remote node with node_id: {outgoing_node_id}')
 
-    return HTTPBasicAuth(get_owner(), outgoing.secret)
+    # to authenticate to remote node we use the current node id
+    # with the associated outgoing secret.
+    current_node_id = get_owner()
+
+    return HTTPBasicAuth(current_node_id, outgoing.secret)
 
 
 def get_remote_asset(url, node_id, content_hash, salt=None):
