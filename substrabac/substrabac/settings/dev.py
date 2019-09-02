@@ -39,7 +39,7 @@ LOGGING = {
             'format': '%(levelname)s %(asctime)s %(module)s %(process)d %(thread)d %(message)s'
         },
         'simple': {
-            'format': '%(levelname)s %(message)s'
+            'format': '%(levelname)s - %(asctime)s - %(name)s - %(message)s'
         },
     },
     'filters': {
@@ -52,6 +52,11 @@ LOGGING = {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
         },
         'error_file': {
             'level': 'INFO',
@@ -67,6 +72,11 @@ LOGGING = {
             'handlers': ['mail_admins', 'error_file'],
             'level': 'INFO',
             'propagate': False,
+        },
+        'events': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
         },
     }
 }
