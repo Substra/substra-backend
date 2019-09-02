@@ -173,8 +173,16 @@ class NodeError(Exception):
 
 
 def get_remote_file(url, auth, content_hash, salt=None):
+    kwargs = {
+        'headers': {'Accept': 'application/json;version=0.0'},
+        'auth': auth
+    }
+
+    if settings.DEBUG:
+        kwargs['verify'] = False
+
     try:
-        response = requests.get(url, auth=auth, headers={'Accept': 'application/json;version=0.0'})
+        response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
     else:
