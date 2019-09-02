@@ -146,7 +146,6 @@ class EventsConfig(AppConfig):
     name = 'events'
 
     def ready(self):
-        # always
 
         with get_hfc() as (loop, client):
             print('Start the event application.')
