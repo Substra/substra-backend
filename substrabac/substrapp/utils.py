@@ -1,6 +1,5 @@
 import io
 import hashlib
-import OpenSSL
 import logging
 import os
 import tempfile
@@ -85,19 +84,7 @@ def get_hash(file, key=None):
 
 def get_owner():
     ledger_settings = getattr(settings, 'LEDGER')
-    return get_hash_public_key(ledger_settings['signcert'])
-
-
-def get_hash_public_key(file):
-
-    with open(file, 'rb') as f:
-        cert = f.read()
-
-    loaded_cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
-    pub_asn1 = OpenSSL.crypto.dump_publickey(OpenSSL.crypto.FILETYPE_ASN1,
-                                             loaded_cert.get_pubkey())
-
-    return compute_hash(pub_asn1)
+    return ledger_settings['client']['msp_id']
 
 
 def compute_hash(bytes, key=None):
