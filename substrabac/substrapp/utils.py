@@ -137,9 +137,32 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
+class ZipFile(zipfile.ZipFile):
+    """Override Zipfile to ensure unix file permissions are preserved.
+
+    This is due to a python bug:
+    https://bugs.python.org/issue15795
+
+    Workaround from:
+    https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
+    """
+
+    def extract(self, member, path=None, pwd=None):
+        if not isinstance(member, zipfile.ZipInfo):
+            member = self.getinfo(member)
+
+        if path is None:
+            path = os.getcwd()
+
+        ret_val = self._extract_member(member, path, pwd)
+        attr = member.external_attr >> 16
+        os.chmod(ret_val, attr)
+        return ret_val
+
+
 def uncompress_path(archive_path, to_directory):
     if zipfile.is_zipfile(archive_path):
-        zip_ref = zipfile.ZipFile(archive_path, 'r')
+        zip_ref = ZipFile(archive_path, 'r')
         zip_ref.extractall(to_directory)
         zip_ref.close()
     elif tarfile.is_tarfile(archive_path):
@@ -152,7 +175,7 @@ def uncompress_path(archive_path, to_directory):
 
 def uncompress_content(archive_content, to_directory):
     if zipfile.is_zipfile(io.BytesIO(archive_content)):
-        zip_ref = zipfile.ZipFile(io.BytesIO(archive_content))
+        zip_ref = ZipFile(io.BytesIO(archive_content))
         zip_ref.extractall(to_directory)
         zip_ref.close()
     else:
