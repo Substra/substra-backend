@@ -48,6 +48,10 @@ class ObjectiveQueryTests(APITestCase):
                                    data_opener=self.data_data_opener)
 
     def get_default_objective_data(self):
+
+        self.objective_description, self.objective_description_filename, \
+            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+
         expected_hash = get_hash(self.objective_description)
         data = {
             'name': 'tough objective',

@@ -193,8 +193,13 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        description_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/description.md')
-        metrics_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/metrics.py')
+        objective_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/')
+
+        description_path = os.path.join(objective_path, 'description.md')
+
+        metrics_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
+
+        zip_folder(objective_path, metrics_path)
 
         pkhash = get_hash(description_path)
 
@@ -229,8 +234,13 @@ class ObjectiveViewTests(APITestCase):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
-        description_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/description.md')
-        metrics_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/metrics.py')
+        objective_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/')
+
+        description_path = os.path.join(objective_path, 'description.md')
+
+        metrics_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
+
+        zip_folder(objective_path, metrics_path)
 
         test_data_manager_key = get_hash(os.path.join(
             dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
