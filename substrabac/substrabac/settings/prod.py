@@ -5,6 +5,7 @@ from .deps.cors import *
 from .deps.raven import *
 from .deps.org import *
 from .deps.ledger import *
+from .deps.restframework import *  # noqa
 
 
 DEBUG = False
