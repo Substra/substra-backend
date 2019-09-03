@@ -16,6 +16,7 @@ import uuid
 from checksumdir import dirhash
 
 from django.conf import settings
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework import status
 
 
@@ -162,6 +163,21 @@ def uncompress_content(archive_content, to_directory):
             tar.close()
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
+
+
+def is_archive(archive_content):
+
+    if isinstance(archive_content, InMemoryUploadedFile):
+        archive_content = archive_content.file.read()
+    if zipfile.is_zipfile(io.BytesIO(archive_content)):
+        return True
+    else:
+        try:
+            tar = tarfile.open(fileobj=io.BytesIO(archive_content))
+            tar.close()
+            return True
+        except tarfile.TarError:
+            return False
 
 
 class NodeError(Exception):
