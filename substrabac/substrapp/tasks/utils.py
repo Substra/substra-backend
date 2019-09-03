@@ -11,6 +11,8 @@ from django.conf import settings
 
 DOCKER_LABEL = 'substra_task'
 
+logger = logging.getLogger(__name__)
+
 
 def get_cpu_sets(cpu_count, concurrency):
     cpu_step = max(1, cpu_count // concurrency)
@@ -188,9 +190,17 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
 
     # Build metrics
-    client.images.build(path=dockerfile_path,
-                        tag=image_name,
-                        rm=remove_image)
+    try:
+        client.images.build(path=dockerfile_path,
+                            tag=image_name,
+                            rm=remove_image)
+    except docker.errors.BuildError as e:
+        # catch build errors and print them for easier debugging of failed build
+        lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
+        lines = [l for l in lines if l]
+        error = '\n'.join(lines)
+        logger.error(f'BuildError: {error}')
+        raise
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
@@ -303,7 +313,7 @@ class ResourcesManager():
                     containers = [container.attrs
                                   for container in cls.__docker.containers.list(filters=filters)]
                 except docker.errors.APIError as e:
-                    logging.error(e, exc_info=True)
+                    logger.error(e, exc_info=True)
                     continue
 
                 # CPU
