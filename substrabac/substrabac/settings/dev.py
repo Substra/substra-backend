@@ -4,6 +4,7 @@ from .common import *
 from .deps.cors import *
 from .deps.org import *
 from .deps.ledger import *
+from .deps.restframework import *  # noqa
 
 
 DEBUG = True
