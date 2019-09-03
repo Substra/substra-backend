@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import multiprocessing
 import os
 import contextlib
@@ -21,8 +22,7 @@ from substrapp.utils import get_owner
 
 from celery.result import AsyncResult
 
-import logging
-
+logger = logging.getLogger(__name__)
 LEDGER = getattr(settings, 'LEDGER', None)
 
 
@@ -53,35 +53,41 @@ def on_tuples(block):
         tx_validation_code = None
 
     payload = get_block_payload(block)
+    owner = get_owner()
+    worker_queue = f"{LEDGER['name']}.worker"
 
     for tuple_type, _tuples in payload.items():
-        if _tuples:
-            for _tuple in _tuples:
-                tuple_key = _tuple['key']
-                tuple_status = _tuple['status']
+        if not _tuples:
+            continue
 
-                logging.info(f'[ChaincodeEvent] Received {tuple_type} "{tuple_status}" '
-                             f'(key: "{tuple_key}") with tx status: {tx_validation_code}')
+        for _tuple in _tuples:
+            key = _tuple['key']
+            status = _tuple['status']
 
-                if tuple_status == 'todo':
-                    launch_tuple(_tuple, tuple_type)
+            logger.info(f'Processing task {key}: type={tuple_type} status={status}'
+                        f' with tx status: {tx_validation_code}')
 
+            if status != 'todo':
+                continue
 
-def launch_tuple(_tuple, tuple_type):
+            if tuple_type is None:
+                continue
 
-    worker_queue = f"{LEDGER['name']}.worker"
-    data_owner = get_owner()
+            tuple_owner = _tuple['dataset']['worker']
+            if tuple_owner != owner:
+                logger.debug(f'Skipping task {key}: owner does not match'
+                             f' ({tuple_owner} vs {owner})')
+                continue
 
-    if data_owner == _tuple['dataset']['worker'] and tuple_type is not None:
-        tkey = _tuple['key']
-        if AsyncResult(tkey).state == 'PENDING':
+            if AsyncResult(key).state != 'PENDING':
+                logger.info(f'Skipping task {key}: already exists')
+                continue
+
             prepare_tuple.apply_async(
                 (_tuple, tuple_type),
-                task_id=tkey,
+                task_id=key,
                 queue=worker_queue
             )
-        else:
-            print(f'[ChaincodeEvent] Tuple task ({tkey}) already exists')
 
 
 def wait():
