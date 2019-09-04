@@ -62,9 +62,6 @@ INSTALLED_APPS = [
     'node',
 ]
 
-BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
-BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
-
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'libs.authentication.SettingsBackend',
