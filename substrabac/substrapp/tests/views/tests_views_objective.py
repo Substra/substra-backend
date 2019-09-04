@@ -308,18 +308,18 @@ class ObjectiveViewTests(APITestCase):
 
             self.client.get(url, data={'sort': 'desc'}, **self.extra)
             mquery_ledger.assert_called_with(
-                fcn='getObjectiveLeaderboard',
+                fcn='queryObjectiveLeaderboard',
                 args={
                     'objectiveKey': objective[0]['key'],
-                    'ascendingSort': False,
+                    'ascendingOrder': False,
                 })
 
             self.client.get(url, data={'sort': 'asc'}, **self.extra)
             mquery_ledger.assert_called_with(
-                fcn='getObjectiveLeaderboard',
+                fcn='queryObjectiveLeaderboard',
                 args={
                     'objectiveKey': objective[0]['key'],
-                    'ascendingSort': True,
+                    'ascendingOrder': True,
                 })
 
         response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
