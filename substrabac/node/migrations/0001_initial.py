@@ -14,7 +14,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='IncomingNode',
             fields=[
-                ('node_id', models.CharField(max_length=64, primary_key=True, serialize=False)),
+                ('node_id', models.CharField(max_length=1024, primary_key=True, serialize=False)),
                 ('secret', models.CharField(max_length=128)),
             ],
             options={
@@ -24,7 +24,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='OutgoingNode',
             fields=[
-                ('node_id', models.CharField(max_length=64, primary_key=True, serialize=False)),
+                ('node_id', models.CharField(max_length=1024, primary_key=True, serialize=False)),
                 ('secret', models.CharField(max_length=128)),
             ],
             options={
