@@ -3,7 +3,7 @@ import secrets
 
 
 class Node(models.Model):
-    node_id = models.CharField(primary_key=True, max_length=64, blank=False)
+    node_id = models.CharField(primary_key=True, max_length=1024, blank=False)
     secret = models.CharField(max_length=128, blank=False)
 
     @staticmethod
