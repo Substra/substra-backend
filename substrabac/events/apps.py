@@ -147,8 +147,10 @@ class EventsConfig(AppConfig):
 
     def ready(self):
 
+        # We try to connect a client first, if it fails the backend will not start
+        # It avoid potential issue when we launch the channel event hub in a subprocess
         with get_hfc() as (loop, client):
-            print('Start the event application.')
+            logger.info('Start the event application.')
 
         p1 = multiprocessing.Process(target=wait)
         p1.start()
