@@ -128,12 +128,21 @@ def get_temporary_text_file(contents, filename):
 
 
 def get_sample_objective():
+
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+
     description_content = "Super objective"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
-    metrics_content = "def metrics():\n\tpass"
-    metrics_filename = "metrics.py"
-    metrics = get_temporary_text_file(metrics_content, metrics_filename)
+
+    metrics_filename = "metrics.zip"
+    f = BytesIO(b'')
+    with open(os.path.join(dir_path,
+                           '../../../fixtures/chunantes/objectives/objective0/metrics.zip'), 'rb') as zip_file:
+        flength = f.write(zip_file.read())
+    metrics = InMemoryUploadedFile(f, None, metrics_filename,
+                                   'application/zip', flength, None)
+    metrics.seek(0)
 
     return description, description_filename, metrics, metrics_filename
 
