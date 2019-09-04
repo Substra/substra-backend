@@ -113,10 +113,8 @@ def do_populate():
     parser.set_defaults(nb_org=2)
     args = vars(parser.parse_args())
 
-    if args['skaffold']:
-        setup_config('skaffold')
-    else:
-        setup_config('docker')
+    network_type = 'skaffold' if args['skaffold'] else 'docker'
+    setup_config(network_type)
 
     if args['nb_org'] == 1:
         org_0 = org_1 = org_2 = 'owkin'
