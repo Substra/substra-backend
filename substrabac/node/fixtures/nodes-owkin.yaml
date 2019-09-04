@@ -1,0 +1,16 @@
+- fields:
+    secret: 2df765d2aecc51c844dda3017d7b21ff79ffaf68ea11f3273639b462c70e0a5820e96ff15aa2511a539f33ac5cfd5954b7a5087ae4007d2e9837749de77d23dd
+  model: node.outgoingnode
+  pk: chu-nantesMSP
+- fields:
+    secret: 3e3e02045cf47fc37c6e0c7d5440fa17889c106a865254a0eeae3ccda60a8f0b90a2de218aa39ed074d71b0a1674cd5bdd0bf74ffc7fc385d8b9c9b63a7675c0
+  model: node.outgoingnode
+  pk: clbMSP
+- fields:
+    secret: 22a5fa0c3e8d681fba881f745baad652fc05a04abedd02a202fce47243482d25a752277159689e3b944ee61c4938c3919878aad79dad28a2cedbd949a55d5792
+  model: node.incomingnode
+  pk: chu-nantesMSP
+- fields:
+    secret: fb3cd57a6e7c688a61021388b1ef7b321640e600b0fd187d6faf4ebbd5ac59d9bc8e286f6177e206576435ab1a7fb7a470dfedb2e6152958980e6e17eb783031
+  model: node.incomingnode
+  pk: clbMSP

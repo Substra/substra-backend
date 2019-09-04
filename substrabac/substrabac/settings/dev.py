@@ -7,6 +7,9 @@ from .deps.ledger import *
 from .deps.restframework import *
 
 
+BASICAUTH_USERNAME = "admin"
+BASICAUTH_PASSWORD = "admin"
+
 DEBUG = True
 
 # Database

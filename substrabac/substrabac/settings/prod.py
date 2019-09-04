@@ -10,6 +10,9 @@ from .deps.restframework import *
 
 DEBUG = False
 
+BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
+BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
+
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 os.environ['HTTPS'] = "on"

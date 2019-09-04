@@ -12,7 +12,7 @@ from termcolor import colored
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-USER, PASSWORD = ('foo', 'bar')
+USER, PASSWORD = ('admin', 'admin')
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 server_path = f'{SUBSTRA_FOLDER}/servermedias'
 

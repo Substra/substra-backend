@@ -1,0 +1,16 @@
+- fields:
+    secret: 22a5fa0c3e8d681fba881f745baad652fc05a04abedd02a202fce47243482d25a752277159689e3b944ee61c4938c3919878aad79dad28a2cedbd949a55d5792
+  model: node.outgoingnode
+  pk: owkinMSP
+- fields:
+    secret: 7f37ca057ce8631ea5cce999697026701f47ffbc9c43fb88f7bf107856615fbeb1dbca6b7a5ae4c4415b0bfd141fa267661eb270a1e79e4a77502cf125ade021
+  model: node.outgoingnode
+  pk: clbMSP
+- fields:
+    secret: 2df765d2aecc51c844dda3017d7b21ff79ffaf68ea11f3273639b462c70e0a5820e96ff15aa2511a539f33ac5cfd5954b7a5087ae4007d2e9837749de77d23dd
+  model: node.incomingnode
+  pk: owkinMSP
+- fields:
+    secret: e804ffc806ed55ef546b0a2395b9a2de53ebedf533e84ef68f7a311b9f480213b98d88c22df1a2f0cb2adcd0436ad0dbf86846d936ebb7dd8156e56c06f8116c
+  model: node.incomingnode
+  pk: clbMSP
