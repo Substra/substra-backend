@@ -43,8 +43,8 @@ class LedgerConflict(LedgerResponseError):
 
     @classmethod
     def from_response(cls, response):
-        pkhash = response['error'].replace('(', '').replace(')', '').split('tkey: ')[-1].strip()
-        if 'tkey: ' not in response['error'] or len(pkhash) != 64:
+        pkhash = response.get('key')
+        if not pkhash:
             return LedgerBadResponse(response['error'])
         return LedgerConflict(response['error'], pkhash=pkhash)
 
