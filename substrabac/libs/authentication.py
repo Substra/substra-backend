@@ -10,9 +10,7 @@ class SettingsBackend:
         if not username or not password:
             return None
 
-        server_username = settings.BASICAUTH_USERNAME
-        server_password = settings.BASICAUTH_PASSWORD
-        if username == server_username and password == server_password:
+        if username == settings.BASICAUTH_USERNAME and password == settings.BASICAUTH_PASSWORD:
             return User(username)
 
         return None
