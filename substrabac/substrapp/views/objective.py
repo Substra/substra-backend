@@ -22,7 +22,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory, uncompress_path
+from substrapp.utils import get_hash, get_computed_hash, get_from_node, create_directory, uncompress_path, is_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.views.utils import ComputeHashMixin, ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException
@@ -121,6 +121,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         metrics = request.data.get('metrics')
         description = request.data.get('description')
         test_data_manager_key = request.data.get('test_data_manager_key', '')
+
+        if not is_archive(metrics):
+            raise Exception('Archive must be zip or tar.*')
 
         pkhash = get_hash(description)
 
