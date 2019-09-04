@@ -11,7 +11,7 @@ from Cryptodome.Util import asn1
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.x509 import NameOID
 from hfc.fabric_ca.caservice import ca_service
 
@@ -150,24 +150,34 @@ def get_hfc_client():
     return loop, client
 
 
-def get_hashed_modulus(cert):
+def get_creator(cert):
+
     cert = OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_PEM, cert)
     pub = cert.get_pubkey()
-    pub_asn1 = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pub)
-    pub_der = asn1.DerSequence()
-    pub_der.decode(pub_asn1)
 
-    modulus = pub_der[1]
-    hashed_modulus = hashlib.sha256(str(modulus).encode()).hexdigest()
+    creator=''
+    # rsa case
+    if pub.type() == OpenSSL.crypto.TYPE_RSA:
+        pub_asn1 = OpenSSL.crypto.dump_privatekey(OpenSSL.crypto.FILETYPE_ASN1, pub)
+        pub_der = asn1.DerSequence()
+        pub_der.decode(pub_asn1)
+        modulus = pub_der[1]
+        creator = hashlib.sha256(modulus.to_bytes(256, byteorder='big')).hexdigest()
+    # ecdsa case
+    elif pub.type() == OpenSSL.crypto.TYPE_EC:
+        ecPublicNumbers = pub.to_cryptography_key().public_numbers()
+        x = ecPublicNumbers.x
+        y = ecPublicNumbers.y
+        point = bytes(f'{x}:{y}', 'utf-8')
+        creator = hashlib.sha256(point).hexdigest()
 
-    return hashed_modulus
+    return creator
 
 
 def write_pkey_key(path):
-    pkey = rsa.generate_private_key(
-        public_exponent=65537,
-        key_size=2048,
-        backend=default_backend())
+    # you can choose between rsa or ecdsa
+    # pkey = rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=default_backend())
+    pkey = ec.generate_private_key(ec.SECP256R1(), default_backend())
     data = pkey.private_bytes(encoding=serialization.Encoding.PEM,
                               format=serialization.PrivateFormat.PKCS8,
                               encryption_algorithm=serialization.NoEncryption())
@@ -223,7 +233,7 @@ def get_csr(pkey,
             x509.DNSName(dns_name),
         ]),
         critical=False,
-        # Sign the CSR with our private key.
+        # Sign the CSR with our private key (rsa or ecdsa).
     ).sign(pkey, hashes.SHA256(), default_backend())
 
     return csr

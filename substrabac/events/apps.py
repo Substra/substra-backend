@@ -16,6 +16,7 @@ from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.protos.peer.transaction_pb2 import TxValidationCode
 
+from substrabac.settings.deps.ledger import get_creator
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_hash
 
@@ -70,18 +71,21 @@ def on_tuples(block):
 def launch_tuple(_tuple, tuple_type):
 
     worker_queue = f"{LEDGER['name']}.worker"
-    data_owner = get_hash(LEDGER['signcert'])
 
-    if data_owner == _tuple['dataset']['worker'] and tuple_type is not None:
-        tkey = _tuple['key']
-        if AsyncResult(tkey).state == 'PENDING':
-            prepare_tuple.apply_async(
-                (_tuple, tuple_type),
-                task_id=tkey,
-                queue=worker_queue
-            )
-        else:
-            print(f'[ChaincodeEvent] Tuple task ({tkey}) already exists')
+    with open(LEDGER['signcert'], 'rb') as f:
+        cert = f.read()
+        data_owner = get_creator(cert)
+
+        if data_owner == _tuple['dataset']['worker'] and tuple_type is not None:
+            tkey = _tuple['key']
+            if AsyncResult(tkey).state == 'PENDING':
+                prepare_tuple.apply_async(
+                    (_tuple, tuple_type),
+                    task_id=tkey,
+                    queue=worker_queue
+                )
+            else:
+                print(f'[ChaincodeEvent] Tuple task ({tkey}) already exists')
 
 
 def wait():

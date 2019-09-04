@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.management import BaseCommand
 
 from authent.models import Permission, InternalAuthent
-from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
+from substrabac.settings.deps.ledger import get_csr, get_creator
 
 
 class Command(BaseCommand):
@@ -33,6 +33,6 @@ class Command(BaseCommand):
         csr = get_csr(pkey, username)
         enrollment = cacli.enroll(username, pwd, csr=csr)
 
-        hashed_modulus = get_hashed_modulus(enrollment.cert)
+        creator = get_creator(enrollment.cert)
         # get or create internal authent
-        i, _ = InternalAuthent.objects.get_or_create(permission=p, modulus=hashed_modulus)
+        i, _ = InternalAuthent.objects.get_or_create(permission=p, creator=creator)

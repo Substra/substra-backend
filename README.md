@@ -164,7 +164,7 @@ If your populate.py includes specific permission, they need to be created in loc
 
 
 Run this command for creating internal users (users who want to to download files),  
-it will register a hashed modulus related to a permission.
+it will register a creator pertained to a permission.
 
 ```
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin python manage.py init_internal_users

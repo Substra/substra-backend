@@ -4,7 +4,7 @@ import os
 from django.conf import settings
 from django.core.management import BaseCommand
 
-from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
+from substrabac.settings.deps.ledger import get_csr, get_creator
 from authent.models import Permission, InternalAuthent
 
 
@@ -43,6 +43,6 @@ class Command(BaseCommand):
                     except Exception as e:
                         print(str(e))
                     else:
-                        hashed_modulus = get_hashed_modulus(enrollment.cert)
+                        creator = get_creator(enrollment.cert)
                         # get or create internal authent
-                        i, _ = InternalAuthent.objects.get_or_create(permission=p, modulus=hashed_modulus)
+                        i, _ = InternalAuthent.objects.get_or_create(permission=p, creator=creator)

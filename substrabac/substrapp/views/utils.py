@@ -6,7 +6,7 @@ from django.http import FileResponse
 from rest_framework.response import Response
 
 from authent.models import InternalAuthent
-from substrabac.settings.deps.ledger import get_csr, get_hashed_modulus
+from substrabac.settings.deps.ledger import get_csr, get_creator
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError, LedgerForbidden, LedgerUnauthorized
 
 from django.conf import settings
@@ -87,8 +87,8 @@ class ManageFileMixin(object):
                         except Exception as e:
                             raise LedgerForbidden(f'Not allowed, error: {str(e)}')
                         else:
-                            hashed_modulus = get_hashed_modulus(enrollment.cert)
-                            if not InternalAuthent.objects.filter(permission__name__in=permissions, modulus=hashed_modulus):
+                            creator = get_creator(enrollment.cert)
+                            if not InternalAuthent.objects.filter(permission__name__in=permissions, creator=creator):
                                 raise LedgerUnauthorized('Permission denied')
 
             obj = self.get_object()
