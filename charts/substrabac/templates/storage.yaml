@@ -1,0 +1,27 @@
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "substra.fullname" . }}
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size | quote }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "substra.fullname" . }}
+spec:
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Recycle
+  capacity:
+    storage: {{ .Values.persistence.size | quote }}
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: {{ .Values.persistence.hostPath | quote }}
+    type: DirectoryOrCreate

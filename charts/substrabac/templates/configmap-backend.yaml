@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-backend
+data:
+  conf.json: |
+    {
+      "name": "{{ .Values.organization.name }}",
+      "signcert": "/var/hyperledger/msp/signcerts/cert.pem",
+      "core_peer_mspconfigpath": "/var/hyperledger/msp",
+      "channel_name": "{{ .Values.channel }}",
+      "chaincode_name": "{{ .Values.chaincode.name }}",
+      "chaincode_version": "{{ .Values.chaincode.version }}",
+      "client": {
+        "name": "{{ .Values.user.name }}",
+        "org": "{{ .Values.organization.name }}",
+        "state_store": "/tmp/hfc-cvs",
+        "key_path": "/var/hyperledger/msp/keystore/*",
+        "cert_path": "/var/hyperledger/msp/signcerts/cert.pem",
+        "msp_id": "{{ .Values.peer.mspID }}"
+      },
+      "peer": {
+        "name": "peer",
+        "host": "{{ .Values.peer.host }}",
+        "port": {
+          "internal": {{ .Values.peer.port }},
+          "external": {{ .Values.peer.port }}
+        },
+        "docker_core_dir": "/var/hyperledger/fabric_cfg",
+        "tlsCACerts": "/var/hyperledger/admin_msp/cacerts/cacert.pem",
+        "clientKey": "/var/hyperledger/tls/client/pair/tls.key",
+        "clientCert": "/var/hyperledger/tls/client/pair/tls.crt",
+        "grpcOptions": {
+          "grpc-max-send-message-length": 15,
+          "grpc.ssl_target_name_override": "{{ .Values.peer.host }}"
+        }
+      },
+      "orderer": {
+        "name": "{{ .Values.orderer.name }}",
+        "host": "{{ .Values.orderer.host }}",
+        "port": {{ .Values.orderer.port }},
+        "ca": "/var/hyperledger/tls/ord/cert/cacert.pem",
+        "grpcOptions": {
+          "grpc-max-send-message-length": 15,
+          "grpc.ssl_target_name_override": "{{ .Values.orderer.host }}"
+        }
+      }
+    }

@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-celerybeat
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-celerybeat
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  replicas: {{ .Values.celerybeat.replicaCount }}
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-celerybeat
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-celerybeat
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with .Values.celerybeat.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: celerybeat
+          image: "{{ .Values.celerybeat.image.repository }}:{{ .Values.celerybeat.image.tag }}"
+          {{- if .Values.celerybeat.image.pullPolicy }}
+          imagePullPolicy: "{{ .Values.celerybeat.image.pullPolicy }}"
+          {{- end }}
+          command: ["celery"]
+          args: ["-A", "substrabac", "beat", "-l", "debug"]
+          env:
+            - name: CELERY_BROKER_URL
+              value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+            - name: DJANGO_SETTINGS_MODULE
+              value: substrabac.settings.common
+            - name: PYTHONUNBUFFERED
+              value: "1"
+          resources:
+            {{- toYaml .Values.celerybeat.resources | nindent 12 }}
+    {{- with .Values.celerybeat.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.celerybeat.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.celerybeat.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
