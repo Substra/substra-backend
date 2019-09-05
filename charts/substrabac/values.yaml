@@ -1,7 +1,6 @@
 backend:
   replicaCount: 1
-  djangoSettingsModuleEvent: substrabac.settings.events.prod
-  djangoSettingsModule: substrabac.settings.prod
+  settings: prod
   siteHost: localhost
   defaultDomain: localhost
 
