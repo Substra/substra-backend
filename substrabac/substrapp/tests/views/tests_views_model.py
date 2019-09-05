@@ -14,8 +14,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import get_hash
 
-from ..common import get_sample_model
-from ..common import FakeRequest
+from ..common import get_sample_model, AuthenticatedClient
 from ..assets import objective, datamanager, algo, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -25,6 +24,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class ModelViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -123,14 +123,10 @@ class ModelViewTests(APITestCase):
     def test_model_retrieve(self):
 
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.model.get_from_node') as mrequestsget, \
-                mock.patch('substrapp.views.model.ModelViewSet.compute_hash') as mcomputed_hash:
+                mock.patch('substrapp.views.model.get_remote_asset') as get_remote_asset:
             mget_object_from_ledger.return_value = model[1]
 
-            mrequestsget.return_value = FakeRequest(status=status.HTTP_200_OK,
-                                                    content=self.model.read().encode())
-
-            mcomputed_hash.return_value = model[1]['traintuple']['outModel']['hash']
+            get_remote_asset.return_value = self.model.read().encode()
 
             url = reverse('substrapp:model-list')
             search_params = model[1]['traintuple']['outModel']['hash'] + '/'

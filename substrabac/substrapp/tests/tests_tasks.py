@@ -6,7 +6,6 @@ import uuid
 from unittest.mock import MagicMock
 
 from django.test import override_settings
-from django.http import HttpResponse
 from rest_framework import status
 from rest_framework.test import APITestCase
 from django_celery_results.models import TaskResult
@@ -14,7 +13,7 @@ from django_celery_results.models import TaskResult
 from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
-from substrapp.utils import compute_hash, get_computed_hash, get_remote_file, get_hash, create_directory
+from substrapp.utils import compute_hash, get_remote_file, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
                                    put_model, put_models, put_algo, put_metric, put_data_sample, prepare_task, do_task,
@@ -22,7 +21,9 @@ from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, 
 
 from .common import (get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample,
                      get_sample_model)
-from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel
+from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel, FakeRequest
+from . import assets
+from node.models import OutgoingNode
 
 import zipfile
 import docker
@@ -50,6 +51,10 @@ class TasksTests(APITestCase):
 
         self.ResourcesManager = ResourcesManager()
 
+    @classmethod
+    def setUpTestData(cls):
+        cls.outgoing_node = OutgoingNode.objects.create(node_id="external_node_id", secret="s3cr37")
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
@@ -66,38 +71,29 @@ class TasksTests(APITestCase):
         except Exception:
             self.fail('`remove_subtuple_materials` raised Exception unexpectedly!')
 
-    def test_get_computed_hash(self):
-        with mock.patch('substrapp.utils.requests.get') as mget:
-            mget.return_value = HttpResponse(str(self.script.read()))
-            _, pkhash = get_computed_hash('localhost')
-            self.assertEqual(pkhash, get_hash(self.script))
-
-        with mock.patch('substrapp.utils.requests.get') as mget:
-            mget.return_value = HttpResponse()
-            mget.return_value.status_code = status.HTTP_400_BAD_REQUEST
-            with self.assertRaises(Exception):
-                get_computed_hash('localhost')
-
     def test_get_remote_file(self):
         content = str(self.script.read())
+        pkhash = compute_hash(content)
         remote_file = {'storageAddress': 'localhost',
-                       'hash': compute_hash(content)}
+                       'hash': pkhash,
+                       'owner': 'external_node_id',
+                       }
 
-        with mock.patch('substrapp.utils.get_computed_hash') as mget_computed_hash:
-            pkhash = compute_hash(content)
-            mget_computed_hash.return_value = content, pkhash
+        with mock.patch('substrapp.utils.get_owner') as get_owner,\
+                mock.patch('substrapp.utils.requests.get') as request_get:
+            get_owner.return_value = 'external_node_id'
+            request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote, pkhash_remote = get_remote_file(remote_file)
-            self.assertEqual(pkhash_remote, get_hash(self.script))
+            content_remote = get_remote_file(remote_file, 'external_node_id', pkhash)
             self.assertEqual(content_remote, content)
 
-        with mock.patch('substrapp.utils.get_computed_hash') as mget_computed_hash:
-            content = content + ' FAIL'
-            pkhash = compute_hash(content)
-            mget_computed_hash.return_value = content, pkhash
+        with mock.patch('substrapp.utils.get_owner') as get_owner,\
+                mock.patch('substrapp.utils.requests.get') as request_get:
+            get_owner.return_value = 'external_node_id'
+            request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             with self.assertRaises(Exception):
-                get_remote_file(remote_file)  # contents (by pkhash) are different
+                get_remote_file(remote_file, 'external_node_id', 'fake_pkhash')  # contents (by pkhash) are different
 
     def test_Ressource_Manager(self):
 
@@ -406,8 +402,12 @@ class TasksTests(APITestCase):
         model_type = 'model'
         subtuple = {model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
 
-        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
-            mget_remote_file.return_value = model_content, model_hash
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
+                mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
+            mget_remote_file.return_value = model_content
+            get_owner.return_value = assets.traintuple[1]['creator']
+            get_object_from_ledger.return_value = assets.traintuple[1]  # uses index 1 to have a set value of outModel
             model_content = get_model(subtuple)
 
         self.assertIsNotNone(model_content)
@@ -424,14 +424,14 @@ class TasksTests(APITestCase):
         traintupleKey2 = compute_hash(models_content[1])
         model_hash2 = compute_hash(models_content[1], traintupleKey2)
 
-        models_hash = [model_hash, model_hash2]
         model_type = 'inModels'
         subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
                                  {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}
 
-        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
-            mget_remote_file.side_effect = [[models_content[0], models_hash[0]],
-                                            [models_content[1], models_hash[1]]]
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks._authenticate_worker'),\
+                mock.patch('substrapp.tasks.tasks.get_object_from_ledger'):
+            mget_remote_file.side_effect = (models_content[0], models_content[1])
             models_content_res = get_models(subtuple)
 
         self.assertEqual(models_content_res, models_content)
@@ -441,10 +441,23 @@ class TasksTests(APITestCase):
     def test_get_algo(self):
         algo_content = self.algo.read()
         algo_hash = get_hash(self.algo)
+        subtuple = {
+            'algo': {
+                'storageAddress': assets.algo[0]['content']['storageAddress'],
+                'owner': assets.algo[0]['owner'],
+                'hash': algo_hash
+            }
+        }
 
-        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file:
-            mget_remote_file.return_value = algo_content, algo_hash
-            self.assertEqual(algo_content, get_algo({'algo': ''}))
+        with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file,\
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
+                mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
+            mget_remote_file.return_value = algo_content
+            get_owner.return_value = assets.algo[0]['owner']
+            get_object_from_ledger.return_value = assets.algo[0]
+
+            data = get_algo(subtuple)
+            self.assertEqual(algo_content, data)
 
     def test_get_objective(self):
         metrics_content = self.script.read().encode('utf-8')
@@ -455,19 +468,21 @@ class TasksTests(APITestCase):
             mget.return_value = FakeObjective()
 
             objective = get_objective({'objective': {'hash': objective_hash,
-                                       'metrics': ''}})
+                                                     'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, b'foo')
 
         with mock.patch('substrapp.tasks.tasks.get_remote_file') as mget_remote_file, \
+                mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \
+                mock.patch('substrapp.tasks.tasks._authenticate_worker'),\
                 mock.patch('substrapp.models.Objective.objects.update_or_create') as mupdate_or_create:
 
             mget.return_value = FakeObjective()
-            mget_remote_file.return_value = metrics_content, objective_hash
+            mget_remote_file.return_value = metrics_content
             mupdate_or_create.return_value = FakeObjective(), True
 
             objective = get_objective({'objective': {'hash': objective_hash,
-                                       'metrics': ''}})
+                                                     'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, b'foo')
 

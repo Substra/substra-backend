@@ -1,7 +1,29 @@
 from io import StringIO, BytesIO
 import os
+import base64
 
+from django.conf import settings
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from rest_framework.test import APIClient
+
+
+# This function helper generate a basic authenticaiton header with given credentials
+# Given username and password it returns "Basic GENERATED_TOKEN"
+def generate_basic_auth_header(username, password):
+    return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
+
+
+class AuthenticatedClient(APIClient):
+
+    def request(self, **kwargs):
+        basic_auth_header = generate_basic_auth_header(
+            settings.BASICAUTH_USERNAME,
+            settings.BASICAUTH_PASSWORD
+        )
+
+        self.credentials(HTTP_AUTHORIZATION=basic_auth_header)
+
+        return super().request(**kwargs)
 
 
 class gpu():

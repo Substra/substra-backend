@@ -102,24 +102,6 @@ def compute_hash(bytes, key=None):
     return sha256_hash.hexdigest()
 
 
-def get_computed_hash(url, key=None):
-    response = get_from_node(url)
-    computedHash = compute_hash(response.content, key)
-
-    return response.content, computedHash
-
-
-def get_remote_file(object, key=None):
-    content, computed_hash = get_computed_hash(object['storageAddress'], key)
-
-    if computed_hash != object['hash']:
-        msg = 'computed hash is not the same as the hosted file.' \
-              'Please investigate for default of synchronization, corruption, or hacked'
-        raise Exception(msg)
-
-    return content, computed_hash
-
-
 def create_directory(directory):
     if not os.path.exists(directory):
         os.makedirs(directory)
@@ -190,16 +172,11 @@ class NodeError(Exception):
     pass
 
 
-def get_from_node(url):
-
+def get_remote_file(url, auth, content_hash, salt=None):
     kwargs = {
         'headers': {'Accept': 'application/json;version=0.0'},
+        'auth': auth
     }
-
-    username = getattr(settings, 'BASICAUTH_USERNAME', None)
-    password = getattr(settings, 'BASICAUTH_PASSWORD', None)
-    if username is not None and password is not None:
-        kwargs['auth'] = (username, password)
 
     if settings.DEBUG:
         kwargs['verify'] = False
@@ -213,4 +190,7 @@ def get_from_node(url):
             logging.error(response.text)
             raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    return response
+    computed_hash = compute_hash(response.content, key=salt)
+    if computed_hash != content_hash:
+        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+    return response.content

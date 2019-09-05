@@ -1,29 +1,33 @@
-import hashlib
 import os
 
 from django.http import FileResponse
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
+from substrapp.utils import NodeError, get_remote_file, get_owner
+from node.models import OutgoingNode
 
 from django.conf import settings
 from rest_framework import status
+from requests.auth import HTTPBasicAuth
 
 
-class ComputeHashMixin(object):
-    def compute_hash(self, file, key=None):
+def authenticate_outgoing_request(outgoing_node_id):
+    try:
+        outgoing = OutgoingNode.objects.get(node_id=outgoing_node_id)
+    except OutgoingNode.DoesNotExist:
+        raise NodeError(f'Unauthorized to call remote node with node_id: {outgoing_node_id}')
 
-        sha256_hash = hashlib.sha256()
-        if isinstance(file, str):
-            file = file.encode()
+    # to authenticate to remote node we use the current node id
+    # with the associated outgoing secret.
+    current_node_id = get_owner()
 
-        if key is not None and isinstance(key, str):
-            file += key.encode()
+    return HTTPBasicAuth(current_node_id, outgoing.secret)
 
-        sha256_hash.update(file)
-        computedHash = sha256_hash.hexdigest()
 
-        return computedHash
+def get_remote_asset(url, node_id, content_hash, salt=None):
+    auth = authenticate_outgoing_request(node_id)
+    return get_remote_file(url, auth, content_hash, salt=salt)
 
 
 class CustomFileResponse(FileResponse):

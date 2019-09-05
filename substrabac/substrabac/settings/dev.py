@@ -1,12 +1,14 @@
 import os
 
 from .common import *
-
-from .deps.restframework import *
 from .deps.cors import *
 from .deps.org import *
 from .deps.ledger import *
+from .deps.restframework import *
 
+
+BASICAUTH_USERNAME = "admin"
+BASICAUTH_PASSWORD = "admin"
 
 DEBUG = True
 

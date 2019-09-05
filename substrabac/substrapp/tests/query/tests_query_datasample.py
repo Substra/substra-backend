@@ -22,7 +22,7 @@ from substrapp.ledger_utils import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
 from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sample_script, \
-    get_sample_datamanager2, get_sample_tar_data_sample, get_sample_zip_data_sample_2
+    get_sample_datamanager2, get_sample_tar_data_sample, get_sample_zip_data_sample_2, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -31,6 +31,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataSampleQueryTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

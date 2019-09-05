@@ -145,8 +145,8 @@ def generate_docker_compose_file(conf, launch_settings):
             f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
 
             # Basic auth
-            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', '')}",
-            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', '')}",
+            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', 'admin')}",
+            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', 'admin')}",
             f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
             f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
         ]
@@ -163,6 +163,11 @@ def generate_docker_compose_file(conf, launch_settings):
         for tls_key in ['tlsCACerts', 'clientCert', 'clientKey']:
             hlf_volumes.append(f'{org["peer"][tls_key]}:{org["peer"][tls_key]}:ro')
 
+        # load incoming/outgoing node fixtures/ that should not be executed in production env
+        fixtures_command = ''
+        if launch_settings == 'dev':
+            fixtures_command = f"python manage.py loaddata nodes-{org_name_stripped}"
+
         backend = {
             'container_name': f'{org_name_stripped}.substrabac',
             'labels': ['substra'],
@@ -170,7 +175,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                       f'yes | python manage.py migrate; {django_server}"',
+                       f'yes | python manage.py migrate; {fixtures_command}; {django_server}"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': [
