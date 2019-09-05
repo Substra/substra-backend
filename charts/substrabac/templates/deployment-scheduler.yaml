@@ -44,7 +44,7 @@ spec:
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: DJANGO_SETTINGS_MODULE
-              value: {{ .Values.backend.djangoSettingsModule }}
+              value: substrabac.settings.{{ .Values.backend.settings }}
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- with .Values.backend.auth }}
@@ -66,13 +66,9 @@ spec:
               value: "{{ .Values.peer.host }}:{{ .Values.peer.port }}"
             - name: FABRIC_LOGGING_SPEC
               value: debug
-            - name: MEDIA_ROOT
-              value: {{ .Values.persistence.hostPath }}/medias/
             - name: LEDGER_CONFIG_FILE
               value: /conf/{{ .Values.organization.name }}/substrabac/conf.json
           volumeMounts:
-            - mountPath: {{ .Values.persistence.hostPath }}
-              name: data
             - mountPath: /conf/{{ .Values.organization.name }}/substrabac
               name: config
               readOnly: true
@@ -108,9 +104,6 @@ spec:
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-backend
-      - name: data
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" . }}
       - name: fabric
         configMap:
           name: {{ $.Values.secrets.fabricConfigmap }}
