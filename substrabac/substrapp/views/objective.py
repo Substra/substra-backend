@@ -122,7 +122,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         description = request.data.get('description')
         test_data_manager_key = request.data.get('test_data_manager_key', '')
 
-        if not is_archive(metrics):
+        if not is_archive(metrics.file.read()):
             raise Exception('Archive must be zip or tar.*')
 
         pkhash = get_hash(description)
