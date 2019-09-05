@@ -19,6 +19,7 @@ from hfc.protos.peer.transaction_pb2 import TxValidationCode
 
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_owner
+from substrapp.ledger_utils import get_hfc
 
 from celery.result import AsyncResult
 
@@ -145,6 +146,11 @@ class EventsConfig(AppConfig):
     name = 'events'
 
     def ready(self):
-        # always wait
+
+        # We try to connect a client first, if it fails the backend will not start
+        # It avoid potential issue when we launch the channel event hub in a subprocess
+        with get_hfc() as (loop, client):
+            logger.info('Start the event application.')
+
         p1 = multiprocessing.Process(target=wait)
         p1.start()

@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Pod
+spec:
+  containers:
+    - name: helm
+      image: dtzar/helm-kubectl
+      command: [cat]
+      tty: true
+      volumeMounts:
+        - name: chartmuseum-secret
+          mountPath: /secret
+      env:
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /secret/chartmuseum-secret.json
+      resources:
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+  volumes:
+    - name: chartmuseum-secret
+      secret:
+        secretName: chartmuseum-secret

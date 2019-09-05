@@ -18,11 +18,16 @@ server_path = f'{SUBSTRA_FOLDER}/servermedias'
 client = substra.Client()
 
 
-def setup_config():
+def setup_config(network='docker'):
     print('Init config in /tmp/.substrabac for owkin and chunantes')
-    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
-    client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0')
-    client.add_profile('clb', 'http://clb.substrabac:8002', '0.0')
+    if network == 'docker':
+        client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
+        client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0')
+        client.add_profile('clb', 'http://clb.substrabac:8002', '0.0')
+    if network == 'skaffold':
+        client.add_profile('owkin', 'http://substrabac.node-1', '0.0')
+        client.add_profile('chunantes', 'http://substrabac.node-2', '0.0')
+        client.add_profile('clb', 'http://substrabac.node-3', '0.0')
 
 
 def zip_folder(path, destination):
@@ -92,7 +97,6 @@ def update_datamanager(data_manager_key, data, profile):
 
 
 def do_populate():
-    setup_config()
 
     parser = argparse.ArgumentParser()
     group = parser.add_mutually_exclusive_group()
@@ -104,8 +108,13 @@ def do_populate():
                        help='Launch populate with three orgs')
     parser.add_argument('-a', '--archive', action='store_true',
                         help='Launch populate with archive data samples only')
+    parser.add_argument('-s', '--skaffold', action='store_true',
+                        help='Launch populate with skaffold (K8S) network')
     parser.set_defaults(nb_org=2)
     args = vars(parser.parse_args())
+
+    network_type = 'skaffold' if args['skaffold'] else 'docker'
+    setup_config(network_type)
 
     if args['nb_org'] == 1:
         org_0 = org_1 = org_2 = 'owkin'
