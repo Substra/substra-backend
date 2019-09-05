@@ -36,7 +36,13 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         ledger_data = {
             'name': request.data.get('name'),
-            'permissions': request.data.get('permissions', 'all'),
+            # XXX workaround because input is a QueryDict and not a JSON object. This
+            #     is due to the fact that we are sending file object and body in a
+            #     single HTTP request
+            'permissions': {
+                'public': request.data.get('permissions_public'),
+                'authorized_ids': request.data.get('permissions_authorized_ids', []),
+            },
         }
 
         # init ledger serializer

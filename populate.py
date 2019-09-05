@@ -142,7 +142,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
-        'permissions': 'all',
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     data_manager_org1_key = get_or_create(data, org_1, 'dataset', dryrun=True)
 
@@ -186,7 +186,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
-        'permissions': 'all'
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     data_manager_org0_key = get_or_create(data, org_0, 'dataset')
 
@@ -196,7 +196,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
-        'permissions': 'all'
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     get_or_create(data, org_1, 'dataset')
 
@@ -253,7 +253,7 @@ def do_populate():
             'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
             'metrics': zip_path,
-            'permissions': 'all',
+            'permissions': {'public': True, 'authorized_ids': []},
             'test_data_sample_keys': test_data_sample_keys,
             'test_data_manager_key': data_manager_org0_key
         }
@@ -273,7 +273,7 @@ def do_populate():
             'description': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
             'metrics': zip_path,
-            'permissions': 'all'
+            'permissions': {'public': True, 'authorized_ids': []},
         }
 
         get_or_create(data, org_0, 'objective', dryrun=True)
@@ -295,7 +295,7 @@ def do_populate():
         'name': 'Logistic regression',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
-        'permissions': 'all',
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     algo_key = get_or_create(data, org_2, 'algo')
 
@@ -306,7 +306,7 @@ def do_populate():
         'name': 'Neural Network',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
-        'permissions': 'all',
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     algo_key_2 = get_or_create(data, org_1, 'algo')
 
@@ -316,7 +316,7 @@ def do_populate():
         'name': 'Random Forest',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
-        'permissions': 'all',
+        'permissions': {'public': True, 'authorized_ids': []},
     }
     algo_key_3 = get_or_create(data, org_1, 'algo')
 

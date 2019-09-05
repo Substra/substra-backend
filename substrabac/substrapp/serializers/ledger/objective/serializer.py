@@ -4,6 +4,7 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 
 from substrapp.utils import get_hash
+from substrapp.serializers.ledger.utils import PermissionsSerializer
 from .util import createLedgerObjective
 from .tasks import createLedgerObjectiveAsync
 
@@ -14,7 +15,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                                                   required=False)
     name = serializers.CharField(min_length=1, max_length=100)
     test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
-    permissions = serializers.CharField(min_length=1, max_length=60)
+    permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
 
     def create(self, validated_data):
@@ -45,7 +46,10 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                 'dataManagerKey': test_data_manager_key,
                 'dataSampleKeys': test_data_sample_keys,
             },
-            'permissions': permissions
+            'permissions': {'process': {
+                'public': permissions.get('public'),
+                'authorizedIDs': permissions.get('authorized_ids'),
+            }}
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
