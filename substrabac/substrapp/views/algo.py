@@ -70,7 +70,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, file):
 
-        if not is_archive(file):
+        if not is_archive(file.file.read()):
             raise Exception('Archive must be zip or tar.*')
 
         pkhash = get_hash(file)
