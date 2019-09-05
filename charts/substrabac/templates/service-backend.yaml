@@ -1,0 +1,50 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ template "substra.fullname" . }}-backend
+  labels:
+    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+    {{- if .Values.backend.service.labels }}
+    {{- toYaml .Values.backend.service.labels | nindent 4 }}
+    {{- end }}
+  {{- if .Values.backend.service.annotations }}
+  annotations:
+    {{- toYaml .Values.backend.service.annotations | nindent 4 }}
+  {{- end }}
+spec:
+{{- if (or (eq .Values.backend.service.type "ClusterIP") (empty .Values.backend.service.type)) }}
+  type: ClusterIP
+  {{- if .Values.backend.service.clusterIP }}
+  clusterIP: {{ .Values.backend.service.clusterIP }}
+  {{end}}
+{{- else if eq .Values.backend.service.type "LoadBalancer" }}
+  type: {{ .Values.backend.service.type }}
+  {{- if .Values.backend.service.loadBalancerIP }}
+  loadBalancerIP: {{ .Values.backend.service.loadBalancerIP }}
+  {{- end }}
+  {{- if .Values.backend.service.loadBalancerSourceRanges }}
+  loadBalancerSourceRanges:
+{{ toYaml .Values.backend.service.loadBalancerSourceRanges | indent 4 }}
+  {{- end -}}
+{{- else }}
+  type: {{ .Values.backend.service.type }}
+{{- end }}
+{{- if .Values.backend.service.externalIPs }}
+  externalIPs:
+{{ toYaml .Values.backend.service.externalIPs | indent 4 }}
+{{- end }}
+  ports:
+    - name: http
+      port: {{ .Values.backend.service.port }}
+      protocol: TCP
+      targetPort: 8000
+{{ if (and (eq .Values.backend.service.type "NodePort") (not (empty .Values.backend.service.nodePort))) }}
+      nodePort: {{.Values.backend.service.nodePort}}
+{{ end }}
+  selector:
+    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    app.kubernetes.io/instance: {{ .Release.Name }}

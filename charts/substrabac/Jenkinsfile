@@ -1,0 +1,40 @@
+pipeline {
+  options {
+    timestamps ()
+    timeout(time: 1, unit: 'HOURS')
+    buildDiscarder(logRotator(numToKeepStr: '5'))
+    skipDefaultCheckout true
+  }
+
+  agent {
+    kubernetes {
+      label 'chart-substra'
+      defaultContainer 'build'
+      yamlFile '.cicd/agent-build.yaml'
+    }
+  }
+
+  stages {
+    stage('Test') {
+      steps {
+        dir("substra") {
+          checkout scm
+          sh "helm lint"
+        }
+      }
+    }
+
+    stage('Publish') {
+      when { buildingTag() }
+      steps {
+        dir("substra") {
+          checkout scm
+          sh "helm init --client-only"
+          sh "helm plugin install https://github.com/chartmuseum/helm-push"
+          sh "helm repo add substra https://substra-charts.owkin.com --username owlways --password Cokear4nnRK9ooC"
+          sh "helm push . substra"
+        }
+      }
+    }
+  }
+}
