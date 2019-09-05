@@ -24,6 +24,20 @@ pipeline {
 
     stage('Test & Build') {
       parallel {
+        stage('Test Helm') {
+          agent {
+            kubernetes {
+              label 'substrabac-helm'
+              defaultContainer 'helm'
+              yamlFile '.cicd/agent-helm.yaml'
+            }
+          }
+
+          steps {
+            sh "helm lint charts/substrabac"
+          }
+        }
+
         stage('Test') {
           agent {
             kubernetes {
@@ -111,6 +125,25 @@ pipeline {
                 /kaniko/executor -f `pwd`/docker/celeryworker/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/celeryworker:$GIT_COMMIT"
               '''
             }
+          }
+        }
+
+        stage('Publish Helm') {
+          agent {
+            kubernetes {
+              label 'substrabac-helm'
+              defaultContainer 'helm'
+              yamlFile '.cicd/agent-helm.yaml'
+            }
+          }
+
+          when { buildingTag() }
+
+          steps {
+            sh "helm init --client-only"
+            sh "helm plugin install https://github.com/chartmuseum/helm-push"
+            sh "helm repo add substra https://substra-charts.owkin.com --username owlways --password Cokear4nnRK9ooC"
+            sh "helm push charts/substrabac substra || true"
           }
         }
       }
