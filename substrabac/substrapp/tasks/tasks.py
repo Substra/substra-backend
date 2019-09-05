@@ -4,43 +4,74 @@ import os
 import shutil
 import tempfile
 from os import path
+import json
+from multiprocessing.managers import BaseManager
+import logging
 
+import docker
 from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
+from requests.auth import HTTPBasicAuth
 
 from substrabac.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, get_remote_file, uncompress_content
+from substrapp.utils import get_hash, get_owner, create_directory, get_remote_file, uncompress_content, NodeError
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
-                                    query_tuples, LedgerError, LedgerStatusError)
+                                    query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.exception_handler import compute_error_code
 
-import docker
-import json
-from multiprocessing.managers import BaseManager
 
-import logging
+def _authenticate_worker(node_id):
+    from node.models import OutgoingNode
+
+    owner = get_owner()
+
+    # This handle worker node authentication
+    # WARN: This should use a different authentication
+    #       Backend (WorkerBackend for example) to be able
+    #       to differentiate regular node users from workers
+    if node_id == owner:
+        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
+    else:
+        try:
+            outgoing = OutgoingNode.objects.get(node_id=node_id)
+        except OutgoingNode.DoesNotExist:
+            raise NodeError(f'Unauthorized to call node_id: {node_id}')
+
+        auth = HTTPBasicAuth(owner, outgoing.secret)
+
+    return auth
+
+
+def _get_asset_content(url, node_id, content_hash, salt=None):
+    return get_remote_file(url, _authenticate_worker(node_id), content_hash, salt=salt)
 
 
 def get_objective(subtuple):
     from substrapp.models import Objective
 
-    objectiveHash = subtuple['objective']['hash']
+    objective_hash = subtuple['objective']['hash']
 
     try:
-        objective = Objective.objects.get(pk=objectiveHash)
+        objective = Objective.objects.get(pk=objective_hash)
     except ObjectDoesNotExist:
         objective = None
 
     # get objective from ledger as it is not available in local db and store it in local db
     if objective is None or not objective.metrics:
-        content, computed_hash = get_remote_file(subtuple['objective']['metrics'])
+        objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
 
-        objective, _ = Objective.objects.update_or_create(pkhash=objectiveHash, validated=True)
+        content = _get_asset_content(
+            objective_metadata['metrics']['storageAddress'],
+            objective_metadata['owner'],
+            objective_metadata['metrics']['hash'],
+        )
+
+        objective, _ = Objective.objects.update_or_create(pkhash=objective_hash, validated=True)
 
         tmp_file = tempfile.TemporaryFile()
         tmp_file.write(content)
@@ -50,12 +81,29 @@ def get_objective(subtuple):
 
 
 def get_algo(subtuple):
-    algo_content, _ = get_remote_file(subtuple['algo'])
+    algo_hash = subtuple['algo']['hash']
+    algo_metadata = get_object_from_ledger(algo_hash, 'queryAlgo')
+
+    algo_content = _get_asset_content(
+        algo_metadata['content']['storageAddress'],
+        algo_metadata['owner'],
+        algo_metadata['content']['hash'],
+    )
+
     return algo_content
 
 
 def _get_model(model):
-    model_content, _ = get_remote_file(model, model['traintupleKey'])
+    traintuple_hash = model['traintupleKey']
+    traintuple_metadata = get_object_from_ledger(traintuple_hash, 'queryTraintuple')
+
+    model_content = _get_asset_content(
+        traintuple_metadata['outModel']['storageAddress'],
+        traintuple_metadata['creator'],
+        traintuple_metadata['outModel']['hash'],
+        salt=traintuple_hash,
+    )
+
     return model_content
 
 

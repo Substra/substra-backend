@@ -59,6 +59,13 @@ INSTALLED_APPS = [
     'rest_framework_swagger',
     'rest_framework',
     'substrapp',
+    'node',
+]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'libs.authentication.SettingsBackend',
+    'node.authentication.NodeBackend',
 ]
 
 MIDDLEWARE = [

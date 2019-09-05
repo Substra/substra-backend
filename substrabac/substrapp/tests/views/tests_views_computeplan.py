@@ -10,6 +10,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerComputePlanSerializer
+from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -19,6 +20,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class ComputePlanViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

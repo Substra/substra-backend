@@ -1,0 +1,16 @@
+- fields:
+    secret: e804ffc806ed55ef546b0a2395b9a2de53ebedf533e84ef68f7a311b9f480213b98d88c22df1a2f0cb2adcd0436ad0dbf86846d936ebb7dd8156e56c06f8116c
+  model: node.outgoingnode
+  pk: chu-nantesMSP
+- fields:
+    secret: fb3cd57a6e7c688a61021388b1ef7b321640e600b0fd187d6faf4ebbd5ac59d9bc8e286f6177e206576435ab1a7fb7a470dfedb2e6152958980e6e17eb783031
+  model: node.outgoingnode
+  pk: owkinMSP
+- fields:
+    secret: 7f37ca057ce8631ea5cce999697026701f47ffbc9c43fb88f7bf107856615fbeb1dbca6b7a5ae4c4415b0bfd141fa267661eb270a1e79e4a77502cf125ade021
+  model: node.incomingnode
+  pk: chu-nantesMSP
+- fields:
+    secret: 3e3e02045cf47fc37c6e0c7d5440fa17889c106a865254a0eeae3ccda60a8f0b90a2de218aa39ed074d71b0a1674cd5bdd0bf74ffc7fc385d8b9c9b63a7675c0
+  model: node.incomingnode
+  pk: owkinMSP

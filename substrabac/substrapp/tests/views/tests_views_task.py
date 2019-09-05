@@ -10,7 +10,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..common import FakeAsyncResult
+from ..common import FakeAsyncResult, AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -19,6 +19,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TaskViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

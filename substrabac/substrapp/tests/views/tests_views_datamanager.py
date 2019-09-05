@@ -14,8 +14,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 
-from ..common import get_sample_datamanager
-from ..common import FakeRequest
+from ..common import get_sample_datamanager, AuthenticatedClient
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -26,6 +25,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class DataManagerViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -113,7 +113,7 @@ class DataManagerViewTests(APITestCase):
         datamanager_response = [d for d in datamanager
                                 if d['key'] == '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'][0]
         with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger, \
-                mock.patch('substrapp.views.datamanager.get_from_node') as mrequestsget:
+                mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
             mget_object_from_ledger.return_value = datamanager_response
 
             with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
@@ -125,10 +125,7 @@ class DataManagerViewTests(APITestCase):
                     '../../../../fixtures/chunantes/datamanagers/datamanager0/description.md'), 'rb') as f:
                 description_content = f.read()
 
-            mrequestsget.side_effect = [FakeRequest(status=status.HTTP_200_OK,
-                                                    content=opener_content),
-                                        FakeRequest(status=status.HTTP_200_OK,
-                                                    content=description_content)]
+            mget_remote_asset.side_effect = [opener_content, description_content]
 
             search_params = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca/'
             response = self.client.get(url + search_params, **self.extra)

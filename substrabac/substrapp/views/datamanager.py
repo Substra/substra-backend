@@ -15,17 +15,17 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
 from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
-from substrapp.utils import get_hash, get_from_node
+from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (ManageFileMixin, ComputeHashMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code, ValidationException, LedgerException)
+from substrapp.views.utils import (ManageFileMixin, find_primary_key_error,
+                                   validate_pk, get_success_create_code, ValidationException, LedgerException,
+                                   get_remote_asset)
 from substrapp.views.filters_utils import filter_list
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
                          mixins.RetrieveModelMixin,
                          mixins.ListModelMixin,
-                         ComputeHashMixin,
                          ManageFileMixin,
                          GenericViewSet):
     queryset = DataManager.objects.all()
@@ -150,20 +150,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.data_opener:
             url = datamanager['opener']['storageAddress']
 
-            response = get_from_node(url)
-
-            try:
-                computed_hash = self.compute_hash(response.content)
-            except Exception as e:
-                raise Exception('Failed to fetch opener file') from e
-
-            if computed_hash != pk:
-                msg = 'computed hash is not the same as the hosted file. ' \
-                      'Please investigate for default of synchronization, corruption, or hacked'
-                raise Exception(msg)
+            content = get_remote_asset(url, datamanager['owner'], datamanager['opener']['hash'])
 
             f = tempfile.TemporaryFile()
-            f.write(response.content)
+            f.write(content)
 
             # save/update data_opener in local db for later use
             instance.data_opener.save('opener.py', f)
@@ -172,20 +162,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.description:
             url = datamanager['description']['storageAddress']
 
-            response = get_from_node(url)
-
-            try:
-                computed_hash = self.compute_hash(response.content)
-            except Exception as e:
-                raise Exception('Failed to fetch description file') from e
-
-            if computed_hash != datamanager['description']['hash']:
-                msg = 'computed hash is not the same as the hosted file. ' \
-                      'Please investigate for default of synchronization, corruption, or hacked'
-                raise Exception(msg)
+            content = get_remote_asset(url, datamanager['owner'], datamanager['description']['hash'])
 
             f = tempfile.TemporaryFile()
-            f.write(response.content)
+            f.write(content)
 
             # save/update description in local db for later use
             instance.description.save('description.md', f)

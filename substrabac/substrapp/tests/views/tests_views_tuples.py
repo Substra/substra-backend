@@ -17,6 +17,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import LedgerError
 
 from ..assets import traintuple, testtuple
+from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -25,6 +26,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TraintupleViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -96,6 +98,7 @@ class TraintupleViewTests(APITestCase):
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TesttupleViewTests(APITestCase):
+    client_class = AuthenticatedClient
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

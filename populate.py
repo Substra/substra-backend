@@ -12,6 +12,7 @@ from termcolor import colored
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
+USER, PASSWORD = ('admin', 'admin')
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 server_path = f'{SUBSTRA_FOLDER}/servermedias'
 
@@ -21,13 +22,19 @@ client = substra.Client()
 def setup_config(network='docker'):
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     if network == 'docker':
-        client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
-        client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0')
-        client.add_profile('clb', 'http://clb.substrabac:8002', '0.0')
+        client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
+                           user=USER, password=PASSWORD)
+        client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0',
+                           user=USER, password=PASSWORD)
+        client.add_profile('clb', 'http://clb.substrabac:8002', '0.0',
+                           user=USER, password=PASSWORD)
     if network == 'skaffold':
-        client.add_profile('owkin', 'http://substrabac.node-1', '0.0')
-        client.add_profile('chunantes', 'http://substrabac.node-2', '0.0')
-        client.add_profile('clb', 'http://substrabac.node-3', '0.0')
+        client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
+                           user=USER, password=PASSWORD)
+        client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
+                           user=USER, password=PASSWORD)
+        client.add_profile('clb', 'http://substrabac.node-3', '0.0',
+                           user=USER, password=PASSWORD)
 
 
 def zip_folder(path, destination):
