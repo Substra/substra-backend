@@ -26,7 +26,7 @@ from substrapp.utils import get_hash, create_directory, uncompress_path, is_arch
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.tasks.utils import get_asset_content
 from substrapp.views.utils import ManageFileMixin, find_primary_key_error, validate_pk, \
-    get_success_create_code, ValidationException, LedgerException, get_remote_asset
+    get_success_create_code, ValidationException, LedgerException, get_remote_asset, validate_sort
 from substrapp.views.filters_utils import filter_list
 
 
@@ -263,6 +263,26 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         serializer = self.get_serializer(instance)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['GET'])
+    def leaderboard(self, request, pk):
+        validate_pk(pk)
+
+        sort = request.query_params.get('sort', 'desc')
+        try:
+            validate_sort(sort)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            leaderboard = query_ledger(fcn='queryObjectiveLeaderboard', args={
+                'objectiveKey': pk,
+                'ascendingOrder': sort == 'asc',
+            })
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        return Response(leaderboard, status=status.HTTP_200_OK)
 
 
 @app.task(bind=True, ignore_result=False)

@@ -94,6 +94,11 @@ def validate_pk(pk):
         raise Exception(f'Wrong pk {pk}')
 
 
+def validate_sort(sort):
+    if sort not in ['asc', 'desc']:
+        raise Exception(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
+
+
 class LedgerException(Exception):
     def __init__(self, data, st):
         self.data = data
