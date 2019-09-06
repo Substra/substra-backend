@@ -60,7 +60,8 @@ class ObjectiveQueryTests(APITestCase):
             'test_data_sample_keys': self.test_data_sample_keys,
             'description': self.objective_description,
             'metrics': self.objective_metrics,
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'metrics_name': 'accuracy'
         }
         return expected_hash, data

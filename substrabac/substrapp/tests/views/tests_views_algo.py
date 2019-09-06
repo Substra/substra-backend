@@ -195,7 +195,8 @@ class AlgoViewTests(APITestCase):
                 'description': open(description_path, 'rb'),
                 'objective_key': get_hash(os.path.join(
                     dir_path, '../../../../fixtures/chunantes/objectives/objective0/description.md')),
-                'permissions': 'all'}
+                'permissions_public': True,
+                'permissions_authorized_ids': []}
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
 
