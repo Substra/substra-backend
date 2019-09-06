@@ -15,40 +15,13 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
-from requests.auth import HTTPBasicAuth
 
 from substrabac.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, get_remote_file, uncompress_content, NodeError
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker
+from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content
 from substrapp.tasks.exception_handler import compute_error_code
-
-
-def _authenticate_worker(node_id):
-    from node.models import OutgoingNode
-
-    owner = get_owner()
-
-    # This handle worker node authentication
-    # WARN: This should use a different authentication
-    #       Backend (WorkerBackend for example) to be able
-    #       to differentiate regular node users from workers
-    if node_id == owner:
-        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
-    else:
-        try:
-            outgoing = OutgoingNode.objects.get(node_id=node_id)
-        except OutgoingNode.DoesNotExist:
-            raise NodeError(f'Unauthorized to call node_id: {node_id}')
-
-        auth = HTTPBasicAuth(owner, outgoing.secret)
-
-    return auth
-
-
-def _get_asset_content(url, node_id, content_hash, salt=None):
-    return get_remote_file(url, _authenticate_worker(node_id), content_hash, salt=salt)
 
 
 def get_objective(subtuple):
@@ -65,7 +38,7 @@ def get_objective(subtuple):
     if objective is None or not objective.metrics:
         objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
 
-        content = _get_asset_content(
+        content = get_asset_content(
             objective_metadata['metrics']['storageAddress'],
             objective_metadata['owner'],
             objective_metadata['metrics']['hash'],
@@ -84,7 +57,7 @@ def get_algo(subtuple):
     algo_hash = subtuple['algo']['hash']
     algo_metadata = get_object_from_ledger(algo_hash, 'queryAlgo')
 
-    algo_content = _get_asset_content(
+    algo_content = get_asset_content(
         algo_metadata['content']['storageAddress'],
         algo_metadata['owner'],
         algo_metadata['content']['hash'],
@@ -97,7 +70,7 @@ def _get_model(model):
     traintuple_hash = model['traintupleKey']
     traintuple_metadata = get_object_from_ledger(traintuple_hash, 'queryTraintuple')
 
-    model_content = _get_asset_content(
+    model_content = get_asset_content(
         traintuple_metadata['outModel']['storageAddress'],
         traintuple_metadata['creator'],
         traintuple_metadata['outModel']['hash'],

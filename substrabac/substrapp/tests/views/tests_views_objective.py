@@ -290,7 +290,7 @@ class ObjectiveViewTests(APITestCase):
         test_data_manager_key = compute_hash(opener_content)
 
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mdatamanager,\
-                mock.patch('substrapp.views.objective.get_remote_asset') as get_remote_asset:
+                mock.patch('substrapp.views.objective.get_asset_content') as mget_asset_content:
             mdatamanager.return_value = {
                 'opener': {
                     'storageAddress': 'test',
@@ -298,5 +298,5 @@ class ObjectiveViewTests(APITestCase):
                 },
                 'owner': 'external_node_id'
             }
-            get_remote_asset.return_value = opener_content
+            mget_asset_content.return_value = opener_content
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)

@@ -8,10 +8,39 @@ import logging
 
 from subprocess import check_output
 from django.conf import settings
+from requests.auth import HTTPBasicAuth
+from substrapp.utils import get_owner, get_remote_file, NodeError
+
 
 DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
+
+
+def authenticate_worker(node_id):
+    from node.models import OutgoingNode
+
+    owner = get_owner()
+
+    # This handle worker node authentication
+    # WARN: This should use a different authentication
+    #       Backend (WorkerBackend for example) to be able
+    #       to differentiate regular node users from workers
+    if node_id == owner:
+        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
+    else:
+        try:
+            outgoing = OutgoingNode.objects.get(node_id=node_id)
+        except OutgoingNode.DoesNotExist:
+            raise NodeError(f'Unauthorized to call node_id: {node_id}')
+
+        auth = HTTPBasicAuth(owner, outgoing.secret)
+
+    return auth
+
+
+def get_asset_content(url, node_id, content_hash, salt=None):
+    return get_remote_file(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
 def get_cpu_sets(cpu_count, concurrency):
