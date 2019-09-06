@@ -300,3 +300,27 @@ class ObjectiveViewTests(APITestCase):
             }
             mget_asset_content.return_value = opener_content
             objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
+
+    def test_objective_leaderboard_sort(self):
+        url = reverse('substrapp:objective-leaderboard', args=[objective[0]['key']])
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = {}
+
+            self.client.get(url, data={'sort': 'desc'}, **self.extra)
+            mquery_ledger.assert_called_with(
+                fcn='queryObjectiveLeaderboard',
+                args={
+                    'objectiveKey': objective[0]['key'],
+                    'ascendingOrder': False,
+                })
+
+            self.client.get(url, data={'sort': 'asc'}, **self.extra)
+            mquery_ledger.assert_called_with(
+                fcn='queryObjectiveLeaderboard',
+                args={
+                    'objectiveKey': objective[0]['key'],
+                    'ascendingOrder': True,
+                })
+
+        response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
