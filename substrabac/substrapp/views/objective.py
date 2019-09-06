@@ -24,6 +24,7 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash, create_directory, uncompress_path, is_archive
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
+from substrapp.tasks.utils import get_asset_content
 from substrapp.views.utils import ManageFileMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException, get_remote_asset
 from substrapp.views.filters_utils import filter_list
@@ -278,7 +279,7 @@ def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
     os.remove(archive_path)
 
     datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
-    opener_content = get_remote_asset(
+    opener_content = get_asset_content(
         datamanager['opener']['storageAddress'],
         datamanager['owner'],
         datamanager['opener']['hash'],
