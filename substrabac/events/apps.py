@@ -15,7 +15,6 @@ from hfc.fabric import Client
 from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
-from hfc.protos.peer.transaction_pb2 import TxValidationCode
 
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_owner
@@ -37,23 +36,8 @@ def get_event_loop():
         loop.close()
 
 
-def get_block_payload(block):
-    payload = json.loads(
-        block['data']['data'][0]['payload']['data']['actions'][0]['payload']['action']['proposal_response_payload'][
-            'extension']['events']['payload'])
-    return payload
-
-
-def on_tuples(block):
-    try:
-        meta = block['metadata']['metadata'][-1]
-        if isinstance(meta, list):
-            meta = int(meta.pop())
-        tx_validation_code = TxValidationCode.Name(meta)
-    except Exception:
-        tx_validation_code = None
-
-    payload = get_block_payload(block)
+def on_tuples(cc_event, block_number, tx_id, tx_status):
+    payload = json.loads(cc_event['payload'])
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
 
@@ -66,7 +50,7 @@ def on_tuples(block):
             status = _tuple['status']
 
             logger.info(f'Processing task {key}: type={tuple_type} status={status}'
-                        f' with tx status: {tx_validation_code}')
+                        f' with tx status: {tx_status}')
 
             if status != 'todo':
                 continue
@@ -139,6 +123,7 @@ def wait():
             channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                      'tuples-updated',
                                                      onEvent=on_tuples)
+
             loop.run_until_complete(stream)
 
 
