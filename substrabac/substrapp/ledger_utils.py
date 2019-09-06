@@ -181,9 +181,6 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             status_code = response['status']
             exception_class = STATUS_TO_EXCEPTION.get(status_code, LedgerBadResponse)
             raise exception_class.from_response(response)
-        # Check permissions
-        if response and 'permissions' in response and response['permissions'] != 'all':
-            raise LedgerForbidden('Not allowed')
 
         return response
 

@@ -37,22 +37,48 @@ class CustomFileResponse(FileResponse):
         self['Access-Control-Expose-Headers'] = 'Content-Disposition'
 
 
+def is_local_user(user):
+    return user.username == settings.BASICAUTH_USERNAME
+
+
+def has_access(user, asset):
+    """Returns true if API consumer can access asset data."""
+    if user.is_anonymous:  # safeguard, should never happened
+        return False
+
+    if is_local_user(user):
+        return True
+
+    permission = asset['permissions']['process']
+    if permission['public']:
+        return True
+
+    node_id = user.username
+    return node_id in permission['authorizedIDs']
+
+
 class ManageFileMixin(object):
-    def manage_file(self, field):
+    def download_file(self, request, field):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
-        # TODO get cert for permissions check
-
         try:
-            get_object_from_ledger(pk, self.ledger_query_call)
+            asset = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        else:
-            obj = self.get_object()
 
-            data = getattr(obj, field)
-            return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+        if not has_access(request.user, asset):
+            return Response({'message': 'Unauthorized'},
+                            status=status.HTTP_401_UNAUTHORIZED)
+
+        obj = self.get_object()
+        data = getattr(obj, field)
+        response = CustomFileResponse(
+            open(data.path, 'rb'),
+            as_attachment=True,
+            filename=os.path.basename(data.path)
+        )
+        return response
 
 
 def find_primary_key_error(validation_error, key_name='pkhash'):

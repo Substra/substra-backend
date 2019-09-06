@@ -39,7 +39,8 @@ class DataManagerQueryTests(APITestCase):
         data = {
             'name': 'slide opener',
             'type': 'images',
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'objective_key': '',
             'description': self.data_description,
             'data_opener': self.data_data_opener

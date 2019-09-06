@@ -4,13 +4,14 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 
 from substrapp.utils import get_hash
+from substrapp.serializers.ledger.utils import PermissionsSerializer
 from .util import createLedgerAlgo
 from .tasks import createLedgerAlgoAsync
 
 
 class LedgerAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=100)
-    permissions = serializers.CharField(min_length=1, max_length=60)
+    permissions = PermissionsSerializer()
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
@@ -32,7 +33,10 @@ class LedgerAlgoSerializer(serializers.Serializer):
             'storageAddress': protocol + host + reverse('substrapp:algo-file', args=[instance.pk]),
             'descriptionHash': get_hash(instance.description),
             'descriptionStorageAddress': protocol + host + reverse('substrapp:algo-description', args=[instance.pk]),
-            'permissions': permissions
+            'permissions': {'process': {
+                'public': permissions.get('public'),
+                'authorizedIDs': permissions.get('authorized_ids'),
+            }}
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

@@ -1,5 +1,11 @@
+from rest_framework import serializers
 from django.core.exceptions import ObjectDoesNotExist
 from substrapp.ledger_utils import invoke_ledger, LedgerError, LedgerTimeout
+
+
+class PermissionsSerializer(serializers.Serializer):
+    public = serializers.BooleanField()
+    authorized_ids = serializers.ListField(child=serializers.CharField())
 
 
 def create_ledger_asset(model, fcn, args, pkhash, sync=False):

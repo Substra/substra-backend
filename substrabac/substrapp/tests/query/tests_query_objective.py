@@ -15,7 +15,7 @@ from substrapp.models import Objective, DataManager
 from substrapp.utils import get_hash, compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_temporary_text_file, AuthenticatedClient
+    get_temporary_text_file, AuthenticatedClient, get_sample_objective_metadata
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -60,7 +60,8 @@ class ObjectiveQueryTests(APITestCase):
             'test_data_sample_keys': self.test_data_sample_keys,
             'description': self.objective_description,
             'metrics': self.objective_metrics,
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'metrics_name': 'accuracy'
         }
         return expected_hash, data
@@ -220,7 +221,7 @@ class ObjectiveQueryTests(APITestCase):
 
         with mock.patch(
                 'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = self.objective_metrics
+            mget_object_from_ledger.return_value = get_sample_objective_metadata()
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
