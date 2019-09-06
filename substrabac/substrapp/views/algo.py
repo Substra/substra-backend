@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
-from substrapp.utils import get_hash, is_archive
+from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (ManageFileMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
@@ -69,9 +69,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return d
 
     def _create(self, request, file):
-
-        if not is_archive(file):
-            raise Exception('Archive must be zip or tar.*')
 
         pkhash = get_hash(file)
         serializer = self.get_serializer(data={
