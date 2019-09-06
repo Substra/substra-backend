@@ -85,7 +85,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
             'test_data_manager_key': request.data.get('test_data_manager_key', ''),
             'name': request.data.get('name'),
-            'permissions': request.data.get('permissions'),
+            # XXX workaround because input is a QueryDict and not a JSON object. This
+            #     is due to the fact that we are sending file object and body in a
+            #     single HTTP request
+            'permissions': {
+                'public': request.data.get('permissions_public'),
+                'authorized_ids': request.data.get('permissions_authorized_ids', []),
+            },
             'metrics_name': request.data.get('metrics_name'),
         }
         ledger_data.update({'instance': instance})
@@ -245,11 +251,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):
-        return self.manage_file('description')
+        return self.download_file(request, 'description')
 
     @action(detail=True)
     def metrics(self, request, *args, **kwargs):
-        return self.manage_file('metrics')
+        return self.download_file(request, 'metrics')
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):

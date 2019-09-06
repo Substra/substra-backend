@@ -19,6 +19,9 @@ server_path = f'{SUBSTRA_FOLDER}/servermedias'
 client = substra.Client()
 
 
+PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
+
+
 def setup_config(network='docker'):
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     if network == 'docker':
@@ -142,7 +145,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
-        'permissions': 'all',
+        'permissions': PUBLIC_PERMISSIONS,
     }
     data_manager_org1_key = get_or_create(data, org_1, 'dataset', dryrun=True)
 
@@ -186,7 +189,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
-        'permissions': 'all'
+        'permissions': PUBLIC_PERMISSIONS,
     }
     data_manager_org0_key = get_or_create(data, org_0, 'dataset')
 
@@ -196,7 +199,7 @@ def do_populate():
         'data_opener': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/opener.py'),
         'type': 'Images',
         'description': os.path.join(dir_path, './fixtures/owkin/datamanagers/datamanager0/description.md'),
-        'permissions': 'all'
+        'permissions': PUBLIC_PERMISSIONS,
     }
     get_or_create(data, org_1, 'dataset')
 
@@ -253,7 +256,7 @@ def do_populate():
             'description': os.path.join(dir_path, './fixtures/chunantes/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
             'metrics': zip_path,
-            'permissions': 'all',
+            'permissions': PUBLIC_PERMISSIONS,
             'test_data_sample_keys': test_data_sample_keys,
             'test_data_manager_key': data_manager_org0_key
         }
@@ -273,7 +276,7 @@ def do_populate():
             'description': os.path.join(dir_path, './fixtures/owkin/objectives/objective0/description.md'),
             'metrics_name': 'macro-average recall',
             'metrics': zip_path,
-            'permissions': 'all'
+            'permissions': PUBLIC_PERMISSIONS,
         }
 
         get_or_create(data, org_0, 'objective', dryrun=True)
@@ -295,7 +298,7 @@ def do_populate():
         'name': 'Logistic regression',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo3/description.md'),
-        'permissions': 'all',
+        'permissions': PUBLIC_PERMISSIONS,
     }
     algo_key = get_or_create(data, org_2, 'algo')
 
@@ -306,7 +309,7 @@ def do_populate():
         'name': 'Neural Network',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo0/description.md'),
-        'permissions': 'all',
+        'permissions': PUBLIC_PERMISSIONS,
     }
     algo_key_2 = get_or_create(data, org_1, 'algo')
 
@@ -316,7 +319,7 @@ def do_populate():
         'name': 'Random Forest',
         'file': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/algo.tar.gz'),
         'description': os.path.join(dir_path, './fixtures/chunantes/algos/algo4/description.md'),
-        'permissions': 'all',
+        'permissions': PUBLIC_PERMISSIONS,
     }
     algo_key_3 = get_or_create(data, org_1, 'algo')
 

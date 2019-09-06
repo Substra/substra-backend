@@ -16,7 +16,9 @@ from substrapp.utils import get_hash, compute_hash
 from substrapp.ledger_utils import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_sample_algo, get_sample_algo_zip, AuthenticatedClient
+    get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
+    get_sample_algo_metadata
+
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -55,7 +57,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
 
         return expected_hash, data
@@ -68,7 +71,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
 
         return expected_hash, data
@@ -136,7 +140,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -157,7 +162,8 @@ class AlgoQueryTests(APITestCase):
             data = {
                 'name': 'super top algo',
                 'objective_key': get_hash(self.objective_description),
-                'permissions': 'all'
+                'permissions_public': True,
+                'permissions_authorized_ids': [],
             }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -182,7 +188,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -201,7 +208,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
@@ -216,14 +224,14 @@ class AlgoQueryTests(APITestCase):
         algo = Algo.objects.create(file=self.algo)
         with mock.patch(
                 'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = self.algo
+            mget_object_from_ledger.return_value = get_sample_algo_metadata()
+
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
-            # self.assertEqual(r, f'http://testserver/media/algos/{algo.pkhash}/{self.algo_filename}')
 
     def test_get_algo_files_no_version(self):
         algo = Algo.objects.create(file=self.algo)

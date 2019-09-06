@@ -173,7 +173,8 @@ class DataManagerViewTests(APITestCase):
         data = {
             'name': 'ISIC 2018',
             'type': 'Images',
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'dryrun': True
         }
 

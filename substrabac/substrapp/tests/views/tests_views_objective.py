@@ -211,7 +211,8 @@ class ObjectiveViewTests(APITestCase):
             'description': open(description_path, 'rb'),
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'test_data_sample_keys': self.test_data_sample_keys,
             'test_data_manager_key': test_data_manager_key
         }
@@ -250,7 +251,8 @@ class ObjectiveViewTests(APITestCase):
             'description': open(description_path, 'rb'),
             'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
-            'permissions': 'all',
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
             'test_data_sample_keys': self.test_data_sample_keys,
             'test_data_manager_key': test_data_manager_key,
             'dryrun': True
