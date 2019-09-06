@@ -57,7 +57,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
 
         return expected_hash, data
@@ -70,7 +71,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
 
         return expected_hash, data
@@ -138,7 +140,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -159,7 +162,8 @@ class AlgoQueryTests(APITestCase):
             data = {
                 'name': 'super top algo',
                 'objective_key': get_hash(self.objective_description),
-                'permissions': 'all'
+                'permissions_public': True,
+                'permissions_authorized_ids': [],
             }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -184,7 +188,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         response = self.client.post(url, data, format='multipart')
         r = response.json()
@@ -203,7 +208,8 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'name': 'super top algo',
             'objective_key': get_hash(self.objective_description),
-            'permissions': 'all'
+            'permissions_public': True,
+            'permissions_authorized_ids': [],
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=-1.0',
