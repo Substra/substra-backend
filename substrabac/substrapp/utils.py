@@ -152,19 +152,6 @@ def uncompress_content(archive_content, to_directory):
             raise Exception('Archive must be zip or tar.*')
 
 
-def is_archive(archive_content):
-
-    if zipfile.is_zipfile(io.BytesIO(archive_content)):
-        return True
-    else:
-        try:
-            tar = tarfile.open(fileobj=io.BytesIO(archive_content))
-            tar.close()
-            return True
-        except tarfile.TarError:
-            return False
-
-
 class NodeError(Exception):
     pass
 
