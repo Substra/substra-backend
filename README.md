@@ -157,7 +157,22 @@ Go in the `substrabac` folder and run the server locally:
  SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.events.dev
  SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.events.dev
  ```
+ 
+ If you want to bypass the basic authentication when you browse the server on localhost:8000 or localhost:8001, you can use the `nobasicauth` settings.  
+ Simply replace `events.dev` by `nobasicauth`, like:
+  ```
+ SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.nobasicauth
+ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.nobasicauth
+ ```
+ It allows the substrafront project to work correctly too.
 
+## Load data fixtures
+
+For working with node to node authentication, you need load some extra fixtures
+```
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=substrabac.settings.events.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=substrabac.settings.events.dev
+```
 
 ## Test with unit and functional tests
 
