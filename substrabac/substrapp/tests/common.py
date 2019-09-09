@@ -235,8 +235,7 @@ def get_sample_tar_data_sample():
             dir_path, '../../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/zip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, 'application/zip', flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -249,8 +248,7 @@ def get_sample_algo():
     with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/tar+gzip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, 'application/tar+gzip', flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -258,17 +256,28 @@ def get_sample_algo():
 
 def get_sample_algo_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    file_filename = "file.tar.gz"
+    file_filename = "file.zip"
     f = BytesIO()
     with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo0/algo.zip'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/tar+gzip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, 'application/tar+gzip', flength, None)
     file.seek(0)
 
     return file, file_filename
 
+
+def get_description_algo():
+    dir_path = os.path.dirname(os.path.realpath(__file__))
+    file_filename = "file.md"
+    f = BytesIO()
+    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/description.md'), 'rb') as desc_file:
+        flength = f.write(desc_file.read())
+
+    file = InMemoryUploadedFile(f, None, file_filename, 'application/text', flength, None)
+    file.seek(0)
+
+    return file, file_filename
 
 def get_sample_model():
     model_content = "0.1, 0.2, -1.0"

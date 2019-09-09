@@ -25,7 +25,7 @@ from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerE
 from substrapp.utils import get_hash, create_directory, uncompress_path
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.tasks.utils import get_asset_content
-from substrapp.views.utils import ManageFileMixin, find_primary_key_error, validate_pk, \
+from substrapp.views.utils import PermissionMixin, find_primary_key_error, validate_pk, \
     get_success_create_code, ValidationException, LedgerException, get_remote_asset, validate_sort
 from substrapp.views.filters_utils import filter_list
 
@@ -33,13 +33,10 @@ from substrapp.views.filters_utils import filter_list
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
-                       ManageFileMixin,
                        GenericViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
     ledger_query_call = 'queryObjective'
-
-    # permission_classes = (permissions.IsAuthenticated,)
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -250,14 +247,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return Response(objectives_list, status=status.HTTP_200_OK)
 
     @action(detail=True)
-    def description(self, request, *args, **kwargs):
-        return self.download_file(request, 'description')
-
-    @action(detail=True)
-    def metrics(self, request, *args, **kwargs):
-        return self.download_file(request, 'metrics')
-
-    @action(detail=True)
     def data(self, request, *args, **kwargs):
         instance = self.get_object()
 
@@ -353,3 +342,18 @@ def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
             logging.error(e, exc_info=True)
 
         remove_subtuple_materials(subtuple_directory)
+
+
+class ObjectivePermissionViewSet(PermissionMixin,
+                                 GenericViewSet):
+    queryset = Objective.objects.all()
+    serializer_class = ObjectiveSerializer
+    ledger_query_call = 'queryObjective'
+
+    @action(detail=True)
+    def description(self, request, *args, **kwargs):
+        return self.download_file(request, 'description')
+
+    @action(detail=True)
+    def metrics(self, request, *args, **kwargs):
+        return self.download_file(request, 'metrics')
