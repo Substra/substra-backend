@@ -11,7 +11,7 @@ class SettingsBackend:
             return None
 
         if username == settings.BASICAUTH_USERNAME and password == settings.BASICAUTH_PASSWORD:
-            return User(username)
+            return User(username=username)
 
         return None
 
