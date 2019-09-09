@@ -15,7 +15,7 @@ class NodeBackend:
 
         incoming_node_exists = IncomingNode.objects.filter(node_id=node_id, secret=secret).exists()
         if incoming_node_exists:
-            return User(node_id)
+            return User(username=node_id)
 
         return None
 
