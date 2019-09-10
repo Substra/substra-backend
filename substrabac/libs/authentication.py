@@ -2,7 +2,7 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 
-#TODO should be removed when local users are handled with registering/logging and session
+# TODO should be removed when local users are handled with registering/logging and session
 class SettingsBackend:
     """Authenticate against user and password defined in settings."""
 

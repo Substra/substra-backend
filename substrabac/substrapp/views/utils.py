@@ -64,7 +64,8 @@ class BasicAuthentication(BasicAuthentication):
                 return None
             else:
                 # create fake auth in debug mode, if no provided (user case, not node)
-                auth = [b'Basic', base64.b64encode(f'{settings.BASICAUTH_USERNAME}:{settings.BASICAUTH_PASSWORD}'.encode(HTTP_HEADER_ENCODING))]
+                debug_basic_auth = f'{settings.BASICAUTH_USERNAME}:{settings.BASICAUTH_PASSWORD}'
+                auth = [b'Basic', base64.b64encode(debug_basic_auth.encode(HTTP_HEADER_ENCODING))]
 
         if len(auth) == 1:
             msg = _('Invalid basic header. No credentials provided.')
@@ -92,7 +93,8 @@ class BasicAuthentication(BasicAuthentication):
 
 class PermissionMixin(object):
 
-    authentication_classes = [import_module(settings.BASIC_AUTHENTICATION_MODULE).BasicAuthentication, SessionAuthentication]
+    authentication_classes = [import_module(settings.BASIC_AUTHENTICATION_MODULE).BasicAuthentication,
+                              SessionAuthentication]
     permission_classes = [IsAuthenticated]
 
     def _has_access(self, user, asset):
