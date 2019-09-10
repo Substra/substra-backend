@@ -245,7 +245,11 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                  'labels': [DOCKER_LABEL],
                  'detach': False,
                  'auto_remove': False,
-                 'remove': False}
+                 'remove': False,
+                 'network_disabled': True,
+                 'network_mode': 'none',
+                 'privileged': False,
+                 'cap_drop': ['ALL']}
 
     if gpu_set is not None:
         task_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
