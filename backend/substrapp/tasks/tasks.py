@@ -50,32 +50,17 @@ class TasksError(Exception):
 
 
 def get_objective(tuple_):
-    from substrapp.models import Objective
 
     objective_hash = tuple_['objective']['hash']
+    objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
 
-    try:
-        objective = Objective.objects.get(pk=objective_hash)
-    except ObjectDoesNotExist:
-        objective = None
+    objective_content = get_asset_content(
+        objective_metadata['metrics']['storageAddress'],
+        objective_metadata['owner'],
+        objective_metadata['metrics']['hash'],
+    )
 
-    # get objective from ledger as it is not available in local db and store it in local db
-    if objective is None or not objective.metrics:
-        objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
-
-        content = get_asset_content(
-            objective_metadata['metrics']['storageAddress'],
-            objective_metadata['owner'],
-            objective_metadata['metrics']['hash'],
-        )
-
-        objective, _ = Objective.objects.update_or_create(pkhash=objective_hash, validated=True)
-
-        tmp_file = tempfile.TemporaryFile()
-        tmp_file.write(content)
-        objective.metrics.save('metrics.archive', tmp_file)
-
-    return objective.metrics.read()
+    return objective_content
 
 
 @timeit
@@ -316,6 +301,33 @@ def prepare_testtuple_input_models(directory, tuple_):
 
 
 @timeit
+def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
+    if not model_content:
+        raise Exception('Model content should not be empty')
+
+    from substrapp.models import Model
+
+    # store a model in local subtuple directory from input model content
+    model_dst_path = path.join(subtuple_directory, f'model/{filename_prefix}{traintuple_hash}')
+    model = None
+    try:
+        model = Model.objects.get(pk=model_hash)
+    except ObjectDoesNotExist:  # write it to local disk
+        with open(model_dst_path, 'wb') as f:
+            f.write(model_content)
+    else:
+        # verify that local db model file is not corrupted
+        if get_hash(model.file.path, traintuple_hash) != model_hash:
+            raise Exception('Model Hash in Subtuple is not the same as in local db')
+
+        if not os.path.exists(model_dst_path):
+            os.symlink(model.file.path, model_dst_path)
+        else:
+            # verify that local subtuple model file is not corrupted
+            if get_hash(model_dst_path, traintuple_hash) != model_hash:
+                raise Exception('Model Hash in Subtuple is not the same as in local medias')
+
+
 def prepare_models(directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
@@ -351,7 +363,7 @@ def prepare_opener(directory, tuple_):
 
     opener_dst_path = path.join(directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
-        os.link(datamanager.data_opener.path, opener_dst_path)
+        os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
         # verify that local subtuple data opener file is not corrupted
         if get_hash(opener_dst_path) != data_opener_hash:
@@ -651,11 +663,16 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     environment = {}
 
     # VOLUMES
-
     symlinks_volume = {}
     for subfolder in os.listdir(data_path):
         real_path = os.path.realpath(os.path.join(data_path, subfolder))
         symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+    for subtuple_folder in ['opener', 'model', 'metrics']:
+        for subitem in os.listdir(path.join(subtuple_directory, subtuple_folder)):
+            real_path = os.path.realpath(os.path.join(subtuple_directory, subtuple_folder, subitem))
+            if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
+                symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
