@@ -261,7 +261,7 @@ def get_sample_algo_zip():
     with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo0/algo.zip'), 'rb') as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename, 'application/tar+gzip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, 'application/zip', flength, None)
     file.seek(0)
 
     return file, file_filename
