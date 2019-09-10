@@ -279,6 +279,7 @@ def get_description_algo():
 
     return file, file_filename
 
+
 def get_sample_model():
     model_content = "0.1, 0.2, -1.0"
     model_filename = "model.bin"
