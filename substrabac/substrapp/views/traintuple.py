@@ -1,9 +1,12 @@
+import logging
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
+from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
 
 
@@ -73,7 +76,25 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             data = query_ledger(fcn='queryTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        return Response(data, status=status.HTTP_200_OK)
+
+        traintuple_list = [data]
+
+        query_params = request.query_params.get('search', None)
+        if query_params is not None:
+            try:
+                traintuple_list = filter_list(
+                    object_type='traintuple',
+                    data=data,
+                    query_params=query_params)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+            except Exception as e:
+                logging.exception(e)
+                return Response(
+                    {'message': f'Malformed search filters {query_params}'},
+                    status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(traintuple_list, status=status.HTTP_200_OK)
 
     def _retrieve(self, pk):
         validate_pk(pk)

@@ -156,7 +156,8 @@ def do_populate():
     if not args['archive']:
         print(f'register train data (from server) on datamanager {org_1} (will take datamanager creator as worker)')
         data_samples_path = ['./fixtures/chunantes/datasamples/train/0024306',
-                             './fixtures/chunantes/datasamples/train/0024307']
+                             './fixtures/chunantes/datasamples/train/0024307',
+                             './fixtures/chunantes/datasamples/train/0024308']
         for d in data_samples_path:
             try:
                 shutil.copytree(os.path.join(dir_path, d),
@@ -174,7 +175,8 @@ def do_populate():
         data = {
             'paths': [
                 os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024306'),
-                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307')
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024307'),
+                os.path.join(dir_path, './fixtures/chunantes/datasamples/train/0024308')
             ],
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
@@ -331,7 +333,7 @@ def do_populate():
         'algo_key': algo_key,
         'objective_key': objective_key,
         'data_manager_key': data_manager_org1_key,
-        'train_data_sample_keys': train_data_sample_keys,
+        'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': 'substra'
     }
     traintuple_key = get_or_create(data, org_1, 'traintuple')
@@ -341,7 +343,7 @@ def do_populate():
         'algo_key': algo_key_2,
         'data_manager_key': data_manager_org1_key,
         'objective_key': objective_key,
-        'train_data_sample_keys': train_data_sample_keys,
+        'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': 'My super tag'
     }
 
@@ -352,7 +354,7 @@ def do_populate():
         'algo_key': algo_key_3,
         'data_manager_key': data_manager_org1_key,
         'objective_key': objective_key,
-        'train_data_sample_keys': train_data_sample_keys,
+        'train_data_sample_keys': train_data_sample_keys[:2],
     }
 
     get_or_create(data, org_1, 'traintuple')
@@ -366,7 +368,8 @@ def do_populate():
     # create testtuple
     print('create testtuple')
     data = {
-        'traintuple_key': traintuple_key
+        'traintuple_key': traintuple_key,
+        'tag': 'substra',
     }
 
     testtuple_key = get_or_create(data, org_1, 'testtuple')
@@ -394,6 +397,40 @@ def do_populate():
             print('.', end='', flush=True)
 
         time.sleep(3)
+
+    ####################################################
+    # Compute plan
+
+    print('create compute plan')
+    traintuples_data = [
+        {
+            "data_manager_key": data_manager_org1_key,
+            "train_data_sample_keys": [train_data_sample_keys[0], train_data_sample_keys[2]],
+            "traintuple_id": "dummy_traintuple_id",
+            "in_models_ids": [],
+            "tag": "",
+        },
+    ]
+    testtuples_data = [
+        # {
+        #     "traintuple_id": "dummy_traintuple_id",
+        #     "tag": "",
+        # }
+    ]
+    compute_plan_data = {
+        "algo_key": algo_key,  # logistic regression, org2
+        "objective_key": objective_key,  # org 0
+        "traintuples": traintuples_data,
+        "testtuples": testtuples_data,
+    }
+    # until both chaincode, backend and sdk can handle compute plan collisions, we need to have a
+    # generic try-except so that this script can run multiple times in a row
+    try:
+        client.set_profile(org_1)
+        res = client.add_compute_plan(compute_plan_data)
+        print(colored(json.dumps(res, indent=2), 'green'))
+    except:  # noqa: E722
+        print(colored('Could not create compute plan', 'red'))
 
 
 if __name__ == '__main__':

@@ -15,6 +15,8 @@ AUTHORIZED_FILTERS = {
     'algo': ['model', 'algo'],
     'objective': ['model', 'dataset', 'objective'],
     'model': ['model', 'algo', 'dataset', 'objective'],
+    'traintuple': ['traintuple'],
+    'testtuple': ['testtuple'],
 }
 
 
@@ -89,7 +91,7 @@ def filter_list(object_type, data, query_params):
 
                 else:
                     for attribute, val in subfilters.items():
-                        filtered_list = [x for x in filtered_list if x[attribute] in val]
+                        filtered_list = [x for x in filtered_list if x.get(attribute) in val]
             else:
                 # Filter by other asset
 
