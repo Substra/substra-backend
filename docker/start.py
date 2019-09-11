@@ -23,7 +23,7 @@ BACKEND_PORT = {
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 
 
-def generate_docker_compose_file(conf, launch_settings):
+def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
     # POSTGRES
     POSTGRES_USER = 'substrabac'
@@ -127,7 +127,9 @@ def generate_docker_compose_file(conf, launch_settings):
                             f'--module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics ' \
                             f'--master --processes {processes} --threads 2'
         else:
-            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev ' \
+            print('nobasicauth: ', nobasicauth, flush=True)
+            extra_settings = '.nobasicauth' if nobasicauth is True else ''
+            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events{extra_settings}.dev ' \
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
@@ -281,9 +283,9 @@ def stop(docker_compose=None):
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
 
-def start(conf, launch_settings, no_backup):
+def start(conf, launch_settings, no_backup, nobasicauth=False):
     print('Generate docker-compose file\n')
-    docker_compose = generate_docker_compose_file(conf, launch_settings)
+    docker_compose = generate_docker_compose_file(conf, launch_settings, nobasicauth)
 
     stop(docker_compose)
 
@@ -307,6 +309,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dev', action='store_true', default=False,
                         help="use dev settings")
+    parser.add_argument('--nobasicauth', action='store_true', default=False,
+                        help="use dev settings without basic authentication")
     parser.add_argument('--no-backup', action='store_true', default=False,
                         help="Remove backup binded volume, medias and db data. Launch from scratch")
     args = vars(parser.parse_args())
@@ -315,6 +319,10 @@ if __name__ == "__main__":
         launch_settings = 'dev'
     else:
         launch_settings = 'prod'
+
+    nobasicauth = False
+    if args['nobasicauth']:
+        nobasicauth = True
 
     no_backup = args['no_backup']
 
@@ -327,4 +335,4 @@ if __name__ == "__main__":
 
     print('', flush=True)
 
-    start(conf, launch_settings, no_backup)
+    start(conf, launch_settings, no_backup, nobasicauth)

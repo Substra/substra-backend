@@ -2,6 +2,11 @@ from django.contrib.auth.models import User
 from .models import IncomingNode
 
 
+class NodeUser(User):
+    pass
+
+
+# TODO: should be removed when node to node authent will be done via certificates
 class NodeBackend:
     """Authenticate node """
 
@@ -15,7 +20,7 @@ class NodeBackend:
 
         incoming_node_exists = IncomingNode.objects.filter(node_id=node_id, secret=secret).exists()
         if incoming_node_exists:
-            return User(username=node_id)
+            return NodeUser(username=node_id)
 
         return None
 
