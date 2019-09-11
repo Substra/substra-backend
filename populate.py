@@ -33,11 +33,11 @@ def setup_config(network='docker'):
                            user=USER, password=PASSWORD)
     if network == 'skaffold':
         client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='peer1', password='baz')
         client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='peer2', password='baz')
         client.add_profile('clb', 'http://substrabac.node-3', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='peer3', password='baz')
 
 
 def zip_folder(path, destination):
