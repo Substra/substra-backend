@@ -12,7 +12,7 @@ from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (ManageFileMixin, find_primary_key_error,
+from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset)
 from substrapp.views.filters_utils import filter_list
@@ -21,7 +21,6 @@ from substrapp.views.filters_utils import filter_list
 class AlgoViewSet(mixins.CreateModelMixin,
                   mixins.RetrieveModelMixin,
                   mixins.ListModelMixin,
-                  ManageFileMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
@@ -186,6 +185,13 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     status=status.HTTP_400_BAD_REQUEST)
 
         return Response(algos_list, status=status.HTTP_200_OK)
+
+
+class AlgoPermissionViewSet(PermissionMixin,
+                            GenericViewSet):
+    queryset = Algo.objects.all()
+    serializer_class = AlgoSerializer
+    ledger_query_call = 'queryAlgo'
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):

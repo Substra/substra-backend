@@ -74,6 +74,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
@@ -159,3 +160,6 @@ CELERY_WORKER_CONCURRENCY = 1
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//'),
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
+
+BASIC_AUTHENTICATION_MODULE = 'rest_framework.authentication'

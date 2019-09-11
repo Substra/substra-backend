@@ -1,6 +1,12 @@
 import os
 
+import base64
+import binascii
+from importlib import import_module
+
 from django.http import FileResponse
+from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
@@ -10,6 +16,10 @@ from node.models import OutgoingNode
 from django.conf import settings
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
+
+from django.utils.translation import ugettext_lazy as _
+
+from rest_framework import HTTP_HEADER_ENCODING, exceptions
 
 
 def authenticate_outgoing_request(outgoing_node_id):
@@ -41,23 +51,67 @@ def is_local_user(user):
     return user.username == settings.BASICAUTH_USERNAME
 
 
-def has_access(user, asset):
-    """Returns true if API consumer can access asset data."""
-    if user.is_anonymous:  # safeguard, should never happened
-        return False
+class BasicAuthentication(BasicAuthentication):
+    def authenticate(self, request):
+        """
+        Returns a `User` if a correct username and password have been supplied
+        using HTTP Basic authentication.  Otherwise returns `None`.
+        """
+        auth = get_authorization_header(request).split()
 
-    if is_local_user(user):
-        return True
+        if not auth or auth[0].lower() != b'basic':
+            if not settings.DEBUG:
+                return None
+            else:
+                # create fake auth in debug mode, if no provided (user case, not node)
+                debug_basic_auth = f'{settings.BASICAUTH_USERNAME}:{settings.BASICAUTH_PASSWORD}'
+                auth = [b'Basic', base64.b64encode(debug_basic_auth.encode(HTTP_HEADER_ENCODING))]
 
-    permission = asset['permissions']['process']
-    if permission['public']:
-        return True
+        if len(auth) == 1:
+            msg = _('Invalid basic header. No credentials provided.')
+            raise exceptions.AuthenticationFailed(msg)
+        elif len(auth) > 2:
+            msg = _('Invalid basic header. Credentials string should not contain spaces.')
+            raise exceptions.AuthenticationFailed(msg)
 
-    node_id = user.username
-    return node_id in permission['authorizedIDs']
+        try:
+            auth_parts = base64.b64decode(auth[1]).decode(HTTP_HEADER_ENCODING).partition(':')
+        except (TypeError, UnicodeDecodeError, binascii.Error):
+            msg = _('Invalid basic header. Credentials not correctly base64 encoded.')
+            raise exceptions.AuthenticationFailed(msg)
+
+        userid, password = auth_parts[0], auth_parts[2]
+        return self.authenticate_credentials(userid, password, request)
+
+    def authenticate_header(self, request):
+        if not settings.DEBUG:
+            return 'Basic realm="%s"' % self.www_authenticate_realm
+
+        # do not prompt basic auth prompt in debug mode
+        return ''
 
 
-class ManageFileMixin(object):
+class PermissionMixin(object):
+
+    authentication_classes = [import_module(settings.BASIC_AUTHENTICATION_MODULE).BasicAuthentication,
+                              SessionAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def _has_access(self, user, asset):
+        """Returns true if API consumer can access asset data."""
+        if user.is_anonymous:  # safeguard, should never happened
+            return False
+
+        if is_local_user(user):
+            return True
+
+        permission = asset['permissions']['process']
+        if permission['public']:
+            return True
+
+        node_id = user.username
+        return node_id in permission['authorizedIDs']
+
     def download_file(self, request, field):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
@@ -67,7 +121,7 @@ class ManageFileMixin(object):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        if not has_access(request.user, asset):
+        if not self._has_access(request.user, asset):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
