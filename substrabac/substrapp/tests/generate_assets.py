@@ -10,9 +10,9 @@ assets_path = os.path.join(dir_path, 'assets.py')
 def main():
 
     client = Client()
-    client.create_config('owkin', 'http://owkin.substrabac:8000', '0.0')
+    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
 
-    client.set_config('owkin')
+    client.set_profile('owkin')
 
     assets = {}
     assets['objective'] = json.dumps(client.list_objective(), indent=4)
@@ -21,10 +21,12 @@ def main():
     assets['traintuple'] = json.dumps(client.list_traintuple(), indent=4)
     assets['testtuple'] = json.dumps(client.list_testtuple(), indent=4)
 
-    assets['model'] = json.dumps([res for res in client._list('model')
+    assets['model'] = json.dumps([res for res in client.client.list('model')
                                   if ('traintuple' in res and 'testtuple' in res)], indent=4)
 
     with open(assets_path, 'w') as f:
+        f.write('"""\nWARNING\n=======\n\nDO NOT MANUALLY EDIT THIS FILE!\n\n'
+                'It is generated using substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
             v = v.replace('owkin.substrabac:8000', 'testserver')
             v = v.replace('chunantes.substrabac:8001', 'testserver')

@@ -22,6 +22,14 @@ from ..common import AuthenticatedClient
 MEDIA_ROOT = "/tmp/unittests_views/"
 
 
+def get_compute_plan_id(assets):
+    for asset in assets:
+        compute_plan_id = asset.get('computePlanID')
+        if compute_plan_id:
+            return compute_plan_id
+    raise Exception('Could not find a compute plan ID')
+
+
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
@@ -52,7 +60,7 @@ class TraintupleViewTests(APITestCase):
     def test_traintuple_list_empty(self):
         url = reverse('substrapp:traintuple-list')
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = [[]]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -93,6 +101,28 @@ class TraintupleViewTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
+    def test_traintuple_list_filter_tag(self):
+        url = reverse('substrapp:traintuple-list')
+        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = traintuple
+
+            search_params = '?search=traintuple%253Atag%253Asubstra'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 1)
+
+    def test_traintuple_list_filter_compute_plan_id(self):
+        url = reverse('substrapp:traintuple-list')
+        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = traintuple
+            compute_plan_id = get_compute_plan_id(traintuple)
+            search_params = f'?search=traintuple%253AcomputePlanID%253A{compute_plan_id}'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 1)
+
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
@@ -124,7 +154,7 @@ class TesttupleViewTests(APITestCase):
     def test_testtuple_list_empty(self):
         url = reverse('substrapp:testtuple-list')
         with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = [[]]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
@@ -164,3 +194,20 @@ class TesttupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_testtuple_list_filter_tag(self):
+        url = reverse('substrapp:testtuple-list')
+        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = testtuple
+
+            search_params = '?search=testtuple%253Atag%253Asubstra'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 1)
+
+            search_params = '?search=testtuple%253Atag%253Afoo'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 0)
