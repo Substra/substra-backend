@@ -7,8 +7,8 @@ from .deps.ledger import *
 from .deps.restframework import *
 
 
-BASICAUTH_USERNAME = "admin"
-BASICAUTH_PASSWORD = "admin"
+BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', 'admin')
+BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', 'admin')
 
 DEBUG = True
 
