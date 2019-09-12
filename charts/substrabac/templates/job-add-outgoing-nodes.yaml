@@ -1,8 +1,14 @@
-{{- range .Values.outgoingNodes }}
+{{- range $index, $value := .Values.outgoingNodes }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ template "substra.fullname" $ }}-add-outgoing-nodes
+  name: {{ template "substra.fullname" $ }}-add-outgoing-nodes-{{ $index }}
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-backend
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}
 spec:
   template:
     spec:
@@ -11,8 +17,8 @@ spec:
       - name: substrabac
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"
         imagePullPolicy: "{{ $.Values.backend.image.pullPolicy }}"
-        command: ["/bin/bash"]
-        args: ["-c", "DJANGO_SETTINGS_MODULE=substrabac.settings.dev python3 manage.py create_outgoing_node {{ .name }} {{ .secret }}"]
+        command: ["python3"]
+        args: ["manage.py", "create_outgoing_node", {{ .name }}, {{ .secret }}]
         env:
           - name: ORG
             value: {{ $.Values.organization.name }}
