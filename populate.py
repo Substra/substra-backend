@@ -32,6 +32,7 @@ def setup_config(network='docker'):
         client.add_profile('clb', 'http://clb.substrabac:8002', '0.0',
                            user=USER, password=PASSWORD)
     if network == 'skaffold':
+        # the usernames and passwords are defined in the skaffold.yaml file
         client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
                            user='peer1', password='baz')
         client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
