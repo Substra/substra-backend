@@ -59,7 +59,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             #     single HTTP request
             'permissions': {
                 'public': request.data.get('permissions_public'),
-                'authorized_ids': request.data.get('permissions_authorized_ids', []),
+                'authorized_ids': request.data.getlist('permissions_authorized_ids', []),
             },
             'type': request.data.get('type'),
             'objective_keys': request.data.getlist('objective_keys'),
