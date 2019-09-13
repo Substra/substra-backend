@@ -49,4 +49,4 @@ spec:
   selector:
     app.kubernetes.io/name: {{ template "substra.name" . }}-flower
     app.kubernetes.io/instance: {{ .Release.Name }}
-{{-end }}
+{{- end }}
