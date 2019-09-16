@@ -1,4 +1,5 @@
 {{- range $index, $value := .Values.incomingNodes }}
+---
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -13,6 +14,12 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
+      {{- with $.Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
       containers:
       - name: substrabac
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"

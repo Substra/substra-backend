@@ -33,7 +33,6 @@ spec:
           imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
           {{- end }}
           command: ["/bin/bash"]
-
           {{- if eq .Values.backend.settings "prod" }}
           args: ["-c", "sed -i '7d' substrabac/settings/prod.py; python manage.py migrate; touch /ready; python3 manage.py collectstatic --noinput; DJANGO_SETTINGS_MODULE=substrabac.settings.events.{{ .Values.backend.settings }} uwsgi --http :8000 --module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics --master --processes 2 --threads 2"]
           {{- else }}
