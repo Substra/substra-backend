@@ -9,7 +9,9 @@ from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
 from .task import TaskViewSet
 from .computeplan import ComputePlanViewSet
+from .permissionnode import PermissionNodeViewSet
 
 __all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'DataManagerPermissionViewSet', 'ObjectiveViewSet',
            'ObjectivePermissionViewSet', 'ModelViewSet', 'ModelPermissionViewSet', 'AlgoViewSet',
-           'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'TaskViewSet', 'ComputePlanViewSet']
+           'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'TaskViewSet', 'ComputePlanViewSet',
+           'PermissionNodeViewSet']
