@@ -32,12 +32,13 @@ def setup_config(network='docker'):
         client.add_profile('clb', 'http://clb.substrabac:8002', '0.0',
                            user=USER, password=PASSWORD)
     if network == 'skaffold':
+        # the usernames and passwords are defined in the skaffold.yaml file
         client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='node-1', password='node-1pwd')
         client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='node-2', password='node-2pwd')
         client.add_profile('clb', 'http://substrabac.node-3', '0.0',
-                           user=USER, password=PASSWORD)
+                           user='node-3', password='node-3pwd')
 
 
 def zip_folder(path, destination):

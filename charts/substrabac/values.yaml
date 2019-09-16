@@ -52,6 +52,13 @@ backend:
     #   cpu: 100m
     #   memory: 128Mi
 
+outgoingNodes: []
+  # - name: nodeId
+  #   secret: nodeSecret
+incomingNodes: []
+  # - name: nodeId
+  #   secret: nodeSecret
+
 persistence:
   hostPath: "/substra"
   size: "10Gi"
