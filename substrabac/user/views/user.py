@@ -1,5 +1,3 @@
-import datetime
-
 from django.conf import settings
 from django.contrib.auth.models import User
 
@@ -34,7 +32,7 @@ class UserViewSet(GenericViewSet):
 
         try:
             serializer.is_valid(raise_exception=True)
-        except AuthenticationFailed as e:
+        except AuthenticationFailed:
             return Response({'message': 'wrong username password'}, status=status.HTTP_401_UNAUTHORIZED)
         except TokenError as e:
             raise InvalidToken(e.args[0])

@@ -8,7 +8,6 @@ from node.models import IncomingNode, OutgoingNode
 from substrapp.models import Algo
 
 from ..common import generate_basic_auth_header, get_sample_algo_metadata, get_sample_algo, get_description_algo
-from django.conf import settings
 from django.test import override_settings
 
 MEDIA_ROOT = "/tmp/unittests_views/"
