@@ -4,7 +4,7 @@ import os
 import shutil
 from rest_framework import status
 from rest_framework.test import APITestCase
-from node.models import IncomingNode
+from node.models import IncomingNode, OutgoingNode
 from substrapp.models import Algo
 
 from ..common import generate_basic_auth_header, get_sample_algo_metadata, get_sample_algo, get_description_algo
@@ -37,14 +37,15 @@ class AuthenticationTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.incoming_node = IncomingNode.objects.create(node_id="external_node_id", secret="s3cr37")
+        cls.outgoing_node = OutgoingNode.objects.create(node_id="external_node_id", secret="s3cr37")
 
     def test_authentication_fail(self):
         response = self.client.get(self.algo_url, **self.extra)
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
-    def test_authentication_with_settings_success(self):
-        authorization_header = generate_basic_auth_header(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
+    def test_authentication_internal(self):
+        authorization_header = generate_basic_auth_header(self.outgoing_node.node_id, self.outgoing_node.secret)
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 

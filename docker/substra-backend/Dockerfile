@@ -18,3 +18,4 @@ COPY ./backend/events /usr/src/app/events
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/node /usr/src/app/node
 COPY ./backend/node-register /usr/src/app/node-register
+COPY ./backend/user /usr/src/app/user

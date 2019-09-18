@@ -9,6 +9,7 @@ django-celery-results==1.0.4
 django-filter==1.1.0
 django-rest-swagger==2.1.2
 djangorestframework==3.8.2
+djangorestframework-simplejwt==4.3.0
 docker == 3.5.0
 grpcio >= 1.0.1
 GPUtil == 1.4.0

@@ -13,5 +13,5 @@ RUN pip3 install -r requirements.txt
 
 COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
-COPY ./backend/backend /usr/src/app/backend
-COPY ./backend/node /usr/src/app/node
+COPY ./backend/backend /usr/src/app/bac
+COPY ./backend/user /usr/src/app/user
