@@ -36,20 +36,29 @@ class ModelViewTests(APITestCase):
 
         self.logger.setLevel(self.previous_level)
 
-    def test_model_list_empty(self):
-        url = reverse('substrapp:permission_node-list')
-        with mock.patch('substrapp.views.permissionnode.query_ledger') as mquery_ledger:
+    def test_node_list_empty(self):
+        url = reverse('substrapp:node-list')
+        with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = {'node_ids': []}
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, {'node_ids': []})
+            self.assertEqual(r, [])
 
-    def test_model_list_success(self):
-        url = reverse('substrapp:permission_node-list')
-        with mock.patch('substrapp.views.permissionnode.query_ledger') as mquery_ledger:
+    def test_node_list_success(self):
+        url = reverse('substrapp:node-list')
+        with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = {'node_ids': ['foo', 'bar']}
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, {'node_ids': ['foo', 'bar']})
+            self.assertEqual(r, [{'node_id': 'foo'}, {'node_id': 'bar'}])
+
+    def test_current_node(self):
+        url = reverse('substrapp:node-current')
+        with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = 'foo'
+
+            response = self.client.get(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, {'node_id': 'foo'})
