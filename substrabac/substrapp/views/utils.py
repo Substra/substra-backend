@@ -16,7 +16,6 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
-
 from users.authentication import SecureJWTAuthentication
 
 

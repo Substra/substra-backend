@@ -17,7 +17,6 @@ from users.serializers import CustomTokenObtainPairSerializer
 def generate_basic_auth_header(username, password):
     return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
 
-
 def generate_jwt_auth_header(jwt):
     return 'JWT ' + jwt
 
