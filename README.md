@@ -130,7 +130,6 @@ A django admin command is available for registering a user:
 ```shell
 ./manage.py add_user $USERNAME $PASSWORD
 ```
-
 The populate.py file will use for each organization credentials `substra/p@$swr0d44` for connection.
 Create these users with:
 
@@ -203,9 +202,15 @@ Then, build the images:
 $> sh build-docker-images.sh
 ```
 
+<<<<<<< HEAD
 Then, go to the `docker` dir and run `start.py` (`-d` means `dev` settings):
 ```bash
 $> python start.py -d --no-backup
+=======
+Then, go to the`docker` dir and run `start.py`:
+```bash
+$> python3 start.py -d --no-backup
+>>>>>>> Fix tests - docker - add session authent
 ```
 
 Check your services are correctly started with `docker ps -a`.
