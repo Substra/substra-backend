@@ -164,12 +164,21 @@ Go in the `substrabac` folder and run the server locally:
  ```
  It allows the substrafront project to work correctly too.
 
-## Load data fixtures
+## Generate nodes authentication
+
+For working with node to node authentication, you need to generate and then load some fixtures
+```
+python ./substrabac/node/generate_nodes.py
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py init_nodes ./substrabac/node/nodes/owkinMSP.json --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py init_nodes ./substrabac/node/nodes/chu-nantesMSP.json --settings=substrabac.settings.dev
+```
+
+## Create a default user
 
 For working with node to node authentication, you need load some extra fixtures
 ```
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=substrabac.settings.server.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=substrabac.settings.server.dev
+SUBSTRABAC_ORG=owkin ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
+SUBSTRABAC_ORG=chu-nantes ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
 ```
 
 ## Test with unit and functional tests
@@ -225,13 +234,20 @@ Now you can reach `http://localhost:8000/` and `http://localhost:8001/` :tada:
 ## Launching with docker
 
 As for substra-network, you can launch all the services in docker containers.|
-First, build the images:
+
+First, Make sure you've generated some nodes artifacts:
+```bash
+$> python ./substrabac/node/generate_nodes.py
+```
+
+Then, build the images:
 ```bash
 $> sh build-docker-images.sh
 ```
+
 Then, go to the`docker` dir and run `start.py`:
 ```bash
-$> python3 start.py
+$> python3 start.py -d --no-backup
 ```
 
 Check your services are correctly started with `docker ps -a`.

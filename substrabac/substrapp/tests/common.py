@@ -1,27 +1,53 @@
+from http.cookies import SimpleCookie
 from io import StringIO, BytesIO
 import os
 import base64
 
 from django.conf import settings
+from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
+from django.db import transaction
 from rest_framework.test import APIClient
 
 
 # This function helper generate a basic authenticaiton header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
+from user.serializers import CustomTokenObtainPairSerializer
+
+
 def generate_basic_auth_header(username, password):
     return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
+
+def generate_jwt_auth_header(jwt):
+    return 'JWT ' + jwt
 
 
 class AuthenticatedClient(APIClient):
 
     def request(self, **kwargs):
-        basic_auth_header = generate_basic_auth_header(
-            settings.BASICAUTH_USERNAME,
-            settings.BASICAUTH_PASSWORD
-        )
 
-        self.credentials(HTTP_AUTHORIZATION=basic_auth_header)
+        # create user
+        username = 'foo'
+        password = 'barbar10'
+        try:
+            with transaction.atomic():
+                User.objects.create_user(username=username, password=password)
+        except:
+            pass
+        # simulate login
+        serializer = CustomTokenObtainPairSerializer(data={
+            'username': username,
+            'password': password
+        })
+
+        serializer.is_valid()
+        token = serializer.validated_data
+        jwt = str(token)
+
+        # simulate right httpOnly cookie and Authorization jwt
+        jwt_auth_header = generate_jwt_auth_header('.'.join(jwt.split('.')[0:2]))
+        self.credentials(HTTP_AUTHORIZATION=jwt_auth_header)
+        self.cookies = SimpleCookie({'signature': jwt.split('.')[2]})
 
         return super().request(**kwargs)
 

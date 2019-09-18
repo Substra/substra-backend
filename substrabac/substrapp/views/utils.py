@@ -1,14 +1,12 @@
 import os
 
-import base64
-import binascii
-from importlib import import_module
 
 from django.http import FileResponse
-from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from libs.sessionAuthentication import CustomSessionAuthentication
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
@@ -18,9 +16,8 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
-from django.utils.translation import ugettext_lazy as _
 
-from rest_framework import HTTP_HEADER_ENCODING, exceptions
+from user.authentication import SecureJWTAuthentication
 
 
 def authenticate_outgoing_request(outgoing_node_id):
@@ -52,46 +49,6 @@ def is_local_user(user):
     return user.username == settings.BASICAUTH_USERNAME
 
 
-class BasicAuthentication(BasicAuthentication):
-    def authenticate(self, request):
-        """
-        Returns a `User` if a correct username and password have been supplied
-        using HTTP Basic authentication.  Otherwise returns `None`.
-        """
-        auth = get_authorization_header(request).split()
-
-        if not auth or auth[0].lower() != b'basic':
-            if not settings.DEBUG:
-                return None
-            else:
-                # create fake auth in debug mode, if no provided (user case, not node)
-                debug_basic_auth = f'{settings.BASICAUTH_USERNAME}:{settings.BASICAUTH_PASSWORD}'
-                auth = [b'Basic', base64.b64encode(debug_basic_auth.encode(HTTP_HEADER_ENCODING))]
-
-        if len(auth) == 1:
-            msg = _('Invalid basic header. No credentials provided.')
-            raise exceptions.AuthenticationFailed(msg)
-        elif len(auth) > 2:
-            msg = _('Invalid basic header. Credentials string should not contain spaces.')
-            raise exceptions.AuthenticationFailed(msg)
-
-        try:
-            auth_parts = base64.b64decode(auth[1]).decode(HTTP_HEADER_ENCODING).partition(':')
-        except (TypeError, UnicodeDecodeError, binascii.Error):
-            msg = _('Invalid basic header. Credentials not correctly base64 encoded.')
-            raise exceptions.AuthenticationFailed(msg)
-
-        userid, password = auth_parts[0], auth_parts[2]
-        return self.authenticate_credentials(userid, password, request)
-
-    def authenticate_header(self, request):
-        if not settings.DEBUG:
-            return 'Basic realm="%s"' % self.www_authenticate_realm
-
-        # do not prompt basic auth prompt in debug mode
-        return ''
-
-
 def node_has_process_permission(asset):
     """Check if current node can process input asset."""
     permission = asset['permissions']['process']
@@ -99,9 +56,11 @@ def node_has_process_permission(asset):
 
 
 class PermissionMixin(object):
-
-    authentication_classes = [import_module(settings.BASIC_AUTHENTICATION_MODULE).BasicAuthentication,
-                              SessionAuthentication]
+    authentication_classes = [
+        BasicAuthentication,  # for node to node
+        SecureJWTAuthentication,  # for user from front/sdk/cli
+        CustomSessionAuthentication,  # for user on drf web browsable api
+    ]
     permission_classes = [IsAuthenticated]
 
     def _has_access(self, user, asset):

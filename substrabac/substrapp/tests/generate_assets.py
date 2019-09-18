@@ -1,6 +1,6 @@
 import os
 import json
-from substra import Client
+import substra
 
 
 dir_path = os.path.dirname(__file__)
@@ -9,8 +9,10 @@ assets_path = os.path.join(dir_path, 'assets.py')
 
 def main():
 
-    client = Client()
-    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0')
+    client = substra.Client()
+    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
+                       user='foo', password='barbar10')
+    client.login()
 
     client.set_profile('owkin')
 

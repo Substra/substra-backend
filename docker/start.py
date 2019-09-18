@@ -22,7 +22,7 @@ BACKEND_PORT = {
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 
 
-def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
+def generate_docker_compose_file(conf, launch_settings):
 
     # POSTGRES
     POSTGRES_USER = 'substrabac'
@@ -111,6 +111,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
         },
         'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
+    # generate nodes
+    # TODO make sure nodes folder exists else warn
+
     for org in conf:
         org_name = org['name']
         org_name_stripped = org_name.replace('-', '')
@@ -126,9 +129,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                             f'--master --processes {processes} --threads 2 --need-app' \
                             f'--env DJANGO_SETTINGS_MODULE=substrabac.settings.server.prod uwsgi --http :{port} '
         else:
-            print('nobasicauth: ', nobasicauth, flush=True)
-            extra_settings = '.nobasicauth' if nobasicauth is True else ''
-            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.server{extra_settings}.dev ' \
+            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.server.dev ' \
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
@@ -150,8 +151,6 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
 
             # Basic auth
-            f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', 'admin')}",
-            f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', 'admin')}",
             f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
             f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
         ]
@@ -170,8 +169,10 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
         # load incoming/outgoing node fixtures/ that should not be executed in production env
         fixtures_command = ''
+        user_command = ''
         if launch_settings == 'dev':
-            fixtures_command = f"python manage.py loaddata nodes-{org_name_stripped}"
+            fixtures_command = f"python manage.py init_nodes ./node/nodes/{org_name}MSP.json"
+            user_command = f"python manage.py add_user foo barbar10"
 
         backend = {
             'container_name': f'{org_name_stripped}.substrabac',
@@ -180,7 +181,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                       f'yes | python manage.py migrate; {fixtures_command}; {django_server}"',
+                       f'yes | python manage.py migrate; {fixtures_command}; {user_command}; {django_server}"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': [
@@ -265,9 +266,9 @@ def stop(docker_compose=None):
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
 
-def start(conf, launch_settings, no_backup, nobasicauth=False):
+def start(conf, launch_settings, no_backup):
     print('Generate docker-compose file\n')
-    docker_compose = generate_docker_compose_file(conf, launch_settings, nobasicauth)
+    docker_compose = generate_docker_compose_file(conf, launch_settings)
 
     stop(docker_compose)
 
@@ -291,8 +292,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('-d', '--dev', action='store_true', default=False,
                         help="use dev settings")
-    parser.add_argument('--nobasicauth', action='store_true', default=False,
-                        help="use dev settings without basic authentication")
     parser.add_argument('--no-backup', action='store_true', default=False,
                         help="Remove backup binded volume, medias and db data. Launch from scratch")
     args = vars(parser.parse_args())
@@ -301,10 +300,6 @@ if __name__ == "__main__":
         launch_settings = 'dev'
     else:
         launch_settings = 'prod'
-
-    nobasicauth = False
-    if args['nobasicauth']:
-        nobasicauth = True
 
     no_backup = args['no_backup']
 
@@ -317,4 +312,4 @@ if __name__ == "__main__":
 
     print('', flush=True)
 
-    start(conf, launch_settings, no_backup, nobasicauth)
+    start(conf, launch_settings, no_backup)
