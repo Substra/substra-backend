@@ -97,6 +97,16 @@ def update_datamanager(data_manager_key, data, profile):
         print(colored(json.dumps(r, indent=2), 'green'))
 
 
+def login(*args):
+    for org in args:
+        print(f'Login with {org}')
+        client.set_profile(org)
+        try:
+            client.login()
+        except Exception as e:
+            raise Exception(f'login failed: {str(e)}')
+
+
 def do_populate():
 
     parser = argparse.ArgumentParser()
