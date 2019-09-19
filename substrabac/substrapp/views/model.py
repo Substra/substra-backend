@@ -10,7 +10,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import CustomFileResponse, validate_pk, get_remote_asset
+from substrapp.views.utils import CustomFileResponse, validate_pk, get_remote_asset, PermissionMixin
 from substrapp.views.filters_utils import filter_list
 
 
@@ -105,6 +105,14 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     status=status.HTTP_400_BAD_REQUEST)
 
         return Response(models_list, status=status.HTTP_200_OK)
+
+
+class ModelPermissionViewSet(PermissionMixin,
+                             GenericViewSet):
+
+    queryset = Model.objects.all()
+    serializer_class = ModelSerializer
+    ledger_query_call = 'queryModelDetails'
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
