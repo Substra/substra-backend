@@ -1,5 +1,4 @@
 from rest_framework import status
-from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -19,12 +18,3 @@ class NodeViewSet(GenericViewSet):
         ]
 
         return Response(nodes, status=status.HTTP_200_OK)
-
-    @action(detail=False, methods=['GET'])
-    def current(self, request):
-        try:
-            res = query_ledger(fcn='queryCurrentPermissionNode')
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
-        return Response({'node_id': res}, status=status.HTTP_200_OK)

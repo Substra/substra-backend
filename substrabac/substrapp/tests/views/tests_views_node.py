@@ -53,12 +53,3 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [{'node_id': 'foo'}, {'node_id': 'bar'}])
-
-    def test_current_node(self):
-        url = reverse('substrapp:node-current')
-        with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = 'foo'
-
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {'node_id': 'foo'})
