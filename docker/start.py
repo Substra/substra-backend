@@ -123,9 +123,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
         if launch_settings == 'prod':
             django_server = f'python3 manage.py collectstatic --noinput; '\
-                            f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.prod uwsgi --http :{port} ' \
                             f'--module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics ' \
-                            f'--master --processes {processes} --threads 2'
+                            f'--master --processes {processes} --threads 2 --need-app' \
+                            f'--env DJANGO_SETTINGS_MODULE=substrabac.settings.events.prod uwsgi --http :{port} '
         else:
             print('nobasicauth: ', nobasicauth, flush=True)
             extra_settings = '.nobasicauth' if nobasicauth is True else ''
