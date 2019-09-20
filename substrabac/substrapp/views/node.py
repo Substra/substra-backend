@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.ledger_utils import query_ledger, LedgerError
+from substrapp.utils import get_owner
 
 
 class NodeViewSet(GenericViewSet):
@@ -12,9 +13,12 @@ class NodeViewSet(GenericViewSet):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
+        current_node_id = get_owner()
         nodes = [
-            {'node_id': node_id}
+            {
+                'nodeID': node_id,
+                'isCurrent': node_id == current_node_id,
+            }
             for node_id in res['node_ids']
         ]
-
         return Response(nodes, status=status.HTTP_200_OK)
