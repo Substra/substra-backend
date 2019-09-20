@@ -36,20 +36,16 @@ class ModelViewTests(APITestCase):
 
         self.logger.setLevel(self.previous_level)
 
-    def test_node_list_empty(self):
-        url = reverse('substrapp:node-list')
-        with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'node_ids': []}
-
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, [])
-
     def test_node_list_success(self):
         url = reverse('substrapp:node-list')
         with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = {'node_ids': ['foo', 'bar']}
+            with mock.patch('substrapp.views.node.get_owner') as mget_owner:
+                mget_owner.return_value = 'foo'
 
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, [{'node_id': 'foo'}, {'node_id': 'bar'}])
+                response = self.client.get(url, **self.extra)
+                r = response.json()
+                self.assertEqual(r, [
+                    {'nodeID': 'foo', 'isCurrent': True},
+                    {'nodeID': 'bar', 'isCurrent': False}
+                ])
