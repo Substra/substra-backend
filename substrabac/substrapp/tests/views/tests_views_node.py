@@ -39,7 +39,7 @@ class ModelViewTests(APITestCase):
     def test_node_list_success(self):
         url = reverse('substrapp:node-list')
         with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'node_ids': ['foo', 'bar']}
+            mquery_ledger.return_value = {'nodeIDs': ['foo', 'bar']}
             with mock.patch('substrapp.views.node.get_owner') as mget_owner:
                 mget_owner.return_value = 'foo'
 
