@@ -19,6 +19,6 @@ class NodeViewSet(GenericViewSet):
                 'nodeID': node_id,
                 'isCurrent': node_id == current_node_id,
             }
-            for node_id in res['node_ids']
+            for node_id in res['nodeIDs']
         ]
         return Response(nodes, status=status.HTTP_200_OK)
