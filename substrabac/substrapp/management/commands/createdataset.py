@@ -98,7 +98,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all',  # forced, TODO changed when permissions are available
+                          'permissions': {'public': True, 'authorized_ids': []},
                           'type': data_manager['type'],
                           'objective_keys': data_manager.get('objective_keys', []),
                           'instance': instance},

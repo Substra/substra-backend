@@ -119,7 +119,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all',
+                          'permissions': {'public': True, 'authorized_ids': []},
                           'type': data_manager['type'],
                           'instance': instance},
                     context={'request': LocalRequest()})
@@ -203,8 +203,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerObjectiveSerializer(
                     data={'name': objective['name'],
-                          'permissions': 'all',
-                          # forced, TODO changed when permissions are available
+                          'permissions': {'public': True, 'authorized_ids': []},
                           'metrics_name': objective['metrics_name'],
                           'test_data_sample_keys': objective.get('test_data_sample_keys', []),
                           'test_data_manager_key': objective.get('test_data_manager_key', ''),
