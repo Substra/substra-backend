@@ -26,7 +26,11 @@ def main():
 
     with open(assets_path, 'w') as f:
         f.write('"""\nWARNING\n=======\n\nDO NOT MANUALLY EDIT THIS FILE!\n\n'
-                'It is generated using substrapp/tests/generate_assets.py\n"""\n\n')
+                'It is generated using substrapp/tests/generate_assets.py\n\n'
+                'In order to update this file:\n'
+                '1. start a clean instance of substra\n'
+                '2. run populate.py\n'
+                '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
             v = v.replace('owkin.substrabac:8000', 'testserver')
             v = v.replace('chunantes.substrabac:8001', 'testserver')
