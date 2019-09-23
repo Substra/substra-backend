@@ -72,7 +72,7 @@ def _get_model(model):
 
     model_content = get_asset_content(
         traintuple_metadata['outModel']['storageAddress'],
-        traintuple_metadata['creator'],
+        traintuple_metadata['dataset']['worker'],
         traintuple_metadata['outModel']['hash'],
         salt=traintuple_hash,
     )
