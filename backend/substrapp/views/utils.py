@@ -17,7 +17,7 @@ from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
 
-from user.authentication import SecureJWTAuthentication
+from users.authentication import SecureJWTAuthentication
 
 
 def authenticate_outgoing_request(outgoing_node_id):

@@ -11,7 +11,7 @@ from rest_framework.test import APIClient
 
 # This function helper generate a basic authenticaiton header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
-from user.serializers import CustomTokenObtainPairSerializer
+from users.serializers import CustomTokenObtainPairSerializer
 
 
 def generate_basic_auth_header(username, password):
