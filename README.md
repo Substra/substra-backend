@@ -240,7 +240,7 @@ $> sh build-docker-images.sh
 
 Then, go to the`docker` dir and run `start.py`:
 ```bash
-$> python3 start.py -d --no-backup
+$> python start.py -d --no-backup
 ```
 
 Check your services are correctly started with `docker ps -a`.

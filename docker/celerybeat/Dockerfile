@@ -15,4 +15,4 @@ COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/node /usr/src/app/node
-COPY ./backend/user /usr/src/app/user
+COPY ./backend/users /usr/src/app/users
