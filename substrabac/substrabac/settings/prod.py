@@ -9,6 +9,11 @@ from .deps.restframework import *
 
 
 DEBUG = False
+TASK_CONFIG = {
+    'LOGS': bool(os.environ.get('TASK_LOGS', True)),
+    'CLEAN': bool(os.environ.get('TASK_CLEAN', True))
+}
+
 
 BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
