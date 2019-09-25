@@ -109,14 +109,14 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 
 
 8. Optional: Create a superuser in your databases:
-```
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py createsuperuser --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py createsuperuser --settings=backend.settings.dev
+```shell
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./backend/manage.py createsuperuser --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./backend/manage.py createsuperuser --settings=backend.settings.dev
 ```
 
 9. Build the substra-model docker image:
 Clone the following git repo https://github.com/SubstraFoundation/substra-tools and build the docker image
-```
+```shell
 docker build -t substra-model .
 ```
 
@@ -140,10 +140,10 @@ Execute this command in the `backend/backend` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
 DJANGO_SETTINGS_MODULE=backend.settings.common celery -A backend beat -l info
 ```
 
@@ -153,8 +153,8 @@ Go in the `backend` folder and run the server locally:
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
 
 ```shell
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./manage.py runserver 8000 --settings=backend.settings.server.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./manage.py runserver 8001 --settings=backend.settings.server.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 ./manage.py runserver 8000 --settings=backend.settings.server.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 ./manage.py runserver 8001 --settings=backend.settings.server.dev
 ```
 
 ## Generate nodes authentication
@@ -169,14 +169,14 @@ BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./manage.py init_nodes ./backen
 ## Create a default user
 
 For working with node to node authentication, you need load some extra fixtures
-```
-BACKEND_ORG=owkin ./backend/manage.py add_user substra p@$swr0d44 --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra p@$swr0d44 --settings=backend.settings.dev
+```shell
+BACKEND_ORG=owkin ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
 ```
 
 ## Test with unit and functional tests
 
-```
+```shell
     DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
