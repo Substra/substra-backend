@@ -6,7 +6,7 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'user.authentication.SecureJWTAuthentication',  # for front/sdk/cli
+        'users.authentication.SecureJWTAuthentication',  # for front/sdk/cli
         'libs.sessionAuthentication.CustomSessionAuthentication',  # for web browsable api
     ],
     'DEFAULT_PERMISSION_CLASSES': [

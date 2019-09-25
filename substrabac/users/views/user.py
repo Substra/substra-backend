@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
 
-from user.serializers import CustomTokenObtainPairSerializer
+from users.serializers import CustomTokenObtainPairSerializer
 
 
 class UserViewSet(GenericViewSet):
