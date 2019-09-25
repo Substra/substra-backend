@@ -109,14 +109,14 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 
 
 8. Optional: Create a superuser in your databases:
-```
+```shell
 SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
 SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
 ```
 
 9. Build the substra-model docker image:
 Clone the following git repo https://github.com/SubstraFoundation/substratools and build the docker image
-```
+```shell
 docker build -t substra-model .
 ```
 
@@ -140,12 +140,12 @@ Execute this command in the `substrabac/substrabac` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l info
 ```
 
@@ -153,10 +153,17 @@ DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l i
 
 Go in the `substrabac` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
+<<<<<<< HEAD
 ```shell
 SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
 SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
 ```
+=======
+ ```
+ SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
+ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
+ ```
+>>>>>>> Fix README
 
 ## Generate nodes authentication
 
@@ -169,7 +176,6 @@ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py init_nod
 
 ## Create a default user
 
-For working with node to node authentication, you need load some extra fixtures
 ```shell
 SUBSTRABAC_ORG=owkin ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
 SUBSTRABAC_ORG=chu-nantes ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
@@ -177,7 +183,7 @@ SUBSTRABAC_ORG=chu-nantes ./substrabac/manage.py add_user foo barbar10 --setting
 
 ## Test with unit and functional tests
 
-```
+```shell
     DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
