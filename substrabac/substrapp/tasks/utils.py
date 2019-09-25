@@ -211,8 +211,14 @@ def monitoring_task(client, task_args):
     t._result += f" GB - GPU:{t._stats['gpu']['max']:.2f} % - GPU Mem:{t._stats['gpu_memory']['max']:.2f} GB"
 
 
+def container_format_log(container_name, container_logs):
+    logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
+    for log in logs:
+        logger.info(log)
+
+
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
-                   remove_image=True):
+                   remove_image=True, remove_container=True, logs=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
@@ -244,6 +250,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                  'shm_size': '8G',
                  'labels': [DOCKER_LABEL],
                  'detach': False,
+                 'stdout': logs,
+                 'stderr': logs,
                  'auto_remove': False,
                  'remove': False,
                  'network_disabled': True,
@@ -271,7 +279,14 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     # We already get the excetion and we need to remove the containers to be able to remove the local
     # volume in case of fl task.
     container = client.containers.get(container_name)
-    container.remove()
+    if logs:
+        container_format_log(
+            container_name,
+            container.logs()
+        )
+
+    if remove_container:
+        container.remove()
 
     # Remove images
     if remove_image or hasattr(task, "_exception"):

@@ -361,16 +361,17 @@ def do_task(subtuple, tuple_type):
         raise e
     finally:
         # Clean subtuple materials
-        remove_subtuple_materials(subtuple_directory)
+        if settings.TASK_CONFIG['CLEAN']:
+            remove_subtuple_materials(subtuple_directory)
 
-        # Rank == -1 -> Last fl subtuple or fl throws an exception
-        if flrank == -1:
-            flvolume = f'local-{compute_plan_id}-{org_name}'
-            local_volume = client.volumes.get(volume_id=flvolume)
-            try:
-                local_volume.remove(force=True)
-            except Exception:
-                logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
+            # Rank == -1 -> Last fl subtuple or fl throws an exception
+            if flrank == -1:
+                flvolume = f'local-{compute_plan_id}-{org_name}'
+                local_volume = client.volumes.get(volume_id=flvolume)
+                try:
+                    local_volume.remove(force=True)
+                except Exception:
+                    logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
 
     return result
 
@@ -408,10 +409,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
     model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
 
-    if compute_plan_id is not None and flrank != -1:
-        remove_image = False
+    if (compute_plan_id is not None and flrank != -1) or settings.TASK_CONFIG['CLEAN']:
+        REMOVE_IMAGE = False
     else:
-        remove_image = True
+        REMOVE_IMAGE = True
 
     # create the command option for algo
     if tuple_type == 'traintuple':
@@ -450,7 +451,9 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         container_name=algo_docker_name,
         volumes={**volumes, **model_volume, **symlinks_volume},
         command=algo_command,
-        remove_image=remove_image
+        remove_image=REMOVE_IMAGE,
+        remove_container=settings.TASK_CONFIG['CLEAN'],
+        logs=settings.TASK_CONFIG['LOGS']
     )
 
     # save model in database
@@ -477,7 +480,9 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         container_name=metrics_docker_name,
         volumes={**volumes, **symlinks_volume},
         command=None,
-        remove_image=remove_image
+        remove_image=REMOVE_IMAGE,
+        remove_container=settings.TASK_CONFIG['CLEAN'],
+        logs=settings.TASK_CONFIG['LOGS']
     )
 
     # load performance

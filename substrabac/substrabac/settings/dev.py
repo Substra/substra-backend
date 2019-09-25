@@ -11,6 +11,11 @@ BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', 'dev')
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', 'dev')
 
 DEBUG = True
+TASK_CONFIG = {
+    'LOGS': bool(os.environ.get('TASK_LOGS', True)),
+    'CLEAN': bool(os.environ.get('TASK_CLEAN', True))
+}
+
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

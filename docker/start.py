@@ -143,6 +143,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'PYTHONUNBUFFERED=1',
             'DATABASE_HOST=postgresql',
 
+            f"TASK_LOGS=True",
+            f"TASK_CLEAN=True",
+
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
             f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
 
@@ -151,6 +154,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             f"BACK_AUTH_PASSWORD={os.environ.get('BACK_AUTH_PASSWORD', 'admin')}",
             f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
             f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
+
         ]
 
         hlf_volumes = [

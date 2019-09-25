@@ -20,7 +20,7 @@ LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 
 LEDGER_SYNC_ENABLED = True
-LEDGER_MVCC_RETRY = True
+LEDGER_CALL_RETRY = True
 
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
 
