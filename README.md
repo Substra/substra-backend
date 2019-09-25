@@ -151,23 +151,15 @@ DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l i
 
 Go in the `substrabac` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
- ```
- SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
- SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
- ```
- 
- If you want to bypass the basic authentication when you browse the server on localhost:8000 or localhost:8001, you can use the `nobasicauth` settings.  
- Simply replace `server.dev` by `nobasicauth`, like:
-  ```
- SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.nobasicauth
- SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.nobasicauth
- ```
- It allows the substrafront project to work correctly too.
+```shell
+SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
+SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
+```
 
 ## Generate nodes authentication
 
 For working with node to node authentication, you need to generate and then load some fixtures
-```
+```shell
 python ./substrabac/node/generate_nodes.py
 SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py init_nodes ./substrabac/node/nodes/owkinMSP.json --settings=substrabac.settings.dev
 SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py init_nodes ./substrabac/node/nodes/chu-nantesMSP.json --settings=substrabac.settings.dev
@@ -176,7 +168,7 @@ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py init_nod
 ## Create a default user
 
 For working with node to node authentication, you need load some extra fixtures
-```
+```shell
 SUBSTRABAC_ORG=owkin ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
 SUBSTRABAC_ORG=chu-nantes ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
 ```
