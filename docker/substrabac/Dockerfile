@@ -18,4 +18,4 @@ COPY ./substrabac/events /usr/src/app/events
 COPY ./substrabac/substrabac /usr/src/app/substrabac
 COPY ./substrabac/node /usr/src/app/node
 COPY ./substrabac/node-register /usr/src/app/node-register
-COPY ./substrabac/user /usr/src/app/user
+COPY ./substrabac/users /usr/src/app/users

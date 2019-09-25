@@ -15,4 +15,4 @@ COPY ./substrabac/libs /usr/src/app/libs
 COPY ./substrabac/substrapp /usr/src/app/substrapp
 COPY ./substrabac/substrabac /usr/src/app/substrabac
 COPY ./substrabac/node /usr/src/app/node
-COPY ./substrabac/user /usr/src/app/user
+COPY ./substrabac/users /usr/src/app/users
