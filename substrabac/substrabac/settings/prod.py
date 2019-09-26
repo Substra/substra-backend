@@ -9,9 +9,12 @@ from .deps.restframework import *
 
 
 DEBUG = False
-TASK_CAPTURE_LOGS = os.environ.get('TASK_CAPTURE_LOGS', 'true').lower() == 'true'
-TASK_CLEAN_EXECUTION_ENVIRONMENT = os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', 'true').lower() == 'true'
-TASK_CACHE_DOCKER_IMAGES = os.environ.get('TASK_CACHE_DOCKER_IMAGES', 'false').lower() == 'true'
+
+TASK = {
+    'CAPTURE_LOGS': to_bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
+    'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
+    'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
+}
 
 BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER')
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD')
