@@ -39,13 +39,13 @@ class ModelViewTests(APITestCase):
     def test_node_list_success(self):
         url = reverse('substrapp:node-list')
         with mock.patch('substrapp.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'nodeIDs': ['foo', 'bar']}
+            mquery_ledger.return_value = [{'ID': 'foo'}, {'ID': 'bar'}]
             with mock.patch('substrapp.views.node.get_owner') as mget_owner:
                 mget_owner.return_value = 'foo'
 
                 response = self.client.get(url, **self.extra)
                 r = response.json()
                 self.assertEqual(r, [
-                    {'nodeID': 'foo', 'isCurrent': True},
-                    {'nodeID': 'bar', 'isCurrent': False}
+                    {'ID': 'foo', 'isCurrent': True},
+                    {'ID': 'bar', 'isCurrent': False}
                 ])
