@@ -334,13 +334,13 @@ def do_task(subtuple, tuple_type):
     subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
     org_name = getattr(settings, 'ORG_NAME')
 
-    # Federated learning variables
+    # compute plan / federated learning variables
     compute_plan_id = None
-    flrank = None
+    rank = None
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
-        flrank = int(subtuple['rank'])
+        rank = int(subtuple['rank'])
 
     client = docker.from_env()
 
@@ -351,106 +351,93 @@ def do_task(subtuple, tuple_type):
             tuple_type,
             subtuple,
             compute_plan_id,
-            flrank,
+            rank,
             org_name
         )
     except Exception as e:
-        # If an exception is thrown set flrank == -1 (we stop the fl training)
         if compute_plan_id is not None:
-            flrank = -1
+            rank = -1  # -1 means last subtuple in the compute plan
         raise e
     finally:
         # Clean subtuple materials
         if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
             remove_subtuple_materials(subtuple_directory)
-
-            # Rank == -1 -> Last fl subtuple or fl throws an exception
-            if flrank == -1:
-                flvolume = f'local-{compute_plan_id}-{org_name}'
-                local_volume = client.volumes.get(volume_id=flvolume)
+            if rank == -1:
+                volume_id = f'local-{compute_plan_id}-{org_name}'
+                local_volume = client.volumes.get(volume_id=volume_id)
                 try:
                     local_volume.remove(force=True)
                 except Exception:
-                    logging.error(f'Cannot remove local volume {flvolume}', exc_info=True)
+                    logging.error(f'Cannot remove local volume {volume_id}', exc_info=True)
 
     return result
 
 
-def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, flrank, org_name):
-    # Job log
-    job_task_log = ''
+def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name):
 
-    # subtuple setup
     model_path = path.join(subtuple_directory, 'model')
     data_path = path.join(subtuple_directory, 'data')
+    pred_path = path.join(subtuple_directory, 'pred')
+    opener_file = path.join(subtuple_directory, 'opener/opener.py')
+    algo_path = path.join(subtuple_directory)
 
-    ##########################################
-    # RESOLVE SYMLINKS
-    # TO DO:
-    #   - Verify that real paths are safe
-    #   - Try to see if it's clean to do that
-    ##########################################
+    algo_docker = f'substra/algo_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
+    algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
+
+    remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
+
+    # VOLUMES
+
     symlinks_volume = {}
     for subfolder in os.listdir(data_path):
         real_path = os.path.realpath(os.path.join(data_path, subfolder))
         symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
-    ##########################################
+    volumes = {
+        data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+        pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
+        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
+    }
 
-    pred_path = path.join(subtuple_directory, 'pred')
-    opener_file = path.join(subtuple_directory, 'opener/opener.py')
-    volumes = {data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-               pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-               opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
+    model_volume = {
+        model_path: {'bind': '/sandbox/model', 'mode': 'rw'}
+    }
 
-    # compute algo task
-    algo_path = path.join(subtuple_directory)
-    algo_docker = f'algo_{tuple_type}'.lower()  # tag must be lowercase for docker
-    algo_docker_name = f'{algo_docker}_{subtuple["key"]}'
-    model_volume = {model_path: {'bind': '/sandbox/model', 'mode': 'rw'}}
+    # local volume for training subtuple in compute plan
+    if compute_plan_id is not None and tuple_type == 'traintuple':
+        volume_id = f'local-{compute_plan_id}-{org_name}'
+        if rank == 0:
+            client.volumes.create(name=volume_id)
+        else:
+            client.volumes.get(volume_id=volume_id)
+        model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-    if (compute_plan_id is not None and flrank != -1) or settings.TASK['CACHE_DOCKER_IMAGES']:
-        remove_image = False
-    else:
-        remove_image = True
-
-    # create the command option for algo
+    # generate command
     if tuple_type == 'traintuple':
-        algo_command = 'train'    # main command
+        command = 'train'
+        algo_docker_name = f'{algo_docker_name}_{command}'
 
-        # add list of inmodels
         if subtuple['inModels'] is not None:
             inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
-            algo_command = f"{algo_command} {' '.join(inmodels)}"
+            command = f"{command} {' '.join(inmodels)}"
 
-        # add compute_plan_id rank for training
-        if flrank is not None:
-            algo_command = f"{algo_command} --rank {flrank}"
+        if rank is not None:
+            command = f"{command} --rank {rank}"
 
     elif tuple_type == 'testtuple':
-        algo_command = 'predict'    # main command
-
+        command = 'predict'
+        algo_docker_name = f'{algo_docker_name}_{command}'
         inmodels = subtuple['model']["traintupleKey"]
-        algo_command = f'{algo_command} {inmodels}'
+        command = f'{command} {inmodels}'
 
-    # local volume for compute_plan_id
-    if compute_plan_id is not None and tuple_type == 'traintuple':
-        flvolume = f'local-{compute_plan_id}-{org_name}'
-        if flrank == 0:
-            client.volumes.create(name=flvolume)
-        else:
-            client.volumes.get(volume_id=flvolume)
-
-        model_volume[flvolume] = {'bind': '/sandbox/local', 'mode': 'rw'}
-
-    job_task_log = compute_docker(
+    compute_docker(
         client=client,
         resources_manager=resources_manager,
         dockerfile_path=algo_path,
         image_name=algo_docker,
         container_name=algo_docker_name,
         volumes={**volumes, **model_volume, **symlinks_volume},
-        command=algo_command,
+        command=command,
         remove_image=remove_image,
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
         capture_logs=settings.TASK['CAPTURE_LOGS']
@@ -458,26 +445,19 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     # save model in database
     if tuple_type == 'traintuple':
-        from substrapp.models import Model
-        end_model_path = path.join(subtuple_directory, 'model/model')
-        end_model_file_hash = get_hash(end_model_path, subtuple['key'])
-        instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+        end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
 
-        with open(end_model_path, 'rb') as f:
-            instance.file.save('model', f)
-        current_site = getattr(settings, "DEFAULT_DOMAIN")
-        end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
-
-    # compute metric task
+    # evaluation
     metrics_path = f'{subtuple_directory}/metrics'
-    metrics_docker = f'metrics_{tuple_type}'.lower()  # tag must be lowercase for docker
-    metrics_docker_name = f'{metrics_docker}_{subtuple["key"]}'
+    eval_docker = f'substra/metrics_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
+    eval_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}_eval'
+
     compute_docker(
         client=client,
         resources_manager=resources_manager,
         dockerfile_path=metrics_path,
-        image_name=metrics_docker,
-        container_name=metrics_docker_name,
+        image_name=eval_docker,
+        container_name=eval_docker_name,
         volumes={**volumes, **symlinks_volume},
         command=None,
         remove_image=remove_image,
@@ -488,14 +468,26 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # load performance
     with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
         perf = json.load(perf_file)
-
     global_perf = perf['all']
 
-    result = {'global_perf': global_perf,
-              'job_task_log': job_task_log}
+    result = {'global_perf': global_perf}
 
     if tuple_type == 'traintuple':
         result['end_model_file_hash'] = end_model_file_hash
         result['end_model_file'] = end_model_file
 
     return result
+
+
+def save_model(subtuple_directory, subtuple_key):
+    from substrapp.models import Model
+    end_model_path = path.join(subtuple_directory, 'model/model')
+    end_model_file_hash = get_hash(end_model_path, subtuple_key)
+    instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+
+    with open(end_model_path, 'rb') as f:
+        instance.file.save('model', f)
+    current_site = getattr(settings, "DEFAULT_DOMAIN")
+    end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+
+    return end_model_file, end_model_file_hash
