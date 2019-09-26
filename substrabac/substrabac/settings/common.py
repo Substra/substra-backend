@@ -58,6 +58,8 @@ INSTALLED_APPS = [
     'django_celery_results',
     'rest_framework_swagger',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'substrapp',
     'node',
     'users'

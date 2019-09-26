@@ -2,7 +2,7 @@ import os
 
 
 from django.http import FileResponse
-from rest_framework.authentication import BasicAuthentication
+from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -58,6 +58,7 @@ class PermissionMixin(object):
     authentication_classes = [
         BasicAuthentication,  # for node to node
         SecureJWTAuthentication,  # for user from front/sdk/cli
+        TokenAuthentication,  # for user from front/sdk/cli
         CustomSessionAuthentication,  # for user on drf web browsable api
     ]
     permission_classes = [IsAuthenticated]
