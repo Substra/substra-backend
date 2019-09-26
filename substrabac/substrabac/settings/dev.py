@@ -11,11 +11,9 @@ BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', 'dev')
 BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', 'dev')
 
 DEBUG = True
-TASK_CONFIG = {
-    'LOGS': bool(os.environ.get('TASK_LOGS', True)),
-    'CLEAN': bool(os.environ.get('TASK_CLEAN', True))
-}
-
+TASK_CAPTURE_LOGS = bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
+TASK_CLEAN_EXECUTION_ENVIRONMENT = bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True))
+TASK_CACHE_DOCKER_IMAGES = bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False))
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases

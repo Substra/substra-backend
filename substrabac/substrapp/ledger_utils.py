@@ -95,8 +95,7 @@ def retry_on_error(delay=1, nbtries=5, backoff=2):
             while True:
                 try:
                     return fn(*args, **kwargs)
-                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse,
-                        LedgerResponseError, LedgerStatusError) as e:
+                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse) as e:
 
                     _nbtries -= 1
                     if not nbtries:

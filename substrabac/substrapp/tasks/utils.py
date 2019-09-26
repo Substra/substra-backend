@@ -218,7 +218,7 @@ def container_format_log(container_name, container_logs):
 
 
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
-                   remove_image=True, remove_container=True, logs=True):
+                   remove_image=True, remove_container=True, capture_logs=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
@@ -250,8 +250,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                  'shm_size': '8G',
                  'labels': [DOCKER_LABEL],
                  'detach': False,
-                 'stdout': logs,
-                 'stderr': logs,
+                 'stdout': capture_logs,
+                 'stderr': capture_logs,
                  'auto_remove': False,
                  'remove': False,
                  'network_disabled': True,
@@ -279,7 +279,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     # We already get the excetion and we need to remove the containers to be able to remove the local
     # volume in case of fl task.
     container = client.containers.get(container_name)
-    if logs:
+    if capture_logs:
         container_format_log(
             container_name,
             container.logs()
