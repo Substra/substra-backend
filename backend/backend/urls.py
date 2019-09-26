@@ -20,6 +20,8 @@ from django.conf.urls.static import static
 from django.urls import include
 
 from backend.views import schema_view
+from rest_framework.authtoken import views
+
 from substrapp.urls import router
 from node.urls import router as nodeRouter
 from users.urls import router as userRouter
@@ -32,7 +34,8 @@ urlpatterns = [
         url(r'^', include((router.urls, 'substrapp'))),
         url(r'^', include((nodeRouter.urls, 'node'))),
         url(r'^', include((userRouter.urls, 'user'))),
-        url(r'^api-auth/', include('rest_framework.urls')),
+        url(r'^api-auth/', include('rest_framework.urls')),  # for session authent
+        url(r'^api-token-auth/', views.obtain_auth_token)  # for token authent
     ])),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
