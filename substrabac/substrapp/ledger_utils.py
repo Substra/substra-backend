@@ -243,7 +243,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'storageAddress': res["end_model_file"],
             },
             'perf': float(res["global_perf"]),
-            'log': 'success',
+            'log': '',
         }
 
     elif tuple_type == 'testtuple':
@@ -251,7 +251,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
         invoke_args = {
             'key': tuple_key,
             'perf': float(res["global_perf"]),
-            'log': 'success',
+            'log': '',
         }
 
     else:
