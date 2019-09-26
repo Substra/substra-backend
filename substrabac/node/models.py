@@ -1,4 +1,4 @@
-from django.contrib.auth.hashers import make_password, check_password, is_password_usable
+from django.contrib.auth.hashers import make_password, check_password
 from django.db import models
 
 import secrets
