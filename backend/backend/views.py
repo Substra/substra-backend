@@ -1,11 +1,18 @@
 import yaml
+
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.decorators import api_view, renderer_classes
 from rest_framework import response, schemas
 from rest_framework_swagger.renderers import OpenAPIRenderer, SwaggerUIRenderer
+from rest_framework.compat import coreapi
+
+from rest_framework.authtoken.models import Token
+from rest_framework.response import Response
 
 from django.conf.urls import url, include
+
+from libs.expiryTokenAuthentication import token_expire_handler, expires_in
 from substrapp.urls import router
-from rest_framework.compat import coreapi
 
 from requests.compat import urlparse
 
@@ -105,3 +112,23 @@ def schema_view(request):
         title='Substra Backend API',
         patterns=[url(r'^/', include([url(r'^', include(router.urls))]))])
     return response.Response(generator.get_schema(request=request))
+
+
+class ExpiryObtainAuthToken(ObtainAuthToken):
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.serializer_class(data=request.data,
+                                           context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        user = serializer.validated_data['user']
+        token, created = Token.objects.get_or_create(user=user)
+
+        # token_expire_handler will check, if the token is expired it will generate new one
+        is_expired, token = token_expire_handler(token)
+
+        return Response({
+            'token': token.key,
+            'expires_in': expires_in(token)
+        })
+
+obtain_auth_token = ExpiryObtainAuthToken.as_view()
