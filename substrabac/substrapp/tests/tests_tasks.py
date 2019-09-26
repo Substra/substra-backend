@@ -1,7 +1,6 @@
 import os
 import shutil
 import mock
-import time
 import uuid
 from unittest.mock import MagicMock
 
@@ -14,14 +13,14 @@ from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file, get_hash, create_directory
-from substrapp.tasks.utils import ResourcesManager, monitoring_task, compute_docker, ExceptionThread
+from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
                                    put_model, put_models, put_algo, put_metric, put_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
 
 from .common import (get_sample_algo, get_sample_script, get_sample_zip_data_sample, get_sample_tar_data_sample,
                      get_sample_model)
-from .common import FakeClient, FakeObjective, FakeDataManager, FakeModel, FakeRequest
+from .common import FakeObjective, FakeDataManager, FakeModel, FakeRequest
 from . import assets
 from node.models import OutgoingNode
 
@@ -104,17 +103,6 @@ class TasksTests(APITestCase):
 
         if gpu_set is not None:
             self.assertIn(gpu_set, self.ResourcesManager._ResourcesManager__gpu_sets)
-
-    def test_monitoring_task(self):
-
-        monitoring = ExceptionThread(target=monitoring_task, args=(FakeClient(), {'name': 'job'}))
-        monitoring.start()
-        time.sleep(0.1)
-        monitoring.join()
-
-        self.assertNotEqual(monitoring._stats['memory']['max'], 0)
-        self.assertNotEqual(monitoring._stats['cpu']['max'], 0)
-        self.assertNotEqual(monitoring._stats['netio']['rx'], 0)
 
     def test_put_algo_tar(self):
         algo_content = self.algo.read()
@@ -495,17 +483,12 @@ class TasksTests(APITestCase):
             f.write('FROM library/hello-world')
 
         hash_docker = uuid.uuid4().hex
-        result = compute_docker(client, self.ResourcesManager,
-                                self.subtuple_path, 'test_compute_docker_' + hash_docker,
-                                'test_compute_docker_name_' + hash_docker, None, None)
+        compute_docker(client, self.ResourcesManager,
+                       self.subtuple_path, 'test_compute_docker_' + hash_docker,
+                       'test_compute_docker_name_' + hash_docker, None, None)
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
-
-        self.assertIn('CPU', result)
-        self.assertIn('GPU', result)
-        self.assertIn('Mem', result)
-        self.assertIn('GPU Mem', result)
 
     def test_build_subtuple_folders(self):
         with mock.patch('substrapp.tasks.tasks.getattr') as getattr:

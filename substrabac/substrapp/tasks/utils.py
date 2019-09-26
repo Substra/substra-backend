@@ -2,7 +2,6 @@ import os
 import docker
 import GPUtil as gputil
 import threading
-import time
 
 import logging
 
@@ -114,103 +113,6 @@ def filter_gpu_sets(used_gpu_sets, gpu_sets):
     return filter_resources_sets(used_gpu_sets, gpu_sets, expand_gpu_set, reduce_gpu_set)
 
 
-def update_statistics(task_statistics, stats, gpu_stats):
-
-    # CPU
-
-    if stats is not None:
-
-        if 'cpu_stats' in stats and stats['cpu_stats']['cpu_usage'].get('total_usage', None):
-            # Compute CPU usage in %
-            delta_total_usage = (stats['cpu_stats']['cpu_usage']['total_usage'] -
-                                 stats['precpu_stats']['cpu_usage']['total_usage'])
-            delta_system_usage = (stats['cpu_stats']['system_cpu_usage'] - stats['precpu_stats']['system_cpu_usage'])
-            total_usage = (delta_total_usage / delta_system_usage) * stats['cpu_stats']['online_cpus'] * 100.0
-
-            task_statistics['cpu']['current'].append(total_usage)
-            task_statistics['cpu']['max'] = max(task_statistics['cpu']['max'],
-                                                max(task_statistics['cpu']['current']))
-
-        # MEMORY in GB
-        if 'memory_stats' in stats:
-            current_usage = stats['memory_stats'].get('usage', None)
-            max_usage = stats['memory_stats'].get('max_usage', None)
-
-            if current_usage:
-                task_statistics['memory']['current'].append(current_usage / 1024**3)
-            if max_usage:
-                task_statistics['memory']['max'] = max(task_statistics['memory']['max'],
-                                                       max_usage / 1024**3,
-                                                       max(task_statistics['memory']['current']))
-
-        # Network in kB
-        if 'networks' in stats:
-            task_statistics['netio']['rx'] = stats['networks']['eth0'].get('rx_bytes', 0)
-            task_statistics['netio']['tx'] = stats['networks']['eth0'].get('tx_bytes', 0)
-
-    # GPU
-
-    if gpu_stats is not None:
-        total_usage = sum([100 * gpu.load for gpu in gpu_stats])
-        task_statistics['gpu']['current'].append(total_usage)
-        task_statistics['gpu']['max'] = max(task_statistics['gpu']['max'],
-                                            max(task_statistics['gpu']['current']))
-
-        total_usage = sum([gpu.memoryUsed for gpu in gpu_stats]) / 1024
-        task_statistics['gpu_memory']['current'].append(total_usage)
-        task_statistics['gpu_memory']['max'] = max(task_statistics['gpu_memory']['max'],
-                                                   max(task_statistics['gpu_memory']['current']))
-
-
-def monitoring_task(client, task_args):
-    """thread worker function"""
-
-    task_name = task_args['name']
-
-    gpu_set = None
-    if 'environment' in task_args:
-        gpu_set = task_args['environment']['NVIDIA_VISIBLE_DEVICES']
-
-    start = time.time()
-    t = threading.currentThread()
-
-    # Statistics
-    task_statistics = {'memory': {'max': 0,
-                                  'current': [0]},
-                       'gpu_memory': {'max': 0,
-                                      'current': [0]},
-                       'cpu': {'max': 0,
-                               'current': [0]},
-                       'gpu': {'max': 0,
-                               'current': []},
-                       'io': {'max': 0,
-                              'current': []},
-                       'netio': {'rx': 0,
-                                 'tx': 0},
-                       'time': 0}
-
-    while not t.stopthread.isSet():
-        stats = None
-        try:
-            container = client.containers.get(task_name)
-            stats = container.stats(decode=True, stream=False)
-        except (docker.errors.NotFound, docker.errors.APIError):
-            pass
-
-        gpu_stats = None
-        if gpu_set is not None:
-            gpu_stats = [gpu for gpu in gputil.getGPUs() if str(gpu.id) in gpu_set]
-
-        update_statistics(task_statistics, stats, gpu_stats)
-
-    task_statistics['time'] = time.time() - start
-
-    t._stats = task_statistics
-
-    t._result = f"CPU:{t._stats['cpu']['max']:.2f} % - Mem:{t._stats['memory']['max']:.2f}"
-    t._result += f" GB - GPU:{t._stats['gpu']['max']:.2f} % - GPU Mem:{t._stats['gpu_memory']['max']:.2f} GB"
-
-
 def container_format_log(container_name, container_logs):
     logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
     for log in logs:
@@ -224,7 +126,6 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     if not os.path.exists(dockerfile_fullpath):
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
 
-    # Build metrics
     try:
         client.images.build(path=dockerfile_path,
                             tag=image_name,
@@ -241,84 +142,46 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
     cpu_set, gpu_set = resources_manager.get_cpu_gpu_sets()    # blocking call
 
-    task_args = {'image': image_name,
-                 'name': container_name,
-                 'cpuset_cpus': cpu_set,
-                 'mem_limit': memory_limit_mb,
-                 'command': command,
-                 'volumes': volumes,
-                 'shm_size': '8G',
-                 'labels': [DOCKER_LABEL],
-                 'detach': False,
-                 'stdout': capture_logs,
-                 'stderr': capture_logs,
-                 'auto_remove': False,
-                 'remove': False,
-                 'network_disabled': True,
-                 'network_mode': 'none',
-                 'privileged': False,
-                 'cap_drop': ['ALL']}
+    task_args = {
+        'image': image_name,
+        'name': container_name,
+        'cpuset_cpus': cpu_set,
+        'mem_limit': memory_limit_mb,
+        'command': command,
+        'volumes': volumes,
+        'shm_size': '8G',
+        'labels': [DOCKER_LABEL],
+        'detach': False,
+        'stdout': capture_logs,
+        'stderr': capture_logs,
+        'auto_remove': False,
+        'remove': False,
+        'network_disabled': True,
+        'network_mode': 'none',
+        'privileged': False,
+        'cap_drop': ['ALL']
+    }
 
     if gpu_set is not None:
         task_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
         task_args['runtime'] = 'nvidia'
 
-    task = ExceptionThread(target=client.containers.run,
-                           kwargs=task_args)
-
-    monitoring = ExceptionThread(target=monitoring_task,
-                                 args=(client, task_args))
-
-    task.start()
-    monitoring.start()
-
-    task.join()
-    monitoring.join()
-
-    # Remove container in all case (exception thrown or not)
-    # We already get the excetion and we need to remove the containers to be able to remove the local
-    # volume in case of fl task.
-    container = client.containers.get(container_name)
-    if capture_logs:
-        container_format_log(
-            container_name,
-            container.logs()
-        )
-
-    if remove_container:
+    try:
+        client.containers.run(**task_args)
+    finally:
+        # we need to remove the containers to be able to remove the local
+        # volume in case of compute plan
+        container = client.containers.get(container_name)
+        if capture_logs:
+            container_format_log(
+                container_name,
+                container.logs()
+            )
         container.remove()
 
-    # Remove images
-    if remove_image or hasattr(task, "_exception"):
-        client.images.remove(image_name, force=True)
-
-    if hasattr(task, "_exception"):
-        raise task._exception
-
-    return monitoring._result
-
-
-class ExceptionThread(threading.Thread):
-
-    def __init__(self, *args, **kwargs):
-        super(ExceptionThread, self).__init__(*args, **kwargs)
-        self.stopthread = threading.Event()
-
-    def run(self):
-        try:
-            if self._target:
-                self._target(*self._args, **self._kwargs)
-        except BaseException as e:
-            self._exception = e
-            raise e
-        finally:
-            # Avoid a refcycle if the thread is running a function with
-            # an argument that has a member that points to the thread.
-            del self._target, self._args, self._kwargs
-
-    def join(self, timeout=None):
-        self.stopthread.set()
-        super(ExceptionThread, self).join(timeout)
+        # Remove images
+        if remove_image:
+            client.images.remove(image_name, force=True)
 
 
 class ResourcesManager():
