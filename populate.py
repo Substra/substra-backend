@@ -30,20 +30,15 @@ def setup_config(network='docker'):
     print('Init config in /tmp/.substrabac for owkin and chunantes')
     if network == 'docker':
         USER, PASSWORD = ('foo', 'barbar10')
-        client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
-                           username=USER, password=PASSWORD)
-        client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0',
-                           username=USER, password=PASSWORD)
-        client.add_profile('clb', 'http://clb.substrabac:8002', '0.0',
-                           username=USER, password=PASSWORD)
+        # get first available user
+        client.add_profile('owkin', USER, PASSWORD, 'http://owkin.substrabac:8000', '0.0')
+        client.add_profile('chunantes', USER, PASSWORD, 'http://chunantes.substrabac:8001', '0.0')
+        client.add_profile('clb', USER, PASSWORD, 'http://clb.substrabac:8002', '0.0')
     if network == 'skaffold':
         # the usernames and passwords are defined in the skaffold.yaml file
-        client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
-                           username='node-1', password='node-1pwd')
-        client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
-                           username='node-2', password='node-2pwd')
-        client.add_profile('clb', 'http://substrabac.node-3', '0.0',
-                           username='node-3', password='node-3pwd')
+        client.add_profile('owkin', 'node-1', 'node-1pwd', 'http://substrabac.node-1', '0.0')
+        client.add_profile('chunantes', 'node-2', 'node-2pwd', 'http://substrabac.node-2', '0.0')
+        client.add_profile('clb', 'node-3', 'node-3pwd', 'http://substrabac.node-3', '0.0')
 
 
 def zip_folder(path, destination):
