@@ -4,4 +4,5 @@ ignore = E402, W504, F403, F405
 exclude = substrabac/substrapp/migrations/*,
           substrabac/substrapp/tests/assets.py,
           substrabac/substrabac/settings/*,
+          substrabac/node/migrations/*,
           .env, .venv
