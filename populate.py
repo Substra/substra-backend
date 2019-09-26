@@ -29,20 +29,16 @@ PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 def setup_config(network='docker'):
     print('Init config for owkin and chunantes')
     if network == 'docker':
-        client.add_profile('owkin', 'http://owkin.substra-backend:8000', '0.0',
-                           username=USER, password=PASSWORD)
-        client.add_profile('chunantes', 'http://chunantes.substra-backend:8001', '0.0',
-                           username=USER, password=PASSWORD)
-        client.add_profile('clb', 'http://clb.substra-backend:8002', '0.0',
-                           username=USER, password=PASSWORD)
+        USER, PASSWORD = ('foo', 'barbar10')
+        # get first available user
+        client.add_profile('owkin', USER, PASSWORD, 'http://substra-backend.owkin.xyz:8000', '0.0')
+        client.add_profile('chunantes', USER, PASSWORD, 'http://substra-backend.chunantes.xyz:8001', '0.0')
+        client.add_profile('clb', USER, PASSWORD, 'http://substra-backend.clb.xyz:8002', '0.0')
     if network == 'skaffold':
         # the usernames and passwords are defined in the skaffold.yaml file
-        client.add_profile('owkin', 'http://substra-backend.node-1', '0.0',
-                           username='node-1', password='node-1pwd')
-        client.add_profile('chunantes', 'http://substra-backend.node-2', '0.0',
-                           username='node-2', password='node-2pwd')
-        client.add_profile('clb', 'http://substra-backend.node-3', '0.0',
-                           username='node-3', password='node-3pwd')
+        client.add_profile('owkin', 'node-1', 'node-1pwd', 'http://substra-backend.node-1.com', '0.0')
+        client.add_profile('chunantes', 'node-2', 'node-2pwd', 'http://substra-backend.node-2.com', '0.0')
+        client.add_profile('clb', 'node-3', 'node-3pwd', 'http://substra-backend.node-3.com', '0.0')
 
 
 def zip_folder(path, destination):
