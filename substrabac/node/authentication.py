@@ -1,4 +1,6 @@
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
+
 from .models import IncomingNode
 
 
@@ -12,17 +14,18 @@ class NodeBackend:
 
     def authenticate(self, request, username=None, password=None):
         """Check the username/password and return a user."""
-        node_id = username
-        secret = password
-
-        if not node_id or not secret:
+        if not username or not password:
             return None
 
-        incoming_node_exists = IncomingNode.objects.filter(node_id=node_id, secret=secret).exists()
-        if incoming_node_exists:
-            return NodeUser(username=node_id)
+        try:
+            node = IncomingNode.objects.get(node_id=username)
+        except ObjectDoesNotExist:
+            return None
+        else:
+            if node.check_password(password):
+                return NodeUser(username=username)
 
-        return None
+            return None
 
     def get_user(self, user_id):
         # required for session
