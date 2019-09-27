@@ -131,4 +131,5 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
             'expires_in': expires_in(token)
         })
 
+
 obtain_auth_token = ExpiryObtainAuthToken.as_view()

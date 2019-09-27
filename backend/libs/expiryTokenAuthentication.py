@@ -6,10 +6,11 @@ from datetime import timedelta
 from django.utils import timezone
 from django.conf import settings
 
+
 # this return left time
 def expires_in(token):
     time_elapsed = timezone.now() - token.created
-    left_time = timedelta(seconds=getattr(settings, 'TOKEN_EXPIRED_AFTER_SECONDS', 5*60)) - time_elapsed
+    left_time = timedelta(seconds=getattr(settings, 'TOKEN_EXPIRED_AFTER_SECONDS', 5 * 60)) - time_elapsed
     return left_time
 
 
