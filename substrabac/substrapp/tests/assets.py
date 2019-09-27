@@ -189,7 +189,7 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0165-a860d73]",
+        "log": "[01-01-0165-2cfe33a]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
@@ -236,8 +236,8 @@ traintuple = [
             }
         },
         "outModel": {
-            "hash": "4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c",
-            "storageAddress": "http://testserver/model/4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c/file/"
+            "hash": "21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0",
+            "storageAddress": "http://testserver/model/21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0/file/"
         },
         "permissions": {
             "process": {
@@ -277,8 +277,8 @@ traintuple = [
             }
         },
         "outModel": {
-            "hash": "a06d1286549331a028af0878d7417ab12859d4796050a9bebb6f9ff64e8856e4",
-            "storageAddress": "http://testserver/model/a06d1286549331a028af0878d7417ab12859d4796050a9bebb6f9ff64e8856e4/file/"
+            "hash": "fd1ae479a232c930f453a5b5d4f402b17ece18e15f95ede70f0a51b6b95009e0",
+            "storageAddress": "http://testserver/model/fd1ae479a232c930f453a5b5d4f402b17ece18e15f95ede70f0a51b6b95009e0/file/"
         },
         "permissions": {
             "process": {
@@ -309,7 +309,7 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0165-9cc4851]",
+        "log": "[01-01-0165-b887bcc]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
@@ -352,8 +352,8 @@ testtuple = [
         "log": "",
         "model": {
             "traintupleKey": "0bd1a982d5d26699a2c32fe8ec72d9debb0af017a91a45c98fe1f8bf784b0b87",
-            "hash": "4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c",
-            "storageAddress": "http://testserver/model/4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c/file/"
+            "hash": "21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0",
+            "storageAddress": "http://testserver/model/21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0/file/"
         },
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
@@ -388,7 +388,7 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0165-a860d73]",
+            "log": "[01-01-0165-2cfe33a]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
@@ -449,8 +449,8 @@ model = [
                 }
             },
             "outModel": {
-                "hash": "4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c",
-                "storageAddress": "http://testserver/model/4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c/file/"
+                "hash": "21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0",
+                "storageAddress": "http://testserver/model/21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0/file/"
             },
             "permissions": {
                 "process": {
@@ -483,8 +483,8 @@ model = [
             "log": "",
             "model": {
                 "traintupleKey": "0bd1a982d5d26699a2c32fe8ec72d9debb0af017a91a45c98fe1f8bf784b0b87",
-                "hash": "4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c",
-                "storageAddress": "http://testserver/model/4cbf8b8d2f55f1ded0914eeee6625faa7529b7f30bc7c716df0fa1bb969f608c/file/"
+                "hash": "21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0",
+                "storageAddress": "http://testserver/model/21fdf97348b49c55754dfb339b2dbae710dfc0373781c34d6d54dbae553391d0/file/"
             },
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
@@ -526,8 +526,8 @@ model = [
                 }
             },
             "outModel": {
-                "hash": "a06d1286549331a028af0878d7417ab12859d4796050a9bebb6f9ff64e8856e4",
-                "storageAddress": "http://testserver/model/a06d1286549331a028af0878d7417ab12859d4796050a9bebb6f9ff64e8856e4/file/"
+                "hash": "fd1ae479a232c930f453a5b5d4f402b17ece18e15f95ede70f0a51b6b95009e0",
+                "storageAddress": "http://testserver/model/fd1ae479a232c930f453a5b5d4f402b17ece18e15f95ede70f0a51b6b95009e0/file/"
             },
             "permissions": {
                 "process": {
@@ -572,7 +572,7 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0165-9cc4851]",
+            "log": "[01-01-0165-b887bcc]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
