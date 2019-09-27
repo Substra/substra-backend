@@ -129,11 +129,7 @@ def generate_docker_compose_file(conf, launch_settings):
                             f'--master --processes {processes} --threads 2 --need-app' \
                             f'--env DJANGO_SETTINGS_MODULE=substrabac.settings.server.prod uwsgi --http :{port} '
         else:
-<<<<<<< HEAD
             django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.server.dev ' \
-=======
-            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.events.dev ' \
->>>>>>> Fix tests - docker - add session authent
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
