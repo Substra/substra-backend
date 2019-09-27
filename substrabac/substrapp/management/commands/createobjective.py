@@ -21,10 +21,10 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''  # noqa
     create objective
-    python ./manage.py createobjective '{"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}'
+    python ./manage.py createobjective '{"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md", "permissions": {"public": True, "authorized_ids": []}}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "permissions": {"public": True, "authorized_ids": []}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}'
     python ./manage.py createobjective objective.json
     # objective.json:
-    # {"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md"}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo"}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}
+    # {"objective": {"name": "foo", "metrics_name": "accuracy", "metrics": "./metrics.py", "description": "./description.md", "permissions": {"public": True, "authorized_ids": []}, "data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "permissions": {"public": True, "authorized_ids": []}, "data_samples": {"paths": ["./data.zip", "./train/data"]}}
     '''
 
     def add_arguments(self, parser):
@@ -61,6 +61,9 @@ class Command(BaseCommand):
         if 'description' not in data_manager:
             return self.stderr.write(
                 'Please provide a description to your data_manager')
+        if 'permissions' not in data_manager:
+            return self.stderr.write(
+                'Please provide permissions to your data_manager')
 
         # get data and check
         data_samples = data_input.get('data_samples', None)
@@ -84,6 +87,9 @@ class Command(BaseCommand):
         if 'description' not in objective:
             return self.stderr.write(
                 'Please provide a description to your objective')
+        if 'permissions' not in objective:
+            return self.stderr.write(
+                'Please provide permissions to your objective')
 
         # by default data need to be test_only
         data_samples['test_only'] = True
@@ -119,7 +125,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all',
+                          'permissions': data_manager['permissions'],
                           'type': data_manager['type'],
                           'instance': instance},
                     context={'request': LocalRequest()})
@@ -203,8 +209,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerObjectiveSerializer(
                     data={'name': objective['name'],
-                          'permissions': 'all',
-                          # forced, TODO changed when permissions are available
+                          'permissions': objective['permissions'],
                           'metrics_name': objective['metrics_name'],
                           'test_data_sample_keys': objective.get('test_data_sample_keys', []),
                           'test_data_manager_key': objective.get('test_data_manager_key', ''),
