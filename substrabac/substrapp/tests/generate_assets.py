@@ -10,8 +10,7 @@ assets_path = os.path.join(dir_path, 'assets.py')
 def main():
 
     client = substra.Client()
-    client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
-                       username='foo', password='barbar10')
+    client.add_profile('owkin', 'foo', 'barbar10', 'http://owkin.substrabac:8000', '0.0')
     client.login()
 
     client.set_profile('owkin')
