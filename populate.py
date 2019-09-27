@@ -82,7 +82,9 @@ def get_or_create(data, profile, asset, dryrun=False, local=True):
 
     else:
         print(colored(json.dumps(r, indent=2), 'green'))
-        key_or_keys = [x['pkhash'] for x in r] if isinstance(r, list) else r['pkhash']
+
+        key_or_keys = [x.get('pkhash', x.get('key'))
+                       for x in r] if isinstance(r, list) else r.get('pkhash', r.get('key'))
 
     return key_or_keys
 
