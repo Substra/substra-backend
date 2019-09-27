@@ -1,6 +1,5 @@
 import os
 import logging
-import shutil
 
 import mock
 
@@ -32,7 +31,7 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-         self.logger.setLevel(self.previous_level)
+        self.logger.setLevel(self.previous_level)
 
     def test_node_list_success(self):
         url = reverse('node:node-list')
