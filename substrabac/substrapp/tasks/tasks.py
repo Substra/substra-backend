@@ -20,7 +20,7 @@ from substrabac.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content
+from substrapp.tasks.utils import ResourcesManager, compute_docker, compute_k8s, get_asset_content
 from substrapp.tasks.exception_handler import compute_error_code
 
 
@@ -430,18 +430,31 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         inmodels = subtuple['model']["traintupleKey"]
         command = f'{command} {inmodels}'
 
-    compute_docker(
-        client=client,
-        resources_manager=resources_manager,
-        dockerfile_path=algo_path,
-        image_name=algo_docker,
-        container_name=algo_docker_name,
-        volumes={**volumes, **model_volume, **symlinks_volume},
-        command=command,
-        remove_image=remove_image,
-        remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
-    )
+    if settings.TASK['TYPE'] == 'docker':
+        compute_docker(
+            client=client,
+            resources_manager=resources_manager,
+            dockerfile_path=algo_path,
+            image_name=algo_docker,
+            container_name=algo_docker_name,
+            volumes={**volumes, **model_volume, **symlinks_volume},
+            command=command,
+            remove_image=remove_image,
+            remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
+            capture_logs=settings.TASK['CAPTURE_LOGS']
+        )
+
+    elif settings.TASK['TYPE'] == 'k8s':
+        compute_k8s(
+            client=client,
+            dockerfile_path=algo_path,
+            image_name=algo_docker,
+            pod_name=algo_docker_name,
+            volumes={**volumes, **model_volume, **symlinks_volume},
+            command=command,
+            remove_image=remove_image,
+            capture_logs=settings.TASK['CAPTURE_LOGS']
+        )
 
     # save model in database
     if tuple_type == 'traintuple':
@@ -452,18 +465,31 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     eval_docker = f'substra/metrics_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
     eval_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}_eval'
 
-    compute_docker(
-        client=client,
-        resources_manager=resources_manager,
-        dockerfile_path=metrics_path,
-        image_name=eval_docker,
-        container_name=eval_docker_name,
-        volumes={**volumes, **symlinks_volume},
-        command=None,
-        remove_image=remove_image,
-        remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
-    )
+    if settings.TASK['TYPE'] == 'docker':
+        compute_docker(
+            client=client,
+            resources_manager=resources_manager,
+            dockerfile_path=metrics_path,
+            image_name=eval_docker,
+            container_name=eval_docker_name,
+            volumes={**volumes, **symlinks_volume},
+            command=None,
+            remove_image=remove_image,
+            remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
+            capture_logs=settings.TASK['CAPTURE_LOGS']
+        )
+
+    elif settings.TASK['TYPE'] == 'k8s':
+        compute_k8s(
+            client=client,
+            dockerfile_path=metrics_path,
+            image_name=eval_docker,
+            pod_name=eval_docker_name,
+            volumes={**volumes, **symlinks_volume},
+            command=None,
+            remove_image=remove_image,
+            capture_logs=settings.TASK['CAPTURE_LOGS']
+        )
 
     # load performance
     with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:

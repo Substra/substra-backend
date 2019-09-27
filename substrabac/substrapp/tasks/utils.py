@@ -1,5 +1,6 @@
 import os
 import docker
+import kubernetes as k8s
 import GPUtil as gputil
 import threading
 
@@ -9,7 +10,7 @@ from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file, NodeError
-
+from substrapp.tasks.k8s_utils import create_pod, wait_pod, get_pod_logs, delete_pod
 
 DOCKER_LABEL = 'substra_task'
 
@@ -114,13 +115,17 @@ def filter_gpu_sets(used_gpu_sets, gpu_sets):
 
 
 def container_format_log(container_name, container_logs):
-    logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
+
+    if isinstance(container_logs, bytes):
+        logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
+    else:
+        logs = [f'[{container_name}] {log}' for log in container_logs.split('\n')]
+
     for log in logs:
         logger.info(log)
 
 
-def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
-                   remove_image=True, remove_container=True, capture_logs=True):
+def build_docker_image(client, dockerfile_path, image_name, remove_image=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
@@ -130,6 +135,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         client.images.build(path=dockerfile_path,
                             tag=image_name,
                             rm=remove_image)
+
     except docker.errors.BuildError as e:
         # catch build errors and print them for easier debugging of failed build
         lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
@@ -137,6 +143,12 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         error = '\n'.join(lines)
         logger.error(f'BuildError: {error}')
         raise
+
+
+def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
+                   remove_image=True, remove_container=True, capture_logs=True):
+
+    build_docker_image(client, dockerfile_path, image_name, remove_image)
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
@@ -178,6 +190,35 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
                 container.logs()
             )
         container.remove()
+
+        # Remove images
+        if remove_image:
+            client.images.remove(image_name, force=True)
+
+
+def compute_k8s(client, dockerfile_path, image_name, pod_name, volumes, command,
+                remove_image=True, capture_logs=True):
+
+    build_docker_image(client, dockerfile_path, image_name, remove_image)
+
+    pod_name = pod_name.replace('_', '-')
+
+    try:
+        k8s.config.load_incluster_config()
+        k8s_client = k8s.client.CoreV1Api()
+        namespace = "default"
+
+        create_pod(k8s_client, namespace, pod_name, image_name, command, labels={"app": DOCKER_LABEL})
+        wait_pod(k8s_client, namespace, pod_name)
+        if capture_logs:
+            container_format_log(
+                pod_name,
+                get_pod_logs(k8s_client=k8s_client,
+                             namespace=namespace,
+                             name=pod_name)
+            )
+    finally:
+        delete_pod(k8s_client, namespace, pod_name)
 
         # Remove images
         if remove_image:
