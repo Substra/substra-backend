@@ -12,6 +12,14 @@ BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', 'dev')
 
 DEBUG = True
 
+TASK = {
+    'CAPTURE_LOGS': to_bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
+    'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
+    'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
+}
+
+LEDGER_CALL_RETRY = False  # Overwrite the ledger setting value
+
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
