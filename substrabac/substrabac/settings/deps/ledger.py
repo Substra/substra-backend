@@ -40,7 +40,6 @@ def get_hfc_client():
     asyncio.set_event_loop(loop)
 
     client = Client()
-    channel = client.new_channel(LEDGER['channel_name'])
 
     # Add peer from substrabac ledger config file
     peer = Peer(name=LEDGER['peer']['name'])
@@ -52,6 +51,23 @@ def get_hfc_client():
         'clientCert': {'path': LEDGER['peer']['clientCert']},
     })
     client._peers[LEDGER['peer']['name']] = peer
+
+    # Check peer has joined channel
+
+    response = loop.run_until_complete(
+        client.query_channels(
+            requestor=LEDGER['requestor'],
+            peers=[peer],
+            decode=True
+        )
+    )
+
+    channels = [ch.channel_id for ch in response.channels]
+
+    if not LEDGER['channel_name'] in channels:
+        raise Exception(f'Peer has not joined channel: {LEDGER["channel_name"]}')
+
+    channel = client.new_channel(LEDGER['channel_name'])
 
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
@@ -78,6 +94,7 @@ def update_client_with_discovery(client, discovery_results):
 
     # Get all msp tls root cert files
     tls_root_certs = {}
+
     for mspid, msp_info in discovery_results['config']['msps'].items():
         tls_root_certs[mspid] = base64.decodebytes(
             msp_info['tls_root_certs'].pop().encode()
