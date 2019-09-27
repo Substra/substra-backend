@@ -21,11 +21,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''  # noqa
     create dataset
-    python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdataset dataset.json
     # datamanager.json:
     # objective_keys are optional
-    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": []}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_keys": [], "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
@@ -58,6 +58,8 @@ class Command(BaseCommand):
             return self.stderr.write('Please provide a data_opener to your data_manager')
         if 'description' not in data_manager:
             return self.stderr.write('Please provide a description to your data_manager')
+        if 'permissions' not in data_manager:
+            return self.stderr.write('Please provide permissions to your data_manager')
 
         data_samples = data_input.get('data_samples', None)
         if data_samples is None:
@@ -98,7 +100,7 @@ class Command(BaseCommand):
                 # init ledger serializer
                 ledger_serializer = LedgerDataManagerSerializer(
                     data={'name': data_manager['name'],
-                          'permissions': 'all',  # forced, TODO changed when permissions are available
+                          'permissions': data_manager['permissions'],
                           'type': data_manager['type'],
                           'objective_keys': data_manager.get('objective_keys', []),
                           'instance': instance},
