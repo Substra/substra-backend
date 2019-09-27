@@ -163,3 +163,17 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 
 BASIC_AUTHENTICATION_MODULE = 'rest_framework.authentication'
+
+
+TRUE_VALUES = {
+    't', 'T',
+    'y', 'Y', 'yes', 'YES',
+    'true', 'True', 'TRUE',
+    'on', 'On', 'ON',
+    '1', 1,
+    True
+}
+
+
+def to_bool(value):
+    return value in TRUE_VALUES

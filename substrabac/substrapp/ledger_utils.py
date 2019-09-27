@@ -81,11 +81,11 @@ STATUS_TO_EXCEPTION = {
 }
 
 
-def retry_on_mvcc_error(delay=1, nbtries=5, backoff=2):
+def retry_on_error(delay=1, nbtries=5, backoff=2):
     def _retry(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
-            if not getattr(settings, 'LEDGER_MVCC_RETRY', False):
+            if not getattr(settings, 'LEDGER_CALL_RETRY', False):
                 return fn(*args, **kwargs)
 
             _delay = delay
@@ -95,7 +95,8 @@ def retry_on_mvcc_error(delay=1, nbtries=5, backoff=2):
             while True:
                 try:
                     return fn(*args, **kwargs)
-                except LedgerMVCCError as e:
+                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse) as e:
+
                     _nbtries -= 1
                     if not nbtries:
                         raise
@@ -185,11 +186,13 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         return response
 
 
+@retry_on_error()
 def query_ledger(fcn, args=None):
     # careful, passing invoke parameters to query_ledger will NOT fail
     return call_ledger('query', fcn=fcn, args=args)
 
 
+@retry_on_error()
 def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
     params = {
         'wait_for_event': sync,
@@ -209,11 +212,12 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True)
         return response
 
 
+@retry_on_error()
 def get_object_from_ledger(pk, query):
     return query_ledger(fcn=query, args={'key': pk})
 
 
-@retry_on_mvcc_error()
+@retry_on_error()
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
 
@@ -228,7 +232,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
         sync=True)
 
 
-@retry_on_mvcc_error()
+@retry_on_error()
 def log_success_tuple(tuple_type, tuple_key, res):
     if tuple_type == 'traintuple':
         invoke_fcn = 'logSuccessTrain'
@@ -239,7 +243,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'storageAddress': res["end_model_file"],
             },
             'perf': float(res["global_perf"]),
-            'log': f'Train - {res["job_task_log"]};',
+            'log': '',
         }
 
     elif tuple_type == 'testtuple':
@@ -247,7 +251,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
         invoke_args = {
             'key': tuple_key,
             'perf': float(res["global_perf"]),
-            'log': f'Test - {res["job_task_log"]};',
+            'log': '',
         }
 
     else:
@@ -256,7 +260,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
     return invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
-@retry_on_mvcc_error()
+@retry_on_error()
 def log_start_tuple(tuple_type, tuple_key):
     start_type = None
 
@@ -276,6 +280,7 @@ def log_start_tuple(tuple_type, tuple_key):
         pass
 
 
+@retry_on_error()
 def query_tuples(tuple_type, data_owner):
     data = query_ledger(
         fcn="queryFilter",

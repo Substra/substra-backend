@@ -143,6 +143,10 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'PYTHONUNBUFFERED=1',
             'DATABASE_HOST=postgresql',
 
+            f"TASK_CAPTURE_LOGS=True",
+            f"TASK_CLEAN_EXECUTION_ENVIRONMENT=True",
+            f"TASK_CACHE_DOCKER_IMAGES=False",
+
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
             f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
 
