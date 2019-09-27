@@ -21,6 +21,7 @@ from django.urls import include
 
 from substrabac.views import schema_view
 from substrapp.urls import router
+from node.urls import router as nodeRouter
 
 
 urlpatterns = [
@@ -28,6 +29,7 @@ urlpatterns = [
         url(r'^admin/', admin.site.urls),
         url(r'^doc/', schema_view),
         url(r'^', include((router.urls, 'substrapp'))),
+        url(r'^', include((nodeRouter.urls, 'node'))),
     ])),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
   + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

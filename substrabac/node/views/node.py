@@ -6,7 +6,8 @@ from substrapp.ledger_utils import query_ledger, LedgerError
 from substrapp.utils import get_owner
 
 
-class NodeViewSet(mixins.ListModelMixin, GenericViewSet):
+class NodeViewSet(mixins.ListModelMixin,
+                  GenericViewSet):
     def list(self, request, *args, **kwargs):
         try:
             nodes = query_ledger(fcn='queryNodes')
