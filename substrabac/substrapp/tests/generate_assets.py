@@ -11,7 +11,7 @@ def main():
 
     client = substra.Client()
     client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
-                       user='foo', password='barbar10')
+                       username='foo', password='barbar10')
     client.login()
 
     client.set_profile('owkin')
