@@ -8,6 +8,6 @@ class NodeConfig(AppConfig):
     name = 'node'
 
     def ready(self):
-        if hasattr(settings, 'LEDGER'):
+        if hasattr(settings, 'REGISTER_NODE') and getattr(settings, 'REGISTER_NODE'):
             # args is set to empty because fabric-sdk-py doesn't allow None args for invoke operations
             invoke_ledger(fcn='registerNode', args=[''], sync=True)
