@@ -2,15 +2,19 @@ from rest_framework import status, mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from node.models import IncomingNode
 from substrapp.ledger_utils import query_ledger, LedgerError
 from substrapp.utils import get_owner
 
 
 class NodeViewSet(mixins.ListModelMixin,
                   GenericViewSet):
+    queryset = IncomingNode.objects.all()
+    ledger_query_call = 'queryNodes'
+
     def list(self, request, *args, **kwargs):
         try:
-            nodes = query_ledger(fcn='queryNodes')
+            nodes = query_ledger(fcn=self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
