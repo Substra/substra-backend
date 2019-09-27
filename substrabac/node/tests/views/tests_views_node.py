@@ -32,33 +32,18 @@ class ModelViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
 
     def tearDown(self):
-        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
-        self.logger.setLevel(self.previous_level)
-
-    def test_node_list_empty(self):
-        url = reverse('node:node-list')
-        with mock.patch('node.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'node_ids': []}
-
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, [])
+         self.logger.setLevel(self.previous_level)
 
     def test_node_list_success(self):
         url = reverse('node:node-list')
         with mock.patch('node.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'node_ids': ['foo', 'bar']}
+            mquery_ledger.return_value = [{'id': 'foo'}, {'id': 'bar'}]
+            with mock.patch('node.views.node.get_owner') as mget_owner:
+                mget_owner.return_value = 'foo'
 
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, [{'node_id': 'foo'}, {'node_id': 'bar'}])
-
-    def test_current_node(self):
-        url = reverse('node:node-current')
-        with mock.patch('node.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = 'foo'
-
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {'node_id': 'foo'})
+                response = self.client.get(url, **self.extra)
+                r = response.json()
+                self.assertEqual(r, [
+                    {'id': 'foo', 'isCurrent': True},
+                    {'id': 'bar', 'isCurrent': False}
+                ])

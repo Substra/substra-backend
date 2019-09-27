@@ -7,16 +7,9 @@ from rest_framework.routers import DefaultRouter
 
 from substrapp.views import ObjectiveViewSet, DataSampleViewSet, DataManagerViewSet, \
     AlgoViewSet, TrainTupleViewSet, TestTupleViewSet, ModelViewSet, TaskViewSet, \
-<<<<<<< HEAD
     ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet, \
-<<<<<<< HEAD
-    ModelPermissionViewSet, NodeViewSet, PermissionNodeViewSet
-=======
-    NodeViewSet
->>>>>>> add current node view
-=======
-    ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet
->>>>>>> Place node view in its own app
+    ModelPermissionViewSet
+
 
 # Create a router and register our viewsets with it.
 
@@ -34,14 +27,6 @@ router.register(r'traintuple', TrainTupleViewSet, base_name='traintuple')
 router.register(r'testtuple', TestTupleViewSet, base_name='testtuple')
 router.register(r'task', TaskViewSet, base_name='task')
 router.register(r'compute_plan', ComputePlanViewSet, base_name='compute_plan')
-<<<<<<< HEAD
-router.register(r'node', NodeViewSet, base_name='node')
-<<<<<<< HEAD
-router.register(r'permission_node', PermissionNodeViewSet, base_name='permission_node')
-=======
->>>>>>> add current node view
-=======
->>>>>>> Place node view in its own app
 
 urlpatterns = [
     url(r'^', include(router.urls)),
