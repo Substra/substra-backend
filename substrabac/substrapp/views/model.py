@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
@@ -116,6 +117,11 @@ class ModelPermissionViewSet(PermissionMixin,
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
+
+        # user cannot download model, only node can
+        if not isinstance(request.user, NodeUser):
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+
         model_object = self.get_object()
         data = getattr(model_object, 'file')
         return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
