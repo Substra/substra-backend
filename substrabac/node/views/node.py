@@ -2,7 +2,6 @@ from rest_framework import status, mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from node.models import IncomingNode
 from substrapp.ledger_utils import query_ledger, LedgerError
 from substrapp.utils import get_owner
 
