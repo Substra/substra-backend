@@ -132,3 +132,4 @@ benin_malin
 # file for testing data creation with django command
 data.json
 
+.vscode/
