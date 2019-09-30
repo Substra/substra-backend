@@ -9,8 +9,10 @@ from substrapp.utils import get_owner
 
 class NodeViewSet(mixins.ListModelMixin,
                   GenericViewSet):
-    queryset = IncomingNode.objects.all()
     ledger_query_call = 'queryNodes'
+
+    def get_queryset(self):
+        return []
 
     def list(self, request, *args, **kwargs):
         try:
