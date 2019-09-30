@@ -107,6 +107,18 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return Response(models_list, status=status.HTTP_200_OK)
 
+    @action(detail=True)
+    def details(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            data = get_object_from_ledger(pk, self.ledger_query_call)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        return Response(data, status=status.HTTP_200_OK)
+
 
 class ModelPermissionViewSet(PermissionMixin,
                              GenericViewSet):
@@ -125,15 +137,3 @@ class ModelPermissionViewSet(PermissionMixin,
         model_object = self.get_object()
         data = getattr(model_object, 'file')
         return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
-
-    @action(detail=True)
-    def details(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
-        return Response(data, status=status.HTTP_200_OK)
