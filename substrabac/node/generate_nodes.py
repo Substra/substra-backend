@@ -62,4 +62,3 @@ if __name__ == '__main__':
     orgs = ['owkinMSP', 'chu-nantesMSP', 'clbMSP']  # TODO should be discovered by discovery service
 
     generate_for_orgs(orgs)
-
