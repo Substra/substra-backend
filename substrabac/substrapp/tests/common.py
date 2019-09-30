@@ -10,13 +10,14 @@ from django.db import transaction
 from rest_framework.test import APIClient
 
 
-# This function helper generate a basic authenticaiton header with given credentials
+# This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
 from users.serializers import CustomTokenObtainPairSerializer
 
 
 def generate_basic_auth_header(username, password):
     return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
+
 
 def generate_jwt_auth_header(jwt):
     return 'JWT ' + jwt

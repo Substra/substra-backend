@@ -443,7 +443,7 @@ class TasksTests(APITestCase):
         subtuple = {
             'algo': {
                 'storageAddress': assets.algo[0]['content']['storageAddress'],
-                'owner':  assets.algo[0]['owner'],
+                'owner': assets.algo[0]['owner'],
                 'hash': algo_hash
             }
         }
