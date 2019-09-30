@@ -69,6 +69,25 @@ def get_hfc_client():
 
     channel = client.new_channel(LEDGER['channel_name'])
 
+    # Check chaincode is instantiated in the channel
+
+    responses = loop.run_until_complete(
+        client.query_instantiated_chaincodes(
+            requestor=LEDGER['requestor'],
+            channel_name=LEDGER['channel_name'],
+            peers=[peer],
+            decode=True
+        )
+    )
+
+    chaincodes = [(cc.name, cc.version)
+                  for resp in responses
+                  for cc in resp.chaincodes]
+
+    if not (LEDGER['chaincode_name'], LEDGER['chaincode_version']) in chaincodes:
+        raise Exception(f'Chaincode : {LEDGER["chaincode_name"], LEDGER["chaincode_version"]}'
+                        f' is not instantiated in the channel :  {LEDGER["channel_name"]}')
+
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
         channel._discovery(
