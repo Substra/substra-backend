@@ -10,6 +10,7 @@ from substrapp.views import ObjectiveViewSet, DataSampleViewSet, DataManagerView
     ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet, \
     ModelPermissionViewSet
 
+
 # Create a router and register our viewsets with it.
 
 router = DefaultRouter()
