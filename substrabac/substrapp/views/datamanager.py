@@ -20,7 +20,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException,
-                                   get_remote_asset)
+                                   get_remote_asset, node_has_process_permission)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -190,23 +190,26 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         validate_pk(pk)
         # get instance from remote node
         data = get_object_from_ledger(pk, 'queryDataset')
-        # try to get it from local db to check if description exists
-        try:
-            instance = self.get_object()
-        except Http404:
-            instance = None
-        finally:
-            # check if instance has description or data_opener
-            if not instance or not instance.description or not instance.data_opener:
-                instance = self.create_or_update_datamanager(instance, data, pk)
 
-            # do not give access to local files address
-            serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
-            data.update(serializer.data)
+        # do not cache if node has not process permission
+        if not node_has_process_permission(data):
+            # try to get it from local db to check if description exists
+            try:
+                instance = self.get_object()
+            except Http404:
+                instance = None
+            finally:
+                # check if instance has description or data_opener
+                if not instance or not instance.description or not instance.data_opener:
+                    instance = self.create_or_update_datamanager(instance, data, pk)
 
-            replace_storage_addresses(request, data)
+                # do not give access to local files address
+                serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                data.update(serializer.data)
 
-            return data
+                replace_storage_addresses(request, data)
+
+        return data
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
