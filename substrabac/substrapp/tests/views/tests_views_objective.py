@@ -378,6 +378,7 @@ class ObjectiveViewTests(APITestCase):
             res = self.client.get(url, **self.extra)
             res_content = b''.join(list(res.streaming_content))
             self.assertEqual(res_content, description_content)
+            self.assertEqual(res['Content-Disposition'], 'attachment; filename="description.md"')
 
     def test_objective_url_rewrite_download_remote_allowed(self):
         description_path = os.path.join(
@@ -403,6 +404,7 @@ class ObjectiveViewTests(APITestCase):
             res = self.client.get(url, **self.extra)
             res_content = b''.join(list(res.streaming_content))
             self.assertEqual(res_content, description_content)
+            self.assertEqual(res['Content-Disposition'], 'attachment; filename="description.md"')
 
     def test_objective_url_rewrite_download_remote_denied(self):
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \

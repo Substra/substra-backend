@@ -141,7 +141,6 @@ class PermissionMixin(object):
             response = CustomFileResponse(
                 streaming_content=r.raw,
                 as_attachment=True,
-                filename='dummydummydummy.md',  # todo: proper filename
                 status=r.status_code
             )
 
