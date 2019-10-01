@@ -29,7 +29,7 @@ PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 def setup_config(network='docker'):
     print('Init config for owkin and chunantes')
     if network == 'docker':
-        USER, PASSWORD = ('foo', 'barbar10')
+        USER, PASSWORD = ('substra', 'p@$swr0d44')
         # get first available user
         client.add_profile('owkin', USER, PASSWORD, 'http://substra-backend.owkin.xyz:8000', '0.0')
         client.add_profile('chunantes', USER, PASSWORD, 'http://substra-backend.chunantes.xyz:8001', '0.0')
