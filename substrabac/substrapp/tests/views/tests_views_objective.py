@@ -74,15 +74,20 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_empty(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [[], ['ISIC']]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [[]])
 
+    def test_objective_list_success(self):
+        url = reverse('substrapp:objective-list')
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = objective
+
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [['ISIC']])
+            self.assertEqual(r, [objective])
 
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
@@ -330,9 +335,25 @@ class ObjectiveViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_objective_url_rewrite_list(self):
-        # todo
-        # todo: also handle metrics rewrite
-        pass
+        url = reverse('substrapp:objective-list')
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_objectives = copy.deepcopy(objective)
+            for ledger_objective in ledger_objectives:
+                ledger_objective['description']['storageAddress'] = \
+                    ledger_objective['description']['storageAddress'] \
+                        .replace('http://testserver', 'http://remotetestserver')
+            mquery_ledger.return_value = ledger_objectives
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            self.assertEqual(res.data[0][0]['description']['storageAddress'],
+                             objective[0]['description']['storageAddress'])
+            self.assertEqual(res.data[0][1]['description']['storageAddress'],
+                             objective[1]['description']['storageAddress'])
 
     def test_objective_url_rewrite_retrieve(self):
         url = reverse('substrapp:objective-detail', args=[objective[0]['key']])

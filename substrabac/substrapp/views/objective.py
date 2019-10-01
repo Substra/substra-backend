@@ -30,6 +30,11 @@ from substrapp.views.utils import PermissionMixin, find_primary_key_error, valid
 from substrapp.views.filters_utils import filter_list
 
 
+def rewrite_storage_addresses(request, objective):
+    objective['description']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:objective-description', args=[objective['key']]))
+
+
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
@@ -206,8 +211,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
 
-        data['description']['storageAddress'] = request.build_absolute_uri(
-            reverse('substrapp:objective-description', args=[pk]))
+        rewrite_storage_addresses(request, data)
 
         return data
 
@@ -246,6 +250,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 return Response(
                     {'message': f'Malformed search filters {query_params}'},
                     status=status.HTTP_400_BAD_REQUEST)
+
+        for group in objectives_list:
+            for objective in group:
+                rewrite_storage_addresses(request, objective)
 
         return Response(objectives_list, status=status.HTTP_200_OK)
 
