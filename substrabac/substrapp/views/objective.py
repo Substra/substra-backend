@@ -186,7 +186,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
         data = get_object_from_ledger(pk, self.ledger_query_call)
@@ -206,6 +206,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
 
+        data['description']['storageAddress'] = request.build_absolute_uri(
+            reverse('substrapp:objective-description', args=[pk]))
+
         return data
 
     def retrieve(self, request, *args, **kwargs):
@@ -213,7 +216,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:

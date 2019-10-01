@@ -4,6 +4,7 @@ import base64
 import binascii
 from importlib import import_module
 
+import requests
 from django.http import FileResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
 from rest_framework.permissions import IsAuthenticated
@@ -125,13 +126,25 @@ class PermissionMixin(object):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
-        obj = self.get_object()
-        data = getattr(obj, field)
-        response = CustomFileResponse(
-            open(data.path, 'rb'),
-            as_attachment=True,
-            filename=os.path.basename(data.path)
-        )
+        if get_owner() == asset['owner']:
+            obj = self.get_object()
+            data = getattr(obj, field)
+            response = CustomFileResponse(
+                open(data.path, 'rb'),
+                as_attachment=True,
+                filename=os.path.basename(data.path)
+            )
+        else:
+            r = requests.get(asset[field]['storageAddress'], stream=True)
+            if not r.ok:
+                return Response({'message': str(r.text)}, status=r.status_code)
+            response = CustomFileResponse(
+                streaming_content=r.raw,
+                as_attachment=True,
+                filename='dummydummydummy.md',  # todo: proper filename
+                status=r.status_code
+            )
+
         return response
 
 

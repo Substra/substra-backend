@@ -2,8 +2,10 @@ import os
 import shutil
 import logging
 import zipfile
+import copy
 
 import mock
+import requests
 
 from django.urls import reverse
 from django.test import override_settings
@@ -11,7 +13,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-
+from substrapp.models import Objective
 from substrapp.serializers import LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import LedgerError
@@ -326,3 +328,96 @@ class ObjectiveViewTests(APITestCase):
 
         response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_objective_url_rewrite_list(self):
+        # todo
+        # todo: also handle metrics rewrite
+        pass
+
+    def test_objective_url_rewrite_retrieve(self):
+        url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
+        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_objective = copy.deepcopy(objective[0])
+            ledger_objective['description']['storageAddress'] = \
+                ledger_objective['description']['storageAddress'].replace('http://testserver',
+                                                                          'http://remotetestserver')
+            mquery_ledger.return_value = ledger_objective
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            self.assertEqual(res.data['description']['storageAddress'],
+                             objective[0]['description']['storageAddress'])
+
+    def test_objective_url_rewrite_download_local(self):
+        description_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '../../../../fixtures/owkin/objectives/objective0/description.md')
+
+        with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
+                mock.patch('substrapp.views.objective.ObjectivePermissionViewSet.get_object') \
+                as mget_object:
+
+            # mock content
+            mquery_ledger.return_value = objective[0]
+            mget_owner.return_value = objective[0]['owner']
+            with open(description_path, 'rb') as f:
+                description_content = f.read()
+
+            class MockDescription:
+                path = description_path
+            mock_objective = Objective(pkhash="toto", description=MockDescription)
+            mget_object.return_value = mock_objective
+
+            # test
+            url = objective[0]['description']['storageAddress']
+            res = self.client.get(url, **self.extra)
+            res_content = b''.join(list(res.streaming_content))
+            self.assertEqual(res_content, description_content)
+
+    def test_objective_url_rewrite_download_remote_allowed(self):
+        description_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)),
+            '../../../../fixtures/owkin/objectives/objective0/description.md')
+        with open(description_path, 'rb') as f:
+            description_content = f.read()
+
+        with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
+                mock.patch('substrapp.views.utils.requests.get') as mrequests_get:
+            # mock content
+            mquery_ledger.return_value = objective[0]
+            mget_owner.return_value = 'not-OwkinMSP'
+
+            requests_response = requests.Response()
+            requests_response.raw = open(description_path, 'rb')
+            requests_response.status_code = status.HTTP_200_OK
+            mrequests_get.return_value = requests_response
+
+            # test
+            url = objective[0]['description']['storageAddress']
+            res = self.client.get(url, **self.extra)
+            res_content = b''.join(list(res.streaming_content))
+            self.assertEqual(res_content, description_content)
+
+    def test_objective_url_rewrite_download_remote_denied(self):
+        with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
+                mock.patch('substrapp.views.utils.requests.get') as mrequests_get:
+            # mock content
+            mquery_ledger.return_value = objective[0]
+            mget_owner.return_value = 'not-OwkinMSP'
+
+            requests_response = requests.Response()
+            requests_response.status_code = status.HTTP_401_UNAUTHORIZED
+            requests_response._content = b'{"message": "nope"}'
+            mrequests_get.return_value = requests_response
+
+            # test
+            url = objective[0]['description']['storageAddress']
+            res = self.client.get(url, **self.extra)
+            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
