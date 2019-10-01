@@ -11,6 +11,8 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, Authen
 
 from users.serializers import CustomTokenObtainPairSerializer
 
+import tldextract
+
 
 class UserViewSet(GenericViewSet):
     queryset = User.objects.all()
@@ -47,7 +49,10 @@ class UserViewSet(GenericViewSet):
 
         response = Response(token.payload, status=status.HTTP_200_OK)
 
-        host = request.get_host().split(':')[0]
+        ext = tldextract.extract(request.get_host())
+        host = ext.domain
+        if ext.suffix:
+            host += '.' + ext.suffix
 
         if settings.DEBUG:
             response.set_cookie('header.payload', value=headerPayload, expires=expires, domain=host)
