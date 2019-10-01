@@ -37,11 +37,6 @@ backend:
     loadBalancerSourceRanges: []
     # nodePort: 30000
 
-  auth: {}
-    # user: owkward
-    # password: H9YJh7znjhoje3
-    # header: "Basic b3drd2FyZDpIOVlKaDd6bmpob2plMw=="
-
   ingress:
     enabled: false
     annotations: {}
