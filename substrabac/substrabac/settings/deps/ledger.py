@@ -80,12 +80,12 @@ def get_hfc_client():
         )
     )
 
-    chaincodes = [(cc.name, cc.version)
+    chaincodes = [cc.name
                   for resp in responses
                   for cc in resp.chaincodes]
 
-    if not (LEDGER['chaincode_name'], LEDGER['chaincode_version']) in chaincodes:
-        raise Exception(f'Chaincode : {LEDGER["chaincode_name"], LEDGER["chaincode_version"]}'
+    if not LEDGER['chaincode_name'] in chaincodes:
+        raise Exception(f'Chaincode : {LEDGER["chaincode_name"]}'
                         f' is not instantiated in the channel :  {LEDGER["channel_name"]}')
 
     # Discover orderers and peers from channel discovery
