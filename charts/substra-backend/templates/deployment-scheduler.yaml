@@ -50,17 +50,6 @@ spec:
               value: backend.settings.{{ .Values.backend.settings }}
             - name: PYTHONUNBUFFERED
               value: "1"
-            {{- with .Values.backend.auth }}
-            - name: BACK_AUTH_USER
-              value: {{ .user | quote }}
-            - name: BACK_AUTH_PASSWORD
-              value: {{ .password | quote }}
-            {{- else }}
-            - name: BACK_AUTH_USER
-              value: ""
-            - name: BACK_AUTH_PASSWORD
-              value: ""
-            {{- end }}
             - name: DATABASE_HOST
               value: {{ .Release.Name }}-postgresql
             - name: FABRIC_CFG_PATH_ENV

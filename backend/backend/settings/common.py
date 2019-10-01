@@ -81,6 +81,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
+    'libs.HealthCheckMiddleware.HealthCheckMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'

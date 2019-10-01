@@ -75,6 +75,10 @@ incomingNodes: []
   # - name: nodeId
   #   secret: nodeSecret
 
+users: []
+  # - name: username
+  #   secret: userSecret
+
 persistence:
   hostPath: "/substra"
   size: "10Gi"
