@@ -58,11 +58,6 @@ class TasksTests(APITestCase):
         if assets.traintuple[1]['creator'] != assets.algo[0]['owner']:
             cls.outgoing_node_algo = OutgoingNode.objects.create(node_id=assets.algo[0]['owner'], secret="s3cr37")
 
-        cls.outgoing_node_traintuple = OutgoingNode.objects.create(node_id=assets.traintuple[1]['creator'],
-                                                                   secret="s3cr37")
-        if assets.traintuple[1]['creator'] != assets.algo[0]['owner']:
-            cls.outgoing_node_algo = OutgoingNode.objects.create(node_id=assets.algo[0]['owner'], secret="s3cr37")
-
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
