@@ -28,6 +28,14 @@ class UserViewSet(GenericViewSet):
             self.www_authenticate_realm,
         )
 
+    def get_host(self, request):
+        ext = tldextract.extract(request.get_host())
+        host = ext.domain
+        if ext.suffix:
+            host += '.' + ext.suffix
+
+        return host
+
     @list_route(['post'])
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -49,10 +57,7 @@ class UserViewSet(GenericViewSet):
 
         response = Response(token.payload, status=status.HTTP_200_OK)
 
-        ext = tldextract.extract(request.get_host())
-        host = ext.domain
-        if ext.suffix:
-            host += '.' + ext.suffix
+        host = self.get_host(request)
 
         if settings.DEBUG:
             response.set_cookie('header.payload', value=headerPayload, expires=expires, domain=host)
@@ -65,10 +70,12 @@ class UserViewSet(GenericViewSet):
     @list_route()
     def logout(self, request, *args, **kwargs):
         response = Response({}, status=status.HTTP_200_OK)
+
+        host = self.get_host(request)
         if settings.DEBUG:
-            response.set_cookie('header.payload', value='', domain='127.0.0.1')
-            response.set_cookie('signature', value='', httponly=True, domain='127.0.0.1')
+            response.set_cookie('header.payload', value='', domain=host)
+            response.set_cookie('signature', value='', httponly=True, domain=host)
         else:
-            response.set_cookie('header.payload', value='', secure=True, domain=self.domain)
-            response.set_cookie('signature', value='', httponly=True, secure=True, domain=self.domain)
+            response.set_cookie('header.payload', value='', secure=True, domain=host)
+            response.set_cookie('signature', value='', httponly=True, secure=True, domain=host)
         return response
