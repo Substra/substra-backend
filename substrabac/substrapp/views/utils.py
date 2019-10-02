@@ -4,14 +4,13 @@ import base64
 import binascii
 from importlib import import_module
 
-import requests
 from django.http import FileResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
-from substrapp.utils import NodeError, get_remote_file, get_owner
+from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
 
 from django.conf import settings
@@ -38,7 +37,7 @@ def authenticate_outgoing_request(outgoing_node_id):
 
 def get_remote_asset(url, node_id, content_hash, salt=None):
     auth = authenticate_outgoing_request(node_id)
-    return get_remote_file(url, auth, content_hash, salt=salt)
+    return get_remote_file_content(url, auth, content_hash, salt=salt)
 
 
 class CustomFileResponse(FileResponse):
@@ -135,9 +134,13 @@ class PermissionMixin(object):
                 filename=os.path.basename(data.path)
             )
         else:
-            r = requests.get(asset[field]['storageAddress'], stream=True)
+            node_id = asset['owner']
+            auth = authenticate_outgoing_request(node_id)
+            r = get_remote_file(asset[field]['storageAddress'], auth, stream=True)
             if not r.ok:
-                return Response({'message': str(r.text)}, status=r.status_code)
+                return Response({
+                    'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
+                }, status=r.status_code)
             response = CustomFileResponse(
                 streaming_content=r.raw,
                 as_attachment=True,

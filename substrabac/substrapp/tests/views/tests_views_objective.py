@@ -9,6 +9,7 @@ import requests
 
 from django.urls import reverse
 from django.test import override_settings
+from requests.auth import HTTPBasicAuth
 
 from rest_framework import status
 from rest_framework.test import APITestCase
@@ -345,7 +346,7 @@ class ObjectiveViewTests(APITestCase):
             for ledger_objective in ledger_objectives:
                 ledger_objective['description']['storageAddress'] = \
                     ledger_objective['description']['storageAddress'] \
-                        .replace('http://testserver', 'http://remotetestserver')
+                    .replace('http://testserver', 'http://remotetestserver')
             mquery_ledger.return_value = ledger_objectives
 
             # actual test
@@ -409,10 +410,13 @@ class ObjectiveViewTests(APITestCase):
             description_content = f.read()
 
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.utils.authenticate_outgoing_request') \
+                as mauthenticate_outgoing_request, \
                 mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
-                mock.patch('substrapp.views.utils.requests.get') as mrequests_get:
+                mock.patch('substrapp.utils.requests.get') as mrequests_get:
             # mock content
             mquery_ledger.return_value = objective[0]
+            mauthenticate_outgoing_request.return_value = HTTPBasicAuth('foo', 'bar')
             mget_owner.return_value = 'not-OwkinMSP'
 
             requests_response = requests.Response()
@@ -429,10 +433,13 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_url_rewrite_download_remote_denied(self):
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.utils.authenticate_outgoing_request') \
+                as mauthenticate_outgoing_request, \
                 mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
-                mock.patch('substrapp.views.utils.requests.get') as mrequests_get:
+                mock.patch('substrapp.utils.requests.get') as mrequests_get:
             # mock content
             mquery_ledger.return_value = objective[0]
+            mauthenticate_outgoing_request.return_value = HTTPBasicAuth('foo', 'bar')
             mget_owner.return_value = 'not-OwkinMSP'
 
             requests_response = requests.Response()

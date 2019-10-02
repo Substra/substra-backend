@@ -12,7 +12,7 @@ from django_celery_results.models import TaskResult
 from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
-from substrapp.utils import compute_hash, get_remote_file, get_hash, create_directory
+from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
 from substrapp.tasks.utils import ResourcesManager, compute_docker
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_model, get_models, get_objective, put_opener,
                                    put_model, put_models, put_algo, put_metric, put_data_sample, prepare_task, do_task,
@@ -75,7 +75,7 @@ class TasksTests(APITestCase):
         except Exception:
             self.fail('`remove_subtuple_materials` raised Exception unexpectedly!')
 
-    def test_get_remote_file(self):
+    def test_get_remote_file_content(self):
         content = str(self.script.read())
         pkhash = compute_hash(content)
         remote_file = {'storageAddress': 'localhost',
@@ -88,7 +88,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote = get_remote_file(remote_file, 'external_node_id', pkhash)
+            content_remote = get_remote_file_content(remote_file, 'external_node_id', pkhash)
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
@@ -97,7 +97,8 @@ class TasksTests(APITestCase):
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             with self.assertRaises(Exception):
-                get_remote_file(remote_file, 'external_node_id', 'fake_pkhash')  # contents (by pkhash) are different
+                # contents (by pkhash) are different
+                get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
 
     def test_Ressource_Manager(self):
 

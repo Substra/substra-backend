@@ -30,7 +30,7 @@ from substrapp.views.utils import PermissionMixin, find_primary_key_error, valid
 from substrapp.views.filters_utils import filter_list
 
 
-def rewrite_storage_addresses(request, objective):
+def replace_storage_addresses(request, objective):
     objective['description']['storageAddress'] = request.build_absolute_uri(
         reverse('substrapp:objective-description', args=[objective['key']]))
 
@@ -211,7 +211,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
 
-        rewrite_storage_addresses(request, data)
+        replace_storage_addresses(request, data)
 
         return data
 
@@ -253,7 +253,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         for group in objectives_list:
             for objective in group:
-                rewrite_storage_addresses(request, objective)
+                replace_storage_addresses(request, objective)
 
         return Response(objectives_list, status=status.HTTP_200_OK)
 
