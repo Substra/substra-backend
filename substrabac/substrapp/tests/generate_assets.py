@@ -10,7 +10,7 @@ assets_path = os.path.join(dir_path, 'assets.py')
 def main():
 
     client = substra.Client()
-    client.add_profile('owkin', 'foo', 'barbar10', 'http://owkin.substrabac:8000', '0.0')
+    client.add_profile('owkin', 'foo', 'barbar10', 'http://substrabac.owkin.com:8000', '0.0')
     client.login()
 
     client.set_profile('owkin')
@@ -33,8 +33,8 @@ def main():
                 '2. run populate.py\n'
                 '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
-            v = v.replace('owkin.substrabac:8000', 'testserver')
-            v = v.replace('chunantes.substrabac:8001', 'testserver')
+            v = v.replace('substrabac.owkin.com:8000', 'testserver')
+            v = v.replace('substrabac.chunantes.com:8001', 'testserver')
             v = v.replace('true', 'True')
             v = v.replace('false', 'False')
             v = v.replace('null', 'None')
