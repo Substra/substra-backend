@@ -344,17 +344,20 @@ class ObjectiveViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_objectives = copy.deepcopy(objective)
             for ledger_objective in ledger_objectives:
-                ledger_objective['description']['storageAddress'] = \
-                    ledger_objective['description']['storageAddress'] \
-                    .replace('http://testserver', 'http://remotetestserver')
+                for field in ('description', 'metrics'):
+                    ledger_objective[field]['storageAddress'] = \
+                        ledger_objective[field]['storageAddress'] \
+                        .replace('http://testserver', 'http://remotetestserver')
             mquery_ledger.return_value = ledger_objectives
 
             # actual test
             res = self.client.get(url, **self.extra)
-            self.assertEqual(res.data[0][0]['description']['storageAddress'],
-                             objective[0]['description']['storageAddress'])
-            self.assertEqual(res.data[0][1]['description']['storageAddress'],
-                             objective[1]['description']['storageAddress'])
+            res_objectives = res.data[0]
+            self.assertEqual(len(res_objectives), len(objective))
+            for i, res_objective in enumerate(res_objectives):
+                for field in ('description', 'metrics'):
+                    self.assertEqual(res_objective[field]['storageAddress'],
+                                     objective[i][field]['storageAddress'])
 
     def test_objective_url_rewrite_retrieve(self):
         url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
@@ -364,20 +367,24 @@ class ObjectiveViewTests(APITestCase):
             # mock content
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_objective = copy.deepcopy(objective[0])
-            ledger_objective['description']['storageAddress'] = \
-                ledger_objective['description']['storageAddress'].replace('http://testserver',
-                                                                          'http://remotetestserver')
+            for field in ('description', 'metrics'):
+                ledger_objective[field]['storageAddress'] = \
+                    ledger_objective[field]['storageAddress'].replace('http://testserver',
+                                                                      'http://remotetestserver')
             mquery_ledger.return_value = ledger_objective
 
             # actual test
             res = self.client.get(url, **self.extra)
-            self.assertEqual(res.data['description']['storageAddress'],
-                             objective[0]['description']['storageAddress'])
+            for field in ('description', 'metrics'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 objective[0][field]['storageAddress'])
 
     def test_objective_url_rewrite_download_local(self):
-        description_path = os.path.join(
+        objective_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            '../../../../fixtures/owkin/objectives/objective0/description.md')
+            '../../../../fixtures/owkin/objectives/objective0')
+        description_path = os.path.join(objective_path, 'description.md')
+        metrics_path = os.path.join(objective_path, 'metrics.zip')
 
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.utils.get_owner') as mget_owner, \
@@ -389,25 +396,41 @@ class ObjectiveViewTests(APITestCase):
             mget_owner.return_value = objective[0]['owner']
             with open(description_path, 'rb') as f:
                 description_content = f.read()
+            with open(metrics_path, 'rb') as f:
+                metrics_content = f.read()
 
             class MockDescription:
                 path = description_path
-            mock_objective = Objective(pkhash="toto", description=MockDescription)
+
+            class MockMetrics:
+                path = metrics_path
+
+            mock_objective = Objective(pkhash="foo",
+                                       description=MockDescription,
+                                       metrics=MockMetrics)
             mget_object.return_value = mock_objective
 
             # test
-            url = objective[0]['description']['storageAddress']
-            res = self.client.get(url, **self.extra)
-            res_content = b''.join(list(res.streaming_content))
-            self.assertEqual(res_content, description_content)
-            self.assertEqual(res['Content-Disposition'], 'attachment; filename="description.md"')
+            conf = (('description', 'description.md', description_content),
+                    ('metrics', 'metrics.zip', metrics_content))
+            for field, filename, content in conf:
+                url = objective[0][field]['storageAddress']
+                res = self.client.get(url, **self.extra)
+                res_content = b''.join(list(res.streaming_content))
+                self.assertEqual(res_content, content)
+                self.assertEqual(res['Content-Disposition'],
+                                 f'attachment; filename="{filename}"')
 
     def test_objective_url_rewrite_download_remote_allowed(self):
-        description_path = os.path.join(
+        objective_path = os.path.join(
             os.path.dirname(os.path.realpath(__file__)),
-            '../../../../fixtures/owkin/objectives/objective0/description.md')
+            '../../../../fixtures/owkin/objectives/objective0')
+        description_path = os.path.join(objective_path, 'description.md')
+        metrics_path = os.path.join(objective_path, 'metrics.zip')
         with open(description_path, 'rb') as f:
             description_content = f.read()
+        with open(metrics_path, 'rb') as f:
+            metrics_content = f.read()
 
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.utils.authenticate_outgoing_request') \
@@ -419,17 +442,24 @@ class ObjectiveViewTests(APITestCase):
             mauthenticate_outgoing_request.return_value = HTTPBasicAuth('foo', 'bar')
             mget_owner.return_value = 'not-OwkinMSP'
 
-            requests_response = requests.Response()
-            requests_response.raw = open(description_path, 'rb')
-            requests_response.status_code = status.HTTP_200_OK
-            mrequests_get.return_value = requests_response
+            requests_responses = []
+            for filepath in (description_path, metrics_path):
+                requests_response = requests.Response()
+                requests_response.raw = open(filepath, 'rb')
+                requests_response.status_code = status.HTTP_200_OK
+                requests_responses.append(requests_response)
+            mrequests_get.side_effect = requests_responses
 
             # test
-            url = objective[0]['description']['storageAddress']
-            res = self.client.get(url, **self.extra)
-            res_content = b''.join(list(res.streaming_content))
-            self.assertEqual(res_content, description_content)
-            self.assertEqual(res['Content-Disposition'], 'attachment; filename="description.md"')
+            conf = (('description', 'description.md', description_content),
+                    ('metrics', 'metrics.zip', metrics_content))
+            for field, filename, content in conf:
+                url = objective[0][field]['storageAddress']
+                res = self.client.get(url, **self.extra)
+                res_content = b''.join(list(res.streaming_content))
+                self.assertEqual(res_content, content)
+                self.assertEqual(res['Content-Disposition'],
+                                 f'attachment; filename="{filename}"')
 
     def test_objective_url_rewrite_download_remote_denied(self):
         with mock.patch('substrapp.views.utils.get_object_from_ledger') as mquery_ledger, \
@@ -448,6 +478,7 @@ class ObjectiveViewTests(APITestCase):
             mrequests_get.return_value = requests_response
 
             # test
-            url = objective[0]['description']['storageAddress']
-            res = self.client.get(url, **self.extra)
-            self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
+            for field in ('description', 'metrics'):
+                url = objective[0][field]['storageAddress']
+                res = self.client.get(url, **self.extra)
+                self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)

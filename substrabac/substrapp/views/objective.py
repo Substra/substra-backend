@@ -33,6 +33,9 @@ from substrapp.views.filters_utils import filter_list
 def replace_storage_addresses(request, objective):
     objective['description']['storageAddress'] = request.build_absolute_uri(
         reverse('substrapp:objective-description', args=[objective['key']]))
+    objective['metrics']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:objective-metrics', args=[objective['key']])
+    )
 
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
