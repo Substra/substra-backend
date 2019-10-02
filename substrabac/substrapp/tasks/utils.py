@@ -21,19 +21,12 @@ def authenticate_worker(node_id):
 
     owner = get_owner()
 
-    # This handle worker node authentication
-    # WARN: This should use a different authentication
-    #       Backend (WorkerBackend for example) to be able
-    #       to differentiate regular node users from workers
-    if node_id == owner:
-        auth = HTTPBasicAuth(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
-    else:
-        try:
-            outgoing = OutgoingNode.objects.get(node_id=node_id)
-        except OutgoingNode.DoesNotExist:
-            raise NodeError(f'Unauthorized to call node_id: {node_id}')
+    try:
+        outgoing = OutgoingNode.objects.get(node_id=node_id)
+    except OutgoingNode.DoesNotExist:
+        raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
-        auth = HTTPBasicAuth(owner, outgoing.secret)
+    auth = HTTPBasicAuth(owner, outgoing.secret)
 
     return auth
 
