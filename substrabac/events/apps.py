@@ -3,6 +3,7 @@ import json
 import logging
 import multiprocessing
 import os
+import time
 import contextlib
 
 from django.apps import AppConfig
@@ -134,8 +135,16 @@ class EventsConfig(AppConfig):
 
         # We try to connect a client first, if it fails the backend will not start
         # It avoid potential issue when we launch the channel event hub in a subprocess
-        with get_hfc() as (loop, client):
-            logger.info('Start the event application.')
+        while True:
+            try:
+                with get_hfc() as (loop, client):
+                    logger.info('Start the event application.')
+            except Exception as e:
+                logger.exception(e)
+                time.sleep(5)
+                logger.info('Retry to connect the event application to the ledger')
+            else:
+                break
 
         p1 = multiprocessing.Process(target=wait)
         p1.start()
