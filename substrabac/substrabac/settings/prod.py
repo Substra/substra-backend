@@ -42,9 +42,7 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', f'/substra/medias/{ORG_NAME}')
-SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
-SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
-DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
+DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://substrabac.{ORG_NAME}.com:{DEFAULT_PORT}')
 
 LOGGING = {
     'version': 1,

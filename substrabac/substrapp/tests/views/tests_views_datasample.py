@@ -25,7 +25,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(DEFAULT_DOMAIN='https://localhost')
 @override_settings(LEDGER_SYNC_ENABLED=True)
