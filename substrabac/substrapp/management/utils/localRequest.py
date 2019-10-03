@@ -1,4 +1,5 @@
 from django.conf import settings
+from urllib.parse import urlparse
 
 
 class LocalRequest(object):
@@ -8,4 +9,4 @@ class LocalRequest(object):
 
     def get_host(self):
         # remove protocol (http/https) from default domain
-        return getattr(settings, 'DEFAULT_DOMAIN').split('//')[-1]
+        return urlparse(getattr(settings, 'DEFAULT_DOMAIN')).netloc
