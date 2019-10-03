@@ -214,14 +214,14 @@ class ObjectiveQueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    @mock.patch('substrapp.views.utils.get_owner', return_value='foo')
-    def test_get_objective_metrics(self, *args):
+    def test_get_objective_metrics(self):
         objective = Objective.objects.create(
             description=self.objective_description,
             metrics=self.objective_metrics)
 
-        with mock.patch(
-                'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_objective_metadata()
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',
