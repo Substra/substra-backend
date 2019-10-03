@@ -214,7 +214,8 @@ class ObjectiveQueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_get_objective_metrics(self):
+    @mock.patch('substrapp.views.utils.get_owner', return_value='foo')
+    def test_get_objective_metrics(self, *args):
         objective = Objective.objects.create(
             description=self.objective_description,
             metrics=self.objective_metrics)

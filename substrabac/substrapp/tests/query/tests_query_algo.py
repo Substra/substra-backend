@@ -220,7 +220,8 @@ class AlgoQueryTests(APITestCase):
         self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
         self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
 
-    def test_get_algo_files(self):
+    @mock.patch('substrapp.views.utils.get_owner', return_value='foo')
+    def test_get_algo_files(self, *args):
         algo = Algo.objects.create(file=self.algo)
         with mock.patch(
                 'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:

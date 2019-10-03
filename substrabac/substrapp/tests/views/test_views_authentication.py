@@ -30,7 +30,8 @@ class AuthenticationTests(APITestCase):
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
-    def test_authentication_with_settings_success(self):
+    @mock.patch('substrapp.views.utils.get_owner', return_value='foo')
+    def test_authentication_with_settings_success(self, *args):
         authorization_header = generate_basic_auth_header(settings.BASICAUTH_USERNAME, settings.BASICAUTH_PASSWORD)
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
@@ -49,7 +50,8 @@ class AuthenticationTests(APITestCase):
 
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
-    def test_authentication_with_node(self):
+    @mock.patch('substrapp.views.utils.get_owner', return_value='foo')
+    def test_authentication_with_node(self, *args):
         authorization_header = generate_basic_auth_header('external_node_id', 's3cr37')
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
