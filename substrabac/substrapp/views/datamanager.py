@@ -300,4 +300,4 @@ class DataManagerPermissionViewSet(PermissionMixin,
 
     @action(detail=True)
     def opener(self, request, *args, **kwargs):
-        return self.download_file(request, 'data_opener')
+        return self.download_file(request, 'data_opener', 'opener')

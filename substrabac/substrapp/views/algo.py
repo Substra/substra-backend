@@ -210,7 +210,7 @@ class AlgoPermissionViewSet(PermissionMixin,
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, 'file')
+        return self.download_file(request, 'file', 'content')
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

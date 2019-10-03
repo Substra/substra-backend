@@ -4,7 +4,7 @@ import base64
 import binascii
 from importlib import import_module
 
-from django.http import FileResponse
+from django.http import FileResponse, StreamingHttpResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -112,7 +112,7 @@ class PermissionMixin(object):
         node_id = user.username
         return node_id in permission['authorizedIDs']
 
-    def download_file(self, request, field):
+    def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
@@ -127,7 +127,7 @@ class PermissionMixin(object):
 
         if get_owner() == asset['owner']:
             obj = self.get_object()
-            data = getattr(obj, field)
+            data = getattr(obj, django_field)
             response = CustomFileResponse(
                 open(data.path, 'rb'),
                 as_attachment=True,
@@ -136,16 +136,19 @@ class PermissionMixin(object):
         else:
             node_id = asset['owner']
             auth = authenticate_outgoing_request(node_id)
-            r = get_remote_file(asset[field]['storageAddress'], auth, stream=True)
+            if not ledger_field:
+                ledger_field = django_field
+            r = get_remote_file(asset[ledger_field]['storageAddress'], auth, stream=True)
             if not r.ok:
                 return Response({
                     'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
                 }, status=r.status_code)
-            response = CustomFileResponse(
+            response = StreamingHttpResponse(
                 streaming_content=r.raw,
-                as_attachment=True,
                 status=r.status_code
             )
+            for header in r.headers:
+                response[header] = r.headers.get(header)
 
         return response
 
