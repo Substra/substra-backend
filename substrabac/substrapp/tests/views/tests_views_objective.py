@@ -16,10 +16,9 @@ from substrapp.serializers import LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import LedgerError
 
-from substrapp.views.objective import compute_dryrun as objective_compute_dryrun
 from substrapp.utils import compute_hash, get_hash
 
-from ..common import get_sample_objective, FakeTask, AuthenticatedClient
+from ..common import get_sample_objective, AuthenticatedClient
 from ..assets import objective, datamanager, traintuple, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -233,80 +232,6 @@ class ObjectiveViewTests(APITestCase):
 
         data['description'].close()
         data['metrics'].close()
-
-    def test_objective_create_dryrun(self):
-
-        url = reverse('substrapp:objective-list')
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        objective_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/')
-
-        description_path = os.path.join(objective_path, 'description.md')
-
-        metrics_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
-
-        zip_folder(objective_path, metrics_path)
-
-        test_data_manager_key = get_hash(os.path.join(
-            dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
-
-        data = {
-            'name': 'Simplified skin lesion classification',
-            'description': open(description_path, 'rb'),
-            'metrics_name': 'macro-average recall',
-            'metrics': open(metrics_path, 'rb'),
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'test_data_manager_key': test_data_manager_key,
-            'dryrun': True
-        }
-
-        with mock.patch('substrapp.views.objective.compute_dryrun.apply_async') as mdryrun_task:
-
-            mdryrun_task.return_value = FakeTask('42')
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
-
-        self.assertEqual(response.data['id'], '42')
-        self.assertEqual(response.data['message'],
-                         'Your dry-run has been taken in account. '
-                         'You can follow the task execution on https://localhost/task/42/')
-        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-        data['description'].close()
-        data['metrics'].close()
-
-    def test_objective_compute_dryrun(self):
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        objective_path = os.path.join(dir_path, '../../../../fixtures/owkin/objectives/objective0/')
-        description_path = os.path.join(objective_path, 'description.md')
-        zip_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
-
-        opener_path = os.path.join(dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py')
-
-        zip_folder(objective_path, zip_path)
-
-        with open(opener_path, 'rb') as f:
-            opener_content = f.read()
-
-        pkhash = get_hash(description_path)
-
-        test_data_manager_key = compute_hash(opener_content)
-
-        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mdatamanager,\
-                mock.patch('substrapp.views.objective.get_asset_content') as mget_asset_content:
-            mdatamanager.return_value = {
-                'opener': {
-                    'storageAddress': 'test',
-                    'hash': pkhash
-                },
-                'owner': 'external_node_id'
-            }
-            mget_asset_content.return_value = opener_content
-            objective_compute_dryrun(zip_path, test_data_manager_key, pkhash)
 
     def test_objective_leaderboard_sort(self):
         url = reverse('substrapp:objective-leaderboard', args=[objective[0]['key']])

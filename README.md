@@ -142,10 +142,8 @@ Note the use of the development settings.
 ```shell
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l info
 ```
 
@@ -261,10 +259,8 @@ Use these configurations for easier debugging and productivity:
 ![](assets/server_chunantes.png)
 ![](assets/celery owkin worker.png)
 ![](assets/celery owkin scheduler.png)
-![](assets/celery owkin dryrunner.png)
 ![](assets/celery chunantes worker.png)
 ![](assets/celery chunantes scheduler.png)
-![](assets/celery chunantes dryrunner.png)
 ![](assets/celery_beat.png)
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.

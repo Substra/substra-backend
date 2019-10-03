@@ -7,7 +7,6 @@ from subprocess import call, check_output
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 raven_backend_url = "https://cff352ba26fc49f19e01692db93bf951@sentry.io/1317743"
-raven_dryrunner_url = "https://a1c2de65bb0f4120aa11d75bca9b47f6@sentry.io/1402760"
 raven_worker_url = "https://76abd6b5d11e48ea8a118831c86fc615@sentry.io/1402762"
 raven_scheduler_url = raven_worker_url
 
@@ -221,23 +220,6 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
             'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
 
-        dryrunner = {
-            'container_name': f'{org_name_stripped}.dryrunner',
-            'labels': ['substra'],
-            'hostname': f'{org_name}.dryrunner',
-            'image': 'substra/celeryworker',
-            'restart': 'unless-stopped',
-            'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
-                       f'-Q {org_name},{org_name}.dryrunner,celery --hostname {org_name}.dryrunner"',
-            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-            'environment': backend_global_env.copy(),
-            'volumes': [
-                '/var/run/docker.sock:/var/run/docker.sock',
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
-                f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
-            'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
-
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
             worker['runtime'] = 'nvidia'
@@ -245,7 +227,6 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
         if launch_settings == 'dev':
             media_root = f'MEDIA_ROOT={SUBSTRA_FOLDER}/medias/{org_name_stripped}'
             worker['environment'].append(media_root)
-            dryrunner['environment'].append(media_root)
             backend['environment'].append(media_root)
         else:
             default_domain = os.environ.get('SUBSTRABAC_DEFAULT_DOMAIN', '')
@@ -253,16 +234,13 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                 backend['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
                 worker['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
                 scheduler['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
-                dryrunner['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
             backend['environment'].append(f"RAVEN_URL={raven_backend_url}")
             scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}")
             worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
-            dryrunner['environment'].append(f"RAVEN_URL={raven_dryrunner_url}")
 
         docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
         docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
-        docker_compose['substrabac_services']['dryrunner' + org_name_stripped] = dryrunner
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}

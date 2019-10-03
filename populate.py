@@ -51,7 +51,7 @@ def zip_folder(path, destination):
     zipf.close()
 
 
-def get_or_create(data, profile, asset, dryrun=False, local=True):
+def get_or_create(data, profile, asset, local=True):
 
     client.set_profile(profile)
 
@@ -61,17 +61,6 @@ def get_or_create(data, profile, asset, dryrun=False, local=True):
 
     method = getattr(client, f'add_{asset}')
 
-    if dryrun:
-        print('dryrun')
-        try:
-            r = method(data, dryrun=True, **method_kwargs)
-        except substra.exceptions.AlreadyExists as e:
-            r = e.response.json()
-            print(colored(json.dumps(r, indent=2), 'cyan'))
-        else:
-            print(colored(json.dumps(r, indent=2), 'magenta'))
-
-    print('real')
     try:
         r = method(data, **method_kwargs)
 
@@ -150,7 +139,7 @@ def do_populate():
         'description': os.path.join(dir_path, './fixtures/chunantes/datamanagers/datamanager0/description.md'),
         'permissions': PUBLIC_PERMISSIONS,
     }
-    data_manager_org1_key = get_or_create(data, org_1, 'dataset', dryrun=True)
+    data_manager_org1_key = get_or_create(data, org_1, 'dataset')
 
     ####################################################
 
@@ -172,7 +161,7 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_samples', dryrun=True, local=False)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_samples', local=False)
     else:
         print(f'register train data on datamanager {org_1} (will take datamanager creator as worker)')
         data = {
@@ -184,7 +173,7 @@ def do_populate():
             'data_manager_keys': [data_manager_org1_key],
             'test_only': False,
         }
-        train_data_sample_keys = get_or_create(data, org_1, 'data_samples', dryrun=True)
+        train_data_sample_keys = get_or_create(data, org_1, 'data_samples')
 
     ####################################################
 
@@ -266,7 +255,7 @@ def do_populate():
             'test_data_manager_key': data_manager_org0_key
         }
 
-        objective_key = get_or_create(data, org_0, 'objective', dryrun=True)
+        objective_key = get_or_create(data, org_0, 'objective')
 
         ####################################################
 
@@ -284,7 +273,7 @@ def do_populate():
             'permissions': PUBLIC_PERMISSIONS,
         }
 
-        get_or_create(data, org_0, 'objective', dryrun=True)
+        get_or_create(data, org_0, 'objective')
 
     ####################################################
 

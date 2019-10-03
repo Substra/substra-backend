@@ -163,34 +163,6 @@ class DataManagerViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_datamanager_create_dryrun(self):
-        url = reverse('substrapp:data_manager-list')
-
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        files = {
-            'data_opener': open(
-                os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'),
-                'rb'),
-
-            'description': open(
-                os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/description.md'),
-                'rb')}
-
-        data = {
-            'name': 'ISIC 2018',
-            'type': 'Images',
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
-            'dryrun': True
-        }
-
-        response = self.client.post(url, {**data, **files}, format='multipart', **self.extra)
-        self.assertEqual(response.data, {'message': f'Your data opener is valid. You can remove the dryrun option.'})
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        for x in files:
-            files[x].close()
-
     def test_datamanager_list_storage_addresses_update(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
