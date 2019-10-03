@@ -7,4 +7,5 @@ class LocalRequest(object):
         return not getattr(settings, 'DEBUG')
 
     def get_host(self):
-        return getattr(settings, 'SITE_HOST')
+        # remove protocol (http/https) from default domain
+        return getattr(settings, 'DEFAULT_DOMAIN').split('//')[-1]

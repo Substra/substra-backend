@@ -149,10 +149,6 @@ def generate_docker_compose_file(conf, launch_settings):
 
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
             f'DJANGO_SETTINGS_MODULE=backend.settings.{launch_settings}',
-
-            # Basic auth
-            f"SITE_HOST={os.environ.get('SITE_HOST', 'localhost')}",
-            f"SITE_PORT={os.environ.get('BACK_PORT', 9000)}",
         ]
 
         hlf_volumes = [
