@@ -22,7 +22,7 @@ def with_permission_mixin(remote):
             with mock.patch('substrapp.views.utils.get_object_from_ledger',
                             return_value={'owner': 'owner-foo',
                                           'file_property': {'storageAddress': 'foo'}}), \
-                 tempfile.NamedTemporaryFile() as tmp_file, \
+                    tempfile.NamedTemporaryFile() as tmp_file, \
                     mock.patch('substrapp.views.utils.get_owner',
                                return_value='not-owner-foo' if remote else 'owner-foo'):
                 tmp_file_content = b'foo bar'
@@ -101,5 +101,3 @@ class PermissionMixinDownloadFileTests(APITestCase):
         res = permission_mixin.download_file(MockRequest(), 'file_property')
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertFalse(permission_mixin.get_object.called)
-
-

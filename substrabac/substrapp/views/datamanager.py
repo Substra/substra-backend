@@ -3,6 +3,7 @@ import tempfile
 import logging
 from django.conf import settings
 from django.http import Http404
+from django.urls import reverse
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -21,6 +22,14 @@ from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException,
                                    get_remote_asset)
 from substrapp.views.filters_utils import filter_list
+
+
+def replace_storage_addresses(request, data_manager):
+    data_manager['description']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:data_manager-description', args=[data_manager['key']]))
+    data_manager['opener']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:data_manager-opener', args=[data_manager['key']])
+    )
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
@@ -177,7 +186,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
         data = get_object_from_ledger(pk, 'queryDataset')
@@ -195,6 +204,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
             data.update(serializer.data)
 
+            replace_storage_addresses(request, data)
+
             return data
 
     def retrieve(self, request, *args, **kwargs):
@@ -202,7 +213,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
@@ -235,6 +246,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 return Response(
                     {'message': f'Malformed search filters {query_params}'},
                     status=status.HTTP_400_BAD_REQUEST)
+
+        for group in data_managers_list:
+            for data_manager in group:
+                replace_storage_addresses(request, data_manager)
 
         return Response(data_managers_list, status=status.HTTP_200_OK)
 

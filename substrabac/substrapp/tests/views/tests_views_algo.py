@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import logging
@@ -52,15 +53,20 @@ class AlgoViewTests(APITestCase):
     def test_algo_list_empty(self):
         url = reverse('substrapp:algo-list')
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [[], ['ISIC']]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [[]])
 
+    def test_algo_list_success(self):
+        url = reverse('substrapp:algo-list')
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = algo
+
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [['ISIC']])
+            self.assertEqual(r, [algo])
 
     def test_algo_list_filter_fail(self):
         url = reverse('substrapp:algo-list')
@@ -209,3 +215,47 @@ class AlgoViewTests(APITestCase):
 
         data['description'].close()
         data['file'].close()
+
+    def test_algo_list_storage_addresses_update(self):
+        url = reverse('substrapp:algo-list')
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_algos = copy.deepcopy(algo)
+            for ledger_algo in ledger_algos:
+                for field in ('description', 'content'):
+                    ledger_algo[field]['storageAddress'] = \
+                        ledger_algo[field]['storageAddress'].replace('http://testserver',
+                                                                     'http://remotetestserver')
+            mquery_ledger.return_value = ledger_algos
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            res_algos = res.data[0]
+            self.assertEqual(len(res_algos), len(algo))
+            for i, res_algo in enumerate(res_algos):
+                for field in ('description', 'content'):
+                    self.assertEqual(res_algo[field]['storageAddress'],
+                                     algo[i][field]['storageAddress'])
+
+    def test_algo_retrieve_storage_addresses_update(self):
+        url = reverse('substrapp:algo-detail', args=[algo[0]['key']])
+        with mock.patch('substrapp.views.algo.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.algo.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_algo = copy.deepcopy(algo[0])
+            for field in ('description', 'content'):
+                ledger_algo[field]['storageAddress'] = \
+                    ledger_algo[field]['storageAddress'].replace('http://testserver',
+                                                                 'http://remotetestserver')
+            mquery_ledger.return_value = ledger_algo
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            for field in ('description', 'content'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 algo[0][field]['storageAddress'])

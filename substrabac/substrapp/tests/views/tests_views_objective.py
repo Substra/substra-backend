@@ -5,16 +5,13 @@ import zipfile
 import copy
 
 import mock
-import requests
 
 from django.urls import reverse
 from django.test import override_settings
-from requests.auth import HTTPBasicAuth
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Objective
 from substrapp.serializers import LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import LedgerError
@@ -335,7 +332,7 @@ class ObjectiveViewTests(APITestCase):
         response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_objective_url_rewrite_list(self):
+    def test_objective_list_storage_addresses_update(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
@@ -359,7 +356,7 @@ class ObjectiveViewTests(APITestCase):
                     self.assertEqual(res_objective[field]['storageAddress'],
                                      objective[i][field]['storageAddress'])
 
-    def test_objective_url_rewrite_retrieve(self):
+    def test_objective_retrieve_storage_addresses_update(self):
         url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
@@ -378,5 +375,3 @@ class ObjectiveViewTests(APITestCase):
             for field in ('description', 'metrics'):
                 self.assertEqual(res.data[field]['storageAddress'],
                                  objective[0][field]['storageAddress'])
-
-

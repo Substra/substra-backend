@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import logging
@@ -50,15 +51,20 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_empty(self):
         url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [[], ['ISIC']]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [[]])
 
+    def test_datamanager_list_success(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = datamanager
+
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [['ISIC']])
+            self.assertEqual(r, [datamanager])
 
     def test_datamanager_list_filter_fail(self):
         url = reverse('substrapp:data_manager-list')
@@ -184,3 +190,47 @@ class DataManagerViewTests(APITestCase):
 
         for x in files:
             files[x].close()
+
+    def test_datamanager_list_storage_addresses_update(self):
+        url = reverse('substrapp:data_manager-list')
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_datamanagers = copy.deepcopy(datamanager)
+            for ledger_datamanager in ledger_datamanagers:
+                for field in ('description', 'opener'):
+                    ledger_datamanager[field]['storageAddress'] = \
+                        ledger_datamanager[field]['storageAddress'] \
+                        .replace('http://testserver', 'http://remotetestserver')
+            mquery_ledger.return_value = ledger_datamanagers
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            res_datamanagers = res.data[0]
+            self.assertEqual(len(res_datamanagers), len(datamanager))
+            for i, res_datamanager in enumerate(res_datamanagers):
+                for field in ('description', 'opener'):
+                    self.assertEqual(res_datamanager[field]['storageAddress'],
+                                     datamanager[i][field]['storageAddress'])
+
+    def test_datamanager_retrieve_storage_addresses_update(self):
+        url = reverse('substrapp:data_manager-detail', args=[datamanager[0]['key']])
+        with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_datamanager = copy.deepcopy(datamanager[0])
+            for field in ('description', 'opener'):
+                ledger_datamanager[field]['storageAddress'] = \
+                    ledger_datamanager[field]['storageAddress'].replace('http://testserver',
+                                                                        'http://remotetestserver')
+            mquery_ledger.return_value = ledger_datamanager
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            for field in ('description', 'opener'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 datamanager[0][field]['storageAddress'])
