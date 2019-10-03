@@ -138,7 +138,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         data = get_object_from_ledger(pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
-        if not node_has_process_permission(data):
+        if node_has_process_permission(data):
             # try to get it from local db to check if description exists
             try:
                 instance = self.get_object()
