@@ -2,6 +2,7 @@ import tempfile
 import logging
 
 from django.http import Http404
+from django.urls import reverse
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -16,6 +17,14 @@ from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset)
 from substrapp.views.filters_utils import filter_list
+
+
+def replace_storage_addresses(request, algo):
+    algo['description']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:algo-description', args=[algo['key']]))
+    algo['content']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:algo-file', args=[algo['key']])
+    )
 
 
 class AlgoViewSet(mixins.CreateModelMixin,
@@ -124,7 +133,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, request, pk):
         validate_pk(pk)
         data = get_object_from_ledger(pk, self.ledger_query_call)
 
@@ -144,6 +153,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
             serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
             data.update(serializer.data)
 
+            replace_storage_addresses(request, data)
+
             return data
 
     def retrieve(self, request, *args, **kwargs):
@@ -151,7 +162,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
@@ -184,6 +195,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     {'message': f'Malformed search filters {query_params}'},
                     status=status.HTTP_400_BAD_REQUEST)
 
+        for group in algos_list:
+            for algo in group:
+                replace_storage_addresses(request, algo)
+
         return Response(algos_list, status=status.HTTP_200_OK)
 
 
@@ -195,7 +210,7 @@ class AlgoPermissionViewSet(PermissionMixin,
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, 'file')
+        return self.download_file(request, 'file', 'content')
 
     @action(detail=True)
     def description(self, request, *args, **kwargs):

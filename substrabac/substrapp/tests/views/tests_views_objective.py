@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import zipfile
+import copy
 
 import mock
 
@@ -10,7 +11,6 @@ from django.test import override_settings
 
 from rest_framework import status
 from rest_framework.test import APITestCase
-
 
 from substrapp.serializers import LedgerObjectiveSerializer
 
@@ -72,15 +72,20 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_empty(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [[], ['ISIC']]
+            mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [[]])
 
+    def test_objective_list_success(self):
+        url = reverse('substrapp:objective-list')
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = objective
+
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [['ISIC']])
+            self.assertEqual(r, [objective])
 
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
@@ -326,3 +331,47 @@ class ObjectiveViewTests(APITestCase):
 
         response = self.client.get(url, data={'sort': 'foo'}, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_objective_list_storage_addresses_update(self):
+        url = reverse('substrapp:objective-list')
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_objectives = copy.deepcopy(objective)
+            for ledger_objective in ledger_objectives:
+                for field in ('description', 'metrics'):
+                    ledger_objective[field]['storageAddress'] = \
+                        ledger_objective[field]['storageAddress'] \
+                        .replace('http://testserver', 'http://remotetestserver')
+            mquery_ledger.return_value = ledger_objectives
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            res_objectives = res.data[0]
+            self.assertEqual(len(res_objectives), len(objective))
+            for i, res_objective in enumerate(res_objectives):
+                for field in ('description', 'metrics'):
+                    self.assertEqual(res_objective[field]['storageAddress'],
+                                     objective[i][field]['storageAddress'])
+
+    def test_objective_retrieve_storage_addresses_update(self):
+        url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
+        with mock.patch('substrapp.views.objective.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_objective = copy.deepcopy(objective[0])
+            for field in ('description', 'metrics'):
+                ledger_objective[field]['storageAddress'] = \
+                    ledger_objective[field]['storageAddress'].replace('http://testserver',
+                                                                      'http://remotetestserver')
+            mquery_ledger.return_value = ledger_objective
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            for field in ('description', 'metrics'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 objective[0][field]['storageAddress'])

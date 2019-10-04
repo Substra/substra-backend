@@ -222,8 +222,9 @@ class AlgoQueryTests(APITestCase):
 
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.algo)
-        with mock.patch(
-                'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_algo_metadata()
 
             extra = {

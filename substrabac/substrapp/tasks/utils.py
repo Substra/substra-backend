@@ -8,7 +8,7 @@ import logging
 from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from substrapp.utils import get_owner, get_remote_file, NodeError
+from substrapp.utils import get_owner, get_remote_file_content, NodeError
 
 
 DOCKER_LABEL = 'substra_task'
@@ -32,7 +32,7 @@ def authenticate_worker(node_id):
 
 
 def get_asset_content(url, node_id, content_hash, salt=None):
-    return get_remote_file(url, authenticate_worker(node_id), content_hash, salt=salt)
+    return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
 def get_cpu_sets(cpu_count, concurrency):

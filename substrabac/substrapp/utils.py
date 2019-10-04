@@ -156,11 +156,11 @@ class NodeError(Exception):
     pass
 
 
-def get_remote_file(url, auth, content_hash, salt=None):
-    kwargs = {
+def get_remote_file(url, auth, **kwargs):
+    kwargs.update({
         'headers': {'Accept': 'application/json;version=0.0'},
         'auth': auth
-    }
+    })
 
     if settings.DEBUG:
         kwargs['verify'] = False
@@ -169,10 +169,16 @@ def get_remote_file(url, auth, content_hash, salt=None):
         response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
-    else:
-        if response.status_code != status.HTTP_200_OK:
-            logging.error(response.text)
-            raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+
+    return response
+
+
+def get_remote_file_content(url, auth, content_hash, salt=None):
+    response = get_remote_file(url, auth)
+
+    if response.status_code != status.HTTP_200_OK:
+        logging.error(response.text)
+        raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     computed_hash = compute_hash(response.content, key=salt)
     if computed_hash != content_hash:

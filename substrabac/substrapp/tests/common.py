@@ -192,12 +192,14 @@ DEFAULT_PERMISSIONS = {
 
 def get_sample_algo_metadata():
     return {
+        'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
     }
 
 
 def get_sample_objective_metadata():
     return {
+        'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
     }
 

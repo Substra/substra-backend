@@ -35,7 +35,9 @@ class AuthenticationTests(APITestCase):
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
 
-        with mock.patch('substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_algo_metadata()
             response = self.client.get(self.algo_url, **self.extra)
 
@@ -53,7 +55,10 @@ class AuthenticationTests(APITestCase):
         authorization_header = generate_basic_auth_header('external_node_id', 's3cr37')
 
         self.client.credentials(HTTP_AUTHORIZATION=authorization_header)
-        with mock.patch('substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_algo_metadata()
             response = self.client.get(self.algo_url, **self.extra)
 

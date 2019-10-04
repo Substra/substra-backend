@@ -219,8 +219,9 @@ class ObjectiveQueryTests(APITestCase):
             description=self.objective_description,
             metrics=self.objective_metrics)
 
-        with mock.patch(
-                'substrapp.views.utils.get_object_from_ledger') as mget_object_from_ledger:
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_objective_metadata()
             extra = {
                 'HTTP_ACCEPT': 'application/json;version=0.0',

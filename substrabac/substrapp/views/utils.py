@@ -10,12 +10,13 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
-from substrapp.utils import NodeError, get_remote_file, get_owner
+from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
 
 from django.conf import settings
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
+from wsgiref.util import is_hop_by_hop
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -37,7 +38,7 @@ def authenticate_outgoing_request(outgoing_node_id):
 
 def get_remote_asset(url, node_id, content_hash, salt=None):
     auth = authenticate_outgoing_request(node_id)
-    return get_remote_file(url, auth, content_hash, salt=salt)
+    return get_remote_file_content(url, auth, content_hash, salt=salt)
 
 
 class CustomFileResponse(FileResponse):
@@ -112,7 +113,7 @@ class PermissionMixin(object):
         node_id = user.username
         return node_id in permission['authorizedIDs']
 
-    def download_file(self, request, field):
+    def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
@@ -125,13 +126,35 @@ class PermissionMixin(object):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_401_UNAUTHORIZED)
 
-        obj = self.get_object()
-        data = getattr(obj, field)
-        response = CustomFileResponse(
-            open(data.path, 'rb'),
-            as_attachment=True,
-            filename=os.path.basename(data.path)
-        )
+        if get_owner() == asset['owner']:
+            obj = self.get_object()
+            data = getattr(obj, django_field)
+            response = CustomFileResponse(
+                open(data.path, 'rb'),
+                as_attachment=True,
+                filename=os.path.basename(data.path)
+            )
+        else:
+            node_id = asset['owner']
+            auth = authenticate_outgoing_request(node_id)
+            if not ledger_field:
+                ledger_field = django_field
+            r = get_remote_file(asset[ledger_field]['storageAddress'], auth, stream=True)
+            if not r.ok:
+                return Response({
+                    'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
+                }, status=r.status_code)
+
+            response = CustomFileResponse(
+                streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
+                status=r.status_code)
+
+            for header in r.headers:
+                # We don't use hop_by_hop headers since they are incompatible
+                # with WSGI
+                if not is_hop_by_hop(header):
+                    response[header] = r.headers.get(header)
+
         return response
 
 

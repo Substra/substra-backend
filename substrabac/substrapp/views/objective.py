@@ -30,6 +30,14 @@ from substrapp.views.utils import PermissionMixin, find_primary_key_error, valid
 from substrapp.views.filters_utils import filter_list
 
 
+def replace_storage_addresses(request, objective):
+    objective['description']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:objective-description', args=[objective['key']]))
+    objective['metrics']['storageAddress'] = request.build_absolute_uri(
+        reverse('substrapp:objective-metrics', args=[objective['key']])
+    )
+
+
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
@@ -186,7 +194,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
         data = get_object_from_ledger(pk, self.ledger_query_call)
@@ -206,6 +214,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
         data.update(serializer.data)
 
+        replace_storage_addresses(request, data)
+
         return data
 
     def retrieve(self, request, *args, **kwargs):
@@ -213,7 +223,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
@@ -243,6 +253,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 return Response(
                     {'message': f'Malformed search filters {query_params}'},
                     status=status.HTTP_400_BAD_REQUEST)
+
+        for group in objectives_list:
+            for objective in group:
+                replace_storage_addresses(request, objective)
 
         return Response(objectives_list, status=status.HTTP_200_OK)
 
