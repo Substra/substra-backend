@@ -143,12 +143,25 @@ class PermissionMixin(object):
                 return Response({
                     'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
                 }, status=r.status_code)
-            response = StreamingHttpResponse(
-                streaming_content=r.raw,
-                status=r.status_code
-            )
+
+            response = CustomFileResponse(
+                streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
+                status=r.status_code)
+            # List of hop-by-hop headers that are incompatible with WSGI
+            # therefor they need to be blacklist
+            hop_by_hop_headers = [
+                'Connection',
+                'Keep-Alive',
+                'Proxy-Authenticate',
+                'Proxy-Authorization',
+                'TE',
+                'Trailers',
+                'Transfer-Encoding',
+                'Upgrade',
+            ]
             for header in r.headers:
-                response[header] = r.headers.get(header)
+                if header not in hop_by_hop_headers:
+                    response[header] = r.headers.get(header)
 
         return response
 
