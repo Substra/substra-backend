@@ -4,7 +4,7 @@ import base64
 import binascii
 from importlib import import_module
 
-from django.http import FileResponse, StreamingHttpResponse
+from django.http import FileResponse
 from rest_framework.authentication import SessionAuthentication, BasicAuthentication, get_authorization_header
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -16,6 +16,7 @@ from node.models import OutgoingNode
 from django.conf import settings
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
+from wsgiref.util import is_hop_by_hop
 
 from django.utils.translation import ugettext_lazy as _
 
@@ -147,20 +148,11 @@ class PermissionMixin(object):
             response = CustomFileResponse(
                 streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
                 status=r.status_code)
-            # List of hop-by-hop headers that are incompatible with WSGI
-            # therefor they need to be blacklist
-            hop_by_hop_headers = [
-                'Connection',
-                'Keep-Alive',
-                'Proxy-Authenticate',
-                'Proxy-Authorization',
-                'TE',
-                'Trailers',
-                'Transfer-Encoding',
-                'Upgrade',
-            ]
+
             for header in r.headers:
-                if header not in hop_by_hop_headers:
+                # We don't use hop_by_hop headers since they are incompatible
+                # with WSGI
+                if not is_hop_by_hop(header):
                     response[header] = r.headers.get(header)
 
         return response
