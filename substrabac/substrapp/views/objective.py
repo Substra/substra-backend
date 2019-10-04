@@ -123,9 +123,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             # create on ledger + db
             return self.commit(serializer, request)
 
-    def _get_create_status(self):
-        return get_success_create_code()
-
     def create(self, request, *args, **kwargs):
 
         try:
@@ -138,7 +135,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = self._get_create_status()
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
