@@ -20,9 +20,12 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-backend
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- with .Values.backend.image.pullSecrets }}
+      {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
       imagePullSecrets:
-      {{- range . }}
+      {{- range $index, $value := .Values.pullSecretsInline }}
+        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
+      {{- end }}
+      {{- range .Values.backend.image.pullSecrets }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
