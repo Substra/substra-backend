@@ -44,10 +44,6 @@ class CustomFileResponse(FileResponse):
         self['Access-Control-Expose-Headers'] = 'Content-Disposition'
 
 
-def is_local_user(user):
-    return user.username == settings.BASICAUTH_USERNAME
-
-
 def node_has_process_permission(asset):
     """Check if current node can process input asset."""
     permission = asset['permissions']['process']
@@ -67,9 +63,6 @@ class PermissionMixin(object):
         """Returns true if API consumer can access asset data."""
         if user.is_anonymous:  # safeguard, should never happened
             return False
-
-        if is_local_user(user):
-            return True
 
         permission = asset['permissions']['process']
         if permission['public']:
