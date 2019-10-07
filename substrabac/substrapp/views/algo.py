@@ -155,7 +155,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                 serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
                 data.update(serializer.data)
 
-                replace_storage_addresses(request, data)
+        replace_storage_addresses(request, data)
 
         return data
 

@@ -215,9 +215,33 @@ class DataManagerViewTests(APITestCase):
                     self.assertEqual(res_datamanager[field]['storageAddress'],
                                      datamanager[i][field]['storageAddress'])
 
-    def test_datamanager_retrieve_storage_addresses_update(self):
+    def test_datamanager_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:data_manager-detail', args=[datamanager[0]['key']])
         with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.datamanager.node_has_process_permission',
+                           return_value=True), \
+                mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_datamanager = copy.deepcopy(datamanager[0])
+            for field in ('description', 'opener'):
+                ledger_datamanager[field]['storageAddress'] = \
+                    ledger_datamanager[field]['storageAddress'].replace('http://testserver',
+                                                                        'http://remotetestserver')
+            mquery_ledger.return_value = ledger_datamanager
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            for field in ('description', 'opener'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 datamanager[0][field]['storageAddress'])
+
+    def test_datamanager_retrieve_storage_addresses_update_without_cache(self):
+        url = reverse('substrapp:data_manager-detail', args=[datamanager[0]['key']])
+        with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.datamanager.node_has_process_permission',
+                           return_value=False), \
                 mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
 
             # mock content

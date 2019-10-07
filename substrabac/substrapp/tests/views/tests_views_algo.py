@@ -240,9 +240,33 @@ class AlgoViewTests(APITestCase):
                     self.assertEqual(res_algo[field]['storageAddress'],
                                      algo[i][field]['storageAddress'])
 
-    def test_algo_retrieve_storage_addresses_update(self):
+    def test_algo_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:algo-detail', args=[algo[0]['key']])
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.algo.node_has_process_permission',
+                           return_value=True), \
+                mock.patch('substrapp.views.algo.get_remote_asset') as mget_remote_asset:
+
+            # mock content
+            mget_remote_asset.return_value = b'dummy binary content'
+            ledger_algo = copy.deepcopy(algo[0])
+            for field in ('description', 'content'):
+                ledger_algo[field]['storageAddress'] = \
+                    ledger_algo[field]['storageAddress'].replace('http://testserver',
+                                                                 'http://remotetestserver')
+            mquery_ledger.return_value = ledger_algo
+
+            # actual test
+            res = self.client.get(url, **self.extra)
+            for field in ('description', 'content'):
+                self.assertEqual(res.data[field]['storageAddress'],
+                                 algo[0][field]['storageAddress'])
+
+    def test_algo_retrieve_storage_addresses_update_without_cache(self):
+        url = reverse('substrapp:algo-detail', args=[algo[0]['key']])
+        with mock.patch('substrapp.views.algo.get_object_from_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.algo.node_has_process_permission',
+                           return_value=False), \
                 mock.patch('substrapp.views.algo.get_remote_asset') as mget_remote_asset:
 
             # mock content
