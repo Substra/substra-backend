@@ -14,7 +14,7 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
+      {{- if or $.Values.pullSecretsInline $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range $index, $value := $.Values.pullSecretsInline }}
         - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
