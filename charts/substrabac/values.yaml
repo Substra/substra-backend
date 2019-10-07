@@ -8,9 +8,8 @@ docker:
   # Dockerconfig to be used to pull the images (base64'd)
   config: null
   # Images to pull
-  pullImages:
-    - eu.gcr.io/substra-208412/substratools:0.1.0
-    - eu.gcr.io/substra-208412/substratools:0.0.1
+  pullImages: []
+    # - eu.gcr.io/substra-208412/substratools:0.0.1
 
 # Inline secrets used to pull images of pods (base64'd)
 pullSecretsInline: []
