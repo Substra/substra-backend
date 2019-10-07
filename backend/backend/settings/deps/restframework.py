@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 REST_FRAMEWORK = {
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
     'DEFAULT_RENDERER_CLASSES': (
@@ -17,4 +19,9 @@ REST_FRAMEWORK = {
     'DEFAULT_VERSIONING_CLASS': 'libs.versioning.AcceptHeaderVersioningRequired',
     'ALLOWED_VERSIONS': ('0.0',),
     'DEFAULT_VERSION': '0.0',
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),
+    'AUTH_HEADER_TYPES': ('JWT',),
 }
