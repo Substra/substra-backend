@@ -207,7 +207,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
                 data.update(serializer.data)
 
-                replace_storage_addresses(request, data)
+        replace_storage_addresses(request, data)
 
         return data
 
