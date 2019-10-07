@@ -25,8 +25,10 @@ from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerE
 from substrapp.utils import get_hash, create_directory, uncompress_path
 from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
 from substrapp.tasks.utils import get_asset_content
-from substrapp.views.utils import PermissionMixin, find_primary_key_error, validate_pk, \
-    get_success_create_code, ValidationException, LedgerException, get_remote_asset, validate_sort
+from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
+                                   get_success_create_code, ValidationException,
+                                   LedgerException, get_remote_asset, validate_sort,
+                                   node_has_process_permission)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -180,7 +182,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
-
         # get description from remote node
         url = objective['description']['storageAddress']
 
@@ -191,7 +192,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         tmp_description.write(content)
         instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
         instance.description.save('description.md', tmp_description)
-
         return instance
 
     def _retrieve(self, request, pk):
@@ -199,20 +199,22 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # get instance from remote node
         data = get_object_from_ledger(pk, self.ledger_query_call)
 
-        # try to get it from local db to check if description exists
-        try:
-            instance = self.get_object()
-        except Http404:
-            instance = None
+        # do not cache if node has not process permission
+        if node_has_process_permission(data):
+            # try to get it from local db to check if description exists
+            try:
+                instance = self.get_object()
+            except Http404:
+                instance = None
 
-        if not instance or not instance.description:
-            instance = self.create_or_update_objective(data, pk)
+            if not instance or not instance.description:
+                instance = self.create_or_update_objective(data, pk)
 
-        # For security reason, do not give access to local file address
-        # Restrain data to some fields
-        # TODO: do we need to send creation date and/or last modified date ?
-        serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
-        data.update(serializer.data)
+            # For security reason, do not give access to local file address
+            # Restrain data to some fields
+            # TODO: do we need to send creation date and/or last modified date ?
+            serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
+            data.update(serializer.data)
 
         replace_storage_addresses(request, data)
 

@@ -92,6 +92,12 @@ class BasicAuthentication(BasicAuthentication):
         return ''
 
 
+def node_has_process_permission(asset):
+    """Check if current node can process input asset."""
+    permission = asset['permissions']['process']
+    return permission['public'] or get_owner() in permission['authorizedIDs']
+
+
 class PermissionMixin(object):
 
     authentication_classes = [import_module(settings.BASIC_AUTHENTICATION_MODULE).BasicAuthentication,
