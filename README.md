@@ -168,7 +168,14 @@ BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./manage.py init_nodes ./backen
 
 ## Create a default user
 
-For working with node to node authentication, you need load some extra fixtures
+A django admin command is available for registering a user:
+```shell
+./manage.py add_user $USERNAME $PASSWORD
+```
+
+The populate.py file will use for each organization credentials `substra/p@$swr0d44` for connection.
+Create these users with:
+
 ```shell
 BACKEND_ORG=owkin ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
 BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
