@@ -135,6 +135,8 @@ def do_populate():
     else:
         raise Exception(f"Number of orgs {args['nb_org']} not in [1, 2, 3]")
 
+    login(org_0, org_1, org_2)
+
     print(f'will create datamanager with {org_1}')
     # create datamanager with org1
     data = {
