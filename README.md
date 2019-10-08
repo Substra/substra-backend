@@ -153,17 +153,11 @@ DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l i
 
 Go in the `substrabac` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
-<<<<<<< HEAD
 ```shell
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
-```
-=======
  ```
  SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
  SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
  ```
->>>>>>> Fix README
 
 ## Generate nodes authentication
 
@@ -175,6 +169,14 @@ SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py init_nod
 ```
 
 ## Create a default user
+
+A django admin command is available for registering a user:
+```shell
+manage.py add_user $USERNAME $PASSWORD
+```
+
+The populate.py file will use for each organization credentials `foo/barbar10` for connection.
+Create these users with:
 
 ```shell
 SUBSTRABAC_ORG=owkin ./substrabac/manage.py add_user foo barbar10 --settings=substrabac.settings.dev
