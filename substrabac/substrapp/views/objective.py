@@ -1,30 +1,22 @@
-import docker
 import logging
-import os
 import re
 import tempfile
-import uuid
 
-from django.conf import settings
 from django.db import IntegrityError
 from django.http import Http404
 from django.urls import reverse
-from docker.errors import ContainerError
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrabac.celery import app
 
 from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.utils import get_hash, create_directory, uncompress_path
-from substrapp.tasks.tasks import build_subtuple_folders, remove_subtuple_materials
-from substrapp.tasks.utils import get_asset_content
+from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
@@ -50,28 +42,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def perform_create(self, serializer):
         return serializer.save()
-
-    def handle_dryrun(self, pkhash, metrics, test_data_manager_key):
-        try:
-            dryrun_directory = os.path.join(getattr(settings, 'MEDIA_ROOT'), 'dryrun')
-            create_directory(dryrun_directory)
-
-            metrics_path = os.path.join(dryrun_directory, f'metrics_{pkhash}.archive')
-
-            with open(metrics_path, 'wb') as fh:
-                fh.write(metrics.open().read())
-            task = compute_dryrun.apply_async(
-                (metrics_path, test_data_manager_key, pkhash),
-                queue=f"{settings.LEDGER['name']}.dryrunner"
-            )
-        except Exception as e:
-            raise Exception(f'Could not launch objective creation with dry-run on this instance: {str(e)}')
-        else:
-            current_site = getattr(settings, "DEFAULT_DOMAIN")
-            task_route = f'{current_site}{reverse("substrapp:task-detail", args=[task.id])}'
-            msg = f'Your dry-run has been taken in account. You can follow the task execution on {task_route}'
-
-            return {'id': task.id, 'message': msg}
 
     def commit(self, serializer, request):
         # create on local db
@@ -130,10 +100,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         return d
 
-    def _create(self, request, dryrun):
+    def _create(self, request):
         metrics = request.data.get('metrics')
         description = request.data.get('description')
-        test_data_manager_key = request.data.get('test_data_manager_key', '')
 
         pkhash = get_hash(description)
 
@@ -151,25 +120,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 st = status.HTTP_409_CONFLICT
             raise ValidationException(e.args, pkhash, st)
         else:
-            if dryrun:
-                return self.handle_dryrun(pkhash, metrics, test_data_manager_key)
-
             # create on ledger + db
             return self.commit(serializer, request)
 
-    def _get_create_status(self, dryrun):
-        if dryrun:
-            st = status.HTTP_202_ACCEPTED
-        else:
-            st = get_success_create_code()
-
-        return st
-
     def create(self, request, *args, **kwargs):
-        dryrun = request.data.get('dryrun', False)
 
         try:
-            data = self._create(request, dryrun)
+            data = self._create(request)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -178,7 +135,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = self._get_create_status(dryrun)
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
@@ -291,73 +248,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e.msg)}, status=e.status)
 
         return Response(leaderboard, status=status.HTTP_200_OK)
-
-
-@app.task(bind=True, ignore_result=False)
-def compute_dryrun(self, archive_path, test_data_manager_key, pkhash):
-    if not test_data_manager_key:
-        os.remove(archive_path)
-        raise Exception('Cannot do an objective dryrun without a data manager key.')
-
-    dryrun_uuid = f'{pkhash}_{uuid.uuid4().hex}'
-
-    subtuple_directory = build_subtuple_folders({'key': dryrun_uuid})
-    metrics_path = f'{subtuple_directory}/metrics'
-    uncompress_path(archive_path, metrics_path)
-    os.remove(archive_path)
-
-    datamanager = get_object_from_ledger(test_data_manager_key, 'queryDataManager')
-    opener_content = get_asset_content(
-        datamanager['opener']['storageAddress'],
-        datamanager['owner'],
-        datamanager['opener']['hash'],
-    )
-
-    with open(os.path.join(subtuple_directory, 'opener/opener.py'), 'wb') as fh:
-        fh.write(opener_content)
-
-    # Launch verification
-    client = docker.from_env()
-    pred_path = os.path.join(subtuple_directory, 'pred')
-    opener_file = os.path.join(subtuple_directory, 'opener/opener.py')
-
-    metrics_docker = 'metrics_dry_run'
-    metrics_docker_name = f'{metrics_docker}_{dryrun_uuid}'
-    volumes = {
-        pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
-        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}}
-
-    client.images.build(path=metrics_path,
-                        tag=metrics_docker,
-                        rm=False)
-
-    job_args = {
-        'image': metrics_docker,
-        'name': metrics_docker_name,
-        'cpuset_cpus': '0-0',
-        'mem_limit': '1G',
-        'command': '--dry-run',
-        'volumes': volumes,
-        'shm_size': '8G',
-        'labels': ['dryrun'],
-        'detach': False,
-        'auto_remove': False,
-        'remove': False}
-
-    try:
-        client.containers.run(**job_args)
-        if not os.path.exists(os.path.join(pred_path, 'perf.json')):
-            raise Exception('Perf file not found')
-    except ContainerError as e:
-        raise Exception(e.stderr)
-    finally:
-        try:
-            container = client.containers.get(metrics_docker_name)
-            container.remove(force=True)
-        except BaseException as e:
-            logging.error(e, exc_info=True)
-
-        remove_subtuple_materials(subtuple_directory)
 
 
 class ObjectivePermissionViewSet(PermissionMixin,

@@ -117,7 +117,6 @@ substrabac/substrapp/**/conf
 # ledger binary files
 bin
 
-dryrun
 
 # test files
 substrabac/substrabac/description.md

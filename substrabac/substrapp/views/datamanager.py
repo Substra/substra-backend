@@ -1,4 +1,3 @@
-import ast
 import tempfile
 import logging
 from django.conf import settings
@@ -42,22 +41,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def perform_create(self, serializer):
         return serializer.save()
-
-    def handle_dryrun(self, data_opener):
-
-        file = data_opener.open().read()
-
-        try:
-            node = ast.parse(file)
-        except BaseException:
-            raise Exception('Opener must be a valid python file, please review your opener file and the documentation.')
-
-        imported_module_names = [m.name for e in node.body if isinstance(e, ast.Import) for m in e.names]
-        if 'substratools' not in imported_module_names:
-            err_msg = 'Opener must import substratools, please review your opener and the documentation.'
-            return {'message': err_msg}, status.HTTP_400_BAD_REQUEST
-
-        return {'message': f'Your data opener is valid. You can remove the dryrun option.'}
 
     def commit(self, serializer, request):
         # create on ledger + db
@@ -106,7 +89,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return d
 
-    def _create(self, request, data_opener, dryrun):
+    def _create(self, request, data_opener):
         pkhash = get_hash(data_opener)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -123,26 +106,14 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 st = status.HTTP_409_CONFLICT
             raise ValidationException(e.args, pkhash, st)
         else:
-            if dryrun:
-                return self.handle_dryrun(data_opener)
-
             # create on ledger + db
             return self.commit(serializer, request)
 
-    def _get_create_status(self, dryrun):
-        if dryrun:
-            st = status.HTTP_200_OK
-        else:
-            st = get_success_create_code()
-
-        return st
-
     def create(self, request, *args, **kwargs):
-        dryrun = request.data.get('dryrun', False)
         data_opener = request.data.get('data_opener')
 
         try:
-            data = self._create(request, data_opener, dryrun)
+            data = self._create(request, data_opener)
         except ValidationException as e:
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
@@ -151,7 +122,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = self._get_create_status(dryrun)
+            st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, instance, datamanager, pk):
