@@ -142,10 +142,8 @@ Note the use of the development settings.
 ```shell
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 SUBSTRABAC_PEER_PORT_EXTERNAL=9051 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.dryrunner,celery --hostname owkin.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
 DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 SUBSTRABAC_PEER_PORT_EXTERNAL=7051 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.dryrunner,celery --hostname chu-nantes.dryrunner
 DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l info
 ```
 
