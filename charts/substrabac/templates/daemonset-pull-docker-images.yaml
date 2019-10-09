@@ -1,4 +1,4 @@
-{{- if .Values.docker.pullImages }}}
+{{- if .Values.docker.pullImages }}
 {{- if .Values.docker.config }}
 ---
 apiVersion: v1
