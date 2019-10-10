@@ -6,6 +6,7 @@ import time
 
 from django.conf import settings
 from rest_framework import status
+from aiogrpc import RpcError
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -95,7 +96,7 @@ def retry_on_error(delay=1, nbtries=5, backoff=2):
             while True:
                 try:
                     return fn(*args, **kwargs)
-                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse) as e:
+                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse, RpcError) as e:
 
                     _nbtries -= 1
                     if not nbtries:
