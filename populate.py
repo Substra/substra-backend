@@ -5,10 +5,14 @@ import shutil
 import tempfile
 import time
 import zipfile
+import logging
 
 import substra
 
 from termcolor import colored
+
+logging.basicConfig(filename='populate.log',
+                    format='[%(asctime)-15s: %(levelname)s] %(message)s')
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -65,8 +69,7 @@ def get_or_create(data, profile, asset, local=True):
         r = method(data, **method_kwargs)
 
     except substra.exceptions.AlreadyExists as e:
-        r = e.response.json()
-        print(colored(json.dumps(r, indent=2), 'cyan'))
+        print(colored(e, 'cyan'))
         key_or_keys = e.pkhash
 
     else:
@@ -82,10 +85,6 @@ def update_datamanager(data_manager_key, data, profile):
     client.set_profile(profile)
     try:
         r = client.update_dataset(data_manager_key, data)
-
-    except substra.exceptions.AlreadyExists as e:
-        r = e.response.json()
-        print(colored(json.dumps(r, indent=2), 'cyan'))
 
     except substra.exceptions.InvalidRequest as e:
         # FIXME if the data manager is already associated with the objective
