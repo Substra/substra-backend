@@ -130,7 +130,7 @@ class PermissionMixin(object):
 
         if not self._has_access(request.user, asset):
             return Response({'message': 'Unauthorized'},
-                            status=status.HTTP_401_UNAUTHORIZED)
+                            status=status.HTTP_403_FORBIDDEN)
 
         if get_owner() == asset['owner']:
             obj = self.get_object()

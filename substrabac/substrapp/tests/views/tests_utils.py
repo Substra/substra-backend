@@ -15,7 +15,7 @@ class MockRequest:
     user = None
 
 
-def with_permission_mixin(remote, same_file_property):
+def with_permission_mixin(remote, same_file_property, has_access):
     def inner(f):
         @functools.wraps(f)
         def wrapper(self):
@@ -42,7 +42,7 @@ def with_permission_mixin(remote, same_file_property):
 
                 permission_mixin = PermissionMixin()
                 permission_mixin.get_object = mock.MagicMock(return_value=TestModel())
-                permission_mixin._has_access = mock.MagicMock(return_value=True)
+                permission_mixin._has_access = mock.MagicMock(return_value=has_access)
                 permission_mixin.lookup_url_kwarg = 'foo'
                 permission_mixin.kwargs = {'foo': 'bar'}
                 permission_mixin.ledger_query_call = 'foo'
@@ -85,8 +85,8 @@ def with_requests_mock(allowed):
 
 
 class PermissionMixinDownloadFileTests(APITestCase):
-    @with_permission_mixin(remote=False, same_file_property=False)
-    def test_download_file_local(self, permission_mixin, content, filename, **kwargs):
+    @with_permission_mixin(remote=False, same_file_property=False, has_access=True)
+    def test_download_file_local_allowed(self, permission_mixin, content, filename, **kwargs):
         res = permission_mixin.download_file(MockRequest(),
                                              'file_property',
                                              'ledger_file_property')
@@ -95,7 +95,12 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res['Content-Disposition'], f'attachment; filename="{filename}"')
         self.assertTrue(permission_mixin.get_object.called)
 
-    @with_permission_mixin(remote=True, same_file_property=False)
+    @with_permission_mixin(remote=False, same_file_property=True, has_access=False)
+    def test_download_file_local_denied(self, permission_mixin, **kwargs):
+        res = permission_mixin.download_file(MockRequest(), 'file_property')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+    @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
     @with_requests_mock(allowed=True)
     def test_download_file_remote_allowed(self, permission_mixin, content, filename, **kwargs):
         res = permission_mixin.download_file(MockRequest(),
@@ -106,7 +111,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res['Content-Disposition'], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)
 
-    @with_permission_mixin(remote=True, same_file_property=False)
+    @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
     @with_requests_mock(allowed=False)
     def test_download_file_remote_denied(self, permission_mixin, **kwargs):
         res = permission_mixin.download_file(MockRequest(),
@@ -115,7 +120,7 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertFalse(permission_mixin.get_object.called)
 
-    @with_permission_mixin(remote=True, same_file_property=True)
+    @with_permission_mixin(remote=True, same_file_property=True, has_access=True)
     @with_requests_mock(allowed=True)
     def test_download_file_remote_same_file_property(self, permission_mixin, content, filename,
                                                      **kwargs):
