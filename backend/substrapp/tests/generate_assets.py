@@ -33,8 +33,8 @@ def main():
                 '2. run populate.py\n'
                 '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
-            v = v.replace('substra-backend.owkin.com:8000', 'testserver')
-            v = v.replace('substra-backend.chunantes.com:8001', 'testserver')
+            v = v.replace('substra-backend.owkin.xyz:8000', 'testserver')
+            v = v.replace('substra-backend.chunantes.xyz:8001', 'testserver')
             v = v.replace('true', 'True')
             v = v.replace('false', 'False')
             v = v.replace('null', 'None')

@@ -42,13 +42,10 @@ DATABASES = {
 }
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', f'/substra/medias/{ORG_NAME}')
-<<<<<<< HEAD:backend/backend/settings/prod.py
-SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substra-backend')
+
+SITE_HOST = os.environ.get('SITE_HOST', f'substra-backend.{ORG_NAME}.xyz')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
-=======
-DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://substrabac.{ORG_NAME}.com:{DEFAULT_PORT}')
->>>>>>> Fix domain to save model and remove SITE_* useless variables.:substrabac/substrabac/settings/prod.py
 
 LOGGING = {
     'version': 1,
