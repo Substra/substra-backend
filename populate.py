@@ -31,9 +31,9 @@ def setup_config(network='docker'):
     if network == 'docker':
         USER, PASSWORD = ('foo', 'barbar10')
         # get first available user
-        client.add_profile('owkin', USER, PASSWORD, 'http://substrabac.owkin.com:8000', '0.0')
-        client.add_profile('chunantes', USER, PASSWORD, 'http://substrabac.chunantes.com:8001', '0.0')
-        client.add_profile('clb', USER, PASSWORD, 'http://substrabac.clb.com:8002', '0.0')
+        client.add_profile('owkin', USER, PASSWORD, 'http://substrabac.owkin.xyz:8000', '0.0')
+        client.add_profile('chunantes', USER, PASSWORD, 'http://substrabac.chunantes.xyz:8001', '0.0')
+        client.add_profile('clb', USER, PASSWORD, 'http://substrabac.clb.xyz:8002', '0.0')
     if network == 'skaffold':
         # the usernames and passwords are defined in the skaffold.yaml file
         client.add_profile('owkin', 'node-1', 'node-1pwd', 'http://substrabac.node-1.com', '0.0')

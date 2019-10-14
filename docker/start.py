@@ -171,7 +171,7 @@ def generate_docker_compose_file(conf, launch_settings):
             user_command = f"python manage.py add_user foo barbar10"
 
         backend = {
-            'container_name': f'substrabac.{org_name_stripped}.com',
+            'container_name': f'substrabac.{org_name_stripped}.xyz',
             'labels': ['substra'],
             'image': 'substra/substrabac',
             'restart': 'unless-stopped',

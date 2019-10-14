@@ -53,7 +53,7 @@ That's all :)
 1. Install new version `pip install .`
 2. Create configuration:
 ```bash
-$> substra config --profile user -k -v 0.0 -u foo -p barbar10 http://substrabac.owkin.com:8000
+$> substra config --profile user -k -v 0.0 -u foo -p barbar10 http://substrabac.owkin.xyz:8000
 ```
 3. Login
 ```bash
@@ -91,7 +91,7 @@ The `populate.py` script uses these credentials for logging in.
 
 #### Test:
 
-1. Go to `http://substrabac.owkin.com:8000`, be sure to have the `mod_header` running for not having the version error message.
+1. Go to `http://substrabac.owkin.xyz:8000`, be sure to have the `mod_header` running for not having the version error message.
 2. Click on the login link on the top right of the page.
 3. Login
 4. Enjoy
@@ -107,6 +107,6 @@ $> docker-compose up -d --force-recreate --build
 
 #### Test:
 
-1. Go to `http://substrafront.owkin.com:3000`, be sure to have deactivated the `mod_header` version control.
+1. Go to `http://substrafront.owkin.xyz:3000`, be sure to have deactivated the `mod_header` version control.
 2. Login
 4. Enjoy
