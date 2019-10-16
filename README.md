@@ -245,12 +245,17 @@ Then, build the images:
 $> sh build-docker-images.sh
 ```
 
-Then, go to the`docker` dir and run `start.py`:
+Then, go to the`docker` dir and run `start.py` (`-d` means `dev` settings):
 ```bash
 $> python start.py -d --no-backup
 ```
 
 Check your services are correctly started with `docker ps -a`.
+
+## Expiry token period
+
+An global environment variable `ACCESS_TOKEN_LIFETIME` can be set for dealing with expiry token period.  
+By default, set to 24h.
 
 ## Testing fabric-sdk-py
 

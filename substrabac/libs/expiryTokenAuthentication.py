@@ -1,16 +1,17 @@
+import os
+
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
 
 from datetime import timedelta
 from django.utils import timezone
-from django.conf import settings
 
 
 # this return left time
 def expires_in(token):
     time_elapsed = timezone.now() - token.created
-    left_time = timedelta(seconds=getattr(settings, 'TOKEN_EXPIRED_AFTER_SECONDS', 5 * 60)) - time_elapsed
+    left_time = os.environ.get('ACCESS_TOKEN_LIFETIME', timedelta(hours=24)) - time_elapsed
     return left_time
 
 
