@@ -1,0 +1,140 @@
+apiVersion: skaffold/v1beta13
+kind: Config
+build:
+  tagPolicy:
+    envTemplate:
+      template: "{{ .IMAGE_NAME}}:latest"
+
+  artifacts:
+    - image: eu.gcr.io/substra-208412/substra-backend
+      context: .
+      docker:
+        dockerfile: docker/substrabac/Dockerfile
+
+    - image: eu.gcr.io/substra-208412/celerybeat
+      context: .
+      docker:
+        dockerfile: docker/celerybeat/Dockerfile
+
+    - image: eu.gcr.io/substra-208412/celeryworker
+      context: .
+      docker:
+        dockerfile: docker/celeryworker/Dockerfile
+
+    - image: eu.gcr.io/substra-208412/flower
+      context: .
+      docker:
+        dockerfile: docker/flower/Dockerfile
+
+deploy:
+  helm:
+    releases:
+      - name: substra-backend-peer-1
+        chartPath: charts/substrabac
+        namespace: peer-1
+        imageStrategy:
+          helm: {}
+        values:
+          backend.image: eu.gcr.io/substra-208412/substra-backend
+          celerybeat.image: eu.gcr.io/substra-208412/celerybeat
+          celeryworker.image: eu.gcr.io/substra-208412/celeryworker
+          flower.image: eu.gcr.io/substra-208412/flower
+        overrides:
+          secrets:
+            fabricConfigmap: network-peer-1-hlf-k8s-fabric
+          backend:
+            image:
+              tag: latest
+            settings: dev
+            defaultDomain: http://substrabac.node-1
+            ingress:
+              enabled: true
+              hosts:
+                - { host: substrabac.node-1, paths: ["/"] }
+              annotations:
+                kubernetes.io/ingress.class: nginx
+                nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
+                nginx.ingress.kubernetes.io/proxy-body-size: 100m
+            auth:
+              user: node-1
+              password: node-1pwd
+              header: "Basic bm9kZS0xOm5vZGUtMXB3ZA=="
+          celerybeat:
+            image:
+              tag: latest
+          celeryworker:
+            image:
+              tag: latest
+          organization:
+            name: MyPeer1
+          peer:
+            host: network-peer-1.peer-1
+            port: 7051
+            mspID: MyPeer1MSP
+          orderer:
+            host: network-orderer.orderer
+            port: 7050
+            name: MyOrderer
+          persistence:
+            hostPath: /tmp/peer-1
+          incomingNodes:
+            - { name: MyPeer1MSP, secret: selfSecret1 }
+            - { name: MyPeer2MSP, secret: nodeSecret2 }
+          outgoingNodes:
+            - { name: MyPeer1MSP, secret: selfSecret1 }
+            - { name: MyPeer2MSP, secret: nodeSecret1 }
+
+      - name: substra-backend-peer-2
+        chartPath: charts/substrabac
+        namespace: peer-2
+        imageStrategy:
+          helm: {}
+        values:
+          backend.image: eu.gcr.io/substra-208412/substra-backend
+          celerybeat.image: eu.gcr.io/substra-208412/celerybeat
+          celeryworker.image: eu.gcr.io/substra-208412/celeryworker
+          flower.image: eu.gcr.io/substra-208412/flower
+        overrides:
+          secrets:
+            fabricConfigmap: network-peer-2-hlf-k8s-fabric
+          backend:
+            image:
+              tag: latest
+            settings: dev
+            defaultDomain: http://substrabac.node-2
+            ingress:
+              enabled: true
+              hosts:
+                - { host: substrabac.node-2, paths: ["/"] }
+              annotations:
+                kubernetes.io/ingress.class: nginx
+                nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
+                nginx.ingress.kubernetes.io/proxy-body-size: 100m
+            auth:
+              user: node-2
+              password: node-2pwd
+              header: "Basic bm9kZS0yOm5vZGUtMnB3ZA=="
+          celerybeat:
+            image:
+              tag: latest
+          celeryworker:
+            image:
+              tag: latest
+          organization:
+            name: MyPeer1
+          peer:
+            host: network-peer-2.peer-2
+            port: 7051
+            mspID: MyPeer2MSP
+          orderer:
+            host: network-orderer.orderer
+            port: 7050
+            name: MyOrderer
+          persistence:
+            hostPath: /tmp/peer-2
+          incomingNodes:
+            - { name: MyPeer1MSP, secret: nodeSecret1 }
+            - { name: MyPeer2MSP, secret: selfSecret2 }
+          outgoingNodes:
+            - { name: MyPeer1MSP, secret: nodeSecret2 }
+            - { name: MyPeer2MSP, secret: selfSecret2 }

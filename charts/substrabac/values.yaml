@@ -106,7 +106,7 @@ secrets:
   # This will include the organization config json file (peer only)
   orgConfig: org-config
   # This will include the organization config json file (peer only)
-  fabricConfigmap: network-substra-network-tools-fabric
+  fabricConfigmap: network-hlf-k8s-fabric
 
 organization:
   name: substra
