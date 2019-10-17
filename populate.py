@@ -428,12 +428,5 @@ if __name__ == '__main__':
     try:
         do_populate()
     except substra.exceptions.HTTPError as e:
-        try:
-            error = e.response.json()
-        except Exception:
-            error_message = e.response.text
-        else:
-            error_message = json.dumps(error, indent=2)
         print(colored(str(e), 'red'))
-        print(colored(error_message, 'red'))
         exit(1)
