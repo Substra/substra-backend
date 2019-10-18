@@ -9,7 +9,7 @@ build:
     - image: eu.gcr.io/substra-208412/substra-backend
       context: .
       docker:
-        dockerfile: docker/substrabac/Dockerfile
+        dockerfile: docker/substra-backend/Dockerfile
 
     - image: eu.gcr.io/substra-208412/celerybeat
       context: .
@@ -30,7 +30,7 @@ deploy:
   helm:
     releases:
       - name: substra-backend-peer-1
-        chartPath: charts/substrabac
+        chartPath: charts/substra-backend
         namespace: peer-1
         imageStrategy:
           helm: {}
@@ -46,11 +46,11 @@ deploy:
             image:
               tag: latest
             settings: dev
-            defaultDomain: http://substrabac.node-1
+            defaultDomain: http://substra-backend.node-1
             ingress:
               enabled: true
               hosts:
-                - { host: substrabac.node-1, paths: ["/"] }
+                - { host: substra-backend.node-1, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
@@ -85,7 +85,7 @@ deploy:
             - { name: MyPeer2MSP, secret: nodeSecret1 }
 
       - name: substra-backend-peer-2
-        chartPath: charts/substrabac
+        chartPath: charts/substra-backend
         namespace: peer-2
         imageStrategy:
           helm: {}
@@ -101,11 +101,11 @@ deploy:
             image:
               tag: latest
             settings: dev
-            defaultDomain: http://substrabac.node-2
+            defaultDomain: http://substra-backend.node-2
             ingress:
               enabled: true
               hosts:
-                - { host: substrabac.node-2, paths: ["/"] }
+                - { host: substra-backend.node-2, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m

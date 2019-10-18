@@ -1,8 +1,8 @@
 [flake8]
 max-line-length = 120
 ignore = E402, W504, F403, F405
-exclude = substrabac/substrapp/migrations/*,
-          substrabac/substrapp/tests/assets.py,
-          substrabac/substrabac/settings/*,
-          substrabac/node/migrations/*,
+exclude = substrabackend/substrapp/migrations/*,
+          substrabackend/substrapp/tests/assets.py,
+          substrabackend/substrabackend/settings/*,
+          substrabackend/node/migrations/*,
           .env, .venv

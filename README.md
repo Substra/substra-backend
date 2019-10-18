@@ -1,16 +1,16 @@
-# Substrabac
+# Substra-Backend
 Backend of the Substra platform
 
 ## Version
 
-You will note substrabac use a versioned REST API with the header protocol.
+You will note substra-backend use a versioned REST API with the header protocol.
 Current is `0.0`.
 
 ## Getting started 1: Prepare the django app
 
 1. Clone the repo:
  ```
- git clone https://github.com/SubstraFoundation/substrabac
+ git clone https://github.com/SubstraFoundation/substra-backend
  ```
 2. :warning: Do this step only if your environment development is on linux.
 On linux systems, all the docker instances create files with `root` permissions.

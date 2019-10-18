@@ -27,14 +27,14 @@ pipeline {
         stage('Test Helm') {
           agent {
             kubernetes {
-              label 'substrabac-helm'
+              label 'substra-backend-helm'
               defaultContainer 'helm'
               yamlFile '.cicd/agent-helm.yaml'
             }
           }
 
           steps {
-            sh "helm lint charts/substrabac"
+            sh "helm lint charts/substra-backend"
           }
         }
 
@@ -53,11 +53,11 @@ pipeline {
             sh "docker login -u _json_key --password-stdin https://eu.gcr.io/substra-208412/ < /secret/kaniko-secret.json"
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
-            dir("substrabac") {
+            dir("substra-backend") {
               sh "pip install flake8"
               sh "flake8"
               sh "pip install -r requirements.txt"
-              sh "DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test"
+              sh "DJANGO_SETTINGS_MODULE=substrabackend.settings.test coverage run manage.py test"
               sh "coverage report"
               sh "coverage html"
             }
@@ -69,7 +69,7 @@ pipeline {
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
                 keepAll: true,
-                reportDir: 'substrabac/htmlcov',
+                reportDir: 'substra-backend/htmlcov',
                 reportFiles: 'index.html',
                 reportName: 'Coverage Report'
               ]
@@ -77,10 +77,10 @@ pipeline {
           }
         }
 
-        stage('Build substrabac') {
+        stage('Build substra-backend') {
           agent {
             kubernetes {
-              label 'substrabac-kaniko-substrabac'
+              label 'substra-backend-kaniko-substrabackend'
               yamlFile '.cicd/agent-kaniko.yaml'
             }
           }
@@ -88,7 +88,7 @@ pipeline {
           steps {
             container(name:'kaniko', shell:'/busybox/sh') {
               sh '''#!/busybox/sh
-                /kaniko/executor -f `pwd`/docker/substrabac/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/substrabac:$GIT_COMMIT"
+                /kaniko/executor -f `pwd`/docker/substra-backend/Dockerfile -c `pwd` -d "eu.gcr.io/substra-208412/substra-backend:$GIT_COMMIT"
               '''
             }
           }
@@ -131,7 +131,7 @@ pipeline {
         stage('Publish Helm') {
           agent {
             kubernetes {
-              label 'substrabac-helm'
+              label 'substra-backend-helm'
               defaultContainer 'helm'
               yamlFile '.cicd/agent-helm.yaml'
             }
@@ -143,7 +143,7 @@ pipeline {
             sh "helm init --client-only"
             sh "helm plugin install https://github.com/chartmuseum/helm-push"
             sh "helm repo add substra https://substra-charts.owkin.com --username owlways --password Cokear4nnRK9ooC"
-            sh "helm push charts/substrabac substra || true"
+            sh "helm push charts/substra-backend substra || true"
           }
         }
       }
