@@ -16,7 +16,7 @@ from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 
-from substrabac.celery import app
+from substrabackend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
@@ -255,7 +255,7 @@ def prepare_tuple(subtuple, tuple_type):
         log_start_tuple(tuple_type, subtuple['key'])
     except LedgerStatusError as e:
         # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
-        # in case of multiple instances of substrabac running for the same organisation
+        # in case of multiple instances of substra backend running for the same organisation
         # So prepare_tuple tasks are ignored if it cannot log_start_tuple
         logging.exception(e)
         raise Ignore()

@@ -167,7 +167,7 @@ class DataSampleQueryTests(APITestCase):
         r = response.json()
         self.assertEqual(
             r['message'],
-            "One or more datamanager keys provided do not exist in local substrabac database. "
+            "One or more datamanager keys provided do not exist in local database. "
             "Please create them before. DataManager keys: ['toto']")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

@@ -196,7 +196,7 @@ class ResourcesManager():
         try:
             return int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2)) // cls.__concurrency
         except ValueError:
-            # fixes macOS issue https://github.com/SubstraFoundation/substrabac/issues/262
+            # fixes macOS issue https://github.com/SubstraFoundation/substra-backend/issues/262
             return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // cls.__concurrency
 
     @classmethod

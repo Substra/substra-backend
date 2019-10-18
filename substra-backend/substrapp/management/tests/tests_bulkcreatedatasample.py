@@ -429,7 +429,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = "One or more datamanager keys provided do not exist in local substrabac database. "\
+        wanted_output = "One or more datamanager keys provided do not exist in local database. "\
                         "Please create them before. DataManager keys: ['bar']"
 
         self.assertEqual(wanted_output, output)
@@ -466,7 +466,7 @@ class BulkCreateDataSampleTestCase(TestCase):
 
         output = err.getvalue().strip()
 
-        wanted_output = f"One or more datamanager keys provided do not exist in local substrabac database. " \
+        wanted_output = f"One or more datamanager keys provided do not exist in local database. " \
                         f"Please create them before. DataManager keys: {data_manager_keys}"
 
         self.assertEqual(wanted_output, output)

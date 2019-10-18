@@ -38,7 +38,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
 
         if datamanager_count != len(data_manager_keys):
-            raise Exception(f'One or more datamanager keys provided do not exist in local substrabac database. '
+            raise Exception(f'One or more datamanager keys provided do not exist in local database. '
                             f'Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod

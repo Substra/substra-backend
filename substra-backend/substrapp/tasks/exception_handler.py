@@ -91,7 +91,7 @@ def find_exception(module):
 
 def generate_exceptions_map(append=True):
 
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.prod'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabackend.settings.prod'
 
     import requests.exceptions
     import celery.exceptions
@@ -144,7 +144,7 @@ def generate_exceptions_map(append=True):
 
 
 if __name__ == '__main__':
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabac.settings.common'
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'substrabackend.settings.common'
     json_exceptions = generate_exceptions_map()
     with open(EXCEPTION_PATH, 'w') as outfile:
         json.dump(json_exceptions, outfile, indent=4)

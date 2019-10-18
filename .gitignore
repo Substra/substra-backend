@@ -110,7 +110,7 @@ venv.bak/
 SECRET
 
 # conf from substra-network
-substrabac/substrapp/**/conf
+substra-backend/substrapp/**/conf
 
 **/medias/*
 
@@ -119,8 +119,8 @@ bin
 
 
 # test files
-substrabac/substrabac/description.md
-substrabac/substrabac/metrics.py
+substra-backend/substra-backend/description.md
+substra-backend/substra-backend/metrics.py
 
 # docker database dir
 postgres-data
