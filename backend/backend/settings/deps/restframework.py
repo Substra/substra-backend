@@ -23,6 +23,6 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': os.environ.get('ACCESS_TOKEN_LIFETIME', timedelta(hours=24)),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=os.environ.get('ACCESS_TOKEN_LIFETIME', 1)),
     'AUTH_HEADER_TYPES': ('JWT',),
 }

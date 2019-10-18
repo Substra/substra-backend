@@ -254,8 +254,8 @@ Check your services are correctly started with `docker ps -a`.
 
 ## Expiry token period
 
-An global environment variable `ACCESS_TOKEN_LIFETIME` can be set for dealing with expiry token period.  
-By default, set to 24h.
+An global environment variable `ACCESS_TOKEN_LIFETIME` expressed in minutes can be set for dealing with expiry token period.  
+By default, set to 24*60 min i.e 24h.
 
 ## Testing fabric-sdk-py
 
