@@ -7,11 +7,11 @@ RUN apt-get install -y git curl netcat
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY ./substrabac/requirements.txt /usr/src/app/.
+COPY ./substrabackend/requirements.txt /usr/src/app/.
 
 RUN pip3 install -r requirements.txt
 
-COPY ./substrabac/libs /usr/src/app/libs
-COPY ./substrabac/substrapp /usr/src/app/substrapp
-COPY ./substrabac/substrabac /usr/src/app/substrabac
-COPY ./substrabac/node /usr/src/app/node
+COPY ./substrabackend/libs /usr/src/app/libs
+COPY ./substrabackend/substrapp /usr/src/app/substrapp
+COPY ./substrabackend/substrabackend /usr/src/app/substrabackend
+COPY ./substrabackend/node /usr/src/app/node

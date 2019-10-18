@@ -64,14 +64,14 @@ Do not forget to build the substra-model image as described in the step 9 of thi
   ```shell
   $> sudo su postgres
   $> psql
-  $ CREATE USER substrabac WITH PASSWORD 'substrabac' CREATEDB CREATEROLE SUPERUSER;
+  $ CREATE USER substrabackend WITH PASSWORD 'substrabackend' CREATEDB CREATEROLE SUPERUSER;
   ```
 6. Create two databases for both orgs: owkin and chu-nantes. A shell script is available, do not hesitate to run it.
-It will drop the databases if they are already created, then create them and grant all privileges to your main user substrabac.
+It will drop the databases if they are already created, then create them and grant all privileges to your main user substrabackend.
  (If this is the first time you create the databases, you will see some warnings which are pointless):
 
   ```shell
-  $> ./substrabac/scripts/recreate_db.sh
+  $> ./scripts/recreate_db.sh
 ```
 7. We will populate data:
 
@@ -79,8 +79,8 @@ It will drop the databases if they are already created, then create them and gra
 
 - With django migrations
 ```shell
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py migrate --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev
+SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
+SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
 ```
 
 ###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
@@ -90,32 +90,32 @@ data in fixtures are relative to the data already set in the ledger if the fixtu
 Two solutions:
 - With django migrations + load data
 ```shell
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py migrate --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py migrate --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabac.settings.dev
+SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
+SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
+SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabackend.settings.dev
+SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabackend.settings.dev
 ```
 - From dumps:
 ```shell
-  $> ./substrabac/scripts/populate_db.sh
+  $> ./scripts/populate_db.sh
 ```
 If you don't want to replicate the data in the ledger, simply run the django migrations.
 
 Populate media files
 ```shell
-  $> ./substrabac/scripts/load_fixtures.sh
+  $> ./scripts/load_fixtures.sh
 ```
 It will clean the `medias` folders and create the `owkin` and `chu-nantes` folders in the `medias` folder.
 
 
 8. Optional: Create a superuser in your databases:
 ```
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python substrabac/manage.py createsuperuser --settings=substrabac.settings.dev
+SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py createsuperuser --settings=substrabackend.settings.dev
+SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py createsuperuser --settings=substrabackend.settings.dev
 ```
 
 9. Build the substra-model docker image:
-Clone the following git repo https://github.com/SubstraFoundation/substratools and build the docker image
+Clone the following git repo https://github.com/SubstraFoundation/substra-tools and build the docker image
 ```
 docker build -t substra-model .
 ```
@@ -135,32 +135,32 @@ sudo apt-get install rabbitmq-server
 
 ### Launch celery workers/scheduler and celery beat
 
-Execute this command in the `substrabac/substrabac` folder.
+Execute this command in the `substrabackend/substrabackend` folder.
 
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 celery -E -A substrabac worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=substrabac.settings.dev SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 celery -E -A substrabac worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabac.settings.common celery -A substrabac beat -l info
+DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 celery -E -A substrabackend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 celery -E -A substrabackend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 celery -E -A substrabackend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 celery -E -A substrabackend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=substrabackend.settings.common celery -A substrabackend beat -l info
 ```
 
 ## Launch the servers
 
-Go in the `substrabac` folder and run the server locally:  
+Go in the `substrabackend` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
  ```
- SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.dev
- SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.dev
+ SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabackend.settings.server.dev
+ SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabackend.settings.server.dev
  ```
  
  If you want to bypass the basic authentication when you browse the server on localhost:8000 or localhost:8001, you can use the `nobasicauth` settings.  
  Simply replace `server.dev` by `nobasicauth`, like:
   ```
- SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabac.settings.server.nobasicauth
- SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabac.settings.server.nobasicauth
+ SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabackend.settings.server.nobasicauth
+ SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabackend.settings.server.nobasicauth
  ```
  It allows the substrafront project to work correctly too.
 
@@ -168,14 +168,14 @@ Go in the `substrabac` folder and run the server locally:
 
 For working with node to node authentication, you need load some extra fixtures
 ```
-SUBSTRABAC_ORG=owkin SUBSTRABAC_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=substrabac.settings.server.dev
-SUBSTRABAC_ORG=chu-nantes SUBSTRABAC_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=substrabac.settings.server.dev
+SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=substrabackend.settings.server.dev
+SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=substrabackend.settings.server.dev
 ```
 
 ## Test with unit and functional tests
 
 ```
-    DJANGO_SETTINGS_MODULE=substrabac.settings.test coverage run manage.py test
+    DJANGO_SETTINGS_MODULE=substrabackend.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
 ```
@@ -195,7 +195,7 @@ When you want to re-run the testing process:
 - Rerun `recreate_db.sh` and `clean_media.sh` scripts.
 - Run the django migrations.
 - Relaunch your substra-network.
-- Run the owkin and chunantes substrabac servers.
+- Run the owkin and chunantes substra-backend servers.
 - Run celery beat and celery owkin and chu-nantes.
 - Run the `populate.py` python script.
 
@@ -265,7 +265,7 @@ Use these configurations for easier debugging and productivity:
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
 
-You can even access directly to the databases (password is `substrabac` as described in the beginning of this document):
+You can even access directly to the databases (password is `substrabackend` as described in the beginning of this document):
 ![](assets/database_owkin.png)
 ![](assets/database_owkin_challenges.png)
 

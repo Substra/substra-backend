@@ -41,7 +41,7 @@ pipeline {
         stage('Test') {
           agent {
             kubernetes {
-              label 'substrabac-test'
+              label 'substra-backend-test'
               defaultContainer 'python'
               yamlFile '.cicd/agent-python.yaml'
             }
@@ -97,7 +97,7 @@ pipeline {
         stage('Build celerybeat') {
           agent {
             kubernetes {
-              label 'substrabac-kaniko-celerybeat'
+              label 'substra-backend-kaniko-celerybeat'
               yamlFile '.cicd/agent-kaniko.yaml'
             }
           }
@@ -114,7 +114,7 @@ pipeline {
         stage('Build celeryworker') {
           agent {
             kubernetes {
-              label 'substrabac-kaniko-celeryworker'
+              label 'substra-backend-kaniko-celeryworker'
               yamlFile '.cicd/agent-kaniko.yaml'
             }
           }

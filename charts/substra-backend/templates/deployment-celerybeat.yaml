@@ -36,12 +36,12 @@ spec:
           imagePullPolicy: "{{ .Values.celerybeat.image.pullPolicy }}"
           {{- end }}
           command: ["celery"]
-          args: ["-A", "substrabac", "beat", "-l", "debug"]
+          args: ["-A", "substrabackend", "beat", "-l", "debug"]
           env:
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: DJANGO_SETTINGS_MODULE
-              value: substrabac.settings.common
+              value: substrabackend.settings.common
             - name: PYTHONUNBUFFERED
               value: "1"
           resources:

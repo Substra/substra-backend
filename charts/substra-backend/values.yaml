@@ -21,7 +21,7 @@ backend:
   defaultDomain: localhost
 
   image:
-    repository: eu.gcr.io/substra-208412/substrabac
+    repository: eu.gcr.io/substra-208412/substra-backend
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []

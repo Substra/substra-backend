@@ -34,15 +34,15 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': os.environ.get(f'SUBSTRABAC_{ORG_DB_NAME}_DB_NAME', f'substrabac_{ORG_NAME}'),
-        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabac'),
-        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabac'),
+        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabackend'),
+        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabackend'),
         'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
         'PORT': 5432,
     }
 }
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', f'/substra/medias/{ORG_NAME}')
-SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabac')
+SITE_HOST = os.environ.get('SITE_HOST', f'{ORG_NAME}.substrabackend')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
 
@@ -77,12 +77,12 @@ LOGGING = {
         'error_file': {
             'class': 'logging.FileHandler',
             'formatter': 'generic',
-            'filename': '/var/log/substrabac.error.log',
+            'filename': '/var/log/substra-backend.error.log',
         },
         'access_file': {
             'class': 'logging.FileHandler',
             'formatter': 'generic',
-            'filename': '/var/log/substrabac.access.log',
+            'filename': '/var/log/substra-backend.access.log',
         },
     },
     'loggers': {

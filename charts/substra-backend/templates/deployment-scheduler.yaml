@@ -36,7 +36,7 @@ spec:
           imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
           {{- end }}
           command: ["celery"]
-          args: ["-A", "substrabac", "worker", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},scheduler,celery", "--hostname", "{{ .Values.organization.name }}.scheduler"]
+          args: ["-A", "substrabackend", "worker", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},scheduler,celery", "--hostname", "{{ .Values.organization.name }}.scheduler"]
           env:
             - name: ORG
               value: {{ .Values.organization.name }}
@@ -47,7 +47,7 @@ spec:
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: DJANGO_SETTINGS_MODULE
-              value: substrabac.settings.{{ .Values.backend.settings }}
+              value: substrabackend.settings.{{ .Values.backend.settings }}
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- with .Values.backend.auth }}
@@ -70,9 +70,9 @@ spec:
             - name: FABRIC_LOGGING_SPEC
               value: debug
             - name: LEDGER_CONFIG_FILE
-              value: /conf/{{ .Values.organization.name }}/substrabac/conf.json
+              value: /conf/{{ .Values.organization.name }}/substrabackend/conf.json
           volumeMounts:
-            - mountPath: /conf/{{ .Values.organization.name }}/substrabac
+            - mountPath: /conf/{{ .Values.organization.name }}/substrabackend
               name: config
               readOnly: true
             - mountPath: /var/hyperledger/msp/signcerts

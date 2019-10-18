@@ -16,7 +16,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_peers_info, decode_fabric_endpoints
 
 
-LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabac/conf.json')
+LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabackend/conf.json')
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 
 LEDGER_SYNC_ENABLED = True
@@ -41,7 +41,7 @@ def get_hfc_client():
 
     client = Client()
 
-    # Add peer from substrabac ledger config file
+    # Add peer from substrabackend ledger config file
     peer = Peer(name=LEDGER['peer']['name'])
     peer.init_with_bundle({
         'url': f'{LEDGER["peer"]["host"]}:{PEER_PORT}',
