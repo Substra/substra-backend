@@ -40,9 +40,9 @@ spec:
           env:
             - name: ORG
               value: {{ .Values.organization.name }}
-            - name: SUBSTRABAC_ORG
+            - name: SUBSTRABACKEND_ORG
               value: {{ .Values.organization.name }}
-            - name: SUBSTRABAC_DEFAULT_PORT
+            - name: SUBSTRABACKEND_DEFAULT_PORT
               value: "8000"
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"

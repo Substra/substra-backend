@@ -82,7 +82,7 @@ def wait():
         chaincode_name = LEDGER['chaincode_name']
         peer = LEDGER['peer']
 
-        peer_port = peer["port"][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+        peer_port = peer["port"][os.environ.get('SUBSTRABACKEND_PEER_PORT', 'external')]
 
         client = Client()
 

@@ -33,9 +33,9 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get(f'SUBSTRABAC_{ORG_DB_NAME}_DB_NAME', f'substrabac_{ORG_NAME}'),
-        'USER': os.environ.get('SUBSTRABAC_DB_USER', 'substrabackend'),
-        'PASSWORD': os.environ.get('SUBSTRABAC_DB_PWD', 'substrabackend'),
+        'NAME': os.environ.get(f'SUBSTRABACKEND_{ORG_DB_NAME}_DB_NAME', f'substrabackend_{ORG_NAME}'),
+        'USER': os.environ.get('SUBSTRABACKEND_DB_USER', 'substrabackend'),
+        'PASSWORD': os.environ.get('SUBSTRABACKEND_DB_PWD', 'substrabackend'),
         'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
         'PORT': 5432,
     }

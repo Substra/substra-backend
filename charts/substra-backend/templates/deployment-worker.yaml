@@ -40,9 +40,9 @@ spec:
           env:
             - name: ORG
               value: {{ .Values.organization.name }}
-            - name: SUBSTRABAC_ORG
+            - name: SUBSTRABACKEND_ORG
               value: {{ .Values.organization.name }}
-            - name: SUBSTRABAC_DEFAULT_PORT
+            - name: SUBSTRABACKEND_DEFAULT_PORT
               value: "8000"
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
@@ -63,11 +63,11 @@ spec:
             {{- end }}
             - name: DEFAULT_DOMAIN
               value: "{{ .Values.backend.defaultDomain }}"
-            - name: SUBSTRABAC_{{ .Values.organization.name | upper }}_DB_NAME
+            - name: SUBSTRABACKEND_{{ .Values.organization.name | upper }}_DB_NAME
               value: {{ .Values.postgresql.postgresqlDatabase }}
-            - name: SUBSTRABAC_DB_USER
+            - name: SUBSTRABACKEND_DB_USER
               value: {{ .Values.postgresql.postgresqlUsername }}
-            - name: SUBSTRABAC_DB_PWD
+            - name: SUBSTRABACKEND_DB_PWD
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: DATABASE_HOST
               value: {{ .Release.Name }}-postgresql

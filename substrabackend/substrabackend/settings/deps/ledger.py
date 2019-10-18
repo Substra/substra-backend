@@ -22,7 +22,7 @@ LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 LEDGER_SYNC_ENABLED = True
 LEDGER_CALL_RETRY = True
 
-PEER_PORT = LEDGER['peer']['port'][os.environ.get('SUBSTRABAC_PEER_PORT', 'external')]
+PEER_PORT = LEDGER['peer']['port'][os.environ.get('SUBSTRABACKEND_PEER_PORT', 'external')]
 
 LEDGER['requestor'] = create_user(
     name=LEDGER['client']['name'],
@@ -130,7 +130,7 @@ def update_client_with_discovery(client, discovery_results):
                 tls_root_cert.flush()
 
                 url = peer_info['endpoint']
-                external_port = os.environ.get('SUBSTRABAC_PEER_PORT_EXTERNAL', None)
+                external_port = os.environ.get('SUBSTRABACKEND_PEER_PORT_EXTERNAL', None)
                 # use case for external development
                 if external_port:
                     url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"

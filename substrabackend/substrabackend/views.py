@@ -102,6 +102,6 @@ class SchemaGenerator(schemas.SchemaGenerator):
 @renderer_classes([OpenAPIRenderer, SwaggerUIRenderer])
 def schema_view(request):
     generator = SchemaGenerator(
-        title='Substrabac API',
+        title='Substra Backend API',
         patterns=[url(r'^/', include([url(r'^', include(router.urls))]))])
     return response.Response(generator.get_schema(request=request))

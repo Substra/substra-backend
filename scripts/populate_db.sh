@@ -2,5 +2,5 @@
 
 # load dumps
 BASEDIR=$(dirname "$0")
-psql -U ${USER} -d substrabac_chunantes < ${BASEDIR}/../fixtures/dump_substrabac_chunantes.sql
-psql -U ${USER} -d substrabac_owkin < ${BASEDIR}/../fixtures/dump_substrabac_owkin.sql
+psql -U ${USER} -d substrabackend_chunantes < ${BASEDIR}/../fixtures/dump_substrabackend_chunantes.sql
+psql -U ${USER} -d substrabackend_owkin < ${BASEDIR}/../fixtures/dump_substrabackend_owkin.sql

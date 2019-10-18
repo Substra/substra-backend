@@ -50,8 +50,8 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
     # Docker compose config
     docker_compose = {
-        'substrabac_services': {},
-        'substrabac_tools': {
+        'substrabackend_services': {},
+        'substrabackend_tools': {
             'postgresql': {
                 'container_name': 'postgresql',
                 'labels': ['substra'],
@@ -133,9 +133,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
         backend_global_env = [
             f'ORG={org_name_stripped}',
-            f'SUBSTRABAC_ORG={org_name}',
-            f'SUBSTRABAC_DEFAULT_PORT={port}',
-            'SUBSTRABAC_PEER_PORT=internal',
+            f'SUBSTRABACKEND_ORG={org_name}',
+            f'SUBSTRABACKEND_DEFAULT_PORT={port}',
+            'SUBSTRABACKEND_PEER_PORT=internal',
 
             f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/substrabackend/conf.json',
 
@@ -229,7 +229,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
         else:
-            default_domain = os.environ.get('SUBSTRABAC_DEFAULT_DOMAIN', '')
+            default_domain = os.environ.get('SUBSTRABACKEND_DEFAULT_DOMAIN', '')
             if default_domain:
                 backend['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
                 worker['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
@@ -238,17 +238,17 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}")
             worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
 
-        docker_compose['substrabac_services']['substrabackend' + org_name_stripped] = backend
-        docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
-        docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
+        docker_compose['substrabackend_services']['substrabackend' + org_name_stripped] = backend
+        docker_compose['substrabackend_services']['scheduler' + org_name_stripped] = scheduler
+        docker_compose['substrabackend_services']['worker' + org_name_stripped] = worker
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}
 
-    for name, dconfig in docker_compose['substrabac_services'].items():
+    for name, dconfig in docker_compose['substrabackend_services'].items():
         COMPOSITION['services'][name] = dconfig
 
-    for name, dconfig in docker_compose['substrabac_tools'].items():
+    for name, dconfig in docker_compose['substrabackend_tools'].items():
         COMPOSITION['services'][name] = dconfig
 
     with open(docker_compose['path'], 'w+') as f:
