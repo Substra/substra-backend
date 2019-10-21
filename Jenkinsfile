@@ -53,7 +53,7 @@ pipeline {
             sh "docker login -u _json_key --password-stdin https://eu.gcr.io/substra-208412/ < /secret/kaniko-secret.json"
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
-            dir("substra-backend") {
+            dir("substrabackend") {
               sh "pip install flake8"
               sh "flake8"
               sh "pip install -r requirements.txt"
