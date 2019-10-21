@@ -15,8 +15,8 @@ from hfc.fabric.orderer import Orderer
 from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_peers_info, decode_fabric_endpoints
 
-
-LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabac/conf.json')
+SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
+LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'{SUBSTRA_FOLDER}/conf/{ORG}/substrabac/conf.json')
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 
 LEDGER_SYNC_ENABLED = True
