@@ -29,7 +29,7 @@ class AuthenticatedClient(APIClient):
 
         # create user
         username = 'foo'
-        password = 'barbar10'
+        password = 'p@$swr0d44'
         try:
             with transaction.atomic():
                 User.objects.create_user(username=username, password=password)
