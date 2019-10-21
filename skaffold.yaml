@@ -1,10 +1,6 @@
 apiVersion: skaffold/v1beta13
 kind: Config
 build:
-  tagPolicy:
-    envTemplate:
-      template: "{{ .IMAGE_NAME}}:latest"
-
   artifacts:
     - image: eu.gcr.io/substra-208412/substra-backend
       context: .
@@ -43,8 +39,6 @@ deploy:
           secrets:
             fabricConfigmap: network-peer-1-hlf-k8s-fabric
           backend:
-            image:
-              tag: latest
             settings: dev
             defaultDomain: http://substra-backend.node-1
             ingress:
@@ -59,12 +53,6 @@ deploy:
               user: node-1
               password: node-1pwd
               header: "Basic bm9kZS0xOm5vZGUtMXB3ZA=="
-          celerybeat:
-            image:
-              tag: latest
-          celeryworker:
-            image:
-              tag: latest
           organization:
             name: MyPeer1
           peer:
@@ -98,8 +86,6 @@ deploy:
           secrets:
             fabricConfigmap: network-peer-2-hlf-k8s-fabric
           backend:
-            image:
-              tag: latest
             settings: dev
             defaultDomain: http://substra-backend.node-2
             ingress:
@@ -114,12 +100,6 @@ deploy:
               user: node-2
               password: node-2pwd
               header: "Basic bm9kZS0yOm5vZGUtMnB3ZA=="
-          celerybeat:
-            image:
-              tag: latest
-          celeryworker:
-            image:
-              tag: latest
           organization:
             name: MyPeer1
           peer:

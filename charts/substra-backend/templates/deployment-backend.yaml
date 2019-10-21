@@ -37,9 +37,9 @@ spec:
           {{- end }}
           command: ["/bin/bash"]
           {{- if eq .Values.backend.settings "prod" }}
-          args: ["-c", "python manage.py migrate; python3 manage.py collectstatic --noinput; uwsgi --http :8000 --module substrabackend.wsgi --static-map /static=/usr/src/app/substrabackend/statics --master --processes 4 --threads 2 --need-app --env DJANGO_SETTINGS_MODULE=substrabackend.settings.server.{{ .Values.backend.settings }} "]
+          args: ["-c", "python manage.py migrate && python3 manage.py collectstatic --noinput && uwsgi --http :8000 --module substrabackend.wsgi --static-map /static=/usr/src/app/substrabackend/statics --master --processes 4 --threads 2 --need-app --env DJANGO_SETTINGS_MODULE=substrabackend.settings.server.{{ .Values.backend.settings }} "]
           {{- else }}
-          args: ["-c", "python manage.py migrate; DJANGO_SETTINGS_MODULE=substrabackend.settings.server.{{ .Values.backend.settings }} python3 manage.py runserver --noreload 0.0.0.0:8000"]
+          args: ["-c", "python manage.py migrate && DJANGO_SETTINGS_MODULE=substrabackend.settings.server.{{ .Values.backend.settings }} python3 manage.py runserver --noreload 0.0.0.0:8000"]
           {{- end }}
           env:
             - name: ORG
