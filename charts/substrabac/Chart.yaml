@@ -1,4 +1,4 @@
-apiVersion: "v1"
+apiVersion: v1
 name: substrabac
 home: https://substra.org/
 version: 1.0.0-alpha.10
