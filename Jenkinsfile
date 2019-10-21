@@ -69,7 +69,7 @@ pipeline {
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
                 keepAll: true,
-                reportDir: 'substra-backend/htmlcov',
+                reportDir: 'substrabackend/htmlcov',
                 reportFiles: 'index.html',
                 reportName: 'Coverage Report'
               ]

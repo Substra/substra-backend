@@ -19,14 +19,14 @@ def generate_network_credentials(nodes):
         network_creds[node_id]['name'] = node_name
         network_creds[node_id]['outgoing'] = {
             other_id: create_random_secret()
-            for other_id in node_ids if other_id != node_id
+            for other_id in node_ids
         }
 
     # parse outgoing credentials to set incoming credentials
     for node_id, node_creds in network_creds.items():
         node_creds['incoming'] = {
             other_id: network_creds[other_id]['outgoing'][node_id]
-            for other_id in node_ids if other_id != node_id
+            for other_id in node_ids
         }
 
     return network_creds

@@ -174,9 +174,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             fixtures_command = f"python manage.py loaddata nodes-{org_name_stripped}"
 
         backend = {
-            'container_name': f'{org_name_stripped}.substrabackend',
+            'container_name': f'{org_name_stripped}.substra-backend',
             'labels': ['substra'],
-            'image': 'substra/substrabackend',
+            'image': 'substra/substra-backend',
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '

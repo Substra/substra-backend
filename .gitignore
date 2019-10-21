@@ -106,29 +106,14 @@ venv.bak/
 # idea files
 .idea
 
-#secret files
+# vscode files
+.vscode/
+
+# secret files
 SECRET
 
-# conf from substra-network
-substra-backend/substrapp/**/conf
-
-**/medias/*
-
-# ledger binary files
+# substra files
 bin
-
-
-# test files
-substra-backend/substra-backend/description.md
-substra-backend/substra-backend/metrics.py
-
-# docker database dir
-postgres-data
+**/medias/*
+substrabackend/substrapp/**/conf
 docker/docker-compose-dynamic.yaml
-
-network.json
-benin_malin
-# file for testing data creation with django command
-data.json
-
-.vscode/
