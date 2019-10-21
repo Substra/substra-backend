@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import glob
 import argparse
@@ -168,7 +169,7 @@ def generate_docker_compose_file(conf, launch_settings):
         user_command = ''
         if launch_settings == 'dev':
             fixtures_command = f"python manage.py init_nodes ./node/nodes/{org_name}MSP.json"
-            user_command = f"python manage.py add_user substra 'p@$swr0d44'"
+            user_command = f"python manage.py add_user substra '{'p@$swr0d44'.replace('$', '$$')}'"  # needed for docker-compose special variable
 
         backend = {
             'container_name': f'substra-backend.{org_name_stripped}.xyz',
