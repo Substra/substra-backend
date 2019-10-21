@@ -28,7 +28,7 @@ class AuthenticatedClient(APIClient):
     def request(self, **kwargs):
 
         # create user
-        username = 'foo'
+        username = 'substra'
         password = 'p@$swr0d44'
         try:
             with transaction.atomic():
