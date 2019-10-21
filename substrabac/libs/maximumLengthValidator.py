@@ -26,4 +26,4 @@ class MaximumLengthValidator:
             "Your password must contain a maximum of %(max_length)d character.",
             "Your password must contain a maximum of %(max_length)d characters.",
             self.max_length
-        ) % {'min_length': self.max_length}
+        ) % {'max_length': self.max_length}
