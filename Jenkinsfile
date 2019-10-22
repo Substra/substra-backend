@@ -53,11 +53,11 @@ pipeline {
             sh "docker login -u _json_key --password-stdin https://eu.gcr.io/substra-208412/ < /secret/kaniko-secret.json"
             sh "apt install -y python3-pip python3-dev build-essential gfortran musl-dev postgresql-contrib git curl netcat"
 
-            dir("substrabackend") {
+            dir("backend") {
               sh "pip install flake8"
               sh "flake8"
               sh "pip install -r requirements.txt"
-              sh "DJANGO_SETTINGS_MODULE=substrabackend.settings.test coverage run manage.py test"
+              sh "DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test"
               sh "coverage report"
               sh "coverage html"
             }
@@ -69,7 +69,7 @@ pipeline {
                 allowMissing: false,
                 alwaysLinkToLastBuild: false,
                 keepAll: true,
-                reportDir: 'substrabackend/htmlcov',
+                reportDir: 'backend/htmlcov',
                 reportFiles: 'index.html',
                 reportName: 'Coverage Report'
               ]
@@ -80,7 +80,7 @@ pipeline {
         stage('Build substra-backend') {
           agent {
             kubernetes {
-              label 'substra-backend-kaniko-substrabackend'
+              label 'substra-backend-kaniko-substra-backend'
               yamlFile '.cicd/agent-kaniko.yaml'
             }
           }

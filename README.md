@@ -64,10 +64,10 @@ Do not forget to build the substra-model image as described in the step 9 of thi
   ```shell
   $> sudo su postgres
   $> psql
-  $ CREATE USER substrabackend WITH PASSWORD 'substrabackend' CREATEDB CREATEROLE SUPERUSER;
+  $ CREATE USER backend WITH PASSWORD 'backend' CREATEDB CREATEROLE SUPERUSER;
   ```
 6. Create two databases for both orgs: owkin and chu-nantes. A shell script is available, do not hesitate to run it.
-It will drop the databases if they are already created, then create them and grant all privileges to your main user substrabackend.
+It will drop the databases if they are already created, then create them and grant all privileges to your main user backend.
  (If this is the first time you create the databases, you will see some warnings which are pointless):
 
   ```shell
@@ -79,8 +79,8 @@ It will drop the databases if they are already created, then create them and gra
 
 - With django migrations
 ```shell
-SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
-SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py migrate --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py migrate --settings=backend.settings.dev
 ```
 
 ###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
@@ -90,10 +90,10 @@ data in fixtures are relative to the data already set in the ledger if the fixtu
 Two solutions:
 - With django migrations + load data
 ```shell
-SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
-SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py migrate --settings=substrabackend.settings.dev
-SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py loaddata ./fixtures/data_owkin.json --settings=substrabackend.settings.dev
-SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=substrabackend.settings.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py migrate --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py migrate --settings=backend.settings.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py loaddata ./fixtures/data_owkin.json --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=backend.settings.dev
 ```
 - From dumps:
 ```shell
@@ -110,8 +110,8 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 
 8. Optional: Create a superuser in your databases:
 ```
-SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python substrabackend/manage.py createsuperuser --settings=substrabackend.settings.dev
-SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python substrabackend/manage.py createsuperuser --settings=substrabackend.settings.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py createsuperuser --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py createsuperuser --settings=backend.settings.dev
 ```
 
 9. Build the substra-model docker image:
@@ -135,32 +135,32 @@ sudo apt-get install rabbitmq-server
 
 ### Launch celery workers/scheduler and celery beat
 
-Execute this command in the `substrabackend/substrabackend` folder.
+Execute this command in the `backend/backend` folder.
 
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 celery -E -A substrabackend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 celery -E -A substrabackend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 celery -E -A substrabackend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=substrabackend.settings.dev SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 celery -E -A substrabackend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=substrabackend.settings.common celery -A substrabackend beat -l info
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=backend.settings.common celery -A backend beat -l info
 ```
 
 ## Launch the servers
 
-Go in the `substrabackend` folder and run the server locally:  
+Go in the `backend` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
  ```
- SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabackend.settings.server.dev
- SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabackend.settings.server.dev
+ BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=backend.settings.server.dev
+ BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=backend.settings.server.dev
  ```
  
  If you want to bypass the basic authentication when you browse the server on localhost:8000 or localhost:8001, you can use the `nobasicauth` settings.  
  Simply replace `server.dev` by `nobasicauth`, like:
   ```
- SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=substrabackend.settings.server.nobasicauth
- SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=substrabackend.settings.server.nobasicauth
+ BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=backend.settings.server.nobasicauth
+ BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=backend.settings.server.nobasicauth
  ```
  It allows the substrafront project to work correctly too.
 
@@ -168,14 +168,14 @@ Go in the `substrabackend` folder and run the server locally:
 
 For working with node to node authentication, you need load some extra fixtures
 ```
-SUBSTRABACKEND_ORG=owkin SUBSTRABACKEND_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=substrabackend.settings.server.dev
-SUBSTRABACKEND_ORG=chu-nantes SUBSTRABACKEND_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=substrabackend.settings.server.dev
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=backend.settings.server.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=backend.settings.server.dev
 ```
 
 ## Test with unit and functional tests
 
 ```
-    DJANGO_SETTINGS_MODULE=substrabackend.settings.test coverage run manage.py test
+    DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
 ```
@@ -265,7 +265,7 @@ Use these configurations for easier debugging and productivity:
 
 Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
 
-You can even access directly to the databases (password is `substrabackend` as described in the beginning of this document):
+You can even access directly to the databases (password is `backend` as described in the beginning of this document):
 ![](assets/database_owkin.png)
 ![](assets/database_owkin_challenges.png)
 

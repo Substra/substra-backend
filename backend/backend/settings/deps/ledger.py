@@ -16,13 +16,13 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_peers_info, decode_fabric_endpoints
 
 
-LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/substrabackend/conf.json')
+LEDGER_CONFIG_FILE = os.environ.get('LEDGER_CONFIG_FILE', f'/substra/conf/{ORG}/backend/conf.json')
 LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 
 LEDGER_SYNC_ENABLED = True
 LEDGER_CALL_RETRY = True
 
-PEER_PORT = LEDGER['peer']['port'][os.environ.get('SUBSTRABACKEND_PEER_PORT', 'external')]
+PEER_PORT = LEDGER['peer']['port'][os.environ.get('BACKEND_PEER_PORT', 'external')]
 
 LEDGER['requestor'] = create_user(
     name=LEDGER['client']['name'],
@@ -41,7 +41,7 @@ def get_hfc_client():
 
     client = Client()
 
-    # Add peer from substrabackend ledger config file
+    # Add peer from backend ledger config file
     peer = Peer(name=LEDGER['peer']['name'])
     peer.init_with_bundle({
         'url': f'{LEDGER["peer"]["host"]}:{PEER_PORT}',
@@ -130,7 +130,7 @@ def update_client_with_discovery(client, discovery_results):
                 tls_root_cert.flush()
 
                 url = peer_info['endpoint']
-                external_port = os.environ.get('SUBSTRABACKEND_PEER_PORT_EXTERNAL', None)
+                external_port = os.environ.get('BACKEND_PEER_PORT_EXTERNAL', None)
                 # use case for external development
                 if external_port:
                     url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"

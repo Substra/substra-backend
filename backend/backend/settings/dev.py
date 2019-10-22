@@ -26,9 +26,9 @@ LEDGER_CALL_RETRY = False  # Overwrite the ledger setting value
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get(f'SUBSTRABACKEND_{ORG_DB_NAME}_DB_NAME', f'substrabackend_{ORG_NAME}'),
-        'USER': os.environ.get('SUBSTRABACKEND_DB_USER', 'substrabackend'),
-        'PASSWORD': os.environ.get('SUBSTRABACKEND_DB_PWD', 'substrabackend'),
+        'NAME': os.environ.get(f'BACKEND_{ORG_DB_NAME}_DB_NAME', f'backend_{ORG_NAME}'),
+        'USER': os.environ.get('BACKEND_DB_USER', 'backend'),
+        'PASSWORD': os.environ.get('BACKEND_DB_PWD', 'backend'),
         'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
         'PORT': 5432,
     }
@@ -70,7 +70,7 @@ LOGGING = {
         },
         'error_file': {
             'level': 'INFO',
-            'filename': os.path.join(PROJECT_ROOT, 'substrabackend.log'),
+            'filename': os.path.join(PROJECT_ROOT, 'backend.log'),
             'class': 'logging.handlers.RotatingFileHandler',
             'maxBytes': 1 * 1024 * 1024,
             'backupCount': 2,

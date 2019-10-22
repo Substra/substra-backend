@@ -115,5 +115,5 @@ SECRET
 # substra files
 bin
 **/medias/*
-substrabackend/substrapp/**/conf
+backend/substrapp/**/conf
 docker/docker-compose-dynamic.yaml

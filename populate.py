@@ -27,7 +27,7 @@ PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 
 
 def setup_config(network='docker'):
-    print('Init config in /tmp/.substrabackend for owkin and chunantes')
+    print('Init config for owkin and chunantes')
     if network == 'docker':
         client.add_profile('owkin', 'http://owkin.substra-backend:8000', '0.0',
                            user=USER, password=PASSWORD)

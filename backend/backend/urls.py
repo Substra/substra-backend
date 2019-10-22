@@ -1,4 +1,4 @@
-"""substrabackend URL Configuration
+"""backend URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.0/topics/http/urls/
@@ -19,7 +19,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include
 
-from substrabackend.views import schema_view
+from backend.views import schema_view
 from substrapp.urls import router
 from node.urls import router as nodeRouter
 

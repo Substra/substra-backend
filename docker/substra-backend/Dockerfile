@@ -7,14 +7,14 @@ RUN apt-get install -y git curl netcat
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
-COPY ./substrabackend/requirements.txt /usr/src/app/.
+COPY ./backend/requirements.txt /usr/src/app/.
 
 RUN pip3 install -r requirements.txt
 
-COPY ./substrabackend/manage.py /usr/src/app/manage.py
-COPY ./substrabackend/libs /usr/src/app/libs
-COPY ./substrabackend/substrapp /usr/src/app/substrapp
-COPY ./substrabackend/events /usr/src/app/events
-COPY ./substrabackend/substrabackend /usr/src/app/substrabackend
-COPY ./substrabackend/node /usr/src/app/node
-COPY ./substrabackend/node-register /usr/src/app/node-register
+COPY ./backend/manage.py /usr/src/app/manage.py
+COPY ./backend/libs /usr/src/app/libs
+COPY ./backend/substrapp /usr/src/app/substrapp
+COPY ./backend/events /usr/src/app/events
+COPY ./backend/backend /usr/src/app/backend
+COPY ./backend/node /usr/src/app/node
+COPY ./backend/node-register /usr/src/app/node-register

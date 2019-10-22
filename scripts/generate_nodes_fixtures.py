@@ -60,7 +60,7 @@ if __name__ == '__main__':
     print(json.dumps(network_credentials, sort_keys=True, indent=4))
 
     # create fixture files
-    fixtures_path = 'substrabackend/node/fixtures'
+    fixtures_path = 'backend/node/fixtures'
     try:
         os.makedirs(fixtures_path)
     except OSError:

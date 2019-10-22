@@ -37,12 +37,12 @@ spec:
           imagePullPolicy: "{{ .Values.flower.image.pullPolicy }}"
           {{- end }}
           command: ["celery"]
-          args: ["flower", "-A", "substrabackend"]
+          args: ["flower", "-A", "backend"]
           env:
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: DJANGO_SETTINGS_MODULE
-              value: substrabackend.settings.common
+              value: backend.settings.common
             - name: PYTHONUNBUFFERED
               value: "1"
           resources:

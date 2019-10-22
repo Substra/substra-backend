@@ -9,7 +9,7 @@ docker:
   config: null
   # Images to pull
   pullImages: []
-    # - eu.gcr.io/substra-208412/substratools:0.0.1
+    # - eu.gcr.io/substra-208412/substra-tools:0.0.1
 
 # Inline secrets used to pull images of pods (base64'd)
 pullSecretsInline: []

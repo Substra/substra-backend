@@ -5,9 +5,9 @@ from celery import current_app
 from celery.signals import after_task_publish
 
 # set the default Django settings module for the 'celery' program.
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'substrabackend.settings.prod')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
 
-app = Celery('substrabackend')
+app = Celery('backend')
 
 # Using a string here means the worker doesn't have to serialize
 # the configuration object to child processes.

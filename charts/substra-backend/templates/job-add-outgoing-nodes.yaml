@@ -32,18 +32,18 @@ spec:
         env:
           - name: ORG
             value: {{ $.Values.organization.name }}
-          - name: SUBSTRABACKEND_ORG
+          - name: BACKEND_ORG
             value: {{ $.Values.organization.name }}
-          - name: SUBSTRABACKEND_{{ $.Values.organization.name | upper }}_DB_NAME
+          - name: BACKEND_{{ $.Values.organization.name | upper }}_DB_NAME
             value: {{ $.Values.postgresql.postgresqlDatabase }}
-          - name: SUBSTRABACKEND_DB_USER
+          - name: BACKEND_DB_USER
             value: {{ $.Values.postgresql.postgresqlUsername }}
-          - name: SUBSTRABACKEND_DB_PWD
+          - name: BACKEND_DB_PWD
             value: {{ $.Values.postgresql.postgresqlPassword }}
           - name: DATABASE_HOST
             value: {{ $.Release.Name }}-postgresql
           - name: DJANGO_SETTINGS_MODULE
-            value: substrabackend.settings.{{ $.Values.backend.settings }}
+            value: backend.settings.{{ $.Values.backend.settings }}
           - name: FABRIC_CFG_PATH
             value: /var/hyperledger/fabric_cfg
           - name: CORE_PEER_ADDRESS_ENV
@@ -58,12 +58,12 @@ spec:
             value: {{ $.user | quote }}
           - name: BACK_AUTH_PASSWORD
             value: {{ $.password | quote }}
-          - name: SUBSTRABACKEND_DEFAULT_PORT
+          - name: BACKEND_DEFAULT_PORT
             value: {{ $.Values.backend.service.port | quote}}
-          - name: SUBSTRABACKEND_PEER_PORT
+          - name: BACKEND_PEER_PORT
             value: "internal"
           - name: LEDGER_CONFIG_FILE
-            value: /conf/{{ $.Values.organization.name }}/substrabackend/conf.json
+            value: /conf/{{ $.Values.organization.name }}/backend/conf.json
           - name: PYTHONUNBUFFERED
             value: "1"
           - name: MEDIA_ROOT
@@ -71,7 +71,7 @@ spec:
         volumeMounts:
           - mountPath: {{ $.Values.persistence.hostPath }}
             name: data
-          - mountPath: /conf/{{ $.Values.organization.name }}/substrabackend
+          - mountPath: /conf/{{ $.Values.organization.name }}/backend
             name: config
             readOnly: true
           - mountPath: /var/hyperledger/fabric_cfg
