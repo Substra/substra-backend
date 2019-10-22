@@ -8,9 +8,8 @@ from rest_framework.decorators import list_route
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
-from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
-from users.serializers import CustomTokenObtainPairSerializer
+from users.serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 
 import tldextract
 
@@ -74,8 +73,7 @@ class UserViewSet(GenericViewSet):
 
     @list_route(['post'])
     def refresh(self, request, *args, **kwargs):
-        self.serializer_class = TokenRefreshSerializer
-        serializer = self.get_serializer(data=request.data)
+        serializer = CustomTokenRefreshSerializer(data=request.data, context=self.get_serializer_context())
 
         try:
             serializer.is_valid(raise_exception=True)
@@ -113,10 +111,11 @@ class UserViewSet(GenericViewSet):
         response = Response({}, status=status.HTTP_200_OK)
 
         host = self.get_host(request)
-        if settings.DEBUG:
-            response.set_cookie('header.payload', value='', domain=host)
-            response.set_cookie('signature', value='', httponly=True, domain=host)
-        else:
-            response.set_cookie('header.payload', value='', secure=True, domain=host)
-            response.set_cookie('signature', value='', httponly=True, secure=True, domain=host)
+
+        secure = not settings.DEBUG
+
+        response.set_cookie('header.payload', value='', secure=secure, domain=host)
+        response.set_cookie('signature', value='', httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value='', httponly=True, secure=secure, domain=host)
+
         return response
