@@ -37,16 +37,12 @@ class ExpiryTokenAuthentication(TokenAuthentication):
         """
 
     def authenticate_credentials(self, key):
-        try:
-            token = Token.objects.get(key=key)
-        except Token.DoesNotExist:
-            raise AuthenticationFailed("Invalid Token")
 
-        if not token.user.is_active:
-            raise AuthenticationFailed("User is not active")
+        _, token = super(ExpiryTokenAuthentication, self).authenticate_credentials(key)
 
-        is_expired, token = token_expire_handler(token)
+        is_expired = is_token_expired(token)
         if is_expired:
-            raise AuthenticationFailed("The Token is expired")
+            token.delete()
+            raise AuthenticationFailed('The Token is expired')
 
         return (token.user, token)
