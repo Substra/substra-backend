@@ -24,7 +24,6 @@ class CustomTokenRefreshSerializer(serializers.Serializer):
 
         refresh_cookie = self.context['request'].COOKIES['refresh']
 
-
         refresh = RefreshToken(refresh_cookie)
 
         if api_settings.ROTATE_REFRESH_TOKENS:

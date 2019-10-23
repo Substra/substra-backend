@@ -67,7 +67,8 @@ class UserViewSet(GenericViewSet):
 
         response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
         response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
-        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
+                            domain=host)
 
         return response
 
@@ -102,7 +103,8 @@ class UserViewSet(GenericViewSet):
 
         response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
         response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
-        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
+                            domain=host)
 
         return response
 
