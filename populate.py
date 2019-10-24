@@ -324,8 +324,10 @@ def do_populate():
         'algo_key': algo_key,
         'objective_key': objective_key,
         'data_manager_key': data_manager_org1_key,
-        'train_data_sample_keys': train_data_sample_keys[:2],
-        'tag': 'substra'
+        'train_data_sample_keys': train_data_sample_keys[:2]
+        # This traintuple should succeed.
+        # It doesn't have a tag, so it can be used as a test
+        # of the "non-bundled" display in substra-frontend.
     }
     traintuple_key = get_or_create(data, org_1, 'traintuple')
 
@@ -335,7 +337,7 @@ def do_populate():
         'data_manager_key': data_manager_org1_key,
         'objective_key': objective_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
-        'tag': 'My super tag'
+        'tag': '(should fail) My super tag'
     }
 
     get_or_create(data, org_1, 'traintuple')
@@ -346,6 +348,7 @@ def do_populate():
         'data_manager_key': data_manager_org1_key,
         'objective_key': objective_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
+        'tag': '(should fail) My other tag'
     }
 
     get_or_create(data, org_1, 'traintuple')
