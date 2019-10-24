@@ -1,5 +1,7 @@
 import mock
 from django.urls import reverse
+import os
+import shutil
 from rest_framework import status
 from rest_framework.test import APITestCase
 from node.models import IncomingNode
@@ -7,10 +9,18 @@ from substrapp.models import Algo
 
 from ..common import generate_basic_auth_header, get_sample_algo_metadata, get_sample_algo, get_description_algo
 from django.conf import settings
+from django.test import override_settings
+
+MEDIA_ROOT = "/tmp/unittests_views/"
 
 
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
 class AuthenticationTests(APITestCase):
     def setUp(self):
+
+        if not os.path.exists(MEDIA_ROOT):
+            os.makedirs(MEDIA_ROOT)
+
         self.extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
@@ -20,6 +30,9 @@ class AuthenticationTests(APITestCase):
         self.algo_description_file, self.algo_description_filename = get_description_algo()
         self.algo = Algo.objects.create(file=self.algo_file, description=self.algo_description_file)
         self.algo_url = reverse('substrapp:algo-file', kwargs={'pk': self.algo.pk})
+
+    def tearDown(self):
+        shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     @classmethod
     def setUpTestData(cls):
