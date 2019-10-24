@@ -112,8 +112,5 @@ venv.bak/
 # secret files
 SECRET
 
-# substra files
-bin
-**/medias/*
-backend/substrapp/**/conf
+# substra-backend files
 docker/docker-compose-dynamic.yaml
