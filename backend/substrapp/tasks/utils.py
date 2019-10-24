@@ -2,7 +2,6 @@ import os
 import docker
 import GPUtil as gputil
 import threading
-
 import logging
 
 from subprocess import check_output
@@ -110,6 +109,22 @@ def container_format_log(container_name, container_logs):
     logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
     for log in logs:
         logger.info(log)
+
+
+def list_files(startpath):
+    if os.path.exists(startpath):
+
+        for root, dirs, files in os.walk(startpath, followlinks=True):
+            level = root.replace(startpath, '').count(os.sep)
+            indent = ' ' * 4 * (level)
+            logger.info(f'{indent}{os.path.basename(root)}/')
+            subindent = ' ' * 4 * (level + 1)
+            for f in files:
+                logger.info(f'{subindent}{f}')
+
+        logging.info('\n')
+    else:
+        logger.info(f'{startpath} does not exist.')
 
 
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,

@@ -6,7 +6,7 @@ import time
 
 from django.conf import settings
 from rest_framework import status
-from aiogrpc import RpcError
+from grpc import RpcError
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -97,13 +97,12 @@ def retry_on_error(delay=1, nbtries=5, backoff=2):
                 try:
                     return fn(*args, **kwargs)
                 except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse, RpcError) as e:
-
                     _nbtries -= 1
                     if not nbtries:
                         raise
                     _delay *= _backoff
                     time.sleep(_delay)
-                    logger.warning(f'Function {fn.__name__} failed: {e} retrying in {_delay}s')
+                    logger.warning(f'Function {fn.__name__} failed ({type(e)}): {e} retrying in {_delay}s')
 
         return _wrapper
     return _retry
