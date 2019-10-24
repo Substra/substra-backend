@@ -70,9 +70,9 @@ spec:
             - name: FABRIC_LOGGING_SPEC
               value: debug
             - name: LEDGER_CONFIG_FILE
-              value: /conf/{{ .Values.organization.name }}/backend/conf.json
+              value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
           volumeMounts:
-            - mountPath: /conf/{{ .Values.organization.name }}/backend
+            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               name: config
               readOnly: true
             - mountPath: /var/hyperledger/msp/signcerts

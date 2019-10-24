@@ -137,7 +137,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             f'BACKEND_DEFAULT_PORT={port}',
             'BACKEND_PEER_PORT=internal',
 
-            f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/backend/conf.json',
+            f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/substra-backend/conf.json',
 
             'PYTHONUNBUFFERED=1',
             'DATABASE_HOST=postgresql',
@@ -157,7 +157,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
         ]
 
         hlf_volumes = [
-            # config (core.yaml + backend/conf.json)
+            # config (core.yaml + substra-backend/conf.json)
             f'{SUBSTRA_FOLDER}/conf/{org_name}:{SUBSTRA_FOLDER}/conf/{org_name}:ro',
 
             # HLF files
@@ -308,7 +308,7 @@ if __name__ == "__main__":
 
     no_backup = args['no_backup']
 
-    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/backend/conf.json')]
+    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/substra-backend/conf.json')]
 
     print('Build backend for : ', flush=True)
     print('  Organizations :', flush=True)

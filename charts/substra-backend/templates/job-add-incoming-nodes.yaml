@@ -63,7 +63,7 @@ spec:
           - name: BACKEND_PEER_PORT
             value: "internal"
           - name: LEDGER_CONFIG_FILE
-            value: /conf/{{ $.Values.organization.name }}/backend/conf.json
+            value: /conf/{{ $.Values.organization.name }}/substra-backend/conf.json
           - name: PYTHONUNBUFFERED
             value: "1"
           - name: MEDIA_ROOT
@@ -71,7 +71,7 @@ spec:
         volumeMounts:
           - mountPath: {{ $.Values.persistence.hostPath }}
             name: data
-          - mountPath: /conf/{{ $.Values.organization.name }}/backend
+          - mountPath: /conf/{{ $.Values.organization.name }}/substra-backend
             name: config
             readOnly: true
           - mountPath: /var/hyperledger/fabric_cfg

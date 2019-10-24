@@ -80,13 +80,13 @@ spec:
             - name: MEDIA_ROOT
               value: {{ .Values.persistence.hostPath }}/medias/
             - name: LEDGER_CONFIG_FILE
-              value: /conf/{{ .Values.organization.name }}/backend/conf.json
+              value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
           volumeMounts:
             - mountPath: /var/run/docker.sock
               name: dockersocket
             - mountPath: {{ .Values.persistence.hostPath }}
               name: data
-            - mountPath: /conf/{{ .Values.organization.name }}/backend
+            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               name: config
               readOnly: true
             - mountPath: /var/hyperledger/msp/signcerts
