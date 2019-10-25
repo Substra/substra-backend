@@ -27,21 +27,21 @@ PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 
 
 def setup_config(network='docker'):
-    print('Init config in /tmp/.substrabac for owkin and chunantes')
+    print('Init config for owkin and chunantes')
     if network == 'docker':
-        client.add_profile('owkin', 'http://owkin.substrabac:8000', '0.0',
+        client.add_profile('owkin', 'http://owkin.substra-backend:8000', '0.0',
                            user=USER, password=PASSWORD)
-        client.add_profile('chunantes', 'http://chunantes.substrabac:8001', '0.0',
+        client.add_profile('chunantes', 'http://chunantes.substra-backend:8001', '0.0',
                            user=USER, password=PASSWORD)
-        client.add_profile('clb', 'http://clb.substrabac:8002', '0.0',
+        client.add_profile('clb', 'http://clb.substra-backend:8002', '0.0',
                            user=USER, password=PASSWORD)
     if network == 'skaffold':
         # the usernames and passwords are defined in the skaffold.yaml file
-        client.add_profile('owkin', 'http://substrabac.node-1', '0.0',
+        client.add_profile('owkin', 'http://substra-backend.node-1', '0.0',
                            user='node-1', password='node-1pwd')
-        client.add_profile('chunantes', 'http://substrabac.node-2', '0.0',
+        client.add_profile('chunantes', 'http://substra-backend.node-2', '0.0',
                            user='node-2', password='node-2pwd')
-        client.add_profile('clb', 'http://substrabac.node-3', '0.0',
+        client.add_profile('clb', 'http://substra-backend.node-3', '0.0',
                            user='node-3', password='node-3pwd')
 
 

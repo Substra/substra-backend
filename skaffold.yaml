@@ -1,15 +1,11 @@
 apiVersion: skaffold/v1beta13
 kind: Config
 build:
-  tagPolicy:
-    envTemplate:
-      template: "{{ .IMAGE_NAME}}:latest"
-
   artifacts:
     - image: eu.gcr.io/substra-208412/substra-backend
       context: .
       docker:
-        dockerfile: docker/substrabac/Dockerfile
+        dockerfile: docker/substra-backend/Dockerfile
 
     - image: eu.gcr.io/substra-208412/celerybeat
       context: .
@@ -30,7 +26,7 @@ deploy:
   helm:
     releases:
       - name: substra-backend-peer-1
-        chartPath: charts/substrabac
+        chartPath: charts/substra-backend
         namespace: peer-1
         imageStrategy:
           helm: {}
@@ -43,14 +39,12 @@ deploy:
           secrets:
             fabricConfigmap: network-peer-1-hlf-k8s-fabric
           backend:
-            image:
-              tag: latest
             settings: dev
-            defaultDomain: http://substrabac.node-1
+            defaultDomain: http://substra-backend.node-1
             ingress:
               enabled: true
               hosts:
-                - { host: substrabac.node-1, paths: ["/"] }
+                - { host: substra-backend.node-1, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
@@ -59,12 +53,6 @@ deploy:
               user: node-1
               password: node-1pwd
               header: "Basic bm9kZS0xOm5vZGUtMXB3ZA=="
-          celerybeat:
-            image:
-              tag: latest
-          celeryworker:
-            image:
-              tag: latest
           organization:
             name: MyPeer1
           peer:
@@ -85,7 +73,7 @@ deploy:
             - { name: MyPeer2MSP, secret: nodeSecret1 }
 
       - name: substra-backend-peer-2
-        chartPath: charts/substrabac
+        chartPath: charts/substra-backend
         namespace: peer-2
         imageStrategy:
           helm: {}
@@ -98,14 +86,12 @@ deploy:
           secrets:
             fabricConfigmap: network-peer-2-hlf-k8s-fabric
           backend:
-            image:
-              tag: latest
             settings: dev
-            defaultDomain: http://substrabac.node-2
+            defaultDomain: http://substra-backend.node-2
             ingress:
               enabled: true
               hosts:
-                - { host: substrabac.node-2, paths: ["/"] }
+                - { host: substra-backend.node-2, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
@@ -114,12 +100,6 @@ deploy:
               user: node-2
               password: node-2pwd
               header: "Basic bm9kZS0yOm5vZGUtMnB3ZA=="
-          celerybeat:
-            image:
-              tag: latest
-          celeryworker:
-            image:
-              tag: latest
           organization:
             name: MyPeer1
           peer:

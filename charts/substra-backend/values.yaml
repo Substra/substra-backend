@@ -1,0 +1,223 @@
+gpu:
+  enabled: false
+  platform: ubuntu # or cos
+
+docker:
+  # Path of the docker socket on the host
+  socket: /var/run/docker.sock
+  # Dockerconfig to be used to pull the images (base64'd)
+  config: null
+  # Images to pull
+  pullImages: []
+    # - eu.gcr.io/substra-208412/substra-tools:0.0.1
+
+# Inline secrets used to pull images of pods (base64'd)
+pullSecretsInline: []
+
+backend:
+  replicaCount: 1
+  settings: prod
+  siteHost: localhost
+  defaultDomain: localhost
+
+  image:
+    repository: eu.gcr.io/substra-208412/substra-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  service:
+    type: NodePort
+    port: 8000
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+    # nodePort: 30000
+
+  auth: {}
+    # user: owkward
+    # password: H9YJh7znjhoje3
+    # header: "Basic b3drd2FyZDpIOVlKaDd6bmpob2plMw=="
+
+  ingress:
+    enabled: false
+    annotations: {}
+      # kubernetes.io/ingress.class: nginx
+      # kubernetes.io/tls-acme: "true"
+    hosts:
+      - host: chart-example.local
+        paths: []
+
+    tls: []
+    #  - secretName: chart-example-tls
+    #    hosts:
+    #      - chart-example.local
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+outgoingNodes: []
+  # - name: nodeId
+  #   secret: nodeSecret
+incomingNodes: []
+  # - name: nodeId
+  #   secret: nodeSecret
+
+persistence:
+  hostPath: "/substra"
+  size: "10Gi"
+
+# Secrets names
+secrets:
+  # Certificate, saved under key 'cert.pem'
+  cert: hlf-idcert
+  # Key, saved under 'key.pem'
+  key: hlf-idkey
+  # CA Cert, saved under 'cacert.pem'
+  caCert: hlf-cacert
+  # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
+  tls: hlf-tls
+  # TLS root CA certificate saved under key 'cert.pem'
+  tlsRootCert: hlf-tlsrootcert
+  # TLS client root CA certificates saved under any names (as there may be multiple)
+  tlsClient: hlf-tls
+  # TLS client root CA certificates saved under any names (as there may be multiple)
+  tlsClientRootCerts: hlf-client-tlsrootcert
+  # This should contain the Certificate of the Peer Organisation admin
+  # This is necessary to successfully run the peer
+  adminCert: hlf-admincert
+  # This should contain the Private Key of the Peer Organisation admin
+  # This is necessary to successfully join a channel
+  adminKey: hlf-adminkey
+  # This should include the Orderer TLS 'cacert.pem'
+  ordTlsRootCert: hlf-client-tlsrootcert
+  # This will include the organization config json file (peer only)
+  orgConfig: org-config
+  # This will include the organization config json file (peer only)
+  fabricConfigmap: network-hlf-k8s-fabric
+
+organization:
+  name: substra
+
+user:
+  name: user
+
+orderer:
+  host: orderer-hlf-ord
+  port: 7050
+
+peer:
+  host: healthchain-peer.owkin.com
+  port: 443
+  mspID: OwkinPeerMSP
+
+channel: mychannel
+
+chaincode:
+  name: mycc
+  version: "1.0"
+
+postgresql:
+  enabled: true
+  postgresqlDatabase: substra
+  postgresqlUsername: postgres
+  postgresqlPassword: postgres
+  persistence:
+    enabled: false
+
+rabbitmq:
+  enabled: true
+  rabbitmq:
+    username: rabbitmq
+    password: rabbitmq
+  host: rabbitmq
+  port: 5672
+  persistence:
+    enabled: false
+
+flower:
+  enabled: true
+  host: flower
+  port: 5555
+  persistence:
+    enabled: false
+
+  image:
+    repository: eu.gcr.io/substra-208412/flower
+    tag: latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  service:
+    type: NodePort
+    port: 5555
+    annotations: {}
+    labels: {}
+    clusterIP: ""
+    externalIPs: []
+    loadBalancerIP: ""
+    loadBalancerSourceRanges: []
+
+celerybeat:
+  replicaCount: 1
+  image:
+    repository: eu.gcr.io/substra-208412/celerybeat
+    tag: latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+celeryworker:
+  replicaCount: 1
+  image:
+    repository: eu.gcr.io/substra-208412/celeryworker
+    tag: latest
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}

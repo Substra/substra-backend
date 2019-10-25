@@ -25,10 +25,10 @@ SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
     # POSTGRES
-    POSTGRES_USER = 'substrabac'
-    USER = 'substrabac'
-    POSTGRES_PASSWORD = 'substrabac'
-    POSTGRES_DB = 'substrabac'
+    POSTGRES_USER = 'backend'
+    USER = 'backend'
+    POSTGRES_PASSWORD = 'backend'
+    POSTGRES_DB = 'backend'
 
     # RABBITMQ
     RABBITMQ_DEFAULT_USER = 'guest'
@@ -50,8 +50,8 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
     # Docker compose config
     docker_compose = {
-        'substrabac_services': {},
-        'substrabac_tools': {
+        'backend_services': {},
+        'backend_tools': {
             'postgresql': {
                 'container_name': 'postgresql',
                 'labels': ['substra'],
@@ -73,12 +73,12 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                 'image': 'substra/celerybeat',
                 'restart': 'unless-stopped',
                 'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                           'celery -A substrabac beat -l info"',
+                           'celery -A backend beat -l info"',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
                     'PYTHONUNBUFFERED=1',
                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                    f'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
+                    f'DJANGO_SETTINGS_MODULE=backend.settings.common'],
                 'depends_on': ['postgresql', 'rabbit']
             },
             'rabbit': {
@@ -102,10 +102,10 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                 'ports': ['5555:5555'],
                 'image': 'substra/flower',
                 'restart': 'unless-stopped',
-                'command': 'celery flower -A substrabac',
+                'command': 'celery flower -A backend',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-                                'DJANGO_SETTINGS_MODULE=substrabac.settings.common'],
+                                'DJANGO_SETTINGS_MODULE=backend.settings.common'],
                 'depends_on': ['rabbit', 'postgresql']
             }
         },
@@ -122,22 +122,22 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
         if launch_settings == 'prod':
             django_server = f'python3 manage.py collectstatic --noinput; '\
-                            f'--module substrabac.wsgi --static-map /static=/usr/src/app/substrabac/statics ' \
+                            f'--module backend.wsgi --static-map /static=/usr/src/app/backend/statics ' \
                             f'--master --processes {processes} --threads 2 --need-app' \
-                            f'--env DJANGO_SETTINGS_MODULE=substrabac.settings.server.prod uwsgi --http :{port} '
+                            f'--env DJANGO_SETTINGS_MODULE=backend.settings.server.prod uwsgi --http :{port} '
         else:
             print('nobasicauth: ', nobasicauth, flush=True)
             extra_settings = '.nobasicauth' if nobasicauth is True else ''
-            django_server = f'DJANGO_SETTINGS_MODULE=substrabac.settings.server{extra_settings}.dev ' \
+            django_server = f'DJANGO_SETTINGS_MODULE=backend.settings.server{extra_settings}.dev ' \
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
             f'ORG={org_name_stripped}',
-            f'SUBSTRABAC_ORG={org_name}',
-            f'SUBSTRABAC_DEFAULT_PORT={port}',
-            'SUBSTRABAC_PEER_PORT=internal',
+            f'BACKEND_ORG={org_name}',
+            f'BACKEND_DEFAULT_PORT={port}',
+            'BACKEND_PEER_PORT=internal',
 
-            f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/substrabac/conf.json',
+            f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/substra-backend/conf.json',
 
             'PYTHONUNBUFFERED=1',
             'DATABASE_HOST=postgresql',
@@ -147,7 +147,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             f"TASK_CACHE_DOCKER_IMAGES=False",
 
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-            f'DJANGO_SETTINGS_MODULE=substrabac.settings.{launch_settings}',
+            f'DJANGO_SETTINGS_MODULE=backend.settings.{launch_settings}',
 
             # Basic auth
             f"BACK_AUTH_USER={os.environ.get('BACK_AUTH_USER', 'admin')}",
@@ -157,7 +157,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
         ]
 
         hlf_volumes = [
-            # config (core.yaml + substrabac/conf.json)
+            # config (core.yaml + substra-backend/conf.json)
             f'{SUBSTRA_FOLDER}/conf/{org_name}:{SUBSTRA_FOLDER}/conf/{org_name}:ro',
 
             # HLF files
@@ -174,9 +174,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             fixtures_command = f"python manage.py loaddata nodes-{org_name_stripped}"
 
         backend = {
-            'container_name': f'{org_name_stripped}.substrabac',
+            'container_name': f'{org_name_stripped}.substra-backend',
             'labels': ['substra'],
-            'image': 'substra/substrabac',
+            'image': 'substra/substra-backend',
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
@@ -186,7 +186,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'volumes': [
                 f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro',
-                f'{SUBSTRA_FOLDER}/static:/usr/src/app/substrabac/statics'] + hlf_volumes,
+                f'{SUBSTRA_FOLDER}/static:/usr/src/app/backend/statics'] + hlf_volumes,
             'depends_on': ['postgresql', 'rabbit']}
 
         scheduler = {
@@ -196,12 +196,12 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
+                       f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': hlf_volumes,
-            'depends_on': [f'substrabac{org_name_stripped}', 'postgresql', 'rabbit']}
+            'depends_on': [f'backend{org_name_stripped}', 'postgresql', 'rabbit']}
 
         worker = {
             'container_name': f'{org_name_stripped}.worker',
@@ -210,7 +210,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
             'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
-                       f'celery -A substrabac worker -l info -n {org_name_stripped} '
+                       f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
@@ -218,7 +218,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
                 '/var/run/docker.sock:/var/run/docker.sock',
                 f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
-            'depends_on': [f'substrabac{org_name_stripped}', 'rabbit']}
+            'depends_on': [f'backend{org_name_stripped}', 'rabbit']}
 
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
@@ -229,7 +229,7 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
         else:
-            default_domain = os.environ.get('SUBSTRABAC_DEFAULT_DOMAIN', '')
+            default_domain = os.environ.get('BACKEND_DEFAULT_DOMAIN', '')
             if default_domain:
                 backend['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
                 worker['environment'].append(f"DEFAULT_DOMAIN={default_domain}")
@@ -238,17 +238,17 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
             scheduler['environment'].append(f"RAVEN_URL={raven_scheduler_url}")
             worker['environment'].append(f"RAVEN_URL={raven_worker_url}")
 
-        docker_compose['substrabac_services']['substrabac' + org_name_stripped] = backend
-        docker_compose['substrabac_services']['scheduler' + org_name_stripped] = scheduler
-        docker_compose['substrabac_services']['worker' + org_name_stripped] = worker
+        docker_compose['backend_services']['backend' + org_name_stripped] = backend
+        docker_compose['backend_services']['scheduler' + org_name_stripped] = scheduler
+        docker_compose['backend_services']['worker' + org_name_stripped] = worker
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}
 
-    for name, dconfig in docker_compose['substrabac_services'].items():
+    for name, dconfig in docker_compose['backend_services'].items():
         COMPOSITION['services'][name] = dconfig
 
-    for name, dconfig in docker_compose['substrabac_tools'].items():
+    for name, dconfig in docker_compose['backend_tools'].items():
         COMPOSITION['services'][name] = dconfig
 
     with open(docker_compose['path'], 'w+') as f:
@@ -308,9 +308,9 @@ if __name__ == "__main__":
 
     no_backup = args['no_backup']
 
-    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/substrabac/conf.json')]
+    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/substra-backend/conf.json')]
 
-    print('Build substrabac for : ', flush=True)
+    print('Build backend for : ', flush=True)
     print('  Organizations :', flush=True)
     for org in conf:
         print('   -', org['name'], flush=True)
