@@ -51,7 +51,7 @@ guillaume:165536:65536
 ```
 The first line should be added with the docker group (999 in my case).
 
-Final step is to redownload all the dockers image, go in the substra-network project and rerun the `./bootstrap.sh` script.
+Final step is to redownload all the dockers image, go in the hlf-k8s project and rerun the `./bootstrap.sh` script.
 Do not forget to build the substra-model image as described in the step 9 of this tutorial.
 
 3. Install dependencies (might be useful to create a virtual environment before, eg using virtualenv and virtualenvwrapper):
@@ -83,7 +83,7 @@ BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py migrate --s
 BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py migrate --settings=backend.settings.dev
 ```
 
-###### With fixtures (fixtures container has been run from substra-network, old behavior for testing)
+###### With fixtures (fixtures container has been run from hlf-k8s, old behavior for testing)
 
 data in fixtures are relative to the data already set in the ledger if the fixtures container instance succeeded
 
@@ -123,9 +123,9 @@ docker build -t substra-model .
 ## Getting started 2: Linking the app with Hyperledger Fabric
 
 
-### Make the subtra-network available to the app
+### Make the hlf-k8s available to the app
 
-[See here](https://github.com/SubstraFoundation/substra-network#network).
+[See here](https://github.com/SubstraFoundation/hlf-k8s#network).
 
 ### Install rabbitmq
 
@@ -162,7 +162,7 @@ Go in the `backend` folder and run the server locally:
  BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=backend.settings.server.nobasicauth
  BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=backend.settings.server.nobasicauth
  ```
- It allows the substrafront project to work correctly too.
+ It allows the substra-frontend project to work correctly too.
 
 ## Load data fixtures
 
@@ -194,7 +194,7 @@ When you want to re-run the testing process:
 - Stop all your services and containers.
 - Rerun `recreate_db.sh` and `clean_media.sh` scripts.
 - Run the django migrations.
-- Relaunch your substra-network.
+- Relaunch your hlf-k8s network.
 - Run the owkin and chunantes substra-backend servers.
 - Run celery beat and celery owkin and chu-nantes.
 - Run the `populate.py` python script.
@@ -224,7 +224,7 @@ Now you can reach `http://localhost:8000/` and `http://localhost:8001/` :tada:
 
 ## Launching with docker
 
-As for substra-network, you can launch all the services in docker containers.|
+As for hlf-k8s, you can launch all the services in docker containers.|
 First, build the images:
 ```bash
 $> sh build-docker-images.sh
@@ -239,7 +239,7 @@ Check your services are correctly started with `docker ps -a`.
 ## Testing fabric-sdk-py
 
 A directory named `fabric-sdk-py_tests` is available to the root of this project.  
-If you launch a substra-network setup, you will be able to play with theses tests.  
+If you launch a hlf-k8s setup, you will be able to play with theses tests.  
 For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFile.py` script for producing the network.json file needed.
 
 ## Miscellaneous
