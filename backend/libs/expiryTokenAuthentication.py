@@ -1,16 +1,16 @@
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.settings import api_settings
 
 from datetime import timedelta
 from django.utils import timezone
-from django.conf import settings
 
 
 # this return left time
 def expires_in(token):
     time_elapsed = timezone.now() - token.created
-    left_time = timedelta(seconds=getattr(settings, 'TOKEN_EXPIRED_AFTER_SECONDS', 5 * 60)) - time_elapsed
+    left_time = api_settings.ACCESS_TOKEN_LIFETIME - time_elapsed
     return left_time
 
 
@@ -37,16 +37,12 @@ class ExpiryTokenAuthentication(TokenAuthentication):
         """
 
     def authenticate_credentials(self, key):
-        try:
-            token = Token.objects.get(key=key)
-        except Token.DoesNotExist:
-            raise AuthenticationFailed("Invalid Token")
 
-        if not token.user.is_active:
-            raise AuthenticationFailed("User is not active")
+        _, token = super(ExpiryTokenAuthentication, self).authenticate_credentials(key)
 
-        is_expired, token = token_expire_handler(token)
+        is_expired = is_token_expired(token)
         if is_expired:
-            raise AuthenticationFailed("The Token is expired")
+            token.delete()
+            raise AuthenticationFailed('The Token is expired')
 
         return (token.user, token)

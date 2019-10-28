@@ -12,7 +12,7 @@ class ZxcvbnValidator:
         if results['score'] < 3:
             str = 'This password is not complex enough.'
             if results['feedback']['warning']:
-                str += f"\nnwarning: {results['feedback']['warning']}"
+                str += f"\nwarning: {results['feedback']['warning']}"
             raise ValidationError(_(str), code='password_not_complex')
 
     def get_help_text(self):
