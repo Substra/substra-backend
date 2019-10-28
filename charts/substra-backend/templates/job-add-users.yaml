@@ -21,7 +21,7 @@ spec:
       {{- end }}
       {{- end }}
       containers:
-      - name: substrabac
+      - name: backend
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"
         imagePullPolicy: "{{ $.Values.backend.image.pullPolicy }}"
         command: ["python3"]
@@ -29,18 +29,18 @@ spec:
         env:
           - name: ORG
             value: {{ $.Values.organization.name }}
-          - name: SUBSTRABAC_ORG
+          - name: BACKEND_ORG
             value: {{ $.Values.organization.name }}
-          - name: SUBSTRABAC_{{ $.Values.organization.name | upper }}_DB_NAME
+          - name: BACKEND_{{ $.Values.organization.name | upper }}_DB_NAME
             value: {{ $.Values.postgresql.postgresqlDatabase }}
-          - name: SUBSTRABAC_DB_USER
+          - name: BACKEND_DB_USER
             value: {{ $.Values.postgresql.postgresqlUsername }}
-          - name: SUBSTRABAC_DB_PWD
+          - name: BACKEND_DB_PWD
             value: {{ $.Values.postgresql.postgresqlPassword }}
           - name: DATABASE_HOST
             value: {{ $.Release.Name }}-postgresql
           - name: DJANGO_SETTINGS_MODULE
-            value: substrabac.settings.{{ $.Values.backend.settings }}
+            value: backend.settings.{{ $.Values.backend.settings }}
           - name: FABRIC_CFG_PATH
             value: /var/hyperledger/fabric_cfg
           - name: CORE_PEER_ADDRESS_ENV
@@ -55,12 +55,12 @@ spec:
             value: {{ $.user | quote }}
           - name: BACK_AUTH_PASSWORD
             value: {{ $.password | quote }}
-          - name: SUBSTRABAC_DEFAULT_PORT
+          - name: BACKEND_DEFAULT_PORT
             value: {{ $.Values.backend.service.port | quote}}
-          - name: SUBSTRABAC_PEER_PORT
+          - name: BACKEND_PEER_PORT
             value: "internal"
           - name: LEDGER_CONFIG_FILE
-            value: /conf/{{ $.Values.organization.name }}/substrabac/conf.json
+            value: /conf/{{ $.Values.organization.name }}/backend/conf.json
           - name: PYTHONUNBUFFERED
             value: "1"
           - name: MEDIA_ROOT
@@ -68,7 +68,7 @@ spec:
         volumeMounts:
           - mountPath: {{ $.Values.persistence.hostPath }}
             name: data
-          - mountPath: /conf/{{ $.Values.organization.name }}/substrabac
+          - mountPath: /conf/{{ $.Values.organization.name }}/backend
             name: config
             readOnly: true
           - mountPath: /var/hyperledger/fabric_cfg

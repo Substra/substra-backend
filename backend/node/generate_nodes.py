@@ -20,7 +20,7 @@ def generate(orgs):
         files[org] = data
 
     for org in orgs:
-        # create intern node (request from worker A to substrabac A)
+        # create intern node (request from worker A to backend A)
         secret = generate_secret()
         files[org]['outgoing_nodes'].append({
             'node_id': org,
