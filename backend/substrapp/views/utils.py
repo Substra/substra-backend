@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from libs.sessionAuthentication import CustomSessionAuthentication
+from node.authentication import NodeUser
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
@@ -68,7 +69,13 @@ class PermissionMixin(object):
         if permission['public']:
             return True
 
-        node_id = user.username
+        if isinstance(user, NodeUser):
+            node_id = user.username
+        else:
+            # for classic user test on current msp id
+            LEDGER = getattr(settings, 'LEDGER')
+            node_id = LEDGER['client']['msp_id']
+
         return node_id in permission['authorizedIDs']
 
     def download_file(self, request, django_field, ledger_field=None):
