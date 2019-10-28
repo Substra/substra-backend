@@ -72,7 +72,7 @@ class UserViewSet(GenericViewSet):
 
         return response
 
-    @list_route(['post'])
+    @action(methods=['post'], detail=False)
     def refresh(self, request, *args, **kwargs):
         serializer = CustomTokenRefreshSerializer(data=request.data, context=self.get_serializer_context())
 
