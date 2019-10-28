@@ -18,6 +18,7 @@ AUTHORIZED_FILTERS = {
     'model': ['model', 'algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
     'testtuple': ['testtuple'],
+    'compositetuple': ['compositetuple'],
 }
 
 
