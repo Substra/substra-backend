@@ -45,4 +45,4 @@ class ExpiryTokenAuthentication(TokenAuthentication):
             token.delete()
             raise AuthenticationFailed('The Token is expired')
 
-        return (token.user, token)
+        return token.user, token
