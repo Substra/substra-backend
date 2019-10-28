@@ -42,13 +42,13 @@ class AuthenticatedClient(APIClient):
         })
 
         serializer.is_valid()
-        token = serializer.validated_data
-        jwt = str(token)
+        data = serializer.validated_data
+        access_token = str(data.access_token)
 
         # simulate right httpOnly cookie and Authorization jwt
-        jwt_auth_header = generate_jwt_auth_header('.'.join(jwt.split('.')[0:2]))
+        jwt_auth_header = generate_jwt_auth_header('.'.join(access_token.split('.')[0:2]))
         self.credentials(HTTP_AUTHORIZATION=jwt_auth_header)
-        self.cookies = SimpleCookie({'signature': jwt.split('.')[2]})
+        self.cookies = SimpleCookie({'signature': access_token.split('.')[2]})
 
         return super().request(**kwargs)
 

@@ -9,7 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
 
-from users.serializers import CustomTokenObtainPairSerializer
+from users.serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 
 import tldextract
 
@@ -47,24 +47,65 @@ class UserViewSet(GenericViewSet):
         except TokenError as e:
             raise InvalidToken(e.args[0])
 
-        token = serializer.validated_data
+        data = serializer.validated_data
 
-        expires = token.current_time + token.lifetime
+        refresh_token = data
+        access_token = data.access_token
 
-        tokenString = str(token)
-        headerPayload = '.'.join(tokenString.split('.')[0:2])
-        signature = tokenString.split('.')[2]
+        access_expires = access_token.current_time + access_token.lifetime
+        refresh_expires = refresh_token.current_time + refresh_token.lifetime
 
-        response = Response(token.payload, status=status.HTTP_200_OK)
+        accessTokenString = str(access_token)
+        headerPayload = '.'.join(accessTokenString.split('.')[0:2])
+        signature = accessTokenString.split('.')[2]
+
+        response = Response(access_token.payload, status=status.HTTP_200_OK)
 
         host = self.get_host(request)
 
-        if settings.DEBUG:
-            response.set_cookie('header.payload', value=headerPayload, expires=expires, domain=host)
-            response.set_cookie('signature', value=signature, httponly=True, domain=host)
-        else:
-            response.set_cookie('header.payload', value=headerPayload, expires=expires, secure=True, domain=host)
-            response.set_cookie('signature', value=signature, httponly=True, secure=True, domain=host)
+        secure = not settings.DEBUG
+
+        response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
+        response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
+                            domain=host)
+
+        return response
+
+    @list_route(['post'])
+    def refresh(self, request, *args, **kwargs):
+        serializer = CustomTokenRefreshSerializer(data=request.data, context=self.get_serializer_context())
+
+        try:
+            serializer.is_valid(raise_exception=True)
+        except AuthenticationFailed:
+            return Response({'message': 'wrong username password'}, status=status.HTTP_401_UNAUTHORIZED)
+        except TokenError as e:
+            raise InvalidToken(e.args[0])
+
+        data = serializer.validated_data
+
+        refresh_token = data
+        access_token = data.access_token
+
+        access_expires = access_token.current_time + access_token.lifetime
+        refresh_expires = refresh_token.current_time + refresh_token.lifetime
+
+        accessTokenString = str(access_token)
+        headerPayload = '.'.join(accessTokenString.split('.')[0:2])
+        signature = accessTokenString.split('.')[2]
+
+        response = Response(access_token.payload, status=status.HTTP_200_OK)
+
+        host = self.get_host(request)
+
+        secure = not settings.DEBUG
+
+        response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
+        response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
+                            domain=host)
+
         return response
 
     @action(detail=False)
@@ -72,10 +113,11 @@ class UserViewSet(GenericViewSet):
         response = Response({}, status=status.HTTP_200_OK)
 
         host = self.get_host(request)
-        if settings.DEBUG:
-            response.set_cookie('header.payload', value='', domain=host)
-            response.set_cookie('signature', value='', httponly=True, domain=host)
-        else:
-            response.set_cookie('header.payload', value='', secure=True, domain=host)
-            response.set_cookie('signature', value='', httponly=True, secure=True, domain=host)
+
+        secure = not settings.DEBUG
+
+        response.set_cookie('header.payload', value='', secure=secure, domain=host)
+        response.set_cookie('signature', value='', httponly=True, secure=secure, domain=host)
+        response.set_cookie('refresh', value='', httponly=True, secure=secure, domain=host)
+
         return response
