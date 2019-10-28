@@ -1,22 +1,22 @@
+from django.conf import settings
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import AuthenticationFailed
-from rest_framework_simplejwt.settings import api_settings
 
 from datetime import timedelta
 from django.utils import timezone
 
 
 # this return left time
-def expires_in(token):
+def expires_at(token):
     time_elapsed = timezone.now() - token.created
-    left_time = api_settings.ACCESS_TOKEN_LIFETIME - time_elapsed
+    left_time = getattr(settings, 'EXPIRY_TOKEN_LIFETIME') - time_elapsed
     return left_time
 
 
 # token checker if token expired or not
 def is_token_expired(token):
-    return expires_in(token) < timedelta(seconds=0)
+    return expires_at(token) < timedelta(seconds=0)
 
 
 # if token is expired new token will be established

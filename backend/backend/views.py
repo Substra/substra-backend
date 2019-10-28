@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from django.conf.urls import url, include
 
-from libs.expiryTokenAuthentication import token_expire_handler, expires_in
+from libs.expiryTokenAuthentication import token_expire_handler, expires_at
 from substrapp.urls import router
 
 from requests.compat import urlparse
@@ -128,7 +128,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
 
         return Response({
             'token': token.key,
-            'expires_in': expires_in(token)
+            'expires_at': expires_at(token)
         })
 
 

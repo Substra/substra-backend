@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import sys
+from datetime import timedelta
+
 from libs.gen_secret_key import write_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -175,6 +177,8 @@ CELERY_WORKER_CONCURRENCY = 1
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//'),
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
+
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60))),
 
 TRUE_VALUES = {
     't', 'T',

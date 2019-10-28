@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.decorators import list_route
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
@@ -36,7 +36,7 @@ class UserViewSet(GenericViewSet):
 
         return host
 
-    @list_route(['post'])
+    @action(methods=['post'], detail=False)
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 
@@ -67,7 +67,7 @@ class UserViewSet(GenericViewSet):
             response.set_cookie('signature', value=signature, httponly=True, secure=True, domain=host)
         return response
 
-    @list_route()
+    @action(detail=False)
     def logout(self, request, *args, **kwargs):
         response = Response({}, status=status.HTTP_200_OK)
 

@@ -111,9 +111,6 @@ def generate_docker_compose_file(conf, launch_settings):
         },
         'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
-    # generate nodes
-    # TODO make sure nodes folder exists else warn
-
     for org in conf:
         org_name = org['name']
         org_name_stripped = org_name.replace('-', '')
@@ -264,24 +261,29 @@ def stop(docker_compose=None):
 
 
 def start(conf, launch_settings, no_backup):
-    print('Generate docker-compose file\n')
-    docker_compose = generate_docker_compose_file(conf, launch_settings)
+    nodes_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'backend/node/nodes')
+    if not os.path.exists(nodes_path):
+        print('ERROR: nodes folder does not exist, please run `python ./backend/node/generate_nodes.py`'
+              ' (you maybe will have to regenerate your docker images)\n')
+    else:
+        print('Generate docker-compose file\n')
+        docker_compose = generate_docker_compose_file(conf, launch_settings)
 
-    stop(docker_compose)
+        stop(docker_compose)
 
-    if no_backup:
-        print('Clean medias directory\n')
-        call(['sh', os.path.join(dir_path, '../scripts/clean_media.sh')])
-        print('Remove postgresql database\n')
-        call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/postgres-data'])
-        print('Remove rabbit database\n')
-        call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/rabbit-data'])
+        if no_backup:
+            print('Clean medias directory\n')
+            call(['sh', os.path.join(dir_path, '../scripts/clean_media.sh')])
+            print('Remove postgresql database\n')
+            call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/postgres-data'])
+            print('Remove rabbit database\n')
+            call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/rabbit-data'])
 
-    print('start docker-compose', flush=True)
-    call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
-          os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
-    call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}',
-          '--filter', 'label=substra'])
+        print('start docker-compose', flush=True)
+        call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
+              os.path.join(dir_path, '../'), 'up', '-d', '--remove-orphans', '--build'])
+        call(['docker', 'ps', '-a', '--format', 'table {{.ID}}\t{{.Names}}\t{{.Status}}\t{{.Ports}}',
+              '--filter', 'label=substra'])
 
 
 if __name__ == "__main__":
