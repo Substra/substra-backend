@@ -178,7 +178,7 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
-EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60))),
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
 
 TRUE_VALUES = {
     't', 'T',
