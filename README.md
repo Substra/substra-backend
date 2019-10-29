@@ -245,7 +245,7 @@ Then, build the images:
 $> sh build-docker-images.sh
 ```
 
-Then, go to the`docker` dir and run `start.py` (`-d` means `dev` settings):
+Then, go to the `docker` dir and run `start.py` (`-d` means `dev` settings):
 ```bash
 $> python start.py -d --no-backup
 ```
@@ -254,7 +254,9 @@ Check your services are correctly started with `docker ps -a`.
 
 ## Expiry token period
 
-An global environment variable `ACCESS_TOKEN_LIFETIME` expressed in minutes can be set for dealing with expiry token period.  
+Two global environment variables `ACCESS_TOKEN_LIFETIME` and `EXPIRY_TOKEN_LIFETIME` expressed in minutes can be set for dealing with expiry token period.  
+The first one `ACCESS_TOKEN_LIFETIME` deals with JWT Authentication.  
+THe second one `EXPIRY_TOKEN_LIFETIME` deals with simple token expiration.  
 By default, set to 24*60 min i.e 24h.
 
 ## Testing fabric-sdk-py
