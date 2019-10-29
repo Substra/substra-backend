@@ -25,6 +25,15 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='CompositeAlgo',
+            fields=[
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('file', models.FileField(max_length=500, upload_to=substrapp.models.compositealgo.upload_to)),
+                ('description', models.FileField(max_length=500, upload_to=substrapp.models.compositealgo.upload_to)),
+                ('validated', models.BooleanField(default=False)),
+            ],
+        ),
+        migrations.CreateModel(
             name='DataManager',
             fields=[
                 ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
