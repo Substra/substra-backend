@@ -66,17 +66,13 @@ class PermissionMixin(object):
             return False
 
         permission = asset['permissions']['process']
-        if permission['public']:
-            return True
 
-        if isinstance(user, NodeUser):
+        if isinstance(user, NodeUser):  # for node
             node_id = user.username
-        else:
-            # for classic user test on current msp id
-            LEDGER = getattr(settings, 'LEDGER')
-            node_id = LEDGER['client']['msp_id']
+        else:  # for classic user, test on current msp id
+            node_id = get_owner()
 
-        return node_id in permission['authorizedIDs']
+        return permission['public'] or node_id in permission['authorizedIDs']
 
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
