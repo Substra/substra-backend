@@ -31,9 +31,8 @@ class CompositetupleQueryTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
         self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
-        # todo
-        # self.train_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
-        # self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
+        self.train_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
+        self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -47,14 +46,14 @@ class CompositetupleQueryTests(APITestCase):
         url = reverse('substrapp:compositetuple-list')
 
         data = {
-            # todo
-            # 'train_data_sample_keys': self.train_data_sample_keys,
-            # 'algo_key': self.fake_key,
-            # 'data_manager_key': self.fake_key,
-            # 'objective_key': self.fake_key,
-            # 'rank': -1,
-            # 'compute_plan_id': self.fake_key,
-            # 'in_models_keys': [self.fake_key]
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
+            'rank': -1,
+            'compute_plan_id': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -68,7 +67,6 @@ class CompositetupleQueryTests(APITestCase):
             minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
-
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -86,16 +84,17 @@ class CompositetupleQueryTests(APITestCase):
         # post data
         url = reverse('substrapp:compositetuple-list')
 
-        # todo
         data = {
-            # 'train_data_sample_keys': self.train_data_sample_keys,
-            # 'algo_key': self.fake_key,
-            # 'data_manager_key': self.fake_key,
-            # 'objective_key': self.fake_key,
-            # 'rank': -1,
-            # 'compute_plan_id': self.fake_key,
-            # 'in_models_keys': [self.fake_key]
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
+            'rank': -1,
+            'compute_plan_id': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
         }
+
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -114,10 +113,9 @@ class CompositetupleQueryTests(APITestCase):
     def test_add_compositetuple_ko(self):
         url = reverse('substrapp:compositetuple-list')
 
-        # todo
         data = {
-            # 'train_data_sample_keys': self.train_data_sample_keys,
-            # 'model_key': self.fake_key
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'model_key': self.fake_key
         }
 
         extra = {
@@ -134,48 +132,3 @@ class CompositetupleQueryTests(APITestCase):
         data = {'objective': get_hash(self.objective_description)}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_add_compositetuple_no_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:compositetuple-list')
-
-        # todo
-        data = {
-            # 'train_data_sample_keys': self.train_data_sample_keys,
-            # 'datamanager_key': self.fake_key,
-            # 'model_key': self.fake_key,
-            # 'algo_key': self.fake_key
-        }
-
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_compositetuple_wrong_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:compositetuple-list')
-
-        # todo
-        data = {
-            # 'train_data_sample_keys': self.train_data_sample_keys,
-            # 'datamanager_key': self.fake_key,
-            # 'model_key': self.fake_key,
-            # 'algo_key': self.fake_key
-        }
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
