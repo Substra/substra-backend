@@ -77,7 +77,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
+    'libs.sql_printing_middleware.SQLPrintingMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
