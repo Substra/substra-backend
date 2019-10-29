@@ -40,19 +40,15 @@ deploy:
             fabricConfigmap: network-peer-1-hlf-k8s-fabric
           backend:
             settings: dev
-            defaultDomain: http://substra-backend.node-1
+            defaultDomain: http://substra-backend.node-1.com
             ingress:
               enabled: true
               hosts:
-                - { host: substra-backend.node-1, paths: ["/"] }
+                - { host: substra-backend.node-1.com, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
-            auth:
-              user: node-1
-              password: node-1pwd
-              header: "Basic bm9kZS0xOm5vZGUtMXB3ZA=="
           organization:
             name: MyPeer1
           peer:
@@ -87,21 +83,17 @@ deploy:
             fabricConfigmap: network-peer-2-hlf-k8s-fabric
           backend:
             settings: dev
-            defaultDomain: http://substra-backend.node-2
+            defaultDomain: http://substra-backend.node-2.com
             ingress:
               enabled: true
               hosts:
-                - { host: substra-backend.node-2, paths: ["/"] }
+                - { host: substra-backend.node-2.com, paths: ["/"] }
               annotations:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
-            auth:
-              user: node-2
-              password: node-2pwd
-              header: "Basic bm9kZS0yOm5vZGUtMnB3ZA=="
           organization:
-            name: MyPeer1
+            name: MyPeer2
           peer:
             host: network-peer-2.peer-2
             port: 7051
