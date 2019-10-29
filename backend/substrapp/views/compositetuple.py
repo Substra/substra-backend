@@ -33,17 +33,16 @@ class CompositeTupleViewSet(mixins.CreateModelMixin,
             return data
 
     def _create(self, request):
-        # TODO
         data = {
-            # 'algo_key': request.data.get('algo_key'),
-            # 'data_manager_key': request.data.get('data_manager_key'),
-            # 'objective_key': request.data.get('objective_key'),
-            # 'rank': request.data.get('rank'),
-            # 'compute_plan_id': request.data.get('compute_plan_id', ''),
-            # 'in_models_keys': request.data.getlist('in_models_keys'),
-            # # list of train data keys (which are stored in the train worker node)
-            # 'train_data_sample_keys': request.data.getlist('train_data_sample_keys'),
-            # 'tag': request.data.get('tag', '')
+            'algo_key': request.data.get('algo_key'),
+            'data_manager_key': request.data.get('data_manager_key'),
+            'objective_key': request.data.get('objective_key'),
+            'rank': request.data.get('rank'),
+            'compute_plan_id': request.data.get('compute_plan_id', ''),
+            'in_head_model_key': request.data.get('in_head_model_key'),
+            'in_trunk_model_key': request.data.get('in_head_model_key'),
+            'train_data_sample_keys': request.data.getlist('train_data_sample_keys'),
+            'tag': request.data.get('tag', '')
         }
 
         serializer = self.get_serializer(data=data)
