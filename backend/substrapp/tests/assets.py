@@ -682,11 +682,27 @@ compositetuple = [
         },
         "outHeadModel": {
             "hash": "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99",
-            "storageAddress": "http://testserver/model/e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99/file/"
+            "storageAddress": "http://testserver/model/e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99/file/",
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorizedIDs": ["e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff22"]
+                }
+            }
         },
         "outTrunkModel": {
             "hash": "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99",
-            "storageAddress": "http://testserver/model/e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99/file/"
+            "storageAddress": "http://testserver/model/e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff99/file/",
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorizedIDs": [
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff22",
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff23",
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff24"
+                    ]
+                }
+            }
         },
         "permissions": {
             "process": {
@@ -728,11 +744,27 @@ compositetuple = [
         },
         "outHeadModel": {
             "hash": "0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98",
-            "storageAddress": "http://testserver/model/0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98/file/"
+            "storageAddress": "http://testserver/model/0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98/file/",
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorizedIDs": ["e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff22"]
+                }
+            }
         },
         "outTrunkModel": {
             "hash": "0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98",
-            "storageAddress": "http://testserver/model/0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98/file/"
+            "storageAddress": "http://testserver/model/0b1ce6f2bd9247a262c3695aa07aad5ef187197f118c73c60a42e176f8f53b98/file/",
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorizedIDs": [
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff22",
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff23",
+                        "e6a16f5bea8a485f48a8aa8c462155d2d500022a9459c1ff4b3c32acd168ff24",
+                    ]
+                }
+            }
         },
         "permissions": {
             "process": {
