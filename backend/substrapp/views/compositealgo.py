@@ -182,7 +182,6 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
         # parse filters
         query_params = request.query_params.get('search', None)
-
         if query_params is not None:
             try:
                 composite_algos_list = filter_list(
@@ -201,7 +200,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             for composite_algo in group:
                 replace_storage_addresses(request, composite_algo)
 
-        return Response(omposite_algos_list, status=status.HTTP_200_OK)
+        return Response(composite_algos_list, status=status.HTTP_200_OK)
 
 
 class CompositeAlgoPermissionViewSet(PermissionMixin,
