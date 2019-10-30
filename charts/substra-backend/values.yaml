@@ -70,9 +70,9 @@ incomingNodes: []
   # - name: nodeId
   #   secret: nodeSecret
 
-users:
-   - name: "substra"
-     secret: "p@$swr0d44"
+users: []
+#   - name: username
+#     secret: password
 
 persistence:
   hostPath: "/substra"

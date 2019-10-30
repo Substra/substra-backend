@@ -67,6 +67,9 @@ deploy:
           outgoingNodes:
             - { name: MyPeer1MSP, secret: selfSecret1 }
             - { name: MyPeer2MSP, secret: nodeSecret1 }
+          users:
+            - name: "node-1"
+              secret: "p@$swr0d44"
 
       - name: substra-backend-peer-2
         chartPath: charts/substra-backend
@@ -110,3 +113,6 @@ deploy:
           outgoingNodes:
             - { name: MyPeer1MSP, secret: nodeSecret2 }
             - { name: MyPeer2MSP, secret: selfSecret2 }
+          users:
+            - name: "node-2"
+              secret: "p@$swr0d45"

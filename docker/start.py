@@ -19,6 +19,21 @@ BACKEND_PORT = {
     'clb': 8002
 }
 
+BACKEND_CREDENTIALS = {
+    'owkin': {
+        'username': 'substra',
+        'password': 'p@$swr0d44'
+    },
+    'chunantes': {
+        'username': 'substra',
+        'password': 'p@$swr0d45'
+    },
+    'clb': {
+        'username': 'substra',
+        'password': 'p@$swr0d46'
+    }
+}
+
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 
 
@@ -116,6 +131,7 @@ def generate_docker_compose_file(conf, launch_settings):
         org_name_stripped = org_name.replace('-', '')
 
         port = BACKEND_PORT[org_name_stripped]
+        credentials = BACKEND_CREDENTIALS[org_name_stripped]
 
         cpu_count = os.cpu_count()
         processes = 2 * int(cpu_count) + 1
@@ -165,8 +181,8 @@ def generate_docker_compose_file(conf, launch_settings):
         user_command = ''
         if launch_settings == 'dev':
             fixtures_command = f"python manage.py init_nodes ./node/nodes/{org_name}MSP.json"
-            # replace needed for docker-compose special variable
-            user_command = f"python manage.py add_user substra '{'p@$swr0d44'.replace('$', '$$')}'"
+            # $ replace is needed for docker-compose $ special variable
+            user_command = f"python manage.py add_user {credentials['username']} '{credentials['password'].replace('$', '$$')}'"
 
         backend = {
             'container_name': f'substra-backend.{org_name_stripped}.xyz',
