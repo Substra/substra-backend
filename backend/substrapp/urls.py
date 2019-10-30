@@ -8,7 +8,7 @@ from rest_framework.routers import DefaultRouter
 from substrapp.views import ObjectiveViewSet, DataSampleViewSet, DataManagerViewSet, \
     AlgoViewSet, TrainTupleViewSet, TestTupleViewSet, ModelViewSet, TaskViewSet, \
     ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet, \
-    ModelPermissionViewSet, CompositeTupleViewSet, CompositeAlgoViewSet
+    ModelPermissionViewSet, CompositeTupleViewSet, CompositeAlgoViewSet, CompositeAlgoPermissionViewSet
 
 
 # Create a router and register our viewsets with it.
@@ -29,6 +29,7 @@ router.register(r'task', TaskViewSet, base_name='task')
 router.register(r'compute_plan', ComputePlanViewSet, base_name='compute_plan')
 router.register(r'compositetuple', CompositeTupleViewSet, base_name='compositetuple')
 router.register(r'compositealgo', CompositeAlgoViewSet, base_name='compositealgo')
+router.register(r'compositealgo', CompositeAlgoPermissionViewSet, base_name='compositealgo')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
