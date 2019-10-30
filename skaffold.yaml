@@ -63,10 +63,10 @@ deploy:
             hostPath: /tmp/peer-1
           incomingNodes:
             - { name: MyPeer1MSP, secret: selfSecret1 }
-            - { name: MyPeer2MSP, secret: nodeSecret2 }
+            - { name: MyPeer2MSP, secret: nodeSecret1w2 }
           outgoingNodes:
             - { name: MyPeer1MSP, secret: selfSecret1 }
-            - { name: MyPeer2MSP, secret: nodeSecret1 }
+            - { name: MyPeer2MSP, secret: nodeSecret2w1 }
           users:
             - name: "node-1"
               secret: "p@$swr0d44"
@@ -108,10 +108,10 @@ deploy:
           persistence:
             hostPath: /tmp/peer-2
           incomingNodes:
-            - { name: MyPeer1MSP, secret: nodeSecret1 }
+            - { name: MyPeer1MSP, secret: nodeSecret2w1 }
             - { name: MyPeer2MSP, secret: selfSecret2 }
           outgoingNodes:
-            - { name: MyPeer1MSP, secret: nodeSecret2 }
+            - { name: MyPeer1MSP, secret: nodeSecret1w2 }
             - { name: MyPeer2MSP, secret: selfSecret2 }
           users:
             - name: "node-2"
