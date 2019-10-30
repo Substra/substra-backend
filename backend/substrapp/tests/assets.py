@@ -615,9 +615,9 @@ compositetuple = [
     {
         "key": "363f70dcc3bf22fdce65e36c957e855b7cd3e2828e6909f34ccc97ee6218541a",
         "algo": {
-            "name": "Neural Network",
-            "hash": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f",
-            "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe44142f/file/"
+            "name": "Composite Algo",
+            "hash": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444",
+            "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444/file/"
         },
         "creator": "chu-nantesMSP",
         "dataset": {
@@ -655,9 +655,9 @@ compositetuple = [
     {
         "key": "05b44fa4b94d548e35922629f7b23dd84f777d09925bbecb0362081ca528f746",
         "algo": {
-            "name": "Logistic regression",
-            "hash": "6523012b72bcd0299f709bc6aaa084d2092dddb9a6256fbffa64645478995a1d",
-            "storageAddress": "http://testserver/algo/6523012b72bcd0299f709bc6aaa084d2092dddb9a6256fbffa64645478995a1d/file/"
+            "name": "Composite Algo",
+            "hash": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444",
+            "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444/file/"
         },
         "creator": "chu-nantesMSP",
         "dataset": {
@@ -717,9 +717,9 @@ compositetuple = [
     {
         "key": "32070e156eb4f97d85ff8448ea2ab71f4f275ab845159029354e4446aff974e0",
         "algo": {
-            "name": "Logistic regression",
-            "hash": "6523012b72bcd0299f709bc6aaa084d2092dddb9a6256fbffa64645478995a1d",
-            "storageAddress": "http://testserver/algo/6523012b72bcd0299f709bc6aaa084d2092dddb9a6256fbffa64645478995a1d/file/"
+            "name": "Composite Algo",
+            "hash": "0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444",
+            "storageAddress": "http://testserver/algo/0acc5180e09b6a6ac250f4e3c172e2893f617aa1c22ef1f379019d20fe441444/file/"
         },
         "creator": "chu-nantesMSP",
         "dataset": {
@@ -779,9 +779,9 @@ compositetuple = [
     {
         "key": "a2171a1c09738c677748346d22d2b5eea47f874a3b4f4b75224674235892de72",
         "algo": {
-            "name": "Random Forest",
-            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
-            "storageAddress": "http://testserver/algo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/file/"
+            "name": "Composite Algo 2",
+            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455",
+            "storageAddress": "http://testserver/compositealgo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455/file/"
         },
         "creator": "chu-nantesMSP",
         "dataset": {
@@ -815,5 +815,46 @@ compositetuple = [
         "rank": 0,
         "status": "failed",
         "tag": ""
+    }
+]
+
+compositealgo = [
+    {
+        "key": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
+        "name": "Composite Algo",
+        "content": {
+            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
+            "storageAddress": "http://testserver/compositealgo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/file/"
+        },
+        "description": {
+            "hash": "b9463411a01ea00869bdffce6e59a5c100a4e635c0a9386266cad3c77eb28e9e",
+            "storageAddress": "http://testserver/compositealgo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9/description/"
+        },
+        "owner": "chu-nantesMSP",
+        "permissions": {
+            "process": {
+                "public": True,
+                "authorizedIDs": []
+            }
+        }
+    },
+    {
+        "key": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455",
+        "name": "Composite Algo 2",
+        "content": {
+            "hash": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455",
+            "storageAddress": "http://testserver/compositealgo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455/file/"
+        },
+        "description": {
+            "hash": "4acea40c4b51996c88ef279c5c9aa41ab77b97d38c5ca167e978a98b2e402675",
+            "storageAddress": "http://testserver/compositealgo/9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee4455/description/"
+        },
+        "owner": "chu-nantesMSP",
+        "permissions": {
+            "process": {
+                "public": True,
+                "authorizedIDs": []
+            }
+        }
     }
 ]
