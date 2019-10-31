@@ -21,7 +21,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
-class CompositetupleQueryTests(APITestCase):
+class CompositeTraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
@@ -37,13 +37,13 @@ class CompositetupleQueryTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_add_compositetuple_sync_ok(self):
+    def test_add_compositetraintuple_sync_ok(self):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
                                  metrics=metrics)
         # post data
-        url = reverse('substrapp:compositetuple-list')
+        url = reverse('substrapp:compositetraintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
@@ -62,10 +62,10 @@ class CompositetupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.compositetuple.util.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.compositetuple.query_ledger') as mquery_ledger:
+        with mock.patch('substrapp.serializers.ledger.compositetraintuple.util.invoke_ledger') as minvoke_ledger, \
+                mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'compositetuple_pkhash'.encode('utf-8').hex()
+            raw_pkhash = 'compositetraintuple_pkhash'.encode('utf-8').hex()
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
@@ -79,13 +79,13 @@ class CompositetupleQueryTests(APITestCase):
         broker_url='memory://',
         backend='memory'
     )
-    def test_add_compositetuple_no_sync_ok(self):
+    def test_add_compositetraintuple_no_sync_ok(self):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
                                  metrics=metrics)
         # post data
-        url = reverse('substrapp:compositetuple-list')
+        url = reverse('substrapp:compositetraintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
@@ -104,10 +104,10 @@ class CompositetupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.compositetuple.util.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.compositetuple.query_ledger') as mquery_ledger:
+        with mock.patch('substrapp.serializers.ledger.compositetraintuple.util.invoke_ledger') as minvoke_ledger, \
+                mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'compositetuple_pkhash'.encode('utf-8').hex()
+            raw_pkhash = 'compositetraintuple_pkhash'.encode('utf-8').hex()
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
@@ -115,8 +115,8 @@ class CompositetupleQueryTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-    def test_add_compositetuple_ko(self):
-        url = reverse('substrapp:compositetuple-list')
+    def test_add_compositetraintuple_ko(self):
+        url = reverse('substrapp:compositetraintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
