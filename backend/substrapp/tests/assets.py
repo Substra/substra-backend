@@ -610,7 +610,7 @@ model = [
     }
 ]
 
-compositetuple = [
+compositetraintuple = [
     {
         "key": "363f70dcc3bf22fdce65e36c957e855b7cd3e2828e6909f34ccc97ee6218541a",
         "algo": {
