@@ -8,11 +8,11 @@ from .traintuple.serializer import LedgerTrainTupleSerializer
 from .testtuple.serializer import LedgerTestTupleSerializer
 from .datamanager.serializer import LedgerDataManagerSerializer
 from .computeplan.serializer import LedgerComputePlanSerializer
-from .compositetuple.serializer import LedgerCompositeTupleSerializer
+from .compositetraintuple.serializer import LedgerCompositeTraintupleSerializer
 from .compositealgo.serializer import LedgerCompositeAlgoSerializer
 
 __all__ = ['LedgerObjectiveSerializer', 'LedgerModelSerializer',
            'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
-           'LedgerCompositeTupleSerializer', 'LedgerCompositeAlgoSerializer']
+           'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer']
