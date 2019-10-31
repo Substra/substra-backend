@@ -4,18 +4,18 @@ from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.serializers import LedgerCompositeTupleSerializer
+from substrapp.serializers import LedgerCompositeTraintupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
 
 
-class CompositeTupleViewSet(mixins.CreateModelMixin,
+class CompositeTraintupleViewSet(mixins.CreateModelMixin,
                             mixins.RetrieveModelMixin,
                             mixins.ListModelMixin,
                             GenericViewSet):
-    serializer_class = LedgerCompositeTupleSerializer
-    ledger_query_call = 'queryCompositetuple'
+    serializer_class = LedgerCompositeTraintupleSerializer
+    ledger_query_call = 'queryCompositeTraintuple'
 
     def get_queryset(self):
         return []
@@ -52,11 +52,11 @@ class CompositeTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get compositetuple pkhash to handle 408 timeout in invoke_ledger
+        # Get compositetraintuple pkhash to handle 408 timeout in invoke_ledger
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger(fcn='createCompositetuple', args=args)
+            data = query_ledger(fcn='createCompositeTraintuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
@@ -77,17 +77,17 @@ class CompositeTupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryCompositetuple', args=[])
+            data = query_ledger(fcn='queryCompositeTraintuple', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        compositetuple_list = [data]
+        compositetraintuple_list = [data]
 
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                compositetuple_list = filter_list(
-                    object_type='compositetuple',
+                compositetraintuple_list = filter_list(
+                    object_type='compositetraintuple',
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
@@ -98,7 +98,7 @@ class CompositeTupleViewSet(mixins.CreateModelMixin,
                     {'message': f'Malformed search filters {query_params}'},
                     status=status.HTTP_400_BAD_REQUEST)
 
-        return Response(compositetuple_list, status=status.HTTP_200_OK)
+        return Response(compositetraintuple_list, status=status.HTTP_200_OK)
 
     def _retrieve(self, pk):
         validate_pk(pk)
