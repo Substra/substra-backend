@@ -15,9 +15,8 @@ class LedgerCompositeTupleSerializer(serializers.Serializer):
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_head_model_key = serializers.CharField(min_length=64, max_length=64)
-    in_head_model_permissions = PermissionsSerializer()
     in_trunk_model_key = serializers.CharField(min_length=64, max_length=64)
-    in_trunk_model_permissions = PermissionsSerializer()
+    out_trunk_model_permissions = PermissionsSerializer()
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
@@ -31,28 +30,19 @@ class LedgerCompositeTupleSerializer(serializers.Serializer):
         compute_plan_id = validated_data.get('compute_plan_id', '')
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_head_model_key = validated_data.get('in_head_model_key')
-        in_head_model_permissions = validated_data.get('in_head_model_permissions')
         in_trunk_model_key = validated_data.get('in_trunk_model_key')
-        in_trunk_model_permissions = validated_data.get('in_trunk_model_permissions')
+        out_trunk_model_permissions = validated_data.get('out_trunk_model_permissions')
         tag = validated_data.get('tag', '')
 
         args = {
             'algoKey': algo_key,
             'objectiveKey': objective_key,
-            'inHeadModel': {
-                'key': in_head_model_key,
-                'permissions': {'process': {
-                    'public': in_head_model_permissions.get('public'),
-                    'authorizedIDs': in_head_model_permissions.get('authorized_ids'),
-                }}
-            },
-            'inTrunkModel': {
-                'key': in_trunk_model_key,
-                'permissions': {'process': {
-                    'public': in_trunk_model_permissions.get('public'),
-                    'authorizedIDs': in_trunk_model_permissions.get('authorized_ids'),
-                }}
-            },
+            'inHeadModelKey': in_head_model_key,
+            'inTrunkModelKey': in_trunk_model_key,
+            'outTrunkModelPermissions': {'process': {
+                'public': out_trunk_model_permissions.get('public'),
+                'authorizedIDs': out_trunk_model_permissions.get('authorized_ids'),
+            }},
             'dataManagerKey': data_manager_key,
             'dataSampleKeys': train_data_sample_keys,
             'computePlanID': compute_plan_id,
