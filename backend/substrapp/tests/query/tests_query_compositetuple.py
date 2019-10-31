@@ -53,8 +53,13 @@ class CompositetupleQueryTests(APITestCase):
             'rank': -1,
             'compute_plan_id': self.fake_key,
             'in_head_model_key': self.fake_key,
+            'in_head_model_permissions_public': False,
+            'in_head_model_permissions_authorized_ids': [],
             'in_trunk_model_key': self.fake_key,
+            'in_trunk_model_permissions_public': False,
+            'in_trunk_model_permissions_authorized_ids': [],
         }
+
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
@@ -92,7 +97,11 @@ class CompositetupleQueryTests(APITestCase):
             'rank': -1,
             'compute_plan_id': self.fake_key,
             'in_head_model_key': self.fake_key,
+            'in_head_model_permissions_public': False,
+            'in_head_model_permissions_authorized_ids': [],
             'in_trunk_model_key': self.fake_key,
+            'in_trunk_model_permissions_public': False,
+            'in_trunk_model_permissions_authorized_ids': [],
         }
 
         extra = {
