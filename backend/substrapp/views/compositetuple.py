@@ -40,14 +40,10 @@ class CompositeTupleViewSet(mixins.CreateModelMixin,
             'rank': request.data.get('rank'),
             'compute_plan_id': request.data.get('compute_plan_id', ''),
             'in_head_model_key': request.data.get('in_head_model_key'),
-            'in_head_model_permissions': {
-                'public': request.data.get('in_head_model_permissions_public'),
-                'authorized_ids': request.data.getlist('in_head_model_permissions_authorized_ids', []),
-            },
             'in_trunk_model_key': request.data.get('in_trunk_model_key'),
-            'in_trunk_model_permissions': {
-                'public': request.data.get('in_trunk_model_permissions_public'),
-                'authorized_ids': request.data.getlist('in_trunk_model_permissions_authorized_ids', []),
+            'out_trunk_model_permissions': {
+                'public': False,
+                'authorized_ids': request.data.getlist('out_trunk_model_permissions_authorized_ids', []),
             },
             'train_data_sample_keys': request.data.getlist('train_data_sample_keys'),
             'tag': request.data.get('tag', '')
