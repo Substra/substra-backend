@@ -10,13 +10,13 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import CompositeTupleViewSet
+from substrapp.views import CompositeTraintupleViewSet
 
 from substrapp.utils import get_hash
 
 from substrapp.ledger_utils import LedgerError
 
-from ..assets import compositetuple
+from ..assets import compositetraintuple
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -33,7 +33,7 @@ def get_compute_plan_id(assets):
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-class CompositetupleViewTests(APITestCase):
+class CompositeTraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
 
     def setUp(self):
@@ -53,33 +53,33 @@ class CompositetupleViewTests(APITestCase):
 
         self.logger.setLevel(self.previous_level)
 
-    def test_compositetuple_queryset(self):
-        compositetuple_view = CompositeTupleViewSet()
-        self.assertFalse(compositetuple_view.get_queryset())
+    def test_compositetraintuple_queryset(self):
+        compositetraintuple_view = CompositeTraintupleViewSet()
+        self.assertFalse(compositetraintuple_view.get_queryset())
 
-    def test_compositetuple_list_empty(self):
-        url = reverse('substrapp:compositetuple-list')
-        with mock.patch('substrapp.views.compositetuple.query_ledger') as mquery_ledger:
+    def test_compositetraintuple_list_empty(self):
+        url = reverse('substrapp:compositetraintuple-list')
+        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = []
 
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, [[]])
 
-    def test_compositetuple_retrieve(self):
+    def test_compositetraintuple_retrieve(self):
 
-        with mock.patch('substrapp.views.compositetuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = compositetuple[0]
-            url = reverse('substrapp:compositetuple-list')
+        with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = compositetraintuple[0]
+            url = reverse('substrapp:compositetraintuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, compositetuple[0])
+            self.assertEqual(r, compositetraintuple[0])
 
-    def test_compositetuple_retrieve_fail(self):
+    def test_compositetraintuple_retrieve_fail(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        url = reverse('substrapp:compositetuple-list')
+        url = reverse('substrapp:compositetraintuple-list')
 
         # PK hash < 64 chars
         search_params = '42303efa663015e729159833a12ffb510ff/'
@@ -91,7 +91,7 @@ class CompositetupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.compositetuple.get_object_from_ledger') as mget_object_from_ledger:
+        with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('Test')
 
             file_hash = get_hash(os.path.join(dir_path,
@@ -101,26 +101,24 @@ class CompositetupleViewTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_compositetuple_list_filter_tag(self):
-        url = reverse('substrapp:compositetuple-list')
-        with mock.patch('substrapp.views.compositetuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = compositetuple
+    def test_compositetraintuple_list_filter_tag(self):
+        url = reverse('substrapp:compositetraintuple-list')
+        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = compositetraintuple
 
-            search_params = '?search=compositetuple%253Atag%253Asubstra'
+            search_params = '?search=compositetraintuple%253Atag%253Asubstra'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r[0]), 1)
 
-    def test_compositetuple_list_filter_compute_plan_id(self):
-        url = reverse('substrapp:compositetuple-list')
-        with mock.patch('substrapp.views.compositetuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = compositetuple
-            compute_plan_id = get_compute_plan_id(compositetuple)
-            search_params = f'?search=compositetuple%253AcomputePlanID%253A{compute_plan_id}'
+    def test_compositetraintuple_list_filter_compute_plan_id(self):
+        url = reverse('substrapp:compositetraintuple-list')
+        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = compositetraintuple
+            compute_plan_id = get_compute_plan_id(compositetraintuple)
+            search_params = f'?search=compositetraintuple%253AcomputePlanID%253A{compute_plan_id}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r[0]), 1)
-
-
