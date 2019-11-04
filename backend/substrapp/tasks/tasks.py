@@ -79,6 +79,32 @@ def _get_model(traintuple_hash):
     return model_content
 
 
+def get_head_model(tuple_):
+    key = tuple_.get('inHeadModelKey')
+    # TODO: support different types of traintuples
+    metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
+
+    return get_asset_content(
+        metadata['outHeadModel']['storageAddress'],
+        metadata['dataset']['worker'],
+        metadata['outHeadModel']['hash'],
+        salt=key
+    )
+
+
+def get_trunk_model(tuple_):
+    key = tuple_.get('inTrunkModelKey')
+    # TODO: support different types of traintuples
+    metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
+
+    return get_asset_content(
+        metadata['outTrunkModel']['storageAddress'],
+        metadata['dataset']['worker'],
+        metadata['outTrunkModel']['hash'],
+        salt=key
+    )
+
+
 def get_model(testtuple):
     traintuple_hash = testtuple.get('traintupleKey')
     if traintuple_hash:
@@ -321,6 +347,8 @@ def prepare_materials(subtuple, tuple_type):
         model_content = get_model(subtuple)
     elif tuple_type == 'traintuple':
         models_content = get_models(subtuple)
+    elif tuple_type == 'compositetraintuple':
+        models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
     else:
         raise NotImplementedError()
 
@@ -334,7 +362,7 @@ def prepare_materials(subtuple, tuple_type):
         traintuple_metadata = get_traintuple_metadata(subtuple['traintupleKey'])
         model_hash = traintuple_metadata['outModel']['hash']
         put_model(subtuple, subtuple_directory, model_content, model_hash)
-    elif tuple_type == 'traintuple' and models_content:
+    elif tuple_type in ('traintuple', 'compositetraintuple') and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
     logging.info(f'Prepare materials for {tuple_type} task: success')
@@ -386,14 +414,16 @@ def do_task(subtuple, tuple_type):
 
 def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name):
 
+    model_folder = '/sandbox/model'
     model_path = path.join(subtuple_directory, 'model')
     data_path = path.join(subtuple_directory, 'data')
     pred_path = path.join(subtuple_directory, 'pred')
     opener_file = path.join(subtuple_directory, 'opener/opener.py')
     algo_path = path.join(subtuple_directory)
-
     algo_docker = f'substra/algo_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
     algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
+    output_head_model_filename = 'out_head_model'
+    output_trunk_model_filename = 'out_trunk_model'
 
     remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
 
@@ -411,7 +441,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     }
 
     model_volume = {
-        model_path: {'bind': '/sandbox/model', 'mode': 'rw'}
+        model_path: {'bind': model_folder, 'mode': 'rw'}
     }
 
     # local volume for training subtuple in compute plan
@@ -441,6 +471,24 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         inmodels = subtuple["traintupleKey"]
         command = f'{command} {inmodels}'
 
+    elif tuple_type == 'compositetraintuple':
+        command = 'train'
+        algo_docker_name = f'{algo_docker_name}_{command}'
+
+        command = f"{command} --output-models-path {model_folder}"
+        command = f"{command} --output-head-model-filename {output_head_model_filename}"
+        command = f"{command} --output-trunk-model-filename {output_trunk_model_filename}"
+
+        if subtuple['inHeadModel'] is not None:
+            inHeadModelKey = subtuple['inHeadModelKey']
+            command = f"{command} --input-head-model-filename {inHeadModelKey}"
+        if subtuple['inTrunkModel'] is not None:
+            inTrunkModelKey = subtuple['inHeadModelKey']
+            command = f"{command} --input-trunk-model-filename {inTrunkModelKey}"
+
+        if rank is not None:
+            command = f"{command} --rank {rank}"
+
     compute_docker(
         client=client,
         resources_manager=resources_manager,
@@ -457,6 +505,18 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # save model in database
     if tuple_type == 'traintuple':
         end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
+
+    if tuple_type == 'compositetraintuple':
+        end_head_model_file, end_head_model_file_hash = save_model(
+            subtuple_directory,
+            subtuple['key'],
+            filename=output_head_model_filename,
+        )
+        end_trunk_model_file, end_trunk_model_file_hash = save_model(
+            subtuple_directory,
+            subtuple['key'],
+            filename=output_trunk_model_filename,
+        )
 
     # evaluation
     metrics_path = f'{subtuple_directory}/metrics'
@@ -487,12 +547,18 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         result['end_model_file_hash'] = end_model_file_hash
         result['end_model_file'] = end_model_file
 
+    if tuple_type == 'compositetuple':
+        result['end_head_model_file_hash'] = end_head_model_file_hash
+        result['end_head_model_file'] = end_head_model_file
+        result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
+        result['end_trunk_model_file'] = end_trunk_model_file
+
     return result
 
 
-def save_model(subtuple_directory, subtuple_key):
+def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
-    end_model_path = path.join(subtuple_directory, 'model/model')
+    end_model_path = path.join(subtuple_directory, f'model/{filename}')
     end_model_file_hash = get_hash(end_model_path, subtuple_key)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
 
