@@ -103,7 +103,7 @@ def filter_list(object_type, data, query_params):
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key in ('algo',  'compositealgo'):
+                if filter_key in ('algo', 'compositealgo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         hashes = [x['key'] for x in filtering_data]

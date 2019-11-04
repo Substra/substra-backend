@@ -28,9 +28,9 @@ def replace_storage_addresses(request, composite_algo):
 
 
 class CompositeAlgoViewSet(mixins.CreateModelMixin,
-                  mixins.RetrieveModelMixin,
-                  mixins.ListModelMixin,
-                  GenericViewSet):
+                           mixins.RetrieveModelMixin,
+                           mixins.ListModelMixin,
+                           GenericViewSet):
     queryset = CompositeAlgo.objects.all()
     serializer_class = CompositeAlgoSerializer
     ledger_query_call = 'queryCompositeAlgo'
@@ -56,7 +56,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         # init ledger serializer
         ledger_data.update({'instance': instance})
         ledger_serializer = LedgerCompositeAlgoSerializer(data=ledger_data,
-                                                 context={'request': request})
+                                                          context={'request': request})
         if not ledger_serializer.is_valid():
             # delete instance
             instance.delete()
@@ -204,7 +204,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
 
 class CompositeAlgoPermissionViewSet(PermissionMixin,
-                            GenericViewSet):
+                                     GenericViewSet):
     queryset = CompositeAlgo.objects.all()
     serializer_class = CompositeAlgoSerializer
     ledger_query_call = 'queryCompositeAlgo'
