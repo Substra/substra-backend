@@ -11,9 +11,9 @@ from substrapp.views.utils import validate_pk, get_success_create_code, LedgerEx
 
 
 class CompositeTraintupleViewSet(mixins.CreateModelMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.ListModelMixin,
-                            GenericViewSet):
+                                 mixins.RetrieveModelMixin,
+                                 mixins.ListModelMixin,
+                                 GenericViewSet):
     serializer_class = LedgerCompositeTraintupleSerializer
     ledger_query_call = 'queryCompositeTraintuple'
 
