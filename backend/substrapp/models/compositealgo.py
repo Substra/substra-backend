@@ -1,5 +1,8 @@
 from django.db import models
 
+from substrapp.utils import get_hash
+
+
 def upload_to(instance, filename):
     return 'compositealgos/{0}/{1}'.format(instance.pk, filename)
 
