@@ -14,8 +14,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
-    in_head_model_key = serializers.CharField(min_length=64, max_length=64)
-    in_trunk_model_key = serializers.CharField(min_length=64, max_length=64)
+    in_head_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
+    in_trunk_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     out_trunk_model_permissions = PermissionsSerializer()
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
