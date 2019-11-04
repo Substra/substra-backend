@@ -228,7 +228,7 @@ class CompositeAlgoViewTests(APITestCase):
                 for field in ('description', 'content'):
                     ledger_composite_algo[field]['storageAddress'] = \
                         ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                     'http://remotetestserver')
+                                                                               'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algos
 
             # actual test
@@ -253,7 +253,7 @@ class CompositeAlgoViewTests(APITestCase):
             for field in ('description', 'content'):
                 ledger_composite_algo[field]['storageAddress'] = \
                     ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                 'http://remotetestserver')
+                                                                           'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algo
 
             # actual test
@@ -275,7 +275,7 @@ class CompositeAlgoViewTests(APITestCase):
             for field in ('description', 'content'):
                 ledger_composite_algo[field]['storageAddress'] = \
                     ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                 'http://remotetestserver')
+                                                                           'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algo
 
             # actual test
