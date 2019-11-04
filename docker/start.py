@@ -308,7 +308,8 @@ if __name__ == "__main__":
 
     no_backup = args['no_backup']
 
-    conf = [json.load(open(file_path, 'r')) for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/substra-backend/conf.json')]
+    conf = [json.load(open(file_path, 'r'))
+            for file_path in glob.glob(f'{SUBSTRA_FOLDER}/conf/*/substra-backend/conf.json')]
 
     print('Build backend for : ', flush=True)
     print('  Organizations :', flush=True)
