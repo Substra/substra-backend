@@ -10,7 +10,6 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
-    rank = serializers.IntegerField(allow_null=True, required=False)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
