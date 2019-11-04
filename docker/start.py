@@ -122,9 +122,9 @@ def generate_docker_compose_file(conf, launch_settings, nobasicauth=False):
 
         if launch_settings == 'prod':
             django_server = f'python3 manage.py collectstatic --noinput; '\
-                            f'--module backend.wsgi --static-map /static=/usr/src/app/backend/statics ' \
+                            f'uwsgi --module backend.wsgi --static-map /static=/usr/src/app/backend/statics ' \
                             f'--master --processes {processes} --threads 2 --need-app' \
-                            f'--env DJANGO_SETTINGS_MODULE=backend.settings.server.prod uwsgi --http :{port} '
+                            f'--env DJANGO_SETTINGS_MODULE=backend.settings.server.prod --http :{port} '
         else:
             print('nobasicauth: ', nobasicauth, flush=True)
             extra_settings = '.nobasicauth' if nobasicauth is True else ''
