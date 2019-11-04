@@ -326,7 +326,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path + '-local')
             with self.assertRaises(Exception):
-                put_model({'model': {'hash': model_hash, 'traintupleKey': traintupleKey}},
+                put_model({'model': {'hash': model_hash, 'traintupleKey': traintupleKey, 'traintupleType': 'traintuple'}},
                           self.subtuple_path, model_content)
 
         os.remove(model_path)
@@ -339,7 +339,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path)
             with self.assertRaises(Exception):
-                put_model({'model': {'hash': 'fail-hash', 'traintupleKey': traintupleKey}},
+                put_model({'model': {'hash': 'fail-hash', 'traintupleKey': traintupleKey, 'traintupleType': 'traintuple'}},
                           self.subtuple_path, model_content)
 
         with self.assertRaises(Exception):
@@ -360,8 +360,8 @@ class TasksTests(APITestCase):
         model_path2 = os.path.join(self.subtuple_path, 'model', traintupleKey2)
 
         model_type = 'inModels'
-        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
-                                 {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}
+        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey, 'traintupleType': 'traintuple'},
+                                 {'hash': model_hash2, 'traintupleKey': traintupleKey2, 'traintupleType': 'traintuple'}]}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
 
@@ -419,8 +419,10 @@ class TasksTests(APITestCase):
         model_hash2 = compute_hash(models_content[1], traintupleKey2)
 
         model_type = 'inModels'
-        subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey},
-                                 {'hash': model_hash2, 'traintupleKey': traintupleKey2}]}
+        subtuple = {model_type: [
+            {'hash': model_hash, 'traintupleKey': traintupleKey, 'traintupleType': 'traintuple'},
+            {'hash': model_hash2, 'traintupleKey': traintupleKey2, 'traintupleType': 'traintuple'}]
+        }
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
                 mock.patch('substrapp.tasks.utils.authenticate_worker'),\
@@ -675,7 +677,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey'}]
+        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey', 'model': {'traintupleType': 'traintuple'}}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \

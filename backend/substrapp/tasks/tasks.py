@@ -24,6 +24,10 @@ from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_co
 from substrapp.tasks.exception_handler import compute_error_code
 
 
+PREFIX_HEAD_FILENAME = 'head_'
+PREFIX_TRUNK_FILENAME = 'trunk_'
+
+
 def get_objective(subtuple):
     from substrapp.models import Objective
 
@@ -122,14 +126,14 @@ def get_models(subtuple):
         return []
 
 
-def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
+def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key, filename_prefix=''):
     if not model_content:
         raise Exception('Model content should not be empty')
 
     from substrapp.models import Model
 
     # store a model in local subtuple directory from input model content
-    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_key}')
+    model_dst_path = path.join(subtuple_directory, f'model/{filename_prefix}{traintuple_key}')
     model = None
     try:
         model = Model.objects.get(pk=model_hash)
@@ -149,9 +153,9 @@ def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintup
                 raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
-def put_model(subtuple, subtuple_directory, model_content):
+def put_model(subtuple, subtuple_directory, model_content, filename_prefix=''):
     return _put_model(subtuple, subtuple_directory, model_content, subtuple['model']['hash'],
-                      subtuple['model']['traintupleKey'])
+                      subtuple['model']['traintupleKey'], filename_prefix)
 
 
 def put_models(subtuple, subtuple_directory, models_content):
@@ -336,7 +340,10 @@ def prepare_materials(subtuple, tuple_type):
     metrics_content = get_objective(subtuple)
     algo_content = get_algo(subtuple)
     if tuple_type == 'testtuple':
-        model_content = get_model(subtuple)
+        if 'compositetraintuple' == subtuple['model']['traintupleType']:
+            models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
+        else:
+            model_content = get_model(subtuple)
     elif tuple_type == 'traintuple':
         models_content = get_models(subtuple)
     elif tuple_type == 'compositetraintuple':
@@ -351,8 +358,16 @@ def prepare_materials(subtuple, tuple_type):
     put_metric(subtuple_directory, metrics_content)
     put_algo(subtuple_directory, algo_content)
     if tuple_type == 'testtuple':
-        put_model(subtuple, subtuple_directory, model_content)
-    elif tuple_type in ('traintuple', 'compositetraintuple') and models_content:
+        if 'compositetraintuple' == subtuple['model']['traintupleType']:
+            put_model(subtuple, subtuple_directory, models_content[0], prefix_filename=PREFIX_HEAD_FILENAME)
+            put_model(subtuple, subtuple_directory, models_content[1], prefix_filename=PREFIX_TRUNK_FILENAME)
+        else:
+            put_model(subtuple, subtuple_directory, model_content)
+
+    elif tuple_type == 'compositetraintuple' and models_content:
+        put_model(subtuple, subtuple_directory, models_content[0], prefix_filename=PREFIX_HEAD_FILENAME)
+        put_model(subtuple, subtuple_directory, models_content[1], prefix_filename=PREFIX_TRUNK_FILENAME)
+    elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
     logging.info(f'Prepare materials for {tuple_type} task: success ')
@@ -411,8 +426,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     algo_path = path.join(subtuple_directory)
     algo_docker = f'substra/algo_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
     algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
-    output_head_model_filename = 'out_head_model'
-    output_trunk_model_filename = 'out_trunk_model'
+    output_head_model_filename = 'head_model'
+    output_trunk_model_filename = 'trunk_model'
 
     remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
 
@@ -448,8 +463,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         algo_docker_name = f'{algo_docker_name}_{command}'
 
         if subtuple['inModels'] is not None:
-            inmodels = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
-            command = f"{command} {' '.join(inmodels)}"
+            in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+            command = f"{command} {' '.join(in_traintuple_keys)}"
 
         if rank is not None:
             command = f"{command} --rank {rank}"
@@ -457,8 +472,15 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     elif tuple_type == 'testtuple':
         command = 'predict'
         algo_docker_name = f'{algo_docker_name}_{command}'
-        inmodels = subtuple['model']["traintupleKey"]
-        command = f'{command} {inmodels}'
+
+        if 'compositetraintuple' == subtuple['model']['traintupleType']:
+            composite_traintuple_key = subtuple['model']['traintupleKey']
+            command = f"{command} --input-models-path {model_folder}"
+            command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{composite_traintuple_key}"
+            command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{composite_traintuple_key}"
+        else:
+            in_model = subtuple['model']["traintupleKey"]
+            command = f'{command} {in_model}'
 
     elif tuple_type == 'compositetraintuple':
         command = 'train'
@@ -468,12 +490,12 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command = f"{command} --output-head-model-filename {output_head_model_filename}"
         command = f"{command} --output-trunk-model-filename {output_trunk_model_filename}"
 
-        if subtuple['inHeadModel'] is not None:
+        if subtuple['inHeadModelKey'] is not None:
             inHeadModelKey = subtuple['inHeadModelKey']
-            command = f"{command} --input-head-model-filename {inHeadModelKey}"
+            command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{inHeadModelKey}"
         if subtuple['inTrunkModel'] is not None:
-            inTrunkModelKey = subtuple['inHeadModelKey']
-            command = f"{command} --input-trunk-model-filename {inTrunkModelKey}"
+            inTrunkModelKey = subtuple['inTrunkModelKey']
+            command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{inTrunkModelKey}"
 
         if rank is not None:
             command = f"{command} --rank {rank}"
