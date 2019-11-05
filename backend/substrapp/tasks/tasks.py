@@ -84,7 +84,8 @@ def _get_model(traintuple_hash):
 
 
 def get_head_model(tuple_):
-    key = tuple_.get('inHeadModelKey')
+    model = tuple_.get('model')
+    key = model.get('traintupleKey')
     # TODO: support different types of traintuples
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
 
@@ -97,7 +98,8 @@ def get_head_model(tuple_):
 
 
 def get_trunk_model(tuple_):
-    key = tuple_.get('inTrunkModelKey')
+    model = tuple_.get('model')
+    key = model.get('traintupleKey')
     # TODO: support different types of traintuples
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
 
