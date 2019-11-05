@@ -50,7 +50,7 @@ class CompositeAlgoViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_composite_algo_list_empty(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = []
 
@@ -59,7 +59,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(r, [[]])
 
     def test_composite_algo_list_success(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
@@ -68,7 +68,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(r, [compositealgo])
 
     def test_composite_algo_list_filter_fail(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
@@ -79,7 +79,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertIn('Malformed search filters', r['message'])
 
     def test_composite_algo_list_filter_name(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
@@ -90,7 +90,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(len(r[0]), 1)
 
     def test_composite_algo_list_filter_dual(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
@@ -102,7 +102,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(len(r[0]), 1)
 
     def test_composite_algo_list_filter_datamanager_fail(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = compositealgo
@@ -115,7 +115,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertIn('Malformed search filters', r['message'])
 
     def test_composite_algo_list_filter_objective_fail(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = compositealgo
@@ -128,7 +128,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertIn('Malformed search filters', r['message'])
 
     def test_composite_algo_list_filter_model(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = compositealgo
@@ -144,7 +144,7 @@ class CompositeAlgoViewTests(APITestCase):
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         composite_algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         composite_algo_response = [a for a in compositealgo if a['key'] == composite_algo_hash][0]
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.compositealgo.get_remote_asset') as get_remote_asset:
@@ -164,7 +164,7 @@ class CompositeAlgoViewTests(APITestCase):
     def test_composite_algo_retrieve_fail(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
 
         # PK hash < 64 chars
         search_params = '42303efa663015e729159833a12ffb510ff/'
@@ -186,7 +186,7 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_composite_algo_create(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
@@ -216,7 +216,7 @@ class CompositeAlgoViewTests(APITestCase):
         data['file'].close()
 
     def test_composite_algo_list_storage_addresses_update(self):
-        url = reverse('substrapp:compositealgo-list')
+        url = reverse('substrapp:composite_algo-list')
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.objective.get_remote_asset') as mget_remote_asset:
 
@@ -240,7 +240,7 @@ class CompositeAlgoViewTests(APITestCase):
                                      compositealgo[i][field]['storageAddress'])
 
     def test_composite_algo_retrieve_storage_addresses_update_with_cache(self):
-        url = reverse('substrapp:compositealgo-detail', args=[compositealgo[0]['key']])
+        url = reverse('substrapp:composite_algo-detail', args=[compositealgo[0]['key']])
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.compositealgo.node_has_process_permission',
                            return_value=True), \
@@ -262,7 +262,7 @@ class CompositeAlgoViewTests(APITestCase):
                                  compositealgo[0][field]['storageAddress'])
 
     def test_composite_algo_retrieve_storage_addresses_update_without_cache(self):
-        url = reverse('substrapp:compositealgo-detail', args=[compositealgo[0]['key']])
+        url = reverse('substrapp:composite_algo-detail', args=[compositealgo[0]['key']])
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.compositealgo.node_has_process_permission',
                            return_value=False), \
