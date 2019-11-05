@@ -66,9 +66,8 @@ def get_algo(subtuple):
     return algo_content
 
 
-def _get_model(model):
-    traintuple_hash = model['traintupleKey']
-    traintuple_metadata = get_object_from_ledger(traintuple_hash, 'queryTraintuple')
+def _get_model(traintuple_hash):
+    traintuple_metadata = get_traintuple_metadata(traintuple_hash)
 
     model_content = get_asset_content(
         traintuple_metadata['outModel']['storageAddress'],
@@ -80,10 +79,10 @@ def _get_model(model):
     return model_content
 
 
-def get_model(subtuple):
-    model = subtuple.get('model')
-    if model:
-        return _get_model(model)
+def get_model(testtuple):
+    traintuple_hash = testtuple.get('traintupleKey')
+    if traintuple_hash:
+        return _get_model(traintuple_hash)
     else:
         return None
 
@@ -91,10 +90,12 @@ def get_model(subtuple):
 def get_models(subtuple):
     input_models = subtuple.get('inModels')
     if input_models:
-        return [_get_model(item) for item in input_models]
+        return [_get_model(item['traintupleKey']) for item in input_models]
     else:
         return []
 
+def get_traintuple_metadata(traintupleKey):
+    return get_object_from_ledger(traintupleKey, 'queryTraintuple')
 
 def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
     if not model_content:
@@ -123,9 +124,9 @@ def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintup
                 raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
-def put_model(subtuple, subtuple_directory, model_content):
-    return _put_model(subtuple, subtuple_directory, model_content, subtuple['model']['hash'],
-                      subtuple['model']['traintupleKey'])
+def put_model(testtuple, subtuple_directory, model_content, model_hash):
+    return _put_model(testtuple, subtuple_directory, model_content, model_hash,
+                      testtuple['traintupleKey'])
 
 
 def put_models(subtuple, subtuple_directory, models_content):
@@ -323,7 +324,9 @@ def prepare_materials(subtuple, tuple_type):
     put_metric(subtuple_directory, metrics_content)
     put_algo(subtuple_directory, algo_content)
     if tuple_type == 'testtuple':
-        put_model(subtuple, subtuple_directory, model_content)
+        traintuple_metadata = get_traintuple_metadata(subtuple['traintupleKey'])
+        model_hash = traintuple_metadata['outModel']['hash']
+        put_model(subtuple, subtuple_directory, model_content, model_hash)
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
@@ -427,7 +430,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     elif tuple_type == 'testtuple':
         command = 'predict'
         algo_docker_name = f'{algo_docker_name}_{command}'
-        inmodels = subtuple['model']["traintupleKey"]
+        inmodels = subtuple["traintupleKey"]
         command = f'{command} {inmodels}'
 
     compute_docker(
