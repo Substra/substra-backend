@@ -138,9 +138,9 @@ def generate_docker_compose_file(conf, launch_settings):
 
         if launch_settings == 'prod':
             django_server = f'python3 manage.py collectstatic --noinput; '\
-                            f'--module backend.wsgi --static-map /static=/usr/src/app/backend/statics ' \
+                            f'uwsgi --module backend.wsgi --static-map /static=/usr/src/app/backend/statics ' \
                             f'--master --processes {processes} --threads 2 --need-app' \
-                            f'--env DJANGO_SETTINGS_MODULE=backend.settings.server.prod uwsgi --http :{port} '
+                            f'--env DJANGO_SETTINGS_MODULE=backend.settings.server.prod --http :{port} '
         else:
             django_server = f'DJANGO_SETTINGS_MODULE=backend.settings.server.dev ' \
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
