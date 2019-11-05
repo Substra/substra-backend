@@ -9,7 +9,7 @@ docker:
   config: null
   # Images to pull
   pullImages: []
-    # - eu.gcr.io/substra-208412/substra-tools:0.0.1
+    # - substrafoundation/substra-tools:0.0.1
 
 # Inline secrets used to pull images of pods (base64'd)
 pullSecretsInline: []
@@ -21,7 +21,7 @@ backend:
   defaultDomain: localhost
 
   image:
-    repository: eu.gcr.io/substra-208412/substra-backend
+    repository: substrafoundation/substra-backend
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -154,7 +154,7 @@ flower:
     enabled: false
 
   image:
-    repository: eu.gcr.io/substra-208412/flower
+    repository: substrafoundation/flower
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -172,7 +172,7 @@ flower:
 celerybeat:
   replicaCount: 1
   image:
-    repository: eu.gcr.io/substra-208412/celerybeat
+    repository: substrafoundation/celerybeat
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -198,7 +198,7 @@ celerybeat:
 celeryworker:
   replicaCount: 1
   image:
-    repository: eu.gcr.io/substra-208412/celeryworker
+    repository: substrafoundation/celeryworker
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []

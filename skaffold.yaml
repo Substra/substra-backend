@@ -2,22 +2,22 @@ apiVersion: skaffold/v1beta13
 kind: Config
 build:
   artifacts:
-    - image: eu.gcr.io/substra-208412/substra-backend
+    - image: substrafoundation/substra-backend
       context: .
       docker:
         dockerfile: docker/substra-backend/Dockerfile
 
-    - image: eu.gcr.io/substra-208412/celerybeat
+    - image: substrafoundation/celerybeat
       context: .
       docker:
         dockerfile: docker/celerybeat/Dockerfile
 
-    - image: eu.gcr.io/substra-208412/celeryworker
+    - image: substrafoundation/celeryworker
       context: .
       docker:
         dockerfile: docker/celeryworker/Dockerfile
 
-    - image: eu.gcr.io/substra-208412/flower
+    - image: substrafoundation/flower
       context: .
       docker:
         dockerfile: docker/flower/Dockerfile
@@ -31,10 +31,10 @@ deploy:
         imageStrategy:
           helm: {}
         values:
-          backend.image: eu.gcr.io/substra-208412/substra-backend
-          celerybeat.image: eu.gcr.io/substra-208412/celerybeat
-          celeryworker.image: eu.gcr.io/substra-208412/celeryworker
-          flower.image: eu.gcr.io/substra-208412/flower
+          backend.image: substrafoundation/substra-backend
+          celerybeat.image: substrafoundation/celerybeat
+          celeryworker.image: substrafoundation/celeryworker
+          flower.image: substrafoundation/flower
         overrides:
           secrets:
             fabricConfigmap: network-peer-1-hlf-k8s-fabric
@@ -77,10 +77,10 @@ deploy:
         imageStrategy:
           helm: {}
         values:
-          backend.image: eu.gcr.io/substra-208412/substra-backend
-          celerybeat.image: eu.gcr.io/substra-208412/celerybeat
-          celeryworker.image: eu.gcr.io/substra-208412/celeryworker
-          flower.image: eu.gcr.io/substra-208412/flower
+          backend.image: substrafoundation/substra-backend
+          celerybeat.image: substrafoundation/celerybeat
+          celeryworker.image: substrafoundation/celeryworker
+          flower.image: substrafoundation/flower
         overrides:
           secrets:
             fabricConfigmap: network-peer-2-hlf-k8s-fabric
