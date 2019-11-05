@@ -493,7 +493,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         if subtuple['inHeadModelKey'] is not None:
             inHeadModelKey = subtuple['inHeadModelKey']
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{inHeadModelKey}"
-        if subtuple['inTrunkModel'] is not None:
+        if subtuple['inTrunkModelKey'] is not None:
             inTrunkModelKey = subtuple['inTrunkModelKey']
             command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{inTrunkModelKey}"
 
@@ -517,7 +517,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     if tuple_type == 'traintuple':
         end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
 
-    if tuple_type == 'compositetraintuple':
+    elif tuple_type == 'compositetraintuple':
         end_head_model_file, end_head_model_file_hash = save_model(
             subtuple_directory,
             subtuple['key'],
@@ -558,7 +558,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         result['end_model_file_hash'] = end_model_file_hash
         result['end_model_file'] = end_model_file
 
-    if tuple_type == 'compositetuple':
+    elif tuple_type == 'compositetuple':
         result['end_head_model_file_hash'] = end_head_model_file_hash
         result['end_head_model_file'] = end_head_model_file
         result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
