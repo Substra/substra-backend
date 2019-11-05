@@ -109,14 +109,14 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 
 
 8. Optional: Create a superuser in your databases:
-```
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py createsuperuser --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py createsuperuser --settings=backend.settings.dev
+```shell
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./backend/manage.py createsuperuser --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./backend/manage.py createsuperuser --settings=backend.settings.dev
 ```
 
 9. Build the substra-model docker image:
 Clone the following git repo https://github.com/SubstraFoundation/substra-tools and build the docker image
-```
+```shell
 docker build -t substra-model .
 ```
 
@@ -140,10 +140,10 @@ Execute this command in the `backend/backend` folder.
 Note the use of the development settings.
 
 ```shell
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
+DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
 DJANGO_SETTINGS_MODULE=backend.settings.common celery -A backend beat -l info
 ```
 
@@ -151,30 +151,39 @@ DJANGO_SETTINGS_MODULE=backend.settings.common celery -A backend beat -l info
 
 Go in the `backend` folder and run the server locally:  
 :warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
- ```
- BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=backend.settings.server.dev
- BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=backend.settings.server.dev
- ```
- 
- If you want to bypass the basic authentication when you browse the server on localhost:8000 or localhost:8001, you can use the `nobasicauth` settings.  
- Simply replace `server.dev` by `nobasicauth`, like:
-  ```
- BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py runserver 8000 --settings=backend.settings.server.nobasicauth
- BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py runserver 8001 --settings=backend.settings.server.nobasicauth
- ```
- It allows the substra-frontend project to work correctly too.
 
-## Load data fixtures
-
-For working with node to node authentication, you need load some extra fixtures
+```shell
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 ./manage.py runserver 8000 --settings=backend.settings.server.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 ./manage.py runserver 8001 --settings=backend.settings.server.dev
 ```
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python manage.py loaddata nodes-owkin.yaml --settings=backend.settings.server.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python manage.py loaddata nodes-chunantes.yaml --settings=backend.settings.server.dev
+
+## Generate nodes authentication
+
+For working with node to node authentication, you need to generate and then load some fixtures
+```shell
+python ./backend/node/generate_nodes.py
+BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./manage.py init_nodes ./backend/node/nodes/owkinMSP.json --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./manage.py init_nodes ./backend/node/nodes/chu-nantesMSP.json --settings=backend.settings.dev
+```
+
+## Create a default user
+
+A django admin command is available for registering a user:
+```shell
+./manage.py add_user $USERNAME $PASSWORD
+```
+
+The populate.py file will use for each organization credentials `substra/p@$swr0d44` for connection.
+Create these users with:
+
+```shell
+BACKEND_ORG=owkin ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
+BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
 ```
 
 ## Test with unit and functional tests
 
-```
+```shell
     DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
     coverage report    # For shell report
     coverage html      # For HTML report
@@ -224,17 +233,31 @@ Now you can reach `http://localhost:8000/` and `http://localhost:8001/` :tada:
 
 ## Launching with docker
 
-As for hlf-k8s, you can launch all the services in docker containers.|
-First, build the images:
+As for hlf-k8s, you can launch all the services in docker containers.
+
+First, Make sure you've generated some nodes artifacts:
+```bash
+$> python ./backend/node/generate_nodes.py
+```
+
+Then, build the images:
 ```bash
 $> sh build-docker-images.sh
 ```
-Then, go to the`docker` dir and run `start.py`:
+
+Then, go to the `docker` dir and run `start.py` (`-d` means `dev` settings):
 ```bash
-$> python3 start.py
+$> python start.py -d --no-backup
 ```
 
 Check your services are correctly started with `docker ps -a`.
+
+## Expiry token period
+
+Two global environment variables `ACCESS_TOKEN_LIFETIME` and `EXPIRY_TOKEN_LIFETIME` expressed in minutes can be set for dealing with expiry token period.  
+The first one `ACCESS_TOKEN_LIFETIME` deals with JWT Authentication.  
+THe second one `EXPIRY_TOKEN_LIFETIME` deals with simple token expiration.  
+By default, set to 24*60 min i.e 24h.
 
 ## Testing fabric-sdk-py
 

@@ -29,20 +29,15 @@ PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 def setup_config(network='docker'):
     print('Init config for owkin and chunantes')
     if network == 'docker':
-        client.add_profile('owkin', 'http://owkin.substra-backend:8000', '0.0',
-                           user=USER, password=PASSWORD)
-        client.add_profile('chunantes', 'http://chunantes.substra-backend:8001', '0.0',
-                           user=USER, password=PASSWORD)
-        client.add_profile('clb', 'http://clb.substra-backend:8002', '0.0',
-                           user=USER, password=PASSWORD)
+        # get first available user
+        client.add_profile('owkin', 'substra', 'p@$swr0d44', 'http://substra-backend.owkin.xyz:8000', '0.0')
+        client.add_profile('chunantes', 'substra', 'p@$swr0d45', 'http://substra-backend.chunantes.xyz:8001', '0.0')
+        client.add_profile('clb', 'substra', 'p@$swr0d46', 'http://substra-backend.clb.xyz:8002', '0.0')
     if network == 'skaffold':
         # the usernames and passwords are defined in the skaffold.yaml file
-        client.add_profile('owkin', 'http://substra-backend.node-1', '0.0',
-                           user='node-1', password='node-1pwd')
-        client.add_profile('chunantes', 'http://substra-backend.node-2', '0.0',
-                           user='node-2', password='node-2pwd')
-        client.add_profile('clb', 'http://substra-backend.node-3', '0.0',
-                           user='node-3', password='node-3pwd')
+        client.add_profile('owkin', 'node-1', 'p@$swr0d44', 'http://substra-backend.node-1.com', '0.0')
+        client.add_profile('chunantes', 'node-2', 'p@$swr0d45', 'http://substra-backend.node-2.com', '0.0')
+        client.add_profile('clb', 'node-3', 'p@$swr0d46', 'http://substra-backend.node-3.com', '0.0')
 
 
 def zip_folder(path, destination):
@@ -97,6 +92,16 @@ def update_datamanager(data_manager_key, data, profile):
         print(colored(json.dumps(r, indent=2), 'green'))
 
 
+def login(*args):
+    for org in args:
+        print(f'Login with {org}')
+        client.set_profile(org)
+        try:
+            client.login()
+        except Exception as e:
+            raise Exception(f'login failed: {str(e)}')
+
+
 def do_populate():
 
     parser = argparse.ArgumentParser()
@@ -128,6 +133,8 @@ def do_populate():
         org_2 = 'clb'
     else:
         raise Exception(f"Number of orgs {args['nb_org']} not in [1, 2, 3]")
+
+    login(org_0, org_1, org_2)
 
     print(f'will create datamanager with {org_1}')
     # create datamanager with org1

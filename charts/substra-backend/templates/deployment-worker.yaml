@@ -50,17 +50,6 @@ spec:
               value: backend.settings.{{ .Values.backend.settings }}
             - name: PYTHONUNBUFFERED
               value: "1"
-            {{- with .Values.backend.auth }}
-            - name: BACK_AUTH_USER
-              value: {{ .user | quote }}
-            - name: BACK_AUTH_PASSWORD
-              value: {{ .password | quote }}
-            {{- else }}
-            - name: BACK_AUTH_USER
-              value: ""
-            - name: BACK_AUTH_PASSWORD
-              value: ""
-            {{- end }}
             - name: DEFAULT_DOMAIN
               value: "{{ .Values.backend.defaultDomain }}"
             - name: BACKEND_{{ .Values.organization.name | upper }}_DB_NAME

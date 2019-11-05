@@ -115,3 +115,4 @@ SECRET
 # substra-backend files
 docker/docker-compose-dynamic.yaml
 **/medias/*
+backend/node/nodes/*

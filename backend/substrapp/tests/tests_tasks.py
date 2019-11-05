@@ -53,7 +53,6 @@ class TasksTests(APITestCase):
     @classmethod
     def setUpTestData(cls):
         cls.outgoing_node = OutgoingNode.objects.create(node_id="external_node_id", secret="s3cr37")
-
         cls.outgoing_node_traintuple = OutgoingNode.objects.create(node_id=assets.traintuple[1]['creator'],
                                                                    secret="s3cr37")
         if assets.traintuple[1]['creator'] != assets.algo[0]['owner']:
@@ -435,6 +434,7 @@ class TasksTests(APITestCase):
     def test_get_algo(self):
         algo_content = self.algo.read()
         algo_hash = get_hash(self.algo)
+
         subtuple = {
             'algo': {
                 'storageAddress': assets.algo[0]['content']['storageAddress'],
@@ -447,7 +447,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.utils.get_owner') as get_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
             mget_remote_file.return_value = algo_content
-            get_owner.return_value = assets.algo[0]['owner']
+            get_owner.return_value = 'external_node_id'
             get_object_from_ledger.return_value = assets.algo[0]
 
             data = get_algo(subtuple)

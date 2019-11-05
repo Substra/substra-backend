@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import sys
+from datetime import timedelta
+
 from libs.gen_secret_key import write_secret_key
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -58,13 +60,15 @@ INSTALLED_APPS = [
     'django_celery_results',
     'rest_framework_swagger',
     'rest_framework',
+    'rest_framework.authtoken',
+    'rest_framework_simplejwt.token_blacklist',
     'substrapp',
-    'node'
+    'node',
+    'users'
 ]
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'libs.authentication.SettingsBackend',
     'node.authentication.NodeBackend',
 ]
 
@@ -78,6 +82,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
+    'libs.HealthCheckMiddleware.HealthCheckMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -115,10 +120,22 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
+        'NAME': 'libs.zxcvbnValidator.ZxcvbnValidator',
+    },
+    {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 9,
+        }
+    },
+    {
+        'NAME': 'libs.maximumLengthValidator.MaximumLengthValidator',
+        'OPTIONS': {
+            'max_length': 64
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -161,9 +178,7 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
-
-BASIC_AUTHENTICATION_MODULE = 'rest_framework.authentication'
-
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
 
 TRUE_VALUES = {
     't', 'T',

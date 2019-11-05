@@ -36,8 +36,7 @@ DATABASES = {
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, f'medias/{ORG_NAME}'))
 
-
-SITE_HOST = f'{ORG_NAME}.substra-backend'
+SITE_HOST = f'substra-backend.{ORG_NAME}.xyz'
 SITE_PORT = DEFAULT_PORT
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
 

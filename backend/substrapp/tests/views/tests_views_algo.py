@@ -4,6 +4,7 @@ import shutil
 import logging
 
 import mock
+import urllib.parse
 
 from django.urls import reverse
 from django.test import override_settings
@@ -26,7 +27,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoViewTests(APITestCase):
@@ -95,7 +95,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = algo
 
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
+            search_params = f'?search=algo%253Aname%253A{urllib.parse.quote(algo[2]["name"])}'
             search_params += f'%2Calgo%253Aowner%253A{algo[2]["owner"]}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()

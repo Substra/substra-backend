@@ -16,7 +16,6 @@ MEDIA_ROOT = "/tmp/unittests_misc/"
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(SITE_HOST='localhost')
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class CreateObjectiveTestCase(TestCase):
 
