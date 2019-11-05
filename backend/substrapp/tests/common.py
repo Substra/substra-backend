@@ -6,7 +6,6 @@ import base64
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
-from django.db import transaction
 from rest_framework.test import APIClient
 
 
