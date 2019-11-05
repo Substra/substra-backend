@@ -255,6 +255,21 @@ def log_success_tuple(tuple_type, tuple_key, res):
             'log': '',
         }
 
+    elif tuple_type == 'compositeTraintuple':
+        invoke_fcn = 'logSuccessCompositeTrain'
+        invoke_args = {
+            'key': tuple_key,
+            'outHeadModel': {
+                'hash': res["end_head_model_file_hash"],
+                'storageAddress': res["end_head_model_file"],
+            },
+            'outTrunkModel': {
+                'hash': res["end_trunk_model_file_hash"],
+                'storageAddress': res["end_trunk_model_file"],
+            },
+            'perf': float(res["global_perf"]),
+            'log': '',
+        }
     else:
         raise NotImplementedError()
 
@@ -269,6 +284,8 @@ def log_start_tuple(tuple_type, tuple_key):
         start_type = 'logStartTrain'
     elif tuple_type == 'testtuple':
         start_type = 'logStartTest'
+    elif tuple_type == 'compositeTraintuple':
+        start_type = 'logStartCompositeTrain'
     else:
         raise NotImplementedError()
 
