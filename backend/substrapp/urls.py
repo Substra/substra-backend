@@ -27,9 +27,9 @@ router.register(r'traintuple', TrainTupleViewSet, base_name='traintuple')
 router.register(r'testtuple', TestTupleViewSet, base_name='testtuple')
 router.register(r'task', TaskViewSet, base_name='task')
 router.register(r'compute_plan', ComputePlanViewSet, base_name='compute_plan')
-router.register(r'compositetraintuple', CompositeTraintupleViewSet, base_name='compositetraintuple')
-router.register(r'compositealgo', CompositeAlgoViewSet, base_name='compositealgo')
-router.register(r'compositealgo', CompositeAlgoPermissionViewSet, base_name='compositealgo')
+router.register(r'compositetraintuple', CompositeTraintupleViewSet, base_name='composite_traintuple')
+router.register(r'compositealgo', CompositeAlgoViewSet, base_name='composite_algo')
+router.register(r'compositealgo', CompositeAlgoPermissionViewSet, base_name='composite_algo')
 
 urlpatterns = [
     url(r'^', include(router.urls)),
