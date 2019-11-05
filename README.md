@@ -202,15 +202,9 @@ Then, build the images:
 $> sh build-docker-images.sh
 ```
 
-<<<<<<< HEAD
 Then, go to the `docker` dir and run `start.py` (`-d` means `dev` settings):
 ```bash
 $> python start.py -d --no-backup
-=======
-Then, go to the`docker` dir and run `start.py`:
-```bash
-$> python3 start.py -d --no-backup
->>>>>>> Fix tests - docker - add session authent
 ```
 
 Check your services are correctly started with `docker ps -a`.
