@@ -70,6 +70,19 @@ def get_algo(subtuple):
     return algo_content
 
 
+def get_composite_algo(tuple_):
+    algo_hash = tuple_['algo']['hash']
+    algo_metadata = get_object_from_ledger(algo_hash, 'queryCompositeAlgo')
+
+    algo_content = get_asset_content(
+        algo_metadata['content']['storageAddress'],
+        algo_metadata['owner'],
+        algo_metadata['content']['hash'],
+    )
+
+    return algo_content
+
+
 def _get_model(model):
     traintuple_hash = model['traintupleKey']
     traintuple_metadata = get_object_from_ledger(traintuple_hash, 'queryTraintuple')
@@ -86,6 +99,9 @@ def _get_model(model):
 
 def get_head_model(tuple_):
     model = tuple_.get('model')
+    if not model:
+        return None
+
     key = model.get('traintupleKey')
     # TODO: support different types of traintuples
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
@@ -100,6 +116,9 @@ def get_head_model(tuple_):
 
 def get_trunk_model(tuple_):
     model = tuple_.get('model')
+    if not model:
+        return None
+
     key = model.get('traintupleKey')
     # TODO: support different types of traintuples
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
@@ -340,15 +359,18 @@ def prepare_materials(subtuple, tuple_type):
 
     # get subtuple components
     metrics_content = get_objective(subtuple)
-    algo_content = get_algo(subtuple)
     if tuple_type == 'testtuple':
-        if 'compositetraintuple' == subtuple['model']['traintupleType']:
+        if 'compositeTraintuple' == subtuple['model']['traintupleType']:
+            algo_content = get_composite_algo(subtuple)
             models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
         else:
+            algo_content = get_algo(subtuple)
             model_content = get_model(subtuple)
     elif tuple_type == 'traintuple':
+        algo_content = get_algo(subtuple)
         models_content = get_models(subtuple)
-    elif tuple_type == 'compositetraintuple':
+    elif tuple_type == 'compositeTraintuple':
+        algo_content = get_composite_algo(subtuple)
         models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
     else:
         raise NotImplementedError()
@@ -360,15 +382,15 @@ def prepare_materials(subtuple, tuple_type):
     put_metric(subtuple_directory, metrics_content)
     put_algo(subtuple_directory, algo_content)
     if tuple_type == 'testtuple':
-        if 'compositetraintuple' == subtuple['model']['traintupleType']:
-            put_model(subtuple, subtuple_directory, models_content[0], prefix_filename=PREFIX_HEAD_FILENAME)
-            put_model(subtuple, subtuple_directory, models_content[1], prefix_filename=PREFIX_TRUNK_FILENAME)
+        if 'compositeTraintuple' == subtuple['model']['traintupleType']:
+            put_model(subtuple, subtuple_directory, models_content[0], filename_prefix=PREFIX_HEAD_FILENAME)
+            put_model(subtuple, subtuple_directory, models_content[1], filename_prefix=PREFIX_TRUNK_FILENAME)
         else:
             put_model(subtuple, subtuple_directory, model_content)
 
-    elif tuple_type == 'compositetraintuple' and models_content:
-        put_model(subtuple, subtuple_directory, models_content[0], prefix_filename=PREFIX_HEAD_FILENAME)
-        put_model(subtuple, subtuple_directory, models_content[1], prefix_filename=PREFIX_TRUNK_FILENAME)
+    elif tuple_type == 'compositeTraintuple' and models_content:
+        put_model(subtuple, subtuple_directory, models_content[0], filename_prefix=PREFIX_HEAD_FILENAME)
+        put_model(subtuple, subtuple_directory, models_content[1], filename_prefix=PREFIX_TRUNK_FILENAME)
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
@@ -484,7 +506,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             in_model = subtuple['model']["traintupleKey"]
             command = f'{command} {in_model}'
 
-    elif tuple_type == 'compositetraintuple':
+    elif tuple_type == 'compositeTraintuple':
         command = 'train'
         algo_docker_name = f'{algo_docker_name}_{command}'
 
@@ -519,7 +541,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     if tuple_type == 'traintuple':
         end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
 
-    elif tuple_type == 'compositetraintuple':
+    elif tuple_type == 'compositeTraintuple':
         end_head_model_file, end_head_model_file_hash = save_model(
             subtuple_directory,
             subtuple['key'],
@@ -560,7 +582,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         result['end_model_file_hash'] = end_model_file_hash
         result['end_model_file'] = end_model_file
 
-    elif tuple_type == 'compositetuple':
+    elif tuple_type == 'compositeTraintuple':
         result['end_head_model_file_hash'] = end_head_model_file_hash
         result['end_head_model_file'] = end_head_model_file
         result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
