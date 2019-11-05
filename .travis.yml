@@ -30,6 +30,7 @@ script:
   - pip install flake8
   - flake8
   - coverage run manage.py test
+  - cd ..
 
 after_script:
   - 'if ! git diff --quiet --exit-code $TRAVIS_COMMIT_RANGE charts; then CHART_CHANGED="true"; else CHART_CHANGED="false"; fi'
