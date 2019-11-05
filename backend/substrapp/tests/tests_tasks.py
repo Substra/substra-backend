@@ -359,7 +359,8 @@ class TasksTests(APITestCase):
 
         model_type = 'inModels'
         subtuple = {model_type: [{'hash': model_hash, 'traintupleKey': traintupleKey, 'traintupleType': 'traintuple'},
-                                 {'hash': model_hash2, 'traintupleKey': traintupleKey2, 'traintupleType': 'traintuple'}]}
+                                 {'hash': model_hash2, 'traintupleKey': traintupleKey2,
+                                  'traintupleType': 'traintuple'}]}
 
         model_directory = os.path.join(self.subtuple_path, 'model/')
 
@@ -674,7 +675,12 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey', 'traintupleKey': 'subtuple_test', 'traintupleType': 'traintuple'}]
+        subtuple = [{
+            'key': 'subtuple_test',
+            'computePlanID': 'flkey',
+            'traintupleKey': 'subtuple_test',
+            'traintupleType': 'traintuple'
+        }]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
