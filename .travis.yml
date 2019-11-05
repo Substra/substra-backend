@@ -39,7 +39,7 @@ after_script:
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then git config --global user.email "travis@travis-ci.org"; fi'
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then git config --global user.name "Travis CI"; fi'
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then git clone https://${GH_TOKEN}@github.com/SubstraFoundation/charts.git substra-charts; fi'
-  - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then mv hlf-k8s-* substra-charts/; fi'
+  - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then mv substra-backend-* substra-charts/; fi'
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then cd substra-charts; fi'
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then helm repo index .; fi'
   - 'if [ "$CHART_CHANGED" == "true" -a "$TRAVIS_PULL_REQUEST" == "false" ]; then git add .; fi'
