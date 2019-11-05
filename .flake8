@@ -5,4 +5,5 @@ exclude = backend/substrapp/migrations/*,
           backend/substrapp/tests/assets.py,
           backend/backend/settings/*,
           backend/node/migrations/*,
+          backend/medias/*,
           .env, .venv
