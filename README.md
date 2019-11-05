@@ -130,6 +130,7 @@ A django admin command is available for registering a user:
 ```shell
 ./manage.py add_user $USERNAME $PASSWORD
 ```
+
 The populate.py file will use for each organization credentials `substra/p@$swr0d44` for connection.
 Create these users with:
 

@@ -126,9 +126,6 @@ def generate_docker_compose_file(conf, launch_settings):
         },
         'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
 
-    # generate nodes
-    # TODO make sure nodes folder exists else warn
-
     for org in conf:
         org_name = org['name']
         org_name_stripped = org_name.replace('-', '')
