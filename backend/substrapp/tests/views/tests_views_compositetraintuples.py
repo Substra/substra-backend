@@ -58,7 +58,7 @@ class CompositeTraintupleViewTests(APITestCase):
         self.assertFalse(compositetraintuple_view.get_queryset())
 
     def test_compositetraintuple_list_empty(self):
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
         with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = []
 
@@ -70,7 +70,7 @@ class CompositeTraintupleViewTests(APITestCase):
 
         with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.return_value = compositetraintuple[0]
-            url = reverse('substrapp:compositetraintuple-list')
+            url = reverse('substrapp:composite_traintuple-list')
             search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -79,7 +79,7 @@ class CompositeTraintupleViewTests(APITestCase):
     def test_compositetraintuple_retrieve_fail(self):
 
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
 
         # PK hash < 64 chars
         search_params = '42303efa663015e729159833a12ffb510ff/'
@@ -102,7 +102,7 @@ class CompositeTraintupleViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetraintuple_list_filter_tag(self):
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
         with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositetraintuple
 
@@ -113,7 +113,7 @@ class CompositeTraintupleViewTests(APITestCase):
             self.assertEqual(len(r[0]), 1)
 
     def test_compositetraintuple_list_filter_compute_plan_id(self):
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
         with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositetraintuple
             compute_plan_id = get_compute_plan_id(compositetraintuple)

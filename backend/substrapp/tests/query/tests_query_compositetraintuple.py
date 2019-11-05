@@ -43,7 +43,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         Objective.objects.create(description=description,
                                  metrics=metrics)
         # post data
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
@@ -85,7 +85,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         Objective.objects.create(description=description,
                                  metrics=metrics)
         # post data
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
@@ -116,7 +116,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_compositetraintuple_ko(self):
-        url = reverse('substrapp:compositetraintuple-list')
+        url = reverse('substrapp:composite_traintuple-list')
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,

@@ -21,9 +21,9 @@ from substrapp.views.filters_utils import filter_list
 
 def replace_storage_addresses(request, composite_algo):
     composite_algo['description']['storageAddress'] = request.build_absolute_uri(
-        reverse('substrapp:compositealgo-description', args=[composite_algo['key']]))
+        reverse('substrapp:composite_algo-description', args=[composite_algo['key']]))
     composite_algo['content']['storageAddress'] = request.build_absolute_uri(
-        reverse('substrapp:compositealgo-file', args=[composite_algo['key']])
+        reverse('substrapp:composite_algo-file', args=[composite_algo['key']])
     )
 
 
