@@ -1,0 +1,191 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-backend
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  replicas: {{ .Values.backend.replicaCount }}
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range $index, $value := .Values.pullSecretsInline }}
+        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
+      {{- end }}
+      {{- range .Values.backend.image.pullSecrets }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+        - name: {{ template "substra.name" . }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          {{- if .Values.backend.image.pullPolicy }}
+          imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+          {{- end }}
+          command: ["/bin/bash"]
+          {{- if eq .Values.backend.settings "prod" }}
+          args: ["-c", "python manage.py migrate && python3 manage.py collectstatic --noinput && uwsgi --http :8000 --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes 4 --threads 2 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
+          {{- else }}
+          args: ["-c", "python manage.py migrate && DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} python3 manage.py runserver --noreload 0.0.0.0:8000"]
+          {{- end }}
+          env:
+            - name: ORG
+              value: {{ .Values.organization.name }}
+            - name: BACKEND_ORG
+              value: {{ .Values.organization.name }}
+            - name: BACKEND_{{ .Values.organization.name | upper }}_DB_NAME
+              value: {{ .Values.postgresql.postgresqlDatabase }}
+            - name: BACKEND_DB_USER
+              value: {{ .Values.postgresql.postgresqlUsername }}
+            - name: BACKEND_DB_PWD
+              value: {{ .Values.postgresql.postgresqlPassword }}
+            - name: DATABASE_HOST
+              value: {{ .Release.Name }}-postgresql
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.{{ .Values.backend.settings }}
+            - name: FABRIC_CFG_PATH
+              value: /var/hyperledger/fabric_cfg
+            - name: CORE_PEER_ADDRESS_ENV
+              value: "{{ .Values.peer.host }}:{{ .Values.peer.port }}"
+            - name: FABRIC_LOGGING_SPEC
+              value: debug
+            - name: DEFAULT_DOMAIN
+              value: "{{ .Values.backend.defaultDomain }}"
+            - name: CELERY_BROKER_URL
+              value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+            - name: BACKEND_DEFAULT_PORT
+              value: {{ .Values.backend.service.port | quote}}
+            - name: BACKEND_PEER_PORT
+              value: "internal"
+            - name: LEDGER_CONFIG_FILE
+              value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
+            - name: PYTHONUNBUFFERED
+              value: "1"
+            - name: MEDIA_ROOT
+              value: {{ .Values.persistence.hostPath }}/medias/
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.service.port }}
+              protocol: TCP
+          volumeMounts:
+            - mountPath: {{ .Values.persistence.hostPath }}
+              name: data
+            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
+              name: config
+              readOnly: true
+            - mountPath: /var/hyperledger/fabric_cfg
+              name: fabric
+              readOnly: true
+            - mountPath: /var/hyperledger/msp/signcerts
+              name: id-cert
+            - mountPath: /var/hyperledger/msp/keystore
+              name: id-key
+            - mountPath: /var/hyperledger/msp/cacerts
+              name: cacert
+            - mountPath: /var/hyperledger/msp/admincerts
+              name: admin-cert
+            - mountPath: /var/hyperledger/tls/server/pair
+              name: tls
+            - mountPath: /var/hyperledger/tls/server/cert
+              name: tls-rootcert
+            - mountPath: /var/hyperledger/tls/client/pair
+              name: tls-client
+            - mountPath: /var/hyperledger/tls/client/cert
+              name: tls-clientrootcert
+            - mountPath: /var/hyperledger/tls/ord/cert
+              name: ord-tls-rootcert
+            - mountPath: /var/hyperledger/admin_msp/signcerts
+              name: admin-cert
+            - mountPath: /var/hyperledger/admin_msp/keystore
+              name: admin-key
+            - mountPath: /var/hyperledger/admin_msp/cacerts
+              name: cacert
+            - mountPath: /var/hyperledger/admin_msp/admincerts
+              name: admin-cert
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: http
+              httpHeaders:
+                - name: Accept
+                  value: "text/html;version=0.0, */*;version=0.0"
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+              httpHeaders:
+                - name: Accept
+                  value: "text/html;version=0.0, */*;version=0.0"
+            initialDelaySeconds: 10
+            timeoutSeconds: 2
+            periodSeconds: 5
+          resources:
+            {{- toYaml .Values.backend.resources | nindent 12 }}
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" . }}
+      - name: config
+        configMap:
+          name: {{ include "substra.fullname" . }}-backend
+      - name: fabric
+        configMap:
+          name: {{ $.Values.secrets.fabricConfigmap }}
+      - name: id-cert
+        secret:
+          secretName: {{ $.Values.secrets.cert }}
+      - name: id-key
+        secret:
+          secretName: {{ $.Values.secrets.key }}
+      - name: cacert
+        secret:
+          secretName: {{ $.Values.secrets.caCert }}
+      - name: tls
+        secret:
+          secretName: {{ $.Values.secrets.tls }}
+      - name: tls-rootcert
+        secret:
+          secretName: {{ $.Values.secrets.tlsRootCert }}
+      - name: tls-client
+        secret:
+          secretName: {{ $.Values.secrets.tlsClient }}
+      - name: tls-clientrootcert
+        secret:
+          secretName: {{ $.Values.secrets.tlsClientRootCerts }}
+      - name: admin-cert
+        secret:
+          secretName: {{ $.Values.secrets.adminCert }}
+      - name: admin-key
+        secret:
+          secretName: {{ $.Values.secrets.adminKey }}
+      - name: ord-tls-rootcert
+        secret:
+          secretName: {{ $.Values.secrets.tlsRootCert }}
+    {{- with .Values.backend.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.backend.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.backend.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
