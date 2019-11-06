@@ -87,8 +87,8 @@ def get_model(testtuple):
         return None
 
 
-def get_models(subtuple):
-    input_models = subtuple.get('inModels')
+def get_models(traintuple):
+    input_models = traintuple.get('inModels')
     if input_models:
         return [_get_model(item['traintupleKey']) for item in input_models]
     else:
