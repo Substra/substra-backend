@@ -159,7 +159,7 @@ def get_composite_models(subtuple):
         return []
 
 
-def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
+def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
     if not model_content:
         raise Exception('Model content should not be empty')
 
@@ -187,7 +187,7 @@ def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintup
 
 
 def put_model(testtuple, subtuple_directory, model_content, model_hash, filename_prefix=''):
-    return _put_model(testtuple, subtuple_directory, model_content, model_hash,
+    return _put_model(subtuple_directory, model_content, model_hash,
                       testtuple['traintupleKey'], filename_prefix)
 
 
@@ -196,7 +196,22 @@ def put_models(subtuple, subtuple_directory, models_content):
         raise Exception('Models content should not be empty')
 
     for model_content, model in zip(models_content, subtuple['inModels']):
-        _put_model(model, subtuple_directory, model_content, model['hash'], model['traintupleKey'])
+        _put_model(subtuple_directory, model_content, model['hash'], model['traintupleKey'])
+
+
+def put_composite_models(subtuple, subtuple_directory, models_content):
+    if not models_content:
+        raise Exception('Models content should not be empty')
+
+    _put_model(subtuple_directory, models_content[0],
+               subtuple['InHeadModel']['hash'],
+               subtuple['InHeadModel']['traintupleKey'],
+               filename_prefix=PREFIX_HEAD_FILENAME)
+
+    _put_model(subtuple_directory, models_content[0],
+               subtuple['InTrunkModel']['hash'],
+               subtuple['InTrunkModel']['traintupleKey'],
+               filename_prefix=PREFIX_TRUNK_FILENAME)
 
 
 def put_opener(subtuple, subtuple_directory):
@@ -400,22 +415,14 @@ def prepare_materials(subtuple, tuple_type):
     put_data_sample(subtuple, subtuple_directory)
     if tuple_type == 'testtuple':
         if 'compositeTraintuple' == subtuple['traintupleType']:
-            # TODO: add a get_composite_traintuple_metadata function and use
-            # it here to retrieve head_model_hash and trunk_model_hash
-            traintuple_metadata = get_traintuple_metadata(subtuple['traintupleKey'])
-            model_hash = traintuple_metadata['outModel']['hash']
-            put_model(subtuple, subtuple_directory, models_content[0], model_hash, prefix_filename=PREFIX_HEAD_FILENAME)
-            put_model(subtuple, subtuple_directory, models_content[1], model_hash, prefix_filename=PREFIX_TRUNK_FILENAME)
+            put_composite_models(subtuple, subtuple_directory, models_content)
         else:
             traintuple_metadata = get_traintuple_metadata(subtuple['traintupleKey'])
             model_hash = traintuple_metadata['outModel']['hash']
             put_model(subtuple, subtuple_directory, model_content, model_hash)
 
     elif tuple_type == 'compositeTraintuple' and models_content:
-        # TODO: implement traintuple-friendly put_model function
-        # put_model(subtuple, subtuple_directory, models_content[0], prefix_filename=PREFIX_HEAD_FILENAME)
-        # put_model(subtuple, subtuple_directory, models_content[1], prefix_filename=PREFIX_TRUNK_FILENAME)
-        pass
+        put_composite_models(subtuple, subtuple_directory, models_content)
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
