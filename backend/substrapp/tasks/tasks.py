@@ -204,13 +204,13 @@ def put_composite_models(subtuple, subtuple_directory, models_content):
         raise Exception('Models content should not be empty')
 
     _put_model(subtuple_directory, models_content[0],
-               subtuple['InHeadModel']['hash'],
-               subtuple['InHeadModel']['traintupleKey'],
+               subtuple['inHeadModel']['hash'],
+               subtuple['inHeadModel']['traintupleKey'],
                filename_prefix=PREFIX_HEAD_FILENAME)
 
-    _put_model(subtuple_directory, models_content[0],
-               subtuple['InTrunkModel']['hash'],
-               subtuple['InTrunkModel']['traintupleKey'],
+    _put_model(subtuple_directory, models_content[1],
+               subtuple['inTrunkModel']['hash'],
+               subtuple['inTrunkModel']['traintupleKey'],
                filename_prefix=PREFIX_TRUNK_FILENAME)
 
 
