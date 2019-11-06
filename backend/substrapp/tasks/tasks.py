@@ -523,11 +523,13 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command = f"{command} --output-head-model-filename {output_head_model_filename}"
         command = f"{command} --output-trunk-model-filename {output_trunk_model_filename}"
 
-        if subtuple['inHeadModelKey'] is not None:
-            inHeadModelKey = subtuple['inHeadModelKey']
+        if subtuple['inHeadModel'] is not None:
+            inHeadModel = subtuple['inHeadModel']
+            inHeadModelKey = inHeadModel.get('traintupleKey')
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{inHeadModelKey}"
-        if subtuple['inTrunkModelKey'] is not None:
-            inTrunkModelKey = subtuple['inTrunkModelKey']
+        if subtuple['inTrunkModel'] is not None:
+            inTrunkModel = subtuple['inTrunkModel']
+            inTrunkModelKey = inTrunkModel.get('traintupleKey')
             command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{inTrunkModelKey}"
 
         if rank is not None:
