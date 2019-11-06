@@ -94,8 +94,10 @@ def get_models(subtuple):
     else:
         return []
 
+
 def get_traintuple_metadata(traintupleKey):
     return get_object_from_ledger(traintupleKey, 'queryTraintuple')
+
 
 def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
     if not model_content:

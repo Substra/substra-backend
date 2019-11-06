@@ -390,7 +390,6 @@ class TasksTests(APITestCase):
     def test_get_model(self):
         model_content = self.model.read().encode()
         traintupleKey = compute_hash(model_content)
-        model_hash = compute_hash(model_content, traintupleKey)
         subtuple = {'traintupleKey': traintupleKey}
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
