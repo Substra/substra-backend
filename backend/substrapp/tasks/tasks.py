@@ -98,7 +98,7 @@ def _get_model(model):
 
 
 def get_head_model(tuple_):
-    model = tuple_.get('model')
+    model = tuple_.get('inHeadModel')
     if not model:
         return None
 
@@ -115,7 +115,7 @@ def get_head_model(tuple_):
 
 
 def get_trunk_model(tuple_):
-    model = tuple_.get('model')
+    model = tuple_.get('inTrunkModel')
     if not model:
         return None
 
@@ -143,6 +143,15 @@ def get_models(subtuple):
     input_models = subtuple.get('inModels')
     if input_models:
         return [_get_model(item) for item in input_models]
+    else:
+        return []
+
+
+def get_composite_models(subtuple):
+    head_model = get_head_model(subtuple)
+    trunk_model = get_trunk_model(subtuple)
+    if head_model and trunk_model:
+        return [head_model, trunk_model]
     else:
         return []
 
@@ -362,7 +371,7 @@ def prepare_materials(subtuple, tuple_type):
     if tuple_type == 'testtuple':
         if 'compositeTraintuple' == subtuple['model']['traintupleType']:
             algo_content = get_composite_algo(subtuple)
-            models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
+            models_content = get_composite_models(subtuple)
         else:
             algo_content = get_algo(subtuple)
             model_content = get_model(subtuple)
@@ -371,7 +380,7 @@ def prepare_materials(subtuple, tuple_type):
         models_content = get_models(subtuple)
     elif tuple_type == 'compositeTraintuple':
         algo_content = get_composite_algo(subtuple)
-        models_content = [get_head_model(subtuple), get_trunk_model(subtuple)]
+        models_content = get_composite_models(subtuple)
     else:
         raise NotImplementedError()
 
