@@ -547,14 +547,16 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command = f"{command} --output-head-model-filename {output_head_model_filename}"
         command = f"{command} --output-trunk-model-filename {output_trunk_model_filename}"
 
-        if subtuple['inHeadModel'] is not None:
-            inHeadModel = subtuple['inHeadModel']
-            inHeadModelKey = inHeadModel.get('traintupleKey')
-            command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{inHeadModelKey}"
-        if subtuple['inTrunkModel'] is not None:
-            inTrunkModel = subtuple['inTrunkModel']
-            inTrunkModelKey = inTrunkModel.get('traintupleKey')
-            command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{inTrunkModelKey}"
+        if subtuple['inHeadModel'] and subtuple['inTrunkModel']:
+            command = f"{command} --input-models-path {model_folder}"
+
+            in_head_model = subtuple['inHeadModel']
+            in_head_model_key = in_head_model.get('traintupleKey')
+            command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{in_head_model_key}"
+
+            in_trunk_model = subtuple['inTrunkModel']
+            in_trunk_model_key = in_trunk_model.get('traintupleKey')
+            command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{in_trunk_model_key}"
 
         if rank is not None:
             command = f"{command} --rank {rank}"
