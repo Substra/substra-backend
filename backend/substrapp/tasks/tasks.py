@@ -107,9 +107,9 @@ def get_head_model(tuple_):
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
 
     return get_asset_content(
-        metadata['outHeadModel']['storageAddress'],
+        metadata['outHeadModel']['outModel']['storageAddress'],
         metadata['dataset']['worker'],
-        metadata['outHeadModel']['hash'],
+        metadata['outHeadModel']['outModel']['hash'],
         salt=key
     )
 
@@ -124,9 +124,9 @@ def get_trunk_model(tuple_):
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
 
     return get_asset_content(
-        metadata['outTrunkModel']['storageAddress'],
+        metadata['outTrunkModel']['outModel']['storageAddress'],
         metadata['dataset']['worker'],
-        metadata['outTrunkModel']['hash'],
+        metadata['outTrunkModel']['outModel']['hash'],
         salt=key
     )
 
