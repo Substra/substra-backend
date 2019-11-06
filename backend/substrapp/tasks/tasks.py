@@ -156,6 +156,29 @@ def get_composite_models(subtuple):
         return []
 
 
+def get_testtuple_composite_models(tuple_):
+    key = tuple_.get('model').get('traintupleKey')
+    metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
+
+    head_model = get_asset_content(
+        metadata['outHeadModel']['outModel']['storageAddress'],
+        metadata['dataset']['worker'],
+        metadata['outHeadModel']['outModel']['hash'],
+        salt=key
+    )
+
+    trunk_model = get_asset_content(
+        metadata['outTrunkModel']['outModel']['storageAddress'],
+        metadata['dataset']['worker'],
+        metadata['outTrunkModel']['outModel']['hash'],
+        salt=key
+    )
+
+    assert head_model and trunk_model
+
+    return [head_model, trunk_model]
+
+
 def _put_model(subtuple_directory, model_content, model_hash, traintuple_key, filename_prefix=''):
     if not model_content:
         raise Exception('Model content should not be empty')
@@ -208,6 +231,24 @@ def put_composite_models(subtuple, subtuple_directory, models_content):
     _put_model(subtuple_directory, models_content[1],
                subtuple['inTrunkModel']['hash'],
                subtuple['inTrunkModel']['traintupleKey'],
+               filename_prefix=PREFIX_TRUNK_FILENAME)
+
+
+def put_composite_test_models(subtuple, subtuple_directory, models_content):
+    if not models_content:
+        raise Exception('Models content should not be empty')
+
+    key = subtuple.get('model').get('traintupleKey')
+    metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
+
+    _put_model(subtuple_directory, models_content[0],
+               metadata['outHeadModel']['outModel']['hash'],
+               key,
+               filename_prefix=PREFIX_HEAD_FILENAME)
+
+    _put_model(subtuple_directory, models_content[1],
+               metadata['outTrunkModel']['outModel']['hash'],
+               key,
                filename_prefix=PREFIX_TRUNK_FILENAME)
 
 
@@ -386,7 +427,7 @@ def prepare_materials(subtuple, tuple_type):
     if tuple_type == 'testtuple':
         if 'compositeTraintuple' == subtuple['model']['traintupleType']:
             algo_content = get_composite_algo(subtuple)
-            models_content = get_composite_models(subtuple)
+            models_content = get_testtuple_composite_models(subtuple)
         else:
             algo_content = get_algo(subtuple)
             model_content = get_model(subtuple)
@@ -407,7 +448,7 @@ def prepare_materials(subtuple, tuple_type):
     put_algo(subtuple_directory, algo_content)
     if tuple_type == 'testtuple':
         if 'compositeTraintuple' == subtuple['model']['traintupleType']:
-            put_composite_models(subtuple, subtuple_directory, models_content)
+            put_composite_test_models(subtuple, subtuple_directory, models_content)
         else:
             put_model(subtuple, subtuple_directory, model_content)
 
@@ -519,7 +560,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command = 'predict'
         algo_docker_name = f'{algo_docker_name}_{command}'
 
-        if 'compositetraintuple' == subtuple['model']['traintupleType']:
+        if 'compositeTraintuple' == subtuple['model']['traintupleType']:
             composite_traintuple_key = subtuple['model']['traintupleKey']
             command = f"{command} --input-models-path {model_folder}"
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{composite_traintuple_key}"
