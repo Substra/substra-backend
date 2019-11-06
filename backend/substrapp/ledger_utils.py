@@ -222,7 +222,13 @@ def get_object_from_ledger(pk, query):
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
 
-    fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
+    log_fail_methods = {
+        'traintuple': 'logFailTrain',
+        'testuple': 'logFailTest',
+        'compositeTraintuple': 'logFailCompositeTrain'
+    }
+
+    fail_type = log_fail_methods[tuple_type]
 
     return invoke_ledger(
         fcn=fail_type,
