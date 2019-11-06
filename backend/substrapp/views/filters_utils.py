@@ -11,6 +11,7 @@ FILTER_QUERIES = {
 }
 
 AUTHORIZED_FILTERS = {
+    'compute_plan': ['compute_plan'],
     'dataset': ['dataset', 'model', 'objective'],
     'algo': ['model', 'algo'],
     'objective': ['model', 'dataset', 'objective'],
