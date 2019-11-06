@@ -223,7 +223,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
 
     log_fail_methods = {
         'traintuple': 'logFailTrain',
-        'testuple': 'logFailTest',
+        'testtuple': 'logFailTest',
         'compositeTraintuple': 'logFailCompositeTrain'
     }
 
