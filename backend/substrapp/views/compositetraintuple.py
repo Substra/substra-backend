@@ -77,7 +77,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryCompositeTraintuple', args=[])
+            data = query_ledger(fcn='queryCompositeTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
