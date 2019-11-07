@@ -87,7 +87,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 compositetraintuple_list = filter_list(
-                    object_type='compositetraintuple',
+                    object_type='composite_traintuple',
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
