@@ -80,30 +80,43 @@ persistence:
 
 # Secrets names
 secrets:
-  # Certificate, saved under key 'cert.pem'
+  # TODO remove
   cert: hlf-idcert
   # Key, saved under 'key.pem'
   key: hlf-idkey
-  # CA Cert, saved under 'cacert.pem'
-  caCert: hlf-cacert
+  ordTlsRootCert: hlf-client-tlsrootcert
   # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
   tls: hlf-tls
-  # TLS root CA certificate saved under key 'cert.pem'
-  tlsRootCert: hlf-tlsrootcert
-  # TLS client root CA certificates saved under any names (as there may be multiple)
-  tlsClient: hlf-tls
-  # TLS client root CA certificates saved under any names (as there may be multiple)
-  tlsClientRootCerts: hlf-client-tlsrootcert
   # This should contain the Certificate of the Peer Organisation admin
   # This is necessary to successfully run the peer
   adminCert: hlf-admincert
   # This should contain the Private Key of the Peer Organisation admin
   # This is necessary to successfully join a channel
   adminKey: hlf-adminkey
+
+
+  user:
+    # Certificate, saved under key 'cert.pem'
+    cert: hlf-idcert
+    # Key, saved under 'key.pem'
+    key: hlf-idkey
   # This should include the Orderer TLS 'cacert.pem'
-  ordTlsRootCert: hlf-client-tlsrootcert
-  # This will include the organization config json file (peer only)
-  orgConfig: org-config
+  orderer:
+    tls:
+      ca: hlf-client-tlsrootcert
+  peer:
+    tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
+      client: hlf-tls
+      server: hlf-tls
+
+  # CA Cert, saved under 'cacert.pem'
+  caCert: hlf-cacert
+  # TLS root CA certificate saved under key 'cert.pem'
+  tlsRootCert: hlf-tlsrootcert
+  # TLS client root CA certificates saved under any names (as there may be multiple)
+  tlsClient: hlf-tls
+  # TLS client root CA certificates saved under any names (as there may be multiple)
+  tlsClientRootCerts: hlf-client-tlsrootcert
   # This will include the organization config json file (peer only)
   fabricConfigmap: network-hlf-k8s-fabric
 

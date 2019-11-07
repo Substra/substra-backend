@@ -2,7 +2,7 @@
 
 ## Requirements
 
-Having a Kubernetes cluster working with Helm initialized. You can do thant locally by installing Minikube and grabbing Helm binary from github.
+Having a Kubernetes cluster working with Helm initialized. You can do that locally by installing Minikube and grabbing Helm binary from github.
 Then simply launch your cluster using `minikube start` and configure helm with `helm init`.
 
 You will also need the Hyperledger Fabric network setup on the cluster.

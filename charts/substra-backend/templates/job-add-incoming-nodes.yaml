@@ -34,7 +34,7 @@ spec:
             value: {{ $.Values.organization.name }}
           - name: BACKEND_ORG
             value: {{ $.Values.organization.name }}
-          - name: BACKEND_{{ $.Values.organization.name | upper }}_DB_NAME
+          - name: BACKEND_DB_NAME
             value: {{ $.Values.postgresql.postgresqlDatabase }}
           - name: BACKEND_DB_USER
             value: {{ $.Values.postgresql.postgresqlUsername }}
@@ -54,10 +54,6 @@ spec:
             value: "{{ $.Values.backend.defaultDomain }}"
           - name: CELERY_BROKER_URL
             value: "amqp://{{ $.Values.rabbitmq.rabbitmq.username }}:{{ $.Values.rabbitmq.rabbitmq.password }}@{{ $.Release.Name }}-{{ $.Values.rabbitmq.host }}:{{ $.Values.rabbitmq.port }}//"
-          - name: BACK_AUTH_USER
-            value: {{ $.user | quote }}
-          - name: BACK_AUTH_PASSWORD
-            value: {{ $.password | quote }}
           - name: BACKEND_DEFAULT_PORT
             value: {{ $.Values.backend.service.port | quote}}
           - name: BACKEND_PEER_PORT

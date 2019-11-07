@@ -27,7 +27,7 @@ data:
           "external": {{ .Values.peer.port }}
         },
         "docker_core_dir": "/var/hyperledger/fabric_cfg",
-        "tlsCACerts": "/var/hyperledger/admin_msp/cacerts/cacert.pem",
+        "tlsCACerts": "/var/hyperledger/cacert.pem",
         "clientKey": "/var/hyperledger/tls/client/pair/tls.key",
         "clientCert": "/var/hyperledger/tls/client/pair/tls.crt",
         "grpcOptions": {

@@ -3,12 +3,7 @@ import os
 from .common import *
 from .deps.cors import *
 from .deps.org import *
-from .deps.ledger import *
 from .deps.restframework import *
-
-
-BASICAUTH_USERNAME = os.environ.get('BACK_AUTH_USER', 'dev')
-BASICAUTH_PASSWORD = os.environ.get('BACK_AUTH_PASSWORD', 'dev')
 
 DEBUG = True
 
@@ -26,7 +21,7 @@ LEDGER_CALL_RETRY = False  # Overwrite the ledger setting value
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.environ.get(f'BACKEND_{ORG_DB_NAME}_DB_NAME', f'backend_{ORG_NAME}'),
+        'NAME': os.environ.get(f'BACKEND_DB_NAME', f'backend_{ORG_NAME}'),
         'USER': os.environ.get('BACKEND_DB_USER', 'backend'),
         'PASSWORD': os.environ.get('BACKEND_DB_PWD', 'backend'),
         'HOST': os.environ.get('DATABASE_HOST', 'localhost'),
