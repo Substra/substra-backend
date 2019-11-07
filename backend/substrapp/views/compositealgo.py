@@ -185,7 +185,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 composite_algos_list = filter_list(
-                    object_type='compositealgo',
+                    object_type='composite_algo',
                     data=data,
                     query_params=query_params)
             except LedgerError as e:

@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 from ..common import get_sample_composite_algo, AuthenticatedClient
-from ..assets import objective, datamanager, compositealgo, traintuple, model
+from ..assets import objective, datamanager, compositealgo, traintuple, model, algo
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -83,7 +83,7 @@ class CompositeAlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=compositealgo%253Aname%253AComposite%2520Algo'
+            search_params = '?search=composite_algo%253Aname%253AComposite%2520Algo'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -94,12 +94,23 @@ class CompositeAlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=compositealgo%253Aname%253AComposite%2520Algo'
-            search_params += f'%2Ccompositealgo%253Aowner%253A{compositealgo[1]["owner"]}'
+            search_params = '?search=composite_algo%253Aname%253AComposite%2520Algo'
+            search_params += f'%2Ccomposite_algo%253Aowner%253A{compositealgo[1]["owner"]}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r[0]), 1)
+
+    def test_composite_algo_list_filter_algo(self):
+        url = reverse('substrapp:composite_algo-list')
+        with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = compositealgo
+
+            search_params = f'?search=algo%253Akey%253A{algo[0]["key"]}'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 0)
 
     def test_composite_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:composite_algo-list')
