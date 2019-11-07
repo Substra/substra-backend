@@ -106,7 +106,7 @@ class CompositeTraintupleViewTests(APITestCase):
         with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositetraintuple
 
-            search_params = '?search=compositetraintuple%253Atag%253Asubstra'
+            search_params = '?search=composite_traintuple%253Atag%253Asubstra'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -117,7 +117,7 @@ class CompositeTraintupleViewTests(APITestCase):
         with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositetraintuple
             compute_plan_id = get_compute_plan_id(compositetraintuple)
-            search_params = f'?search=compositetraintuple%253AcomputePlanID%253A{compute_plan_id}'
+            search_params = f'?search=composite_traintuple%253AcomputePlanID%253A{compute_plan_id}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
