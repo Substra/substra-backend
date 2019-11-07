@@ -396,8 +396,8 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.utils.get_owner') as mget_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as mget_object_from_ledger:
             mget_remote_file.return_value = model_content
-            mget_owner.return_value = assets.traintuple[1]['creator']
-            mget_object_from_ledger.return_value = assets.traintuple[1]  # uses index 1 to have a set value of outModel
+            mget_owner.return_value = assets.traintuple[2]['creator']
+            mget_object_from_ledger.return_value = assets.traintuple[2]  # uses index 1 to have a set value of outModel
             model_content = get_model(subtuple)
 
         self.assertIsNotNone(model_content)
