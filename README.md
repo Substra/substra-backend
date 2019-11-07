@@ -114,12 +114,6 @@ BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./backend/manage.py createsuperuser 
 BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./backend/manage.py createsuperuser --settings=backend.settings.dev
 ```
 
-9. Build the substra-model docker image:
-Clone the following git repo https://github.com/SubstraFoundation/substra-tools and build the docker image
-```shell
-docker build -t substra-model .
-```
-
 ## Getting started 2: Linking the app with Hyperledger Fabric
 
 
