@@ -95,18 +95,18 @@ def get_models(traintuple):
         return []
 
 
-def get_traintuple_metadata(traintupleKey):
-    return get_object_from_ledger(traintupleKey, 'queryTraintuple')
+def get_traintuple_metadata(traintuple_hash):
+    return get_object_from_ledger(traintuple_hash, 'queryTraintuple')
 
 
-def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
+def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_hash):
     if not model_content:
         raise Exception('Model content should not be empty')
 
     from substrapp.models import Model
 
     # store a model in local subtuple directory from input model content
-    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_key}')
+    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_hash}')
     model = None
     try:
         model = Model.objects.get(pk=model_hash)
@@ -115,14 +115,14 @@ def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintup
             f.write(model_content)
     else:
         # verify that local db model file is not corrupted
-        if get_hash(model.file.path, traintuple_key) != model_hash:
+        if get_hash(model.file.path, traintuple_hash) != model_hash:
             raise Exception('Model Hash in Subtuple is not the same as in local db')
 
         if not os.path.exists(model_dst_path):
             os.link(model.file.path, model_dst_path)
         else:
             # verify that local subtuple model file is not corrupted
-            if get_hash(model_dst_path, traintuple_key) != model_hash:
+            if get_hash(model_dst_path, traintuple_hash) != model_hash:
                 raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
