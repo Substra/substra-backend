@@ -8,19 +8,19 @@ FILTER_QUERIES = {
     'algo': 'queryAlgos',
     'objective': 'queryObjectives',
     'model': 'queryTraintuples',
-    'compositealgo': 'queryCompositeAlgos'
+    'composite_algo': 'queryCompositeAlgos'
 }
 
 AUTHORIZED_FILTERS = {
     'compute_plan': ['compute_plan'],
     'dataset': ['dataset', 'model', 'objective'],
-    'algo': ['model', 'algo'],
-    'compositealgo': ['compositealgo', 'model'],
+    'algo': ['model', 'algo', 'composite_algo'],
+    'composite_algo': ['composite_algo', 'algo', 'model'],
     'objective': ['model', 'dataset', 'objective'],
     'model': ['model', 'algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
     'testtuple': ['testtuple'],
-    'compositetraintuple': ['compositetraintuple']
+    'composite_traintuple': ['composite_traintuple']
 }
 
 
@@ -63,6 +63,17 @@ def get_filters(query_params):
     return filters
 
 
+def _same_nature(filter_key, object_type):
+    if filter_key == object_type:
+        return True
+
+    # algo and composite algos are of the same nature
+    if {filter_key, object_type} <= {'algo', 'composite_algo'}:
+        return True
+
+    return False
+
+
 def filter_list(object_type, data, query_params):
 
     filters = get_filters(query_params)
@@ -79,7 +90,7 @@ def filter_list(object_type, data, query_params):
             # Will be appended in object_list after been filtered
             filtered_list = data
 
-            if filter_key == object_type:
+            if _same_nature(filter_key, object_type):
                 # Filter by own asset
                 if filter_key == 'model':
                     for attribute, val in subfilters.items():
@@ -104,7 +115,7 @@ def filter_list(object_type, data, query_params):
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key in ('algo', 'compositealgo'):
+                if filter_key in ('algo', 'composite_algo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         hashes = [x['key'] for x in filtering_data]
