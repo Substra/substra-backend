@@ -88,6 +88,8 @@ spec:
               name: peer-tls-client
             - mountPath: /var/hyperledger/tls/ord/cert
               name: orderer-tls-ca
+            - name: ca
+              mountPath: /var/hyperledger/ca
           livenessProbe:
             httpGet:
               path: /liveness
@@ -135,6 +137,9 @@ spec:
       - name: orderer-tls-ca
         secret:
           secretName: {{ $.Values.secrets.orderer.tls.ca }}
+      - name: ca
+        secret:
+          secretName: {{ $.Values.secrets.ca }}
     {{- with .Values.backend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

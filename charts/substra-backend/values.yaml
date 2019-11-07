@@ -95,6 +95,7 @@ secrets:
   adminKey: hlf-adminkey
 
 
+  ca: hlf-ca
   user:
     # Certificate, saved under key 'cert.pem'
     cert: hlf-idcert
@@ -106,7 +107,7 @@ secrets:
       ca: hlf-client-tlsrootcert
   peer:
     tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
-      client: hlf-tls
+      client: hlf-client-tls
       server: hlf-tls
 
   # CA Cert, saved under 'cacert.pem'

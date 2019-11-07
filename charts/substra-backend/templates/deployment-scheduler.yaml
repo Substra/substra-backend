@@ -62,6 +62,8 @@ spec:
               name: peer-tls-client
             - mountPath: /var/hyperledger/tls/ord/cert
               name: orderer-tls-ca
+            - name: ca
+              mountPath: /var/hyperledger/ca
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
@@ -69,16 +71,24 @@ spec:
         configMap:
           name: {{ include "substra.fullname" . }}-backend
           readOnly: true
-      - mountPath: /var/hyperledger/msp/signcerts
-        name: user-cert
-      - mountPath: /var/hyperledger/msp/keystore
-        name: user-key
-      - mountPath: /var/hyperledger/tls/server/pair
-        name: peer-tls-server
-      - mountPath: /var/hyperledger/tls/client/pair
-        name: peer-tls-client
-      - mountPath: /var/hyperledger/tls/ord/cert
-        name: orderer-tls-ca
+      - name: user-cert
+        secret:
+          secretName: {{ $.Values.secrets.user.cert }}
+      - name: user-key
+        secret:
+          secretName: {{ $.Values.secrets.user.key }}
+      - name: peer-tls-server
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.server }}
+      - name: peer-tls-client
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.client }}
+      - name: orderer-tls-ca
+        secret:
+          secretName: {{ $.Values.secrets.orderer.tls.ca }}
+      - name: ca
+        secret:
+          secretName: {{ $.Values.secrets.ca }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
