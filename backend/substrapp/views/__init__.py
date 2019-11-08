@@ -7,6 +7,7 @@ from .model import ModelViewSet, ModelPermissionViewSet
 from .algo import AlgoViewSet, AlgoPermissionViewSet
 from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
+from .aggregatetuple import AggregatetupleViewSet
 from .task import TaskViewSet
 from .computeplan import ComputePlanViewSet
 from .compositetraintuple import CompositeTraintupleViewSet
@@ -17,5 +18,5 @@ __all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'DataManagerPermissionView
            'ObjectivePermissionViewSet', 'ModelViewSet', 'ModelPermissionViewSet', 'AlgoViewSet',
            'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'TaskViewSet', 'ComputePlanViewSet',
            'CompositeTraintupleViewSet', 'CompositeAlgoViewSet', 'CompositeAlgoPermissionViewSet',
-           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet'
+           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet', 'AggregatetupleViewSet'
            ]
