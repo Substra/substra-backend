@@ -225,7 +225,7 @@ traintuple = [
             "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
             "perf": 0
         },
-        "computePlanID": "",
+        "computePlanID": "d4ca4befe79e56b98168b80e17db415f5be8c138ddeb600b6937a3f2aa809de3",
         "inModels": None,
         "log": "[00-01-0032-27dbbe0]",
         "objective": {
@@ -261,11 +261,11 @@ traintuple = [
                 "03a1f878768ea8624942d46a3b438c37992e626c2cf655023bcc3bed69d485d1"
             ],
             "openerHash": "8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca",
-            "perf": 1
+            "perf": 0
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "",
+        "log": "[01-01-0014-b8a6e50]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
@@ -284,8 +284,8 @@ traintuple = [
             }
         },
         "rank": 0,
-        "status": "done",
-        "tag": ""
+        "status": "failed",
+        "tag": "(should fail) My other tag"
     },
     {
         "key": "d4ca4befe79e56b98168b80e17db415f5be8c138ddeb600b6937a3f2aa809de3",
@@ -363,12 +363,12 @@ testtuple = [
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
-        "status": "done",
+        "status": "failed",
         "tag": "substra"
     }
 ]
 
-model = [
+computeplan = [
     {
         "traintuple": {
             "key": "939e412a4045f17d9c3d7e4b46399afcd78f77647bc74681c259271dc3a3127e",
@@ -496,7 +496,7 @@ model = [
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
-            "status": "done",
+            "status": "failed",
             "tag": "substra"
         }
     },
@@ -609,8 +609,4 @@ model = [
             "tag": ""
         }
     }
-]
-
-computeplan = [
-    # todo
 ]

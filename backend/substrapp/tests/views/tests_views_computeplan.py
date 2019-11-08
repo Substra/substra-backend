@@ -83,12 +83,11 @@ class ComputePlanViewTests(APITestCase):
             self.assertEqual(r, [computeplan])
 
     def test_computeplan_retrieve(self):
-        url = reverse('substrapp:data_manager-list')
         with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.return_value = computeplan[0]
 
-            search_params = computeplan[0]['key']
-            response = self.client.get(url + search_params, **self.extra)
+            url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['computePlanID']])
+            response = self.client.get(url, **self.extra)
             r = response.json()
 
             self.assertEqual(r, computeplan[0])
@@ -109,6 +108,6 @@ class ComputePlanViewTests(APITestCase):
         with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
 
-            search_params = computeplan[0]['key']
-            response = self.client.get(url + search_params, **self.extra)
+            search_params = computeplan[0]['computePlanID']
+            response = self.client.get(url + search_params + '/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
