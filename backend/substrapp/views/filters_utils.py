@@ -8,7 +8,8 @@ FILTER_QUERIES = {
     'algo': 'queryAlgos',
     'objective': 'queryObjectives',
     'model': 'queryTraintuples',
-    'composite_algo': 'queryCompositeAlgos'
+    'composite_algo': 'queryCompositeAlgos',
+    'aggregatealgo': 'queryAggregateAlgos'
 }
 
 AUTHORIZED_FILTERS = {
@@ -16,6 +17,7 @@ AUTHORIZED_FILTERS = {
     'dataset': ['dataset', 'model', 'objective'],
     'algo': ['model', 'algo', 'composite_algo'],
     'composite_algo': ['composite_algo', 'algo', 'model'],
+    'aggreagatealgo': ['aggreagatealgo', 'model'],
     'objective': ['model', 'dataset', 'objective'],
     'model': ['model', 'algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
@@ -112,7 +114,7 @@ def filter_list(object_type, data, query_params):
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key in ('algo', 'composite_algo'):
+                if filter_key in ('algo', 'composite_algo', 'aggreagatealgo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         hashes = [x['key'] for x in filtering_data]

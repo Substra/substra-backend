@@ -11,9 +11,11 @@ from .task import TaskViewSet
 from .computeplan import ComputePlanViewSet
 from .compositetraintuple import CompositeTraintupleViewSet
 from .compositealgo import CompositeAlgoViewSet, CompositeAlgoPermissionViewSet
+from .aggregatealgo import AggregateAlgoViewSet, AggregateAlgoPermissionViewSet
 
 __all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'DataManagerPermissionViewSet', 'ObjectiveViewSet',
            'ObjectivePermissionViewSet', 'ModelViewSet', 'ModelPermissionViewSet', 'AlgoViewSet',
            'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'TaskViewSet', 'ComputePlanViewSet',
-           'CompositeTraintupleViewSet', 'CompositeAlgoViewSet', 'CompositeAlgoPermissionViewSet'
+           'CompositeTraintupleViewSet', 'CompositeAlgoViewSet', 'CompositeAlgoPermissionViewSet',
+           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet'
            ]

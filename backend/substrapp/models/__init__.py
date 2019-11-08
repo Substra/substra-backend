@@ -6,5 +6,6 @@ from .datamanager import DataManager
 from .algo import Algo
 from .model import Model
 from .compositealgo import CompositeAlgo
+from .aggregatealgo import AggregateAlgo
 
-__all__ = ['DataSample', 'Objective', 'DataManager', 'Algo', 'Model', 'CompositeAlgo']
+__all__ = ['DataSample', 'Objective', 'DataManager', 'Algo', 'Model', 'CompositeAlgo', 'AggregateAlgo']
