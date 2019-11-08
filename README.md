@@ -12,7 +12,7 @@ Current is `0.0`.
  ```
  git clone https://github.com/SubstraFoundation/substra-backend
  ```
-2. If you are on Linux, follow the [Linux user namespaces instructions](./linux-userns-guide.md)
+2. If you are on Linux, follow the [Linux user namespaces instructions](./doc/linux-userns-guide.md)
 3. Install dependencies (might be useful to create a virtual environment before, eg using virtualenv and virtualenvwrapper):
   - For numpy, scipy, and pandas (for Ubuntu & Debian users): `sudo apt-get install python-numpy python-scipy python-pandas`
   - `pip install -r requirements.txt`
@@ -220,7 +220,7 @@ For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFil
 
 ## Miscellaneous
 
-- [PyCharm setup](./pycharm-setup.md)
+- [PyCharm setup](./doc/pycharm-setup.md)
 
 ## License
 

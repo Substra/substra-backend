@@ -1,4 +1,4 @@
-[< Back to README](./README)
+[< Back to README](../README)
 
 Linux user namespaces guide
 ---------------------------
@@ -50,4 +50,4 @@ guillaume:165536:65536
 The first line should be added with the docker group (999 in my case).
 
 The final step is to re-download all the docker images. Go to the [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) project and rerun the `./bootstrap.sh` script.
-Do not forget to build the substra-model image as described in the step 9 of the [README](./README).
+Do not forget to build the substra-model image as described in the step 9 of the [README](../README).
