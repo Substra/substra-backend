@@ -61,26 +61,33 @@ def get_algo(subtuple):
     algo_hash = subtuple['algo']['hash']
     algo_metadata = get_object_from_ledger(algo_hash, 'queryAlgo')
 
-    algo_content = get_asset_content(
+    return get_asset_content(
         algo_metadata['content']['storageAddress'],
         algo_metadata['owner'],
         algo_metadata['content']['hash'],
     )
-
-    return algo_content
 
 
 def get_composite_algo(tuple_):
     algo_hash = tuple_['algo']['hash']
     algo_metadata = get_object_from_ledger(algo_hash, 'queryCompositeAlgo')
 
-    algo_content = get_asset_content(
+    return get_asset_content(
         algo_metadata['content']['storageAddress'],
         algo_metadata['owner'],
         algo_metadata['content']['hash'],
     )
 
-    return algo_content
+
+def get_aggregate_algo(tuple_):
+    algo_hash = tuple_['algo']['hash']
+    algo_metadata = get_object_from_ledger(algo_hash, 'queryAggregateAlgo')
+
+    return get_asset_content(
+        algo_metadata['content']['storageAddress'],
+        algo_metadata['owner'],
+        algo_metadata['content']['hash'],
+    )
 
 
 def _get_model(traintuple_hash):
