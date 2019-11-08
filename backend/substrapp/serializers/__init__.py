@@ -6,6 +6,7 @@ from .model import ModelSerializer
 from .datamanager import DataManagerSerializer
 from .algo import AlgoSerializer
 from .compositealgo import CompositeAlgoSerializer
+from .aggregatealgo import AggregateAlgoSerializer
 from .ledger import *
 
 __all__ = ['DataSampleSerializer', 'ObjectiveSerializer', 'ModelSerializer',
@@ -14,4 +15,5 @@ __all__ = ['DataSampleSerializer', 'ObjectiveSerializer', 'ModelSerializer',
            'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
-           'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer']
+           'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer',
+           'AggregateAlgoSerializer', 'LedgerAggregateAlgoSerializer']
