@@ -10,9 +10,12 @@ from .datamanager.serializer import LedgerDataManagerSerializer
 from .computeplan.serializer import LedgerComputePlanSerializer
 from .compositetraintuple.serializer import LedgerCompositeTraintupleSerializer
 from .compositealgo.serializer import LedgerCompositeAlgoSerializer
+from .aggregatealgo.serializer import LedgerAggregateAlgoSerializer
+
 
 __all__ = ['LedgerObjectiveSerializer', 'LedgerModelSerializer',
            'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
-           'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer']
+           'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer',
+           'LedgerAggregateAlgoSerializer']
