@@ -306,12 +306,11 @@ class TasksTests(APITestCase):
 
         traintupleKey = compute_hash(model_content)
         model_hash = compute_hash(model_content, traintupleKey)
-        model_type = 'model'
-        subtuple = {'key': model_hash, model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
+        subtuple = {'key': model_hash, 'traintupleKey': traintupleKey}
 
         model_directory = os.path.join(self.subtuple_path, 'model')
         create_directory(model_directory)
-        put_model(subtuple, self.subtuple_path, model_content)
+        put_model(subtuple, self.subtuple_path, model_content, model_hash)
 
         model_path = os.path.join(model_directory, traintupleKey)
         self.assertTrue(os.path.exists(model_path))
@@ -325,24 +324,24 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path + '-local')
             with self.assertRaises(Exception):
-                put_model({'model': {'hash': model_hash, 'traintupleKey': traintupleKey}},
-                          self.subtuple_path, model_content)
+                put_model({'traintupleKey': traintupleKey},
+                          self.subtuple_path, model_content, model_hash)
 
         os.remove(model_path)
 
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path + '-local')
-            put_model(subtuple, self.subtuple_path, model_content)
+            put_model(subtuple, self.subtuple_path, model_content, model_hash)
             self.assertTrue(os.path.exists(model_path))
 
         with mock.patch('substrapp.models.Model.objects.get') as mget:
             mget.return_value = FakeModel(model_path)
             with self.assertRaises(Exception):
-                put_model({'model': {'hash': 'fail-hash', 'traintupleKey': traintupleKey}},
-                          self.subtuple_path, model_content)
+                put_model({'traintupleKey': traintupleKey},
+                          self.subtuple_path, model_content, 'fail-hash')
 
         with self.assertRaises(Exception):
-            put_model(subtuple, self.subtuple_path, None)
+            put_model(subtuple, self.subtuple_path, None, None)
 
     def test_put_models(self):
 
@@ -391,16 +390,14 @@ class TasksTests(APITestCase):
     def test_get_model(self):
         model_content = self.model.read().encode()
         traintupleKey = compute_hash(model_content)
-        model_hash = compute_hash(model_content, traintupleKey)
-        model_type = 'model'
-        subtuple = {model_type: {'hash': model_hash, 'traintupleKey': traintupleKey}}
+        subtuple = {'traintupleKey': traintupleKey}
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
                 mock.patch('substrapp.tasks.utils.get_owner') as mget_owner,\
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as mget_object_from_ledger:
             mget_remote_file.return_value = model_content
-            mget_owner.return_value = assets.traintuple[1]['creator']
-            mget_object_from_ledger.return_value = assets.traintuple[1]  # uses index 1 to have a set value of outModel
+            mget_owner.return_value = assets.traintuple[2]['creator']
+            mget_object_from_ledger.return_value = assets.traintuple[2]  # uses index 1 to have a set value of outModel
             model_content = get_model(subtuple)
 
         self.assertIsNotNone(model_content)
@@ -675,7 +672,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey'}]
+        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey', 'traintupleKey': 'subtuple_test'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
@@ -683,6 +680,7 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
                 mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
                 mock.patch('substrapp.tasks.tasks.get_model') as mget_model, \
+                mock.patch('substrapp.tasks.tasks.get_traintuple_metadata') as mget_traintuple_metadata, \
                 mock.patch('substrapp.tasks.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
                 mock.patch('substrapp.tasks.tasks.put_opener') as mput_opener, \
                 mock.patch('substrapp.tasks.tasks.put_data_sample') as mput_data_sample, \
@@ -696,6 +694,7 @@ class TasksTests(APITestCase):
             mget_objective.return_value = 'objective'
             mget_algo.return_value = 'algo', 'algo_hash'
             mget_model.return_value = 'model', 'model_hash'
+            mget_traintuple_metadata.return_value = {'outModel': {'hash': 'model_hash'}}
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
             mput_opener.return_value = 'opener'
             mput_data_sample.return_value = 'data'

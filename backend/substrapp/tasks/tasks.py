@@ -66,9 +66,8 @@ def get_algo(subtuple):
     return algo_content
 
 
-def _get_model(model):
-    traintuple_hash = model['traintupleKey']
-    traintuple_metadata = get_object_from_ledger(traintuple_hash, 'queryTraintuple')
+def _get_model(traintuple_hash):
+    traintuple_metadata = get_traintuple_metadata(traintuple_hash)
 
     model_content = get_asset_content(
         traintuple_metadata['outModel']['storageAddress'],
@@ -80,30 +79,34 @@ def _get_model(model):
     return model_content
 
 
-def get_model(subtuple):
-    model = subtuple.get('model')
-    if model:
-        return _get_model(model)
+def get_model(testtuple):
+    traintuple_hash = testtuple.get('traintupleKey')
+    if traintuple_hash:
+        return _get_model(traintuple_hash)
     else:
         return None
 
 
-def get_models(subtuple):
-    input_models = subtuple.get('inModels')
+def get_models(traintuple):
+    input_models = traintuple.get('inModels')
     if input_models:
-        return [_get_model(item) for item in input_models]
+        return [_get_model(item['traintupleKey']) for item in input_models]
     else:
         return []
 
 
-def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_key):
+def get_traintuple_metadata(traintuple_hash):
+    return get_object_from_ledger(traintuple_hash, 'queryTraintuple')
+
+
+def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintuple_hash):
     if not model_content:
         raise Exception('Model content should not be empty')
 
     from substrapp.models import Model
 
     # store a model in local subtuple directory from input model content
-    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_key}')
+    model_dst_path = path.join(subtuple_directory, f'model/{traintuple_hash}')
     model = None
     try:
         model = Model.objects.get(pk=model_hash)
@@ -112,20 +115,20 @@ def _put_model(subtuple, subtuple_directory, model_content, model_hash, traintup
             f.write(model_content)
     else:
         # verify that local db model file is not corrupted
-        if get_hash(model.file.path, traintuple_key) != model_hash:
+        if get_hash(model.file.path, traintuple_hash) != model_hash:
             raise Exception('Model Hash in Subtuple is not the same as in local db')
 
         if not os.path.exists(model_dst_path):
             os.link(model.file.path, model_dst_path)
         else:
             # verify that local subtuple model file is not corrupted
-            if get_hash(model_dst_path, traintuple_key) != model_hash:
+            if get_hash(model_dst_path, traintuple_hash) != model_hash:
                 raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
-def put_model(subtuple, subtuple_directory, model_content):
-    return _put_model(subtuple, subtuple_directory, model_content, subtuple['model']['hash'],
-                      subtuple['model']['traintupleKey'])
+def put_model(testtuple, subtuple_directory, model_content, model_hash):
+    return _put_model(testtuple, subtuple_directory, model_content, model_hash,
+                      testtuple['traintupleKey'])
 
 
 def put_models(subtuple, subtuple_directory, models_content):
@@ -328,7 +331,9 @@ def prepare_materials(subtuple, tuple_type):
     put_metric(subtuple_directory, metrics_content)
     put_data_sample(subtuple, subtuple_directory)
     if tuple_type == 'testtuple':
-        put_model(subtuple, subtuple_directory, model_content)
+        traintuple_metadata = get_traintuple_metadata(subtuple['traintupleKey'])
+        model_hash = traintuple_metadata['outModel']['hash']
+        put_model(subtuple, subtuple_directory, model_content, model_hash)
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
 
@@ -433,7 +438,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     elif tuple_type == 'testtuple':
         command = 'predict'
         algo_docker_name = f'{algo_docker_name}_{command}'
-        inmodels = subtuple['model']["traintupleKey"]
+        inmodels = subtuple["traintupleKey"]
         command = f'{command} {inmodels}'
 
     compute_docker(
