@@ -112,7 +112,7 @@ deploy:
             - { name: MyOrg2MSP, secret: selfSecret2 }
           outgoingNodes:
             - { name: MyOrg1MSP, secret: nodeSecret1w2 }
-            - { name: MyORg2MSP, secret: selfSecret2 }
+            - { name: MyOrg2MSP, secret: selfSecret2 }
           users:
             - name: "node-2"
               secret: "p@$swr0d45"
