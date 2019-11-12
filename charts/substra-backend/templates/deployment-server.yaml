@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "substra.fullname" . }}-backend
+  name: {{ template "substra.fullname" . }}-server
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    app.kubernetes.io/name: {{ template "substra.name" . }}-server
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
   replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+        app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+        app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
       {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
@@ -73,21 +73,21 @@ spec:
               containerPort: {{ .Values.backend.service.port }}
               protocol: TCP
           volumeMounts:
-            - mountPath: {{ .Values.persistence.hostPath }}
-              name: data
-            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-              name: config
+            - name: data
+              mountPath: {{ .Values.persistence.hostPath }}
+            - name: config
+              mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
-            - mountPath: /var/hyperledger/msp/signcerts
-              name: user-cert
-            - mountPath: /var/hyperledger/msp/keystore
-              name: user-key
-            - mountPath: /var/hyperledger/tls/server/pair
-              name: peer-tls-server
-            - mountPath: /var/hyperledger/tls/client/pair
-              name: peer-tls-client
-            - mountPath: /var/hyperledger/tls/ord/cert
-              name: orderer-tls-ca
+            - name: user-cert
+              mountPath: /var/hyperledger/msp/signcerts
+            - name: user-key
+              mountPath: /var/hyperledger/msp/keystore
+            - name: peer-tls-server
+              mountPath: /var/hyperledger/tls/server/pair
+            - name: peer-tls-client
+              mountPath: /var/hyperledger/tls/client/pair
+            - name: orderer-tls-ca
+              mountPath: /var/hyperledger/tls/ord/cert
             - name: ca
               mountPath: /var/hyperledger/ca
           livenessProbe:
@@ -118,10 +118,7 @@ spec:
           claimName: {{ include "substra.fullname" . }}
       - name: config
         configMap:
-          name: {{ include "substra.fullname" . }}-backend
-      - name: fabric
-        configMap:
-          name: {{ $.Values.secrets.fabricConfigmap }}
+          name: {{ include "substra.fullname" . }}-server
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}

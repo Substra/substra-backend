@@ -61,23 +61,25 @@ spec:
             - name: PYTHONUNBUFFERED
               value: "1"
           volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: dockersocket
-            - mountPath: {{ .Values.persistence.hostPath }}
-              name: data
-            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-              name: config
+            - name: dockersocket
+              mountPath: /var/run/docker.sock
+            - name: data
+              mountPath: {{ .Values.persistence.hostPath }}
+            - name: config
+              mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
-            - mountPath: /var/hyperledger/msp/signcerts
-              name: user-cert
-            - mountPath: /var/hyperledger/msp/keystore
-              name: user-key
-            - mountPath: /var/hyperledger/tls/server/pair
-              name: peer-tls-server
-            - mountPath: /var/hyperledger/tls/client/pair
-              name: peer-tls-client
-            - mountPath: /var/hyperledger/tls/ord/cert
-              name: orderer-tls-ca
+            - name: user-cert
+              mountPath: /var/hyperledger/msp/signcerts
+            - name: user-key
+              mountPath: /var/hyperledger/msp/keystore
+            - name: peer-tls-server
+              mountPath: /var/hyperledger/tls/server/pair
+            - name: peer-tls-client
+              mountPath: /var/hyperledger/tls/client/pair
+            - name: orderer-tls-ca
+              mountPath: /var/hyperledger/tls/ord/cert
+            - name: ca
+              mountPath: /var/hyperledger/ca
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
@@ -89,7 +91,7 @@ spec:
           claimName: {{ include "substra.fullname" . }}
       - name: config
         configMap:
-          name: {{ include "substra.fullname" . }}-backend
+          name: {{ include "substra.fullname" . }}-server
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}
@@ -105,6 +107,9 @@ spec:
       - name: orderer-tls-ca
         secret:
           secretName: {{ $.Values.secrets.orderer.tls.ca }}
+      - name: ca
+        secret:
+          secretName: {{ $.Values.secrets.ca }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

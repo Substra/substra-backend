@@ -21,7 +21,7 @@ spec:
       {{- end }}
       {{- end }}
       containers:
-      - name: backend
+      - name: add-users
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"
         imagePullPolicy: "{{ $.Values.backend.image.pullPolicy }}"
         command: ["/bin/bash"]

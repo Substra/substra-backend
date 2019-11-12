@@ -49,19 +49,19 @@ spec:
             - name: PYTHONUNBUFFERED
               value: "1"
           volumeMounts:
-            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-              name: config
+            - name: config
+              mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
-            - mountPath: /var/hyperledger/msp/signcerts
-              name: user-cert
-            - mountPath: /var/hyperledger/msp/keystore
-              name: user-key
-            - mountPath: /var/hyperledger/tls/server/pair
-              name: peer-tls-server
-            - mountPath: /var/hyperledger/tls/client/pair
-              name: peer-tls-client
-            - mountPath: /var/hyperledger/tls/ord/cert
-              name: orderer-tls-ca
+            - name: user-cert
+              mountPath: /var/hyperledger/msp/signcerts
+            - name: user-key
+              mountPath: /var/hyperledger/msp/keystore
+            - name: peer-tls-server
+              mountPath: /var/hyperledger/tls/server/pair
+            - name: peer-tls-client
+              mountPath: /var/hyperledger/tls/client/pair
+            - name: orderer-tls-ca
+              mountPath: /var/hyperledger/tls/ord/cert
             - name: ca
               mountPath: /var/hyperledger/ca
           resources:
@@ -69,7 +69,7 @@ spec:
       volumes:
       - name: config
         configMap:
-          name: {{ include "substra.fullname" . }}-backend
+          name: {{ include "substra.fullname" . }}-server
           readOnly: true
       - name: user-cert
         secret:

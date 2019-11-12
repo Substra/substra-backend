@@ -25,9 +25,9 @@ build:
 deploy:
   helm:
     releases:
-      - name: substra-backend-peer-1
+      - name: org-1
         chartPath: charts/substra-backend
-        namespace: peer-1
+        namespace: org-1
         imageStrategy:
           helm: {}
         values:
@@ -37,7 +37,7 @@ deploy:
           flower.image: substrafoundation/flower
         overrides:
           secrets:
-            fabricConfigmap: network-peer-1-hlf-k8s-fabric
+            fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
             settings: dev
             defaultDomain: http://substra-backend.node-1.com
@@ -50,30 +50,30 @@ deploy:
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
           organization:
-            name: MyPeer1
+            name: MyOrg1
           peer:
-            host: network-peer-1.peer-1
+            host: network-org-1-peer-1.org-1
             port: 7051
-            mspID: MyPeer1MSP
+            mspID: MyOrg1MSP
           orderer:
             host: network-orderer.orderer
             port: 7050
             name: MyOrderer
           persistence:
-            hostPath: /tmp/peer-1
+            hostPath: /tmp/org-1
           incomingNodes:
-            - { name: MyPeer1MSP, secret: selfSecret1 }
-            - { name: MyPeer2MSP, secret: nodeSecret1w2 }
+            - { name: MyOrg1MSP, secret: selfSecret1 }
+            - { name: MyOrg2MSP, secret: nodeSecret1w2 }
           outgoingNodes:
-            - { name: MyPeer1MSP, secret: selfSecret1 }
-            - { name: MyPeer2MSP, secret: nodeSecret2w1 }
+            - { name: MyOrg1MSP, secret: selfSecret1 }
+            - { name: MyOrg2MSP, secret: nodeSecret2w1 }
           users:
             - name: "node-1"
               secret: "p@$swr0d44"
 
-      - name: substra-backend-peer-2
+      - name: org-2
         chartPath: charts/substra-backend
-        namespace: peer-2
+        namespace: org-2
         imageStrategy:
           helm: {}
         values:
@@ -83,7 +83,7 @@ deploy:
           flower.image: substrafoundation/flower
         overrides:
           secrets:
-            fabricConfigmap: network-peer-2-hlf-k8s-fabric
+            fabricConfigmap: network-org-2-hlf-k8s-fabric
           backend:
             settings: dev
             defaultDomain: http://substra-backend.node-2.com
@@ -96,23 +96,23 @@ deploy:
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
           organization:
-            name: MyPeer2
+            name: MyOrg2
           peer:
-            host: network-peer-2.peer-2
+            host: network-org-2-peer-1.org-2
             port: 7051
-            mspID: MyPeer2MSP
+            mspID: MyOrg2MSP
           orderer:
             host: network-orderer.orderer
             port: 7050
             name: MyOrderer
           persistence:
-            hostPath: /tmp/peer-2
+            hostPath: /tmp/org-2
           incomingNodes:
-            - { name: MyPeer1MSP, secret: nodeSecret2w1 }
-            - { name: MyPeer2MSP, secret: selfSecret2 }
+            - { name: MyOrg1MSP, secret: nodeSecret2w1 }
+            - { name: MyOrg2MSP, secret: selfSecret2 }
           outgoingNodes:
-            - { name: MyPeer1MSP, secret: nodeSecret1w2 }
-            - { name: MyPeer2MSP, secret: selfSecret2 }
+            - { name: MyOrg1MSP, secret: nodeSecret1w2 }
+            - { name: MyORg2MSP, secret: selfSecret2 }
           users:
             - name: "node-2"
               secret: "p@$swr0d45"

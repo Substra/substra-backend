@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "substra.fullname" . }}-backend
+  name: {{ template "substra.fullname" . }}-server
 data:
   conf.json: |
     {
