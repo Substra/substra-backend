@@ -80,21 +80,6 @@ persistence:
 
 # Secrets names
 secrets:
-  # TODO remove
-  cert: hlf-idcert
-  # Key, saved under 'key.pem'
-  key: hlf-idkey
-  ordTlsRootCert: hlf-client-tlsrootcert
-  # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
-  tls: hlf-tls
-  # This should contain the Certificate of the Peer Organisation admin
-  # This is necessary to successfully run the peer
-  adminCert: hlf-admincert
-  # This should contain the Private Key of the Peer Organisation admin
-  # This is necessary to successfully join a channel
-  adminKey: hlf-adminkey
-
-
   ca: hlf-ca
   user:
     # Certificate, saved under key 'cert.pem'
@@ -109,15 +94,6 @@ secrets:
     tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
       client: hlf-client-tls
       server: hlf-tls
-
-  # CA Cert, saved under 'cacert.pem'
-  caCert: hlf-cacert
-  # TLS root CA certificate saved under key 'cert.pem'
-  tlsRootCert: hlf-tlsrootcert
-  # TLS client root CA certificates saved under any names (as there may be multiple)
-  tlsClient: hlf-tls
-  # TLS client root CA certificates saved under any names (as there may be multiple)
-  tlsClientRootCerts: hlf-client-tlsrootcert
 
 organization:
   name: substra
