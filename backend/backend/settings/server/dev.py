@@ -1,4 +1,4 @@
 from ..deps.ledger import *
-from ..prod import *
+from ..dev import *
 
 INSTALLED_APPS += ['events', 'node-register']
