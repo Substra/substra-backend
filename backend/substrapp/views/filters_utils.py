@@ -68,10 +68,7 @@ def _same_nature(filter_key, object_type):
         return True
 
     # algo and composite algos are of the same nature
-    if {filter_key, object_type} <= {'algo', 'composite_algo'}:
-        return True
-
-    return False
+    return {filter_key, object_type} <= {'algo', 'composite_algo'}
 
 
 def filter_list(object_type, data, query_params):
