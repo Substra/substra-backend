@@ -241,7 +241,7 @@ def put_composite_test_models(subtuple, subtuple_directory, models_content):
     if not models_content:
         raise Exception('Models content should not be empty')
 
-    key = subtuple.get('model').get('traintupleKey')
+    key = subtuple.get('traintupleKey')
     metadata = get_object_from_ledger(key, 'queryCompositeTraintuple')
 
     _put_model(subtuple_directory, models_content[0],
