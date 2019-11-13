@@ -70,7 +70,6 @@ spec:
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
-          readOnly: true
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}
