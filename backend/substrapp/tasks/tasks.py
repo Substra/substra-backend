@@ -433,7 +433,7 @@ def prepare_materials(subtuple, tuple_type):
     # get subtuple components
     metrics_content = get_objective(subtuple)
     if tuple_type == 'testtuple':
-        if 'compositeTraintuple' == subtuple['model']['traintupleType']:
+        if 'compositeTraintuple' == subtuple['traintupleType']:
             algo_content = get_composite_algo(subtuple)
             models_content = get_testtuple_composite_models(subtuple)
         else:
