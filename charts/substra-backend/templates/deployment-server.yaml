@@ -20,6 +20,12 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- with $.Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: {{ template "substra.name" . }}
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"

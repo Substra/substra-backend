@@ -21,6 +21,12 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-flower
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- with $.Values.flower.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: flower
           image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag }}"

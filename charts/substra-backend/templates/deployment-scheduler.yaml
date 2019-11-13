@@ -20,6 +20,12 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- with $.Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       containers:
         - name: scheduler
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"

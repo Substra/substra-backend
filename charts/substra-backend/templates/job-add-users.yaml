@@ -13,6 +13,12 @@ metadata:
 spec:
   template:
     spec:
+      {{- with $.Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+      - name: {{ . }}
+      {{- end }}
+      {{- end }}
       restartPolicy: OnFailure
       containers:
       - name: add-users
