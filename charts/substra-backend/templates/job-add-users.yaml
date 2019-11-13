@@ -14,12 +14,6 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      {{- with $.Values.backend.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range . }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
       - name: add-users
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"

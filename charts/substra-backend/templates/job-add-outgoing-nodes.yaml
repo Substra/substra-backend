@@ -14,20 +14,11 @@ spec:
   template:
     spec:
       restartPolicy: OnFailure
-      {{- if or $.Values.pullSecretsInline $.Values.backend.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range $index, $value := $.Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range $.Values.backend.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
       - name: add-outgoing-node
         image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"
         imagePullPolicy: "{{ $.Values.backend.image.pullPolicy }}"
-        command: ["python3"]
+        command: ["python"]
         args: ["manage.py", "create_outgoing_node", {{ .name }}, {{ .secret }}]
         env:
           - name: DJANGO_SETTINGS_MODULE

@@ -20,15 +20,6 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range $index, $value := .Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range .Values.backend.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: {{ template "substra.name" . }}
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
@@ -99,6 +90,7 @@ spec:
                   value: "text/html;version=0.0, */*;version=0.0"
             initialDelaySeconds: 60
             timeoutSeconds: 5
+            periodSeconds: 45
             failureThreshold: 6
           readinessProbe:
             httpGet:
@@ -107,7 +99,7 @@ spec:
               httpHeaders:
                 - name: Accept
                   value: "text/html;version=0.0, */*;version=0.0"
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             timeoutSeconds: 2
             periodSeconds: 30
           resources:

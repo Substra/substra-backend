@@ -11,9 +11,6 @@ docker:
   pullImages: []
     # - substrafoundation/substra-tools:0.0.1
 
-# Inline secrets used to pull images of pods (base64'd)
-pullSecretsInline: []
-
 backend:
   replicaCount: 1
   settings: prod
@@ -24,7 +21,6 @@ backend:
     repository: substrafoundation/substra-backend
     tag: latest
     pullPolicy: IfNotPresent
-    pullSecrets: []
 
   service:
     type: NodePort
@@ -145,7 +141,6 @@ flower:
     repository: substrafoundation/flower
     tag: latest
     pullPolicy: IfNotPresent
-    pullSecrets: []
 
   service:
     type: NodePort
@@ -163,7 +158,6 @@ celerybeat:
     repository: substrafoundation/celerybeat
     tag: latest
     pullPolicy: IfNotPresent
-    pullSecrets: []
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -189,7 +183,6 @@ celeryworker:
     repository: substrafoundation/celeryworker
     tag: latest
     pullPolicy: IfNotPresent
-    pullSecrets: []
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious

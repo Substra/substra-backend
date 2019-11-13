@@ -20,15 +20,6 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- if or .Values.pullSecretsInline .Values.celeryworker.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range $index, $value := .Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range .Values.celeryworker.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"

@@ -21,15 +21,6 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-flower
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- if or .Values.pullSecretsInline .Values.flower.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range $index, $value := .Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range .Values.flower.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: flower
           image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag }}"

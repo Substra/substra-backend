@@ -20,15 +20,6 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-celerybeat
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- if or .Values.pullSecretsInline .Values.backend.image.pullSecrets }}
-      imagePullSecrets:
-      {{- range $index, $value := .Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range .Values.backend.image.pullSecrets }}
-        - name: {{ . }}
-      {{- end }}
-      {{- end }}
       containers:
         - name: celerybeat
           image: "{{ .Values.celerybeat.image.repository }}:{{ .Values.celerybeat.image.tag }}"
