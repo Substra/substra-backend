@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ template "substra.fullname" . }}-backend
+  name: {{ template "substra.fullname" . }}-server
   labels:
-    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    app.kubernetes.io/name: {{ template "substra.name" . }}-server
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -46,5 +46,5 @@ spec:
       nodePort: {{.Values.backend.service.nodePort}}
 {{ end }}
   selector:
-    app.kubernetes.io/name: {{ template "substra.name" . }}-backend
+    app.kubernetes.io/name: {{ template "substra.name" . }}-server
     app.kubernetes.io/instance: {{ .Release.Name }}

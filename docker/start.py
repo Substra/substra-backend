@@ -146,7 +146,6 @@ def generate_docker_compose_file(conf, launch_settings):
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
         backend_global_env = [
-            f'ORG={org_name_stripped}',
             f'BACKEND_ORG={org_name}',
             f'BACKEND_DEFAULT_PORT={port}',
             'BACKEND_PEER_PORT=internal',

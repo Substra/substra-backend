@@ -1,42 +1,46 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ template "substra.fullname" . }}-worker
+  name: {{ template "substra.fullname" . }}-server
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
     helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}-worker
+    app.kubernetes.io/name: {{ template "substra.name" . }}-server
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.backend.replicaCount }}
   selector:
     matchLabels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-worker
+        app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ template "substra.name" . }}-worker
+        app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- with $.Values.celeryworker.image.pullSecrets }}
+      {{- with $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
       containers:
-        - name: worker
-          image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
-          {{- if .Values.celeryworker.image.pullPolicy }}
-          imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
+        - name: {{ template "substra.name" . }}
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          {{- if .Values.backend.image.pullPolicy }}
+          imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
           {{- end }}
-          command: ["celery"]
-          args: ["-A", "backend", "worker", "-E", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery", "--hostname", "{{ .Values.organization.name }}.worker"]
+          command: ["/bin/bash"]
+          {{- if eq .Values.backend.settings "prod" }}
+          args: ["-c", "python manage.py migrate && python manage.py collectstatic --noinput && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes 4 --threads 2 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
+          {{- else }}
+          args: ["-c", "python manage.py migrate && python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }}"]
+          {{- end }}
           env:
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.celery.{{ .Values.backend.settings }}
+              value: backend.settings.{{ .Values.backend.settings }}
             - name: BACKEND_ORG
               value: {{ .Values.organization.name }}
             - name: BACKEND_DB_NAME
@@ -51,15 +55,21 @@ spec:
               value: "{{ .Values.backend.defaultDomain }}"
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+            - name: BACKEND_DEFAULT_PORT
+              value: {{ .Values.backend.service.port | quote}}
+            - name: BACKEND_PEER_PORT
+              value: "internal"
             - name: LEDGER_CONFIG_FILE
               value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
             - name: MEDIA_ROOT
               value: {{ .Values.persistence.hostPath }}/medias/
             - name: PYTHONUNBUFFERED
               value: "1"
+          ports:
+            - name: http
+              containerPort: {{ .Values.backend.service.port }}
+              protocol: TCP
           volumeMounts:
-            - name: dockersocket
-              mountPath: /var/run/docker.sock
             - name: data
               mountPath: {{ .Values.persistence.hostPath }}
             - name: config
@@ -77,12 +87,30 @@ spec:
               mountPath: /var/hyperledger/tls/ord/cert
             - name: ca
               mountPath: /var/hyperledger/ca
+          livenessProbe:
+            httpGet:
+              path: /liveness
+              port: http
+              httpHeaders:
+                - name: Accept
+                  value: "text/html;version=0.0, */*;version=0.0"
+            initialDelaySeconds: 60
+            timeoutSeconds: 5
+            periodSeconds: 45
+            failureThreshold: 6
+          readinessProbe:
+            httpGet:
+              path: /readiness
+              port: http
+              httpHeaders:
+                - name: Accept
+                  value: "text/html;version=0.0, */*;version=0.0"
+            initialDelaySeconds: 5
+            timeoutSeconds: 2
+            periodSeconds: 30
           resources:
-            {{- toYaml .Values.celeryworker.resources | nindent 12 }}
+            {{- toYaml .Values.backend.resources | nindent 12 }}
       volumes:
-      - name: dockersocket
-        hostPath:
-          path: /var/run/docker.sock
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" . }}
@@ -107,15 +135,15 @@ spec:
       - name: ca
         secret:
           secretName: {{ $.Values.secrets.ca }}
-    {{- with .Values.celeryworker.nodeSelector }}
+    {{- with .Values.backend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.celeryworker.affinity }}
+    {{- with .Values.backend.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.celeryworker.tolerations }}
+    {{- with .Values.backend.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
