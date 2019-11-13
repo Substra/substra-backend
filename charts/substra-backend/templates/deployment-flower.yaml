@@ -24,7 +24,7 @@ spec:
       {{- with $.Values.flower.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
-      - name: {{ . }}
+        - name: {{ . }}
       {{- end }}
       {{- end }}
       containers:

@@ -16,7 +16,7 @@ spec:
       {{- with $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
-      - name: {{ . }}
+        - name: {{ . }}
       {{- end }}
       {{- end }}
       restartPolicy: OnFailure
