@@ -15,6 +15,9 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     serializer_class = LedgerComputePlanSerializer
 
+    def get_queryset(self):
+        return []
+
     def create(self, request, *args, **kwargs):
         # rely on serializer to parse and validate request data
         serializer = self.get_serializer(data=dict(request.data))
@@ -64,7 +67,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        compute_plan_list = [data]
+        compute_plan_list = [data] if data else [[]]
 
         query_params = request.query_params.get('search', None)
         if query_params is not None:
