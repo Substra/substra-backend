@@ -145,7 +145,7 @@ def generate_docker_compose_file(conf, launch_settings):
             django_server = f'DJANGO_SETTINGS_MODULE=backend.settings.server.dev ' \
                             f'python3 manage.py runserver --noreload 0.0.0.0:{port}'
 
-        backend_global_env = [
+        global_env = [
             f'BACKEND_ORG={org_name}',
             f'BACKEND_DEFAULT_PORT={port}',
             'BACKEND_PEER_PORT=internal',
@@ -160,8 +160,13 @@ def generate_docker_compose_file(conf, launch_settings):
             f"TASK_CACHE_DOCKER_IMAGES=False",
 
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
-            f'DJANGO_SETTINGS_MODULE=backend.settings.{launch_settings}',
         ]
+
+        backend_global_env = global_env.copy()
+        backend_global_env.append(f'DJANGO_SETTINGS_MODULE=backend.settings.{launch_settings}')
+
+        celery_global_env = global_env.copy()
+        celery_global_env.append(f'DJANGO_SETTINGS_MODULE=backend.settings.celery.{launch_settings}')
 
         hlf_volumes = [
             # config (core.yaml + substra-backend/conf.json)
@@ -210,7 +215,7 @@ def generate_docker_compose_file(conf, launch_settings):
                        f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-            'environment': backend_global_env.copy(),
+            'environment': celery_global_env.copy(),
             'volumes': hlf_volumes,
             'depends_on': [f'backend{org_name_stripped}', 'postgresql', 'rabbit']}
 
@@ -224,7 +229,7 @@ def generate_docker_compose_file(conf, launch_settings):
                        f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-            'environment': backend_global_env.copy(),
+            'environment': celery_global_env.copy(),
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
                 f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
@@ -273,7 +278,7 @@ def stop(docker_compose=None):
 
     if docker_compose is not None:
         call(['docker-compose', '-f', docker_compose['path'], '--project-directory',
-              os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
+              os.path.join(dir_path, '../'), 'kill', '--remove-orphans'])
 
 
 def start(conf, launch_settings, no_backup):
