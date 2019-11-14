@@ -74,9 +74,9 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model
 
-            pkhash = model[1]['traintuple']['outModel']['hash']
+            pkhash = model[1]['traintuple']['key']
             url = reverse('substrapp:model-list')
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            search_params = f'?search=model%253Akey%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r[0]), 1)
