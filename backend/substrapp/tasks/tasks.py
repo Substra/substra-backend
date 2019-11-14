@@ -96,8 +96,8 @@ def _get_model(traintuple_hash):
     return model_content
 
 
-def get_head_model(tuple_):
-    model = tuple_.get('inHeadModel')
+def get_head_model(traintuple):
+    model = traintuple.get('inHeadModel')
     if not model:
         return None
 
@@ -113,8 +113,8 @@ def get_head_model(tuple_):
     )
 
 
-def get_trunk_model(tuple_):
-    model = tuple_.get('inTrunkModel')
+def get_trunk_model(traintuple):
+    model = traintuple.get('inTrunkModel')
     if not model:
         return None
 
@@ -150,9 +150,9 @@ def get_traintuple_metadata(traintuple_hash):
     return get_object_from_ledger(traintuple_hash, 'queryTraintuple')
 
 
-def get_composite_models(subtuple):
-    head_model = get_head_model(subtuple)
-    trunk_model = get_trunk_model(subtuple)
+def get_composite_models(traintuple):
+    head_model = get_head_model(traintuple)
+    trunk_model = get_trunk_model(traintuple)
     if head_model and trunk_model:
         return [head_model, trunk_model]
     else:
@@ -214,26 +214,26 @@ def put_model(testtuple, subtuple_directory, model_content, model_hash, filename
                       testtuple['traintupleKey'], filename_prefix)
 
 
-def put_models(subtuple, subtuple_directory, models_content):
+def put_models(traintuple, subtuple_directory, models_content):
     if not models_content:
         raise Exception('Models content should not be empty')
 
-    for model_content, model in zip(models_content, subtuple['inModels']):
+    for model_content, model in zip(models_content, traintuple['inModels']):
         _put_model(subtuple_directory, model_content, model['hash'], model['traintupleKey'])
 
 
-def put_composite_models(subtuple, subtuple_directory, models_content):
+def put_composite_models(traintuple, subtuple_directory, models_content):
     if not models_content:
         raise Exception('Models content should not be empty')
 
     _put_model(subtuple_directory, models_content[0],
-               subtuple['inHeadModel']['hash'],
-               subtuple['inHeadModel']['traintupleKey'],
+               traintuple['inHeadModel']['hash'],
+               traintuple['inHeadModel']['traintupleKey'],
                filename_prefix=PREFIX_HEAD_FILENAME)
 
     _put_model(subtuple_directory, models_content[1],
-               subtuple['inTrunkModel']['hash'],
-               subtuple['inTrunkModel']['traintupleKey'],
+               traintuple['inTrunkModel']['hash'],
+               traintuple['inTrunkModel']['traintupleKey'],
                filename_prefix=PREFIX_TRUNK_FILENAME)
 
 
