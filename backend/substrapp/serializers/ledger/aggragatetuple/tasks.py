@@ -1,9 +1,9 @@
 # Create your tasks here
 from __future__ import absolute_import, unicode_literals
 from celery import shared_task
-from .util import createLedgerAggregate
+from .util import createLedgerAggregateTuple
 
 
 @shared_task
-def createLedgerAggregateAsync(args):
-    return createLedgerAggregate(args)
+def createLedgerAggregateTupleAsync(args):
+    return createLedgerAggregateTuple(args)
