@@ -16,4 +16,5 @@ __all__ = ['DataSampleSerializer', 'ObjectiveSerializer', 'ModelSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
            'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer',
-           'AggregateAlgoSerializer', 'LedgerAggregateAlgoSerializer']
+           'AggregateAlgoSerializer', 'LedgerAggregateAlgoSerializer',
+           'AggregateTupleSerializer', 'LedgerAggregateTupleSerializer']

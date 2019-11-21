@@ -2,11 +2,11 @@ from rest_framework import serializers
 
 from django.conf import settings
 
-from .util import createLedgerAggregatetuple
-from .tasks import createLedgerAggregatetupleAsync
+from .util import createLedgerAggregateTuple
+from .tasks import createLedgerAggregateTupleAsync
 
 
-class LedgerAggregatetupleSerializer(serializers.Serializer):
+class LedgerAggregateTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
@@ -47,10 +47,10 @@ class LedgerAggregatetupleSerializer(serializers.Serializer):
         args = self.get_args(validated_data)
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data = createLedgerAggregatetuple(args, sync=True)
+            data = createLedgerAggregateTuple(args, sync=True)
         else:
             # use a celery task, as we are in an http request transaction
-            createLedgerAggregatetupleAsync.delay(args)
+            createLedgerAggregateTupleAsync.delay(args)
             data = {
                 'message': 'The substra network has been notified for adding this Aggregatetuple. '
                            'Please be aware you won\'t get return values from the ledger. '
