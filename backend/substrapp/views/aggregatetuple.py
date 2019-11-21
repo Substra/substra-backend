@@ -4,17 +4,17 @@ from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.serializers import LedgerAggregatetupleSerializer
+from substrapp.serializers import LedgerAggregateTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
 
 
-class AggregatetupleViewSet(mixins.CreateModelMixin,
+class AggregateTupleViewSet(mixins.CreateModelMixin,
                             mixins.RetrieveModelMixin,
                             mixins.ListModelMixin,
                             GenericViewSet):
-    serializer_class = LedgerAggregatetupleSerializer
+    serializer_class = LedgerAggregateTupleSerializer
     ledger_query_call = 'queryAggregatetuple'
 
     def get_queryset(self):
