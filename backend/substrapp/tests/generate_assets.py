@@ -28,8 +28,7 @@ def main(network):
     assets['traintuple'] = json.dumps(client.list_traintuple(), indent=4)
     assets['testtuple'] = json.dumps(client.list_testtuple(), indent=4)
     assets['computeplan'] = json.dumps(client.list_compute_plan(), indent=4)
-    assets['compositetraintuple'] = """
-[
+    assets['compositetraintuple'] = """[
     {
         "key": "363f70dcc3bf22fdce65e36c957e855b7cd3e2828e6909f34ccc97ee6218541a",
         "algo": {
@@ -236,8 +235,7 @@ def main(network):
     }
 ]
 """
-    assets['compositealgo'] = """
-[
+    assets['compositealgo'] = """[
     {
         "key": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
         "name": "Composite Algo",
