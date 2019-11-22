@@ -234,7 +234,7 @@ def main(network):
         "tag": ""
     }
 ]
-"""
+"""  # noqa: E501
     assets['compositealgo'] = """[
     {
         "key": "9c3d8777e11fd72cbc0fd672bec3a0848f8518b4d56706008cc05f8a1cee44f9",
@@ -275,7 +275,7 @@ def main(network):
         }
     }
 ]
-"""
+"""  # noqa: E501
 
     assets['model'] = json.dumps([res for res in client.client.list('model')
                                   if ('traintuple' in res and 'testtuple' in res)], indent=4)
