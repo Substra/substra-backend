@@ -102,6 +102,23 @@ def login(*args):
             raise Exception(f'login failed: {str(e)}')
 
 
+def wait_for_tuple(client, tuple_type, tuple_key, color):
+    status = None
+    get_tuple = getattr(client, f'get_{tuple_type}')
+    while status not in ('done', 'failed'):
+        res = get_tuple(tuple_key)
+        if status != res['status']:
+            status = res['status']
+            print('')
+            print('-' * 100)
+            print(colored(json.dumps(res, indent=2), color))
+        else:
+            print('.', end='', flush=True)
+
+        time.sleep(3)
+    return res
+
+
 def do_populate():
 
     parser = argparse.ArgumentParser()
@@ -379,25 +396,9 @@ def do_populate():
     res_t = client.get_testtuple(testtuple_key)
     print(colored(json.dumps(res_t, indent=2), 'yellow'))
 
-    testtuple_status = None
-    traintuple_status = None
-
     client.set_profile(org_1)
-
-    while traintuple_status not in ('done', 'failed') or testtuple_status not in ('done', 'failed'):
-        res = client.get_traintuple(traintuple_key)
-        res_t = client.get_testtuple(testtuple_key)
-        if traintuple_status != res['status'] or testtuple_status != res_t['status']:
-            traintuple_status = res['status']
-            testtuple_status = res_t['status']
-            print('')
-            print('-' * 100)
-            print(colored(json.dumps(res, indent=2), 'green'))
-            print(colored(json.dumps(res_t, indent=2), 'yellow'))
-        else:
-            print('.', end='', flush=True)
-
-        time.sleep(3)
+    wait_for_tuple(client, 'traintuple', traintuple_key, 'green')
+    wait_for_tuple(client, 'testtuple', testtuple_key, 'yellow')
 
     ####################################################
     # Compute plan
@@ -432,6 +433,32 @@ def do_populate():
         print(colored(json.dumps(res, indent=2), 'green'))
     except:  # noqa: E722
         print(colored('Could not create compute plan', 'red'))
+
+    ####################################################
+    # Composite algo / traintuple
+
+    print('register composite algo')
+    data = {
+        'name': 'Logistic regression (composite)',
+        'file': os.path.join(dir_path, './fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz'),
+        'description': os.path.join(dir_path, './fixtures/owkin/compositealgos/compositealgo0/description.md'),
+        'permissions': PUBLIC_PERMISSIONS,
+    }
+    composite_algo_key = get_or_create(data, org_0, 'composite_algo')
+
+    print('create composite traintuple')
+
+    # This composite traintuple is the same as the first traintuple except it saves 2 models
+    data = {
+        'algo_key': composite_algo_key,
+        'objective_key': objective_key,
+        'data_manager_key': data_manager_org1_key,
+        'train_data_sample_keys': train_data_sample_keys[:2]
+    }
+
+    composite_traintuple_key = get_or_create(data, org_0, 'composite_traintuple')
+    composite_traintuple = wait_for_tuple(client, 'composite_traintuple', composite_traintuple_key, 'green')
+    assert composite_traintuple['status'] == 'done', 'composite_traintuple should have succeeded'
 
 
 if __name__ == '__main__':
