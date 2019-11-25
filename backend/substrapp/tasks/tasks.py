@@ -189,6 +189,10 @@ def get_testtuple_composite_models(tuple_):
     return [head_model, trunk_model]
 
 
+def get_aggregate_models(tuple_):
+    return get_models(tuple_)
+
+
 def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
     if not model_content:
         raise Exception('Model content should not be empty')
@@ -346,6 +350,11 @@ def prepare_testing_task():
     prepare_task('testtuple')
 
 
+@app.task(ignore_result=True)
+def prepare_aggregate_task():
+    prepare_task('aggregratetuple')
+
+
 def prepare_task(tuple_type):
     data_owner = get_owner()
     worker_queue = f"{settings.LEDGER['name']}.worker"
@@ -452,7 +461,11 @@ def prepare_materials(subtuple, tuple_type):
     elif tuple_type == 'compositeTraintuple':
         algo_content = get_composite_algo(subtuple)
         models_content = get_composite_models(subtuple)
+    elif tuple_type == 'aggregatetuple':
+        algo_content = get_aggregate_algo(subtuple)
+        models_content = get_aggregate_models(subtuple)
     else:
+        logging.error(f"task of type : {tuple_type} not implemented")
         raise NotImplementedError()
 
     # create subtuple
@@ -473,6 +486,8 @@ def prepare_materials(subtuple, tuple_type):
         put_composite_models(subtuple, subtuple_directory, models_content)
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
+    elif tuple_type == 'aggregatetuple' and models_content:
+        put_models(subtuple, subtuple_directory, models_content, model_hash)
 
     logging.info(f'Prepare materials for {tuple_type} task: success')
     list_files(subtuple_directory)
@@ -609,6 +624,17 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         if rank is not None:
             command = f"{command} --rank {rank}"
 
+    elif tuple_type == 'aggregatetuple':
+        command = 'aggregate'
+        algo_docker_name = f'{algo_docker_name}_{command}'
+
+        if subtuple['inModels'] is not None:
+            in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+            command = f"{command} {' '.join(in_aggregatetuple_keys)}"
+
+        if rank is not None:
+            command = f"{command} --rank {rank}"
+
     compute_docker(
         client=client,
         resources_manager=resources_manager,
@@ -623,7 +649,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     )
 
     # save model in database
-    if tuple_type == 'traintuple':
+    if tuple_type in ['traintuple', 'aggregatetuple']:
         end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
 
     elif tuple_type == 'compositeTraintuple':
