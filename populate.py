@@ -453,7 +453,8 @@ def do_populate():
         'algo_key': composite_algo_key,
         'objective_key': objective_key,
         'data_manager_key': data_manager_org1_key,
-        'train_data_sample_keys': train_data_sample_keys[:2]
+        'train_data_sample_keys': train_data_sample_keys[:2],
+        'tag': 'substra',
     }
 
     composite_traintuple_key = get_or_create(data, org_0, 'composite_traintuple')

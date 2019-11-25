@@ -133,12 +133,13 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
+        done_model = [m for m in model if 'traintuple' in m and m['traintuple']['status'] == 'done'][0]
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = objective
             mquery_ledger2.return_value = traintuple
 
-            pkhash = model[1]['traintuple']['outModel']['hash']
+            pkhash = done_model['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
