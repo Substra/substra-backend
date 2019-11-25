@@ -487,7 +487,7 @@ def prepare_materials(subtuple, tuple_type):
     elif tuple_type == 'traintuple' and models_content:
         put_models(subtuple, subtuple_directory, models_content)
     elif tuple_type == 'aggregatetuple' and models_content:
-        put_models(subtuple, subtuple_directory, models_content, model_hash)
+        put_models(subtuple, subtuple_directory, models_content)
 
     logging.info(f'Prepare materials for {tuple_type} task: success')
     list_files(subtuple_directory)
