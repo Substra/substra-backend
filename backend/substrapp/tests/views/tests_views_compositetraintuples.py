@@ -111,14 +111,3 @@ class CompositeTraintupleViewTests(APITestCase):
             r = response.json()
 
             self.assertEqual(len(r[0]), 1)
-
-    def test_compositetraintuple_list_filter_compute_plan_id(self):
-        url = reverse('substrapp:composite_traintuple-list')
-        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = compositetraintuple
-            compute_plan_id = get_compute_plan_id(compositetraintuple)
-            search_params = f'?search=composite_traintuple%253AcomputePlanID%253A{compute_plan_id}'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 1)
