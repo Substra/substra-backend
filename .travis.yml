@@ -20,7 +20,8 @@ addons:
       channel: stable
 
 before_script:
-  - helm init -c
+  - helm --help
+  - helm init
 
 install: pip install -r backend/requirements.txt
 
