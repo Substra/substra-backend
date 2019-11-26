@@ -665,7 +665,23 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             filename=output_trunk_model_filename,
         )
 
+    # create result
+    result = {}
+    if tuple_type in ('traintuple', 'aggregatetuple'):
+        result['end_model_file_hash'] = end_model_file_hash
+        result['end_model_file'] = end_model_file
+
+    elif tuple_type == 'compositeTraintuple':
+        result['end_head_model_file_hash'] = end_head_model_file_hash
+        result['end_head_model_file'] = end_head_model_file
+        result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
+        result['end_trunk_model_file'] = end_trunk_model_file
+
     # evaluation
+    if tuple_type == 'aggregatetuple':  # skip evaluation
+        result['global_perf'] = 0
+        return result
+
     metrics_path = f'{subtuple_directory}/metrics'
     eval_docker = f'substra/metrics_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
     eval_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}_eval'
@@ -686,20 +702,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # load performance
     with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
         perf = json.load(perf_file)
-    global_perf = perf['all']
-
-    result = {'global_perf': global_perf}
-
-    if tuple_type == 'traintuple':
-        result['end_model_file_hash'] = end_model_file_hash
-        result['end_model_file'] = end_model_file
-
-    elif tuple_type == 'compositeTraintuple':
-        result['end_head_model_file_hash'] = end_head_model_file_hash
-        result['end_head_model_file'] = end_head_model_file
-        result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
-        result['end_trunk_model_file'] = end_trunk_model_file
-
+    result['global_perf'] = perf['all']
     return result
 
 
