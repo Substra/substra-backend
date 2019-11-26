@@ -471,9 +471,10 @@ def prepare_materials(subtuple, tuple_type):
     # create subtuple
     subtuple_directory = build_subtuple_folders(subtuple)
     put_algo(subtuple_directory, algo_content)
-    put_opener(subtuple, subtuple_directory)
+    if tuple_type in ('testtuple', 'traintuple', 'compositeTraintuple'):
+        put_opener(subtuple, subtuple_directory)
+        put_data_sample(subtuple, subtuple_directory)
     put_metric(subtuple_directory, metrics_content)
-    put_data_sample(subtuple, subtuple_directory)
     if tuple_type == 'testtuple':
         if 'compositeTraintuple' == subtuple['traintupleType']:
             put_composite_test_models(subtuple, subtuple_directory, models_content)
