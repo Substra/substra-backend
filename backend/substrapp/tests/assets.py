@@ -189,7 +189,7 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0014-9c157b1]",
+        "log": "[01-01-0014-3cb265a]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
@@ -227,7 +227,7 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0014-3948bc4]",
+        "log": "[01-01-0014-59c9f55]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
@@ -274,8 +274,8 @@ traintuple = [
             }
         },
         "outModel": {
-            "hash": "e179eef71ee5c3b425104681112aa8d3a2a192109e627292e425cc5bca555a02",
-            "storageAddress": "http://testserver/model/e179eef71ee5c3b425104681112aa8d3a2a192109e627292e425cc5bca555a02/file/"
+            "hash": "b2054234594af9e9715a4002ba00adb314cb3992622088d981ad87c083993a78",
+            "storageAddress": "http://testserver/model/b2054234594af9e9715a4002ba00adb314cb3992622088d981ad87c083993a78/file/"
         },
         "permissions": {
             "process": {
@@ -315,8 +315,8 @@ traintuple = [
             }
         },
         "outModel": {
-            "hash": "7545cdf72be280f1077843079e42ab9b4b5e55ecfce5c70fcb2aa175b08ec7f3",
-            "storageAddress": "http://testserver/model/7545cdf72be280f1077843079e42ab9b4b5e55ecfce5c70fcb2aa175b08ec7f3/file/"
+            "hash": "e84714ded7d464da0cecf48b6817f5b8c34c40e656c68f2ee595de62b2d761f6",
+            "storageAddress": "http://testserver/model/e84714ded7d464da0cecf48b6817f5b8c34c40e656c68f2ee595de62b2d761f6/file/"
         },
         "permissions": {
             "process": {
@@ -435,7 +435,7 @@ compositetraintuple = [
         },
         "rank": 0,
         "status": "done",
-        "tag": ""
+        "tag": "substra"
     }
 ]
 
@@ -482,7 +482,7 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0014-9c157b1]",
+            "log": "[01-01-0014-3cb265a]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
@@ -535,7 +535,7 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0014-3948bc4]",
+            "log": "[01-01-0014-59c9f55]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
@@ -597,8 +597,8 @@ model = [
                 }
             },
             "outModel": {
-                "hash": "e179eef71ee5c3b425104681112aa8d3a2a192109e627292e425cc5bca555a02",
-                "storageAddress": "http://testserver/model/e179eef71ee5c3b425104681112aa8d3a2a192109e627292e425cc5bca555a02/file/"
+                "hash": "b2054234594af9e9715a4002ba00adb314cb3992622088d981ad87c083993a78",
+                "storageAddress": "http://testserver/model/b2054234594af9e9715a4002ba00adb314cb3992622088d981ad87c083993a78/file/"
             },
             "permissions": {
                 "process": {
@@ -653,8 +653,8 @@ model = [
                 }
             },
             "outModel": {
-                "hash": "7545cdf72be280f1077843079e42ab9b4b5e55ecfce5c70fcb2aa175b08ec7f3",
-                "storageAddress": "http://testserver/model/7545cdf72be280f1077843079e42ab9b4b5e55ecfce5c70fcb2aa175b08ec7f3/file/"
+                "hash": "e84714ded7d464da0cecf48b6817f5b8c34c40e656c68f2ee595de62b2d761f6",
+                "storageAddress": "http://testserver/model/e84714ded7d464da0cecf48b6817f5b8c34c40e656c68f2ee595de62b2d761f6/file/"
             },
             "permissions": {
                 "process": {
@@ -757,7 +757,7 @@ model = [
             },
             "rank": 0,
             "status": "done",
-            "tag": ""
+            "tag": "substra"
         },
         "testtuple": {
             "key": "",
