@@ -224,7 +224,8 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
     log_fail_methods = {
         'traintuple': 'logFailTrain',
         'testtuple': 'logFailTest',
-        'compositeTraintuple': 'logFailCompositeTrain'
+        'compositeTraintuple': 'logFailCompositeTrain',
+        'aggregatetuple': 'logFailAggregate',
     }
 
     fail_type = log_fail_methods[tuple_type]
@@ -275,6 +276,19 @@ def log_success_tuple(tuple_type, tuple_key, res):
             'perf': float(res["global_perf"]),
             'log': '',
         }
+
+    elif tuple_type == 'aggregatetuple':
+        invoke_fcn = 'logSuccessAggregate'
+        invoke_args = {
+            'key': tuple_key,
+            'outModel': {
+                'hash': res["end_model_file_hash"],
+                'storageAddress': res["end_model_file"],
+            },
+            'perf': float(res["global_perf"]),
+            'log': '',
+        }
+
     else:
         raise NotImplementedError()
 
@@ -291,6 +305,8 @@ def log_start_tuple(tuple_type, tuple_key):
         start_type = 'logStartTest'
     elif tuple_type == 'compositeTraintuple':
         start_type = 'logStartCompositeTrain'
+    elif tuple_type == 'aggregatetuple':
+        start_type = 'logStartAggregate'
     else:
         raise NotImplementedError()
 
