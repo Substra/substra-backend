@@ -22,7 +22,8 @@ AUTHORIZED_FILTERS = {
     'model': ['model', 'algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
     'testtuple': ['testtuple'],
-    'composite_traintuple': ['composite_traintuple']
+    'composite_traintuple': ['composite_traintuple'],
+    'aggregatetuple': ['aggregatetuple'],
 }
 
 
@@ -70,7 +71,7 @@ def _same_nature(filter_key, object_type):
         return True
 
     # algo and composite algos are of the same nature
-    return {filter_key, object_type} <= {'algo', 'composite_algo'}
+    return {filter_key, object_type} <= {'algo', 'composite_algo', 'aggregate_algo'}
 
 
 def _get_model_tuple(model):
@@ -86,6 +87,8 @@ def _get_model_tuple(model):
 
     if 'compositeTraintuple' in model:
         return model['compositeTraintuple']
+    elif 'aggregatetuple' in model:
+        return model['aggregatetuple']
     elif 'traintuple' in model:
         return model['traintuple']
     else:
@@ -131,7 +134,7 @@ def filter_list(object_type, data, query_params):
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key in ('algo', 'composite_algo', 'aggreagate_algo'):
+                if filter_key in ('algo', 'composite_algo', 'aggregate_algo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         hashes = [x['key'] for x in filtering_data]
@@ -165,7 +168,7 @@ def filter_list(object_type, data, query_params):
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x)['dataset']['openerHash'] in hashes]
+                                             if _get_model_tuple(x).get('dataset', {}).get('openerHash') in hashes]
                         elif object_type == 'objective':
                             objectiveKeys = [x['objectiveKey'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
