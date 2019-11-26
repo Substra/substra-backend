@@ -83,7 +83,7 @@ class CompositeAlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=composite_algo%253Aname%253AComposite%2520Algo'
+            search_params = '?search=composite_algo%253Aname%253ALogistic%2520regression%2520(composite)'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -94,8 +94,8 @@ class CompositeAlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=composite_algo%253Aname%253AComposite%2520Algo'
-            search_params += f'%2Ccomposite_algo%253Aowner%253A{compositealgo[1]["owner"]}'
+            search_params = '?search=composite_algo%253Aname%253ALogistic%2520regression%2520(composite)'
+            search_params += f'%2Ccomposite_algo%253Aowner%253A{compositealgo[0]["owner"]}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -138,23 +138,9 @@ class CompositeAlgoViewTests(APITestCase):
 
             self.assertIn('Malformed search filters', r['message'])
 
-    def test_composite_algo_list_filter_model(self):
-        url = reverse('substrapp:composite_algo-list')
-        with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
-                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
-            mquery_ledger.return_value = compositealgo
-            mquery_ledger2.return_value = traintuple
-
-            pkhash = model[1]['traintuple']['outModel']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r[0]), 2)
-
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        composite_algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
+        composite_algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz'))
         url = reverse('substrapp:composite_algo-list')
         composite_algo_response = [a for a in compositealgo if a['key'] == composite_algo_hash][0]
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger, \
