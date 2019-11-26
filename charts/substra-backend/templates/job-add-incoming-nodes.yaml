@@ -39,4 +39,24 @@ spec:
             value: {{ $.Release.Name }}-postgresql
           - name: PYTHONUNBUFFERED
             value: "1"
+      initContainers:
+      - name: wait-postgresql
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-postgresql:5432']
+      - name: init-migrate
+        image: "{{ $.Values.backend.image.repository }}:{{ $.Values.backend.image.tag }}"
+        command: ['python', 'manage.py', 'migrate']
+        env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: backend.settings.{{ $.Values.backend.settings }}
+          - name: BACKEND_ORG
+            value: {{ $.Values.organization.name }}
+          - name: BACKEND_DB_NAME
+            value: {{ $.Values.postgresql.postgresqlDatabase }}
+          - name: BACKEND_DB_USER
+            value: {{ $.Values.postgresql.postgresqlUsername }}
+          - name: BACKEND_DB_PWD
+            value: {{ $.Values.postgresql.postgresqlPassword }}
+          - name: DATABASE_HOST
+            value: {{ $.Release.Name }}-postgresql
 {{- end }}
