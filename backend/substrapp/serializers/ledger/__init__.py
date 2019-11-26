@@ -6,7 +6,7 @@ from .datasample.serializer import LedgerDataSampleSerializer
 from .algo.serializer import LedgerAlgoSerializer
 from .traintuple.serializer import LedgerTrainTupleSerializer
 from .testtuple.serializer import LedgerTestTupleSerializer
-from .aggragatetuple.serializer import LedgerAggregateTupleSerializer
+from .aggregatetuple.serializer import LedgerAggregateTupleSerializer
 from .datamanager.serializer import LedgerDataManagerSerializer
 from .computeplan.serializer import LedgerComputePlanSerializer
 from .compositetraintuple.serializer import LedgerCompositeTraintupleSerializer
