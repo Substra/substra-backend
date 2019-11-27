@@ -238,12 +238,6 @@ def prepare_testtuple_input_models(directory, tuple_):
         model_hash = metadata['outModel']['hash']
         _put_model(directory, model, model_hash, traintuple_key)
 
-    elif traintuple_type == AGGREGATETUPLE_TYPE:
-        metadata = get_object_from_ledger(traintuple_key, 'queryAggregatetuple')
-        model = get_model_content(traintuple_type, traintuple_key, metadata, metadata['outModel'])
-        model_hash = metadata['outModel']['hash']
-        _put_model(directory, model, model_hash, traintuple_key)
-
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
         head_content = get_model_content(
@@ -258,7 +252,7 @@ def prepare_testtuple_input_models(directory, tuple_):
                    traintuple_key, filename_prefix=PREFIX_TRUNK_FILENAME)
 
     else:
-        raise NotImplementedError
+        raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
 
 def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
@@ -289,7 +283,10 @@ def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, f
 
 
 def prepare_models(directory, tuple_type, tuple_):
-    """Prepare models for tuple execution."""
+    """Prepare models for tuple execution.
+
+    Checks that all input models are compatible with the current tuple to execute.
+    """
     if tuple_type == TESTTUPLE_TYPE:
         prepare_testtuple_input_models(directory, tuple_)
 
