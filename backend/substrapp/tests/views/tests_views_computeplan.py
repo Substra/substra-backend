@@ -41,17 +41,20 @@ class ComputePlanViewTests(APITestCase):
         dummy_key = 'x' * 64
 
         data = {
-            'algo_key': dummy_key,
             'objective_key': dummy_key,
             'traintuples': [{
+                'algo_key': dummy_key,
                 'data_manager_key': dummy_key,
                 'train_data_sample_keys': [dummy_key],
                 'traintuple_id': dummy_key,
             }],
             'testtuples': [{
+                'algo_key': dummy_key,
                 'traintuple_id': dummy_key,
                 'data_manager_key': dummy_key,
             }],
+            'composite_traintuples': [],
+            'aggregatetuples': [],
         }
 
         with mock.patch.object(LedgerComputePlanSerializer, 'create') as mcreate:
