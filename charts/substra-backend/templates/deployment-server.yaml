@@ -83,7 +83,7 @@ spec:
             mountPath: /var/hyperledger/tls/server/pair
           - name: peer-tls-client
             mountPath: /var/hyperledger/tls/client/pair
-          - name: ca
+          - name: cacert
             mountPath: /var/hyperledger/ca
         livenessProbe:
           httpGet:
@@ -157,9 +157,9 @@ spec:
       - name: peer-tls-client
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
-      - name: ca
+      - name: cacert
         secret:
-          secretName: {{ $.Values.secrets.ca }}
+          secretName: {{ $.Values.secrets.caCert }}
     {{- with .Values.backend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

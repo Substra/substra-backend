@@ -77,7 +77,7 @@ persistence:
 
 # Secrets names
 secrets:
-  ca: hlf-ca
+  caCert: hlf-cacert
   user:
     # Certificate, saved under key 'cert.pem'
     cert: hlf-idcert
