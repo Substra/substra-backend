@@ -73,8 +73,8 @@ def prepare_objective(directory, tuple_):
     uncompress_content(metrics_content, dst_path)
 
 
-def prepare_algo(directory, tuple_type, tuple_):
-    """Prepare algo for tuple execution."""
+def get_algo(tuple_type, tuple_):
+    """Get algo from ledger."""
     query_method_names_mapper = {
         TRAINTUPLE_TYPE: 'queryAlgo',
         COMPOSITE_TRAINTUPLE_TYPE: 'queryCompositeAlgo',
@@ -93,7 +93,12 @@ def prepare_algo(directory, tuple_type, tuple_):
         metadata['owner'],
         metadata['content']['hash'],
     )
+    return content
 
+
+def prepare_algo(directory, tuple_type, tuple_):
+    """Prepare algo for tuple execution."""
+    content = get_algo(tuple_type, tuple_)
     uncompress_content(content, directory)
 
 
