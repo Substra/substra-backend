@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 from ..common import get_sample_composite_algo, AuthenticatedClient
-from ..assets import objective, datamanager, compositealgo, traintuple, model, algo
+from ..assets import objective, datamanager, compositealgo, algo
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -140,7 +140,9 @@ class CompositeAlgoViewTests(APITestCase):
 
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        composite_algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz'))
+        composite_algo_hash = get_hash(
+            os.path.join(dir_path, '../../../../fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz')
+        )
         url = reverse('substrapp:composite_algo-list')
         composite_algo_response = [a for a in compositealgo if a['key'] == composite_algo_hash][0]
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger, \

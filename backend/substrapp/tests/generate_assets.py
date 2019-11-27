@@ -33,7 +33,7 @@ def main(network):
 
     assets['model'] = json.dumps([res for res in client.client.list('model')
                                   if (('traintuple' in res or 'compositeTraintuple' in res) and 'testtuple' in res)],
-                                  indent=4)
+                                 indent=4)
 
     with open(assets_path, 'w') as f:
         f.write('"""\nWARNING\n=======\n\nDO NOT MANUALLY EDIT THIS FILE!\n\n'
