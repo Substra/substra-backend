@@ -6,7 +6,6 @@ data:
   conf.json: |
     {
       "name": "{{ .Values.organization.name }}",
-      "signcert": "/var/hyperledger/msp/signcerts/cert.pem",
       "core_peer_mspconfigpath": "/var/hyperledger/msp",
       "channel_name": "{{ .Values.channel }}",
       "chaincode_name": "{{ .Values.chaincode.name }}",
@@ -33,16 +32,6 @@ data:
         "grpcOptions": {
           "grpc-max-send-message-length": 15,
           "grpc.ssl_target_name_override": "{{ .Values.peer.host }}"
-        }
-      },
-      "orderer": {
-        "name": "{{ .Values.orderer.name }}",
-        "host": "{{ .Values.orderer.host }}",
-        "port": {{ .Values.orderer.port }},
-        "ca": "/var/hyperledger/tls/ord/cert/cacert.pem",
-        "grpcOptions": {
-          "grpc-max-send-message-length": 15,
-          "grpc.ssl_target_name_override": "{{ .Values.orderer.host }}"
         }
       }
     }
