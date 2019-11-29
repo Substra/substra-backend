@@ -27,21 +27,15 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
-        host = ''
-        protocol = 'http://'
-        request = self.context.get('request', None)
-
-        if request:
-            protocol = 'https://' if request.is_secure() else 'http://'
-            host = request.get_host()
+        current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
             'name': name,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
+            'descriptionStorageAddress': current_site + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
             'metricsName': metrics_name,
             'metricsHash': get_hash(instance.metrics),
-            'metricsStorageAddress': protocol + host + reverse('substrapp:objective-metrics', args=[instance.pk]),
+            'metricsStorageAddress': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
             'testDataset': {
                 'dataManagerKey': test_data_manager_key,
                 'dataSampleKeys': test_data_sample_keys,
