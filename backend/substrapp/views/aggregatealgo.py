@@ -185,7 +185,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 aggregate_algos_list = filter_list(
-                    object_type='aggregatealgo',
+                    object_type='aggregate_algo',
                     data=data,
                     query_params=query_params)
             except LedgerError as e:
