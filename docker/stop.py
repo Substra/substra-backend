@@ -15,5 +15,6 @@ def stop():
         call(['docker-compose', '-f', os.path.join(dir_path, docker_compose_path), '--project-directory',
               os.path.join(dir_path, '../'), 'down', '--remove-orphans'])
 
+
 if __name__ == "__main__":
     stop()
