@@ -8,16 +8,22 @@ FILTER_QUERIES = {
     'algo': 'queryAlgos',
     'objective': 'queryObjectives',
     'model': 'queryTraintuples',
+    'composite_algo': 'queryCompositeAlgos',
+    'aggregate_algo': 'queryAggregateAlgos'
 }
 
 AUTHORIZED_FILTERS = {
     'compute_plan': ['compute_plan'],
     'dataset': ['dataset', 'model', 'objective'],
-    'algo': ['model', 'algo'],
+    'algo': ['model', 'algo', 'composite_algo', 'aggregate_algo'],
+    'composite_algo': ['composite_algo', 'algo', 'aggregate_algo', 'model'],
+    'aggregate_algo': ['aggregate_algo', 'algo', 'composite_algo', 'model'],
     'objective': ['model', 'dataset', 'objective'],
-    'model': ['model', 'algo', 'dataset', 'objective'],
+    'model': ['model', 'algo', 'composite_algo', 'aggregate_algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
     'testtuple': ['testtuple'],
+    'composite_traintuple': ['composite_traintuple'],
+    'aggregatetuple': ['aggregatetuple'],
 }
 
 
@@ -60,6 +66,35 @@ def get_filters(query_params):
     return filters
 
 
+def _same_nature(filter_key, object_type):
+    if filter_key == object_type:
+        return True
+
+    # algo and composite algos are of the same nature
+    return {filter_key, object_type} <= {'algo', 'composite_algo', 'aggregate_algo'}
+
+
+def _get_model_tuple(model):
+    """
+    Return the correct part of a model to use for filtering.
+
+    This is necessary because the API allows to filter models using this syntax:
+
+        model:attribute:value
+
+    Where "attribute" is actually an attribute of the model's traintuple or compositeTraintuple (depending on its type).
+    """
+
+    if 'compositeTraintuple' in model:
+        return model['compositeTraintuple']
+    elif 'aggregatetuple' in model:
+        return model['aggregatetuple']
+    elif 'traintuple' in model:
+        return model['traintuple']
+    else:
+        raise NotImplementedError
+
+
 def filter_list(object_type, data, query_params):
 
     filters = get_filters(query_params)
@@ -76,13 +111,11 @@ def filter_list(object_type, data, query_params):
             # Will be appended in object_list after been filtered
             filtered_list = data
 
-            if filter_key == object_type:
+            if _same_nature(filter_key, object_type):
                 # Filter by own asset
                 if filter_key == 'model':
                     for attribute, val in subfilters.items():
-                        filtered_list = [x for x in filtered_list
-                                         if x['traintuple']['outModel'] is not None and
-                                         x['traintuple']['outModel']['hash'] in val]
+                        filtered_list = [x for x in filtered_list if _get_model_tuple(x).get(attribute) in val]
                 elif filter_key == 'objective':
                     for attribute, val in subfilters.items():
                         if attribute == 'metrics':  # specific to nested metrics
@@ -101,14 +134,14 @@ def filter_list(object_type, data, query_params):
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key == 'algo':
+                if filter_key in ('algo', 'composite_algo', 'aggregate_algo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         hashes = [x['key'] for x in filtering_data]
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if x['traintuple']['algo']['hash'] in hashes]
+                                             if _get_model_tuple(x)['algo']['hash'] in hashes]
 
                 elif filter_key == 'model':
                     for attribute, val in subfilters.items():
@@ -135,7 +168,7 @@ def filter_list(object_type, data, query_params):
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if x['traintuple']['dataset']['openerHash'] in hashes]
+                                             if _get_model_tuple(x).get('dataset', {}).get('openerHash') in hashes]
                         elif object_type == 'objective':
                             objectiveKeys = [x['objectiveKey'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
@@ -153,7 +186,7 @@ def filter_list(object_type, data, query_params):
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if x['traintuple']['objective']['hash'] in hashes]
+                                             if _get_model_tuple(x)['objective']['hash'] in hashes]
                         elif object_type == 'dataset':
                             filtered_list = [x for x in filtered_list
                                              if x['objectiveKey'] in hashes]

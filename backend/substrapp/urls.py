@@ -8,7 +8,8 @@ from rest_framework.routers import DefaultRouter
 from substrapp.views import ObjectiveViewSet, DataSampleViewSet, DataManagerViewSet, \
     AlgoViewSet, TrainTupleViewSet, TestTupleViewSet, ModelViewSet, TaskViewSet, \
     ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet, \
-    ModelPermissionViewSet
+    ModelPermissionViewSet, CompositeTraintupleViewSet, CompositeAlgoViewSet, CompositeAlgoPermissionViewSet, \
+    AggregateAlgoViewSet, AggregateAlgoPermissionViewSet, AggregateTupleViewSet
 
 
 # Create a router and register our viewsets with it.
@@ -25,8 +26,15 @@ router.register(r'algo', AlgoViewSet, base_name='algo')
 router.register(r'algo', AlgoPermissionViewSet, base_name='algo')
 router.register(r'traintuple', TrainTupleViewSet, base_name='traintuple')
 router.register(r'testtuple', TestTupleViewSet, base_name='testtuple')
+router.register(r'aggregatetuple', AggregateTupleViewSet, base_name='aggregatetuple')
 router.register(r'task', TaskViewSet, base_name='task')
 router.register(r'compute_plan', ComputePlanViewSet, base_name='compute_plan')
+router.register(r'composite_traintuple', CompositeTraintupleViewSet, base_name='composite_traintuple')
+router.register(r'composite_algo', CompositeAlgoViewSet, base_name='composite_algo')
+router.register(r'composite_algo', CompositeAlgoPermissionViewSet, base_name='composite_algo')
+router.register(r'aggregate_algo', AggregateAlgoViewSet, base_name='aggregate_algo')
+router.register(r'aggregate_algo', AggregateAlgoPermissionViewSet, base_name='aggregate_algo')
+
 
 urlpatterns = [
     url(r'^', include(router.urls)),

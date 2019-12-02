@@ -37,6 +37,12 @@ def get_event_loop():
         loop.close()
 
 
+def tuple_get_worker(tuple_type, _tuple):
+    if tuple_type == 'aggregatetuple':
+        return _tuple['worker']
+    return _tuple['dataset']['worker']
+
+
 def on_tuples(cc_event, block_number, tx_id, tx_status):
     payload = json.loads(cc_event['payload'])
     owner = get_owner()
@@ -59,7 +65,7 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
             if tuple_type is None:
                 continue
 
-            tuple_owner = _tuple['dataset']['worker']
+            tuple_owner = tuple_get_worker(tuple_type, _tuple)
             if tuple_owner != owner:
                 logger.debug(f'Skipping task {key}: owner does not match'
                              f' ({tuple_owner} vs {owner})')

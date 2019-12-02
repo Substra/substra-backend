@@ -173,6 +173,10 @@ def get_sample_algo():
     return file, file_filename
 
 
+def get_sample_composite_algo():
+    return get_sample_algo()
+
+
 def get_sample_algo_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"

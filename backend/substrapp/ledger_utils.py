@@ -221,7 +221,14 @@ def get_object_from_ledger(pk, query):
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
 
-    fail_type = 'logFailTrain' if tuple_type == 'traintuple' else 'logFailTest'
+    log_fail_methods = {
+        'traintuple': 'logFailTrain',
+        'testtuple': 'logFailTest',
+        'compositeTraintuple': 'logFailCompositeTrain',
+        'aggregatetuple': 'logFailAggregate',
+    }
+
+    fail_type = log_fail_methods[tuple_type]
 
     return invoke_ledger(
         fcn=fail_type,
@@ -254,6 +261,34 @@ def log_success_tuple(tuple_type, tuple_key, res):
             'log': '',
         }
 
+    elif tuple_type == 'compositeTraintuple':
+        invoke_fcn = 'logSuccessCompositeTrain'
+        invoke_args = {
+            'key': tuple_key,
+            'outHeadModel': {
+                'hash': res["end_head_model_file_hash"],
+                'storageAddress': res["end_head_model_file"],
+            },
+            'outTrunkModel': {
+                'hash': res["end_trunk_model_file_hash"],
+                'storageAddress': res["end_trunk_model_file"],
+            },
+            'perf': float(res["global_perf"]),
+            'log': '',
+        }
+
+    elif tuple_type == 'aggregatetuple':
+        invoke_fcn = 'logSuccessAggregate'
+        invoke_args = {
+            'key': tuple_key,
+            'outModel': {
+                'hash': res["end_model_file_hash"],
+                'storageAddress': res["end_model_file"],
+            },
+            'perf': float(res["global_perf"]),
+            'log': '',
+        }
+
     else:
         raise NotImplementedError()
 
@@ -268,6 +303,10 @@ def log_start_tuple(tuple_type, tuple_key):
         start_type = 'logStartTrain'
     elif tuple_type == 'testtuple':
         start_type = 'logStartTest'
+    elif tuple_type == 'compositeTraintuple':
+        start_type = 'logStartCompositeTrain'
+    elif tuple_type == 'aggregatetuple':
+        start_type = 'logStartAggregate'
     else:
         raise NotImplementedError()
 
