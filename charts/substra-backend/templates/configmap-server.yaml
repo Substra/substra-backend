@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "substra.fullname" . }}-backend
+  name: {{ template "substra.fullname" . }}-server
 data:
   conf.json: |
     {
@@ -27,7 +27,7 @@ data:
           "external": {{ .Values.peer.port }}
         },
         "docker_core_dir": "/var/hyperledger/fabric_cfg",
-        "tlsCACerts": "/var/hyperledger/admin_msp/cacerts/cacert.pem",
+        "tlsCACerts": "/var/hyperledger/ca/ca-cert.pem",
         "clientKey": "/var/hyperledger/tls/client/pair/tls.key",
         "clientCert": "/var/hyperledger/tls/client/pair/tls.crt",
         "grpcOptions": {

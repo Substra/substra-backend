@@ -74,9 +74,9 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model
 
-            pkhash = model[1]['traintuple']['outModel']['hash']
+            pkhash = model[1]['traintuple']['key']
             url = reverse('substrapp:model-list')
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            search_params = f'?search=model%253Akey%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r[0]), 1)
@@ -92,7 +92,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 4)
+            self.assertEqual(len(r[0]), 5)
 
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
@@ -105,7 +105,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 4)
+            self.assertEqual(len(r[0]), 5)
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
@@ -121,18 +121,19 @@ class ModelViewTests(APITestCase):
             self.assertEqual(len(r[0]), 2)
 
     def test_model_retrieve(self):
+        done_model = [m for m in model if 'traintuple' in m and m['traintuple']['status'] == 'done'][0]
 
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.model.get_remote_asset') as get_remote_asset:
-            mget_object_from_ledger.return_value = model[1]
+            mget_object_from_ledger.return_value = done_model
 
             get_remote_asset.return_value = self.model.read().encode()
 
             url = reverse('substrapp:model-list')
-            search_params = model[1]['traintuple']['outModel']['hash'] + '/'
+            search_params = done_model['traintuple']['outModel']['hash'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[1])
+            self.assertEqual(r, done_model)
 
     def test_model_retrieve_fail(self):
 

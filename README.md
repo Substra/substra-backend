@@ -12,48 +12,7 @@ Current is `0.0`.
  ```
  git clone https://github.com/SubstraFoundation/substra-backend
  ```
-2. :warning: Do this step only if your environment development is on linux.
-On linux systems, all the docker instances create files with `root` permissions.
-For working correctly in a dev environment, we need the files created by our dockers have the same rights as the one we use to launch our celery tasks.
-The celery tasks run dockers containers, these containers create files (models), the celery tasks manipulate these files.
-
-For being able to make dockers instance create files with the rights as the current linux user, we need to modify some files as described here:
-https://www.jujens.eu/posts/en/2017/Jul/02/docker-userns-remap/
-
-:warning: Modifying these files will override your global system configuration. Keep in mind it will apply to all the launched dockers from your machine.
-Open/Create file `/etc/docker/daemon.json` with:
-```
-{
-  "userns-remap": "USER"
-}
-```
-Replace `USER` by your username (`echo $USER`). It is the user who will launch the celery tasks.
-
-Then run this command for knowing the docker group:
-```bash
-$> getent group docker
-docker:x:999:guillaume
-```
-
-`999` in my case.
-
-Now modify the file `/etc/subuid` like:
-```bash
-guillaume:1000:1
-guillaume:165536:65536
-```
-The first line should be added with the `1000` group (here the user is guillaume, replace it by yours).
-
-And the file `/etc/subgid`:
-```bash
-guillaume:999:1
-guillaume:165536:65536
-```
-The first line should be added with the docker group (999 in my case).
-
-Final step is to redownload all the dockers image, go in the hlf-k8s project and rerun the `./bootstrap.sh` script.
-Do not forget to build the substra-model image as described in the step 9 of this tutorial.
-
+2. If you are on Linux, follow the [Linux user namespaces instructions](./doc/linux-userns-guide.md)
 3. Install dependencies (might be useful to create a virtual environment before, eg using virtualenv and virtualenvwrapper):
   - For numpy, scipy, and pandas (for Ubuntu & Debian users): `sudo apt-get install python-numpy python-scipy python-pandas`
   - `pip install -r requirements.txt`
@@ -112,12 +71,6 @@ It will clean the `medias` folders and create the `owkin` and `chu-nantes` folde
 ```shell
 BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./backend/manage.py createsuperuser --settings=backend.settings.dev
 BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./backend/manage.py createsuperuser --settings=backend.settings.dev
-```
-
-9. Build the substra-model docker image:
-Clone the following git repo https://github.com/SubstraFoundation/substra-tools and build the docker image
-```shell
-docker build -t substra-model .
 ```
 
 ## Getting started 2: Linking the app with Hyperledger Fabric
@@ -267,33 +220,7 @@ For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFil
 
 ## Miscellaneous
 
-If you are using pycharm, you can very easily automate your servers and celery workers run configuration.
-
-:warning: You have to specify the sources root of your django project:
-![](assets/sources_root.png)
-
-Enable Django support:
-![](assets/django_enabled.png)
-
-Use these configurations for easier debugging and productivity:
-
-![](assets/conf.png)
-![](assets/server_owkin.png)
-![](assets/server_chunantes.png)
-![](assets/celery owkin worker.png)
-![](assets/celery owkin scheduler.png)
-![](assets/celery chunantes worker.png)
-![](assets/celery chunantes scheduler.png)
-![](assets/celery_beat.png)
-
-Do not hesitate to put breakpoints in your code. Even with periodic celery tasks and hit the `bug` button for launching your pre configurations.
-
-You can even access directly to the databases (password is `backend` as described in the beginning of this document):
-![](assets/database_owkin.png)
-![](assets/database_owkin_challenges.png)
-
-And for more convenience you can use the [multirun plugin](https://plugins.jetbrains.com/plugin/7248-multirun) from pycharm and configure it as:
-![](assets/multirun.png)
+- [PyCharm setup](./doc/pycharm-setup.md)
 
 ## License
 

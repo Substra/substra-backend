@@ -20,12 +20,9 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      {{- if or .Values.pullSecretsInline .Values.celeryworker.image.pullSecrets }}
+      {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
-      {{- range $index, $value := .Values.pullSecretsInline }}
-        - name: {{ template "substra.fullname" $ }}-pull-secret-{{ $index }}
-      {{- end }}
-      {{- range .Values.celeryworker.image.pullSecrets }}
+      {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
@@ -38,21 +35,11 @@ spec:
           command: ["celery"]
           args: ["-A", "backend", "worker", "-E", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery", "--hostname", "{{ .Values.organization.name }}.worker"]
           env:
-            - name: ORG
-              value: {{ .Values.organization.name }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.celery.{{ .Values.backend.settings }}
             - name: BACKEND_ORG
               value: {{ .Values.organization.name }}
-            - name: BACKEND_DEFAULT_PORT
-              value: "8000"
-            - name: CELERY_BROKER_URL
-              value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-            - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.{{ .Values.backend.settings }}
-            - name: PYTHONUNBUFFERED
-              value: "1"
-            - name: DEFAULT_DOMAIN
-              value: "{{ .Values.backend.defaultDomain }}"
-            - name: BACKEND_{{ .Values.organization.name | upper }}_DB_NAME
+            - name: BACKEND_DB_NAME
               value: {{ .Values.postgresql.postgresqlDatabase }}
             - name: BACKEND_DB_USER
               value: {{ .Values.postgresql.postgresqlUsername }}
@@ -60,50 +47,36 @@ spec:
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: DATABASE_HOST
               value: {{ .Release.Name }}-postgresql
-            - name: FABRIC_CFG_PATH_ENV
-              value: /var/hyperledger/fabric_cfg
-            - name: CORE_PEER_ADDRESS_ENV
-              value: "{{ .Values.peer.host }}:{{ .Values.peer.port }}"
-            - name: FABRIC_LOGGING_SPEC
-              value: debug
-            - name: MEDIA_ROOT
-              value: {{ .Values.persistence.hostPath }}/medias/
+            - name: DEFAULT_DOMAIN
+              value: "{{ .Values.backend.defaultDomain }}"
+            - name: CELERY_BROKER_URL
+              value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: LEDGER_CONFIG_FILE
               value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
+            - name: MEDIA_ROOT
+              value: {{ .Values.persistence.hostPath }}/medias/
+            - name: PYTHONUNBUFFERED
+              value: "1"
           volumeMounts:
-            - mountPath: /var/run/docker.sock
-              name: dockersocket
-            - mountPath: {{ .Values.persistence.hostPath }}
-              name: data
-            - mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-              name: config
+            - name: dockersocket
+              mountPath: /var/run/docker.sock
+            - name: data
+              mountPath: {{ .Values.persistence.hostPath }}
+            - name: config
+              mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
-            - mountPath: /var/hyperledger/msp/signcerts
-              name: id-cert
-            - mountPath: /var/hyperledger/msp/keystore
-              name: id-key
-            - mountPath: /var/hyperledger/msp/cacerts
-              name: cacert
-            - mountPath: /var/hyperledger/msp/admincerts
-              name: admin-cert
-            - mountPath: /var/hyperledger/tls/server/pair
-              name: tls
-            - mountPath: /var/hyperledger/tls/server/cert
-              name: tls-rootcert
-            - mountPath: /var/hyperledger/tls/client/pair
-              name: tls-client
-            - mountPath: /var/hyperledger/tls/client/cert
-              name: tls-clientrootcert
-            - mountPath: /var/hyperledger/tls/ord/cert
-              name: ord-tls-rootcert
-            - mountPath: /var/hyperledger/admin_msp/signcerts
-              name: admin-cert
-            - mountPath: /var/hyperledger/admin_msp/keystore
-              name: admin-key
-            - mountPath: /var/hyperledger/admin_msp/cacerts
-              name: cacert
-            - mountPath: /var/hyperledger/admin_msp/admincerts
-              name: admin-cert
+            - name: user-cert
+              mountPath: /var/hyperledger/msp/signcerts
+            - name: user-key
+              mountPath: /var/hyperledger/msp/keystore
+            - name: peer-tls-server
+              mountPath: /var/hyperledger/tls/server/pair
+            - name: peer-tls-client
+              mountPath: /var/hyperledger/tls/client/pair
+            - name: orderer-tls-ca
+              mountPath: /var/hyperledger/tls/ord/cert
+            - name: ca
+              mountPath: /var/hyperledger/ca
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
@@ -115,40 +88,25 @@ spec:
           claimName: {{ include "substra.fullname" . }}
       - name: config
         configMap:
-          name: {{ include "substra.fullname" . }}-backend
-      - name: fabric
-        configMap:
-          name: {{ $.Values.secrets.fabricConfigmap }}
-      - name: id-cert
+          name: {{ include "substra.fullname" . }}-server
+      - name: user-cert
         secret:
-          secretName: {{ .Values.secrets.cert }}
-      - name: id-key
+          secretName: {{ $.Values.secrets.user.cert }}
+      - name: user-key
         secret:
-          secretName: {{ .Values.secrets.key }}
-      - name: cacert
+          secretName: {{ $.Values.secrets.user.key }}
+      - name: peer-tls-server
         secret:
-          secretName: {{ .Values.secrets.caCert }}
-      - name: tls
+          secretName: {{ $.Values.secrets.peer.tls.server }}
+      - name: peer-tls-client
         secret:
-          secretName: {{ .Values.secrets.tls }}
-      - name: tls-rootcert
+          secretName: {{ $.Values.secrets.peer.tls.client }}
+      - name: orderer-tls-ca
         secret:
-          secretName: {{ .Values.secrets.tlsRootCert }}
-      - name: tls-client
+          secretName: {{ $.Values.secrets.orderer.tls.ca }}
+      - name: ca
         secret:
-          secretName: {{ .Values.secrets.tlsClient }}
-      - name: tls-clientrootcert
-        secret:
-          secretName: {{ .Values.secrets.tlsClientRootCerts }}
-      - name: admin-cert
-        secret:
-          secretName: {{ .Values.secrets.adminCert }}
-      - name: admin-key
-        secret:
-          secretName: {{ .Values.secrets.adminKey }}
-      - name: ord-tls-rootcert
-        secret:
-          secretName: {{ .Values.secrets.tlsRootCert }}
+          secretName: {{ $.Values.secrets.ca }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
