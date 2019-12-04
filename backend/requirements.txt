@@ -1,4 +1,4 @@
-Django==2.1.2
+Django==2.1.11
 PyYAML==5.1
 celery == 4.2.1
 checksumdir == 1.1.4
