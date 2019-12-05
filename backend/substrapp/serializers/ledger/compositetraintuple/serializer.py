@@ -11,7 +11,6 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
-    objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
     in_head_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
@@ -24,7 +23,6 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
         data_manager_key = validated_data.get('data_manager_key')
-        objective_key = validated_data.get('objective_key')
         rank = validated_data.get('rank', '')
         rank = '' if rank is None else str(rank)
         compute_plan_id = validated_data.get('compute_plan_id', '')
@@ -36,7 +34,6 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
 
         args = {
             'algoKey': algo_key,
-            'objectiveKey': objective_key,
             'inHeadModelKey': in_head_model_key,
             'inTrunkModelKey': in_trunk_model_key,
             'outTrunkModelPermissions': {'process': {

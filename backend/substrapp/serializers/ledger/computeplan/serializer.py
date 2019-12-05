@@ -24,6 +24,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
+    objective_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
     test_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
@@ -59,7 +60,6 @@ class ComputePlanAggregatetupleSerializer(serializers.Serializer):
 
 
 class LedgerComputePlanSerializer(serializers.Serializer):
-    objective_key = serializers.CharField(min_length=64, max_length=64)
     traintuples = ComputePlanTraintupleSerializer(many=True)
     testtuples = ComputePlanTesttupleSerializer(many=True)
     composite_traintuples = ComputePlanCompositeTrainTupleSerializer(many=True)
@@ -86,6 +86,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_testtuple in data['testtuples']:
             testtuple = {
                 'traintupleID': data_testtuple['traintuple_id'],
+                'objectiveKey': data_testtuple['objective_key'],
             }
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
@@ -134,7 +135,6 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             aggregatetuples.append(aggregatetuple)
 
         return {
-            'objectiveKey': data['objective_key'],
             'traintuples': traintuples,
             'testtuples': testtuples,
             'compositeTraintuples': composite_traintuples,
