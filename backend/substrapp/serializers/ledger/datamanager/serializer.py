@@ -23,22 +23,16 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         objective_key = validated_data.get('objective_key', '')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
-        host = ''
-        protocol = 'http://'
-        request = self.context.get('request', None)
-
-        if request:
-            protocol = 'https://' if request.is_secure() else 'http://'
-            host = request.get_host()
+        current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
             'name': name,
             'openerHash': get_hash(instance.data_opener),
-            'openerStorageAddress': protocol + host + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'openerStorageAddress': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
             'type': data_type,
             'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': protocol + host + reverse('substrapp:data_manager-description',
-                                                                   args=[instance.pk]),
+            'descriptionStorageAddress': current_site + reverse('substrapp:data_manager-description',
+                                                                args=[instance.pk]),
             'objectiveKey': objective_key,
             'permissions': {'process': {
                 'public': permissions.get('public'),
