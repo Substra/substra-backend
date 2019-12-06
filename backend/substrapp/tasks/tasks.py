@@ -578,8 +578,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         model_path: {'bind': model_folder, 'mode': 'rw'}
     }
 
-    # local volume for training subtuple in compute plan
-    if compute_plan_id is not None and tuple_type == TRAINTUPLE_TYPE:
+    # local volume for train like tuples in compute plan
+    if compute_plan_id is not None and tuple_type != TESTTUPLE_TYPE:
         volume_id = f'local-{compute_plan_id}-{org_name}'
         if rank == 0:
             client.volumes.create(name=volume_id)
