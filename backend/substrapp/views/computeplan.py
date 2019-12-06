@@ -3,6 +3,7 @@ import logging
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
+from rest_framework.decorators import action
 
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger_utils import query_ledger, LedgerError, get_object_from_ledger, LedgerConflict
@@ -85,3 +86,13 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                     status=status.HTTP_400_BAD_REQUEST)
 
         return Response(compute_plan_list, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'])
+    def cancel(self, request, pk):
+        validate_pk(pk)
+
+        try:
+            compute_plan = query_ledger(fcn='cancelComputePlan', args={'key': pk})
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+        return Response(compute_plan, status=status.HTTP_200_OK)
