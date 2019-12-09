@@ -162,6 +162,11 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
+            for arg in e.args:
+                if 'MVCC_READ_CONFLICT' in arg:
+                    logger.error(f'MVCC read conflict for {(fcn, args)}')
+                    raise LedgerMVCCError(arg) from e
+
             try:  # get first failed response from list of protobuf ProposalResponse
                 response = [r for r in e.args[0] if r.response.status != 200][0].response.message
             except Exception:
@@ -171,9 +176,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-            if response == 'MVCC_READ_CONFLICT':
-                raise LedgerMVCCError(response)
-            elif 'cannot change status' in response:
+            if 'cannot change status' in response:
                 raise LedgerStatusError(response)
             else:
                 raise LedgerBadResponse(response)
