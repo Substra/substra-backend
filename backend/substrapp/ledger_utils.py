@@ -86,7 +86,7 @@ def retry_on_error(delay=1, nbtries=5, backoff=2):
     def _retry(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
-            if not getattr(settings, 'LEDGER_CALL_RETRY', False):
+            if not getattr(settings, 'LEDGER_CALL_RETRY', True):
                 return fn(*args, **kwargs)
 
             _delay = delay

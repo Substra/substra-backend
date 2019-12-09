@@ -13,7 +13,7 @@ TASK = {
     'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
 }
 
-LEDGER_CALL_RETRY = False  # Overwrite the ledger setting value
+# LEDGER_CALL_RETRY = False  # uncomment to overwrite the ledger setting value
 
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
