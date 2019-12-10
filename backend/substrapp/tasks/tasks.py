@@ -537,9 +537,11 @@ def do_task(subtuple, tuple_type):
             remove_subtuple_materials(subtuple_directory)
             if rank == -1:
                 volume_id = f'local-{compute_plan_id}-{org_name}'
-                local_volume = client.volumes.get(volume_id=volume_id)
                 try:
+                    local_volume = client.volumes.get(volume_id=volume_id)
                     local_volume.remove(force=True)
+                except docker.errors.NotFound:
+                    pass
                 except Exception:
                     logging.error(f'Cannot remove local volume {volume_id}', exc_info=True)
 
@@ -581,10 +583,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # local volume for train like tuples in compute plan
     if compute_plan_id is not None and tuple_type != TESTTUPLE_TYPE:
         volume_id = f'local-{compute_plan_id}-{org_name}'
-        if rank == 0:
-            client.volumes.create(name=volume_id)
-        else:
+        try:
             client.volumes.get(volume_id=volume_id)
+        except docker.errors.NotFound:
+            client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
     # generate command
