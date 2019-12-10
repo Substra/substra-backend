@@ -22,7 +22,7 @@ objective = [
         },
         "metrics": {
             "name": "macro-average recall",
-            "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+            "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
             "storageAddress": "http://testserver/objective/1cdafbb018dd195690111d74916b76c96892d897ec3587c814f287946db446c3/metrics/"
         },
         "owner": "MyOrg1MSP",
@@ -43,7 +43,7 @@ objective = [
         },
         "metrics": {
             "name": "macro-average recall",
-            "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+            "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
             "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
         },
         "owner": "MyOrg1MSP",
@@ -189,11 +189,11 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0014-97dffe6]",
+        "log": "[00-01-0032-4f9c636]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
@@ -227,11 +227,11 @@ traintuple = [
         },
         "computePlanID": "",
         "inModels": None,
-        "log": "[01-01-0014-9d52cfe]",
+        "log": "[00-01-0032-7b9ce00]",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
@@ -269,13 +269,13 @@ traintuple = [
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outModel": {
-            "hash": "ccbc19d95adb93774a4072a9315c87085d18f638324e71a3bac2ef4d535b5316",
-            "storageAddress": "http://testserver/model/ccbc19d95adb93774a4072a9315c87085d18f638324e71a3bac2ef4d535b5316/file/"
+            "hash": "f77449174e0ee8c6255f6d1963d088c1aaf0c16b71d860dd00b2ab3e44171546",
+            "storageAddress": "http://testserver/model/f77449174e0ee8c6255f6d1963d088c1aaf0c16b71d860dd00b2ab3e44171546/file/"
         },
         "permissions": {
             "process": {
@@ -310,13 +310,13 @@ traintuple = [
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outModel": {
-            "hash": "2d37ebfe4ae84aeced73eb932d00610660e3525e18cf9d384b2fe98705e12894",
-            "storageAddress": "http://testserver/model/2d37ebfe4ae84aeced73eb932d00610660e3525e18cf9d384b2fe98705e12894/file/"
+            "hash": "5f57a3f8756ed797eb02950290c40f19c3a52bdcd3f9e3563f8648fe586a0481",
+            "storageAddress": "http://testserver/model/5f57a3f8756ed797eb02950290c40f19c3a52bdcd3f9e3563f8648fe586a0481/file/"
         },
         "permissions": {
             "process": {
@@ -349,17 +349,17 @@ testtuple = [
             "openerHash": "ce9f292c72e9b82697445117f9c2d1d18ce0f8ed07ff91dadb17d668bddf8932",
             "perf": 0
         },
-        "log": "",
+        "log": "[00-01-0424-2df414b]",
         "traintupleType": "traintuple",
         "traintupleKey": "d7e429016148abfac682ec6a183b7883ccb96cd375bb3c7f5d3c35816c04f7d6",
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
-        "status": "done",
+        "status": "failed",
         "tag": "substra"
     }
 ]
@@ -367,22 +367,23 @@ testtuple = [
 computeplan = [
     {
         "computePlanID": "d376a672c7231fba31e23c868202e088a06783da48577654360025050eaf88cc",
-        "algoKey": "9fe61782e7b4d445dff6bc0baae01eb3fa6e926ad0f6870365d605eee5bd169d",
         "objectiveKey": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
-        "traintuples": [
+        "traintupleKeys": [
             "d376a672c7231fba31e23c868202e088a06783da48577654360025050eaf88cc"
         ],
-        "testtuples": None
+        "aggregatetupleKeys": [],
+        "compositeTraintupleKeys": [],
+        "testtupleKeys": []
     }
 ]
 
 compositetraintuple = [
     {
-        "key": "449210a3c3ba9e6725ef9ed84103ffd18fc60408ad0537b9e85fa6359e11c41c",
+        "key": "e83d39acb3870a06f46d92bcc251cc54e6f96d5be756a08fcba321819b86333f",
         "algo": {
             "name": "Logistic regression (composite)",
-            "hash": "510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a",
-            "storageAddress": "http://testserver/composite_algo/510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a/file/"
+            "hash": "468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f",
+            "storageAddress": "http://testserver/composite_algo/468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -401,14 +402,14 @@ compositetraintuple = [
         "objective": {
             "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
             "metrics": {
-                "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                 "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
             }
         },
         "outHeadModel": {
             "outModel": {
-                "hash": "e3bbf9f63f601485903aec0e6c207d4689aea260ab0aea60aadf90f74e4232fa",
-                "storageAddress": "http://testserver/model/e3bbf9f63f601485903aec0e6c207d4689aea260ab0aea60aadf90f74e4232fa/file/"
+                "hash": "df3f74523a807d0c2b06abffb0a1ca4d44c6a121dc61280608caab5fba450ee9",
+                "storageAddress": "http://testserver/model/df3f74523a807d0c2b06abffb0a1ca4d44c6a121dc61280608caab5fba450ee9/file/"
             },
             "permissions": {
                 "process": {
@@ -421,8 +422,8 @@ compositetraintuple = [
         },
         "outTrunkModel": {
             "outModel": {
-                "hash": "d6c41e8e6fa3daf13555935c39cdd4755ecedd8389ea12e2265f9f45afef8e7f",
-                "storageAddress": "http://testserver/model/d6c41e8e6fa3daf13555935c39cdd4755ecedd8389ea12e2265f9f45afef8e7f/file/"
+                "hash": "2485b8f0bed25260684d8052ab6f77e0817e821eaea8acd763ed8e64701d9b47",
+                "storageAddress": "http://testserver/model/2485b8f0bed25260684d8052ab6f77e0817e821eaea8acd763ed8e64701d9b47/file/"
             },
             "permissions": {
                 "process": {
@@ -441,15 +442,15 @@ compositetraintuple = [
 
 compositealgo = [
     {
-        "key": "510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a",
+        "key": "468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f",
         "name": "Logistic regression (composite)",
         "content": {
-            "hash": "510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a",
-            "storageAddress": "http://testserver/composite_algo/510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a/file/"
+            "hash": "468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f",
+            "storageAddress": "http://testserver/composite_algo/468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f/file/"
         },
         "description": {
             "hash": "a5108cfd377dce09c5c2e439fc1527e4b50128099b1e8ec525b6e4dc85f7300f",
-            "storageAddress": "http://testserver/composite_algo/510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a/description/"
+            "storageAddress": "http://testserver/composite_algo/468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -482,11 +483,11 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0014-97dffe6]",
+            "log": "[00-01-0032-4f9c636]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
@@ -535,11 +536,11 @@ model = [
             },
             "computePlanID": "",
             "inModels": None,
-            "log": "[01-01-0014-9d52cfe]",
+            "log": "[00-01-0032-7b9ce00]",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
@@ -592,13 +593,13 @@ model = [
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "outModel": {
-                "hash": "ccbc19d95adb93774a4072a9315c87085d18f638324e71a3bac2ef4d535b5316",
-                "storageAddress": "http://testserver/model/ccbc19d95adb93774a4072a9315c87085d18f638324e71a3bac2ef4d535b5316/file/"
+                "hash": "f77449174e0ee8c6255f6d1963d088c1aaf0c16b71d860dd00b2ab3e44171546",
+                "storageAddress": "http://testserver/model/f77449174e0ee8c6255f6d1963d088c1aaf0c16b71d860dd00b2ab3e44171546/file/"
             },
             "permissions": {
                 "process": {
@@ -648,13 +649,13 @@ model = [
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "outModel": {
-                "hash": "2d37ebfe4ae84aeced73eb932d00610660e3525e18cf9d384b2fe98705e12894",
-                "storageAddress": "http://testserver/model/2d37ebfe4ae84aeced73eb932d00610660e3525e18cf9d384b2fe98705e12894/file/"
+                "hash": "5f57a3f8756ed797eb02950290c40f19c3a52bdcd3f9e3563f8648fe586a0481",
+                "storageAddress": "http://testserver/model/5f57a3f8756ed797eb02950290c40f19c3a52bdcd3f9e3563f8648fe586a0481/file/"
             },
             "permissions": {
                 "process": {
@@ -684,27 +685,27 @@ model = [
                 "openerHash": "ce9f292c72e9b82697445117f9c2d1d18ce0f8ed07ff91dadb17d668bddf8932",
                 "perf": 0
             },
-            "log": "",
+            "log": "[00-01-0424-2df414b]",
             "traintupleType": "traintuple",
             "traintupleKey": "d7e429016148abfac682ec6a183b7883ccb96cd375bb3c7f5d3c35816c04f7d6",
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
-            "status": "done",
+            "status": "failed",
             "tag": "substra"
         }
     },
     {
         "compositeTraintuple": {
-            "key": "449210a3c3ba9e6725ef9ed84103ffd18fc60408ad0537b9e85fa6359e11c41c",
+            "key": "e83d39acb3870a06f46d92bcc251cc54e6f96d5be756a08fcba321819b86333f",
             "algo": {
                 "name": "Logistic regression (composite)",
-                "hash": "510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a",
-                "storageAddress": "http://testserver/composite_algo/510e0cc40af674713ea7bcab19c745d2151006045cc73b13eba789cd267e636a/file/"
+                "hash": "468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f",
+                "storageAddress": "http://testserver/composite_algo/468a18f9c9dedefa32d266c8263f117cd0e859ffecf531d2b90a220559acd96f/file/"
             },
             "creator": "MyOrg1MSP",
             "dataset": {
@@ -723,14 +724,14 @@ model = [
             "objective": {
                 "hash": "3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71",
                 "metrics": {
-                    "hash": "e5762042461c355761dd8986b510ea23494d5638a671370dabbf0ac73f8a3208",
+                    "hash": "7fde70756923d95eba9a45e9d322a2dc7b83c6c7e610c962a7520ecdf4e62374",
                     "storageAddress": "http://testserver/objective/3d70ab46d710dacb0f48cb42db4874fac14e048a0d415e266aad38c09591ee71/metrics/"
                 }
             },
             "outHeadModel": {
                 "outModel": {
-                    "hash": "e3bbf9f63f601485903aec0e6c207d4689aea260ab0aea60aadf90f74e4232fa",
-                    "storageAddress": "http://testserver/model/e3bbf9f63f601485903aec0e6c207d4689aea260ab0aea60aadf90f74e4232fa/file/"
+                    "hash": "df3f74523a807d0c2b06abffb0a1ca4d44c6a121dc61280608caab5fba450ee9",
+                    "storageAddress": "http://testserver/model/df3f74523a807d0c2b06abffb0a1ca4d44c6a121dc61280608caab5fba450ee9/file/"
                 },
                 "permissions": {
                     "process": {
@@ -743,8 +744,8 @@ model = [
             },
             "outTrunkModel": {
                 "outModel": {
-                    "hash": "d6c41e8e6fa3daf13555935c39cdd4755ecedd8389ea12e2265f9f45afef8e7f",
-                    "storageAddress": "http://testserver/model/d6c41e8e6fa3daf13555935c39cdd4755ecedd8389ea12e2265f9f45afef8e7f/file/"
+                    "hash": "2485b8f0bed25260684d8052ab6f77e0817e821eaea8acd763ed8e64701d9b47",
+                    "storageAddress": "http://testserver/model/2485b8f0bed25260684d8052ab6f77e0817e821eaea8acd763ed8e64701d9b47/file/"
                 },
                 "permissions": {
                     "process": {
