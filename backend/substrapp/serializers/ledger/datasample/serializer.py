@@ -2,10 +2,7 @@ import json
 
 from rest_framework import serializers
 
-from django.conf import settings
-
-from .util import createLedgerDataSample
-from .tasks import createLedgerDataSampleAsync
+from substrapp import ledger
 
 
 class LedgerDataSampleSerializer(serializers.Serializer):
@@ -23,15 +20,4 @@ class LedgerDataSampleSerializer(serializers.Serializer):
             'dataManagerKeys': [x for x in data_manager_keys],
             'testOnly': json.dumps(test_only),
         }
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data = createLedgerDataSample(args, [x.pk for x in instances], sync=True)
-        else:
-            # use a celery task, as we are in an http request transaction
-            createLedgerDataSampleAsync.delay(args, [x.pk for x in instances])
-            data = {
-                'message': 'Data samples added in local db waiting for validation. '
-                           'The substra network has been notified for adding this Data'
-            }
-
-        return data
+        return ledger.create_datasamples(args, [x.pk for x in instances])

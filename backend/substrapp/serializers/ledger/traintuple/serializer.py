@@ -1,9 +1,6 @@
 from rest_framework import serializers
 
-from django.conf import settings
-
-from .util import createLedgerTraintuple
-from .tasks import createLedgerTraintupleAsync
+from substrapp import ledger
 
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
@@ -42,16 +39,4 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         args = self.get_args(validated_data)
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data = createLedgerTraintuple(args, sync=True)
-        else:
-            # use a celery task, as we are in an http request transaction
-            createLedgerTraintupleAsync.delay(args)
-            data = {
-                'message': 'The substra network has been notified for adding this Traintuple. '
-                           'Please be aware you won\'t get return values from the ledger. '
-                           'You will need to check manually'
-            }
-
-        return data
+        return ledger.create_traintuple(args)

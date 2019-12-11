@@ -14,10 +14,9 @@ from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp import ledger
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
-from substrapp.serializers.ledger.datasample.util import updateLedgerDataSample
-from substrapp.serializers.ledger.datasample.tasks import updateLedgerDataSampleAsync
 from substrapp.utils import store_datasamples_archive
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
@@ -250,21 +249,14 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             }
 
             if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                try:
-                    data = updateLedgerDataSample(args, sync=True)
-                except LedgerError as e:
-                    return Response({'message': str(e.msg)}, status=e.st)
-
                 st = status.HTTP_200_OK
-
             else:
-                # use a celery task, as we are in an http request transaction
-                updateLedgerDataSampleAsync.delay(args)
-                data = {
-                    'message': 'The substra network has been notified for updating these Data'
-                }
                 st = status.HTTP_202_ACCEPTED
 
+            try:
+                data = ledger.update_datasample(args)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.st)
             return Response(data, status=st)
 
 

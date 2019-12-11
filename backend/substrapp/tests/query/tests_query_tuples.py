@@ -57,7 +57,7 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.traintuple.util.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
@@ -95,7 +95,7 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.traintuple.util.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
@@ -206,7 +206,7 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.testtuple.util.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()
@@ -241,7 +241,7 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.testtuple.util.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()

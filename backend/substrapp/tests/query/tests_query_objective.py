@@ -76,7 +76,7 @@ class ObjectiveQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {'pkhash': pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)
@@ -105,7 +105,7 @@ class ObjectiveQueryTests(APITestCase):
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {
                 'message': 'Objective added in local db waiting for validation.'
                            'The substra network has been notified for adding this Objective'
@@ -133,7 +133,7 @@ class ObjectiveQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.utils.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {'pkhash': pkhash}
 
             response = self.client.post(url, data, format='multipart', **extra)

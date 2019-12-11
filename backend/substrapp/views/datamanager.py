@@ -9,12 +9,9 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-# from hfc.fabric import Client
-# cli = Client(net_profile="../network.json")
+from substrapp import ledger
 from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
-from substrapp.serializers.ledger.datamanager.util import updateLedgerDataManager
-from substrapp.serializers.ledger.datamanager.tasks import updateLedgerDataManagerAsync
 from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
@@ -245,19 +242,14 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            try:
-                data = updateLedgerDataManager(args, sync=True)
-            except LedgerError as e:
-                return Response({'message': str(e.msg)}, status=e.status)
             st = status.HTTP_200_OK
-
         else:
-            # use a celery task, as we are in an http request transaction
-            updateLedgerDataManagerAsync.delay(args)
-            data = {
-                'message': 'The substra network has been notified for updating this DataManager'
-            }
             st = status.HTTP_202_ACCEPTED
+
+        try:
+            data = ledger.update_datamanager(args)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
 
         return Response(data, status=st)
 
