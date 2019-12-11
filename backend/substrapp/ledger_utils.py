@@ -282,51 +282,77 @@ def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
         f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status}')
 
 
-def log_fail_tuple(tuple_type, tuple_key, err_msg):
-    err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
-
-    invoke_fcns = {
+LOG_TUPLE_INVOKE_FCNS = {
+    'doing': {
+        'traintuple': 'logStartTrain',
+        'testtuple': 'logStartTest',
+        'compositeTraintuple': 'logStartCompositeTrain',
+        'aggregatetuple': 'logStartAggregate',
+    },
+    'done': {
+        'traintuple': 'logSuccessTrain',
+        'testtuple': 'logSuccessTest',
+        'compositeTraintuple': 'logSuccessCompositeTrain',
+        'aggregatetuple': 'logSuccessAggregate',
+    },
+    'failed': {
         'traintuple': 'logFailTrain',
         'testtuple': 'logFailTest',
         'compositeTraintuple': 'logFailCompositeTrain',
         'aggregatetuple': 'logFailAggregate',
-    }
-    invoke_fcn = invoke_fcns[tuple_type]
+    },
+}
+
+
+def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
+    """Update tuple status to doing, done or failed.
+
+    In case of ledger timeout, query the ledger until the status has been updated.
+    """
+    try:
+        invoke_fcn = LOG_TUPLE_INVOKE_FCNS[status][tuple_type]
+    except KeyError:
+        raise NotImplementedError(f'Missing method for {tuple_type} status {status}')
+
     invoke_args = {
         'key': tuple_key,
-        'log': err_msg,
     }
+    if extra_kwargs:
+        invoke_args.update(extra_kwargs)
 
     try:
         update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
     except LedgerTimeout:
-        _wait_until_status_after_timeout(tuple_type, tuple_key, 'failed')
+        _wait_until_status_after_timeout(tuple_type, tuple_key, status)
+
+
+def log_start_tuple(tuple_type, tuple_key):
+    _update_tuple_status(tuple_type, tuple_key, 'doing')
+
+
+def log_fail_tuple(tuple_type, tuple_key, err_msg):
+    err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
+    extra_kwargs = {
+        'log': err_msg,
+    }
+    _update_tuple_status(tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
 
 
 def log_success_tuple(tuple_type, tuple_key, res):
-    if tuple_type == 'traintuple':
-        invoke_fcn = 'logSuccessTrain'
-        invoke_args = {
-            'key': tuple_key,
+    extra_kwargs = {
+        'log': '',
+    }
+
+    if tuple_type in ('traintuple', 'aggregatetuple'):
+        extra_kwargs.update({
             'outModel': {
                 'hash': res["end_model_file_hash"],
                 'storageAddress': res["end_model_file"],
             },
-            'log': '',
-        }
-
-    elif tuple_type == 'testtuple':
-        invoke_fcn = 'logSuccessTest'
-        invoke_args = {
-            'key': tuple_key,
-            'perf': float(res["global_perf"]),
-            'log': '',
-        }
+        })
 
     elif tuple_type == 'compositeTraintuple':
-        invoke_fcn = 'logSuccessCompositeTrain'
-        invoke_args = {
-            'key': tuple_key,
+        extra_kwargs.update({
             'outHeadModel': {
                 'hash': res["end_head_model_file_hash"],
                 'storageAddress': res["end_head_model_file"],
@@ -335,41 +361,11 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'hash': res["end_trunk_model_file_hash"],
                 'storageAddress': res["end_trunk_model_file"],
             },
-            'log': '',
-        }
+        })
 
-    elif tuple_type == 'aggregatetuple':
-        invoke_fcn = 'logSuccessAggregate'
-        invoke_args = {
-            'key': tuple_key,
-            'outModel': {
-                'hash': res["end_model_file_hash"],
-                'storageAddress': res["end_model_file"],
-            },
-            'log': '',
-        }
+    elif tuple_type == 'testtuple':
+        extra_kwargs.update({
+            'perf': float(res["global_perf"]),
+        })
 
-    else:
-        raise NotImplementedError()
-
-    try:
-        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
-    except LedgerTimeout:
-        _wait_until_status_after_timeout(tuple_type, tuple_key, 'done')
-
-
-def log_start_tuple(tuple_type, tuple_key):
-    invoke_fcns = {
-        'traintuple': 'logStartTrain',
-        'testtuple': 'logStartTest',
-        'compositeTraintuple': 'logStartCompositeTrain',
-        'aggregatetuple': 'logStartAggregate',
-    }
-    invoke_fcn = invoke_fcns[tuple_type]
-
-    invoke_args = {'key': tuple_key}
-
-    try:
-        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
-    except LedgerTimeout:
-        _wait_until_status_after_timeout(tuple_type, tuple_key, 'doing')
+    _update_tuple_status(tuple_type, tuple_key, 'done', extra_kwargs=extra_kwargs)
