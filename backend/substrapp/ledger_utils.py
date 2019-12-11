@@ -252,7 +252,6 @@ def get_object_from_ledger(pk, query):
 
 
 def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
-    # TODO could be move to a decorator handle_timeout_after_status_update
     query_fcns = {
         'traintuple': 'queryTraintuple',
         'testtuple': 'queryTesttuple',
@@ -262,18 +261,22 @@ def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
     query_fcn = query_fcns[tuple_type]
 
     max_tries = 5
-    trie = 0
+    trie = 1
     backoff = 5
-    while trie < max_tries:
+
+    while trie <= max_tries:
+        # sleep first as this is executed right after a request raising a timeout error
+        time.sleep(trie * backoff)
+
         tuple_ = query_ledger(fcn=query_fcn, args={'key': tuple_key})
         status = tuple_['status']
         if status == expected_status:
             return
-        trie += 1
+
         logger.error(
             f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status} (trie {trie})'
         )
-        time.sleep(trie * backoff)
+        trie += 1
 
     raise LedgerTimeoutNotHandled(
         f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status}')
