@@ -73,9 +73,7 @@ spec:
               mountPath: /var/hyperledger/tls/server/pair
             - name: peer-tls-client
               mountPath: /var/hyperledger/tls/client/pair
-            - name: orderer-tls-ca
-              mountPath: /var/hyperledger/tls/ord/cert
-            - name: ca
+            - name: cacert
               mountPath: /var/hyperledger/ca
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
@@ -101,12 +99,9 @@ spec:
       - name: peer-tls-client
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
-      - name: orderer-tls-ca
+      - name: cacert
         secret:
-          secretName: {{ $.Values.secrets.orderer.tls.ca }}
-      - name: ca
-        secret:
-          secretName: {{ $.Values.secrets.ca }}
+          secretName: {{ $.Values.secrets.caCert }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

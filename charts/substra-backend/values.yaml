@@ -77,16 +77,12 @@ persistence:
 
 # Secrets names
 secrets:
-  ca: hlf-ca
+  caCert: hlf-cacert
   user:
     # Certificate, saved under key 'cert.pem'
     cert: hlf-idcert
     # Key, saved under 'key.pem'
     key: hlf-idkey
-  # This should include the Orderer TLS 'cacert.pem'
-  orderer:
-    tls:
-      ca: hlf-client-tlsrootcert
   peer:
     tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
       client: hlf-client-tls
@@ -97,10 +93,6 @@ organization:
 
 user:
   name: user
-
-orderer:
-  host: orderer-hlf-ord
-  port: 7050
 
 peer:
   host: healthchain-peer.owkin.com

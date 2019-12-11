@@ -55,10 +55,6 @@ deploy:
             host: network-org-1-peer-1.org-1
             port: 7051
             mspID: MyOrg1MSP
-          orderer:
-            host: network-orderer.orderer
-            port: 7050
-            name: MyOrderer
           persistence:
             hostPath: /tmp/org-1
           incomingNodes:
@@ -101,10 +97,6 @@ deploy:
             host: network-org-2-peer-1.org-2
             port: 7051
             mspID: MyOrg2MSP
-          orderer:
-            host: network-orderer.orderer
-            port: 7050
-            name: MyOrderer
           persistence:
             hostPath: /tmp/org-2
           incomingNodes:
