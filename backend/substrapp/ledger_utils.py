@@ -229,7 +229,7 @@ def invoke_ledger(*args, **kwargs):
 
 
 @retry_on_error()
-def _update_ledger(*args, **kwargs):
+def update_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
 
 
@@ -295,7 +295,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
     }
 
     try:
-        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
     except LedgerTimeout:
         _wait_until_status_after_timeout(tuple_type, tuple_key, 'failed')
 
@@ -350,7 +350,7 @@ def log_success_tuple(tuple_type, tuple_key, res):
         raise NotImplementedError()
 
     try:
-        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
     except LedgerTimeout:
         _wait_until_status_after_timeout(tuple_type, tuple_key, 'done')
 
@@ -367,6 +367,6 @@ def log_start_tuple(tuple_type, tuple_key):
     invoke_args = {'key': tuple_key}
 
     try:
-        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
     except LedgerTimeout:
         _wait_until_status_after_timeout(tuple_type, tuple_key, 'doing')
