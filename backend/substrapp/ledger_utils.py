@@ -24,6 +24,10 @@ class LedgerError(Exception):
         return self.msg
 
 
+class LedgerTimeoutNotHandled(LedgerError):
+    pass
+
+
 class LedgerResponseError(LedgerError):
 
     @classmethod
@@ -82,7 +86,12 @@ STATUS_TO_EXCEPTION = {
 }
 
 
-def retry_on_error(delay=1, nbtries=5, backoff=2):
+def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
+    exceptions = exceptions or []
+    exceptions_to_retry = [LedgerMVCCError, LedgerBadResponse, RpcError]
+    exceptions_to_retry.extend(exceptions)
+    exceptions_to_retry = tuple(exceptions_to_retry)
+
     def _retry(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
@@ -96,7 +105,7 @@ def retry_on_error(delay=1, nbtries=5, backoff=2):
             while True:
                 try:
                     return fn(*args, **kwargs)
-                except (LedgerMVCCError, LedgerTimeout, LedgerBadResponse, RpcError) as e:
+                except exceptions_to_retry as e:
                     _nbtries -= 1
                     if not nbtries:
                         raise
@@ -189,14 +198,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         return response
 
 
-@retry_on_error()
-def query_ledger(fcn, args=None):
-    # careful, passing invoke parameters to query_ledger will NOT fail
-    return call_ledger('query', fcn=fcn, args=args)
-
-
-@retry_on_error()
-def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
+def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
     params = {
         'wait_for_event': sync,
     }
@@ -215,34 +217,89 @@ def invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True)
         return response
 
 
+@retry_on_error(exceptions=[LedgerTimeout])
+def query_ledger(fcn, args=None):
+    # careful, passing invoke parameters to query_ledger will NOT fail
+    return call_ledger('query', fcn=fcn, args=args)
+
+
+@retry_on_error(exceptions=[LedgerTimeout])
+def invoke_ledger(*args, **kwargs):
+    return _invoke_ledger(*args, **kwargs)
+
+
 @retry_on_error()
+def _update_ledger(*args, **kwargs):
+    return _invoke_ledger(*args, **kwargs)
+
+
+def query_tuples(tuple_type, data_owner):
+    data = query_ledger(
+        fcn="queryFilter",
+        args={
+            'indexName': f'{tuple_type}~worker~status',
+            'attributes': f'{data_owner},todo'
+        }
+    )
+
+    data = [] if data is None else data
+
+    return data
+
+
 def get_object_from_ledger(pk, query):
     return query_ledger(fcn=query, args={'key': pk})
 
 
-@retry_on_error()
+def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
+    # TODO could be move to a decorator handle_timeout_after_status_update
+    query_fcns = {
+        'traintuple': 'queryTraintuple',
+        'testtuple': 'queryTesttuple',
+        'compositeTraintuple': 'queryCompositeTraintuple',
+        'aggregatetuple': 'queryAggregatetuple',
+    }
+    query_fcn = query_fcns[tuple_type]
+
+    max_tries = 5
+    trie = 0
+    backoff = 5
+    while trie < max_tries:
+        tuple_ = query_ledger(fcn=query_fcn, args={'key': tuple_key})
+        status = tuple_['status']
+        if status == expected_status:
+            return
+        trie += 1
+        logger.error(
+            f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status} (trie {trie})'
+        )
+        time.sleep(trie * backoff)
+
+    raise LedgerTimeoutNotHandled(
+        f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status}')
+
+
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
 
-    log_fail_methods = {
+    invoke_fcns = {
         'traintuple': 'logFailTrain',
         'testtuple': 'logFailTest',
         'compositeTraintuple': 'logFailCompositeTrain',
         'aggregatetuple': 'logFailAggregate',
     }
+    invoke_fcn = invoke_fcns[tuple_type]
+    invoke_args = {
+        'key': tuple_key,
+        'log': err_msg,
+    }
 
-    fail_type = log_fail_methods[tuple_type]
-
-    return invoke_ledger(
-        fcn=fail_type,
-        args={
-            'key': tuple_key,
-            'log': err_msg,
-        },
-        sync=True)
+    try:
+        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+    except LedgerTimeout:
+        _wait_until_status_after_timeout(tuple_type, tuple_key, 'failed')
 
 
-@retry_on_error()
 def log_success_tuple(tuple_type, tuple_key, res):
     if tuple_type == 'traintuple':
         invoke_fcn = 'logSuccessTrain'
@@ -292,43 +349,24 @@ def log_success_tuple(tuple_type, tuple_key, res):
     else:
         raise NotImplementedError()
 
-    return invoke_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+    try:
+        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+    except LedgerTimeout:
+        _wait_until_status_after_timeout(tuple_type, tuple_key, 'done')
 
 
-@retry_on_error()
 def log_start_tuple(tuple_type, tuple_key):
-    start_type = None
+    invoke_fcns = {
+        'traintuple': 'logStartTrain',
+        'testtuple': 'logStartTest',
+        'compositeTraintuple': 'logStartCompositeTrain',
+        'aggregatetuple': 'logStartAggregate',
+    }
+    invoke_fcn = invoke_fcns[tuple_type]
 
-    if tuple_type == 'traintuple':
-        start_type = 'logStartTrain'
-    elif tuple_type == 'testtuple':
-        start_type = 'logStartTest'
-    elif tuple_type == 'compositeTraintuple':
-        start_type = 'logStartCompositeTrain'
-    elif tuple_type == 'aggregatetuple':
-        start_type = 'logStartAggregate'
-    else:
-        raise NotImplementedError()
+    invoke_args = {'key': tuple_key}
 
     try:
-        invoke_ledger(
-            fcn=start_type,
-            args={'key': tuple_key},
-            sync=True)
+        _update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
     except LedgerTimeout:
-        pass
-
-
-@retry_on_error()
-def query_tuples(tuple_type, data_owner):
-    data = query_ledger(
-        fcn="queryFilter",
-        args={
-            'indexName': f'{tuple_type}~worker~status',
-            'attributes': f'{data_owner},todo'
-        }
-    )
-
-    data = [] if data is None else data
-
-    return data
+        _wait_until_status_after_timeout(tuple_type, tuple_key, 'doing')
