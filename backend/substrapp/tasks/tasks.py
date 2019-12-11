@@ -15,6 +15,7 @@ from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
+from celery.task import Task
 
 from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
@@ -348,7 +349,7 @@ def prepare_data_sample(directory, tuple_):
 
 def build_subtuple_folders(subtuple):
     # create a folder named `subtuple['key']` in /medias/subtuple/ with 5 subfolders opener, data, model, pred, metrics
-    subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+    subtuple_directory = get_subtuple_directory(subtuple)
     create_directory(subtuple_directory)
 
     for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
@@ -366,6 +367,26 @@ def remove_subtuple_materials(subtuple_directory):
         logging.exception(e)
     finally:
         list_files(subtuple_directory)
+
+
+def try_remove_local_folder(subtuple, compute_plan_id):
+    if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
+        if compute_plan_id is not None:
+            rank = int(subtuple['rank'])
+            if rank == -1:
+                remove_local_folder(compute_plan_id)
+
+
+def remove_local_folder(compute_plan_id):
+    client = docker.from_env()
+    volume_id = get_volume_id(compute_plan_id)
+    try:
+        local_volume = client.volumes.get(volume_id=volume_id)
+        local_volume.remove(force=True)
+    except docker.errors.NotFound:
+        pass
+    except Exception:
+        logging.error(f'Cannot remove local volume {volume_id}', exc_info=True)
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
@@ -443,7 +464,43 @@ def prepare_tuple(subtuple, tuple_type):
         log_fail_tuple(tuple_type, subtuple['key'], error_code)
 
 
-@app.task(bind=True, ignore_result=False)
+class ComputeTask(Task):
+    def on_success(self, retval, task_id, args, kwargs):
+        tuple_type, subtuple, compute_plan_id = self.split_args(args)
+
+        try:
+            log_success_tuple(tuple_type, subtuple['key'], retval['result'])
+        except LedgerError as e:
+            logging.exception(e)
+
+        try:
+            try_remove_local_folder(subtuple, compute_plan_id)
+        except Exception as e:
+            logging.exception(e)
+
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        tuple_type, subtuple, compute_plan_id = self.split_args(args)
+
+        try:
+            error_code = compute_error_code(exc)
+            logging.error(error_code, exc_info=True)
+            log_fail_tuple(tuple_type, subtuple['key'], error_code)
+        except LedgerError as e:
+            logging.exception(e)
+
+        try:
+            try_remove_local_folder(subtuple, compute_plan_id)
+        except Exception as e:
+            logging.exception(e)
+
+    def split_args(self, celery_args):
+        tuple_type = celery_args[0]
+        subtuple = celery_args[1]
+        compute_plan_id = celery_args[2]
+        return tuple_type, subtuple, compute_plan_id
+
+
+@app.task(bind=True, ignore_result=False, base=ComputeTask)
 def compute_task(self, tuple_type, subtuple, compute_plan_id):
 
     try:
@@ -458,21 +515,19 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     try:
         prepare_materials(subtuple, tuple_type)
         res = do_task(subtuple, tuple_type)
+        result['result'] = res
     except Exception as e:
-        error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
-
-        try:
-            log_fail_tuple(tuple_type, subtuple['key'], error_code)
-        except LedgerError as e:
-            logging.exception(e)
-
-        return result
-
-    try:
-        log_success_tuple(tuple_type, subtuple['key'], res)
-    except LedgerError as e:
-        logging.exception(e)
+        raise self.retry(
+            exc=e,
+            countdown=int(getattr(settings, 'CELERY_TASK_RETRY_DELAY_SECONDS')),
+            max_retries=int(getattr(settings, 'CELERY_TASK_MAX_RETRIES')))
+    finally:
+        if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
+            try:
+                subtuple_directory = get_subtuple_directory(subtuple)
+                remove_subtuple_materials(subtuple_directory)
+            except Exception as e:
+                logging.exception(e)
 
     return result
 
@@ -504,7 +559,7 @@ def prepare_materials(subtuple, tuple_type):
 
 
 def do_task(subtuple, tuple_type):
-    subtuple_directory = path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+    subtuple_directory = get_subtuple_directory(subtuple)
     org_name = getattr(settings, 'ORG_NAME')
 
     # compute plan / federated learning variables
@@ -517,35 +572,15 @@ def do_task(subtuple, tuple_type):
 
     client = docker.from_env()
 
-    try:
-        result = _do_task(
-            client,
-            subtuple_directory,
-            tuple_type,
-            subtuple,
-            compute_plan_id,
-            rank,
-            org_name
-        )
-    except Exception as e:
-        if compute_plan_id is not None:
-            rank = -1  # -1 means last subtuple in the compute plan
-        raise e
-    finally:
-        # Clean subtuple materials
-        if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
-            remove_subtuple_materials(subtuple_directory)
-            if rank == -1:
-                volume_id = f'local-{compute_plan_id}-{org_name}'
-                try:
-                    local_volume = client.volumes.get(volume_id=volume_id)
-                    local_volume.remove(force=True)
-                except docker.errors.NotFound:
-                    pass
-                except Exception:
-                    logging.error(f'Cannot remove local volume {volume_id}', exc_info=True)
-
-    return result
+    return _do_task(
+        client,
+        subtuple_directory,
+        tuple_type,
+        subtuple,
+        compute_plan_id,
+        rank,
+        org_name
+    )
 
 
 def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name):
@@ -582,7 +617,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     # local volume for train like tuples in compute plan
     if compute_plan_id is not None and tuple_type != TESTTUPLE_TYPE:
-        volume_id = f'local-{compute_plan_id}-{org_name}'
+        volume_id = get_volume_id(compute_plan_id)
         try:
             client.volumes.get(volume_id=volume_id)
         except docker.errors.NotFound:
@@ -729,3 +764,12 @@ def save_model(subtuple_directory, subtuple_key, filename='model'):
     end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
     return end_model_file, end_model_file_hash
+
+
+def get_volume_id(compute_plan_id):
+    org_name = getattr(settings, 'ORG_NAME')
+    return f'local-{compute_plan_id}-{org_name}'
+
+
+def get_subtuple_directory(subtuple):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])

@@ -6,13 +6,6 @@ from .deps.org import *
 from .deps.restframework import *
 
 DEBUG = True
-
-TASK = {
-    'CAPTURE_LOGS': to_bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
-    'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
-    'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
-}
-
 # LEDGER_CALL_RETRY = False  # uncomment to overwrite the ledger setting value
 
 # Database

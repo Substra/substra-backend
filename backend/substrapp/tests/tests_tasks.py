@@ -455,23 +455,11 @@ class TasksTests(APITestCase):
 
     def test_compute_task(self):
 
-        class FakeSettings(object):
-            def __init__(self):
-                self.LEDGER = {'signcert': 'signcert',
-                               'org': 'owkin',
-                               'peer': 'peer'}
-
-                self.MEDIA_ROOT = MEDIA_ROOT
-
         subtuple_key = 'test_owkin'
         subtuple = {'key': subtuple_key, 'inModels': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
-        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.tasks.getattr') as mgetattr, \
-                mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
-            msettings.return_value = FakeSettings()
-            mgetattr.return_value = self.subtuple_path
+        with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
             mlog_start_tuple.return_value = 'data', 200
 
             for name in ['opener', 'metrics']:
@@ -503,7 +491,9 @@ class TasksTests(APITestCase):
                 with mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
                     mdo_task.side_effect = Exception("Test")
                     mlog_fail_tuple.return_value = 'data', 404
-                    compute_task('traintuple', subtuple, None)
+                    with self.assertRaises(Exception) as exc:
+                        compute_task('traintuple', subtuple, None)
+                    self.assertEqual(str(exc.exception), "Test")
 
     def test_prepare_materials(self):
 
