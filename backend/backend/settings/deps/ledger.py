@@ -21,6 +21,8 @@ LEDGER = json.load(open(LEDGER_CONFIG_FILE, 'r'))
 LEDGER_SYNC_ENABLED = True
 LEDGER_CALL_RETRY = True
 
+LEDGER_MAX_RETRY_TIMEOUT = 5
+
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('BACKEND_PEER_PORT', 'external')]
 
 LEDGER['requestor'] = create_user(

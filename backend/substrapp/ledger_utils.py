@@ -260,7 +260,7 @@ def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
     }
     query_fcn = query_fcns[tuple_type]
 
-    max_tries = 5
+    max_tries = getattr(settings, 'LEDGER_MAX_RETRY_TIMEOUT', 5)
     trie = 1
     backoff = 5
 
