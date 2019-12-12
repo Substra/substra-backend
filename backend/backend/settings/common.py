@@ -16,6 +16,20 @@ from datetime import timedelta
 
 from libs.gen_secret_key import write_secret_key
 
+
+TRUE_VALUES = {
+    't', 'T',
+    'y', 'Y', 'yes', 'YES',
+    'true', 'True', 'TRUE',
+    'on', 'On', 'ON',
+    '1', 1,
+    True
+}
+
+def to_bool(value):
+    return value in TRUE_VALUES
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PROJECT_ROOT = os.path.dirname(BASE_DIR)
@@ -168,11 +182,19 @@ MEDIA_URL = '/media/'
 
 SITE_ID = 1
 
+TASK = {
+    'CAPTURE_LOGS': to_bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
+    'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
+    'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
+}
+
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TASK_TRACK_STARTED = True  # since 4.0
+CELERY_TASK_MAX_RETRIES = 5
+CELERY_TASK_RETRY_DELAY_SECONDS = 2
 CELERY_WORKER_CONCURRENCY = 1
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//'),
 
@@ -180,15 +202,3 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
 
-TRUE_VALUES = {
-    't', 'T',
-    'y', 'Y', 'yes', 'YES',
-    'true', 'True', 'TRUE',
-    'on', 'On', 'ON',
-    '1', 1,
-    True
-}
-
-
-def to_bool(value):
-    return value in TRUE_VALUES
