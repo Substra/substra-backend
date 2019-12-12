@@ -50,26 +50,26 @@ class MiscTests(TestCase):
             self.assertEqual(data['key'], 'pk')
 
     def test_log_fail_tuple(self):
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             log_fail_tuple('traintuple', 'pk', 'error_msg')
 
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             log_fail_tuple('testtuple', 'pk', 'error_msg')
 
     def test_log_start_tuple(self):
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             log_start_tuple('traintuple', 'pk')
 
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             log_start_tuple('testtuple', 'pk')
 
     def test_log_success_tuple(self):
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             res = {
                 'end_model_file_hash': 'hash',
                 'end_model_file': 'storageAddress',
@@ -77,8 +77,8 @@ class MiscTests(TestCase):
             }
             log_success_tuple('traintuple', 'pk', res)
 
-        with patch('substrapp.ledger_utils.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = None
+        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+            mupdate_ledger.return_value = None
             res = {
                 'global_perf': '0.99',
                 'job_task_log': 'log',
