@@ -36,7 +36,6 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         data = {
             'algo_key': request.data.get('algo_key'),
             'data_manager_key': request.data.get('data_manager_key'),
-            'objective_key': request.data.get('objective_key'),
             'rank': request.data.get('rank'),
             'compute_plan_id': request.data.get('compute_plan_id', ''),
             'in_head_model_key': request.data.get('in_head_model_key', ''),

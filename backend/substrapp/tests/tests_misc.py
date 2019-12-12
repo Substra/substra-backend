@@ -73,7 +73,6 @@ class MiscTests(TestCase):
             res = {
                 'end_model_file_hash': 'hash',
                 'end_model_file': 'storageAddress',
-                'global_perf': '0.99',
                 'job_task_log': 'log',
             }
             log_success_tuple('traintuple', 'pk', res)

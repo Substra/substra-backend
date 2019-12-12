@@ -182,7 +182,7 @@ class TesttupleQueryTests(APITestCase):
 
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
-
+        self.objective_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
         self.test_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
         self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
 
@@ -198,6 +198,7 @@ class TesttupleQueryTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
 
         data = {
+            'objective_key': self.objective_key,
             'test_data_sample_keys': self.test_data_sample_keys,
             'traintuple_key': self.fake_key,
             'data_manager_key': self.fake_key}
@@ -232,6 +233,7 @@ class TesttupleQueryTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
 
         data = {
+            'objective_key': self.objective_key,
             'test_data_sample_keys': self.test_data_sample_keys,
             'traintuple_key': self.fake_key,
             'data_manager_key': self.fake_key}

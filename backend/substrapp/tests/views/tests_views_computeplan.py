@@ -41,7 +41,6 @@ class ComputePlanViewTests(APITestCase):
         dummy_key = 'x' * 64
 
         data = {
-            'objective_key': dummy_key,
             'traintuples': [{
                 'algo_key': dummy_key,
                 'data_manager_key': dummy_key,
@@ -50,6 +49,7 @@ class ComputePlanViewTests(APITestCase):
             }],
             'testtuples': [{
                 'traintuple_id': dummy_key,
+                'objective_key': dummy_key,
                 'data_manager_key': dummy_key,
             }],
             'composite_traintuples': [],

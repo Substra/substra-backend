@@ -252,7 +252,6 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'hash': res["end_model_file_hash"],
                 'storageAddress': res["end_model_file"],
             },
-            'perf': float(res["global_perf"]),
             'log': '',
         }
 
@@ -276,7 +275,6 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'hash': res["end_trunk_model_file_hash"],
                 'storageAddress': res["end_trunk_model_file"],
             },
-            'perf': float(res["global_perf"]),
             'log': '',
         }
 
@@ -288,7 +286,6 @@ def log_success_tuple(tuple_type, tuple_key, res):
                 'hash': res["end_model_file_hash"],
                 'storageAddress': res["end_model_file"],
             },
-            'perf': float(res["global_perf"]),
             'log': '',
         }
 

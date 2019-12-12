@@ -352,7 +352,6 @@ def do_populate():
     print('create traintuple')
     data = {
         'algo_key': algo_key,
-        'objective_key': objective_key,
         'data_manager_key': data_manager_org1_key,
         'train_data_sample_keys': train_data_sample_keys[:2]
         # This traintuple should succeed.
@@ -365,7 +364,6 @@ def do_populate():
     data = {
         'algo_key': algo_key_2,
         'data_manager_key': data_manager_org1_key,
-        'objective_key': objective_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': '(should fail) My super tag'
     }
@@ -376,7 +374,6 @@ def do_populate():
     data = {
         'algo_key': algo_key_3,
         'data_manager_key': data_manager_org1_key,
-        'objective_key': objective_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': '(should fail) My other tag'
     }
@@ -392,6 +389,7 @@ def do_populate():
     # create testtuple
     print('create testtuple')
     data = {
+        'objective_key': objective_key,
         'traintuple_key': traintuple_key,
         'tag': 'substra',
     }
@@ -412,6 +410,7 @@ def do_populate():
     print('create compute plan')
     traintuples_data = [
         {
+            "objective_key": objective_key,  # org 0
             "algo_key": algo_key,  # logistic regression, org2
             "data_manager_key": data_manager_org1_key,
             "train_data_sample_keys": [train_data_sample_keys[0], train_data_sample_keys[2]],
@@ -427,7 +426,6 @@ def do_populate():
         # }
     ]
     compute_plan_data = {
-        "objective_key": objective_key,  # org 0
         "traintuples": traintuples_data,
         "testtuples": testtuples_data,
         "aggregatetuples": [],
@@ -459,7 +457,6 @@ def do_populate():
     # This composite traintuple is the same as the first traintuple except it saves 2 models
     data = {
         'algo_key': composite_algo_key,
-        'objective_key': objective_key,
         'data_manager_key': data_manager_org1_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': 'substra',

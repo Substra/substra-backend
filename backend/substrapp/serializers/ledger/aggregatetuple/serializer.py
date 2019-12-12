@@ -8,7 +8,6 @@ from .tasks import createLedgerAggregateTupleAsync
 
 class LedgerAggregateTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
-    objective_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     worker = serializers.CharField()
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
@@ -19,7 +18,6 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
-        objective_key = validated_data.get('objective_key')
         rank = validated_data.get('rank', '')
         rank = '' if rank is None else str(rank)
         worker = validated_data.get('worker')
@@ -29,7 +27,6 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
 
         args = {
             'algoKey': algo_key,
-            'objectiveKey': objective_key,
             'inModels': in_models_keys,
             'computePlanID': compute_plan_id,
             'rank': rank,

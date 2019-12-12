@@ -484,7 +484,8 @@ def prepare_materials(subtuple, tuple_type):
     directory = build_subtuple_folders(subtuple)
 
     # metrics
-    prepare_objective(directory, subtuple)
+    if tuple_type == TESTTUPLE_TYPE:
+        prepare_objective(directory, subtuple)
 
     # algo
     traintuple_type = (subtuple['traintupleType'] if tuple_type == TESTTUPLE_TYPE else
@@ -689,8 +690,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         result['end_trunk_model_file'] = end_trunk_model_file
 
     # evaluation
-    if tuple_type == AGGREGATETUPLE_TYPE:  # skip evaluation
-        result['global_perf'] = 0
+    if tuple_type != TESTTUPLE_TYPE:  # skip evaluation
         return result
 
     metrics_path = f'{subtuple_directory}/metrics'
