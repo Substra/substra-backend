@@ -412,6 +412,7 @@ def do_populate():
     print('create compute plan')
     traintuples_data = [
         {
+            "algo_key": algo_key,  # logistic regression, org2
             "data_manager_key": data_manager_org1_key,
             "train_data_sample_keys": [train_data_sample_keys[0], train_data_sample_keys[2]],
             "traintuple_id": "dummy_traintuple_id",
@@ -426,10 +427,11 @@ def do_populate():
         # }
     ]
     compute_plan_data = {
-        "algo_key": algo_key,  # logistic regression, org2
         "objective_key": objective_key,  # org 0
         "traintuples": traintuples_data,
         "testtuples": testtuples_data,
+        "aggregatetuples": [],
+        "composite_traintuples": [],
     }
     # until both chaincode, backend and sdk can handle compute plan collisions, we need to have a
     # generic try-except so that this script can run multiple times in a row
