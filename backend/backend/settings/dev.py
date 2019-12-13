@@ -27,6 +27,7 @@ MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, f'medias/{O
 SITE_HOST = f'substra-backend.{ORG_NAME}.xyz'
 SITE_PORT = DEFAULT_PORT
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')
+CELERY_TASK_MAX_RETRIES = 1 # 1 retry == 2 attempts
 CELERY_TASK_RETRY_DELAY_SECONDS = 0
 
 LOGGING = {
