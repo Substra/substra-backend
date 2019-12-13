@@ -115,8 +115,8 @@ class ComputePlanViewTests(APITestCase):
     def test_computeplan_cancel(self):
         cp = computeplan[0]
         key = cp['computePlanID']
-        with mock.patch('substrapp.views.computeplan.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = cp
+        with mock.patch('substrapp.views.computeplan.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = cp
 
             url = reverse('substrapp:compute_plan-cancel', args=[key])
             response = self.client.post(url, **self.extra)
