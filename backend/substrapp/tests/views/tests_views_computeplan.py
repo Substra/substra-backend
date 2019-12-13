@@ -111,3 +111,14 @@ class ComputePlanViewTests(APITestCase):
             search_params = computeplan[0]['computePlanID']
             response = self.client.get(url + search_params + '/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_computeplan_cancel(self):
+        cp = computeplan[0]
+        key = cp['computePlanID']
+        with mock.patch('substrapp.views.computeplan.invoke_ledger') as minvoke_ledger:
+            minvoke_ledger.return_value = cp
+
+            url = reverse('substrapp:compute_plan-cancel', args=[key])
+            response = self.client.post(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, cp)
