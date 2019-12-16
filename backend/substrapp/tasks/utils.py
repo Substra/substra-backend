@@ -1,6 +1,6 @@
 import os
+import json
 import docker
-import GPUtil as gputil
 import threading
 import logging
 
@@ -34,7 +34,39 @@ def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
-def get_cpu_sets(cpu_count, concurrency):
+def get_cpu_count(client):
+    # Get CPU count from docker container through the API
+    # Because the docker execution may be remote
+
+    task_args = {
+        'image': 'substrafoundation/celeryworker',
+        'command': 'python3 -u -c "import os; print(os.cpu_count(), end=\'\')"',
+        'detach': False,
+        'stdout': True,
+        'stderr': True,
+        'auto_remove': False,
+        'remove': True,
+        'network_disabled': True,
+        'network_mode': 'none',
+        'privileged': False,
+        'cap_drop': ['ALL'],
+    }
+
+    cpu_count = os.cpu_count()
+
+    try:
+        cpu_count_bytes = client.containers.run(**task_args)
+    except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
+        logger.info('[Warning] Cannot get cpu count from remote')
+    else:
+        if cpu_count_bytes:
+            cpu_count = int(cpu_count_bytes)
+
+    return cpu_count
+
+
+def get_cpu_sets(client, concurrency):
+    cpu_count = get_cpu_count(client)
     cpu_step = max(1, cpu_count // concurrency)
     cpu_sets = []
 
@@ -47,7 +79,44 @@ def get_cpu_sets(cpu_count, concurrency):
     return cpu_sets
 
 
-def get_gpu_sets(gpu_list, concurrency):
+def get_gpu_list(client):
+    # Get GPU list from docker container through the API
+    # Because the docker execution may be remote
+    cmd = 'python3 -u -c "import GPUtil as gputil;import json;'\
+          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
+
+    task_args = {
+        'image': 'substrafoundation/celeryworker',
+        'command': cmd,
+        'detach': False,
+        'stdout': True,
+        'stderr': True,
+        'auto_remove': False,
+        'remove': True,
+        'network_disabled': True,
+        'network_mode': 'none',
+        'privileged': False,
+        'cap_drop': ['ALL'],
+        'environment': {'CUDA_DEVICE_ORDER': 'PCI_BUS_ID',
+                        'NVIDIA_VISIBLE_DEVICES': 'all'},
+        'runtime': 'nvidia'
+    }
+
+    gpu_list = []
+
+    try:
+        gpu_list_bytes = client.containers.run(**task_args)
+    except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
+        logger.info('[Warning] Cannot get nvidia gpu list from remote')
+    else:
+        gpu_list = json.loads(gpu_list_bytes)
+
+    return gpu_list
+
+
+def get_gpu_sets(client, concurrency):
+
+    gpu_list = get_gpu_list(client)
 
     if gpu_list:
         gpu_count = len(gpu_list)
@@ -195,16 +264,20 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
 class ResourcesManager():
 
     __concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
-    __cpu_count = os.cpu_count()
-    __cpu_sets = get_cpu_sets(__cpu_count, __concurrency)
-
-    # Set CUDA_DEVICE_ORDER so the IDs assigned by CUDA match those from nvidia-smi
-    os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-    __gpu_list = [str(gpu.id) for gpu in gputil.getGPUs()]
-    __gpu_sets = get_gpu_sets(__gpu_list, __concurrency)  # Can be None if no gpu
 
     __lock = threading.Lock()
     __docker = docker.from_env()
+
+    __cpu_sets = 'unknown'
+    __gpu_sets = 'unknown'
+
+    @classmethod
+    def ressources_sets(cls):
+        if cls.__cpu_sets == 'unknown':
+            cls.__cpu_sets = get_cpu_sets(cls.__docker, cls.__concurrency)
+
+        if cls.__gpu_sets == 'unknown':
+            cls.__gpu_sets = get_gpu_sets(cls.__docker, cls.__concurrency)  # Can be None if no gpu
 
     @classmethod
     def memory_limit_mb(cls):
@@ -216,6 +289,8 @@ class ResourcesManager():
 
     @classmethod
     def get_cpu_gpu_sets(cls):
+
+        cls.ressources_sets()
 
         cpu_set = None
         gpu_set = None
