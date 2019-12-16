@@ -95,13 +95,13 @@ def handle_compute_plan_events(cps):
 
 
 def handle_compute_plan_event(cp):
-    id = cp['computePlanID']
+    cpID = cp['computePlanID']
     status = cp['status']
 
-    logger.info(f'Processing compute plan {id} status={status}')
+    logger.info(f'Processing compute plan {cpID} status={status}')
 
     if status == 'done':
-        remove_local_folder(id)
+        remove_local_folder(cpID)
 
 
 def wait():
