@@ -17,7 +17,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks.tasks import prepare_tuple
+from substrapp.tasks.tasks import prepare_tuple, remove_local_folder
 from substrapp.utils import get_owner
 from substrapp.ledger_utils import get_hfc
 
@@ -84,6 +84,24 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
                 task_id=key,
                 queue=worker_queue
             )
+
+        if 'ComputePlans' in payload:
+            handle_compute_plan_events(payload['ComputePlans'])
+
+
+def handle_compute_plan_events(cps):
+    for cp in cps:
+        handle_compute_plan_event(cp)
+
+
+def handle_compute_plan_event(cp):
+    id = cp['computePlanID']
+    status = cp['status']
+
+    logger.info(f'Processing compute plan {id} status={status}')
+
+    if status == 'done':
+        remove_local_folder(id)
 
 
 def wait():

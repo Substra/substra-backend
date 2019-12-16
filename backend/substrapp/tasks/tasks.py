@@ -369,15 +369,9 @@ def remove_subtuple_materials(subtuple_directory):
         list_files(subtuple_directory)
 
 
-def try_remove_local_folder(subtuple, compute_plan_id):
-    if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
-        if compute_plan_id is not None:
-            rank = int(subtuple['rank'])
-            if rank == -1:
-                remove_local_folder(compute_plan_id)
-
-
 def remove_local_folder(compute_plan_id):
+    if not settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
+        return
     client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
     try:
@@ -473,11 +467,6 @@ class ComputeTask(Task):
         except LedgerError as e:
             logging.exception(e)
 
-        try:
-            try_remove_local_folder(subtuple, compute_plan_id)
-        except Exception as e:
-            logging.exception(e)
-
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         tuple_type, subtuple, compute_plan_id = self.split_args(args)
 
@@ -486,11 +475,6 @@ class ComputeTask(Task):
             logging.error(error_code, exc_info=True)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
-            logging.exception(e)
-
-        try:
-            try_remove_local_folder(subtuple, compute_plan_id)
-        except Exception as e:
             logging.exception(e)
 
     def split_args(self, celery_args):
