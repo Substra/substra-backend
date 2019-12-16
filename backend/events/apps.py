@@ -56,8 +56,12 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
             key = _tuple['key']
             status = _tuple['status']
 
-            logger.info(f'Processing task {key}: type={tuple_type} status={status}'
-                        f' with tx status: {tx_status}')
+            if tx_status != 'VALID':
+                logger.error(
+                    f'Failed transaction on task {key}: type={tuple_type}'
+                    f' status={status} with tx status: {tx_status}')
+                continue
+            logger.info(f'Processing task {key}: type={tuple_type} status={status}')
 
             if status != 'todo':
                 continue
