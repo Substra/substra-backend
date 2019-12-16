@@ -8,6 +8,8 @@ from substrapp.ledger_utils import LedgerNotFound, LedgerBadResponse
 from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
     log_success_tuple, query_tuples
 
+import docker
+
 
 class MockDevice():
     """A mock device to temporarily suppress output to stdout
@@ -23,17 +25,21 @@ class MiscTests(TestCase):
 
     def test_cpu_sets(self):
         cpu_count = 16
-        for concurrency in range(1, cpu_count + 1, 1):
-            self.assertEqual(concurrency,
-                             len(get_cpu_sets(cpu_count, concurrency)))
+        with patch('substrapp.tasks.utils.get_cpu_count') as mget_cpu_count:
+            mget_cpu_count.return_value = cpu_count
+            for concurrency in range(1, cpu_count + 1, 1):
+                self.assertEqual(concurrency,
+                                 len(get_cpu_sets(docker.from_env(), concurrency)))
 
     def test_gpu_sets(self):
         gpu_list = ['0', '1']
-        for concurrency in range(1, len(gpu_list) + 1, 1):
-            self.assertEqual(concurrency,
-                             len(get_gpu_sets(gpu_list, concurrency)))
+        with patch('substrapp.tasks.utils.get_gpu_list') as mget_gpu_list:
+            mget_gpu_list.return_value = gpu_list
+            for concurrency in range(1, len(gpu_list) + 1, 1):
+                self.assertEqual(concurrency,
+                                 len(get_gpu_sets(docker.from_env(), concurrency)))
 
-        self.assertFalse(get_gpu_sets([], concurrency))
+        self.assertFalse(get_gpu_sets(docker.from_env(), concurrency))
 
     def test_get_object_from_ledger(self):
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
