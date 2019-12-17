@@ -49,7 +49,7 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
     worker_queue = f"{LEDGER['name']}.worker"
 
     for tuple_type, _tuples in payload.items():
-        
+
         if tuple_type not in ['traintuple', 'compositeTraintuple', 'aggregatetuple']:
             continue
 
