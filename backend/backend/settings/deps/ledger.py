@@ -122,7 +122,11 @@ def update_client_with_discovery(client, discovery_results):
 
     # Load one peer per msp for endorsing transaction
     for msp in discovery_results['members']:
+        if not len(msp):
+            continue
+
         peer_info = msp[0]
+
         if peer_info['mspid'] != LEDGER['client']['msp_id']:
             peer = Peer(name=peer_info['mspid'])
 
