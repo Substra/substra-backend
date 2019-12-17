@@ -49,6 +49,10 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
     worker_queue = f"{LEDGER['name']}.worker"
 
     for tuple_type, _tuples in payload.items():
+        
+        if tuple_type not in ['traintuple', 'compositeTraintuple', 'aggregatetuple']:
+            continue
+
         if not _tuples:
             continue
 
@@ -85,8 +89,8 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
                 queue=worker_queue
             )
 
-        if 'ComputePlans' in payload:
-            handle_compute_plan_events(payload['ComputePlans'])
+        if 'computePlan' in payload:
+            handle_compute_plan_events(payload['computePlan'])
 
 
 def handle_compute_plan_events(cps):
