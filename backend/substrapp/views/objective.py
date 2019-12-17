@@ -231,9 +231,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['GET'])
     def leaderboard(self, request, pk):
-        validate_pk(pk)
-
         sort = request.query_params.get('sort', 'desc')
+
+        try:
+            validate_pk(pk)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             validate_sort(sort)
         except Exception as e:
