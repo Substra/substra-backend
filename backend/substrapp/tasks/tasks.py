@@ -369,6 +369,34 @@ def remove_subtuple_materials(subtuple_directory):
         list_files(subtuple_directory)
 
 
+def try_remove_intermediate_model(tuple_type, subtuple):
+    ''' Try to remove previous model in a very specific set-up
+    If the `remove_subtuple_materials` settings is set,
+    this function check the following criteria:
+    - current tuple is an aggregate tuple
+    - at least one inModel and it's a composite traintuple
+    - this inModel has one inTrunkModel and is a aggregate tuple
+    - this aggregate tuple is on the same worker as the current one
+    Given all the previous conditions are fulfill, we remove the model
+    directory from the previous aggregate tuple
+    '''
+    # TODO: Add the check for the settings
+    if tuple_type != AGGREGATETUPLE_TYPE or len(subtuple["inModels"]) == 0:
+        return
+
+    tuple_type, composite_tuple = find_training_step_tuple_from_key(subtuple["inModels"][0])
+    if tuple_type != COMPOSITE_TRAINTUPLE_TYPE or not composite_tuple['inTrunkModel']:
+        return
+
+    tuple_type, previous_aggregate_tuple = find_training_step_tuple_from_key(
+        composite_tuple['inTrunkModel']['traintupleKey'])
+    if tuple_type != AGGREGATETUPLE_TYPE or subtuple['worker'] != previous_aggregate_tuple['worker']:
+        return
+
+    aggregate_directory = get_subtuple_directory(previous_aggregate_tuple)
+    remove_model(aggregate_directory)
+
+
 def try_remove_local_folder(subtuple, compute_plan_id):
     if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
         if compute_plan_id is not None:
@@ -471,6 +499,11 @@ class ComputeTask(Task):
         try:
             log_success_tuple(tuple_type, subtuple['key'], retval['result'])
         except LedgerError as e:
+            logging.exception(e)
+
+        try:
+            try_remove_intermediate_model(tuple_type, subtuple)
+        except (LedgerError, TasksError) as e:
             logging.exception(e)
 
         try:
@@ -764,6 +797,18 @@ def save_model(subtuple_directory, subtuple_key, filename='model'):
     end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
     return end_model_file, end_model_file_hash
+
+
+def remove_model(subtuple_directory):
+    model_path = path.join(subtuple_directory, 'model')
+    logging.info('Remove subtuple materials')
+    list_files(model_path)
+    try:
+        shutil.rmtree(model_path)
+    except Exception as e:
+        logging.exception(e)
+    finally:
+        list_files(model_path)
 
 
 def get_volume_id(compute_plan_id):
