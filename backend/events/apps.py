@@ -37,12 +37,6 @@ def get_event_loop():
         loop.close()
 
 
-def tuple_get_worker(tuple_type, _tuple):
-    if tuple_type == 'aggregatetuple':
-        return _tuple['worker']
-    return _tuple['dataset']['worker']
-
-
 def on_event(cc_event, block_number, tx_id, tx_status):
     payload = json.loads(cc_event['payload'])
     owner = get_owner()
@@ -97,6 +91,12 @@ def handle_tuple(owner, worker_queue, tuple_type, tx_status, _tuple):
         task_id=key,
         queue=worker_queue
     )
+
+
+def tuple_get_worker(tuple_type, _tuple):
+    if tuple_type == 'aggregatetuple':
+        return _tuple['worker']
+    return _tuple['dataset']['worker']
 
 
 def handle_compute_plan(owner, worker_queue, tx_status, cp):
