@@ -21,9 +21,8 @@ from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files
+from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
 from substrapp.tasks.exception_handler import compute_error_code
-
 
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
@@ -624,6 +623,19 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         except docker.errors.NotFound:
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
+
+    if getattr(settings, 'K8S_SECRETS_FOR_TRAINING_TASKS_ENABLED'):
+        volume_id = # compute_plan_tag
+        try:
+            client.volumes.get(volume_id=volume_id)
+        except docker.errors.NotFound:
+            client.volumes.create(name=volume_id)
+
+            secret_name = ""
+            secret_namespace = ""
+
+            k8s_client = get_k8s_client()
+            k8s_client.read_namespaced_secret(name=secret_name, namespace=secret_namespace, pretty=False)
 
     # generate command
     if tuple_type == TRAINTUPLE_TYPE:

@@ -17,6 +17,12 @@ from datetime import timedelta
 from libs.gen_secret_key import write_secret_key
 
 
+K8S_SECRETS_FOR_TRAINING_TASKS_ENABLED = False
+K8S_HOST= ""
+K8S_ACCESS_TOKEN = ""
+K8S_VERIFY_SSL = False
+K8S_SSL_CA_CERT = ""
+
 TRUE_VALUES = {
     't', 'T',
     'y', 'Y', 'yes', 'YES',
@@ -201,4 +207,3 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
-

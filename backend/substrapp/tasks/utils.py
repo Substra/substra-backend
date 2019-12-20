@@ -9,6 +9,7 @@ from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, NodeError
 
+from kubernetes import client, config
 
 DOCKER_LABEL = 'substra_task'
 
@@ -339,3 +340,17 @@ class ResourcesManager():
                         gpu_set = gpu_sets_available.pop()
 
         return cpu_set, gpu_set
+
+
+
+def get_k8s_client():
+    configuration = client.Configuration()
+    configuration.host = getattr(settings, 'K8S_HOST')
+    configuration.api_key = {"authorization": "Bearer " + getattr(settings, 'K8S_ACCESS_TOKEN')}
+    configuration.verify_ssl = getattr(settings, 'K8S_VERIFY_SSL')
+
+    if getattr(settings, 'K8S_VERIFY_SSL'):
+        # TODO: handle read cert file or check in which format this could be shared
+        configuration.ssl_ca_cert = getattr(settings, 'K8S_SSL_CA_CERT')
+
+    return client.ApiClient(c)
