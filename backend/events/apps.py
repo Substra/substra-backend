@@ -43,7 +43,7 @@ def tuple_get_worker(tuple_type, _tuple):
     return _tuple['dataset']['worker']
 
 
-def on_tuples(cc_event, block_number, tx_id, tx_status):
+def on_event(cc_event, block_number, tx_id, tx_status):
     payload = json.loads(cc_event['payload'])
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
@@ -162,7 +162,7 @@ def wait():
 
             channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                      'tuples-updated',
-                                                     onEvent=on_tuples)
+                                                     onEvent=on_event)
 
             loop.run_until_complete(stream)
 
