@@ -48,59 +48,66 @@ def on_tuples(cc_event, block_number, tx_id, tx_status):
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
 
-    for tuple_type, _tuples in payload.items():
+    for key, items in payload.items():
 
-        if tuple_type not in ['traintuple', 'compositeTraintuple', 'aggregatetuple']:
+        if not items:
             continue
 
-        if not _tuples:
-            continue
+        if key in ['traintuple', 'compositeTraintuple', 'aggregatetuple']:
+            tuple_type = key
+            for tuple in items:
+                handle_tuple(owner, worker_queue, tx_status, tuple_type, tuple)
 
-        for _tuple in _tuples:
-            key = _tuple['key']
-            status = _tuple['status']
+        elif key == 'computePlan':
+            for cp in items:
+                handle_compute_plan(owner, worker_queue, tx_status, cp)
 
-            if tx_status != 'VALID':
-                logger.error(
-                    f'Failed transaction on task {key}: type={tuple_type}'
-                    f' status={status} with tx status: {tx_status}')
-                continue
-            logger.info(f'Processing task {key}: type={tuple_type} status={status}')
-
-            if status != 'todo':
-                continue
-
-            if tuple_type is None:
-                continue
-
-            tuple_owner = tuple_get_worker(tuple_type, _tuple)
-            if tuple_owner != owner:
-                logger.debug(f'Skipping task {key}: owner does not match'
-                             f' ({tuple_owner} vs {owner})')
-                continue
-
-            if AsyncResult(key).state != 'PENDING':
-                logger.info(f'Skipping task {key}: already exists')
-                continue
-
-            prepare_tuple.apply_async(
-                (_tuple, tuple_type),
-                task_id=key,
-                queue=worker_queue
-            )
-
-        if 'computePlan' in payload:
-            handle_compute_plan_events(payload['computePlan'])
+        else:
+            logger.error(f'Unkown key in event: {key}. Value is {items}. '
+                         f'Tx id: {tx_id}. Tx status: {tx_status}')
 
 
-def handle_compute_plan_events(cps):
-    for cp in cps:
-        handle_compute_plan_event(cp)
+def handle_tuple(owner, worker_queue, tuple_type, tx_status, _tuple):
+    key = _tuple['key']
+    status = _tuple['status']
+
+    if tx_status != 'VALID':
+        logger.error(
+            f'Failed transaction on task {key}: type={tuple_type}'
+            f' status={status} with tx status: {tx_status}')
+        return
+
+    logger.info(f'Processing task {key}: type={tuple_type} status={status}')
+
+    if status != 'todo':
+        return
+
+    tuple_owner = tuple_get_worker(tuple_type, _tuple)
+    if tuple_owner != owner:
+        logger.debug(f'Skipping task {key}: owner does not match'
+                     f' ({tuple_owner} vs {owner})')
+        return
+
+    if AsyncResult(key).state != 'PENDING':
+        logger.info(f'Skipping task {key}: already exists')
+        return
+
+    prepare_tuple.apply_async(
+        (_tuple, tuple_type),
+        task_id=key,
+        queue=worker_queue
+    )
 
 
-def handle_compute_plan_event(cp):
+def handle_compute_plan(owner, worker_queue, tx_status, cp):
     id_ = cp['computePlanID']
     status = cp['status']
+
+    if tx_status != 'VALID':
+        logger.error(
+            f'Failed transaction on compute plan {id}:'
+            f' status={status} with tx status: {tx_status}')
+        return
 
     logger.info(f'Processing compute plan {id_} status={status}')
 
