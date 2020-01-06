@@ -6,7 +6,7 @@ from rest_framework.authentication import BasicAuthentication, TokenAuthenticati
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from libs.sessionAuthentication import CustomSessionAuthentication
+from libs.session_authentication import CustomSessionAuthentication
 from node.authentication import NodeUser
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
