@@ -82,7 +82,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
+        with mock.patch('substrapp.ledger.create_datasamples') as mcreate_ledger_assets:
             mcreate_ledger_assets.return_value = {
                 'pkhash': pkhash,
                 'validated': True
@@ -118,7 +118,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
+        with mock.patch('substrapp.ledger.create_datasamples') as mcreate_ledger_assets:
             self.data_file.seek(0)
             self.data_file_2.seek(0)
             ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': True}
@@ -148,7 +148,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.ledger.datasample.util.create_ledger_assets') as mcreate_ledger_assets:
+        with mock.patch('substrapp.ledger.create_datasamples') as mcreate_ledger_assets:
             mcreate_ledger_assets.return_value = ''
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -501,7 +501,7 @@ class DataSampleQueryTests(APITestCase):
         }
 
         with mock.patch(
-                'substrapp.serializers.ledger.datasample.util.invoke_ledger') as minvoke_ledger:
+                'substrapp.ledger.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {'keys': [
                 d.pkhash]}
 

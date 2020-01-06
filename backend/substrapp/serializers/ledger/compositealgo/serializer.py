@@ -3,10 +3,9 @@ from rest_framework import serializers
 from django.conf import settings
 from rest_framework.reverse import reverse
 
+from substrapp import ledger
 from substrapp.utils import get_hash
 from substrapp.serializers.ledger.utils import PermissionsSerializer
-from .util import createLedgerCompositeAlgo
-from .tasks import createLedgerCompositeAlgoAsync
 
 
 class LedgerCompositeAlgoSerializer(serializers.Serializer):
@@ -33,15 +32,4 @@ class LedgerCompositeAlgoSerializer(serializers.Serializer):
                 'authorizedIDs': permissions.get('authorized_ids'),
             }}
         }
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data = createLedgerCompositeAlgo(args, instance.pkhash, sync=True)
-        else:
-            # use a celery task, as we are in an http request transaction
-            createLedgerCompositeAlgoAsync.delay(args, instance.pkhash)
-            data = {
-                'message': 'CompositeAlgo added in local db waiting for validation. '
-                           'The substra network has been notified for adding this CompositeAlgo'
-            }
-
-        return data
+        return ledger.create_compositealgo(args, instance.pkhash)

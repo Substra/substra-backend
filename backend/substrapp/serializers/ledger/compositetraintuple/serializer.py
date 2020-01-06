@@ -1,10 +1,6 @@
 from rest_framework import serializers
 
-from django.conf import settings
-
-from .util import createLedgerCompositeTraintuple
-from .tasks import createLedgerCompositeTraintupleAsync
-
+from substrapp import ledger
 from substrapp.serializers.ledger.utils import PermissionsSerializer
 
 
@@ -51,16 +47,4 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
 
     def create(self, validated_data):
         args = self.get_args(validated_data)
-
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-            data = createLedgerCompositeTraintuple(args, sync=True)
-        else:
-            # use a celery task, as we are in an http request transaction
-            createLedgerCompositeTraintupleAsync.delay(args)
-            data = {
-                'message': 'The substra network has been notified for adding this CompositeTraintuple. '
-                           'Please be aware you won\'t get return values from the ledger.'
-                           'You will need to check manually'
-            }
-
-        return data
+        return ledger.create_compositetraintuple(args)
