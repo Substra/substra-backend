@@ -1,6 +1,6 @@
 from django.db import models
 
-from libs.timestampModel import TimeStamped
+from libs.timestamp_model import TimeStamped
 from substrapp.utils import get_hash
 
 

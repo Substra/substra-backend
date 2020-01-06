@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.core.exceptions import ValidationError
-from libs.maximumLengthValidator import MaximumLengthValidator
-from libs.zxcvbnValidator import ZxcvbnValidator
+from libs.maximum_length_validator import MaximumLengthValidator
+from libs.zxcvbn_validator import ZxcvbnValidator
 
 
 class PasswordValidationTests(TestCase):

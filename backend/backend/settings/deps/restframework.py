@@ -10,8 +10,8 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'users.authentication.SecureJWTAuthentication',  # for front/sdk/cli
-        'libs.expiryTokenAuthentication.ExpiryTokenAuthentication',  # for front/sdk/cli
-        'libs.sessionAuthentication.CustomSessionAuthentication',  # for web browsable api
+        'libs.expiry_token_authentication.ExpiryTokenAuthentication',  # for front/sdk/cli
+        'libs.session_authentication.CustomSessionAuthentication',  # for web browsable api
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',

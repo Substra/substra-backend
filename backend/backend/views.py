@@ -11,7 +11,7 @@ from rest_framework.response import Response
 
 from django.conf.urls import url, include
 
-from libs.expiryTokenAuthentication import token_expire_handler, expires_at
+from libs.expiry_token_authentication import token_expire_handler, expires_at
 from substrapp.urls import router
 
 from requests.compat import urlparse

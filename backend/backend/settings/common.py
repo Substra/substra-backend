@@ -95,8 +95,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'libs.SQLPrintingMiddleware.SQLPrintingMiddleware',
-    'libs.HealthCheckMiddleware.HealthCheckMiddleware',
+    'libs.sql_printing_middleware.SQLPrintingMiddleware',
+    'libs.health_check_middleware.HealthCheckMiddleware',
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -134,7 +134,7 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'libs.zxcvbnValidator.ZxcvbnValidator',
+        'NAME': 'libs.zxcvbn_validator.ZxcvbnValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -146,7 +146,7 @@ AUTH_PASSWORD_VALIDATORS = [
         }
     },
     {
-        'NAME': 'libs.maximumLengthValidator.MaximumLengthValidator',
+        'NAME': 'libs.maximum_length_validator.MaximumLengthValidator',
         'OPTIONS': {
             'max_length': 64
         }
