@@ -72,6 +72,8 @@ spec:
         volumeMounts:
           - name: data
             mountPath: {{ .Values.persistence.hostPath }}
+          - name: statics
+            mountPath: /usr/src/app/backend/statics
           - name: config
             mountPath: /conf/{{ .Values.organization.name }}/substra-backend
             readOnly: true
@@ -137,11 +139,16 @@ spec:
             value: backend.settings.{{ .Values.backend.settings }}
           - name: BACKEND_ORG
             value: {{ .Values.organization.name }}
+        volumeMounts:
+          - name: statics
+            mountPath: /usr/src/app/backend/statics
       {{- end }}
       volumes:
       - name: data
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" . }}
+      - name: statics
+        emptyDir: {}
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
