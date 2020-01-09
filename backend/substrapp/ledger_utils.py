@@ -70,6 +70,10 @@ class LedgerMVCCError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
+class LedgerUnavailable(LedgerError):
+    status = status.HTTP_503_SERVICE_UNAVAILABLE
+
+
 class LedgerBadResponse(LedgerResponseError):
     pass
 
@@ -88,7 +92,7 @@ STATUS_TO_EXCEPTION = {
 
 def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
     exceptions = exceptions or []
-    exceptions_to_retry = [LedgerMVCCError, LedgerBadResponse, RpcError]
+    exceptions_to_retry = [LedgerMVCCError, LedgerBadResponse, RpcError, LedgerUnavailable]
     exceptions_to_retry.extend(exceptions)
     exceptions_to_retry = tuple(exceptions_to_retry)
 
@@ -170,6 +174,9 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except Exception as e:
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+
+            if hasattr(e, 'details') and 'failed to connect to all addresses' in e.details():
+                raise LedgerUnavailable(f'Failed to connect to all addresses for {(fcn, args)}')
 
             for arg in e.args:
                 if 'MVCC_READ_CONFLICT' in arg:
