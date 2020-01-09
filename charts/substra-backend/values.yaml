@@ -16,6 +16,7 @@ backend:
   settings: prod
   siteHost: localhost
   defaultDomain: localhost
+  chainkeysForTraining: false
 
   image:
     repository: substrafoundation/substra-backend
