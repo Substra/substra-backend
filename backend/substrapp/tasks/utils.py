@@ -343,7 +343,6 @@ class ResourcesManager():
         return cpu_set, gpu_set
 
 
-
 def get_k8s_client():
     config.load_incluster_config()
     return client.CoreV1Api()

@@ -9,6 +9,7 @@ from multiprocessing.managers import BaseManager
 import logging
 
 import docker
+from kubernetes.client.rest import ApiException
 from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -625,7 +626,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-
     if os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False):
         label_selector = f"compute_plan_index={subtuple['tag']}"
         secrets = []
@@ -645,7 +645,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 file.write(str(secrets))
 
         volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
-
 
     # Environment current node index
     node_index = os.getenv('NODE_INDEX', None)
@@ -802,15 +801,10 @@ def get_volume_id(compute_plan_id, prefix='local'):
     return f'{prefix}-{compute_plan_id}-{org_name}'
 
 
-
 def get_subtuple_directory(subtuple):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
 
+
 def get_chainkeys_directory(compute_plan_id):
-    return path.join(
-        getattr(settings, 'MEDIA_ROOT'),
-        getattr(settings, 'ORG_NAME'),
-        'computeplan',
-        compute_plan_id,
-        'chainkeys',
-    )
+    return path.join(getattr(settings, 'MEDIA_ROOT'), getattr(settings, 'ORG_NAME'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
