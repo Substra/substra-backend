@@ -17,12 +17,6 @@ from datetime import timedelta
 from libs.gen_secret_key import write_secret_key
 
 
-K8S_SECRETS_FOR_TRAINING_TASKS_ENABLED = False
-K8S_HOST= ""
-K8S_ACCESS_TOKEN = ""
-K8S_VERIFY_SSL = False
-K8S_SSL_CA_CERT = ""
-
 TRUE_VALUES = {
     't', 'T',
     'y', 'Y', 'yes', 'YES',

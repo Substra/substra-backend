@@ -597,6 +597,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     output_trunk_model_filename = 'trunk_model'
 
     remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
+    environment = []
 
     # VOLUMES
 
@@ -624,18 +625,34 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-    if getattr(settings, 'K8S_SECRETS_FOR_TRAINING_TASKS_ENABLED'):
-        volume_id = # compute_plan_tag
+    if is_chainkeys_for_training_enabled():
+        label_selector = f"compute_plan_index={subtuple['tag']}"
+        secrets = []
+
+        k8s_client = get_k8s_client()
         try:
-            client.volumes.get(volume_id=volume_id)
-        except docker.errors.NotFound:
-            client.volumes.create(name=volume_id)
+            secrets = k8s_client.list_namespaced_secret(NAMESPACE, label_selector=label_selector)
+        except ApiException as e:
+            logging.error(f'failed to fetch namespaced secrets {NAMESPACE} with selector {label_selector}')
+            raise e
 
-            secret_name = ""
-            secret_namespace = ""
+        if len(secrets) :
+            chainkeys_directory = get_chainkeys_directory()
 
-            k8s_client = get_k8s_client()
-            k8s_client.read_namespaced_secret(name=secret_name, namespace=secret_namespace, pretty=False)
+            with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as file:
+                if os.stat(file).st_size == 0:
+                    # write only if chainkeys is empty otherwise each task will earse the shared chainkeys
+                    file.write(str(secrets))
+
+            volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+
+
+    # Environment current node index
+    node_index = os.getenv('NODE_INDEX', None)
+    if node_index:
+        environment = {
+            "NODE_INDEX": node_index
+        }
 
     # generate command
     if tuple_type == TRAINTUPLE_TYPE:
@@ -705,7 +722,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command=command,
         remove_image=remove_image,
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
+        capture_logs=settings.TASK['CAPTURE_LOGS'],
+        environment=environment
     )
 
     # save model in database
@@ -754,7 +772,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command=None,
         remove_image=remove_image,
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
+        capture_logs=settings.TASK['CAPTURE_LOGS'],
+        environment=environment
     )
 
     # load performance
@@ -778,10 +797,20 @@ def save_model(subtuple_directory, subtuple_key, filename='model'):
     return end_model_file, end_model_file_hash
 
 
-def get_volume_id(compute_plan_id):
+def get_volume_id(compute_plan_id, prefix='local'):
     org_name = getattr(settings, 'ORG_NAME')
-    return f'local-{compute_plan_id}-{org_name}'
+    return f'{prefix}-{compute_plan_id}-{org_name}'
+
 
 
 def get_subtuple_directory(subtuple):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+
+def get_chainkeys_directory(compute_plan_id):
+    return path.join(
+        getattr(settings, 'MEDIA_ROOT'),
+        getattr(settings, 'ORG_NAME'),
+        'computeplan',
+        compute_plan_id,
+        'chainkeys',
+    )

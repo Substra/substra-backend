@@ -198,7 +198,7 @@ def list_files(startpath):
 
 
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
-                   remove_image=True, remove_container=True, capture_logs=True):
+                   environment, remove_image=True, remove_container=True, capture_logs=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
@@ -237,11 +237,12 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         'network_disabled': True,
         'network_mode': 'none',
         'privileged': False,
-        'cap_drop': ['ALL']
+        'cap_drop': ['ALL'],
+        'environment': environment
     }
 
     if gpu_set is not None:
-        task_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+        task_args['environment'].append({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 
     try:
@@ -344,13 +345,9 @@ class ResourcesManager():
 
 
 def get_k8s_client():
-    configuration = client.Configuration()
-    configuration.host = getattr(settings, 'K8S_HOST')
-    configuration.api_key = {"authorization": "Bearer " + getattr(settings, 'K8S_ACCESS_TOKEN')}
-    configuration.verify_ssl = getattr(settings, 'K8S_VERIFY_SSL')
+    config.load_incluster_config()
+    return client.CoreV1Api()
 
-    if getattr(settings, 'K8S_VERIFY_SSL'):
-        # TODO: handle read cert file or check in which format this could be shared
-        configuration.ssl_ca_cert = getattr(settings, 'K8S_SSL_CA_CERT')
 
-    return client.ApiClient(c)
+def is_chainkeys_for_training_enabled():
+    return os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False)
