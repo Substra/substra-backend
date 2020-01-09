@@ -632,9 +632,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
         k8s_client = get_k8s_client()
         try:
-            secrets = k8s_client.list_namespaced_secret(NAMESPACE, label_selector=label_selector)
+            secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
+            secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
         except ApiException as e:
-            logging.error(f'failed to fetch namespaced secrets {NAMESPACE} with selector {label_selector}')
+            logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
             raise e
 
         chainkeys_directory = get_chainkeys_directory()
