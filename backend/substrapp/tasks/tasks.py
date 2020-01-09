@@ -627,7 +627,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
     if os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False):
-        label_selector = f"compute_plan_index={subtuple['tag']}"
+        label_selector = f"compute_plan={subtuple['tag']}"
         secrets = []
 
         k8s_client = get_k8s_client()
