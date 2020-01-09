@@ -347,7 +347,3 @@ class ResourcesManager():
 def get_k8s_client():
     config.load_incluster_config()
     return client.CoreV1Api()
-
-
-def is_chainkeys_for_training_enabled():
-    return os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False)

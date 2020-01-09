@@ -625,7 +625,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-    if is_chainkeys_for_training_enabled():
+
+    if os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False):
         label_selector = f"compute_plan_index={subtuple['tag']}"
         secrets = []
 
@@ -636,15 +637,13 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             logging.error(f'failed to fetch namespaced secrets {NAMESPACE} with selector {label_selector}')
             raise e
 
-        if len(secrets) :
-            chainkeys_directory = get_chainkeys_directory()
-
+        chainkeys_directory = get_chainkeys_directory()
+        if not os.path.exists(chainkeys_directory):
+            os.mkdir(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as file:
-                if os.stat(file).st_size == 0:
-                    # write only if chainkeys is empty otherwise each task will earse the shared chainkeys
-                    file.write(str(secrets))
+                file.write(str(secrets))
 
-            volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+        volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
 
 
     # Environment current node index
