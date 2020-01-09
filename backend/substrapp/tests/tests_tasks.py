@@ -337,7 +337,7 @@ class TasksTests(APITestCase):
         hash_docker = uuid.uuid4().hex
         compute_docker(client, self.ResourcesManager,
                        self.subtuple_path, 'test_compute_docker_' + hash_docker,
-                       'test_compute_docker_name_' + hash_docker, None, None)
+                       'test_compute_docker_name_' + hash_docker, None, None, environment=[])
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
