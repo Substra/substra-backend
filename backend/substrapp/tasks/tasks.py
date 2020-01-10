@@ -598,7 +598,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     output_trunk_model_filename = 'trunk_model'
 
     remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
-    environment = []
+    environment = {}
 
     # VOLUMES
 
@@ -641,17 +641,15 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         chainkeys_directory = get_chainkeys_directory()
         if not os.path.exists(chainkeys_directory):
             os.mkdirs(chainkeys_directory)
-            with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as file:
-                file.write(str(secrets))
+            with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
+                json.dump(f, secrets)
 
         volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
 
     # Environment current node index
-    node_index = os.getenv('NODE_INDEX', None)
+    node_index = os.getenv('NODE_INDEX')
     if node_index:
-        environment = {
-            "NODE_INDEX": node_index
-        }
+        environment["NODE_INDEX"] = node_index
 
     # generate command
     if tuple_type == TRAINTUPLE_TYPE:

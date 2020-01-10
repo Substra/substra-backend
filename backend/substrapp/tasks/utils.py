@@ -242,7 +242,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     }
 
     if gpu_set is not None:
-        task_args['environment'].append({'NVIDIA_VISIBLE_DEVICES': gpu_set})
+        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 
     try:
