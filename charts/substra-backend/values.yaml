@@ -198,6 +198,6 @@ celeryworker:
 
   affinity: {}
 
-extraEnv:
+extraEnv: []
   # - name: ENV_VARIABLE
   #   value: false
