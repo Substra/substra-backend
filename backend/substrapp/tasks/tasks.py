@@ -626,20 +626,20 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-    if settings.TASK['CHAINKEYS_ENABLED']:
-        label_selector = f"compute_plan={subtuple['tag']}"
-        secrets = []
+    if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
+        chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
-        k8s_client = get_k8s_client()
-        try:
-            secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
-        except ApiException as e:
-            logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
-            raise e
-
-        chainkeys_directory = get_chainkeys_directory()
         if not os.path.exists(chainkeys_directory):
+            secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
+            label_selector = f"compute_plan={subtuple.get('tag')}"
+
+            k8s_client = get_k8s_client()
+            try:
+                secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
+            except ApiException as e:
+                logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
+                raise e
+
             os.mkdirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
                 json.dump(f, secrets)
