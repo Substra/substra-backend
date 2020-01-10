@@ -65,12 +65,9 @@ spec:
             value: {{ .Values.persistence.hostPath }}/medias/
           - name: PYTHONUNBUFFERED
             value: "1"
-          - name: CHAINKEYS_FOR_TRAINING_TASKS_ENABLED
-            value: {{ .Values.backend.chainkeysForTraining }}
-          - name: K8S_SECRET_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
+        {{- with .Values.extraEnv }}
+{{ toYaml . | indent 10 }}
+        {{- end }}
         ports:
           - name: http
             containerPort: {{ .Values.backend.service.port }}

@@ -16,7 +16,6 @@ backend:
   settings: prod
   siteHost: localhost
   defaultDomain: localhost
-  chainkeysForTraining: false
 
   image:
     repository: substrafoundation/substra-backend
@@ -198,3 +197,13 @@ celeryworker:
   tolerations: []
 
   affinity: {}
+
+extraEnv:
+  - name: CHAINKEYS_FOR_TRAINING_TASKS_ENABLED
+    value: False
+  - name: NODE_INDEX
+    value: 1
+  - name: K8S_SECRET_NAMESPACE
+    valueFrom:
+      fieldRef:
+        fieldPath: metadata.namespace
