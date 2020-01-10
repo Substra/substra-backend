@@ -640,7 +640,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
         chainkeys_directory = get_chainkeys_directory()
         if not os.path.exists(chainkeys_directory):
-            os.mkdir(chainkeys_directory)
+            os.mkdirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as file:
                 file.write(str(secrets))
 
