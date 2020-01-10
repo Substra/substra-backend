@@ -197,3 +197,7 @@ celeryworker:
   tolerations: []
 
   affinity: {}
+
+extraEnv: []
+  # - name: ENV_VARIABLE
+  #   value: false
