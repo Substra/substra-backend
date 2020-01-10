@@ -626,7 +626,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
 
-    if os.getenv('CHAINKEYS_FOR_TRAINING_TASKS_ENABLED', False):
+    if settings.TASK['CHAINKEYS_ENABLED']:
         label_selector = f"compute_plan={subtuple['tag']}"
         secrets = []
 
