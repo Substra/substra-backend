@@ -640,7 +640,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
 
-            os.mkdirs(chainkeys_directory)
+            os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
                 json.dump(f, secrets)
 
