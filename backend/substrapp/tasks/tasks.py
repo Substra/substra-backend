@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+from base64 import b64decode
 import os
 import shutil
 import tempfile
@@ -640,9 +641,19 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
 
+            secrets = [{'name': s['metadata']['name'], 'data': int.from_bytes(b64decode(s['data']['key']), 'big')}
+                       for s in secrets.to_dict()['items']]
+
             os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
                 json.dump(f, secrets)
+
+            for secret in secrets:
+                try:
+                    k8s_client.delete_namespaced_secret(secret['name'], secret_namespace)
+                except ApiException as e:
+                    logging.error(f'failed to delete secrets from namespace {secret_namespace}')
+                    raise e
 
         volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
 
