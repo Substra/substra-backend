@@ -641,7 +641,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
 
-            secrets = [{'name': s['metadata']['name'], 'data': int.from_bytes(b64decode(s['data']['key']), 'big')}
+            secrets = [{s['metadata']['name']: int.from_bytes(b64decode(s['data']['key']), 'big')}
                        for s in secrets.to_dict()['items']]
 
             os.makedirs(chainkeys_directory)
