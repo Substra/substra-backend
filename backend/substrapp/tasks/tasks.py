@@ -650,7 +650,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
             for secret in secrets:
                 try:
-                    k8s_client.delete_namespaced_secret(secret['name'], secret_namespace)
+                    k8s_client.delete_namespaced_secret(secret['metadata']['name'], secret_namespace)
                 except ApiException as e:
                     logging.error(f'failed to delete secrets from namespace {secret_namespace}')
                     raise e
