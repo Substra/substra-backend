@@ -239,7 +239,7 @@ def query_ledger(fcn, args=None):
     return call_ledger('query', fcn=fcn, args=args)
 
 
-@retry_on_error(exceptions=[LedgerTimeout])
+@retry_on_error()
 def invoke_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
 
