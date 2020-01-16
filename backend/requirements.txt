@@ -16,6 +16,7 @@ GPUtil == 1.4.0
 hkdf >= 0.0.3
 ipython==6.4.0
 ipython-genutils==0.2.0
+kubernetes==10.0.1
 mock==2.0.0
 psycopg2-binary==2.7.4
 protobuf == 3.6.0

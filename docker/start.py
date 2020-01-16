@@ -158,6 +158,7 @@ def generate_docker_compose_file(conf, launch_settings):
             f"TASK_CAPTURE_LOGS=True",
             f"TASK_CLEAN_EXECUTION_ENVIRONMENT=True",
             f"TASK_CACHE_DOCKER_IMAGES=False",
+            f"TASK_CHAINKEYS_ENABLED=False",
 
             f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
         ]

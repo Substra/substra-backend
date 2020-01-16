@@ -9,6 +9,7 @@ from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, NodeError
 
+from kubernetes import client, config
 
 DOCKER_LABEL = 'substra_task'
 
@@ -197,7 +198,7 @@ def list_files(startpath):
 
 
 def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
-                   remove_image=True, remove_container=True, capture_logs=True):
+                   environment, remove_image=True, remove_container=True, capture_logs=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
@@ -236,11 +237,12 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         'network_disabled': True,
         'network_mode': 'none',
         'privileged': False,
-        'cap_drop': ['ALL']
+        'cap_drop': ['ALL'],
+        'environment': environment
     }
 
     if gpu_set is not None:
-        task_args['environment'] = {'NVIDIA_VISIBLE_DEVICES': gpu_set}
+        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 
     try:
@@ -339,3 +341,8 @@ class ResourcesManager():
                         gpu_set = gpu_sets_available.pop()
 
         return cpu_set, gpu_set
+
+
+def get_k8s_client():
+    config.load_incluster_config()
+    return client.CoreV1Api()

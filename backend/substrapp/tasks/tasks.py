@@ -1,5 +1,6 @@
 from __future__ import absolute_import, unicode_literals
 
+from base64 import b64decode
 import os
 import shutil
 import tempfile
@@ -9,6 +10,7 @@ from multiprocessing.managers import BaseManager
 import logging
 
 import docker
+from kubernetes.client.rest import ApiException
 from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -21,9 +23,8 @@ from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files
+from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
 from substrapp.tasks.exception_handler import compute_error_code
-
 
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
@@ -598,6 +599,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     output_trunk_model_filename = 'trunk_model'
 
     remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
+    environment = {}
 
     # VOLUMES
 
@@ -624,6 +626,41 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         except docker.errors.NotFound:
             client.volumes.create(name=volume_id)
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
+
+    if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
+        chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+
+        if not os.path.exists(chainkeys_directory):
+            secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
+            label_selector = f"compute_plan={subtuple.get('tag')}"
+
+            k8s_client = get_k8s_client()
+            try:
+                secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
+            except ApiException as e:
+                logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
+                raise e
+
+            secrets = {s['metadata']['name']: int.from_bytes(b64decode(s['data']['key']), 'big')
+                       for s in secrets.to_dict()['items']}
+
+            os.makedirs(chainkeys_directory)
+            with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
+                json.dump(f, secrets)
+
+            for secret_name in secrets.keys():
+                try:
+                    k8s_client.delete_namespaced_secret(secret_name, secret_namespace)
+                except ApiException as e:
+                    logging.error(f'failed to delete secrets from namespace {secret_namespace}')
+                    raise e
+
+        volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+
+    # Environment current node index
+    node_index = os.getenv('NODE_INDEX')
+    if node_index:
+        environment["NODE_INDEX"] = node_index
 
     # generate command
     if tuple_type == TRAINTUPLE_TYPE:
@@ -693,7 +730,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command=command,
         remove_image=remove_image,
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
+        capture_logs=settings.TASK['CAPTURE_LOGS'],
+        environment=environment
     )
 
     # save model in database
@@ -742,7 +780,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         command=None,
         remove_image=remove_image,
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS']
+        capture_logs=settings.TASK['CAPTURE_LOGS'],
+        environment=environment
     )
 
     # load performance
@@ -766,10 +805,15 @@ def save_model(subtuple_directory, subtuple_key, filename='model'):
     return end_model_file, end_model_file_hash
 
 
-def get_volume_id(compute_plan_id):
+def get_volume_id(compute_plan_id, prefix='local'):
     org_name = getattr(settings, 'ORG_NAME')
-    return f'local-{compute_plan_id}-{org_name}'
+    return f'{prefix}-{compute_plan_id}-{org_name}'
 
 
 def get_subtuple_directory(subtuple):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
+
+
+def get_chainkeys_directory(compute_plan_id):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), getattr(settings, 'ORG_NAME'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
