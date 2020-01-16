@@ -91,9 +91,9 @@ class UserViewSet(GenericViewSet):
         access_expires = access_token.current_time + access_token.lifetime
         refresh_expires = refresh_token.current_time + refresh_token.lifetime
 
-        accessTokenString = str(access_token)
-        headerPayload = '.'.join(accessTokenString.split('.')[0:2])
-        signature = accessTokenString.split('.')[2]
+        access_token_string = str(access_token)
+        headerPayload = '.'.join(access_token_string.split('.')[0:2])
+        signature = access_token_string.split('.')[2]
 
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
