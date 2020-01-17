@@ -24,10 +24,6 @@ class LedgerError(Exception):
         return self.msg
 
 
-class LedgerTimeoutNotHandled(LedgerError):
-    pass
-
-
 class LedgerResponseError(LedgerError):
 
     @classmethod
@@ -244,7 +240,7 @@ def invoke_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
 
 
-@retry_on_error()
+@retry_on_error(exceptions=[LedgerTimeout])
 def update_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
 
@@ -265,37 +261,6 @@ def query_tuples(tuple_type, data_owner):
 
 def get_object_from_ledger(pk, query):
     return query_ledger(fcn=query, args={'key': pk})
-
-
-def _wait_until_status_after_timeout(tuple_type, tuple_key, expected_status):
-    query_fcns = {
-        'traintuple': 'queryTraintuple',
-        'testtuple': 'queryTesttuple',
-        'compositeTraintuple': 'queryCompositeTraintuple',
-        'aggregatetuple': 'queryAggregatetuple',
-    }
-    query_fcn = query_fcns[tuple_type]
-
-    max_tries = getattr(settings, 'LEDGER_MAX_RETRY_TIMEOUT', 5)
-    trie = 1
-    backoff = 5
-
-    while trie <= max_tries:
-        # sleep first as this is executed right after a request raising a timeout error
-        time.sleep(trie * backoff)
-
-        tuple_ = query_ledger(fcn=query_fcn, args={'key': tuple_key})
-        status = tuple_['status']
-        if status == expected_status:
-            return
-
-        logger.error(
-            f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status} (trie {trie})'
-        )
-        trie += 1
-
-    raise LedgerTimeoutNotHandled(
-        f'{tuple_type} {tuple_key} wrong status {status}: expecting {expected_status}')
 
 
 LOG_TUPLE_INVOKE_FCNS = {
@@ -336,10 +301,7 @@ def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
     if extra_kwargs:
         invoke_args.update(extra_kwargs)
 
-    try:
-        update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
-    except LedgerTimeout:
-        _wait_until_status_after_timeout(tuple_type, tuple_key, status)
+    update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
 def log_start_tuple(tuple_type, tuple_key):
