@@ -187,8 +187,9 @@ def generate_docker_compose_file(conf, launch_settings):
         if launch_settings == 'dev':
             fixtures_command = f"python manage.py init_nodes ./node/nodes/{org_name}MSP.json"
             # $ replace is needed for docker-compose $ special variable
-            user_command = f"python manage.py add_user {credentials['username']} "\
-                           f"'{credentials['password'].replace('$', '$$')}'"
+
+            password = credentials['password'].replace('$', '$$')
+            user_command = f"python manage.py add_user {credentials['username']} '{password}'"
 
         backend = {
             'container_name': f'substra-backend.{org_name_stripped}.xyz',
