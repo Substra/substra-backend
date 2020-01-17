@@ -29,8 +29,8 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             data = serializer.create(serializer.validated_data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
-        else:
-            return data
+
+        return data
 
     def _create(self, request):
         data = {
@@ -56,19 +56,18 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
-        else:
-            pkhash = data.get('key')
-            return self.commit(serializer, pkhash)
+
+        pkhash = data.get('key')
+        return self.commit(serializer, pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
             data = self._create(request)
         except LedgerException as e:
             return Response(e.data, status=e.st)
-        else:
-            headers = self.get_success_headers(data)
-            st = get_success_create_code()
-            return Response(data, status=st, headers=headers)
+        headers = self.get_success_headers(data)
+        st = get_success_create_code()
+        return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -107,7 +106,5 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             data = self._retrieve(pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(data, status=status.HTTP_200_OK)

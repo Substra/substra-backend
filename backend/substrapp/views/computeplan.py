@@ -57,10 +57,8 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             data = get_object_from_ledger(pk, 'queryComputePlan')
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         try:

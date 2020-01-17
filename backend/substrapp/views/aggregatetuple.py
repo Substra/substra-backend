@@ -105,7 +105,5 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
             data = self._retrieve(pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+
+        return Response(data, status=status.HTTP_200_OK)
