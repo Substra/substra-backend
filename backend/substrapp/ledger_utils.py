@@ -24,10 +24,6 @@ class LedgerError(Exception):
         return self.msg
 
 
-class LedgerTimeoutNotHandled(LedgerError):
-    pass
-
-
 class LedgerResponseError(LedgerError):
 
     @classmethod
