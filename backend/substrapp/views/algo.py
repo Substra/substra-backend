@@ -1,5 +1,4 @@
 import tempfile
-import logging
 
 from django.http import Http404
 from django.urls import reverse
@@ -187,11 +186,6 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     query_params=query_params)
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
-            except Exception as e:
-                logging.exception(e)
-                return Response(
-                    {'message': f'Malformed search filters {query_params}'},
-                    status=status.HTTP_400_BAD_REQUEST)
 
         for group in algos_list:
             for algo in group:

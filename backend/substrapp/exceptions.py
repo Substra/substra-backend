@@ -36,4 +36,4 @@ class _ApiError(Exception):
 
 class BadRequestError(_ApiError):
     status = drf.status.HTTP_400_BAD_REQUEST
-    message = "Bad request."""
+    message = "Bad request."

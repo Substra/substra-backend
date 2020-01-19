@@ -1,4 +1,3 @@
-import logging
 import re
 import tempfile
 
@@ -203,11 +202,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                     query_params=query_params)
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
-            except Exception as e:
-                logging.exception(e)
-                return Response(
-                    {'message': f'Malformed search filters {query_params}'},
-                    status=status.HTTP_400_BAD_REQUEST)
 
         for group in objectives_list:
             for objective in group:

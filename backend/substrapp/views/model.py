@@ -99,11 +99,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                     query_params=query_params)
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
-            except Exception as e:
-                logging.exception(e)
-                return Response(
-                    {'message': f'Malformed search filters {query_params}'},
-                    status=status.HTTP_400_BAD_REQUEST)
 
         return Response(models_list, status=status.HTTP_200_OK)
 
