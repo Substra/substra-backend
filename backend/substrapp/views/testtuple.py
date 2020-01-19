@@ -104,4 +104,5 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             data = self._retrieve(pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        return Response(data, status=status.HTTP_200_OK)
+        else:
+            return Response(data, status=status.HTTP_200_OK)

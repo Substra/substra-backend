@@ -131,10 +131,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
-
-        headers = self.get_success_headers(data)
-        st = get_success_create_code()
-        return Response(data, status=st, headers=headers)
+        else:
+            headers = self.get_success_headers(data)
+            st = get_success_create_code()
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, objective, pk):
         # get description from remote node
@@ -183,8 +183,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-
-        return Response(data, status=status.HTTP_200_OK)
+        else:
+            return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -229,8 +229,15 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def leaderboard(self, request, pk):
         sort = request.query_params.get('sort', 'desc')
 
-        validate_pk(pk)
-        validate_sort(sort)
+        try:
+            validate_pk(pk)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            validate_sort(sort)
+        except Exception as e:
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             leaderboard = query_ledger(fcn='queryObjectiveLeaderboard', args={

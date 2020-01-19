@@ -1,5 +1,5 @@
 from celery.result import AsyncResult
-from rest_framework import status
+import rest_framework as drf
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -11,8 +11,13 @@ class TaskViewSet(ViewSet):
 
         res = AsyncResult(pk)
 
+        try:
+            status = res.status
+        except AttributeError:
+            return Response({'message': 'Can\'t get task status'}, status=drf.status.HTTP_400_BAD_REQUEST)
+
         data = {
-            'status': res.status
+            'status': status
         }
 
         if not res.successful():
@@ -24,4 +29,4 @@ class TaskViewSet(ViewSet):
         else:
             data['result'] = res.result
 
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(data, status=drf.status.HTTP_200_OK)
