@@ -3,7 +3,7 @@ from django.test import TestCase
 from mock import patch
 from substrapp.tasks.utils import get_cpu_sets, get_gpu_sets
 
-from substrapp.ledger_utils import LedgerNotFound, LedgerBadResponse
+from substrapp.ledger_utils import LedgerNotFound, LedgerInvalidResponse
 
 from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
     log_success_tuple, query_tuples
@@ -47,8 +47,8 @@ class MiscTests(TestCase):
             self.assertRaises(LedgerNotFound, get_object_from_ledger, 'pk', 'fake_query')
 
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = LedgerBadResponse('Bad Response')
-            self.assertRaises(LedgerBadResponse, get_object_from_ledger, 'pk', 'fake_query')
+            mquery_ledger.side_effect = LedgerInvalidResponse('Bad Response')
+            self.assertRaises(LedgerInvalidResponse, get_object_from_ledger, 'pk', 'fake_query')
 
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = {'key': 'pk'}
