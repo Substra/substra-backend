@@ -6,6 +6,7 @@ from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
+from substrapp import exceptions
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
@@ -13,7 +14,6 @@ class TestTupleViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        GenericViewSet):
     serializer_class = LedgerTestTupleSerializer
-    ledger_query_call = 'queryTesttuple'
 
     def get_queryset(self):
         return []
@@ -85,17 +85,15 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         return Response(testtuple_list, status=status.HTTP_200_OK)
 
-    def _retrieve(self, pk):
-        validate_pk(pk)
-        return get_object_from_ledger(pk, self.ledger_query_call)
-
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
+        validate_pk(pk)
+
         try:
-            data = self._retrieve(pk)
+            data = get_object_from_ledger(pk, 'queryTesttuple')
         except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+            raise exceptions.from_ledger_error(e)
+
+        return Response(data, status=status.HTTP_200_OK)
