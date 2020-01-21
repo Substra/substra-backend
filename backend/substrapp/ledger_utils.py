@@ -28,7 +28,7 @@ class LedgerResponseError(LedgerError):
 
     @classmethod
     def from_response(cls, response):
-        return LedgerResponseError(response['error'])
+        return cls(response['error'])
 
 
 class LedgerConflict(LedgerResponseError):
@@ -47,7 +47,7 @@ class LedgerConflict(LedgerResponseError):
         pkhash = response.get('key')
         if not pkhash:
             return LedgerBadResponse(response['error'])
-        return LedgerConflict(response['error'], pkhash=pkhash)
+        return cls(response['error'], pkhash=pkhash)
 
 
 class LedgerTimeout(LedgerError):
