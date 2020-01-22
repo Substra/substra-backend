@@ -14,86 +14,108 @@ logger = logging.getLogger(__name__)
 
 
 class LedgerError(Exception):
-    status = status.HTTP_400_BAD_REQUEST
+    """Base error from ledger."""
+    # FIXME the base error status code should be 500, the chaincode is currently
+    #       responding with 500 status code for some 400 errors
+    status = status.HTTP_400_BAD_REQUEST  # status.HTTP_500_INTERNAL_SERVER_ERROR
 
     def __init__(self, msg):
-        super(LedgerError, self).__init__(msg)
+        super().__init__(msg)
         self.msg = msg
 
     def __repr__(self):
         return self.msg
 
-
-class LedgerResponseError(LedgerError):
-
     @classmethod
-    def from_response(cls, response):
-        return LedgerResponseError(response['error'])
+    def from_response_dict(cls, response):
+        return cls(response['error'])
 
 
-class LedgerConflict(LedgerResponseError):
+class LedgerStatusError(LedgerError):
+    """Could not update tuple status error."""
+    pass
 
-    status = status.HTTP_409_CONFLICT
 
-    def __init__(self, msg, pkhash):
-        super(LedgerConflict, self).__init__(msg)
-        self.pkhash = pkhash
-
-    def __repr__(self):
-        return self.msg
-
-    @classmethod
-    def from_response(cls, response):
-        pkhash = response.get('key')
-        if not pkhash:
-            return LedgerBadResponse(response['error'])
-        return LedgerConflict(response['error'], pkhash=pkhash)
+class LedgerInvalidResponse(LedgerError):
+    """Could not parse ledger response."""
+    pass
 
 
 class LedgerTimeout(LedgerError):
+    """Ledger does not respond in time."""
     status = status.HTTP_408_REQUEST_TIMEOUT
-
-
-class LedgerForbidden(LedgerResponseError):
-    status = status.HTTP_403_FORBIDDEN
-
-
-class LedgerNotFound(LedgerResponseError):
-    status = status.HTTP_404_NOT_FOUND
 
 
 class LedgerMVCCError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
-class LedgerUnavailable(LedgerError):
-    status = status.HTTP_503_SERVICE_UNAVAILABLE
-
-
 class LedgerPhantomReadConflictError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
-class LedgerBadResponse(LedgerResponseError):
-    pass
+class LedgerUnavailable(LedgerError):
+    """Ledger is not available."""
+    status = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
-class LedgerStatusError(LedgerError):
-    pass
+class LedgerBadRequest(LedgerError):
+    """Invalid request."""
+    status = status.HTTP_400_BAD_REQUEST
 
 
-STATUS_TO_EXCEPTION = {
-    status.HTTP_400_BAD_REQUEST: LedgerBadResponse,
+class LedgerConflict(LedgerError):
+    """Asset already exists."""
+    status = status.HTTP_409_CONFLICT
+
+    def __init__(self, msg, pkhash):
+        super().__init__(msg)
+        self.pkhash = pkhash
+
+    @classmethod
+    def from_response_dict(cls, response):
+        pkhash = response.get('key')
+        if not pkhash:
+            return LedgerError(response['error'])
+        return cls(response['error'], pkhash=pkhash)
+
+
+class LedgerNotFound(LedgerError):
+    """Asset not found."""
+    status = status.HTTP_404_NOT_FOUND
+
+
+class LedgerForbidden(LedgerError):
+    """Organisation is not allowed to perform the operation."""
+    status = status.HTTP_403_FORBIDDEN
+
+
+_STATUS_TO_EXCEPTION = {
+    status.HTTP_400_BAD_REQUEST: LedgerBadRequest,
     status.HTTP_403_FORBIDDEN: LedgerForbidden,
     status.HTTP_404_NOT_FOUND: LedgerNotFound,
     status.HTTP_409_CONFLICT: LedgerConflict,
 }
 
 
+def _raise_for_status(response):
+    """Parse ledger response and raise exceptions in case of errors."""
+    if not response or 'error' not in response:
+        return
+    status_code = response['status']
+    exception_class = _STATUS_TO_EXCEPTION.get(status_code, LedgerError)
+    raise exception_class.from_response_dict(response)
+
+
 def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
     exceptions = exceptions or []
-    exceptions_to_retry = [LedgerMVCCError, LedgerBadResponse, RpcError, LedgerUnavailable,
-                           LedgerPhantomReadConflictError]
+    exceptions_to_retry = [
+        LedgerMVCCError,
+        LedgerInvalidResponse,
+        RpcError,
+        LedgerUnavailable,
+        LedgerPhantomReadConflictError,
+    ]
     exceptions_to_retry.extend(exceptions)
     exceptions_to_retry = tuple(exceptions_to_retry)
 
@@ -173,6 +195,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         except TimeoutError as e:
             raise LedgerTimeout(str(e))
         except Exception as e:
+            # TODO add a method to parse properly the base Exception raised by the fabric-sdk-py
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
@@ -198,14 +221,14 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
             if 'cannot change status' in response:
+                # FIXME check if this is still required or if this is a leftover from
+                #       successive refactorings
                 raise LedgerStatusError(response)
             else:
-                raise LedgerBadResponse(response)
+                raise LedgerInvalidResponse(response)
 
-        if response and 'error' in response:
-            status_code = response['status']
-            exception_class = STATUS_TO_EXCEPTION.get(status_code, LedgerBadResponse)
-            raise exception_class.from_response(response)
+        # Raise errors if status is not ok
+        _raise_for_status(response)
 
         return response
 
