@@ -467,8 +467,10 @@ def prepare_tuple(subtuple, tuple_type):
 
 class ComputeTask(Task):
     def on_success(self, retval, task_id, args, kwargs):
-        tuple_type, subtuple, compute_plan_id = self.split_args(args)
+        from django.db import close_old_connections
+        close_old_connections()
 
+        tuple_type, subtuple, compute_plan_id = self.split_args(args)
         try:
             log_success_tuple(tuple_type, subtuple['key'], retval['result'])
         except LedgerError as e:
@@ -480,6 +482,8 @@ class ComputeTask(Task):
             logging.exception(e)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
+        from django.db import close_old_connections
+        close_old_connections()
         tuple_type, subtuple, compute_plan_id = self.split_args(args)
 
         try:
