@@ -1,5 +1,5 @@
 from celery.result import AsyncResult
-from rest_framework import status
+import rest_framework as drf
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
@@ -12,19 +12,21 @@ class TaskViewSet(ViewSet):
         res = AsyncResult(pk)
 
         try:
-            data = {
-                'status': res.status
-            }
-        except Exception:
-            return Response({'message': 'Can\'t get task status'}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            if not res.successful():
-                if res.status == 'PENDING':
-                    data['message'] = 'Task is either waiting, ' \
-                                      'does not exist in this context or has been removed after 24h'
-                else:
-                    data['message'] = res.traceback
-            else:
-                data['result'] = res.result
+            status = res.status
+        except AttributeError:
+            return Response({'message': 'Can\'t get task status'}, status=drf.status.HTTP_400_BAD_REQUEST)
 
-            return Response(data, status=status.HTTP_200_OK)
+        data = {
+            'status': status
+        }
+
+        if not res.successful():
+            if res.status == 'PENDING':
+                data['message'] = 'Task is either waiting, ' \
+                                  'does not exist in this context or has been removed after 24h'
+            else:
+                data['message'] = res.traceback
+        else:
+            data['result'] = res.result
+
+        return Response(data, status=drf.status.HTTP_200_OK)

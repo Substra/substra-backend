@@ -19,6 +19,8 @@ from wsgiref.util import is_hop_by_hop
 
 from users.authentication import SecureJWTAuthentication
 
+from substrapp import exceptions
+
 
 def authenticate_outgoing_request(outgoing_node_id):
     try:
@@ -150,17 +152,17 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
 
 def validate_pk(pk):
     if len(pk) != 64:
-        raise Exception(f'Wrong pk {pk}')
+        raise exceptions.BadRequestError(f'Wrong pk {pk}')
 
     try:
         int(pk, 16)  # test if pk is correct (hexadecimal)
     except ValueError:
-        raise Exception(f'Wrong pk {pk}')
+        raise exceptions.BadRequestError(f'Wrong pk {pk}')
 
 
 def validate_sort(sort):
     if sort not in ['asc', 'desc']:
-        raise Exception(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
+        raise exceptions.BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
 
 
 class LedgerException(Exception):

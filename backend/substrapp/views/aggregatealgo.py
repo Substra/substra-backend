@@ -1,5 +1,4 @@
 import tempfile
-import logging
 
 from django.http import Http404
 from django.urls import reverse
@@ -111,8 +110,6 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
@@ -167,8 +164,6 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             data = self._retrieve(request, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
-        except Exception as e:
-            return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
 
@@ -190,11 +185,6 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
                     query_params=query_params)
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
-            except Exception as e:
-                logging.exception(e)
-                return Response(
-                    {'message': f'Malformed search filters {query_params}'},
-                    status=status.HTTP_400_BAD_REQUEST)
 
         for group in aggregate_algos_list:
             for aggregate_algo in group:

@@ -1,6 +1,8 @@
+import logging
 from urllib.parse import unquote
 
 from substrapp.ledger_utils import query_ledger
+from substrapp import exceptions
 
 
 FILTER_QUERIES = {
@@ -96,8 +98,13 @@ def _get_model_tuple(model):
 
 
 def filter_list(object_type, data, query_params):
-
-    filters = get_filters(query_params)
+    try:
+        filters = get_filters(query_params)
+    except Exception:
+        # TODO add better filters parsing to avoid this catch all
+        message = f'Malformed search filters: invalid syntax: {query_params}'
+        logging.exception(message)
+        raise exceptions.BadRequestError(message)
 
     object_list = []
 
@@ -106,7 +113,8 @@ def filter_list(object_type, data, query_params):
         for filter_key, subfilters in user_filter.items():
 
             if filter_key not in AUTHORIZED_FILTERS[object_type]:
-                raise Exception(f'Not authorized filter key {filter_key} for asset {object_type}')
+                raise exceptions.BadRequestError(
+                    f'Malformed search filters: not authorized filter key {filter_key} for asset {object_type}')
 
             # Will be appended in object_list after been filtered
             filtered_list = data
