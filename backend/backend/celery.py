@@ -23,7 +23,7 @@ app.autodiscover_tasks()
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks.tasks import prepare_training_task, prepare_testing_task
 
-    period = 3 * 3600
+    period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
     sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler',
                              name='query Traintuples to prepare train task on todo traintuples')
     sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler',
