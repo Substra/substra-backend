@@ -591,13 +591,14 @@ def do_task(subtuple, tuple_type):
 
 def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name):
 
+    algo_hash = subtuple['algo']['hash']
     model_folder = '/sandbox/model'
     model_path = path.join(subtuple_directory, 'model')
     data_path = path.join(subtuple_directory, 'data')
     pred_path = path.join(subtuple_directory, 'pred')
     opener_file = path.join(subtuple_directory, 'opener/opener.py')
     algo_path = path.join(subtuple_directory)
-    algo_docker = f'substra/algo_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
+    algo_docker = f'substra/algo_{algo_hash[0:8]}'.lower()  # tag must be lowercase for docker
     algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
     output_head_model_filename = 'head_model'
     output_trunk_model_filename = 'trunk_model'
