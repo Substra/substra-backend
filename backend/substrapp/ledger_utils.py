@@ -239,7 +239,7 @@ def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True
     }
 
     if sync:
-        params['wait_for_event_timeout'] = 45
+        params['wait_for_event_timeout'] = settings.LEDGER_WAIT_FOR_EVENT_TIMEOUT
 
     if cc_pattern:
         params['cc_pattern'] = cc_pattern
