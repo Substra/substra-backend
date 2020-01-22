@@ -100,10 +100,11 @@ def _get_model_tuple(model):
 def filter_list(object_type, data, query_params):
     try:
         filters = get_filters(query_params)
-    except Exception as e:
+    except Exception:
         # TODO add better filters parsing to avoid this catch all
-        logging.exception(e)
-        raise exceptions.BadRequestError('Malformed search filters: invalid syntax')
+        message = f'Malformed search filters: invalid syntax: {query_params}'
+        logging.exception(message)
+        raise exceptions.BadRequestError(message)
 
     object_list = []
 
