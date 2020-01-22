@@ -87,3 +87,24 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['POST'])
+    def update_ledger(self, request, pk):
+        validate_pk(pk)
+
+        compute_plan_id = pk
+
+        serializer = self.get_serializer(data=dict(request.data))
+        serializer.is_valid(raise_exception=True)
+
+        # update compute plan in ledger
+        try:
+            data = serializer.update(compute_plan_id, serializer.validated_data)
+        except LedgerError as e:
+            error = {'message': str(e.msg), 'computePlanID': compute_plan_id}
+            return Response(error, status=e.status)
+
+        # send successful response
+        headers = self.get_success_headers(data)
+        status = get_success_create_code()
+        return Response(data, status=status, headers=headers)

@@ -142,3 +142,9 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     def create(self, validated_data):
         args = self.get_args(validated_data)
         return ledger.create_computeplan(args)
+
+    def update(self, compute_plan_id, validated_data):
+        args = self.get_args(validated_data)
+        del args['tag']
+        args['computePlanID'] = compute_plan_id
+        return ledger.update_computeplan(args)
