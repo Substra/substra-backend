@@ -23,6 +23,8 @@ LEDGER_CALL_RETRY = True
 
 LEDGER_MAX_RETRY_TIMEOUT = 5
 
+LEDGER_WAIT_FOR_EVENT_TIMEOUT = int(os.getenv('LEDGER_WAIT_FOR_EVENT_TIMEOUT', '45'))
+
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('BACKEND_PEER_PORT', 'external')]
 
 LEDGER['requestor'] = create_user(
