@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.decorators import action
 
-from substrapp.serializers import LedgerComputePlanSerializer
+from substrapp.serializers import LedgerAddComputePlanSerializer, LedgerUpdateComputePlanSerializer
 from substrapp.ledger_utils import invoke_ledger, query_ledger, LedgerError, get_object_from_ledger, LedgerConflict
 from substrapp.views.utils import get_success_create_code, validate_pk
 from substrapp.views.filters_utils import filter_list
@@ -12,7 +12,7 @@ from substrapp.views.filters_utils import filter_list
 class ComputePlanViewSet(mixins.CreateModelMixin,
                          GenericViewSet):
 
-    serializer_class = LedgerComputePlanSerializer
+    serializer_class = LedgerAddComputePlanSerializer
 
     def get_queryset(self):
         return []
@@ -87,3 +87,27 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)
+
+
+    @action(detail=True, methods=['POST'])
+    def update_ledger(self, request, pk):
+        validate_pk(pk)
+
+        data = {'compute_plan_id': pk}
+        data.update(dict(request.data))
+
+        serializer = LedgerUpdateComputePlanSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+
+        # update compute plan in ledger
+        compute_plan_id = serializer.validated_data.get('computePlanID')
+        try:
+            data = serializer.update(None, serializer.validated_data)
+        except LedgerError as e:
+            error = {'message': str(e.msg), 'computePlanID': compute_plan_id}
+            return Response(error, status=e.status)
+
+        # send successful response
+        headers = self.get_success_headers(data)
+        status = get_success_create_code()
+        return Response(data, status=status, headers=headers)

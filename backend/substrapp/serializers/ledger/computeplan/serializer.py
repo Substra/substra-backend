@@ -4,7 +4,7 @@ from substrapp import ledger
 from substrapp.serializers.ledger.utils import PermissionsSerializer
 
 
-class ComputePlanTraintupleSerializer(serializers.Serializer):
+class AddComputePlanTraintupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     train_data_sample_keys = serializers.ListField(
@@ -18,7 +18,14 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
 
-class ComputePlanTesttupleSerializer(serializers.Serializer):
+class UpdateComputePlanTraintupleSerializer(AddComputePlanTraintupleSerializer):
+    in_models_keys = serializers.ListField(
+        child=serializers.CharField(min_length=1, max_length=64),
+        min_length=0,
+        required=False)
+
+
+class AddComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
@@ -29,7 +36,23 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
 
-class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
+class UpdateComputePlanTesttupleSerializer(AddComputePlanTesttupleSerializer):
+    traintuple_id = serializers.CharField(min_length=1, max_length=64, required=False)
+    traintuple_key = serializers.CharField(min_length=1, max_length=64, required=False)
+
+    def validate(self, data):
+        data = super().validate(data)
+
+        if not data['traintuple_key'] and not data['traintuple_id']:
+            raise serializers.ValidationError('Missing value: one of traintuple_key and traintuple_id must be filled')
+
+        if data['traintuple_key'] and data['traintuple_id']:
+            raise serializers.ValidationError('Fields traintuple_key and traintuple_id are mutually exclusive')
+
+        return data
+
+
+class AddComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     train_data_sample_keys = serializers.ListField(
@@ -44,7 +67,23 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
 
-class ComputePlanAggregatetupleSerializer(serializers.Serializer):
+class UpdateComputePlanCompositeTrainTupleSerializer(AddComputePlanCompositeTrainTupleSerializer):
+    in_head_model_key = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
+                                              allow_null=True)
+    in_trunk_model_key = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
+                                               allow_null=True)
+
+    def validate(self, data):
+        super().validate(data)
+
+        if data['in_head_model_key'] and data['in_head_model_id']:
+            raise serializers.ValidationError('Fields in_head_model_key and in_head_model_id are mutually exclusive')
+
+        if data['in_trunk_model_key'] and data['in_trunk_model_id']:
+            raise serializers.ValidationError('Fields in_trunk_model_key and in_trunk_model_id are mutually exclusive')
+
+
+class AddComputePlanAggregatetupleSerializer(serializers.Serializer):
     aggregatetuple_id = serializers.CharField(min_length=1, max_length=64)
     algo_key = serializers.CharField(min_length=64, max_length=64)
     worker = serializers.CharField()
@@ -55,11 +94,18 @@ class ComputePlanAggregatetupleSerializer(serializers.Serializer):
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
 
-class LedgerComputePlanSerializer(serializers.Serializer):
-    traintuples = ComputePlanTraintupleSerializer(many=True, required=False)
-    testtuples = ComputePlanTesttupleSerializer(many=True, required=False)
-    composite_traintuples = ComputePlanCompositeTrainTupleSerializer(many=True, required=False)
-    aggregatetuples = ComputePlanAggregatetupleSerializer(many=True, required=False)
+class UpdateComputePlanAggregatetupleSerializer(AddComputePlanAggregatetupleSerializer):
+    in_models_keys = serializers.ListField(
+        child=serializers.CharField(min_length=1, max_length=64),
+        min_length=0,
+        required=False)
+
+
+class LedgerAddComputePlanSerializer(serializers.Serializer):
+    traintuples = AddComputePlanTraintupleSerializer(many=True, required=False)
+    testtuples = AddComputePlanTesttupleSerializer(many=True, required=False)
+    composite_traintuples = AddComputePlanCompositeTrainTupleSerializer(many=True, required=False)
+    aggregatetuples = AddComputePlanAggregatetupleSerializer(many=True, required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
 
     def get_args(self, data):
@@ -74,6 +120,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             }
             if 'in_models_ids' in data_traintuple:
                 traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
+            if 'in_models_keys' in data_traintuple:
+                traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
             if 'tag' in data_traintuple:
                 traintuple['tag'] = data_traintuple['tag']
 
@@ -82,9 +130,12 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         testtuples = []
         for data_testtuple in data.get('testtuples', []):
             testtuple = {
-                'traintupleID': data_testtuple['traintuple_id'],
                 'objectiveKey': data_testtuple['objective_key'],
             }
+            if 'traintuple_id' in data_testtuple:
+                testtuple['traintupleID'] = data_testtuple['traintuple_id']
+            if 'traintuple_key' in data_testtuple:
+                testtuple['traintupleKey'] = data_testtuple['traintuple_key']
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
@@ -107,8 +158,12 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 composite_traintuple['tag'] = data_composite_traintuple['tag']
             if 'in_head_model_id' in data_composite_traintuple:
                 composite_traintuple['inHeadModelID'] = data_composite_traintuple['in_head_model_id']
+            if 'in_head_model_key' in data_composite_traintuple:
+                composite_traintuple['inHeadModelKey'] = data_composite_traintuple['in_head_model_key']
             if 'in_trunk_model_id' in data_composite_traintuple:
                 composite_traintuple['inTrunkModelID'] = data_composite_traintuple['in_trunk_model_id']
+            if 'in_trunk_model_key' in data_composite_traintuple:
+                composite_traintuple['inTrunkModelKey'] = data_composite_traintuple['in_trunk_model_key']
             if 'out_trunk_model_permissions' in data_composite_traintuple:
                 composite_traintuple['outTrunkModelPermissions'] = data_composite_traintuple[
                     'out_trunk_model_permissions'
@@ -126,6 +181,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
 
             if 'in_models_ids' in data_aggregatetuple:
                 aggregatetuple['inModelsIDs'] = data_aggregatetuple['in_models_ids']
+            if 'in_models_keys' in data_aggregatetuple:
+                aggregatetuple['inModelsKeys'] = data_aggregatetuple['in_models_keys']
             if 'tag' in data_aggregatetuple:
                 aggregatetuple['tag'] = data_aggregatetuple['tag']
 
@@ -142,3 +199,23 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     def create(self, validated_data):
         args = self.get_args(validated_data)
         return ledger.create_computeplan(args)
+
+
+class LedgerUpdateComputePlanSerializer(LedgerAddComputePlanSerializer):
+    compute_plan_id = serializers.CharField(min_length=1, max_length=64)
+
+    traintuples = UpdateComputePlanTraintupleSerializer(many=True, required=False)
+    testtuples = UpdateComputePlanTesttupleSerializer(many=True, required=False)
+    composite_traintuples = UpdateComputePlanCompositeTrainTupleSerializer(many=True, required=False)
+    aggregatetuples = UpdateComputePlanAggregatetupleSerializer(many=True, required=False)
+
+    tag = None
+
+    def get_args(self, data):
+        args = super().get_args(data)
+        args['computePlanID'] = args['compute_plan_id']
+        return args
+
+    def update(self, instance, validated_data):
+        args = self.get_args(validated_data)
+        return ledger.update_compute_plan(args)

@@ -9,7 +9,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.ledger_utils import LedgerError
-from substrapp.serializers import LedgerComputePlanSerializer
+from substrapp.serializers import LedgerAddComputePlanSerializer
 
 from ..common import AuthenticatedClient
 from ..assets import computeplan
@@ -54,7 +54,7 @@ class ComputePlanViewTests(APITestCase):
             }]
         }
 
-        with mock.patch.object(LedgerComputePlanSerializer, 'create') as mcreate:
+        with mock.patch.object(LedgerAddComputePlanSerializer, 'create') as mcreate:
             with mock.patch('substrapp.views.computeplan.query_ledger') as mquery:
                 mcreate.return_value = {}
                 mquery.return_value = {}

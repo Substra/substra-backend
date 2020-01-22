@@ -8,7 +8,7 @@ from .traintuple.serializer import LedgerTrainTupleSerializer
 from .testtuple.serializer import LedgerTestTupleSerializer
 from .aggregatetuple.serializer import LedgerAggregateTupleSerializer
 from .datamanager.serializer import LedgerDataManagerSerializer
-from .computeplan.serializer import LedgerComputePlanSerializer
+from .computeplan.serializer import LedgerAddComputePlanSerializer, LedgerUpdateComputePlanSerializer
 from .compositetraintuple.serializer import LedgerCompositeTraintupleSerializer
 from .compositealgo.serializer import LedgerCompositeAlgoSerializer
 from .aggregatealgo.serializer import LedgerAggregateAlgoSerializer
@@ -17,6 +17,6 @@ from .aggregatealgo.serializer import LedgerAggregateAlgoSerializer
 __all__ = ['LedgerObjectiveSerializer', 'LedgerModelSerializer',
            'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
-           'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
+           'LedgerDataManagerSerializer', 'LedgerAddComputePlanSerializer', 'LedgerUpdateComputePlanSerializer',
            'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer',
            'LedgerAggregateAlgoSerializer', 'LedgerAggregateTupleSerializer']
