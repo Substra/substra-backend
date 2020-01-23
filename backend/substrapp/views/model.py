@@ -1,4 +1,3 @@
-import os
 import tempfile
 import logging
 from django.http import Http404
@@ -11,7 +10,7 @@ from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.serializers import ModelSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import CustomFileResponse, validate_pk, get_remote_asset, PermissionMixin
+from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin
 from substrapp.views.filters_utils import filter_list
 
 logger = logging.getLogger(__name__)
@@ -122,15 +121,22 @@ class ModelPermissionViewSet(PermissionMixin,
 
     queryset = Model.objects.all()
     serializer_class = ModelSerializer
-    ledger_query_call = 'queryModelDetails'
+    ledger_query_call = 'queryModelPermissions'
+
+    def _has_access(self, user, asset):
+        """Returns true if API consumer can access asset data."""
+        if user.is_anonymous:  # safeguard, should never happened
+            return False
+
+        # user cannot download model, only node can
+        if not isinstance(user, NodeUser):
+            return Response({}, status=status.HTTP_403_FORBIDDEN)
+
+        permissions = asset['process']
+        node_id = user.username
+
+        return permissions['public'] or node_id in permissions['authorizedIDs']
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-
-        # user cannot download model, only node can
-        if not isinstance(request.user, NodeUser):
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
-
-        model_object = self.get_object()
-        data = getattr(model_object, 'file')
-        return CustomFileResponse(open(data.path, 'rb'), as_attachment=True, filename=os.path.basename(data.path))
+        return self.download_local_file(request, django_field='file')
