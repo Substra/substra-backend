@@ -126,12 +126,14 @@ def wait():
             pass
         else:
 
-            # Note: Because we cannot split the event app from substrapp right now :
+            # Note:
             #   We do a loop to connect to the channel event hub because grpc may disconnect and create an exception
-            #   As a django app of substrapp, this will not crash the server.
+            #   Since we're in a django app of backend, an exception here will not crash the server (if the "ready"
+            #   method has already returned "true").
             #   It makes it difficult to reconnect automatically because we need to kill the server
             #   to trigger the connexion.
-            #   So we catch this exception (RPC error) and retry to connect to the event loop
+            #   So we catch this exception (RPC error) and retry to connect to the event loop.
+            #   Ideally, we'd extract the event app from the backend project into a separate service/process.
 
             while True:
                 # use chaincode event
