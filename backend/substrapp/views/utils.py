@@ -89,34 +89,62 @@ class PermissionMixin(object):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_403_FORBIDDEN)
 
+        if not ledger_field:
+            ledger_field = django_field
+
         if get_owner() == asset['owner']:
-            obj = self.get_object()
-            data = getattr(obj, django_field)
-            response = CustomFileResponse(
-                open(data.path, 'rb'),
-                as_attachment=True,
-                filename=os.path.basename(data.path)
-            )
+            response = self._download_local_file(django_field)
         else:
-            node_id = asset['owner']
-            auth = authenticate_outgoing_request(node_id)
-            if not ledger_field:
-                ledger_field = django_field
-            r = get_remote_file(asset[ledger_field]['storageAddress'], auth, stream=True)
-            if not r.ok:
-                return Response({
-                    'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
-                }, status=r.status_code)
+            response = self._download_remote_file(ledger_field, asset)
 
-            response = CustomFileResponse(
-                streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
-                status=r.status_code)
+        return response
 
-            for header in r.headers:
-                # We don't use hop_by_hop headers since they are incompatible
-                # with WSGI
-                if not is_hop_by_hop(header):
-                    response[header] = r.headers.get(header)
+    def download_local_file(self, request, django_field, ledger_field=None):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        pk = self.kwargs[lookup_url_kwarg]
+
+        try:
+            asset = get_object_from_ledger(pk, self.ledger_query_call)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        if not self._has_access(request.user, asset):
+            return Response({'message': 'Unauthorized'},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        if not ledger_field:
+            ledger_field = django_field
+
+        return self._download_local_file(django_field)
+
+    def _download_local_file(self, django_field):
+        obj = self.get_object()
+        data = getattr(obj, django_field)
+        response = CustomFileResponse(
+            open(data.path, 'rb'),
+            as_attachment=True,
+            filename=os.path.basename(data.path)
+        )
+        return response
+
+    def _download_remote_file(self, ledger_field, asset):
+        node_id = asset['owner']
+        auth = authenticate_outgoing_request(node_id)
+        r = get_remote_file(asset[ledger_field]['storageAddress'], auth, stream=True)
+        if not r.ok:
+            return Response({
+                'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
+            }, status=r.status_code)
+
+        response = CustomFileResponse(
+            streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
+            status=r.status_code)
+
+        for header in r.headers:
+            # We don't use hop_by_hop headers since they are incompatible
+            # with WSGI
+            if not is_hop_by_hop(header):
+                response[header] = r.headers.get(header)
 
         return response
 
