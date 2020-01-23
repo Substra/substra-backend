@@ -430,7 +430,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key, 'inModels': None}
+        subtuple = {'key': subtuple_key, 'inModels': None, 'algo': {'hash': 'myhash'}}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
