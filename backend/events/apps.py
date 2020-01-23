@@ -23,6 +23,9 @@ from substrapp.ledger_utils import get_hfc
 
 from celery.result import AsyncResult
 
+from grpc import RpcError
+
+
 logger = logging.getLogger(__name__)
 LEDGER = getattr(settings, 'LEDGER', None)
 
@@ -122,20 +125,34 @@ def wait():
         except BaseException:
             pass
         else:
-            channel_event_hub = channel.newChannelEventHub(target_peer,
-                                                           requestor)
 
-            # use chaincode event
+            # Note: Because we cannot split the event app from substrapp right now :
+            #   We do a loop to connect to the channel event hub because grpc may disconnect and create an exception
+            #   As a django app of substrapp, this will not crash the server.
+            #   It makes it difficult to reconnect automatically because we need to kill the server
+            #   to trigger the connexion.
+            #   So we catch this exception (RPC error) and retry to connect to the event loop
 
-            # uncomment this line if you want to replay blocks from the beginning for debugging purposes
-            # stream = channel_event_hub.connect(start=0, filtered=False)
-            stream = channel_event_hub.connect(filtered=False)
+            while True:
+                # use chaincode event
+                channel_event_hub = channel.newChannelEventHub(target_peer,
+                                                               requestor)
+                try:
+                    # uncomment this line if you want to replay blocks from the beginning for debugging purposes
+                    # stream = channel_event_hub.connect(start=0, filtered=False)
 
-            channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                     'tuples-updated',
-                                                     onEvent=on_tuples)
+                    stream = channel_event_hub.connect(filtered=False)
 
-            loop.run_until_complete(stream)
+                    channel_event_hub.registerChaincodeEvent(chaincode_name,
+                                                             'tuples-updated',
+                                                             onEvent=on_tuples)
+
+                    logger.error(f'Connect to Channel Event Hub')
+                    loop.run_until_complete(stream)
+
+                except RpcError as e:
+                    logger.error(f'Channel Event Hub failed ({type(e)}): {e} re-connecting in 5s')
+                    time.sleep(5)
 
 
 class EventsConfig(AppConfig):
@@ -152,7 +169,7 @@ class EventsConfig(AppConfig):
             except Exception as e:
                 logger.exception(e)
                 time.sleep(5)
-                logger.info('Retry to connect the event application to the ledger')
+                logger.error('Retry to connect the event application to the ledger')
             else:
                 break
 

@@ -91,6 +91,11 @@ LOGGING = {
             'level': 'DEBUG',
             'handlers': ['console'],
             'propagate': False,
-        }
+        },
+        'events': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
     },
 }
