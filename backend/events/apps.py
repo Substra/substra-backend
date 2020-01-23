@@ -140,10 +140,10 @@ def wait():
                 channel_event_hub = channel.newChannelEventHub(target_peer,
                                                                requestor)
                 try:
-                    # uncomment this line if you want to replay blocks from the beginning for debugging purposes
-                    # stream = channel_event_hub.connect(start=0, filtered=False)
-
-                    stream = channel_event_hub.connect(filtered=False)
+                    # We want to replay blocks from the beginning (start=0) if channel event hub was disconnected during
+                    # events emission
+                    stream = channel_event_hub.connect(start=0,
+                                                       filtered=False)
 
                     channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                              'tuples-updated',
