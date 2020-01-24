@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import compute_hash, get_hash
 
 from ..common import get_sample_objective, AuthenticatedClient
-from ..assets import objective, datamanager, traintuple, model
+from ..assets import objective, datamanager, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
