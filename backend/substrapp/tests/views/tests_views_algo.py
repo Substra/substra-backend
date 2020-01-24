@@ -135,7 +135,7 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = algo
-            mquery_ledger2.return_value = traintuple
+            mquery_ledger2.return_value = model
 
             pkhash = done_model['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
