@@ -191,7 +191,10 @@ def filter_list(object_type, data, query_params):
                             ]
 
                         elif object_type == 'objective':
-                            hashes = [x['objective']['hash'] for x in filtering_data]
+                            hashes = [
+                                x['testtuple']['objective']['hash'] for x in filtering_data
+                                if x['testtuple'] and x['testtuple']['objective']
+                            ]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
                 elif filter_key == 'dataset':
