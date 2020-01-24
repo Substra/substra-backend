@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 from ..common import get_sample_composite_algo, AuthenticatedClient
-from ..assets import objective, datamanager, compositealgo, algo
+from ..assets import objective, datamanager, compositealgo, algo, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -137,6 +137,24 @@ class CompositeAlgoViewTests(APITestCase):
             r = response.json()
 
             self.assertIn('Malformed search filters', r['message'])
+
+    def test_composite_algo_list_filter_model(self):
+        url = reverse('substrapp:composite_algo-list')
+        done_model = [
+            m for m in model if 'compositeTraintuple' in m and m['compositeTraintuple']['status'] == 'done'
+        ][0]
+
+        with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
+                mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
+            mquery_ledger.return_value = compositealgo
+            mquery_ledger2.return_value = model
+
+            pkhash = done_model['compositeTraintuple']['outTrunkModel']['outModel']['hash']
+            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r[0]), 1)
 
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
