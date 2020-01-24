@@ -26,6 +26,8 @@ from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail
 from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
 from substrapp.tasks.exception_handler import compute_error_code
 
+logger = logging.getLogger(__name__)
+
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
 
@@ -344,7 +346,7 @@ def prepare_data_sample(directory, tuple_):
         try:
             os.symlink(data_sample.path, data_directory)
         except OSError as e:
-            logging.exception(e)
+            logger.exception(e)
             raise Exception('Failed to create sym link for tuple data sample')
 
 
@@ -360,12 +362,12 @@ def build_subtuple_folders(subtuple):
 
 
 def remove_subtuple_materials(subtuple_directory):
-    logging.info('Remove subtuple materials')
+    logger.info('Remove subtuple materials')
     list_files(subtuple_directory)
     try:
         shutil.rmtree(subtuple_directory)
     except Exception as e:
-        logging.exception(e)
+        logger.exception(e)
     finally:
         list_files(subtuple_directory)
 
@@ -387,7 +389,7 @@ def remove_local_folder(compute_plan_id):
     except docker.errors.NotFound:
         pass
     except Exception:
-        logging.error(f'Cannot remove local volume {volume_id}', exc_info=True)
+        logger.error(f'Cannot remove local volume {volume_id}', exc_info=True)
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
@@ -452,7 +454,7 @@ def prepare_tuple(subtuple, tuple_type):
         # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
         # in case of multiple instances of substra backend running for the same organisation
         # So prepare_tuple tasks are ignored if it cannot log_start_tuple
-        logging.exception(e)
+        logger.exception(e)
         raise Ignore()
 
     try:
@@ -461,7 +463,7 @@ def prepare_tuple(subtuple, tuple_type):
             queue=worker_queue)
     except Exception as e:
         error_code = compute_error_code(e)
-        logging.error(error_code, exc_info=True)
+        logger.error(error_code, exc_info=True)
         log_fail_tuple(tuple_type, subtuple['key'], error_code)
 
 
@@ -474,12 +476,12 @@ class ComputeTask(Task):
         try:
             log_success_tuple(tuple_type, subtuple['key'], retval['result'])
         except LedgerError as e:
-            logging.exception(e)
+            logger.exception(e)
 
         try:
             try_remove_local_folder(subtuple, compute_plan_id)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
@@ -488,15 +490,15 @@ class ComputeTask(Task):
 
         try:
             error_code = compute_error_code(exc)
-            logging.error(error_code, exc_info=True)
+            logger.error(error_code, exc_info=True)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
-            logging.exception(e)
+            logger.exception(e)
 
         try:
             try_remove_local_folder(subtuple, compute_plan_id)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
 
     def split_args(self, celery_args):
         tuple_type = celery_args[0]
@@ -532,13 +534,13 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
                 subtuple_directory = get_subtuple_directory(subtuple)
                 remove_subtuple_materials(subtuple_directory)
             except Exception as e:
-                logging.exception(e)
+                logger.exception(e)
 
     return result
 
 
 def prepare_materials(subtuple, tuple_type):
-    logging.info(f'Prepare materials for {tuple_type} task')
+    logger.info(f'Prepare materials for {tuple_type} task')
 
     # create directory
     directory = build_subtuple_folders(subtuple)
@@ -560,7 +562,7 @@ def prepare_materials(subtuple, tuple_type):
     # input models
     prepare_models(directory, tuple_type, subtuple)
 
-    logging.info(f'Prepare materials for {tuple_type} task: success')
+    logger.info(f'Prepare materials for {tuple_type} task: success')
     list_files(directory)
 
 
@@ -643,7 +645,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             try:
                 secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
             except ApiException as e:
-                logging.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
+                logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
 
             secrets = {s['metadata']['name']: int.from_bytes(b64decode(s['data']['key']), 'big')
@@ -657,7 +659,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 try:
                     k8s_client.delete_namespaced_secret(secret_name, secret_namespace)
                 except ApiException as e:
-                    logging.error(f'failed to delete secrets from namespace {secret_namespace}')
+                    logger.error(f'failed to delete secrets from namespace {secret_namespace}')
                     raise e
 
         volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}

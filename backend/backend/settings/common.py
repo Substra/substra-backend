@@ -95,9 +95,15 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.RemoteUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'libs.sql_printing_middleware.SQLPrintingMiddleware',
     'libs.health_check_middleware.HealthCheckMiddleware',
 ]
+
+
+DJANGO_LOG_SQL_QUERIES = to_bool(os.environ.get('DJANGO_LOG_SQL_QUERIES', 'True'))
+if DJANGO_LOG_SQL_QUERIES:
+    MIDDLEWARE.append(
+        'libs.sql_printing_middleware.SQLPrintingMiddleware'
+    )
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -187,6 +193,7 @@ TASK = {
     'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
     'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
     'CHAINKEYS_ENABLED': to_bool(os.environ.get('TASK_CHAINKEYS_ENABLED', False)),
+    'LIST_WORKSPACE': to_bool(os.environ.get('TASK_LIST_WORKSPACE', True)),
 }
 
 CELERY_ACCEPT_CONTENT = ['application/json']

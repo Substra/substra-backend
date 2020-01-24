@@ -22,7 +22,7 @@ from substrapp.views.utils import find_primary_key_error, LedgerException, Valid
     get_success_create_code
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
 
-logger = logging.getLogger('django.request')
+logger = logging.getLogger(__name__)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,

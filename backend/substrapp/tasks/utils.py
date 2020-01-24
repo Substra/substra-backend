@@ -182,6 +182,8 @@ def container_format_log(container_name, container_logs):
 
 
 def list_files(startpath):
+    if not settings.TASK['LIST_WORKSPACE']:
+        return
     if os.path.exists(startpath):
 
         for root, dirs, files in os.walk(startpath, followlinks=True):
@@ -192,7 +194,7 @@ def list_files(startpath):
             for f in files:
                 logger.info(f'{subindent}{f}')
 
-        logging.info('\n')
+        logger.info('\n')
     else:
         logger.info(f'{startpath} does not exist.')
 

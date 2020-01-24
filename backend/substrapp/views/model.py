@@ -14,6 +14,8 @@ from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerE
 from substrapp.views.utils import CustomFileResponse, validate_pk, get_remote_asset, PermissionMixin
 from substrapp.views.filters_utils import filter_list
 
+logger = logging.getLogger(__name__)
+
 
 class ModelViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
@@ -74,10 +76,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         try:
             data = self._retrieve(pk)
         except LedgerError as e:
-            logging.exception(e)
+            logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
             return Response({'message': str(e)}, status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
