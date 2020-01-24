@@ -193,8 +193,11 @@ def filter_list(object_type, data, query_params):
                         hashes = [x['key'] for x in filtering_data]
 
                         if object_type == 'model':
-                            filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x)['objective']['hash'] in hashes]
+                            filtered_list = [
+                                x for x in filtered_list
+                                if (x['testtuple'] and x['testtuple']['objective'] and
+                                    x['testtuple']['objective']['hash'] in hashes)
+                            ]
                         elif object_type == 'dataset':
                             filtered_list = [x for x in filtered_list
                                              if x['objectiveKey'] in hashes]

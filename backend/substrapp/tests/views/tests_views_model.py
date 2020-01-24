@@ -105,7 +105,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 5)
+            self.assertEqual(len(r[0]), 1)
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
