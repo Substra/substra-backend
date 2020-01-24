@@ -1,34 +1,31 @@
 Django==2.1.15
-PyYAML==5.1
-celery == 4.2.1
-checksumdir == 1.1.4
-cryptography >= 1.9
-coverage == 4.5.1
-django-cors-headers==2.0.2
-django-celery-results==1.0.4
-django-filter==1.1.0
-django-rest-swagger==2.1.2
-djangorestframework==3.8.2
-djangorestframework-simplejwt==4.3.0
-docker == 3.5.0
-grpcio >= 1.0.1
-GPUtil == 1.4.0
-hkdf >= 0.0.3
-ipython==6.4.0
+PyYAML==5.3
+celery==4.4.0
+checksumdir==1.1.7
+cryptography>=2.8
+coverage==5.0.3
+django-cors-headers==3.2.1
+django-celery-results==1.1.2
+django-rest-swagger==2.2.0
+djangorestframework==3.11.0
+djangorestframework-simplejwt==4.4.0
+docker==4.1.0
+grpcio>=1.26.0
+GPUtil==1.4.0
+hkdf>=0.0.3
+ipython==7.11.1
 ipython-genutils==0.2.0
 kubernetes==10.0.1
-mock==2.0.0
-psycopg2-binary==2.7.4
-protobuf == 3.6.0
-pycryptodomex >= 3.4.2
-pyOpenSSL == 19.0.0
-pysha3 == 1.0b1
-raven == 6.9.0
-requests == 2.22.0
-rx >= 1.5.3
-sentry-sdk == 0.5.2
-six >= 1.4.0
-tldextract == 2.2.1
-uwsgi == 2.0.18
+mock==3.0.5
+psycopg2-binary==2.8.4
+protobuf==3.11.2
+pycryptodomex>=3.9.4
+pyOpenSSL==19.1.0
+raven==6.10.0
+requests==2.22.0
+sentry-sdk==0.14.1
+six>=1.14.0
+tldextract==2.2.2
+uwsgi==2.0.18
 zxcvbn==4.4.28
 git+git://github.com/hyperledger/fabric-sdk-py.git@36cc15021f74c11c7ae3196e380a5275c220145f # fabric-sdk-py==0.8.1
