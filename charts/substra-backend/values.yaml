@@ -148,6 +148,7 @@ flower:
 
 celerybeat:
   replicaCount: 1
+  taskPeriod: 10800
   image:
     repository: substrafoundation/celerybeat
     tag: latest

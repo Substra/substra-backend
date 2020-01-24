@@ -93,6 +93,7 @@ def generate_docker_compose_file(conf, launch_settings):
                 'environment': [
                     'PYTHONUNBUFFERED=1',
                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
+                    f'SCHEDULE_TASK_PERIOD={3 * 3600}',
                     f'DJANGO_SETTINGS_MODULE=backend.settings.common'],
                 'depends_on': ['postgresql', 'rabbit']
             },
