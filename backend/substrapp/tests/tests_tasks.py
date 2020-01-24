@@ -99,7 +99,7 @@ class TasksTests(APITestCase):
                 # contents (by pkhash) are different
                 get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
 
-    def test_Ressource_Manager(self):
+    def test_resource_manager(self):
 
         self.assertTrue(isinstance(self.ResourcesManager.memory_limit_mb(), int))
 

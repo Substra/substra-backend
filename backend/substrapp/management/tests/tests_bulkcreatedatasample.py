@@ -501,9 +501,8 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())), \
-                patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
-                    spec=True) as mDataSampleSerializer:
+                patch('substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                      spec=True) as mDataSampleSerializer:  # noqa: N806
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -535,10 +534,9 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())), \
-                patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
-                    spec=True) as mDataSampleSerializer, \
-                patch.object(DataSampleViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit, \
+                patch('substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                      spec=True) as mDataSampleSerializer:  # noqa: N806
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -574,10 +572,9 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())), \
-                patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
-                    spec=True) as mDataSampleSerializer, \
-                patch.object(DataSampleViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit, \
+                patch('substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                      spec=True) as mDataSampleSerializer:  # noqa: N806
             mis_zipfile.return_value = True
             mexists.return_value = True
 
@@ -613,10 +610,9 @@ class BulkCreateDataSampleTestCase(TestCase):
                 patch.object(os.path, 'exists') as mexists, \
                 patch('substrapp.management.commands.bulkcreatedatasample.open',
                       mock_open(read_data=self.data_sample_file.read())), \
-                patch(
-                    'substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
-                    spec=True) as mDataSampleSerializer, \
-                patch.object(DataSampleViewSet, 'commit') as mcommit:
+                patch.object(DataSampleViewSet, 'commit') as mcommit, \
+                patch('substrapp.management.commands.bulkcreatedatasample.DataSampleSerializer',
+                      spec=True) as mDataSampleSerializer:  # noqa: N806
             mis_zipfile.return_value = True
             mexists.return_value = True
 

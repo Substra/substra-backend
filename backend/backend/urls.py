@@ -22,8 +22,8 @@ from django.urls import include
 from backend.views import schema_view, obtain_auth_token
 
 from substrapp.urls import router
-from node.urls import router as nodeRouter
-from users.urls import router as userRouter
+from node.urls import router as node_router
+from users.urls import router as user_router
 
 
 urlpatterns = [
@@ -31,8 +31,8 @@ urlpatterns = [
         url(r'^admin/', admin.site.urls),
         url(r'^doc/', schema_view),
         url(r'^', include((router.urls, 'substrapp'))),
-        url(r'^', include((nodeRouter.urls, 'node'))),
-        url(r'^', include((userRouter.urls, 'user'))),  # for secure jwt authent
+        url(r'^', include((node_router.urls, 'node'))),
+        url(r'^', include((user_router.urls, 'user'))),  # for secure jwt authent
         url(r'^api-auth/', include('rest_framework.urls')),  # for session authent
         url(r'^api-token-auth/', obtain_auth_token)  # for expiry token authent
     ])),

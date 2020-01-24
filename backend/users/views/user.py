@@ -55,9 +55,9 @@ class UserViewSet(GenericViewSet):
         access_expires = access_token.current_time + access_token.lifetime
         refresh_expires = refresh_token.current_time + refresh_token.lifetime
 
-        accessTokenString = str(access_token)
-        headerPayload = '.'.join(accessTokenString.split('.')[0:2])
-        signature = accessTokenString.split('.')[2]
+        access_token_string = str(access_token)
+        header_payload = '.'.join(access_token_string.split('.')[0:2])
+        signature = access_token_string.split('.')[2]
 
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
@@ -65,7 +65,7 @@ class UserViewSet(GenericViewSet):
 
         secure = not settings.DEBUG
 
-        response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
+        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure, domain=host)
         response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
         response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
                             domain=host)
@@ -92,7 +92,7 @@ class UserViewSet(GenericViewSet):
         refresh_expires = refresh_token.current_time + refresh_token.lifetime
 
         access_token_string = str(access_token)
-        headerPayload = '.'.join(access_token_string.split('.')[0:2])
+        header_payload = '.'.join(access_token_string.split('.')[0:2])
         signature = access_token_string.split('.')[2]
 
         response = Response(access_token.payload, status=status.HTTP_200_OK)
@@ -101,7 +101,7 @@ class UserViewSet(GenericViewSet):
 
         secure = not settings.DEBUG
 
-        response.set_cookie('header.payload', value=headerPayload, expires=access_expires, secure=secure, domain=host)
+        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure, domain=host)
         response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
         response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
                             domain=host)

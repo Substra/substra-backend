@@ -41,21 +41,21 @@ class TaskViewTests(APITestCase):
     def test_task_retrieve(self):
 
         url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
-        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:  # noqa: N806
             mAsyncResult.return_value = FakeAsyncResult(status='SUCCESS')
             response = self.client.get(url, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_task_retrieve_fail(self):
         url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
-        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:  # noqa: N806
             mAsyncResult.return_value = FakeAsyncResult()
             response = self.client.get(url, **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_task_retrieve_pending(self):
         url = reverse('substrapp:task-detail', kwargs={'pk': 'pk'})
-        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:
+        with mock.patch('substrapp.views.task.AsyncResult') as mAsyncResult:  # noqa: N806
             mAsyncResult.return_value = FakeAsyncResult(status='PENDING', successful=False)
             response = self.client.get(url, **self.extra)
             self.assertEqual(response.data['message'],
