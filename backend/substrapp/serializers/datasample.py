@@ -53,7 +53,7 @@ class DataSampleSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         raise_errors_on_nested_writes('create', self, validated_data)
 
-        ModelClass = self.Meta.model
+        ModelClass = self.Meta.model   # noqa: N806
 
         # Remove many-to-many relationships from validated_data.
         # They are not valid arguments to the default `.create()` method,

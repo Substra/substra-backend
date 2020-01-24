@@ -12,8 +12,8 @@ class ExceptionTests(TestCase):
         # Build the exception map
         exception_map = generate_exceptions_map(append=False)
         # Exception map reference
-        EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../tasks/exceptions.json')
-        reference_exception_map = json.load(open(EXCEPTION_PATH))
+        exception_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../tasks/exceptions.json')
+        reference_exception_map = json.load(open(exception_path))
 
         self.assertTrue(set(reference_exception_map.keys()).issubset(set(exception_map.keys())))
 

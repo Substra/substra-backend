@@ -104,7 +104,7 @@ def generate_exceptions_map(append=True):
     import rest_framework.exceptions
 
     # Modules to inspect
-    MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,
+    MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,   # noqa: N806
                django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
                rest_framework.exceptions]
 

@@ -178,9 +178,9 @@ def filter_list(object_type, data, query_params):
                             filtered_list = [x for x in filtered_list
                                              if _get_model_tuple(x).get('dataset', {}).get('openerHash') in hashes]
                         elif object_type == 'objective':
-                            objectiveKeys = [x['objectiveKey'] for x in filtering_data]
+                            objective_keys = [x['objectiveKey'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
-                                             if x['key'] in objectiveKeys or
+                                             if x['key'] in objective_keys or
                                              (x['testDataset'] and x['testDataset']['dataManagerKey'] in hashes)]
 
                 elif filter_key == 'objective':

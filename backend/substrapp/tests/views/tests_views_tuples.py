@@ -106,8 +106,8 @@ class TraintupleViewTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = traintuple
-            targetTag = '(should fail) My super tag'
-            search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(targetTag)
+            target_tag = '(should fail) My super tag'
+            search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

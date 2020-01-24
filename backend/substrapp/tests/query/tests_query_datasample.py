@@ -428,8 +428,8 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 mock.patch('substrapp.views.datasample.LedgerDataSampleSerializer',
-                           spec=True) as mLedgerDataSampleSerializer:
-            mocked_LedgerDataSampleSerializer = MagicMock()
+                           spec=True) as mLedgerDataSampleSerializer:  # noqa: N806
+            mocked_LedgerDataSampleSerializer = MagicMock()  # noqa: N806
             mocked_LedgerDataSampleSerializer.is_valid.return_value = False
             mocked_LedgerDataSampleSerializer.errors = 'Failed'
             mLedgerDataSampleSerializer.return_value = mocked_LedgerDataSampleSerializer
