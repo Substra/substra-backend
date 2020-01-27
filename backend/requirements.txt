@@ -28,4 +28,4 @@ six>=1.14.0
 tldextract==2.2.2
 uwsgi==2.0.18
 zxcvbn==4.4.28
-git+git://github.com/hyperledger/fabric-sdk-py.git@36cc15021f74c11c7ae3196e380a5275c220145f # fabric-sdk-py==0.8.1
+git+git://github.com/hyperledger/fabric-sdk-py.git@df19cf51ff4f21507869184901988c094658367a
