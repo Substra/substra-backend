@@ -11,6 +11,7 @@ from substrapp.utils import get_owner, get_remote_file_content, NodeError
 
 from kubernetes import client, config
 
+CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE')
 DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
@@ -40,7 +41,7 @@ def get_cpu_count(client):
     # Because the docker execution may be remote
 
     task_args = {
-        'image': 'substrafoundation/celeryworker',
+        'image': CELERYWORKER_IMAGE,
         'command': 'python3 -u -c "import os; print(os.cpu_count(), end=\'\')"',
         'detach': False,
         'stdout': True,
@@ -87,7 +88,7 @@ def get_gpu_list(client):
           'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
 
     task_args = {
-        'image': 'substrafoundation/celeryworker',
+        'image': CELERYWORKER_IMAGE,
         'command': cmd,
         'detach': False,
         'stdout': True,
