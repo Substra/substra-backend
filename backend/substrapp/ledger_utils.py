@@ -154,6 +154,23 @@ def get_hfc():
         loop.close()
 
 
+def _get_signing_peers(strategy, current_peer, all_peers):
+    if strategy == 'SELF':
+        return [current_peer]
+    if strategy == 'MAJORITY':
+        return all_peers
+
+    raise Exception(f'strategy should either "SELF" or "MAJORITY", "{strategy}" given')
+
+
+def get_invoke_signing_peers(current_peer, all_peers):
+    return _get_signing_peers(strategy=settings.LEDGER_INVOKE_STRATEGY, current_peer=current_peer, all_peers=all_peers)
+
+
+def get_query_singing_peers(current_peer, all_peers):
+    return _get_signing_peers(strategy=settings.LEDGER_QUERY_STRATEGY, current_peer=current_peer, all_peers=all_peers)
+
+
 def call_ledger(call_type, fcn, args=None, kwargs=None):
 
     with get_hfc() as (loop, client):
@@ -173,9 +190,12 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
 
+        all_peers = client._peers.keys()
+        current_peer = peer['name']
+
         peers = {
-            'invoke': client._peers.keys(),
-            'query': [peer['name']],
+            'invoke': get_invoke_signing_peers(current_peer=current_peer, all_peers=all_peers),
+            'query': get_query_singing_peers(current_peer=current_peer, all_peers=all_peers),
         }
 
         params = {
@@ -200,6 +220,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
             if hasattr(e, 'details') and 'failed to connect to all addresses' in e.details():
+                logger.error(f'failed to reach all peers {all_peers}, current_peer is {current_peer}')
                 raise LedgerUnavailable(f'Failed to connect to all addresses for {(fcn, args)}')
 
             for arg in e.args:
