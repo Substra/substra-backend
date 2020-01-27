@@ -149,12 +149,14 @@ def get_hfc():
     loop, client = LEDGER['hfc']()
     try:
         yield (loop, client)
+        logger.info(f'yielding client {client._peers.keys()}')
     finally:
+        logger.info(f'deleting client {client._peers.keys()}')
         del client
         loop.close()
 
 
-def _get_signing_peers(strategy, current_peer, all_peers):
+def _get_endorsing_peers(strategy, current_peer, all_peers):
     if strategy == 'SELF':
         return [current_peer]
     if strategy == 'MAJORITY':
@@ -163,12 +165,20 @@ def _get_signing_peers(strategy, current_peer, all_peers):
     raise Exception(f'strategy should either "SELF" or "MAJORITY", "{strategy}" given')
 
 
-def get_invoke_signing_peers(current_peer, all_peers):
-    return _get_signing_peers(strategy=settings.LEDGER_INVOKE_STRATEGY, current_peer=current_peer, all_peers=all_peers)
+def get_invoke_endorsing_peers(current_peer, all_peers):
+    return _get_endorsing_peers(
+        strategy=settings.LEDGER_INVOKE_STRATEGY,
+        current_peer=current_peer,
+        all_peers=all_peers
+    )
 
 
-def get_query_singing_peers(current_peer, all_peers):
-    return _get_signing_peers(strategy=settings.LEDGER_QUERY_STRATEGY, current_peer=current_peer, all_peers=all_peers)
+def get_query_endorsing_peers(current_peer, all_peers):
+    return _get_endorsing_peers(
+        strategy=settings.LEDGER_QUERY_STRATEGY,
+        current_peer=current_peer,
+        all_peers=all_peers
+    )
 
 
 def call_ledger(call_type, fcn, args=None, kwargs=None):
@@ -194,8 +204,8 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         current_peer = peer['name']
 
         peers = {
-            'invoke': get_invoke_signing_peers(current_peer=current_peer, all_peers=all_peers),
-            'query': get_query_singing_peers(current_peer=current_peer, all_peers=all_peers),
+            'invoke': get_invoke_endorsing_peers(current_peer=current_peer, all_peers=all_peers),
+            'query': get_query_endorsing_peers(current_peer=current_peer, all_peers=all_peers),
         }
 
         params = {
