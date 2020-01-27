@@ -149,9 +149,7 @@ def get_hfc():
     loop, client = LEDGER['hfc']()
     try:
         yield (loop, client)
-        logger.info(f'yielding client {client._peers.keys()}')
     finally:
-        logger.info(f'deleting client {client._peers.keys()}')
         del client
         loop.close()
 
@@ -159,10 +157,10 @@ def get_hfc():
 def _get_endorsing_peers(strategy, current_peer, all_peers):
     if strategy == 'SELF':
         return [current_peer]
-    if strategy == 'MAJORITY':
+    if strategy == 'ALL':
         return all_peers
 
-    raise Exception(f'strategy should either "SELF" or "MAJORITY", "{strategy}" given')
+    raise Exception(f'strategy should either be "SELF" or "ALL", "{strategy}" given')
 
 
 def get_invoke_endorsing_peers(current_peer, all_peers):
