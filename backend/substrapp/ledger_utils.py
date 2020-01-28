@@ -144,12 +144,22 @@ def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
     return _retry
 
 
+async def close_grpc_channels(client):
+    for name in client.peers:
+        await client.peers[name]._channel.close()
+    for name in client.orderers:
+        await client.orderers[name]._channel.close()
+
+
 @contextlib.contextmanager
 def get_hfc():
     loop, client = LEDGER['hfc']()
     try:
         yield (loop, client)
     finally:
+        loop.run_until_complete(
+            close_grpc_channels(client)
+        )
         del client
         loop.close()
 
