@@ -83,7 +83,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         validate_pk(pk)
 
         try:
-            compute_plan = invoke_ledger(fcn='cancelComputePlan', args={'key': pk}, only_pkhash=False)
+            compute_plan = invoke_ledger(fcn='cancelComputePlan', args={'key': pk})
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)

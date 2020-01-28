@@ -113,7 +113,7 @@ def create_compositetraintuple(args):
 
 
 def create_computeplan(args):
-    return _create_asset('createComputePlan', args, only_pkhash=False)
+    return _create_asset('createComputePlan', args)
 
 
 def create_algo(args, key):

@@ -233,7 +233,7 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         return response
 
 
-def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
+def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False):
     params = {
         'wait_for_event': sync,
     }
@@ -244,12 +244,7 @@ def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True
     if cc_pattern:
         params['cc_pattern'] = cc_pattern
 
-    response = call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
-
-    if only_pkhash:
-        return {'pkhash': response.get('key', response.get('keys'))}
-    else:
-        return response
+    return call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
 
 
 @retry_on_error(exceptions=[LedgerTimeout])
