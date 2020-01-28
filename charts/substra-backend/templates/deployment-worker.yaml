@@ -57,9 +57,9 @@ spec:
               value: {{ .Values.persistence.hostPath }}/medias/
             - name: PYTHONUNBUFFERED
               value: "1"
-        {{- with .Values.extraEnv }}
-{{ toYaml . | indent 10 }}
-        {{- end }}
+          {{- with .Values.extraEnv }}
+{{ toYaml . | indent 12 }}
+          {{- end }}
           volumeMounts:
             - name: dockersocket
               mountPath: /var/run/docker.sock
