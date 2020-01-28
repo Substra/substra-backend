@@ -62,7 +62,7 @@ class PermissionMixin(object):
     ]
     permission_classes = [IsAuthenticated]
 
-    def _has_access(self, user, asset):
+    def has_access(self, user, asset):
         """Returns true if API consumer can access asset data."""
         if user.is_anonymous:  # safeguard, should never happened
             return False
@@ -85,7 +85,7 @@ class PermissionMixin(object):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        if not self._has_access(request.user, asset):
+        if not self.has_access(request.user, asset):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_403_FORBIDDEN)
 
@@ -108,7 +108,7 @@ class PermissionMixin(object):
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        if not self._has_access(request.user, asset):
+        if not self.has_access(request.user, asset):
             return Response({'message': 'Unauthorized'},
                             status=status.HTTP_403_FORBIDDEN)
 

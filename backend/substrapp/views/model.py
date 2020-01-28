@@ -123,7 +123,7 @@ class ModelPermissionViewSet(PermissionMixin,
     serializer_class = ModelSerializer
     ledger_query_call = 'queryModelPermissions'
 
-    def _has_access(self, user, asset):
+    def has_access(self, user, asset):
         """Returns true if API consumer can access asset data."""
         if user.is_anonymous:  # safeguard, should never happened
             return False
