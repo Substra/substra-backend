@@ -42,7 +42,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
 
                 permission_mixin = PermissionMixin()
                 permission_mixin.get_object = mock.MagicMock(return_value=TestModel())
-                permission_mixin._has_access = mock.MagicMock(return_value=has_access)
+                permission_mixin.has_access = mock.MagicMock(return_value=has_access)
                 permission_mixin.lookup_url_kwarg = 'foo'
                 permission_mixin.kwargs = {'foo': 'bar'}
                 permission_mixin.ledger_query_call = 'foo'
