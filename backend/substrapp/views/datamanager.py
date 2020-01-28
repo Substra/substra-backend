@@ -50,7 +50,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 'authorized_ids': request.data.getlist('permissions_authorized_ids', []),
             },
             'type': request.data.get('type'),
-            'objective_keys': request.data.getlist('objective_keys'),
+            'objective_key': request.data.get('objective_key', ''),
         }
 
         # create on db
