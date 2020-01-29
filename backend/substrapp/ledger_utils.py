@@ -15,9 +15,7 @@ logger = logging.getLogger(__name__)
 
 class LedgerError(Exception):
     """Base error from ledger."""
-    # FIXME the base error status code should be 500, the chaincode is currently
-    #       responding with 500 status code for some 400 errors
-    status = status.HTTP_400_BAD_REQUEST  # status.HTTP_500_INTERNAL_SERVER_ERROR
+    status = status.HTTP_500_INTERNAL_SERVER_ERROR
 
     def __init__(self, msg):
         super().__init__(msg)
