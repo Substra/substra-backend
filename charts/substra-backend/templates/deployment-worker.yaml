@@ -59,7 +59,6 @@ spec:
               value: "1"
             - name: "CELERYWORKER_IMAGE"
               value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
-        {{- with .Values.extraEnv }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
