@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import compute_hash, get_hash
 
 from ..common import get_sample_objective, AuthenticatedClient
-from ..assets import objective, datamanager, traintuple, model
+from ..assets import objective, datamanager, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -133,11 +133,14 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
-        done_model = [m for m in model if 'traintuple' in m and m['traintuple']['status'] == 'done'][0]
+        done_model = [
+            m for m in model
+            if 'traintuple' in m and m['traintuple']['status'] == 'done' and m['testtuple']['objective']
+        ][0]
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = objective
-            mquery_ledger2.return_value = traintuple
+            mquery_ledger2.return_value = model
 
             pkhash = done_model['traintuple']['outModel']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'

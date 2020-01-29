@@ -9,7 +9,7 @@ FILTER_QUERIES = {
     'dataset': 'queryDataManagers',
     'algo': 'queryAlgos',
     'objective': 'queryObjectives',
-    'model': 'queryTraintuples',
+    'model': 'queryModels',
     'composite_algo': 'queryCompositeAlgos',
     'aggregate_algo': 'queryAggregateAlgos'
 }
@@ -153,20 +153,48 @@ def filter_list(object_type, data, query_params):
 
                 elif filter_key == 'model':
                     for attribute, val in subfilters.items():
-                        filtering_data = [x for x in filtering_data
-                                          if x['outModel'] is not None and x['outModel'][attribute] in val]
+                        filtering_data = [
+                            x for x in filtering_data
+                            if (
+                                (
+                                    _get_model_tuple(x).get('outModel') and
+                                    _get_model_tuple(x)['outModel'][attribute] in val
+                                ) or (
+                                    _get_model_tuple(x).get('outTrunkModel') and
+                                    _get_model_tuple(x)['outTrunkModel']['outModel'][attribute] in val
+                                ) or (
+                                    _get_model_tuple(x).get('outHeadModel') and
+                                    _get_model_tuple(x)['outHeadModel']['outModel'][attribute] in val
+                                )
+                            )
+                        ]
 
-                        if object_type == 'algo':
-                            hashes = [x['algo']['hash'] for x in filtering_data]
+                        if object_type in ['algo', 'composite_algo', 'aggregatealgo']:
+                            hashes = [_get_model_tuple(x)['algo']['hash'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
                         elif object_type == 'dataset':
-                            hashes = [x['objective']['hash'] for x in filtering_data]
-                            filtered_list = [x for x in filtered_list
-                                             if x['objectiveKey'] in hashes]
+                            hashes = []
+                            for x in filtering_data:
+                                try:
+                                    hashes.append(x['testtuple']['dataset']['openerHash'])
+                                except KeyError:
+                                    pass
+                                try:
+                                    hashes.append(_get_model_tuple(x)['dataset']['openerHash'])
+                                except KeyError:
+                                    pass
+
+                            filtered_list = [
+                                x for x in filtered_list
+                                if x['opener']['hash'] in hashes
+                            ]
 
                         elif object_type == 'objective':
-                            hashes = [x['objective']['hash'] for x in filtering_data]
+                            hashes = [
+                                x['testtuple']['objective']['hash'] for x in filtering_data
+                                if x['testtuple'] and x['testtuple']['objective']
+                            ]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
                 elif filter_key == 'dataset':
@@ -193,8 +221,11 @@ def filter_list(object_type, data, query_params):
                         hashes = [x['key'] for x in filtering_data]
 
                         if object_type == 'model':
-                            filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x)['objective']['hash'] in hashes]
+                            filtered_list = [
+                                x for x in filtered_list
+                                if (x['testtuple'] and x['testtuple']['objective'] and
+                                    x['testtuple']['objective']['hash'] in hashes)
+                            ]
                         elif object_type == 'dataset':
                             filtered_list = [x for x in filtered_list
                                              if x['objectiveKey'] in hashes]
