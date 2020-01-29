@@ -189,7 +189,7 @@ def get_query_endorsing_peers(current_peer, all_peers):
     )
 
 
-def call_ledger(call_type, fcn, args=None, kwargs=None):
+def _call_ledger(call_type, fcn, args=None, kwargs=None):
 
     with get_hfc() as (loop, client):
         if not args:
@@ -270,6 +270,22 @@ def call_ledger(call_type, fcn, args=None, kwargs=None):
         _raise_for_status(response)
 
         return response
+
+
+def call_ledger(call_type, fcn, *args, **kwargs):
+    """Call ledger and log each request."""
+    ts = time.time()
+    error = None
+    try:
+        return _call_ledger(call_type, fcn, *args, **kwargs)
+    except Exception as e:
+        error = e.__class__.__name__
+        raise
+    finally:
+        # add a log even if the function raises an exception
+        te = time.time()
+        elaps = (te - ts) * 1000
+        logger.info(f'smartcontract {call_type}:{fcn}; elaps={elaps:.2f}ms; error={error}')
 
 
 def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):

@@ -4,6 +4,8 @@ from urllib.parse import unquote
 from substrapp.ledger_utils import query_ledger
 from substrapp import exceptions
 
+logger = logging.getLogger(__name__)
+
 
 FILTER_QUERIES = {
     'dataset': 'queryDataManagers',
@@ -103,7 +105,7 @@ def filter_list(object_type, data, query_params):
     except Exception:
         # TODO add better filters parsing to avoid this catch all
         message = f'Malformed search filters: invalid syntax: {query_params}'
-        logging.exception(message)
+        logger.exception(message)
         raise exceptions.BadRequestError(message)
 
     object_list = []
