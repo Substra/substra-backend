@@ -250,8 +250,8 @@ class DataManagerPermissionViewSet(PermissionMixin,
     serializer_class = DataManagerSerializer
     ledger_query_call = 'queryDataManager'
 
-    @action(detail=True)
-    def description(self, request, *args, **kwargs):
+    @action(detail=True, url_path='description', url_name='description')
+    def description_(self, request, *args, **kwargs):
         return self.download_file(request, 'description')
 
     @action(detail=True)
