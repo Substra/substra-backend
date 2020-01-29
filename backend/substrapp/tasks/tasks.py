@@ -615,9 +615,11 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-        pred_path: {'bind': '/sandbox/pred', 'mode': 'rw'},
         opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
     }
+
+    if tuple_type == TESTTUPLE_TYPE:
+        volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
 
     model_volume = {
         model_path: {'bind': model_folder, 'mode': 'rw'}
