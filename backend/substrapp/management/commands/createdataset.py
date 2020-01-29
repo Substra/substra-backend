@@ -21,11 +21,11 @@ def path_leaf(path):
 class Command(BaseCommand):
     help = '''  # noqa
     create dataset
-    python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_key": "foo", "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
+    python ./manage.py createdataset '{"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_key": "", "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}'
     python ./manage.py createdataset dataset.json
     # datamanager.json:
     # objective_key is optional
-    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_key": "foo", "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
+    # {"data_manager": {"name": "foo", "data_opener": "./opener.py", "description": "./description.md", "type": "foo", "objective_key": "", "permissions": {"public": True, "authorized_ids": []}}, "data_samples": {"paths": ["./data.zip", "./train/data"], "test_only": false}}
     '''
 
     def add_arguments(self, parser):
