@@ -60,8 +60,9 @@ spec:
             - name: "CELERYWORKER_IMAGE"
               value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
         {{- with .Values.extraEnv }}
-{{ toYaml . | indent 10 }}
-        {{- end }}
+          {{- with .Values.extraEnv }}
+{{ toYaml . | indent 12 }}
+          {{- end }}
           volumeMounts:
             - name: dockersocket
               mountPath: /var/run/docker.sock
