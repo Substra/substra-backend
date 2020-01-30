@@ -8,6 +8,7 @@ from os import path
 import json
 from multiprocessing.managers import BaseManager
 import logging
+import tarfile
 
 import docker
 from kubernetes.client.rest import ApiException
@@ -18,6 +19,8 @@ from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 from celery.task import Task
+from botocore.exceptions import ClientError
+import boto3
 
 from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
@@ -35,6 +38,8 @@ TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
+
+TAG_VALUE_FOR_TRANSFERT_BUCKET = "sendToTransfertBucket"
 
 
 class TasksError(Exception):
@@ -797,7 +802,36 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
         perf = json.load(perf_file)
     result['global_perf'] = perf['all']
+
+    tag = subtuple.get("tag")
+    if tag and TAG_VALUE_FOR_TRANSFERT_BUCKET in tag:
+        try:
+            transfer_to_bucket(subtuple["key"], pred_path, model_path)
+        except ClientError as e:
+            logging.error(e)
+
     return result
+
+
+def transfer_to_bucket(tuple_key, pred_path, model_path):
+    access_key = os.getenv('BUCKET_TRANSFERT_ID')
+    secret_key = os.getenv('BUCKET_TRANSFERT_SECRET')
+    bucket_name = os.getenv('BUCKET_TRANSFERT_NAME')
+    if not access_key or not secret_key or not bucket_name:
+        return
+
+    tar_file = f'{tuple_key}.tar.gz'
+    tar_path = path.join('/tmp', tar_file)
+
+    with tarfile.open(tar_path, 'w:gz') as tar:
+        tar.add(pred_path)
+        tar.add(model_path)
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=access_key,
+        aws_secret_access_key=secret_key)
+    s3.upload_file(tar_path, bucket_name, tar_file)
+    os.remove(tar_path)
 
 
 def save_model(subtuple_directory, subtuple_key, filename='model'):
