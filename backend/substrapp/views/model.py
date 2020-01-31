@@ -129,8 +129,8 @@ class ModelPermissionViewSet(PermissionMixin,
             return False
 
         # user cannot download model, only node can
-        if not isinstance(user, NodeUser):
-            return Response({}, status=status.HTTP_403_FORBIDDEN)
+        if not (type(user) is NodeUser):
+            return False
 
         permissions = asset['process']
         node_id = user.username
