@@ -69,7 +69,7 @@ class PermissionMixin(object):
 
         permission = asset['permissions']['process']
 
-        if isinstance(user, NodeUser):  # for node
+        if type(user) is NodeUser:  # for node
             node_id = user.username
         else:  # for classic user, test on current msp id
             node_id = get_owner()
