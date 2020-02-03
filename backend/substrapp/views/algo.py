@@ -204,6 +204,10 @@ class AlgoPermissionViewSet(PermissionMixin,
     def file(self, request, *args, **kwargs):
         return self.download_file(request, 'file', 'content')
 
+    # actions cannot be named "description"
+    # https://github.com/encode/django-rest-framework/issues/6490
+    # for some of the restricted names see:
+    # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path='description', url_name='description')
     def description_(self, request, *args, **kwargs):
         return self.download_file(request, 'description')
