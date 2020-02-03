@@ -808,12 +808,12 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     tag = subtuple.get("tag")
     if tag and TAG_VALUE_FOR_TRANSFERT_BUCKET in tag:
-        transfer_to_bucket(subtuple["key"], pred_path, model_path)
+        transfer_to_bucket(subtuple["key"], [pred_path, model_path])
 
     return result
 
 
-def transfer_to_bucket(tuple_key, pred_path, model_path):
+def transfer_to_bucket(tuple_key, paths):
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
         logger.info(f'unset global env for bucket transter: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}')
         return
@@ -823,8 +823,8 @@ def transfer_to_bucket(tuple_key, pred_path, model_path):
 
     try:
         with tarfile.open(tar_path, 'x:gz') as tar:
-            tar.add(pred_path)
-            tar.add(model_path)
+            for file_path in paths:
+                tar.add(file_path)
         s3 = boto3.client(
             's3',
             aws_access_key_id=ACCESS_KEY,
