@@ -40,6 +40,9 @@ COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
 
 TAG_VALUE_FOR_TRANSFERT_BUCKET = "sendToTransfertBucket"
+ACCESS_KEY = os.getenv('BUCKET_TRANSFERT_ID')
+SECRET_KEY = os.getenv('BUCKET_TRANSFERT_SECRET')
+BUCKET_NAME = os.getenv('BUCKET_TRANSFERT_NAME')
 
 
 class TasksError(Exception):
@@ -805,33 +808,33 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     tag = subtuple.get("tag")
     if tag and TAG_VALUE_FOR_TRANSFERT_BUCKET in tag:
-        try:
-            transfer_to_bucket(subtuple["key"], pred_path, model_path)
-        except ClientError as e:
-            logging.error(e)
+        transfer_to_bucket(subtuple["key"], pred_path, model_path)
 
     return result
 
 
 def transfer_to_bucket(tuple_key, pred_path, model_path):
-    access_key = os.getenv('BUCKET_TRANSFERT_ID')
-    secret_key = os.getenv('BUCKET_TRANSFERT_SECRET')
-    bucket_name = os.getenv('BUCKET_TRANSFERT_NAME')
-    if not access_key or not secret_key or not bucket_name:
+    if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
+        logger.info(f'unset global env for bucket transter: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}')
         return
 
     tar_file = f'{tuple_key}.tar.gz'
     tar_path = path.join('/tmp', tar_file)
 
-    with tarfile.open(tar_path, 'w:gz') as tar:
-        tar.add(pred_path)
-        tar.add(model_path)
-    s3 = boto3.client(
-        's3',
-        aws_access_key_id=access_key,
-        aws_secret_access_key=secret_key)
-    s3.upload_file(tar_path, bucket_name, tar_file)
-    os.remove(tar_path)
+    try:
+        with tarfile.open(tar_path, 'x:gz') as tar:
+            tar.add(pred_path)
+            tar.add(model_path)
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY)
+        s3.upload_file(tar_path, BUCKET_NAME, tar_file)
+    except (ClientError, tarfile.TarError) as e:
+        logger.error(e)
+    finally:
+        if path.exists(tar_path):
+            os.remove(tar_path)
 
 
 def save_model(subtuple_directory, subtuple_key, filename='model'):
