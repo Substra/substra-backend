@@ -20,7 +20,7 @@ from celery.exceptions import Ignore
 from celery.task import Task
 
 from backend.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, compute_hash
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
@@ -143,6 +143,20 @@ def get_model_content(tuple_type, tuple_key, tuple_, out_model):
     )
 
 
+def get_local_model_content(tuple_key, out_model):
+    """Get local model content."""
+    from substrapp.models import Model
+
+    model = Model.objects.get(pk=out_model['hash'])
+    model_content = model.file.read()
+    computed_hash = compute_hash(model_content, key=tuple_key)
+
+    if computed_hash != out_model['hash']:
+        raise Exception(f"Local model fetch error: hash doesn't match {out_model['hash']} vs {computed_hash}")
+
+    return model_content
+
+
 def prepare_traintuple_input_models(directory, tuple_):
     """Get traintuple input models content."""
     input_models = tuple_.get('inModels')
@@ -204,9 +218,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     if tuple_type != COMPOSITE_TRAINTUPLE_TYPE:
         raise TasksError(f'CompositeTraintuple: invalid head input model: type={tuple_type}')
     # get the output head model
-    head_model_content = get_model_content(
-        tuple_type, head_model_key, metadata, metadata['outHeadModel']['outModel'],
-    )
+    head_model_content = get_local_model_content(head_model_key, metadata['outHeadModel']['outModel'])
 
     # get trunk model
     trunk_model_key = trunk_model['traintupleKey']
@@ -249,9 +261,7 @@ def prepare_testtuple_input_models(directory, tuple_):
 
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
-        head_content = get_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outHeadModel']['outModel'],
-        )
+        head_content = get_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'])
         trunk_content = get_model_content(
             traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'],
         )
@@ -767,7 +777,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         result['end_head_model_file_hash'] = end_head_model_file_hash
-        result['end_head_model_file'] = end_head_model_file
         result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
         result['end_trunk_model_file'] = end_trunk_model_file
 
