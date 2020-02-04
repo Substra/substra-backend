@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-add-account
+data:
+  users: |
+    {{- range .Values.users }}
+      {{ .name }} {{ .secret }}
+    {{- end }}
+  incoming_nodes: |
+    {{- range .Values.incomingNodes }}
+      {{ .name }} {{ .secret }}
+    {{- end }}
+  outgoing_nodes: |
+    {{- range .Values.outgoingNodes }}
+      {{ .name }} {{ .secret }}
+    {{- end }}
