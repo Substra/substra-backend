@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-add-account
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-add-account
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-add-account
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-add-account
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+      - name: add-account
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          while true; do
+              ./manage.py migrate
+
+              ## Users
+              while read user_password; do
+                ./manage.py add_user $user_password
+              done < /accounts/users
+
+              ## IncomingNode
+              while read user_password; do
+                ./manage.py create_incoming_node $user_password
+              done < /accounts/incoming_nodes
+
+              ## OutgoingNode
+              while read user_password; do
+                ./manage.py create_outgoing_node $user_password
+              done < /accounts/outgoing_nodes
+
+            sleep 60
+
+          done
+        resources:
+            {{- toYaml .Values.resources | nindent 14 }}
+        env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: backend.settings.{{ .Values.backend.settings }}
+          - name: BACKEND_DB_NAME
+            value: {{ .Values.postgresql.postgresqlDatabase }}
+          - name: BACKEND_DB_USER
+            value: {{ .Values.postgresql.postgresqlUsername }}
+          - name: BACKEND_DB_PWD
+            value: {{ .Values.postgresql.postgresqlPassword }}
+          - name: DATABASE_HOST
+            value: {{ .Release.Name }}-postgresql
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        volumeMounts:
+          - mountPath: /accounts
+            name: accounts
+            readOnly: true
+      initContainers:
+      - name: wait-postgresql
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
+      volumes:
+        - name: accounts
+          configMap:
+            name: {{ template "substra.fullname" . }}-add-account
