@@ -45,7 +45,7 @@ spec:
                 ./manage.py create_outgoing_node $user_password
               done < /accounts/outgoing_nodes
 
-            sleep 10
+            sleep 60
 
           done
         resources:
