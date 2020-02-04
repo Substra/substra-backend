@@ -660,8 +660,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
         if not os.path.exists(chainkeys_directory):
+            cp_metadata = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
+            cp_tag = cp_metadata['tag']
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            label_selector = f"compute_plan={subtuple.get('tag')}"
+            label_selector = f"compute_plan=f{cp_tag}"
 
             k8s_client = get_k8s_client()
             try:
@@ -672,6 +674,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
             secrets = {s['metadata']['name']: int.from_bytes(b64decode(s['data']['key']), 'big')
                        for s in secrets.to_dict()['items']}
+            if not secrets:
+                raise TasksError(f'No secret found using label selector {label_selector}')
 
             os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
