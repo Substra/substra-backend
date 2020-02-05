@@ -10,3 +10,4 @@ backend/substrapp/tests
 **/.idea
 **/.vscode
 .git
+fixtures
