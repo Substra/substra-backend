@@ -1,4 +1,3 @@
-import contextlib
 import functools
 import json
 import logging
@@ -7,6 +6,7 @@ import time
 from django.conf import settings
 from rest_framework import status
 from grpc import RpcError
+from .ledger_client import get_hfc, invalidate_hfc_client
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
@@ -144,26 +144,6 @@ def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
     return _retry
 
 
-async def close_grpc_channels(client):
-    for name in client.peers:
-        await client.peers[name]._channel.close()
-    for name in client.orderers:
-        await client.orderers[name]._channel.close()
-
-
-@contextlib.contextmanager
-def get_hfc():
-    loop, client = LEDGER['hfc']()
-    try:
-        yield (loop, client)
-    finally:
-        loop.run_until_complete(
-            close_grpc_channels(client)
-        )
-        del client
-        loop.close()
-
-
 def _get_endorsing_peers(strategy, current_peer, all_peers):
     if strategy == 'SELF':
         return [current_peer]
@@ -191,7 +171,10 @@ def get_query_endorsing_peers(current_peer, all_peers):
 
 def _call_ledger(call_type, fcn, args=None, kwargs=None):
 
-    with get_hfc() as (loop, client):
+    (loop, client) = get_hfc()
+
+    if loop is not None:  # this 'if' wrapper is just to make the diff more readable,
+                          # I'll remove it (and unindent) before merging
         if not args:
             args = []
         else:
@@ -231,8 +214,10 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         try:
             response = loop.run_until_complete(chaincode_calls[call_type](**params))
         except TimeoutError as e:
+            invalidate_hfc_client()  # force re-generating a new HFC client
             raise LedgerTimeout(str(e))
         except Exception as e:
+            invalidate_hfc_client()  # force re-generating a new HFC client
             # TODO add a method to parse properly the base Exception raised by the fabric-sdk-py
             if hasattr(e, 'details') and 'access denied' in e.details():
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')

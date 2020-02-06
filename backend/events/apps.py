@@ -19,7 +19,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 
 from substrapp.tasks.tasks import prepare_tuple
 from substrapp.utils import get_owner
-from substrapp.ledger_utils import get_hfc
+from substrapp.ledger_client import get_hfc
 
 from celery.result import AsyncResult
 
@@ -166,8 +166,8 @@ class EventsConfig(AppConfig):
         # It avoid potential issue when we launch the channel event hub in a subprocess
         while True:
             try:
-                with get_hfc() as (loop, client):
-                    logger.info('Start the event application.')
+                (loop, client) = get_hfc()
+                logger.info('Start the event application.')
             except Exception as e:
                 logger.exception(e)
                 time.sleep(5)
