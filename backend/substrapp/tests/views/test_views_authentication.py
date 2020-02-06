@@ -1,4 +1,5 @@
 import mock
+from django.contrib.auth.models import User
 from django.urls import reverse
 import os
 import shutil
@@ -37,6 +38,11 @@ class AuthenticationTests(APITestCase):
     def setUpTestData(cls):
         cls.incoming_node = IncomingNode.objects.create(node_id="external_node_id", secret="s3cr37")
         cls.outgoing_node = OutgoingNode.objects.create(node_id="external_node_id", secret="s3cr37")
+        user, created = User.objects.get_or_create(username='foo')
+        if created:
+            user.set_password('bar')
+            user.save()
+        cls.user = user
 
     def test_authentication_fail(self):
         response = self.client.get(self.algo_url, **self.extra)
@@ -89,3 +95,29 @@ class AuthenticationTests(APITestCase):
             response = self.client.get(self.algo_url, **self.extra)
 
             self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_obtain_token(self):
+        # clean use
+        response = self.client.post('/api-token-auth/',
+                                    {'username': 'foo', 'password': 'baz'}, **self.extra)
+        self.assertEqual(response.status_code, 400)
+
+        response = self.client.post('/api-token-auth/',
+                                    {'username': 'foo', 'password': 'bar'}, **self.extra)
+        self.assertEqual(response.status_code, 200)
+        token = response.json()['token']
+        self.assertTrue(token)
+
+        # usage with an existing token
+        # the token should be ignored since the purpose of the view is to authenticate via user/password
+        valid_auth_token_header = f"Token {token}"
+        self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
+        response = self.client.post('/api-token-auth/',
+                                    {'username': 'foo', 'password': 'bar'}, **self.extra)
+        self.assertEqual(response.status_code, 200)
+
+        invalid_auth_token_header = f"Token nope"
+        self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
+        response = self.client.post('/api-token-auth/',
+                                    {'username': 'foo', 'password': 'bar'}, **self.extra)
+        self.assertEqual(response.status_code, 200)

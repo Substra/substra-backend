@@ -115,6 +115,7 @@ def schema_view(request):
 
 
 class ExpiryObtainAuthToken(ObtainAuthToken):
+    authentication_classes = []
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
