@@ -411,7 +411,6 @@ def log_success_tuple(tuple_type, tuple_key, res):
         extra_kwargs.update({
             'outHeadModel': {
                 'hash': res["end_head_model_file_hash"],
-                'storageAddress': res["end_head_model_file"],
             },
             'outTrunkModel': {
                 'hash': res["end_trunk_model_file_hash"],
