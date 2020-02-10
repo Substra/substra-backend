@@ -199,6 +199,14 @@ celeryworker:
 
   affinity: {}
 
+testPod:
+  enabled: false
+  image:
+    repository: python
+    tag: 3.6
+    pullPolicy: IfNotPresent
+  extraRepos: []
+
 extraEnv: []
   # - name: ENV_VARIABLE
   #   value: false

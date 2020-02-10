@@ -36,6 +36,12 @@ deploy:
           celeryworker.image: substrafoundation/celeryworker
           flower.image: substrafoundation/flower
         overrides:
+          testPod:
+              enabled: true
+              extraRepos:
+              - name: melloddy-simulator
+                url: https://github.com/owkin/melloddy-simulator.git
+                token: xx
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
