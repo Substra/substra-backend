@@ -23,7 +23,7 @@ from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
+from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client, timeit
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -70,6 +70,7 @@ def get_objective(tuple_):
     return objective.metrics.read()
 
 
+@timeit
 def prepare_objective(directory, tuple_):
     """Prepare objective for tuple execution."""
     metrics_content = get_objective(tuple_)
@@ -100,6 +101,7 @@ def get_algo(tuple_type, tuple_):
     return content
 
 
+@timeit
 def prepare_algo(directory, tuple_type, tuple_):
     """Prepare algo for tuple execution."""
     content = get_algo(tuple_type, tuple_)
@@ -291,6 +293,7 @@ def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, f
                 raise Exception('Model Hash in Subtuple is not the same as in local medias')
 
 
+@timeit
 def prepare_models(directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
@@ -312,6 +315,7 @@ def prepare_models(directory, tuple_type, tuple_):
         raise TasksError(f"task of type : {tuple_type} not implemented")
 
 
+@timeit
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
@@ -332,6 +336,7 @@ def prepare_opener(directory, tuple_):
             raise Exception('DataOpener Hash in Subtuple is not the same as in local medias')
 
 
+@timeit
 def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
@@ -539,6 +544,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     return result
 
 
+@timeit
 def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
@@ -566,6 +572,7 @@ def prepare_materials(subtuple, tuple_type):
     list_files(directory)
 
 
+@timeit
 def do_task(subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple)
     org_name = getattr(settings, 'ORG_NAME')
@@ -800,6 +807,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     return result
 
 
+@timeit
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
     end_model_path = path.join(subtuple_directory, f'model/{filename}')
