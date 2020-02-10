@@ -16,6 +16,17 @@ DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
 
+import time
+
+
+def timeit(function):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = function(*args, **kw)
+        logger.info(f'[TIME] {function.__name__} - {(time.time() - ts)} s')
+        return result
+    return timed
+
 
 def authenticate_worker(node_id):
     from node.models import OutgoingNode
@@ -36,6 +47,7 @@ def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
+@timeit
 def get_cpu_count(client):
     # Get CPU count from docker container through the API
     # Because the docker execution may be remote
@@ -67,6 +79,7 @@ def get_cpu_count(client):
     return cpu_count
 
 
+@timeit
 def get_cpu_sets(client, concurrency):
     cpu_count = get_cpu_count(client)
     cpu_step = max(1, cpu_count // concurrency)
@@ -208,6 +221,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
 
     try:
+        ts = time.time()
         client.images.build(path=dockerfile_path,
                             tag=image_name,
                             rm=remove_image)
@@ -218,6 +232,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         error = '\n'.join(lines)
         logger.error(f'BuildError: {error}')
         raise
+    finally:
+        logger.info(f'[TIME] client.images.build - {(time.time() - ts)} s')
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
@@ -249,6 +265,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         task_args['runtime'] = 'nvidia'
 
     try:
+        ts = time.time()
         client.containers.run(**task_args)
     finally:
         # we need to remove the containers to be able to remove the local
@@ -264,6 +281,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         # Remove images
         if remove_image:
             client.images.remove(image_name, force=True)
+        logger.info(f'[TIME] client.containers.run - {(time.time() - ts)} s')
 
 
 class ResourcesManager():
