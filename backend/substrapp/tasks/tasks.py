@@ -682,7 +682,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
             os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
-                json.dump(f, secrets)
+                json.dump(secrets, f)
 
             for secret_name in secrets.keys():
                 try:
