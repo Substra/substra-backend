@@ -663,7 +663,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             cp_metadata = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
             cp_tag = cp_metadata['tag']
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            label_selector = f"compute_plan=f{cp_tag}"
+            label_selector = f"compute_plan={cp_tag}"
 
             k8s_client = get_k8s_client()
             try:
