@@ -24,7 +24,8 @@ from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, compute_hash
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client, timeit
+from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, list_files,
+                                   get_k8s_client, timeit)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -160,6 +161,7 @@ def get_local_model_content(tuple_key, out_model):
     return model_content
 
 
+@timeit
 def get_and_put_model_content(parent_tuple_type, authorized_types, input_model, directory):
 
     tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])
