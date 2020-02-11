@@ -168,6 +168,7 @@ def get_local_model_content(tuple_key, out_model):
     return model_content
 
 
+@timeit
 def get_and_put_model_content(parent_tuple_type, authorized_types, input_model, directory):
 
     tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])

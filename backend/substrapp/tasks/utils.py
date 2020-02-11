@@ -225,12 +225,15 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
 
     # Check if image already exist
     try:
+        ts = time.time()
         client.images.get(image_name)
     except docker.errors.ImageNotFound:
         logger.info(f'ImageNotFound: {image_name}. Building it')
     else:
         logger.info(f'ImageFound: {image_name}. Use it')
         build_image = False
+    finally:
+        logger.info(f'[TIME] client.images.get - {(time.time() - ts)} s')
 
     if build_image:
         try:
