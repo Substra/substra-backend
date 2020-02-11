@@ -672,8 +672,11 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
 
-            secrets = {s['metadata']['name']: int.from_bytes(b64decode(s['data']['key']), 'big')
-                       for s in secrets.to_dict()['items']}
+            secrets = {
+                s['metadata']['labels']['index']: int.from_bytes(b64decode(s['data']['key']), 'big')
+                for s in secrets.to_dict()['items']
+            }
+
             if not secrets:
                 raise TasksError(f'No secret found using label selector {label_selector}')
 
