@@ -220,20 +220,33 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     if not os.path.exists(dockerfile_fullpath):
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
 
+    build_image = True
+
+    # Check if image already exist
     try:
-        ts = time.time()
-        client.images.build(path=dockerfile_path,
-                            tag=image_name,
-                            rm=remove_image)
-    except docker.errors.BuildError as e:
-        # catch build errors and print them for easier debugging of failed build
-        lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-        lines = [l for l in lines if l]
-        error = '\n'.join(lines)
-        logger.error(f'BuildError: {error}')
-        raise
-    finally:
-        logger.info(f'[TIME] client.images.build - {(time.time() - ts)} s')
+        client.images.get(image_name)
+    except docker.errors.ImageNotFound:
+        logger.info(f'ImageNotFound: {image_name}. Building it')
+    else:
+        logger.info(f'ImageFound: {image_name}. Use it')
+        build_image = False
+
+    if build_image:
+        try:
+            ts = time.time()
+            client.images.build(path=dockerfile_path,
+                                tag=image_name,
+                                rm=remove_image)
+        except docker.errors.BuildError as e:
+            # catch build errors and print them for easier debugging of failed build
+            lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
+            lines = [l for l in lines if l]
+            error = '\n'.join(lines)
+            logger.error(f'BuildError: {error}')
+            raise
+        finally:
+            logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
+            logger.info(f'[TIME] client.images.build - {(time.time() - ts)} s')
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
