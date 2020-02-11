@@ -199,6 +199,17 @@ celeryworker:
 
   affinity: {}
 
+testPod:
+  enabled: false
+  image:
+    repository: python
+    tag: 3.6
+    pullPolicy: IfNotPresent
+  substraTests:
+    directory: substra-tests
+    tarball: https://github.com/SubstraFoundation/substra-tests/archive/master.tar.gz
+    # githubToken: <my-personal-access-token>
+
 extraEnv: []
   # - name: ENV_VARIABLE
   #   value: false

@@ -1,0 +1,133 @@
+{{- if .Values.testPod.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-test-pod
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-test-pod
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-test-pod
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-test-pod
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- with $.Values.testPod.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      initContainers:
+      - name: init
+        image: "{{ .Values.testPod.image.repository }}:{{ .Values.testPod.image.tag }}"
+        workingDir: /pod
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            # Echo commands, abort on first error
+            set -xe
+
+            # Use venv because every folder except /pod will be wiped after the init container dies
+            pip install virtualenv
+            python -m venv .venv
+            source .venv/bin/activate
+
+            # Get substra
+            git clone https://github.com/SubstraFoundation/substra
+            pip install -e ./substra
+
+            # Get substra-tests
+            tarball={{ .Values.testPod.substraTests.tarball }}
+            directory={{ .Values.testPod.substraTests.directory }}
+            mkdir $directory
+            cd $directory
+            curl --header "Authorization: token {{ .Values.testPod.substraTests.githubToken }}" -L $tarball -o $directory.tar.gz
+            tar xzf $directory.tar.gz --strip-components=1
+            rm -rf $directory.tar.gz
+            [ -f requirements.txt ] && pip install -r requirements.txt
+            cd -
+
+            # Keyring doesn't work without this, don't ask me why
+            pip install keyrings.alt
+        volumeMounts:
+          - name: workspace
+            mountPath: /pod
+      containers:
+      - name: test-pod
+        image: "{{ .Values.testPod.image.repository }}:{{ .Values.testPod.image.tag }}"
+        {{- if .Values.testPod.image.pullPolicy }}
+        imagePullPolicy: "{{ .Values.testPod.image.pullPolicy }}"
+        {{- end }}
+        workingDir: /pod
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            # Run a script every time a user opens a SSH session
+            cat <<\EOF > ~/.bashrc
+            alias ll="ls -la"
+            alias activate="source .venv/bin/activate"
+            PS1='\w$ '
+            activate
+            b64="H4sIAAAAAAAAA1NQoBaISY22NMu10gHSBrlcVDZWX0FBD2rwodVxSkqPGveXg2QfTZ0CVZcO5cYBAVC2DiKKohgokwWSBokvRFWHsAZkyFSIVVkIVzyaOgvKKkLhHm4FkUgKwZLzYKwpcyCMWHQ7kGxRSDi0qe5RzwQdHBbVAcGjqRP8IPIoitEt0wGBujiEXbE6UPCoswM5XhKAtoM1z4Bq9kW1+1HHSrh3oGqxeUxXh0upDmT8oVVgYaVyIFv30RSIqYdW1YHd3jMB7CIUlVhDSZULAEt2AdOOAgAA"
+            banner="$(echo $b64 | base64 -d | gunzip)"
+            echo -e "$banner"
+            echo "Welcome! 😬" # TODO: add giant substra ASCII-art banner :p
+            echo "Type \"substra\" or \"cd substra-tests\" to begin."
+            EOF
+
+            # Configure substra CLI
+            user_password=$(head -1 /accounts/users)
+            add_user() {
+                substra config $3 --profile default --username $1 --password $2
+            }
+            source .venv/bin/activate
+            add_user $user_password $BACKEND_URL
+            substra login
+
+            # Zzz
+            while [ true ]; do
+                sleep 1000;
+            done
+        env:
+          - name: BACKEND_URL
+            value: "http://{{ (index .Values.backend.ingress.hosts 0).host }}"
+        {{- with .Values.extraEnv }}
+{{ toYaml . | indent 10 }}
+        {{- end }}
+        volumeMounts:
+          - name: workspace
+            mountPath: /pod
+          - mountPath: /accounts
+            name: accounts
+            readOnly: true
+        resources:
+          {{- toYaml .Values.testPod.resources | nindent 12 }}
+      volumes:
+        - name: workspace
+          emptyDir: {}
+        - name: accounts
+          configMap:
+            name: {{ template "substra.fullname" . }}-add-account
+    {{- with .Values.testPod.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.testPod.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.testPod.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+{{- end }}
