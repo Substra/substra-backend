@@ -7,6 +7,7 @@ import tempfile
 from os import path
 import json
 from multiprocessing.managers import BaseManager
+from threading import Thread
 import logging
 
 import docker
@@ -145,23 +146,44 @@ def get_model_content(tuple_type, tuple_key, tuple_, out_model):
     )
 
 
+def get_and_put_model_content(parent_tuple_type, authorized_types, input_model, directory):
+
+    tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])
+
+    if tuple_type not in authorized_types:
+        raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
+
+    if tuple_type == TRAINTUPLE_TYPE:
+        model = get_model_content(tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'])
+    elif tuple_type == AGGREGATETUPLE_TYPE:
+        model = get_model_content(tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'])
+    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
+        model = get_model_content(
+            tuple_type, input_model['traintupleKey'], metadata, metadata['outTrunkModel']['outModel']
+        )
+    else:
+        raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
+
+    _put_model(directory, model, input_model['hash'], input_model['traintupleKey'])
+
+
 def prepare_traintuple_input_models(directory, tuple_):
     """Get traintuple input models content."""
     input_models = tuple_.get('inModels')
     if not input_models:
         return
 
-    model_keys = [m['traintupleKey'] for m in input_models]
-    model_contents = []
-    for key in model_keys:
-        tuple_type, metadata = find_training_step_tuple_from_key(key)
-        if tuple_type not in (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE):
-            raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
-        model = get_model_content(tuple_type, key, metadata, metadata['outModel'])
-        model_contents.append(model)
+    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE)
 
-    for content, model in zip(model_contents, tuple_['inModels']):
-        _put_model(directory, content, model['hash'], model['traintupleKey'])
+    models = []
+    for input_model in input_models:
+        proc = Thread(target=get_and_put_model_content,
+                      args=(TRAINTUPLE_TYPE, authorized_types, input_model, directory))
+        models.append(proc)
+        proc.start()
+
+    for proc in models:
+        proc.join()
 
 
 def prepare_aggregatetuple_input_models(directory, tuple_):
@@ -170,26 +192,17 @@ def prepare_aggregatetuple_input_models(directory, tuple_):
     if not input_models:
         return
 
-    model_contents = []
-    model_keys = [m['traintupleKey'] for m in input_models]
-    for key in model_keys:
-        tuple_type, metadata = find_training_step_tuple_from_key(key)
+    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE, COMPOSITE_TRAINTUPLE_TYPE)
+    models = []
 
-        if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-            model = get_model_content(tuple_type, key, metadata, metadata['outModel'])
+    for input_model in input_models:
+        proc = Thread(target=get_and_put_model_content,
+                      args=(AGGREGATETUPLE_TYPE, authorized_types, input_model, directory))
+        models.append(proc)
+        proc.start()
 
-        elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
-            model = get_model_content(
-                tuple_type, key, metadata, metadata['outTrunkModel']['outModel'],
-            )
-
-        else:
-            raise TasksError(f'Aggregatuple: invalid input model: type={tuple_type}')
-
-        model_contents.append(model)
-
-    for content, model in zip(model_contents, tuple_['inModels']):
-        _put_model(directory, content, model['hash'], model['traintupleKey'])
+    for proc in models:
+        proc.join()
 
 
 def prepare_composite_traintuple_input_models(directory, tuple_):
