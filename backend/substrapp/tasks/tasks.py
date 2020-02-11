@@ -673,7 +673,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 raise e
 
             secrets = {
-                s['metadata']['labels']['index']: int.from_bytes(b64decode(s['data']['key']), 'big')
+                s['metadata']['labels']['index']: list(b64decode(s['data']['key']))
                 for s in secrets.to_dict()['items']
             }
 
@@ -682,7 +682,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
             os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
-                json.dump(secrets, f)
+                json.dump({'chain_keys': secrets}, f)
 
             for secret_name in secrets.keys():
                 try:
