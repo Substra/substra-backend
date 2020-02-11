@@ -81,7 +81,7 @@ spec:
             b64="H4sIAAAAAAAAA1NQoBaISY22NMu10gHSBrlcVDZWX0FBD2rwodVxSkqPGveXg2QfTZ0CVZcO5cYBAVC2DiKKohgokwWSBokvRFWHsAZkyFSIVVkIVzyaOgvKKkLhHm4FkUgKwZLzYKwpcyCMWHQ7kGxRSDi0qe5RzwQdHBbVAcGjqRP8IPIoitEt0wGBujiEXbE6UPCoswM5XhKAtoM1z4Bq9kW1+1HHSrh3oGqxeUxXh0upDmT8oVVgYaVyIFv30RSIqYdW1YHd3jMB7CIUlVhDSZULAEt2AdOOAgAA"
             banner="$(echo $b64 | base64 -d | gunzip)"
             echo -e "$banner"
-            echo "Welcome! 😬" # TODO: add giant substra ASCII-art banner :p
+            echo "Welcome! 😬"
             echo "Type \"substra\" or \"cd substra-tests\" to begin."
             EOF
 
