@@ -122,3 +122,13 @@ class ComputePlanViewTests(APITestCase):
             response = self.client.post(url, **self.extra)
             r = response.json()
             self.assertEqual(r, cp)
+
+    def test_computeplan_update(self):
+        cp = computeplan[0]
+        compute_plan_id = cp['computePlanID']
+        url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_id])
+
+        with mock.patch('substrapp.ledger.update_computeplan', return_value=cp):
+            response = self.client.post(url, **self.extra)
+            r = response.json()
+            self.assertEqual(r, cp)

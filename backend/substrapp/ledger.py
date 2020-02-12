@@ -146,3 +146,7 @@ def update_datamanager(args):
 
 def update_datasample(args):
     return _create_asset('updateDataSample', args=args)
+
+
+def update_computeplan(args):
+    return _create_asset('updateComputePlan', args, only_pkhash=False)
