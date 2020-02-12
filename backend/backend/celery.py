@@ -21,13 +21,20 @@ app.autodiscover_tasks()
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks.tasks import prepare_training_task, prepare_testing_task
+    from substrapp.tasks.tasks import (prepare_training_task,
+                                       prepare_testing_task,
+                                       prepare_aggregate_task,
+                                       prepare_composite_training_task)
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
     sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler',
                              name='query Traintuples to prepare train task on todo traintuples')
     sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler',
                              name='query Testuples to prepare test task on todo testuples')
+    sender.add_periodic_task(period, prepare_aggregate_task.s(), queue='scheduler',
+                             name='query Aggregatetuples to prepare task on todo aggregatetuples')
+    sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler',
+                             name='query CompositeTraintuples to prepare task on todo composite_traintuples')
 
 
 @after_task_publish.connect

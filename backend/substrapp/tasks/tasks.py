@@ -410,6 +410,11 @@ def prepare_testing_task():
 
 
 @app.task(ignore_result=True)
+def prepare_composite_training_task():
+    prepare_task(COMPOSITE_TRAINTUPLE_TYPE)
+
+
+@app.task(ignore_result=True)
 def prepare_aggregate_task():
     prepare_task(AGGREGATETUPLE_TYPE)
 
