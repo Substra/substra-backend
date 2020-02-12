@@ -173,6 +173,9 @@ celerybeat:
 
   affinity: {}
 
+celeryscheduler:
+  resources: {}
+
 celeryworker:
   replicaCount: 1
   image:

@@ -60,7 +60,7 @@ spec:
             - name: cacert
               mountPath: /var/hyperledger/ca
           resources:
-            {{- toYaml .Values.celeryworker.resources | nindent 12 }}
+            {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
       volumes:
       - name: config
         configMap:
