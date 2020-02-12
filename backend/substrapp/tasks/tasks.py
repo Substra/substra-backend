@@ -823,8 +823,8 @@ def transfer_to_bucket(tuple_key, paths):
 
     try:
         with tarfile.open(tar_path, 'x:gz') as tar:
-            for file_path in paths:
-                tar.add(file_path)
+            for dir_path in paths:
+                tar.add(dir_path)
         s3 = boto3.client(
             's3',
             aws_access_key_id=ACCESS_KEY,
