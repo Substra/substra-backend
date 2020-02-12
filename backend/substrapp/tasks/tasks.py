@@ -39,10 +39,10 @@ AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
 
-TAG_VALUE_FOR_TRANSFERT_BUCKET = "transfertBucket"
-ACCESS_KEY = os.getenv('BUCKET_TRANSFERT_ID')
-SECRET_KEY = os.getenv('BUCKET_TRANSFERT_SECRET')
-BUCKET_NAME = os.getenv('BUCKET_TRANSFERT_NAME')
+TAG_VALUE_FOR_TRANSFER_BUCKET = "transferBucket"
+ACCESS_KEY = os.getenv('BUCKET_TRANSFER_ID')
+SECRET_KEY = os.getenv('BUCKET_TRANSFER_SECRET')
+BUCKET_NAME = os.getenv('BUCKET_TRANSFER_NAME')
 
 
 class TasksError(Exception):
@@ -807,7 +807,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     result['global_perf'] = perf['all']
 
     tag = subtuple.get("tag")
-    if tag and TAG_VALUE_FOR_TRANSFERT_BUCKET in tag:
+    if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
         transfer_to_bucket(subtuple["key"], [pred_path, model_path])
 
     return result
@@ -821,20 +821,22 @@ def transfer_to_bucket(tuple_key, paths):
     tar_file = f'{tuple_key}.tar.gz'
     tar_path = path.join('/tmp', tar_file)
 
-    try:
-        with tarfile.open(tar_path, 'x:gz') as tar:
-            for dir_path in paths:
-                tar.add(dir_path)
-        s3 = boto3.client(
-            's3',
-            aws_access_key_id=ACCESS_KEY,
-            aws_secret_access_key=SECRET_KEY)
-        s3.upload_file(tar_path, BUCKET_NAME, tar_file)
-    except (ClientError, tarfile.TarError) as e:
-        logger.error(e)
-    finally:
-        if path.exists(tar_path):
-            os.remove(tar_path)
+    with tempfile.TemporaryDirectory(prefix='/tmp/') as tmpdir:
+        tar_path = path.join(tmpdir, f'{tuple_key}.tar.gz')
+        try:
+            with tarfile.open(tar_path, 'x:gz') as tar:
+                for dir_path in paths:
+                    tar.add(dir_path)
+        except tarfile.TarError as e:
+            logger.warning(e)
+        try:
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id=ACCESS_KEY,
+                aws_secret_access_key=SECRET_KEY)
+            s3.upload_file(tar_path, BUCKET_NAME, tar_file)
+        except ClientError as e:
+            logger.warning(e)
 
 
 def save_model(subtuple_directory, subtuple_key, filename='model'):
