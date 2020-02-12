@@ -8,7 +8,7 @@ import functools
 from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from substrapp.utils import get_owner, get_remote_file_content, NodeError
+from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
 
 from kubernetes import client, config
 
@@ -46,6 +46,11 @@ def authenticate_worker(node_id):
 
 def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
+
+
+def get_and_put_asset_content(url, node_id, content_hash, salt=None, content_dst_path=None):
+    return get_and_put_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt,
+                                           content_dst_path=content_dst_path)
 
 
 @timeit
