@@ -19,8 +19,8 @@ from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 from celery.task import Task
-from botocore.exceptions import ClientError
 import boto3
+import functools
 
 from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
@@ -813,30 +813,33 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     return result
 
 
+def safe(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+    return wrapper
+
+
+@safe
 def transfer_to_bucket(tuple_key, paths):
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
         logger.info(f'unset global env for bucket transter: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}')
         return
 
-    tar_file = f'{tuple_key}.tar.gz'
-    tar_path = path.join('/tmp', tar_file)
-
     with tempfile.TemporaryDirectory(prefix='/tmp/') as tmpdir:
-        tar_path = path.join(tmpdir, f'{tuple_key}.tar.gz')
-        try:
-            with tarfile.open(tar_path, 'x:gz') as tar:
-                for dir_path in paths:
-                    tar.add(dir_path)
-        except tarfile.TarError as e:
-            logger.warning(e)
-        try:
-            s3 = boto3.client(
-                's3',
-                aws_access_key_id=ACCESS_KEY,
-                aws_secret_access_key=SECRET_KEY)
-            s3.upload_file(tar_path, BUCKET_NAME, tar_file)
-        except ClientError as e:
-            logger.warning(e)
+        tar_name = f'{tuple_key}.tar.gz'
+        tar_path = path.join(tmpdir, tar_name)
+        with tarfile.open(tar_path, 'x:gz') as tar:
+            for dir_path in paths:
+                tar.add(dir_path)
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY)
+        s3.upload_file(tar_path, BUCKET_NAME, tar_name)
 
 
 def save_model(subtuple_directory, subtuple_key, filename='model'):
