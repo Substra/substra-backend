@@ -20,13 +20,13 @@ from celery.result import AsyncResult
 from celery.exceptions import Ignore
 from celery.task import Task
 import boto3
-import functools
 
 from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
+from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, list_files,
+                                   get_k8s_client, do_not_raise)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -813,17 +813,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     return result
 
 
-def safe(fn):
-    @functools.wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            return fn(*args, **kwargs)
-        except Exception as e:
-            logging.exception(e)
-    return wrapper
-
-
-@safe
+@do_not_raise
 def transfer_to_bucket(tuple_key, paths):
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
         logger.info(f'unset global env for bucket transter: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}')
