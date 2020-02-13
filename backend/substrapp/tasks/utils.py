@@ -3,6 +3,7 @@ import json
 import docker
 import threading
 import logging
+import functools
 
 from subprocess import check_output
 from django.conf import settings
@@ -349,3 +350,13 @@ class ResourcesManager():
 def get_k8s_client():
     config.load_incluster_config()
     return client.CoreV1Api()
+
+
+def do_not_raise(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+    return wrapper

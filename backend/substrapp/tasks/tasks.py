@@ -8,6 +8,7 @@ from os import path
 import json
 from multiprocessing.managers import BaseManager
 import logging
+import tarfile
 
 import docker
 from kubernetes.client.rest import ApiException
@@ -18,12 +19,14 @@ from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 from celery.task import Task
+import boto3
 
 from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, compute_hash
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import ResourcesManager, compute_docker, get_asset_content, list_files, get_k8s_client
+from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, list_files,
+                                   get_k8s_client, do_not_raise)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -35,6 +38,11 @@ TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
+
+TAG_VALUE_FOR_TRANSFER_BUCKET = "transferBucket"
+ACCESS_KEY = os.getenv('BUCKET_TRANSFER_ID')
+SECRET_KEY = os.getenv('BUCKET_TRANSFER_SECRET')
+BUCKET_NAME = os.getenv('BUCKET_TRANSFER_NAME')
 
 
 class TasksError(Exception):
@@ -806,7 +814,31 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
         perf = json.load(perf_file)
     result['global_perf'] = perf['all']
+
+    tag = subtuple.get("tag")
+    if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
+        transfer_to_bucket(subtuple["key"], [pred_path, model_path])
+
     return result
+
+
+@do_not_raise
+def transfer_to_bucket(tuple_key, paths):
+    if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
+        logger.info(f'unset global env for bucket transter: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}')
+        return
+
+    with tempfile.TemporaryDirectory(prefix='/tmp/') as tmpdir:
+        tar_name = f'{tuple_key}.tar.gz'
+        tar_path = path.join(tmpdir, tar_name)
+        with tarfile.open(tar_path, 'x:gz') as tar:
+            for dir_path in paths:
+                tar.add(dir_path)
+        s3 = boto3.client(
+            's3',
+            aws_access_key_id=ACCESS_KEY,
+            aws_secret_access_key=SECRET_KEY)
+        s3.upload_file(tar_path, BUCKET_NAME, tar_name)
 
 
 def save_model(subtuple_directory, subtuple_key, filename='model'):
