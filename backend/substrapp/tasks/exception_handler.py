@@ -82,8 +82,19 @@ def find_exception(module):
                   if issubclass(eclass, BaseException)]
 
     # Exception classes in submodule
-    for submodule in inspect.getmembers(module, inspect.ismodule):
-        exceptions += [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
+
+    try:
+        submodules = inspect.getmembers(module, inspect.ismodule)
+    except Exception:
+        submodules = []
+
+    for submodule_name, submodule in submodules:
+        try:
+            classes = inspect.getmembers(submodule, inspect.isclass)
+        except Exception:
+            classes = []
+
+        exceptions += [ename for ename, eclass in classes
                        if issubclass(eclass, BaseException)]
 
     return set(exceptions)
@@ -98,6 +109,7 @@ def generate_exceptions_map(append=True):
     import tarfile
     import django.core.exceptions
     import django.urls
+    import django.utils
     import django.db
     import django.http
     import django.db.transaction
@@ -106,7 +118,7 @@ def generate_exceptions_map(append=True):
     # Modules to inspect
     MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,   # noqa: N806
                django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
-               rest_framework.exceptions]
+               django.utils, rest_framework.exceptions]
 
     exceptions_classes = set()
 
