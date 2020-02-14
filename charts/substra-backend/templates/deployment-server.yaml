@@ -34,7 +34,7 @@ spec:
         {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes 4 --threads 2 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
+        args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
         {{- else }}
         args: ["-c", "python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }}"]
         {{- end }}
