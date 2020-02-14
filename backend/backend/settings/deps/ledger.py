@@ -141,8 +141,9 @@ def update_client_with_discovery(client, discovery_results):
                 peer.init_with_bundle({
                     'url': url,
                     'grpcOptions': {
-                        'grpc-max-send-message-length': 15,
-                        'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0]
+                        'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0],
+                        'grpc.max_send_message_length': -1,
+                        'grpc.max_receive_message_length': -1
                     },
                     'tlsCACerts': {'path': tls_root_cert.name},
                     'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
@@ -164,8 +165,9 @@ def update_client_with_discovery(client, discovery_results):
         orderer.init_with_bundle({
             'url': f"{orderer_info[0]['host']}:{orderer_info[0]['port']}",
             'grpcOptions': {
-                'grpc-max-send-message-length': 15,
-                'grpc.ssl_target_name_override': orderer_info[0]['host']
+                'grpc.ssl_target_name_override': orderer_info[0]['host'],
+                'grpc.max_send_message_length': -1,
+                'grpc.max_receive_message_length': -1
             },
             'tlsCACerts': {'path': tls_root_cert.name},
             'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
