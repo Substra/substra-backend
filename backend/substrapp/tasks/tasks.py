@@ -646,13 +646,15 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     }
 
     # local volume for train like tuples in compute plan
-    if compute_plan_id is not None and tuple_type != TESTTUPLE_TYPE:
+    if compute_plan_id is not None:
         volume_id = get_volume_id(compute_plan_id)
         try:
             client.volumes.get(volume_id=volume_id)
         except docker.errors.NotFound:
             client.volumes.create(name=volume_id)
-        model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': 'rw'}
+
+        mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
+        model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
 
     if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
