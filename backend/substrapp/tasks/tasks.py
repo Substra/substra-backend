@@ -665,7 +665,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
         if not os.path.exists(chainkeys_directory):
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            label_selector = f"compute_plan={compute_plan_tag}"
+            label_selector = f'compute_plan={compute_plan_tag}'
 
             k8s_client = get_k8s_client()
             try:
