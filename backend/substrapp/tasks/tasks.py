@@ -362,7 +362,12 @@ def prepare_data_sample(directory, tuple_):
         # create a symlink on the folder containing data
         data_directory = path.join(directory, 'data', data_sample_key)
         try:
-            os.symlink(data_sample.path, data_directory)
+            if not os.path.exists(data_directory):
+                os.symlink(data_sample.path, data_directory)
+
+            if not (os.path.realpath(data_directory) == data_sample.path):
+                Exception(f'Sym link ({data_directory})for tuple for data sample {data_sample.path}'
+                          f'does not match (currently to {os.path.realpath(data_directory)}')
         except OSError as e:
             logger.exception(e)
             raise Exception('Failed to create sym link for tuple data sample')
@@ -525,7 +530,10 @@ class ComputeTask(Task):
         return tuple_type, subtuple, compute_plan_id
 
 
-@app.task(bind=True, ignore_result=False, base=ComputeTask)
+@app.task(bind=True, acks_late=True, reject_on_worker_lost=True, ignore_result=False, base=ComputeTask)
+# Ack late and reject on worker lost allows use to
+# see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
+# and https://github.com/celery/celery/issues/5106
 def compute_task(self, tuple_type, subtuple, compute_plan_id):
 
     try:
