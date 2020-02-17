@@ -591,10 +591,13 @@ def do_task(subtuple, tuple_type):
     # compute plan / federated learning variables
     compute_plan_id = None
     rank = None
+    compute_plan_tag = None
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
         rank = int(subtuple['rank'])
+        compute_plan = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
+        compute_plan_tag = compute_plan['tag']
 
     client = docker.from_env()
 
@@ -605,11 +608,12 @@ def do_task(subtuple, tuple_type):
         subtuple,
         compute_plan_id,
         rank,
-        org_name
+        org_name,
+        compute_plan_tag,
     )
 
 
-def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name):
+def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
 
     algo_hash = subtuple['algo']['hash']
     model_folder = '/sandbox/model'
@@ -660,10 +664,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
         if not os.path.exists(chainkeys_directory):
-            cp_metadata = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
-            cp_tag = cp_metadata['tag']
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            label_selector = f"compute_plan={cp_tag}"
+            label_selector = f"compute_plan={compute_plan_tag}"
 
             k8s_client = get_k8s_client()
             try:
