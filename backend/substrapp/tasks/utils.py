@@ -48,9 +48,9 @@ def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
-def get_and_put_asset_content(url, node_id, content_hash, salt=None, content_dst_path=None):
-    return get_and_put_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt,
-                                           content_dst_path=content_dst_path)
+def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt=None):
+    return get_and_put_remote_file_content(url, authenticate_worker(node_id), content_hash,
+                                           content_dst_path=content_dst_path, salt=salt)
 
 
 @timeit
@@ -253,7 +253,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
             error = '\n'.join(lines)
             logger.error(f'BuildError: {error}')
             raise
-        finally:
+        else:
             logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
             logger.info(f'[TIME] client.images.build - {(time.time() - ts)} s')
 

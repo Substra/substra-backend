@@ -195,7 +195,7 @@ def get_remote_file_content(url, auth, content_hash, salt=None):
     return response.content
 
 
-def get_and_put_remote_file_content(url, auth, content_hash, salt=None, content_dst_path=None):
+def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, salt=None):
 
     response = get_remote_file(url, auth, content_dst_path, stream=True)
 

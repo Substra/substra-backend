@@ -150,8 +150,8 @@ def get_and_put_model_content(tuple_type, tuple_key, tuple_, out_model, model_ds
         out_model['storageAddress'],
         owner,
         out_model['hash'],
-        salt=tuple_key,
-        content_dst_path=model_dst_path
+        content_dst_path=model_dst_path,
+        salt=tuple_key
     )
 
 
