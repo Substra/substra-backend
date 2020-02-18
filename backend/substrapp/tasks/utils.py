@@ -24,7 +24,8 @@ def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
         result = function(*args, **kw)
-        logger.info(f'[TIME] {function.__name__} - {(time.time() - ts)} s')
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
         return result
     return timed
 
@@ -238,7 +239,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         logger.info(f'ImageFound: {image_name}. Use it')
         build_image = False
     finally:
-        logger.info(f'[TIME] client.images.get - {(time.time() - ts)} s')
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'client.images.get - elaps={elaps:.2f}ms')
 
     if build_image:
         try:
@@ -255,7 +257,8 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
             raise
         else:
             logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
-            logger.info(f'[TIME] client.images.build - {(time.time() - ts)} s')
+            elaps = (time.time() - ts) * 1000
+            logger.info(f'client.images.build - elaps={elaps:.2f}ms')
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
@@ -303,7 +306,9 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         # Remove images
         if remove_image:
             client.images.remove(image_name, force=True)
-        logger.info(f'[TIME] client.containers.run - {(time.time() - ts)} s')
+
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'client.images.run - elaps={elaps:.2f}ms')
 
 
 class ResourcesManager():
