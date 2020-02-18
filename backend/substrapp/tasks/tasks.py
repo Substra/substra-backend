@@ -7,6 +7,7 @@ import tempfile
 from os import path
 import json
 from multiprocessing.managers import BaseManager
+from threading import Thread
 import logging
 import tarfile
 
@@ -22,11 +23,11 @@ from celery.task import Task
 import boto3
 
 from backend.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, compute_hash
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, list_files,
-                                   get_k8s_client, do_not_raise)
+from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
+                                   list_files, get_k8s_client, do_not_raise, timeit)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -78,6 +79,7 @@ def get_objective(tuple_):
     return objective.metrics.read()
 
 
+@timeit
 def prepare_objective(directory, tuple_):
     """Prepare objective for tuple execution."""
     metrics_content = get_objective(tuple_)
@@ -108,6 +110,7 @@ def get_algo(tuple_type, tuple_):
     return content
 
 
+@timeit
 def prepare_algo(directory, tuple_type, tuple_):
     """Prepare algo for tuple execution."""
     content = get_algo(tuple_type, tuple_)
@@ -140,29 +143,60 @@ def find_training_step_tuple_from_key(tuple_key):
         f'Key {tuple_key}: no tuple found for training step: model: {metadata}')
 
 
-def get_model_content(tuple_type, tuple_key, tuple_, out_model):
+def get_and_put_model_content(tuple_type, tuple_key, tuple_, out_model, model_dst_path):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
-    return get_asset_content(
+    return get_and_put_asset_content(
         out_model['storageAddress'],
         owner,
         out_model['hash'],
-        salt=tuple_key,
+        content_dst_path=model_dst_path,
+        salt=tuple_key
     )
 
 
-def get_local_model_content(tuple_key, out_model):
+def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
     """Get local model content."""
     from substrapp.models import Model
 
     model = Model.objects.get(pk=out_model['hash'])
-    model_content = model.file.read()
-    computed_hash = compute_hash(model_content, key=tuple_key)
 
-    if computed_hash != out_model['hash']:
-        raise Exception(f"Local model fetch error: hash doesn't match {out_model['hash']} vs {computed_hash}")
+    # verify that local db model file is not corrupted
+    if get_hash(model.file.path, tuple_key) != out_model['hash']:
+        raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
-    return model_content
+    if not os.path.exists(model_dst_path):
+        os.link(model.file.path, model_dst_path)
+    else:
+        # verify that local subtuple model file is not corrupted
+        if get_hash(model_dst_path, tuple_key) != out_model['hash']:
+            raise Exception('Local Model Hash in Subtuple is not the same as in local medias')
+
+
+@timeit
+def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
+
+    tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])
+
+    if tuple_type not in authorized_types:
+        raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
+
+    model_dst_path = path.join(directory, f'model/{input_model["traintupleKey"]}')
+
+    if tuple_type == TRAINTUPLE_TYPE:
+        get_and_put_model_content(
+            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+        )
+    elif tuple_type == AGGREGATETUPLE_TYPE:
+        get_and_put_model_content(
+            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+        )
+    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
+        get_and_put_model_content(
+            tuple_type, input_model['traintupleKey'], metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+        )
+    else:
+        raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
 
 
 def prepare_traintuple_input_models(directory, tuple_):
@@ -171,17 +205,17 @@ def prepare_traintuple_input_models(directory, tuple_):
     if not input_models:
         return
 
-    model_keys = [m['traintupleKey'] for m in input_models]
-    model_contents = []
-    for key in model_keys:
-        tuple_type, metadata = find_training_step_tuple_from_key(key)
-        if tuple_type not in (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE):
-            raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
-        model = get_model_content(tuple_type, key, metadata, metadata['outModel'])
-        model_contents.append(model)
+    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE)
 
-    for content, model in zip(model_contents, tuple_['inModels']):
-        _put_model(directory, content, model['hash'], model['traintupleKey'])
+    models = []
+    for input_model in input_models:
+        proc = Thread(target=fetch_model,
+                      args=(TRAINTUPLE_TYPE, authorized_types, input_model, directory))
+        models.append(proc)
+        proc.start()
+
+    for proc in models:
+        proc.join()
 
 
 def prepare_aggregatetuple_input_models(directory, tuple_):
@@ -190,26 +224,17 @@ def prepare_aggregatetuple_input_models(directory, tuple_):
     if not input_models:
         return
 
-    model_contents = []
-    model_keys = [m['traintupleKey'] for m in input_models]
-    for key in model_keys:
-        tuple_type, metadata = find_training_step_tuple_from_key(key)
+    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE, COMPOSITE_TRAINTUPLE_TYPE)
+    models = []
 
-        if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-            model = get_model_content(tuple_type, key, metadata, metadata['outModel'])
+    for input_model in input_models:
+        proc = Thread(target=fetch_model,
+                      args=(AGGREGATETUPLE_TYPE, authorized_types, input_model, directory))
+        models.append(proc)
+        proc.start()
 
-        elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
-            model = get_model_content(
-                tuple_type, key, metadata, metadata['outTrunkModel']['outModel'],
-            )
-
-        else:
-            raise TasksError(f'Aggregatuple: invalid input model: type={tuple_type}')
-
-        model_contents.append(model)
-
-    for content, model in zip(model_contents, tuple_['inModels']):
-        _put_model(directory, content, model['hash'], model['traintupleKey'])
+    for proc in models:
+        proc.join()
 
 
 def prepare_composite_traintuple_input_models(directory, tuple_):
@@ -226,32 +251,26 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     if tuple_type != COMPOSITE_TRAINTUPLE_TYPE:
         raise TasksError(f'CompositeTraintuple: invalid head input model: type={tuple_type}')
     # get the output head model
-    head_model_content = get_local_model_content(head_model_key, metadata['outHeadModel']['outModel'])
+    head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
+    get_and_put_local_model_content(
+        head_model_key, metadata['outHeadModel']['outModel'], head_model_dst_path
+    )
 
     # get trunk model
     trunk_model_key = trunk_model['traintupleKey']
     tuple_type, metadata = find_training_step_tuple_from_key(trunk_model_key)
+    trunk_model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{trunk_model_key}')
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
-        trunk_model_content = get_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outTrunkModel']['outModel'],
+        get_and_put_model_content(
+            tuple_type, trunk_model_key, metadata, metadata['outTrunkModel']['outModel'], trunk_model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
-        trunk_model_content = get_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outModel'],
+        get_and_put_model_content(
+            tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
         )
     else:
         raise TasksError(f'CompositeTraintuple: invalid trunk input model: type={tuple_type}')
-
-    # put head and trunk models
-    _put_model(directory, head_model_content,
-               tuple_['inHeadModel']['hash'],
-               tuple_['inHeadModel']['traintupleKey'],
-               filename_prefix=PREFIX_HEAD_FILENAME)
-    _put_model(directory, trunk_model_content,
-               tuple_['inTrunkModel']['hash'],
-               tuple_['inTrunkModel']['traintupleKey'],
-               filename_prefix=PREFIX_TRUNK_FILENAME)
 
 
 def prepare_testtuple_input_models(directory, tuple_):
@@ -263,52 +282,27 @@ def prepare_testtuple_input_models(directory, tuple_):
 
     if traintuple_type == TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryTraintuple')
-        model = get_model_content(traintuple_type, traintuple_key, metadata, metadata['outModel'])
-        model_hash = metadata['outModel']['hash']
-        _put_model(directory, model, model_hash, traintuple_key)
+        model_dst_path = path.join(directory, f'model/{traintuple_key}')
+        get_and_put_model_content(
+            traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
+        )
 
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
-        head_content = get_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'])
-        trunk_content = get_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'],
+        head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
+        get_and_put_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'],
+                                        head_model_dst_path)
+
+        model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
+        get_and_put_model_content(
+            traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
         )
-        _put_model(directory, head_content, metadata['outHeadModel']['outModel']['hash'],
-                   traintuple_key, filename_prefix=PREFIX_HEAD_FILENAME)
-        _put_model(directory, trunk_content, metadata['outTrunkModel']['outModel']['hash'],
-                   traintuple_key, filename_prefix=PREFIX_TRUNK_FILENAME)
 
     else:
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
 
-def _put_model(subtuple_directory, model_content, model_hash, traintuple_hash, filename_prefix=''):
-    if not model_content:
-        raise Exception('Model content should not be empty')
-
-    from substrapp.models import Model
-
-    # store a model in local subtuple directory from input model content
-    model_dst_path = path.join(subtuple_directory, f'model/{filename_prefix}{traintuple_hash}')
-    model = None
-    try:
-        model = Model.objects.get(pk=model_hash)
-    except ObjectDoesNotExist:  # write it to local disk
-        with open(model_dst_path, 'wb') as f:
-            f.write(model_content)
-    else:
-        # verify that local db model file is not corrupted
-        if get_hash(model.file.path, traintuple_hash) != model_hash:
-            raise Exception('Model Hash in Subtuple is not the same as in local db')
-
-        if not os.path.exists(model_dst_path):
-            os.link(model.file.path, model_dst_path)
-        else:
-            # verify that local subtuple model file is not corrupted
-            if get_hash(model_dst_path, traintuple_hash) != model_hash:
-                raise Exception('Model Hash in Subtuple is not the same as in local medias')
-
-
+@timeit
 def prepare_models(directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
@@ -330,6 +324,7 @@ def prepare_models(directory, tuple_type, tuple_):
         raise TasksError(f"task of type : {tuple_type} not implemented")
 
 
+@timeit
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
@@ -350,6 +345,7 @@ def prepare_opener(directory, tuple_):
             raise Exception('DataOpener Hash in Subtuple is not the same as in local medias')
 
 
+@timeit
 def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
@@ -565,6 +561,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     return result
 
 
+@timeit
 def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
@@ -592,6 +589,7 @@ def prepare_materials(subtuple, tuple_type):
     list_files(directory)
 
 
+@timeit
 def do_task(subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple)
     org_name = getattr(settings, 'ORG_NAME')
@@ -860,6 +858,7 @@ def transfer_to_bucket(tuple_key, paths):
         s3.upload_file(tar_path, BUCKET_NAME, tar_name)
 
 
+@timeit
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
     end_model_path = path.join(subtuple_directory, f'model/{filename}')

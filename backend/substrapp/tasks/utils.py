@@ -8,7 +8,7 @@ import functools
 from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from substrapp.utils import get_owner, get_remote_file_content, NodeError
+from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
 
 from kubernetes import client, config
 
@@ -16,6 +16,18 @@ CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE')
 DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
+
+import time
+
+
+def timeit(function):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = function(*args, **kw)
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
+        return result
+    return timed
 
 
 def authenticate_worker(node_id):
@@ -37,6 +49,12 @@ def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
+def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt=None):
+    return get_and_put_remote_file_content(url, authenticate_worker(node_id), content_hash,
+                                           content_dst_path=content_dst_path, salt=salt)
+
+
+@timeit
 def get_cpu_count(client):
     # Get CPU count from docker container through the API
     # Because the docker execution may be remote
@@ -68,6 +86,7 @@ def get_cpu_count(client):
     return cpu_count
 
 
+@timeit
 def get_cpu_sets(client, concurrency):
     cpu_count = get_cpu_count(client)
     cpu_step = max(1, cpu_count // concurrency)
@@ -208,17 +227,38 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
     if not os.path.exists(dockerfile_fullpath):
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
 
+    build_image = True
+
+    # Check if image already exist
     try:
-        client.images.build(path=dockerfile_path,
-                            tag=image_name,
-                            rm=remove_image)
-    except docker.errors.BuildError as e:
-        # catch build errors and print them for easier debugging of failed build
-        lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-        lines = [l for l in lines if l]
-        error = '\n'.join(lines)
-        logger.error(f'BuildError: {error}')
-        raise
+        ts = time.time()
+        client.images.get(image_name)
+    except docker.errors.ImageNotFound:
+        logger.info(f'ImageNotFound: {image_name}. Building it')
+    else:
+        logger.info(f'ImageFound: {image_name}. Use it')
+        build_image = False
+    finally:
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'client.images.get - elaps={elaps:.2f}ms')
+
+    if build_image:
+        try:
+            ts = time.time()
+            client.images.build(path=dockerfile_path,
+                                tag=image_name,
+                                rm=remove_image)
+        except docker.errors.BuildError as e:
+            # catch build errors and print them for easier debugging of failed build
+            lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
+            lines = [l for l in lines if l]
+            error = '\n'.join(lines)
+            logger.error(f'BuildError: {error}')
+            raise
+        else:
+            logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
+            elaps = (time.time() - ts) * 1000
+            logger.info(f'client.images.build - elaps={elaps:.2f}ms')
 
     # Limit ressources
     memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
@@ -250,6 +290,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         task_args['runtime'] = 'nvidia'
 
     try:
+        ts = time.time()
         client.containers.run(**task_args)
     finally:
         # we need to remove the containers to be able to remove the local
@@ -265,6 +306,9 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         # Remove images
         if remove_image:
             client.images.remove(image_name, force=True)
+
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'client.images.run - elaps={elaps:.2f}ms')
 
 
 class ResourcesManager():

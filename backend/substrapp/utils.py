@@ -158,7 +158,7 @@ class NodeError(Exception):
     pass
 
 
-def get_remote_file(url, auth, **kwargs):
+def get_remote_file(url, auth, content_dst_path=None, **kwargs):
     kwargs.update({
         'headers': {'Accept': 'application/json;version=0.0'},
         'auth': auth
@@ -168,7 +168,13 @@ def get_remote_file(url, auth, **kwargs):
         kwargs['verify'] = False
 
     try:
-        response = requests.get(url, **kwargs)
+        if kwargs.get('stream', False) and content_dst_path is not None:
+            chunk_size = 1024 * 1024
+            with open(content_dst_path, 'wb') as fp:
+                response = requests.get(url, **kwargs)
+                fp.writelines(response.iter_content(chunk_size))
+        else:
+            response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
         raise NodeError(f'Failed to fetch {url}') from e
 
@@ -176,6 +182,7 @@ def get_remote_file(url, auth, **kwargs):
 
 
 def get_remote_file_content(url, auth, content_hash, salt=None):
+
     response = get_remote_file(url, auth)
 
     if response.status_code != status.HTTP_200_OK:
@@ -186,3 +193,16 @@ def get_remote_file_content(url, auth, content_hash, salt=None):
     if computed_hash != content_hash:
         raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
     return response.content
+
+
+def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, salt=None):
+
+    response = get_remote_file(url, auth, content_dst_path, stream=True)
+
+    if response.status_code != status.HTTP_200_OK:
+        logger.error(response.text)
+        raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+
+    computed_hash = get_hash(content_dst_path, key=salt)
+    if computed_hash != content_hash:
+        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
