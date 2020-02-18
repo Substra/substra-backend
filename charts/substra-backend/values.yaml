@@ -16,6 +16,8 @@ backend:
   settings: prod
   siteHost: localhost
   defaultDomain: localhost
+  uwsgiProcesses: 8
+  uwsgiThreads: 2
 
   image:
     repository: substrafoundation/substra-backend
