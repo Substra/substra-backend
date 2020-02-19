@@ -684,20 +684,21 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             except ApiException as e:
                 logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
-
-            secrets = {
-                s['metadata']['labels']['index']: list(b64decode(s['data']['key']))
-                for s in secrets.to_dict()['items']
-            }
-
+            secrets = secrets.to_dict()['items']
             if not secrets:
                 raise TasksError(f'No secret found using label selector {label_selector}')
 
+            formatted_secrets = {
+                s['metadata']['labels']['index']: list(b64decode(s['data']['key']))
+                for s in secrets
+            }
+
             os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
-                json.dump({'chain_keys': secrets}, f)
+                json.dump({'chain_keys': formatted_secrets}, f)
 
-            for secret_name in secrets.keys():
+            for secret in secrets:
+                secret_name = secret['metadata']['name']
                 try:
                     k8s_client.delete_namespaced_secret(secret_name, secret_namespace)
                 except ApiException as e:
