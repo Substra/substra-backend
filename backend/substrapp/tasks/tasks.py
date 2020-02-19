@@ -12,7 +12,7 @@ import logging
 import tarfile
 
 import docker
-from kubernetes.client.rest import ApiException
+import kubernetes
 from checksumdir import dirhash
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
@@ -678,10 +678,11 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
             label_selector = f'compute_plan={compute_plan_tag}'
 
+            # fetch secrets and write them to disk
             k8s_client = get_k8s_client()
             try:
                 secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
-            except ApiException as e:
+            except kubernetes.client.ApiException as e:
                 logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
             secrets = secrets.to_dict()['items']
@@ -697,13 +698,26 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
                 json.dump({'chain_keys': formatted_secrets}, f)
 
+            # remove secrets:
+            # do not delete secrets as a running k8s operator will recreate them, instead
+            # replace each secret data with an empty dict
             for secret in secrets:
-                secret_name = secret['metadata']['name']
                 try:
-                    k8s_client.delete_namespaced_secret(secret_name, secret_namespace)
-                except ApiException as e:
+                    k8s_client.replace_namespaced_secret(
+                        secret['metadata']['name'],
+                        secret_namespace,
+                        body=kubernetes.client.V1Secret(
+                            data={},
+                            metadata=kubernetes.client.V1ObjectMeta(
+                                name=secret['metadata']['name'],
+                                labels=secret['metadata']['labels'],
+                            ),
+                        ),
+                    )
+                except kubernetes.client.ApiException as e:
                     logger.error(f'failed to delete secrets from namespace {secret_namespace}')
                     raise e
+            logger.info(f'{len(secrets)} secrets have been removed')
 
         volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
 
