@@ -682,7 +682,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             k8s_client = get_k8s_client()
             try:
                 secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
-            except kubernetes.client.ApiException as e:
+            except kubernetes.client.rest.ApiException as e:
                 logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
             secrets = secrets.to_dict()['items']
@@ -714,8 +714,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                             ),
                         ),
                     )
-                except kubernetes.client.ApiException as e:
-                    logger.error(f'failed to delete secrets from namespace {secret_namespace}')
+                except kubernetes.client.rest.ApiException as e:
+                    logger.error(f'failed to remove secrets from namespace {secret_namespace}')
                     raise e
             logger.info(f'{len(secrets)} secrets have been removed')
 
