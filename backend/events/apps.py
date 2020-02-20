@@ -17,7 +17,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks.tasks import prepare_tuple
+from substrapp.tasks.tasks import prepare_tuple, on_finished_compute_plan
 from substrapp.utils import get_owner
 from substrapp.ledger_utils import get_hfc
 
@@ -40,53 +40,92 @@ def get_event_loop():
         loop.close()
 
 
-def tuple_get_worker(tuple_type, _tuple):
-    if tuple_type == 'aggregatetuple':
-        return _tuple['worker']
-    return _tuple['dataset']['worker']
+def tuple_get_worker(event_type, asset):
+    if event_type == 'aggregatetuple':
+        return asset['worker']
+    return asset['dataset']['worker']
 
 
-def on_tuples(cc_event, block_number, tx_id, tx_status):
-    payload = json.loads(cc_event['payload'])
+def on_tuples(tx_status, event_type, asset):
+
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
 
-    for tuple_type, _tuples in payload.items():
-        if not _tuples:
+    key = asset['key']
+    status = asset['status']
+
+    if tx_status != 'VALID':
+        logger.error(
+            f'Failed transaction on task {key}: type={event_type}'
+            f' status={status} with tx status: {tx_status}')
+        return
+
+    logger.info(f'Processing task {key}: type={event_type} status={status}')
+
+    if status != 'todo':
+        return
+
+    if event_type is None:
+        return
+
+    tuple_owner = tuple_get_worker(event_type, asset)
+
+    if tuple_owner != owner:
+        logger.debug(f'Skipping task {key}: owner does not match'
+                     f' ({tuple_owner} vs {owner})')
+        return
+
+    if AsyncResult(key).state != 'PENDING':
+        logger.info(f'Skipping task {key}: already exists')
+        return
+
+    prepare_tuple.apply_async(
+        (asset, event_type),
+        task_id=key,
+        queue=worker_queue
+    )
+
+
+def on_compute_plan(tx_status, asset):
+
+    worker_queue = f"{LEDGER['name']}.worker"
+
+    key = asset['computePlanID']
+
+    # Currently, we received this event on done, failed and canceled status
+    # We apply the same behavior for those three status.
+    # In the future, we can apply a conditional strategy based on the status.
+    status = asset['status']
+
+    if tx_status != 'VALID':
+        logger.error(
+            f'Failed transaction on cleaning task {key}: type=computePlan'
+            f' status={status} with tx status: {tx_status}')
+        return
+
+    logger.info(f'Processing cleaning task {key}: type=computePlan status={status}')
+
+    on_finished_compute_plan.apply_async(
+        (asset, ),
+        task_id=key,
+        queue=worker_queue
+    )
+
+
+def on_event(cc_event, block_number, tx_id, tx_status):
+    payload = json.loads(cc_event['payload'])
+
+    for event_type, assets in payload.items():
+
+        if not assets:
             continue
 
-        for _tuple in _tuples:
-            key = _tuple['key']
-            status = _tuple['status']
+        for asset in assets:
 
-            if tx_status != 'VALID':
-                logger.error(
-                    f'Failed transaction on task {key}: type={tuple_type}'
-                    f' status={status} with tx status: {tx_status}')
-                continue
-            logger.info(f'Processing task {key}: type={tuple_type} status={status}')
-
-            if status != 'todo':
-                continue
-
-            if tuple_type is None:
-                continue
-
-            tuple_owner = tuple_get_worker(tuple_type, _tuple)
-            if tuple_owner != owner:
-                logger.debug(f'Skipping task {key}: owner does not match'
-                             f' ({tuple_owner} vs {owner})')
-                continue
-
-            if AsyncResult(key).state != 'PENDING':
-                logger.info(f'Skipping task {key}: already exists')
-                continue
-
-            prepare_tuple.apply_async(
-                (_tuple, tuple_type),
-                task_id=key,
-                queue=worker_queue
-            )
+            if event_type == 'computePlan':
+                on_compute_plan(tx_status, asset)
+            else:
+                on_tuples(tx_status, event_type, asset)
 
 
 def wait():
@@ -146,8 +185,8 @@ def wait():
                                                        filtered=False)
 
                     channel_event_hub.registerChaincodeEvent(chaincode_name,
-                                                             'tuples-updated',
-                                                             onEvent=on_tuples)
+                                                             'chaincode-updates',
+                                                             onEvent=on_event)
 
                     logger.error(f'Connect to Channel Event Hub')
                     loop.run_until_complete(stream)
