@@ -402,6 +402,16 @@ def remove_local_folder(compute_plan_id):
     except Exception:
         logger.error(f'Cannot remove local volume {volume_id}', exc_info=True)
 
+    if settings.TASK['CHAINKEYS_ENABLED']:
+        chainkeys_volume_id = get_chainkeys_directory(compute_plan_id)
+        try:
+            chainkeys_volume = client.volumes.get(volume_id=chainkeys_volume_id)
+            chainkeys_volume.remove(force=True)
+        except docker.errors.NotFound:
+            pass
+        except Exception:
+            logger.error(f'Cannot remove chainkeys volume {chainkeys_volume_id}', exc_info=True)
+
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
 BaseManager.register('ResourcesManager', ResourcesManager)
