@@ -1,6 +1,8 @@
 import tempfile
 import logging
 from django.http import Http404
+from functools import wraps
+from django.middleware.gzip import GZipMiddleware
 from rest_framework import status, mixins
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -116,6 +118,19 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
 
+def gzip_action(func):
+    gz = GZipMiddleware()
+
+    @wraps(func)
+    def wrapper(self, request, *args, **kwargs):
+        resp = func(self, request, *args, **kwargs)
+        if request.method == 'GET':
+            return gz.process_response(request, resp)
+        return resp
+
+    return wrapper
+
+
 class ModelPermissionViewSet(PermissionMixin,
                              GenericViewSet):
 
@@ -137,6 +152,7 @@ class ModelPermissionViewSet(PermissionMixin,
 
         return permissions['public'] or node_id in permissions['authorizedIDs']
 
+    @gzip_action
     @action(detail=True)
     def file(self, request, *args, **kwargs):
         return self.download_local_file(request, django_field='file')
