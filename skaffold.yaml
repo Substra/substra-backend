@@ -57,6 +57,43 @@ deploy:
             mspID: MyOrg1MSP
           persistence:
             hostPath: /tmp/org-1
+            volumes:
+              - name: algos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: aggregatealgos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: compositealgos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: datamanagers
+                readOnly:
+                  server: false
+                  worker: true
+              - name: datasamples
+                readOnly:
+                  server: false
+                  worker: true
+              - name: objectives
+                readOnly:
+                  server: false
+                  worker: true
+              - name: models
+                readOnly:
+                  server: true
+                  worker: false
+              - name: subtuple
+                readOnly:
+                  server: true
+                  worker: false
+              - name: computeplan
+                readOnly:
+                  server: true
+                  worker: false
           incomingNodes:
             - { name: MyOrg1MSP, secret: selfSecret1 }
             - { name: MyOrg2MSP, secret: nodeSecret1w2 }
@@ -99,6 +136,43 @@ deploy:
             mspID: MyOrg2MSP
           persistence:
             hostPath: /tmp/org-2
+            volumes:
+              - name: algos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: aggregatealgos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: compositealgos
+                readOnly:
+                  server: false
+                  worker: true
+              - name: datamanagers
+                readOnly:
+                  server: false
+                  worker: true
+              - name: datasamples
+                readOnly:
+                  server: false
+                  worker: true
+              - name: objectives
+                readOnly:
+                  server: false
+                  worker: true
+              - name: models
+                readOnly:
+                  server: true
+                  worker: false
+              - name: subtuple
+                readOnly:
+                  server: true
+                  worker: false
+              - name: computeplan
+                readOnly:
+                  server: true
+                  worker: false
           incomingNodes:
             - { name: MyOrg1MSP, secret: nodeSecret2w1 }
             - { name: MyOrg2MSP, secret: selfSecret2 }

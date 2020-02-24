@@ -77,6 +77,11 @@ users: []
 persistence:
   hostPath: "/substra"
   size: "10Gi"
+  volumes: []
+  # - name: data
+  #   readOnly:
+  #     server: false
+  #     worker: true
 
 # Secrets names
 secrets:

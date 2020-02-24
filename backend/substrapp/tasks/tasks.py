@@ -150,7 +150,7 @@ def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
         raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
-        os.link(model.file.path, model_dst_path)
+        os.symlink(model.file.path, model_dst_path)
     else:
         # verify that local subtuple model file is not corrupted
         if get_hash(model_dst_path, tuple_key) != out_model['hash']:
@@ -938,7 +938,8 @@ def get_subtuple_directory(subtuple):
 
 
 def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan', compute_plan_id, 'chainkeys')
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
 
 
 def remove_algo_images(algo_hashes):

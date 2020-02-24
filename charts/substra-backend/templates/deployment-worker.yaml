@@ -68,8 +68,14 @@ spec:
           volumeMounts:
             - name: dockersocket
               mountPath: /var/run/docker.sock
-            - name: data
-              mountPath: {{ .Values.persistence.hostPath }}
+            {{- range .Values.persistence.volumes }}
+            - name: data-{{ .name }}
+              mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+              readOnly: {{ .readOnly.worker }}
+            {{- end }}
+            - name: data-servermedias
+              mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+              readOnly: true
             - name: config
               mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
@@ -94,9 +100,14 @@ spec:
       - name: dockersocket
         hostPath:
           path: /var/run/docker.sock
-      - name: data
+      {{- range .Values.persistence.volumes }}
+      - name: data-{{ .name }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" . }}
+          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+      {{- end }}
+      - name: data-servermedias
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
