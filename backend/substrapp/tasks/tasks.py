@@ -391,14 +391,6 @@ def remove_subtuple_materials(subtuple_directory):
         list_files(subtuple_directory)
 
 
-def try_remove_local_folder(subtuple, compute_plan_id):
-    if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
-        if compute_plan_id is not None:
-            rank = int(subtuple['rank'])
-            if rank == -1:
-                remove_local_folder(compute_plan_id)
-
-
 def remove_local_folder(compute_plan_id):
     client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
@@ -502,11 +494,6 @@ class ComputeTask(Task):
         except LedgerError as e:
             logger.exception(e)
 
-        try:
-            try_remove_local_folder(subtuple, compute_plan_id)
-        except Exception as e:
-            logger.exception(e)
-
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
         close_old_connections()
@@ -517,11 +504,6 @@ class ComputeTask(Task):
             logger.error(error_code, exc_info=True)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
-            logger.exception(e)
-
-        try:
-            try_remove_local_folder(subtuple, compute_plan_id)
-        except Exception as e:
             logger.exception(e)
 
     def split_args(self, celery_args):
@@ -633,12 +615,11 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     pred_path = path.join(subtuple_directory, 'pred')
     opener_file = path.join(subtuple_directory, 'opener/opener.py')
     algo_path = path.join(subtuple_directory)
-    algo_docker = f'substra/algo_{algo_hash[0:8]}'.lower()  # tag must be lowercase for docker
+    algo_docker = get_algo_image_name(algo_hash)
     algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
     output_head_model_filename = 'head_model'
     output_trunk_model_filename = 'trunk_model'
 
-    remove_image = not((compute_plan_id is not None and rank != -1) or settings.TASK['CACHE_DOCKER_IMAGES'])
     environment = {}
 
     # VOLUMES
@@ -792,7 +773,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         container_name=algo_docker_name,
         volumes={**volumes, **model_volume, **symlinks_volume},
         command=command,
-        remove_image=remove_image,
+        remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
         capture_logs=settings.TASK['CAPTURE_LOGS'],
         environment=environment
@@ -841,7 +822,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         container_name=eval_docker_name,
         volumes={**volumes, **symlinks_volume},
         command=None,
-        remove_image=remove_image,
+        remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
         capture_logs=settings.TASK['CAPTURE_LOGS'],
         environment=environment
@@ -898,6 +879,11 @@ def get_volume_id(compute_plan_id, prefix='local'):
     return f'{prefix}-{compute_plan_id}-{org_name}'
 
 
+def get_algo_image_name(algo_hash):
+    # tag must be lowercase for docker
+    return f'substra/algo_{algo_hash[0:8]}'.lower()
+
+
 def get_subtuple_directory(subtuple):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
 
@@ -905,3 +891,25 @@ def get_subtuple_directory(subtuple):
 def get_chainkeys_directory(compute_plan_id):
     return path.join(getattr(settings, 'MEDIA_ROOT'), getattr(settings, 'ORG_NAME'), 'computeplan',
                      compute_plan_id, 'chainkeys')
+
+
+def remove_algo_images(algo_hashes):
+    client = docker.from_env()
+    for algo_hash in algo_hashes:
+        algo_docker = get_algo_image_name(algo_hash)
+        logger.info(f'Remove docker image {algo_docker}')
+        client.images.remove(algo_docker, force=True)
+
+
+@app.task(ignore_result=False)
+def on_finished_compute_plan(compute_plan):
+
+    compute_plan_id = compute_plan['computePlanID']
+    algo_hashes = compute_plan['algoKeys']
+
+    # Remove local folder when compute plan is finished
+    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
+    remove_local_folder(compute_plan_id)
+
+    # Remove algorithm images
+    remove_algo_images(algo_hashes)
