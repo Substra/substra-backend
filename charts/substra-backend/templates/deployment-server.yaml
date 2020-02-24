@@ -32,11 +32,15 @@ spec:
         {{- if .Values.backend.image.pullPolicy }}
         imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
         {{- end }}
-        command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
+        command: ["/bin/bash"]
         args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
         {{- else }}
-        args: ["-c", "python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }}"]
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }} &
+          sleep infinity
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
