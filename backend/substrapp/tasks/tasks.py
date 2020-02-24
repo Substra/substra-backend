@@ -391,26 +391,22 @@ def remove_subtuple_materials(subtuple_directory):
         list_files(subtuple_directory)
 
 
-def remove_local_folder(compute_plan_id):
+def remove_local_folders(compute_plan_id):
     client = docker.from_env()
-    volume_id = get_volume_id(compute_plan_id)
-    try:
-        local_volume = client.volumes.get(volume_id=volume_id)
-        local_volume.remove(force=True)
-    except docker.errors.NotFound:
-        pass
-    except Exception:
-        logger.error(f'Cannot remove local volume {volume_id}', exc_info=True)
+    volume_ids = []
+    volume_ids.append(get_volume_id(compute_plan_id))
 
     if settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_volume_id = get_chainkeys_directory(compute_plan_id)
+        volume_ids.append(get_chainkeys_directory(compute_plan_id))
+
+    for volume_id in volume_ids:
         try:
-            chainkeys_volume = client.volumes.get(volume_id=chainkeys_volume_id)
-            chainkeys_volume.remove(force=True)
+            local_volume = client.volumes.get(volume_id=volume_id)
+            local_volume.remove(force=True)
         except docker.errors.NotFound:
             pass
         except Exception:
-            logger.error(f'Cannot remove chainkeys volume {chainkeys_volume_id}', exc_info=True)
+            logger.error(f'Cannot remove volume {volume_id}', exc_info=True)
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
@@ -919,7 +915,7 @@ def on_finished_compute_plan(compute_plan):
 
     # Remove local folder when compute plan is finished
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
-    remove_local_folder(compute_plan_id)
+    remove_local_folders(compute_plan_id)
 
     # Remove algorithm images
     remove_algo_images(algo_hashes)
