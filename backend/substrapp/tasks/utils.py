@@ -12,7 +12,7 @@ from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remo
 
 from kubernetes import client, config
 
-CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE')
+CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ def get_cpu_count(client):
 
     task_args = {
         'image': CELERYWORKER_IMAGE,
-        'command': 'python3 -u -c "import os; print(os.cpu_count(), end=\'\')"',
+        'command': 'python3 -u -c "import os; print(os.cpu_count())"',
         'detach': False,
         'stdout': True,
         'stderr': True,
@@ -76,7 +76,7 @@ def get_cpu_count(client):
     cpu_count = os.cpu_count()
 
     try:
-        cpu_count_bytes = client.containers.run(**task_args)
+        cpu_count_bytes = client.containers.run(**task_args).strip()
     except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
         logger.info('[Warning] Cannot get cpu count from remote')
     else:
