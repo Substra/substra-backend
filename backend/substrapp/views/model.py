@@ -124,9 +124,7 @@ def gzip_action(func):
     @wraps(func)
     def wrapper(self, request, *args, **kwargs):
         resp = func(self, request, *args, **kwargs)
-        if request.method == 'GET':
-            return gz.process_response(request, resp)
-        return resp
+        return gz.process_response(request, resp)
 
     return wrapper
 
