@@ -10,11 +10,24 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.size | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+      app.kubernetes.io/name: {{ template "substra.name" . }}
+      app.kubernetes.io/part-of: {{ template "substra.name" . }}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
   name: {{ template "substra.fullname" . }}
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
