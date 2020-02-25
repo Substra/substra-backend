@@ -1,7 +1,7 @@
 import os
 
 
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponse
 from rest_framework.authentication import BasicAuthentication, TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -106,11 +106,11 @@ class PermissionMixin(object):
         try:
             asset = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+            return HttpResponse({'message': str(e.msg)}, status=e.status)
 
         if not self.has_access(request.user, asset):
-            return Response({'message': 'Unauthorized'},
-                            status=status.HTTP_403_FORBIDDEN)
+            return HttpResponse({'message': 'Unauthorized'},
+                                status=status.HTTP_403_FORBIDDEN)
 
         if not ledger_field:
             ledger_field = django_field
