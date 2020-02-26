@@ -2,6 +2,7 @@ import tempfile
 import logging
 from django.http import Http404
 from functools import wraps
+from django.conf import settings
 from django.middleware.gzip import GZipMiddleware
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -126,7 +127,9 @@ def gzip_action(func):
         resp = func(self, request, *args, **kwargs)
         return gz.process_response(request, resp)
 
-    return wrapper
+    if getattr(settings, 'GZIP_MODEL'):
+        return wrapper
+    return func
 
 
 class ModelPermissionViewSet(PermissionMixin,
