@@ -107,7 +107,7 @@ def _raise_for_status(response):
     raise exception_class.from_response_dict(response)
 
 
-def retry_on_error(delay=1, nbtries=5, backoff=2, exceptions=None):
+def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
     exceptions = exceptions or []
     exceptions_to_retry = [
         LedgerMVCCError,
