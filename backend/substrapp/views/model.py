@@ -127,7 +127,7 @@ def gzip_action(func):
         resp = func(self, request, *args, **kwargs)
         return gz.process_response(request, resp)
 
-    if getattr(settings, 'GZIP_MODEL'):
+    if getattr(settings, 'GZIP_MODELS'):
         return wrapper
     return func
 
