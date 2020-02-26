@@ -114,10 +114,8 @@ class UserViewSet(GenericViewSet):
 
         host = self.get_host(request)
 
-        secure = not settings.DEBUG
-
-        response.set_cookie('header.payload', value='', secure=secure, domain=host)
-        response.set_cookie('signature', value='', httponly=True, secure=secure, domain=host)
-        response.set_cookie('refresh', value='', httponly=True, secure=secure, domain=host)
+        response.delete_cookie('header.payload', domain=host)
+        response.delete_cookie('signature', domain=host)
+        response.delete_cookie('refresh', domain=host)
 
         return response
