@@ -54,6 +54,10 @@ class LedgerPhantomReadConflictError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
+class LedgerEndorsementPolicyFailure(LedgerError):
+    status = status.HTTP_412_PRECONDITION_FAILED
+
+
 class LedgerUnavailable(LedgerError):
     """Ledger is not available."""
     status = status.HTTP_503_SERVICE_UNAVAILABLE
@@ -115,6 +119,7 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
         RpcError,
         LedgerUnavailable,
         LedgerPhantomReadConflictError,
+        LedgerEndorsementPolicyFailure
     ]
     exceptions_to_retry.extend(exceptions)
     exceptions_to_retry = tuple(exceptions_to_retry)
@@ -242,6 +247,10 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
                 if 'PHANTOM_READ_CONFLICT' in arg:
                     logger.error(f'PHANTOM read conflict for {(fcn, args)}')
                     raise LedgerPhantomReadConflictError(arg) from e
+
+                if 'ENDORSEMENT_POLICY_FAILURE' in arg:
+                    logger.error(f'ENDORSEMENT_POLICY_FAILURE for {(fcn, args)}')
+                    raise LedgerEndorsementPolicyFailure(arg) from e
 
             try:  # get first failed response from list of protobuf ProposalResponse
                 response = [r for r in e.args[0] if r.response.status != 200][0].response.message
