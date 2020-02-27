@@ -65,6 +65,8 @@ spec:
             value: {{ .Values.persistence.hostPath }}/medias/
           - name: PYTHONUNBUFFERED
             value: "1"
+          - name: GZIP_MODELS
+            value: {{ .Values.backend.gzipModels | quote }}
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}

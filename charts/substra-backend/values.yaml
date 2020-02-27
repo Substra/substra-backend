@@ -18,6 +18,7 @@ backend:
   defaultDomain: localhost
   uwsgiProcesses: 8
   uwsgiThreads: 2
+  gzipModels: false
 
   image:
     repository: substrafoundation/substra-backend
