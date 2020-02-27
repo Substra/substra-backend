@@ -388,19 +388,28 @@ def remove_subtuple_materials(subtuple_directory):
     except Exception as e:
         logger.exception(e)
     finally:
-        list_files(subtuple_directory)
+        if os.path.exists(subtuple_directory):
+            list_files(subtuple_directory)
 
 
-def remove_local_folder(compute_plan_id):
+def remove_local_folders(compute_plan_id):
     client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
+
     try:
         local_volume = client.volumes.get(volume_id=volume_id)
         local_volume.remove(force=True)
     except docker.errors.NotFound:
         pass
     except Exception:
-        logger.error(f'Cannot remove local volume {volume_id}', exc_info=True)
+        logger.error(f'Cannot remove volume {volume_id}', exc_info=True)
+
+    if settings.TASK['CHAINKEYS_ENABLED']:
+        chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+        try:
+            shutil.rmtree(chainkeys_directory)
+        except Exception:
+            logger.error(f'Cannot remove volume {chainkeys_directory}', exc_info=True)
 
 
 # Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
@@ -654,18 +663,22 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+        volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
 
         if not os.path.exists(chainkeys_directory):
+            os.makedirs(chainkeys_directory)
+
+            k8s_client = get_k8s_client()
             secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
             label_selector = f'compute_plan={compute_plan_tag}'
 
             # fetch secrets and write them to disk
-            k8s_client = get_k8s_client()
             try:
                 secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
             except kubernetes.client.rest.ApiException as e:
                 logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
                 raise e
+
             secrets = secrets.to_dict()['items']
             if not secrets:
                 raise TasksError(f'No secret found using label selector {label_selector}')
@@ -675,7 +688,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 for s in secrets
             }
 
-            os.makedirs(chainkeys_directory)
             with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
                 json.dump({'chain_keys': formatted_secrets}, f)
 
@@ -698,9 +710,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
                 except kubernetes.client.rest.ApiException as e:
                     logger.error(f'failed to remove secrets from namespace {secret_namespace}')
                     raise e
-            logger.info(f'{len(secrets)} secrets have been removed')
+            else:
+                logger.info(f'{len(secrets)} secrets have been removed')
 
-        volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+        list_files(chainkeys_directory)
 
     # Environment current node index
     node_index = os.getenv('NODE_INDEX')
@@ -889,8 +902,7 @@ def get_subtuple_directory(subtuple):
 
 
 def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), getattr(settings, 'ORG_NAME'), 'computeplan',
-                     compute_plan_id, 'chainkeys')
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan', compute_plan_id, 'chainkeys')
 
 
 def remove_algo_images(algo_hashes):
@@ -909,7 +921,7 @@ def on_finished_compute_plan(compute_plan):
 
     # Remove local folder when compute plan is finished
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
-    remove_local_folder(compute_plan_id)
+    remove_local_folders(compute_plan_id)
 
     # Remove algorithm images
     remove_algo_images(algo_hashes)
