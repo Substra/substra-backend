@@ -106,8 +106,13 @@ def _raise_for_status(response):
     """Parse ledger response and raise exceptions in case of errors."""
     if not response or 'error' not in response:
         return
+
+    if 'cannot change status' in response['error']:
+        raise LedgerStatusError.from_response_dict(response)
+
     status_code = response['status']
     exception_class = _STATUS_TO_EXCEPTION.get(status_code, LedgerError)
+
     raise exception_class.from_response_dict(response)
 
 
@@ -119,7 +124,10 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
         RpcError,
         LedgerUnavailable,
         LedgerPhantomReadConflictError,
-        LedgerEndorsementPolicyFailure
+        LedgerEndorsementPolicyFailure,
+        # Retry on LedgerStatusError because of potential ledger state difference
+        # caused by not synchronous committed block receipt between nodes.
+        LedgerStatusError,
     ]
     exceptions_to_retry.extend(exceptions)
     exceptions_to_retry = tuple(exceptions_to_retry)
@@ -261,12 +269,7 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-            if 'cannot change status' in response:
-                # FIXME check if this is still required or if this is a leftover from
-                #       successive refactorings
-                raise LedgerStatusError(response)
-            else:
-                raise LedgerInvalidResponse(response)
+            raise LedgerInvalidResponse(response)
 
         # Raise errors if status is not ok
         _raise_for_status(response)
