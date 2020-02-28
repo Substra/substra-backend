@@ -30,8 +30,9 @@ data:
         "clientKey": "/var/hyperledger/tls/client/pair/tls.key",
         "clientCert": "/var/hyperledger/tls/client/pair/tls.crt",
         "grpcOptions": {
-          "grpc-max-send-message-length": 15,
-          "grpc.ssl_target_name_override": "{{ .Values.peer.host }}"
+          "grpc.ssl_target_name_override": "{{ .Values.peer.host }}",
+          "grpc.max_send_message_length": -1,
+          "grpc.max_receive_message_length": -1
         }
       }
     }
