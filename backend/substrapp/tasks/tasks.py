@@ -916,13 +916,28 @@ def remove_algo_images(algo_hashes):
     client = docker.from_env()
     for algo_hash in algo_hashes:
         algo_docker = get_algo_image_name(algo_hash)
-        logger.info(f'Remove docker image {algo_docker}')
-        client.images.remove(algo_docker, force=True)
+
+        try:
+            if client.images.get(algo_docker):
+                client.images.remove(algo_docker, force=True)
+                logger.info(f'Remove docker image {algo_docker}')
+
+        except docker.errors.ImageNotFound:
+            pass
+        except docker.errors.APIError as e:
+            logger.exception(e)
 
 
 def remove_intermediary_models(model_hashes):
     from substrapp.models import Model
-    Model.objects.filter(pkhash__in=model_hashes, validated=True).delete()
+
+    models = Model.objects.filter(pkhash__in=model_hashes, validated=True)
+    filtered_model_hashes = [model.pk for model in models]
+
+    models.delete()
+
+    log_model_hashes = '\n\t- '.join(filtered_model_hashes)
+    logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
 
 
 @app.task(ignore_result=False)
@@ -931,6 +946,8 @@ def on_finished_compute_plan(compute_plan):
     compute_plan_id = compute_plan['computePlanID']
     algo_hashes = compute_plan['algoKeys']
     model_hashes = compute_plan['modelHashes']
+
+    logger.info(compute_plan)
 
     # Remove local folder when compute plan is finished
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
