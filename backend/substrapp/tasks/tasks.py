@@ -941,20 +941,23 @@ def remove_intermediary_models(model_hashes):
 
 
 @app.task(ignore_result=False)
-def on_finished_compute_plan(compute_plan):
+def on_compute_plan(compute_plan):
 
     compute_plan_id = compute_plan['computePlanID']
     algo_hashes = compute_plan['algoKeys']
     model_hashes = compute_plan['modelHashes']
-
-    logger.info(compute_plan)
+    status = compute_plan['status']
 
     # Remove local folder when compute plan is finished
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
-    remove_local_folders(compute_plan_id)
+
+    if status in ['done', 'failed', 'canceled']:
+        remove_local_folders(compute_plan_id)
 
     # Remove algorithm images
-    remove_algo_images(algo_hashes)
+    if algo_hashes:
+        remove_algo_images(algo_hashes)
 
     # Remove intermediary models
-    remove_intermediary_models(model_hashes)
+    if model_hashes:
+        remove_intermediary_models(model_hashes)

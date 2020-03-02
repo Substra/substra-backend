@@ -17,7 +17,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks.tasks import prepare_tuple, on_finished_compute_plan
+from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
 from substrapp.utils import get_owner
 from substrapp.ledger_utils import get_hfc
 
@@ -46,7 +46,7 @@ def tuple_get_worker(event_type, asset):
     return asset['dataset']['worker']
 
 
-def on_tuples(tx_status, event_type, asset):
+def on_tuples_event(tx_status, event_type, asset):
 
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
@@ -86,7 +86,7 @@ def on_tuples(tx_status, event_type, asset):
     )
 
 
-def on_compute_plan(tx_status, asset):
+def on_compute_plan_event(tx_status, asset):
 
     worker_queue = f"{LEDGER['name']}.worker"
 
@@ -105,7 +105,7 @@ def on_compute_plan(tx_status, asset):
 
     logger.info(f'Processing cleaning task {key}: type=computePlan status={status}')
 
-    on_finished_compute_plan.apply_async(
+    on_compute_plan.apply_async(
         (asset, ),
         task_id=key,
         queue=worker_queue
@@ -123,9 +123,9 @@ def on_event(cc_event, block_number, tx_id, tx_status):
         for asset in assets:
 
             if event_type == 'computePlan':
-                on_compute_plan(tx_status, asset)
+                on_compute_plan_event(tx_status, asset)
             else:
-                on_tuples(tx_status, event_type, asset)
+                on_tuples_event(tx_status, event_type, asset)
 
 
 def wait():
