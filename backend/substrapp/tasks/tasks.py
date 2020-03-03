@@ -6,7 +6,6 @@ import shutil
 import tempfile
 from os import path
 import json
-from multiprocessing.managers import BaseManager
 import logging
 import tarfile
 
@@ -24,7 +23,7 @@ from backend.celery import app
 from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
+from substrapp.tasks.utils import (compute_docker, get_asset_content, get_and_put_asset_content,
                                    list_files, get_k8s_client, do_not_raise, timeit, ExceptionThread)
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -381,6 +380,8 @@ def remove_subtuple_materials(subtuple_directory):
     list_files(subtuple_directory)
     try:
         shutil.rmtree(subtuple_directory)
+    except FileNotFoundError:
+        pass
     except Exception as e:
         logger.exception(e)
     finally:
@@ -412,13 +413,6 @@ def remove_local_folders(compute_plan_id):
             shutil.rmtree(chainkeys_directory)
         except Exception:
             logger.error(f'Cannot remove volume {chainkeys_directory}', exc_info=True)
-
-
-# Instatiate Ressource Manager in BaseManager to share it between celery concurrent tasks
-BaseManager.register('ResourcesManager', ResourcesManager)
-manager = BaseManager()
-manager.start()
-resources_manager = manager.ResourcesManager()
 
 
 @app.task(ignore_result=True)
@@ -484,14 +478,9 @@ def prepare_tuple(subtuple, tuple_type):
         logger.exception(e)
         raise Ignore()
 
-    try:
-        compute_task.apply_async(
-            (tuple_type, subtuple, compute_plan_id),
-            queue=worker_queue)
-    except Exception as e:
-        error_code = compute_error_code(e)
-        logger.error(error_code, exc_info=True)
-        log_fail_tuple(tuple_type, subtuple['key'], error_code)
+    compute_task.apply_async(
+        (tuple_type, subtuple, compute_plan_id),
+        queue=worker_queue)
 
 
 class ComputeTask(Task):
@@ -512,7 +501,14 @@ class ComputeTask(Task):
 
         try:
             error_code = compute_error_code(exc)
-            logger.error(error_code, exc_info=True)
+            # Do not show traceback if it's a container error as we already see them in
+            # container log
+            type_exc = type(exc)
+            exc_info = not(type_exc == docker.errors.ContainerError)
+
+            type_value = str(type_exc).split("'")[1]
+            logger.error(f'{tuple_type} {subtuple["key"]} {error_code} - {type_value}',
+                         exc_info=exc_info)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
             logger.exception(e)
@@ -552,9 +548,10 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
         if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
             try:
                 subtuple_directory = get_subtuple_directory(subtuple)
-                remove_subtuple_materials(subtuple_directory)
-            except Exception as e:
-                logger.exception(e)
+                if os.path.exists(subtuple_directory):
+                    remove_subtuple_materials(subtuple_directory)
+            except Exception as e_removal:
+                logger.exception(e_removal)
 
     return result
 
@@ -562,6 +559,11 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
 @timeit
 def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
+
+    # clean directory if exists (on retry)
+    subtuple_directory = get_subtuple_directory(subtuple)
+    if os.path.exists(subtuple_directory):
+        remove_subtuple_materials(subtuple_directory)
 
     # create directory
     directory = build_subtuple_folders(subtuple)
@@ -787,7 +789,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     compute_docker(
         client=client,
-        resources_manager=resources_manager,
         dockerfile_path=algo_path,
         image_name=algo_docker,
         container_name=algo_docker_name,
@@ -836,7 +837,6 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     compute_docker(
         client=client,
-        resources_manager=resources_manager,
         dockerfile_path=metrics_path,
         image_name=eval_docker,
         container_name=eval_docker_name,

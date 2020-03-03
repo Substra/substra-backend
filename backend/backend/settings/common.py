@@ -26,6 +26,7 @@ TRUE_VALUES = {
     True
 }
 
+
 def to_bool(value):
     return value in TRUE_VALUES
 
@@ -210,7 +211,7 @@ CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
-EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
+EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24 * 60)))
 
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
