@@ -37,6 +37,10 @@ AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
 
+MODEL_FOLDER = '/sandbox/model'
+OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
+OUTPUT_TRUNK_MODEL_FILENAME = 'trunk_model'
+
 TAG_VALUE_FOR_TRANSFER_BUCKET = "transferBucket"
 ACCESS_KEY = os.getenv('BUCKET_TRANSFER_ID')
 SECRET_KEY = os.getenv('BUCKET_TRANSFER_SECRET')
@@ -621,22 +625,88 @@ def do_task(subtuple, tuple_type):
 
 def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
 
-    algo_hash = subtuple['algo']['hash']
-    model_folder = '/sandbox/model'
+    common_volumes, compute_volumes = prepare_volumes(
+        client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
+
+    # Add node index to environment variable for the compute
+    node_index = os.getenv('NODE_INDEX')
+    if node_index:
+        environment = {'NODE_INDEX': node_index}
+    else:
+        environment = {}
+
+    container_name, command = generate_container_name_and_cmd(tuple_type, subtuple, rank)
+
+    compute_docker(
+        client=client,
+        dockerfile_path=subtuple_directory,
+        image_name=get_algo_image_name(subtuple['algo']['hash']),
+        container_name=container_name,
+        volumes={**common_volumes, **compute_volumes},
+        command=command,
+        remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
+        remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
+        capture_logs=settings.TASK['CAPTURE_LOGS'],
+        environment=environment
+    )
+
+    if tuple_type != TESTTUPLE_TYPE:
+        models = save_models(subtuple_directory, tuple_type, subtuple['key'])
+
+    # Build result for the ledger
+    result = {}
+
+    if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
+        result['end_model_file'] = models['end_model']['file']
+        result['end_model_file_hash'] = models['end_model']['hash']
+
+    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
+        # Head model does not expose storage address
+        result['end_head_model_file_hash'] = models['end_head_model']['hash']
+
+        result['end_trunk_model_file'] = models['end_trunk_model']['file']
+        result['end_trunk_model_file_hash'] = models['end_trunk_model']['hash']
+
+    # Evaluation
+    if tuple_type == TESTTUPLE_TYPE:
+
+        compute_docker(
+            client=client,
+            dockerfile_path=f'{subtuple_directory}/metrics',
+            image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
+            container_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
+            volumes=common_volumes,
+            command=None,
+            remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
+            remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
+            capture_logs=settings.TASK['CAPTURE_LOGS'],
+            environment=environment
+        )
+
+        model_path = path.join(subtuple_directory, 'model')
+        pred_path = path.join(subtuple_directory, 'pred')
+
+        # load performance
+        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
+            perf = json.load(perf_file)
+
+        result['global_perf'] = perf['all']
+
+        # Use tag to tranfer or not performances and models
+        tag = subtuple.get("tag")
+        if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
+            transfer_to_bucket(subtuple['key'], [pred_path, model_path])
+
+    return result
+
+
+def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
+
     model_path = path.join(subtuple_directory, 'model')
-    data_path = path.join(subtuple_directory, 'data')
     pred_path = path.join(subtuple_directory, 'pred')
-    opener_file = path.join(subtuple_directory, 'opener/opener.py')
-    algo_path = path.join(subtuple_directory)
-    algo_docker = get_algo_image_name(algo_hash)
-    algo_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}'
-    output_head_model_filename = 'head_model'
-    output_trunk_model_filename = 'trunk_model'
 
-    environment = {}
-
-    # VOLUMES
     symlinks_volume = {}
+    data_path = path.join(subtuple_directory, 'data')
     for subfolder in os.listdir(data_path):
         real_path = os.path.realpath(os.path.join(data_path, subfolder))
         symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
@@ -647,6 +717,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
                 symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
+    opener_file = path.join(subtuple_directory, 'opener/opener.py')
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
         opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
@@ -656,7 +727,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
 
     model_volume = {
-        model_path: {'bind': model_folder, 'mode': 'rw'}
+        model_path: {'bind': MODEL_FOLDER, 'mode': 'rw'}
     }
 
     # local volume for train like tuples in compute plan
@@ -670,69 +741,80 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
 
+    chainkeys_volume = {}
     if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_directory = get_chainkeys_directory(compute_plan_id)
-        volumes[chainkeys_directory] = {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag)
 
-        if not os.path.exists(chainkeys_directory):
-            os.makedirs(chainkeys_directory)
+    return {**volumes, **symlinks_volume}, {**model_volume, **chainkeys_volume}
 
-            k8s_client = get_k8s_client()
-            secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
-            label_selector = f'compute_plan={compute_plan_tag}'
 
-            # fetch secrets and write them to disk
+def prepare_chainkeys(compute_plan_id, compute_plan_tag):
+    chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+
+    chainkeys_volume = {
+        chainkeys_directory: {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
+    }
+
+    if not os.path.exists(chainkeys_directory):
+        os.makedirs(chainkeys_directory)
+
+        k8s_client = get_k8s_client()
+        secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
+        label_selector = f'compute_plan={compute_plan_tag}'
+
+        # fetch secrets and write them to disk
+        try:
+            secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
+        except kubernetes.client.rest.ApiException as e:
+            logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
+            raise e
+
+        secrets = secrets.to_dict()['items']
+        if not secrets:
+            raise TasksError(f'No secret found using label selector {label_selector}')
+
+        formatted_secrets = {
+            s['metadata']['labels']['index']: list(b64decode(s['data']['key']))
+            for s in secrets
+        }
+
+        with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
+            json.dump({'chain_keys': formatted_secrets}, f)
+
+        # remove secrets:
+        # do not delete secrets as a running k8s operator will recreate them, instead
+        # replace each secret data with an empty dict
+        for secret in secrets:
             try:
-                secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
-            except kubernetes.client.rest.ApiException as e:
-                logger.error(f'failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}')
-                raise e
-
-            secrets = secrets.to_dict()['items']
-            if not secrets:
-                raise TasksError(f'No secret found using label selector {label_selector}')
-
-            formatted_secrets = {
-                s['metadata']['labels']['index']: list(b64decode(s['data']['key']))
-                for s in secrets
-            }
-
-            with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
-                json.dump({'chain_keys': formatted_secrets}, f)
-
-            # remove secrets:
-            # do not delete secrets as a running k8s operator will recreate them, instead
-            # replace each secret data with an empty dict
-            for secret in secrets:
-                try:
-                    k8s_client.replace_namespaced_secret(
-                        secret['metadata']['name'],
-                        secret_namespace,
-                        body=kubernetes.client.V1Secret(
-                            data={},
-                            metadata=kubernetes.client.V1ObjectMeta(
-                                name=secret['metadata']['name'],
-                                labels=secret['metadata']['labels'],
-                            ),
+                k8s_client.replace_namespaced_secret(
+                    secret['metadata']['name'],
+                    secret_namespace,
+                    body=kubernetes.client.V1Secret(
+                        data={},
+                        metadata=kubernetes.client.V1ObjectMeta(
+                            name=secret['metadata']['name'],
+                            labels=secret['metadata']['labels'],
                         ),
-                    )
-                except kubernetes.client.rest.ApiException as e:
-                    logger.error(f'failed to remove secrets from namespace {secret_namespace}')
-                    raise e
-            else:
-                logger.info(f'{len(secrets)} secrets have been removed')
+                    ),
+                )
+            except kubernetes.client.rest.ApiException as e:
+                logger.error(f'failed to remove secrets from namespace {secret_namespace}')
+                raise e
+        else:
+            logger.info(f'{len(secrets)} secrets have been removed')
 
-        list_files(chainkeys_directory)
+    list_files(chainkeys_directory)
 
-    # Environment current node index
-    node_index = os.getenv('NODE_INDEX')
-    if node_index:
-        environment["NODE_INDEX"] = node_index
+    return chainkeys_volume
 
-    # generate command
+
+def generate_container_name_and_cmd(tuple_type, subtuple, rank):
+
+    container_name = f'{tuple_type}_{subtuple["key"][0:8]}'
+
     if tuple_type == TRAINTUPLE_TYPE:
         command = 'train'
-        algo_docker_name = f'{algo_docker_name}_{command}'
+        container_name = f'{container_name}_{command}'
 
         if subtuple['inModels'] is not None:
             in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
@@ -743,11 +825,11 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     elif tuple_type == TESTTUPLE_TYPE:
         command = 'predict'
-        algo_docker_name = f'{algo_docker_name}_{command}'
+        container_name = f'{container_name}_{command}'
 
         if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintupleType']:
             composite_traintuple_key = subtuple['traintupleKey']
-            command = f"{command} --input-models-path {model_folder}"
+            command = f"{command} --input-models-path {MODEL_FOLDER}"
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{composite_traintuple_key}"
             command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{composite_traintuple_key}"
         else:
@@ -756,14 +838,14 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         command = 'train'
-        algo_docker_name = f'{algo_docker_name}_{command}'
+        container_name = f'{container_name}_{command}'
 
-        command = f"{command} --output-models-path {model_folder}"
-        command = f"{command} --output-head-model-filename {output_head_model_filename}"
-        command = f"{command} --output-trunk-model-filename {output_trunk_model_filename}"
+        command = f"{command} --output-models-path {MODEL_FOLDER}"
+        command = f"{command} --output-head-model-filename {OUTPUT_HEAD_MODEL_FILENAME}"
+        command = f"{command} --output-trunk-model-filename {OUTPUT_TRUNK_MODEL_FILENAME}"
 
         if subtuple['inHeadModel'] and subtuple['inTrunkModel']:
-            command = f"{command} --input-models-path {model_folder}"
+            command = f"{command} --input-models-path {MODEL_FOLDER}"
 
             in_head_model = subtuple['inHeadModel']
             in_head_model_key = in_head_model.get('traintupleKey')
@@ -778,7 +860,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
         command = 'aggregate'
-        algo_docker_name = f'{algo_docker_name}_{command}'
+        container_name = f'{container_name}_{command}'
 
         if subtuple['inModels'] is not None:
             in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
@@ -787,77 +869,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         if rank is not None:
             command = f"{command} --rank {rank}"
 
-    compute_docker(
-        client=client,
-        dockerfile_path=algo_path,
-        image_name=algo_docker,
-        container_name=algo_docker_name,
-        volumes={**volumes, **model_volume, **symlinks_volume},
-        command=command,
-        remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
-        remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS'],
-        environment=environment
-    )
-
-    # save model in database
-    if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
-        end_model_file, end_model_file_hash = save_model(subtuple_directory, subtuple['key'])
-
-    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        end_head_model_file, end_head_model_file_hash = save_model(
-            subtuple_directory,
-            subtuple['key'],
-            filename=output_head_model_filename,
-        )
-        end_trunk_model_file, end_trunk_model_file_hash = save_model(
-            subtuple_directory,
-            subtuple['key'],
-            filename=output_trunk_model_filename,
-        )
-
-    # create result
-    result = {}
-    if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-        result['end_model_file_hash'] = end_model_file_hash
-        result['end_model_file'] = end_model_file
-
-    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        result['end_head_model_file_hash'] = end_head_model_file_hash
-        result['end_trunk_model_file_hash'] = end_trunk_model_file_hash
-        result['end_trunk_model_file'] = end_trunk_model_file
-
-    # evaluation
-    if tuple_type != TESTTUPLE_TYPE:  # skip evaluation
-        return result
-
-    metrics_path = f'{subtuple_directory}/metrics'
-    eval_docker = f'substra/metrics_{subtuple["key"][0:8]}'.lower()  # tag must be lowercase for docker
-    eval_docker_name = f'{tuple_type}_{subtuple["key"][0:8]}_eval'
-
-    compute_docker(
-        client=client,
-        dockerfile_path=metrics_path,
-        image_name=eval_docker,
-        container_name=eval_docker_name,
-        volumes={**volumes, **symlinks_volume},
-        command=None,
-        remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
-        remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
-        capture_logs=settings.TASK['CAPTURE_LOGS'],
-        environment=environment
-    )
-
-    # load performance
-    with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
-        perf = json.load(perf_file)
-    result['global_perf'] = perf['all']
-
-    tag = subtuple.get("tag")
-    if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
-        transfer_to_bucket(subtuple["key"], [pred_path, model_path])
-
-    return result
+    return container_name, command
 
 
 @do_not_raise
@@ -880,8 +892,39 @@ def transfer_to_bucket(tuple_key, paths):
 
 
 @timeit
+def save_models(subtuple_directory, tuple_type, subtuple_key):
+
+    models = {}
+
+    if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
+        file, file_hash = save_model(subtuple_directory, subtuple_key)
+        models['end_model'] = {
+            'file': file,
+            'hash': file_hash
+        }
+
+    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
+
+        for type_model, filename in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME),
+                                     ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME)]:
+            file, file_hash = save_model(
+                subtuple_directory,
+                subtuple_key,
+                filename=filename,
+            )
+
+            models[type_model] = {
+                'file': file,
+                'hash': file_hash
+            }
+
+    return models
+
+
+@timeit
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
+
     end_model_path = path.join(subtuple_directory, f'model/{filename}')
     end_model_file_hash = get_hash(end_model_path, subtuple_key)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
