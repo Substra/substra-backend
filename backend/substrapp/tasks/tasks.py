@@ -198,18 +198,13 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
 
 
-def prepare_traintuple_input_models(directory, tuple_):
-    """Get traintuple input models content."""
-    input_models = tuple_.get('inModels')
-    if not input_models:
-        return
-
-    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE)
+def fetch_models(tuple_type, authorized_types, input_models, directory):
 
     models = []
+
     for input_model in input_models:
         proc = ExceptionThread(target=fetch_model,
-                               args=(TRAINTUPLE_TYPE, authorized_types, input_model, directory))
+                               args=(tuple_type, authorized_types, input_model, directory))
         models.append(proc)
         proc.start()
 
@@ -225,6 +220,17 @@ def prepare_traintuple_input_models(directory, tuple_):
     else:
         if exceptions:
             raise Exception(exceptions)
+
+
+def prepare_traintuple_input_models(directory, tuple_):
+    """Get traintuple input models content."""
+    input_models = tuple_.get('inModels')
+    if not input_models:
+        return
+
+    authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE)
+
+    fetch_models(TRAINTUPLE_TYPE, authorized_types, input_models, directory)
 
 
 def prepare_aggregatetuple_input_models(directory, tuple_):
@@ -234,26 +240,8 @@ def prepare_aggregatetuple_input_models(directory, tuple_):
         return
 
     authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE, COMPOSITE_TRAINTUPLE_TYPE)
-    models = []
 
-    for input_model in input_models:
-        proc = ExceptionThread(target=fetch_model,
-                               args=(AGGREGATETUPLE_TYPE, authorized_types, input_model, directory))
-        models.append(proc)
-        proc.start()
-
-    for proc in models:
-        proc.join()
-
-    exceptions = []
-
-    for proc in models:
-        if hasattr(proc, "_exception"):
-            exceptions.append(proc._exception)
-            logger.exception(proc._exception)
-    else:
-        if exceptions:
-            raise Exception(exceptions)
+    fetch_models(AGGREGATETUPLE_TYPE, authorized_types, input_models, directory)
 
 
 def prepare_composite_traintuple_input_models(directory, tuple_):
