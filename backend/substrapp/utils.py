@@ -175,9 +175,7 @@ def get_remote_file(url, auth, content_dst_path=None, **kwargs):
                 response.raise_for_status()
 
                 with open(content_dst_path, 'wb') as fp:
-                    for chunk in response.iter_content(chunk_size):
-                        if chunk:  # filter out keep-alive new chunks
-                            fp.write(chunk)
+                    fp.writelines(response.iter_content(chunk_size))
         else:
             response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
