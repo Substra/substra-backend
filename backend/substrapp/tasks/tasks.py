@@ -7,7 +7,6 @@ import tempfile
 from os import path
 import json
 from multiprocessing.managers import BaseManager
-from threading import Thread
 import logging
 import tarfile
 
@@ -27,7 +26,7 @@ from substrapp.utils import get_hash, get_owner, create_directory, uncompress_co
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
-                                   list_files, get_k8s_client, do_not_raise, timeit)
+                                   list_files, get_k8s_client, do_not_raise, timeit, ExceptionThread)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -209,13 +208,23 @@ def prepare_traintuple_input_models(directory, tuple_):
 
     models = []
     for input_model in input_models:
-        proc = Thread(target=fetch_model,
-                      args=(TRAINTUPLE_TYPE, authorized_types, input_model, directory))
+        proc = ExceptionThread(target=fetch_model,
+                               args=(TRAINTUPLE_TYPE, authorized_types, input_model, directory))
         models.append(proc)
         proc.start()
 
     for proc in models:
         proc.join()
+
+    exceptions = []
+
+    for proc in models:
+        if hasattr(proc, "_exception"):
+            exceptions.append(proc._exception)
+            logger.exception(proc._exception)
+    else:
+        if exceptions:
+            raise Exception(exceptions)
 
 
 def prepare_aggregatetuple_input_models(directory, tuple_):
@@ -228,13 +237,23 @@ def prepare_aggregatetuple_input_models(directory, tuple_):
     models = []
 
     for input_model in input_models:
-        proc = Thread(target=fetch_model,
-                      args=(AGGREGATETUPLE_TYPE, authorized_types, input_model, directory))
+        proc = ExceptionThread(target=fetch_model,
+                               args=(AGGREGATETUPLE_TYPE, authorized_types, input_model, directory))
         models.append(proc)
         proc.start()
 
     for proc in models:
         proc.join()
+
+    exceptions = []
+
+    for proc in models:
+        if hasattr(proc, "_exception"):
+            exceptions.append(proc._exception)
+            logger.exception(proc._exception)
+    else:
+        if exceptions:
+            raise Exception(exceptions)
 
 
 def prepare_composite_traintuple_input_models(directory, tuple_):
