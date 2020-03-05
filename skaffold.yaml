@@ -6,16 +6,40 @@ build:
       context: .
       docker:
         dockerfile: docker/substra-backend/Dockerfile
+      sync:
+        infer:
+        - ./backend/manage.py
+        - ./backend/libs/*
+        - ./backend/substrapp/*
+        - ./backend/events/*
+        - ./backend/backend/*
+        - ./backend/node/*
+        - ./backend/node-register/*
+        - ./backend/users/*
 
     - image: substrafoundation/celerybeat
       context: .
       docker:
         dockerfile: docker/celerybeat/Dockerfile
+      sync:
+        infer:
+        - ./backend/libs/*
+        - ./backend/substrapp/*
+        - ./backend/backend/*
+        - ./backend/node/*
+        - ./backend/users/*
 
     - image: substrafoundation/celeryworker
       context: .
       docker:
         dockerfile: docker/celeryworker/Dockerfile
+      sync:
+        infer:
+        - ./backend/libs/*
+        - ./backend/substrapp/*
+        - ./backend/backend/*
+        - ./backend/node/*
+        - ./backend/users/*
 
     - image: substrafoundation/flower
       context: .
