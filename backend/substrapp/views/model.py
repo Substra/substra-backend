@@ -1,6 +1,5 @@
 import tempfile
 import logging
-from django.http import Http404
 from functools import wraps
 from django.conf import settings
 from django.middleware.gzip import GZipMiddleware
@@ -44,39 +43,13 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
-        validate_pk(pk)
-
-        data = get_object_from_ledger(pk, self.ledger_query_call)
-        if not data or not data.get('traintuple'):
-            raise Exception('Invalid model: missing traintuple field')
-        if data['traintuple'].get('status') != "done":
-            raise Exception("Invalid model: traintuple must be at status done")
-
-        # Try to get it from local db, else create it in local db
-        try:
-            instance = self.get_object()
-        except Http404:
-            instance = None
-
-        if not instance or not instance.file:
-            instance = self.create_or_update_model(data['traintuple'],
-                                                   data['traintuple']['outModel']['hash'])
-
-            # For security reason, do not give access to local file address
-            # Restrain data to some fields
-            # TODO: do we need to send creation date and/or last modified date ?
-            serializer = self.get_serializer(instance, fields=('owner', 'pkhash'))
-            data.update(serializer.data)
-
-            return data
-
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
+        validate_pk(pk)
 
         try:
-            data = self._retrieve(pk)
+            data = get_object_from_ledger(pk, self.ledger_query_call)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
@@ -105,18 +78,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                 return Response({'message': str(e.msg)}, status=e.status)
 
         return Response(models_list, status=status.HTTP_200_OK)
-
-    @action(detail=True)
-    def details(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-
-        try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
-
-        return Response(data, status=status.HTTP_200_OK)
 
 
 def gzip_action(func):
