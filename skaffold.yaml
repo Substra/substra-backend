@@ -7,39 +7,57 @@ build:
       docker:
         dockerfile: docker/substra-backend/Dockerfile
       sync:
-        infer:
-        - ./backend/manage.py
-        - ./backend/libs/*
-        - ./backend/substrapp/*
-        - ./backend/events/*
-        - ./backend/backend/*
-        - ./backend/node/*
-        - ./backend/node-register/*
-        - ./backend/users/*
+        manual:
+        - src: ./backend/manage.py
+          dest: /usr/src/app/
+        - src: ./backend/libs/*
+          dest: /usr/src/app/libs
+        - src: ./backend/substrapp/*
+          dest: /usr/src/app/substrapp
+        - src: ./backend/events/*
+          dest: /usr/src/app/events
+        - src: ./backend/backend/*
+          dest: /usr/src/app/backend
+        - src: ./backend/node/*
+          dest: /usr/src/app/node
+        - src: ./backend/node-register/*
+          dest: /usr/src/app/node-register
+        - src: ./backend/users/*
+          dest: /usr/src/app/users
 
     - image: substrafoundation/celerybeat
       context: .
       docker:
         dockerfile: docker/celerybeat/Dockerfile
       sync:
-        infer:
-        - ./backend/libs/*
-        - ./backend/substrapp/*
-        - ./backend/backend/*
-        - ./backend/node/*
-        - ./backend/users/*
+        manual:
+        - src: ./backend/libs/*
+          dest: /usr/src/app/libs
+        - src: ./backend/substrapp/*
+          dest: /usr/src/app/substrapp
+        - src: ./backend/backend/*
+          dest: /usr/src/app/backend
+        - src: ./backend/node/*
+          dest: /usr/src/app/node
+        - src: ./backend/users/*
+          dest: /usr/src/app/users
 
     - image: substrafoundation/celeryworker
       context: .
       docker:
         dockerfile: docker/celeryworker/Dockerfile
       sync:
-        infer:
-        - ./backend/libs/*
-        - ./backend/substrapp/*
-        - ./backend/backend/*
-        - ./backend/node/*
-        - ./backend/users/*
+        manual:
+        - src: ./backend/libs/*
+          dest: /usr/src/app/libs
+        - src: ./backend/substrapp/*
+          dest: /usr/src/app/substrapp
+        - src: ./backend/backend/*
+          dest: /usr/src/app/backend
+        - src: ./backend/node/*
+          dest: /usr/src/app/node
+        - src: ./backend/users/*
+          dest: /usr/src/app/users
 
     - image: substrafoundation/flower
       context: .
