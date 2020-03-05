@@ -170,9 +170,12 @@ def get_remote_file(url, auth, content_dst_path=None, **kwargs):
     try:
         if kwargs.get('stream', False) and content_dst_path is not None:
             chunk_size = 1024 * 1024
-            with open(content_dst_path, 'wb') as fp:
-                response = requests.get(url, **kwargs)
-                fp.writelines(response.iter_content(chunk_size))
+
+            with requests.get(url, **kwargs) as response:
+                response.raise_for_status()
+
+                with open(content_dst_path, 'wb') as fp:
+                    fp.writelines(response.iter_content(chunk_size))
         else:
             response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:

@@ -404,3 +404,18 @@ def do_not_raise(fn):
         except Exception as e:
             logging.exception(e)
     return wrapper
+
+
+class ExceptionThread(threading.Thread):
+
+    def run(self):
+        try:
+            if self._target:
+                self._target(*self._args, **self._kwargs)
+        except BaseException as e:
+            self._exception = e
+            raise e
+        finally:
+            # Avoid a refcycle if the thread is running a function with
+            # an argument that has a member that points to the thread.
+            del self._target, self._args, self._kwargs
