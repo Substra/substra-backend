@@ -3,6 +3,7 @@ import json
 import docker
 import logging
 import functools
+import threading
 
 from subprocess import check_output
 from django.conf import settings
