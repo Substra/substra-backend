@@ -10,7 +10,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from node.authentication import NodeUser
 from substrapp.models import Model
-from substrapp.serializers import ModelSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
 from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin
 from substrapp.views.filters_utils import filter_list
@@ -22,7 +21,6 @@ class ModelViewSet(mixins.RetrieveModelMixin,
                    mixins.ListModelMixin,
                    GenericViewSet):
     queryset = Model.objects.all()
-    serializer_class = ModelSerializer
     ledger_query_call = 'queryModelDetails'
     # permission_classes = (permissions.IsAuthenticated,)
 
@@ -43,13 +41,27 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return instance
 
+    def _retrieve(self, pk):
+        validate_pk(pk)
+
+        data = get_object_from_ledger(pk, self.ledger_query_call)
+
+        compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
+        any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
+
+        if not any_data:
+            raise Exception(
+                'Invalid model: missing traintuple, compositeTraintuple or aggregatetuple field'
+            )
+
+        return data
+
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
-        validate_pk(pk)
 
         try:
-            data = get_object_from_ledger(pk, self.ledger_query_call)
+            data = self._retrieve(pk)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
@@ -97,7 +109,6 @@ class ModelPermissionViewSet(PermissionMixin,
                              GenericViewSet):
 
     queryset = Model.objects.all()
-    serializer_class = ModelSerializer
     ledger_query_call = 'queryModelPermissions'
 
     def has_access(self, user, asset):
