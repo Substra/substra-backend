@@ -948,14 +948,11 @@ def on_compute_plan(compute_plan):
     model_hashes = compute_plan['modelHashes']
     status = compute_plan['status']
 
-    # Remove local folder when compute plan is finished
+    # Remove local folder and algo when compute plan is finished
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
 
     if status in ['done', 'failed', 'canceled']:
         remove_local_folders(compute_plan_id)
-
-    # Remove algorithm images
-    if algo_hashes:
         remove_algo_images(algo_hashes)
 
     # Remove intermediary models
