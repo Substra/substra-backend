@@ -64,9 +64,7 @@ def local_memory_limit():
         return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // CELERY_WORKER_CONCURRENCY
 
 
-@timeit
-def get_memory_limit():
-
+def docker_memory_limit():
     docker_client = docker.from_env()
     # Get memory limit from docker container through the API
     # Because the docker execution may be remote
@@ -88,15 +86,23 @@ def get_memory_limit():
         'cap_drop': ['ALL'],
     }
 
+    memory_limit_bytes = docker_client.containers.run(**task_args)
+
+    return int(memory_limit_bytes)
+
+
+@timeit
+def get_memory_limit():
+
     memory_limit = local_memory_limit()
 
     try:
-        memory_limit_bytes = docker_client.containers.run(**task_args)
-    except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
-        logger.info('[Warning] Cannot get memory limit from remote')
-    else:
-        if memory_limit_bytes:
-            memory_limit = int(memory_limit_bytes)
+        memory_limit = docker_memory_limit()
+    except (docker.errors.ContainerError, docker.errors.ImageNotFound,
+            docker.errors.APIError, ValueError):
+
+        logger.info('[Warning] Cannot get memory limit from remote, get it from local.')
+        memory_limit = local_memory_limit()
 
     return memory_limit
 

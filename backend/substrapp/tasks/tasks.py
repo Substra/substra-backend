@@ -37,6 +37,13 @@ AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
 TESTTUPLE_TYPE = 'testtuple'
 
+TUPLE_COMMANDS = {
+    TRAINTUPLE_TYPE: 'train',
+    TESTTUPLE_TYPE: 'predict',
+    COMPOSITE_TRAINTUPLE_TYPE: 'train',
+    AGGREGATETUPLE_TYPE: 'aggregate',
+}
+
 MODEL_FOLDER = '/sandbox/model'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
 OUTPUT_TRUNK_MODEL_FILENAME = 'trunk_model'
@@ -635,7 +642,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     else:
         environment = {}
 
-    container_name, command = generate_container_name_and_cmd(tuple_type, subtuple, rank)
+    container_name = f'{tuple_type}_{subtuple["key"][0:8]}_{TUPLE_COMMANDS[tuple_type]}'
+    command = generate_command(tuple_type, subtuple, rank)
 
     compute_docker(
         client=client,
@@ -650,22 +658,9 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         environment=environment
     )
 
-    if tuple_type != TESTTUPLE_TYPE:
-        models = save_models(subtuple_directory, tuple_type, subtuple['key'])
-
-    # Build result for the ledger
-    result = {}
-
-    if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-        result['end_model_file'] = models['end_model']['file']
-        result['end_model_file_hash'] = models['end_model']['hash']
-
-    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        # Head model does not expose storage address
-        result['end_head_model_file_hash'] = models['end_head_model']['hash']
-
-        result['end_trunk_model_file'] = models['end_trunk_model']['file']
-        result['end_trunk_model_file_hash'] = models['end_trunk_model']['hash']
+    # Handle model and result from tuple
+    models = save_models(subtuple_directory, tuple_type, subtuple['key'])  # Can be empty if testtuple
+    result = extract_result_from_models(tuple_type, models)  # Can be empty if testtuple
 
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
@@ -808,13 +803,11 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
     return chainkeys_volume
 
 
-def generate_container_name_and_cmd(tuple_type, subtuple, rank):
+def generate_command(tuple_type, subtuple, rank):
 
-    container_name = f'{tuple_type}_{subtuple["key"][0:8]}'
+    command = TUPLE_COMMANDS[tuple_type]
 
     if tuple_type == TRAINTUPLE_TYPE:
-        command = 'train'
-        container_name = f'{container_name}_{command}'
 
         if subtuple['inModels'] is not None:
             in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
@@ -824,8 +817,6 @@ def generate_container_name_and_cmd(tuple_type, subtuple, rank):
             command = f"{command} --rank {rank}"
 
     elif tuple_type == TESTTUPLE_TYPE:
-        command = 'predict'
-        container_name = f'{container_name}_{command}'
 
         if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintupleType']:
             composite_traintuple_key = subtuple['traintupleKey']
@@ -837,8 +828,6 @@ def generate_container_name_and_cmd(tuple_type, subtuple, rank):
             command = f'{command} {in_model}'
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        command = 'train'
-        container_name = f'{container_name}_{command}'
 
         command = f"{command} --output-models-path {MODEL_FOLDER}"
         command = f"{command} --output-head-model-filename {OUTPUT_HEAD_MODEL_FILENAME}"
@@ -859,8 +848,6 @@ def generate_container_name_and_cmd(tuple_type, subtuple, rank):
             command = f"{command} --rank {rank}"
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
-        command = 'aggregate'
-        container_name = f'{container_name}_{command}'
 
         if subtuple['inModels'] is not None:
             in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
@@ -869,7 +856,7 @@ def generate_container_name_and_cmd(tuple_type, subtuple, rank):
         if rank is not None:
             command = f"{command} --rank {rank}"
 
-    return container_name, command
+    return command
 
 
 @do_not_raise
@@ -919,6 +906,24 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
             }
 
     return models
+
+
+def extract_result_from_models(tuple_type, models):
+
+    result = {}
+
+    if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
+        result['end_model_file'] = models['end_model']['file']
+        result['end_model_file_hash'] = models['end_model']['hash']
+
+    elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
+        # Head model does not expose storage address
+        result['end_head_model_file_hash'] = models['end_head_model']['hash']
+
+        result['end_trunk_model_file'] = models['end_trunk_model']['file']
+        result['end_trunk_model_file_hash'] = models['end_trunk_model']['hash']
+
+    return result
 
 
 @timeit
