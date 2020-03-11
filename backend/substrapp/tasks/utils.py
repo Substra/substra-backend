@@ -94,13 +94,10 @@ def docker_memory_limit():
 @timeit
 def get_memory_limit():
 
-    memory_limit = local_memory_limit()
-
     try:
         memory_limit = docker_memory_limit()
     except (docker.errors.ContainerError, docker.errors.ImageNotFound,
             docker.errors.APIError, ValueError):
-
         logger.info('[Warning] Cannot get memory limit from remote, get it from local.')
         memory_limit = local_memory_limit()
 
