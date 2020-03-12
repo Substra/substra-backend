@@ -400,6 +400,9 @@ def remove_subtuple_materials(subtuple_directory):
 
 
 def remove_local_folders(compute_plan_id):
+
+    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
+
     client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
 
@@ -949,8 +952,6 @@ def on_compute_plan(compute_plan):
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished
-    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
-
     if status in ['done', 'failed', 'canceled']:
         remove_local_folders(compute_plan_id)
         remove_algo_images(algo_hashes)
