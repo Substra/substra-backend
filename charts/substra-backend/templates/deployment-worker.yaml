@@ -27,7 +27,7 @@ spec:
       {{- end }}
       {{- end }}
       {{- if .Values.celeryworker.rbac.enable }}
-      serviceAccountName: {{ template "substra.fullname" . }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
       {{- end }}
       containers:
         - name: worker
