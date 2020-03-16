@@ -205,6 +205,10 @@ celeryworker:
 
   affinity: {}
 
+  rbac:
+    enable: False
+  # Add ServiceAccount for celeryworker
+
 extraEnv: []
   # - name: ENV_VARIABLE
   #   value: false
