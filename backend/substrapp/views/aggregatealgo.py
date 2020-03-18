@@ -81,7 +81,8 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'file': file,
-            'description': request.data.get('description')
+            'description': request.data.get('description'),
+            'metadata': request.data.get('metadata', {})
         })
 
         try:

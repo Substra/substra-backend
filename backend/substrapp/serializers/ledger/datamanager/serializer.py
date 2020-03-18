@@ -20,6 +20,7 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         data_type = validated_data.get('type')
         permissions = validated_data.get('permissions')
         objective_key = validated_data.get('objective_key', '')
+        metadata = validated_data.get('metadata', {})
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
@@ -36,6 +37,7 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorizedIDs': permissions.get('authorized_ids'),
-            }}
+            }},
+            'metadata': metadata
         }
         return ledger.create_datamanager(args, instance.pkhash)

@@ -16,6 +16,7 @@ class LedgerAlgoSerializer(serializers.Serializer):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         permissions = validated_data.get('permissions')
+        metadata = validated_data.get('metadata', {})
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
@@ -29,6 +30,7 @@ class LedgerAlgoSerializer(serializers.Serializer):
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorizedIDs': permissions.get('authorized_ids'),
-            }}
+            }},
+            'metadata': metadata
         }
         return ledger.create_algo(args, instance.pkhash)

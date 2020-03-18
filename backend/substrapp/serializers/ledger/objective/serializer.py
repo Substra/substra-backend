@@ -24,6 +24,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         permissions = validated_data.get('permissions')
         test_data_manager_key = validated_data.get('test_data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
+        metadata = validated_data.get('metadata', {})
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
@@ -42,6 +43,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorizedIDs': permissions.get('authorized_ids'),
-            }}
+            }},
+            'metadata': metadata
         }
         return ledger.create_objective(args, instance.pkhash)
