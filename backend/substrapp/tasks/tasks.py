@@ -922,8 +922,8 @@ def remove_algo_images(algo_hashes):
 
         try:
             if client.images.get(algo_docker):
-                client.images.remove(algo_docker, force=True)
                 logger.info(f'Remove docker image {algo_docker}')
+                client.images.remove(algo_docker, force=True)
 
         except docker.errors.ImageNotFound:
             pass
