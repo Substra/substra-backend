@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import CharField, DictField
 
 from substrapp import ledger
 
@@ -13,6 +14,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
                                            min_length=0,
                                            required=False, allow_null=True)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField())
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')

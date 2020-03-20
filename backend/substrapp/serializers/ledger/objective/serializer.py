@@ -1,6 +1,7 @@
 from rest_framework import serializers
 # from django.contrib.sites.models import Site
 from django.conf import settings
+from rest_framework.fields import CharField, DictField
 from rest_framework.reverse import reverse
 
 from substrapp import ledger
@@ -16,6 +17,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
+    metadata = DictField(child=CharField())
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')

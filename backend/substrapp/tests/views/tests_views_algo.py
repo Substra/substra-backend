@@ -207,6 +207,10 @@ class AlgoViewTests(APITestCase):
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
+                },
+                'metadata': {
+                    "foo": "bar",
+                    "bar": "foo"
                 }
             }),
             'file': open(algo_path, 'rb'),
@@ -219,6 +223,7 @@ class AlgoViewTests(APITestCase):
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
+        assert response.data['metadata'] is not None
         self.assertEqual(response.data['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

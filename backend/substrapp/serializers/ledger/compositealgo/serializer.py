@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from django.conf import settings
+from rest_framework.fields import CharField, DictField
 from rest_framework.reverse import reverse
 
 from substrapp import ledger
@@ -11,6 +12,7 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 class LedgerCompositeAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=100)
     permissions = PermissionsSerializer()
+    metadata = DictField(child=CharField())
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
