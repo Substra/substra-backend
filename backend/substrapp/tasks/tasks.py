@@ -948,7 +948,7 @@ def on_compute_plan(compute_plan):
 
     compute_plan_id = compute_plan['computePlanID']
     algo_hashes = compute_plan['algoKeys']
-    model_hashes = compute_plan['modelHashes']
+    model_hashes = compute_plan['modelsToDelete']
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished
