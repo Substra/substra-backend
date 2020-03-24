@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from substrapp import ledger
-from substrapp.serializers.ledger.utils import PermissionsSerializer
+from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 
 
 class LedgerCompositeTraintupleSerializer(serializers.Serializer):
@@ -14,7 +14,7 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
                                               allow_null=True)
     in_trunk_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
                                                allow_null=True)
-    out_trunk_model_permissions = PermissionsSerializer()
+    out_trunk_model_permissions = PrivatePermissionsSerializer()
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
@@ -36,7 +36,6 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
             'inHeadModelKey': in_head_model_key,
             'inTrunkModelKey': in_trunk_model_key,
             'outTrunkModelPermissions': {'process': {
-                'public': out_trunk_model_permissions.get('public'),
                 'authorizedIDs': out_trunk_model_permissions.get('authorized_ids'),
             }},
             'dataManagerKey': data_manager_key,
