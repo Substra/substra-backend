@@ -32,8 +32,8 @@ spec:
           {{- if .Values.celeryworker.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
           {{- end }}
-          command: ["celery"]
-          args: ["-A", "backend", "worker", "-E", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery", "--hostname", "{{ .Values.organization.name }}.worker"]
+          command: ["/bin/bash"]
+          args: ["-c", "update-ca-certificates && celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -80,6 +80,11 @@ spec:
               mountPath: /var/hyperledger/tls/client/pair
             - name: cacert
               mountPath: /var/hyperledger/ca
+            {{- if .Values.privateCa.enabled }}
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            {{- end }}
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
@@ -104,6 +109,11 @@ spec:
       - name: peer-tls-client
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
+      {{- if .Values.privateCa.enabled }}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
+      {{- end }}
       - name: cacert
         secret:
           secretName: {{ $.Values.secrets.caCert }}
