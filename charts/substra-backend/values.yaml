@@ -212,6 +212,6 @@ extraEnv: []
 privateCa:
   enabled: false
   configMap:
-    name: dispatcher-private-ca
+    name: substra-private-ca
 #    data: nil
     fileName: private-ca.crt
