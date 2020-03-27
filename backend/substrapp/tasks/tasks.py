@@ -22,7 +22,7 @@ from celery.task import Task
 import boto3
 
 from backend.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
@@ -181,6 +181,7 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
         raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
 
     model_dst_path = path.join(directory, f'model/{input_model["traintupleKey"]}')
+    raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
@@ -259,6 +260,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
         raise TasksError(f'CompositeTraintuple: invalid head input model: type={tuple_type}')
     # get the output head model
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
+    raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
     get_and_put_local_model_content(
         head_model_key, metadata['outHeadModel']['outModel'], head_model_dst_path
     )
@@ -267,6 +269,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     trunk_model_key = trunk_model['traintupleKey']
     tuple_type, metadata = find_training_step_tuple_from_key(trunk_model_key)
     trunk_model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{trunk_model_key}')
+    raise_if_path_traversal([trunk_model_dst_path], path.join(directory, 'model/'))
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
@@ -290,6 +293,7 @@ def prepare_testtuple_input_models(directory, tuple_):
     if traintuple_type == TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryTraintuple')
         model_dst_path = path.join(directory, f'model/{traintuple_key}')
+        raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
             traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
         )
@@ -297,10 +301,12 @@ def prepare_testtuple_input_models(directory, tuple_):
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
+        raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
         get_and_put_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'],
                                         head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
+        raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
             traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
         )

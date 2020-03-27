@@ -108,6 +108,25 @@ def create_directory(directory):
         os.makedirs(directory)
 
 
+def raise_if_path_traversal(requested_paths, to_directory):
+    # Inspired from https://stackoverflow.com/a/45188896
+
+    safe_directory = os.path.join(
+        os.path.realpath(to_directory),
+        ''
+    )
+
+    if not isinstance(requested_paths, list):
+        raise TypeError(f'requested_paths argument should be a list not a {type(requested_paths)}')
+
+    for requested_path in requested_paths:
+        real_requested_path = os.path.realpath(requested_path)
+        path_traversal = os.path.commonprefix([real_requested_path, safe_directory]) != safe_directory
+
+        if path_traversal:
+            raise Exception(f'Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.')
+
+
 class ZipFile(zipfile.ZipFile):
     """Override Zipfile to ensure unix file permissions are preserved.
 
@@ -132,11 +151,26 @@ class ZipFile(zipfile.ZipFile):
 
 
 def uncompress_path(archive_path, to_directory):
+
     if zipfile.is_zipfile(archive_path):
+
         with ZipFile(archive_path, 'r') as zf:
+
+            # Check no path traversal
+            filenames = [os.path.join(to_directory, filename)
+                         for filename in zf.namelist()]
+            raise_if_path_traversal(filenames, to_directory)
+
             zf.extractall(to_directory)
+
     elif tarfile.is_tarfile(archive_path):
         with tarfile.open(archive_path, 'r:*') as tf:
+
+            # Check no path traversal
+            filenames = [os.path.join(to_directory, filename)
+                         for filename in tf.getnames()]
+            raise_if_path_traversal(filenames, to_directory)
+
             tf.extractall(to_directory)
     else:
         raise Exception('Archive must be zip or tar.gz')
@@ -145,10 +179,22 @@ def uncompress_path(archive_path, to_directory):
 def uncompress_content(archive_content, to_directory):
     if zipfile.is_zipfile(io.BytesIO(archive_content)):
         with ZipFile(io.BytesIO(archive_content)) as zf:
+
+            # Check no path traversal
+            filenames = [os.path.join(to_directory, filename)
+                         for filename in zf.namelist()]
+            raise_if_path_traversal(filenames, to_directory)
+
             zf.extractall(to_directory)
     else:
         try:
             with tarfile.open(fileobj=io.BytesIO(archive_content)) as tf:
+
+                # Check no path traversal
+                filenames = [os.path.join(to_directory, filename)
+                             for filename in tf.getnames()]
+                raise_if_path_traversal(filenames, to_directory)
+
                 tf.extractall(to_directory)
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
@@ -159,6 +205,7 @@ class NodeError(Exception):
 
 
 def get_remote_file(url, auth, content_dst_path=None, **kwargs):
+
     kwargs.update({
         'headers': {'Accept': 'application/json;version=0.0'},
         'auth': auth
