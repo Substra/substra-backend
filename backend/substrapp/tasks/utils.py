@@ -30,6 +30,9 @@ def get_statsd_client(prefix=None):
     )
 
 
+statsd_client = get_statsd_client()
+
+
 def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
@@ -66,7 +69,7 @@ def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt
                                            content_dst_path=content_dst_path, salt=salt)
 
 
-@timeit
+@statsd_client.timer('fetch_model')
 def get_cpu_count(client):
     # Get CPU count from docker container through the API
     # Because the docker execution may be remote
@@ -98,7 +101,7 @@ def get_cpu_count(client):
     return cpu_count
 
 
-@timeit
+@statsd_client.timer('fetch_model')
 def get_cpu_sets(client, concurrency):
     cpu_count = get_cpu_count(client)
     cpu_step = max(1, cpu_count // concurrency)

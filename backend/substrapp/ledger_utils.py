@@ -7,11 +7,12 @@ import time
 from django.conf import settings
 from rest_framework import status
 from grpc import RpcError
+from substrapp.tasks.utils import get_statsd_client
 
-from substrapp.tasks.utils import timeit
 
 LEDGER = getattr(settings, 'LEDGER', None)
 logger = logging.getLogger(__name__)
+statsd_client = get_statsd_client()
 
 
 class LedgerError(Exception):
@@ -278,6 +279,7 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         return response
 
 
+@statsd_client.timer('call_ledger')
 def call_ledger(call_type, fcn, *args, **kwargs):
     """Call ledger and log each request."""
     ts = time.time()
@@ -322,7 +324,6 @@ def query_ledger(fcn, args=None):
     return call_ledger('query', fcn=fcn, args=args)
 
 
-@timeit
 @retry_on_error()
 def invoke_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
@@ -392,10 +393,12 @@ def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
     update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
+@statsd_client.timer('log_start_tuple')
 def log_start_tuple(tuple_type, tuple_key):
     _update_tuple_status(tuple_type, tuple_key, 'doing')
 
 
+@statsd_client.timer('log_fail_tuple')
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     extra_kwargs = {
@@ -404,6 +407,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
     _update_tuple_status(tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
 
 
+@statsd_client.timer('log_success_tuple')
 def log_success_tuple(tuple_type, tuple_key, res):
     extra_kwargs = {
         'log': '',
