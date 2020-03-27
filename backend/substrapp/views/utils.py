@@ -2,11 +2,11 @@ import os
 
 
 from django.http import FileResponse, HttpResponse
-from rest_framework.authentication import BasicAuthentication, TokenAuthentication
+from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
-from libs.session_authentication import CustomSessionAuthentication
 from node.authentication import NodeUser
 from substrapp.ledger_utils import get_object_from_ledger, LedgerError
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
@@ -16,8 +16,6 @@ from django.conf import settings
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
-
-from users.authentication import SecureJWTAuthentication
 
 from substrapp import exceptions
 
@@ -54,12 +52,7 @@ def node_has_process_permission(asset):
 
 
 class PermissionMixin(object):
-    authentication_classes = [
-        BasicAuthentication,  # for node to node
-        SecureJWTAuthentication,  # for user from front/sdk/cli
-        TokenAuthentication,  # for user from front/sdk/cli
-        CustomSessionAuthentication,  # for user on drf web browsable api
-    ]
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
     def has_access(self, user, asset):
