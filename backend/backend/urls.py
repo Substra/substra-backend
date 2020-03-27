@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf.urls import url
-from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include
@@ -28,7 +27,6 @@ from users.urls import router as user_router
 
 urlpatterns = [
     url(r'^', include([
-        url(r'^admin/', admin.site.urls),
         url(r'^doc/', schema_view),
         url(r'^', include((router.urls, 'substrapp'))),
         url(r'^', include((node_router.urls, 'node'))),
