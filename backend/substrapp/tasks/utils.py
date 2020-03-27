@@ -18,6 +18,16 @@ DOCKER_LABEL = 'substra_task'
 logger = logging.getLogger(__name__)
 
 import time
+from statsd import StatsClient
+
+
+def get_statsd_client(prefix=None):
+    return StatsClient(
+        host='graphite-0.graphite.default.svc.cluster.local',
+        port=8125,
+        prefix='backend',
+        maxudpsize=512,
+    )
 
 
 def timeit(function):
@@ -26,6 +36,8 @@ def timeit(function):
         result = function(*args, **kw)
         elaps = (time.time() - ts) * 1000
         logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
+        statsd_client = get_statsd_client()
+        statsd_client.timing(function.__name__, elaps)
         return result
     return timed
 

@@ -8,6 +8,7 @@ from django.conf import settings
 from rest_framework import status
 from grpc import RpcError
 
+from substrapp.tasks.utils import timeit
 
 LEDGER = getattr(settings, 'LEDGER', None)
 logger = logging.getLogger(__name__)
@@ -321,6 +322,7 @@ def query_ledger(fcn, args=None):
     return call_ledger('query', fcn=fcn, args=args)
 
 
+@timeit
 @retry_on_error()
 def invoke_ledger(*args, **kwargs):
     return _invoke_ledger(*args, **kwargs)
