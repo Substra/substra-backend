@@ -111,6 +111,8 @@ def create_directory(directory):
 def raise_if_path_traversal(requested_paths, to_directory):
     # Inspired from https://stackoverflow.com/a/45188896
 
+    # Get real path and ensure there is a suffix /
+    # at the end of the path
     safe_directory = os.path.join(
         os.path.realpath(to_directory),
         ''
@@ -121,9 +123,9 @@ def raise_if_path_traversal(requested_paths, to_directory):
 
     for requested_path in requested_paths:
         real_requested_path = os.path.realpath(requested_path)
-        path_traversal = os.path.commonprefix([real_requested_path, safe_directory]) != safe_directory
+        is_traversal = os.path.commonprefix([real_requested_path, safe_directory]) != safe_directory
 
-        if path_traversal:
+        if is_traversal:
             raise Exception(f'Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.')
 
 

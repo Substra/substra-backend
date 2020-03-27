@@ -12,7 +12,6 @@ from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_s
 
 import docker
 import os
-import shutil
 
 
 DIRECTORY = '/tmp/testmisc/'
@@ -52,13 +51,6 @@ class MockArchive:
 
 class MiscTests(TestCase):
     """Misc tests"""
-
-    def setUp(self):
-        if not os.path.exists(DIRECTORY):
-            os.makedirs(DIRECTORY)
-
-    def tearDown(self):
-        shutil.rmtree(DIRECTORY, ignore_errors=True)
 
     def test_cpu_sets(self):
         cpu_count = 16
