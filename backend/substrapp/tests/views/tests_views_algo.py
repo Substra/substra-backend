@@ -209,8 +209,8 @@ class AlgoViewTests(APITestCase):
                     'authorized_ids': [],
                 },
                 'metadata': {
-                    "foo": "bar",
-                    "bar": "foo"
+                    "one": "foo",
+                    "two": "bar"
                 }
             }),
             'file': open(algo_path, 'rb'),
@@ -220,10 +220,8 @@ class AlgoViewTests(APITestCase):
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
 
             mcreate.return_value = {}
-
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        assert response.data['metadata'] is not None
         self.assertEqual(response.data['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
