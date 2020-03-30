@@ -18,7 +18,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import include
 
-from backend.views import schema_view, obtain_auth_token
+from backend.views import obtain_auth_token
 
 from substrapp.urls import router
 from node.urls import router as node_router
@@ -27,7 +27,6 @@ from users.urls import router as user_router
 
 urlpatterns = [
     url(r'^', include([
-        url(r'^doc/', schema_view),
         url(r'^', include((router.urls, 'substrapp'))),
         url(r'^', include((node_router.urls, 'node'))),
         url(r'^', include((user_router.urls, 'user'))),  # for secure jwt authent
