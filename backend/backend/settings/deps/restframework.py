@@ -21,6 +21,13 @@ REST_FRAMEWORK = {
     'ALLOWED_VERSIONS': ('0.0',),
     'DEFAULT_VERSION': '0.0',
     'EXCEPTION_HANDLER': 'substrapp.exceptions.api_exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '60/minute',
+        'login': '60/minute',
+    },
 }
 
 SIMPLE_JWT = {
