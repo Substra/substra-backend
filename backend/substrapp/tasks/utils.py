@@ -23,7 +23,7 @@ from statsd import StatsClient
 
 def get_statsd_client(prefix=None):
     return StatsClient(
-        host='graphite-0.graphite.default.svc.cluster.local',
+        host='graphite-0.graphite.monitoring.svc.cluster.local',
         port=8125,
         prefix='backend',
         maxudpsize=512,
