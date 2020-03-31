@@ -12,13 +12,14 @@ def main(network):
 
     client = substra.Client()
     if network == 'docker':
-        client.add_profile('default', 'substra', 'p@$swr0d44', 'http://substra-backend.owkin.xyz', '0.0')
+        client.add_profile('default', 'http://substra-backend.owkin.xyz', '0.0')
+        client.login('substra', 'p@$swr0d44')
     elif network == 'skaffold':
-        client.add_profile('default', 'node-1', 'p@$swr0d44', 'http://substra-backend.node-1.com', '0.0')
+        client.add_profile('default', 'http://substra-backend.node-1.com', '0.0')
+        client.login('node-1', 'p@$swr0d44')
     else:
         raise Exception('Unknow network')
 
-    client.login()
     client.set_profile('default')
 
     assets = {}
