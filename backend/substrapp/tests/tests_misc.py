@@ -1,6 +1,8 @@
 from django.test import TestCase
 
 from mock import patch
+
+from substrapp.utils import raise_if_path_traversal, uncompress_path
 from substrapp.tasks.utils import get_cpu_sets, get_gpu_sets
 
 from substrapp.ledger_utils import LedgerNotFound, LedgerInvalidResponse
@@ -9,6 +11,10 @@ from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_s
     log_success_tuple, query_tuples
 
 import docker
+import os
+
+
+DIRECTORY = '/tmp/testmisc/'
 
 
 class MockDevice():
@@ -18,6 +24,29 @@ class MockDevice():
 
     def write(self, s):
         pass
+
+
+class MockArchive:
+    def __init__(self, traversal=True):
+        if traversal:
+            self.files = ['../../foo.csv', '../bar.csv']
+        else:
+            self.files = ['foo.csv', 'bar.csv']
+
+    def __iter__(self):
+        return iter(self.files)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return True
+
+    def namelist(self):
+        return self.files
+
+    def getnames(self):
+        return self.files
 
 
 class MiscTests(TestCase):
@@ -99,3 +128,29 @@ class MiscTests(TestCase):
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = None
             query_tuples('testtuple', 'data_owner')
+
+    def test_path_traversal(self):
+        # Zip
+        with patch('substrapp.utils.zipfile.is_zipfile') as mock_is_zipfile, \
+                patch('substrapp.utils.ZipFile') as mock_zipfile:
+            mock_is_zipfile.return_value = True
+            mock_zipfile.return_value = MockArchive()
+
+            self.assertRaises(Exception,
+                              uncompress_path('', DIRECTORY))
+
+        # Tar
+        with patch('substrapp.utils.zipfile.is_zipfile') as mock_is_zipfile, \
+                patch('substrapp.utils.tarfile.is_tarfile') as mock_is_tarfile, \
+                patch('substrapp.utils.tarfile.open') as mock_tarfile:
+            mock_is_zipfile.return_value = False
+            mock_is_tarfile.return_value = True
+            mock_tarfile.return_value = MockArchive()
+
+            self.assertRaises(Exception,
+                              uncompress_path('', DIRECTORY))
+
+        # Models
+        with self.assertRaises(Exception):
+            model_dst_path = os.path.join(DIRECTORY, f'model/../../hackermodel')
+            raise_if_path_traversal([model_dst_path], os.path.join(DIRECTORY, 'model/'))

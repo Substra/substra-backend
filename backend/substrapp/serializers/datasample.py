@@ -9,7 +9,7 @@ from rest_framework.serializers import raise_errors_on_nested_writes
 from rest_framework.utils import model_meta
 
 from substrapp.models import DataSample
-
+from substrapp.utils import raise_if_path_traversal
 
 from django.utils.deconstruct import deconstructible
 
@@ -19,9 +19,21 @@ class FileValidator(object):
     error_messages = {
         'open': ("Cannot handle this file object."),
         'compressed': ("Ensure this file is an archive (zip or tar.* compressed file)."),
+        'file': ("Ensure your archive contains at least one file."),
+        'traversal': ("Ensure your archive does not contain traversal filenames (e.g. filename with `..` inside)"),
     }
 
+    def validate_archive(self, files):
+        if not len(files):
+            raise ValidationError(self.error_messages['file'])
+        try:
+            raise_if_path_traversal(files, './')
+        except Exception:
+            raise ValidationError(self.error_messages['traversal'])
+
     def __call__(self, data):
+
+        archive = None
 
         try:
             data.file.seek(0)
@@ -35,10 +47,18 @@ class FileValidator(object):
                 # is zipfile?
                 if not zipfile.is_zipfile(data.file):
                     raise ValidationError(self.error_messages['compressed'])
+
+                archive = zipfile.ZipFile(file=data.file)
+                self.validate_archive(archive.namelist())
             else:
-                archive.close()
+                self.validate_archive(archive.getnames())
             finally:
                 data.file.seek(0)
+
+                if archive:
+                    archive.close()
+                else:
+                    raise ValidationError(self.error_messages['open'])
 
 
 class DataSampleSerializer(serializers.ModelSerializer):
