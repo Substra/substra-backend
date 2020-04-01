@@ -6,12 +6,10 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         #  'rest_framework.renderers.AdminRenderer',
-        'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'users.authentication.SecureJWTAuthentication',  # for front/sdk/cli
         'libs.expiry_token_authentication.ExpiryTokenAuthentication',  # for front/sdk/cli
-        'libs.session_authentication.CustomSessionAuthentication',  # for web browsable api
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
