@@ -108,3 +108,13 @@ deploy:
           users:
             - name: "node-2"
               secret: "p@$swr0d45"
+
+profiles:
+  - name: prod
+    patches:
+      - op: replace
+        path: /deploy/helm/releases/0/overrides/backend/settings
+        value: prod
+      - op: replace
+        path: /deploy/helm/releases/1/overrides/backend/settings
+        value: prod
