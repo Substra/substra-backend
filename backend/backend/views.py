@@ -1,13 +1,16 @@
 from rest_framework.authtoken.views import ObtainAuthToken
+from rest_framework.throttling import AnonRateThrottle
 
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
 from libs.expiry_token_authentication import token_expire_handler, expires_at
+from libs.user_login_throttle import UserLoginThrottle
 
 
 class ExpiryObtainAuthToken(ObtainAuthToken):
     authentication_classes = []
+    throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
