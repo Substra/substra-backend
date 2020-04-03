@@ -1,4 +1,4 @@
-{{- if .Values.celeryworker.rbac.enable }} 
+{{- if .Values.celeryworker.rbac.enable }}
 ---
 apiVersion: v1
 kind: ServiceAccount
@@ -14,7 +14,7 @@ metadata:
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "substra.fullname" . }}
+  name: {{ template "substra.fullname" . }}-worker
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -29,7 +29,7 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: {{ template "substra.fullname" . }}
+  name: {{ template "substra.fullname" . }}-worker
   labels:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     app.kubernetes.io/instance: {{ .Release.Name }}
@@ -38,9 +38,9 @@ metadata:
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 subjects:
   - kind: ServiceAccount
-    name: {{ template "substra.fullname" . }}
+    name: {{ template "substra.fullname" . }}-worker
 roleRef:
   kind: Role
-  name: {{ template "substra.fullname" . }}
+  name: {{ template "substra.fullname" . }}-worker
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
