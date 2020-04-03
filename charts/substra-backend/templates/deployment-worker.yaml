@@ -26,6 +26,9 @@ spec:
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      {{- if .Values.celeryworker.rbac.enable }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
+      {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
