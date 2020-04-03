@@ -406,6 +406,9 @@ def remove_subtuple_materials(subtuple_directory):
 
 
 def remove_local_folders(compute_plan_id):
+    if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
+        logger.info(f'Skipping remove local volume of compute plan {compute_plan_id}')
+        return
 
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
 

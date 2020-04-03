@@ -209,3 +209,5 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
 
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
+
+ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))
