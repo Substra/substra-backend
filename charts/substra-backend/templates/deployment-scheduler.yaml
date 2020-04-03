@@ -39,6 +39,14 @@ spec:
               value: backend.settings.celery.{{ .Values.backend.settings }}
             - name: BACKEND_ORG
               value: {{ .Values.organization.name }}
+            - name: BACKEND_DB_NAME
+              value: {{ .Values.postgresql.postgresqlDatabase }}
+            - name: BACKEND_DB_USER
+              value: {{ .Values.postgresql.postgresqlUsername }}
+            - name: BACKEND_DB_PWD
+              value: {{ .Values.postgresql.postgresqlPassword }}
+            - name: DATABASE_HOST
+              value: {{ .Release.Name }}-postgresql
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: LEDGER_CONFIG_FILE

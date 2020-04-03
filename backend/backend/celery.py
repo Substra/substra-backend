@@ -36,6 +36,12 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler',
                              name='query CompositeTraintuples to prepare task on todo composite_traintuples')
 
+    from users.tasks import flush_expired_tokens
+
+    period = int(os.environ.get('FLUSH_EXPIRED_TOKENS_TASK_PERIOD', 24 * 3600))
+    sender.add_periodic_task(period, flush_expired_tokens.s(), queue='scheduler',
+                             name='flush expired tokens')
+
 
 @after_task_publish.connect
 def update_task_state(sender=None, headers=None, body=None, **kwargs):
