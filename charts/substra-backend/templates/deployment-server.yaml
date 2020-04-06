@@ -67,6 +67,10 @@ spec:
             value: "1"
           - name: GZIP_MODELS
             value: {{ .Values.backend.gzipModels | quote }}
+            {{- if .Values.privateCa.enabled }}
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            {{- end }}
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}
