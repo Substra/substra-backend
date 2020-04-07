@@ -23,14 +23,14 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '60/minute',
-        'login': '60/minute',
+        'anon': '120/minute',
+        'login': '120/minute',
     },
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('ACCESS_TOKEN_LIFETIME', 24*60))),
-    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('REFRESH_TOKEN_LIFETIME', 24*60*7))),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('ACCESS_TOKEN_LIFETIME', 24 * 60))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=int(os.environ.get('REFRESH_TOKEN_LIFETIME', 24 * 60 * 7))),
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('JWT',),
     'BLACKLIST_AFTER_ROTATION': True,
