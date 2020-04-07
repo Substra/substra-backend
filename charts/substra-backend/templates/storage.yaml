@@ -1,40 +1,88 @@
+{{- range .Values.persistence.volumes }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: {{ template "substra.fullname" . }}
+  name: {{ template "substra.fullname" $ }}-{{ .name }}
 spec:
   storageClassName: ""
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.persistence.size | quote }}
+      storage: {{ .size | quote }}
   selector:
     matchLabels:
-      app.kubernetes.io/managed-by: {{ .Release.Service }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-      app.kubernetes.io/name: {{ template "substra.name" . }}
-      app.kubernetes.io/part-of: {{ template "substra.name" . }}
+      app.kubernetes.io/managed-by: {{ $.Release.Service }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
+      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-{{ .name }}
 ---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ template "substra.fullname" . }}
+  name: {{ template "substra.fullname" $ }}-{{ .name }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-{{ .name }}
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
+  claimRef:
+    name: {{ template "substra.fullname" $ }}-{{ .name }}
+    namespace: {{ $.Release.Namespace }}
   capacity:
-    storage: {{ .Values.persistence.size | quote }}
+    storage: {{ .size | quote }}
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   hostPath:
-    path: {{ .Values.persistence.hostPath | quote }}
+    path: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+    type: DirectoryOrCreate
+{{- end }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "substra.fullname" $ }}-servermedias
+spec:
+  storageClassName: ""
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: {{ $.Values.persistence.size | quote }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: {{ $.Release.Service }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
+      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-servermedias
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "substra.fullname" $ }}-servermedias
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-servermedias
+spec:
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Recycle
+  claimRef:
+    name: {{ template "substra.fullname" $ }}-servermedias
+    namespace: {{ $.Release.Namespace }}
+  capacity:
+    storage: {{ $.Values.persistence.size | quote }}
+  accessModes:
+    - ReadOnlyMany
+  hostPath:
+    path: {{ $.Values.persistence.hostPath }}/servermedias
     type: DirectoryOrCreate

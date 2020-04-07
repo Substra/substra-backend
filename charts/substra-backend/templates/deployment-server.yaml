@@ -75,8 +75,14 @@ spec:
             containerPort: {{ .Values.backend.service.port }}
             protocol: TCP
         volumeMounts:
-          - name: data
-            mountPath: {{ .Values.persistence.hostPath }}
+          {{- range .Values.persistence.volumes }}
+          - name: data-{{ .name }}
+            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            readOnly: {{ .readOnly.server }}
+          {{- end }}
+          - name: data-servermedias
+            mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+            readOnly: true
           - name: statics
             mountPath: /usr/src/app/backend/statics
           - name: config
@@ -154,9 +160,14 @@ spec:
             mountPath: /usr/src/app/backend/statics
       {{- end }}
       volumes:
-      - name: data
+      {{- range .Values.persistence.volumes }}
+      - name: data-{{ .name }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" . }}
+          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+      {{- end }}
+      - name: data-servermedias
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: statics
         emptyDir: {}
       - name: config

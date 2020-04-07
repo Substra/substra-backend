@@ -77,6 +77,52 @@ users: []
 persistence:
   hostPath: "/substra"
   size: "10Gi"
+  volumes:
+    - name: algos
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: aggregatealgos
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: compositealgos
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: datamanagers
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: datasamples
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: objectives
+      size: "10Gi"
+      readOnly:
+        server: false
+        worker: true
+    - name: models
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: false
+    - name: subtuple
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: false
+    - name: computeplan
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: false
 
 # Secrets names
 secrets:

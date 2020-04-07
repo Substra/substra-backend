@@ -13,7 +13,6 @@ import tarfile
 import docker
 import kubernetes
 from checksumdir import dirhash
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
@@ -50,32 +49,17 @@ class TasksError(Exception):
 
 
 def get_objective(tuple_):
-    from substrapp.models import Objective
 
     objective_hash = tuple_['objective']['hash']
+    objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
 
-    try:
-        objective = Objective.objects.get(pk=objective_hash)
-    except ObjectDoesNotExist:
-        objective = None
+    objective_content = get_asset_content(
+        objective_metadata['metrics']['storageAddress'],
+        objective_metadata['owner'],
+        objective_metadata['metrics']['hash'],
+    )
 
-    # get objective from ledger as it is not available in local db and store it in local db
-    if objective is None or not objective.metrics:
-        objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
-
-        content = get_asset_content(
-            objective_metadata['metrics']['storageAddress'],
-            objective_metadata['owner'],
-            objective_metadata['metrics']['hash'],
-        )
-
-        objective, _ = Objective.objects.update_or_create(pkhash=objective_hash, validated=True)
-
-        tmp_file = tempfile.TemporaryFile()
-        tmp_file.write(content)
-        objective.metrics.save('metrics.archive', tmp_file)
-
-    return objective.metrics.read()
+    return objective_content
 
 
 @timeit
@@ -165,7 +149,7 @@ def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
         raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
-        os.link(model.file.path, model_dst_path)
+        os.symlink(model.file.path, model_dst_path)
     else:
         # verify that local subtuple model file is not corrupted
         if get_hash(model_dst_path, tuple_key) != out_model['hash']:
@@ -315,7 +299,6 @@ def prepare_testtuple_input_models(directory, tuple_):
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
 
-@timeit
 def prepare_models(directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
@@ -351,7 +334,7 @@ def prepare_opener(directory, tuple_):
 
     opener_dst_path = path.join(directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
-        os.link(datamanager.data_opener.path, opener_dst_path)
+        os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
         # verify that local subtuple data opener file is not corrupted
         if get_hash(opener_dst_path) != data_opener_hash:
@@ -651,11 +634,16 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     environment = {}
 
     # VOLUMES
-
     symlinks_volume = {}
     for subfolder in os.listdir(data_path):
         real_path = os.path.realpath(os.path.join(data_path, subfolder))
         symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+    for subtuple_folder in ['opener', 'model', 'metrics']:
+        for subitem in os.listdir(path.join(subtuple_directory, subtuple_folder)):
+            real_path = os.path.realpath(os.path.join(subtuple_directory, subtuple_folder, subitem))
+            if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
+                symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
@@ -921,7 +909,8 @@ def get_subtuple_directory(subtuple):
 
 
 def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan', compute_plan_id, 'chainkeys')
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
 
 
 def remove_algo_images(algo_hashes):

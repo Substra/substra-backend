@@ -175,6 +175,8 @@ def generate_docker_compose_file(conf, launch_settings):
             password = credentials['password'].replace('$', '$$')
             user_command = f"python manage.py add_user {credentials['username']} '{password}'"
 
+        MEDIA_ROOT = f'{SUBSTRA_FOLDER}/medias/{org_name_stripped}'
+
         backend = {
             'container_name': f'substra-backend.{org_name_stripped}.xyz',
             'labels': ['substra'],
@@ -186,9 +188,15 @@ def generate_docker_compose_file(conf, launch_settings):
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': [
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{MEDIA_ROOT}/algos:{MEDIA_ROOT}/algos:rw',
+                f'{MEDIA_ROOT}/aggregatealgos:{MEDIA_ROOT}/aggregatealgos:rw',
+                f'{MEDIA_ROOT}/compositealgos:{MEDIA_ROOT}/compositealgos:rw',
+                f'{MEDIA_ROOT}/datamanagers:{MEDIA_ROOT}/datamanagers:rw',
+                f'{MEDIA_ROOT}/datasamples:{MEDIA_ROOT}/datasamples:rw',
+                f'{MEDIA_ROOT}/objectives:{MEDIA_ROOT}/objectives:rw',
+                f'{MEDIA_ROOT}/models:{MEDIA_ROOT}/models:ro',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro',
-                f'{SUBSTRA_FOLDER}/static:/usr/src/app/backend/statics'] + hlf_volumes,
+                f'{SUBSTRA_FOLDER}/static:/usr/src/app/backend/statics:rw'] + hlf_volumes,
             'depends_on': [f'postgresql{org_name_stripped}', 'rabbit']}
 
         scheduler = {
@@ -218,7 +226,14 @@ def generate_docker_compose_file(conf, launch_settings):
             'environment': celery_global_env.copy(),
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{MEDIA_ROOT}/algos:{MEDIA_ROOT}/algos:ro',
+                f'{MEDIA_ROOT}/aggregatealgos:{MEDIA_ROOT}/aggregatealgos:ro',
+                f'{MEDIA_ROOT}/compositealgos:{MEDIA_ROOT}/compositealgos:ro',
+                f'{MEDIA_ROOT}/datamanagers:{MEDIA_ROOT}/datamanagers:ro',
+                f'{MEDIA_ROOT}/datasamples:{MEDIA_ROOT}/datasamples:ro',
+                f'{MEDIA_ROOT}/objectives:{MEDIA_ROOT}/objectives:ro',
+                f'{MEDIA_ROOT}/models:{MEDIA_ROOT}/models:rw',
+                f'{MEDIA_ROOT}/subtuple:{MEDIA_ROOT}/subtuple:rw',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
             'depends_on': [f'backend{org_name_stripped}', 'rabbit']}
 
@@ -243,7 +258,7 @@ def generate_docker_compose_file(conf, launch_settings):
             worker['runtime'] = 'nvidia'
 
         if launch_settings == 'dev':
-            media_root = f'MEDIA_ROOT={SUBSTRA_FOLDER}/medias/{org_name_stripped}'
+            media_root = f'MEDIA_ROOT={MEDIA_ROOT}'
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
         else:
