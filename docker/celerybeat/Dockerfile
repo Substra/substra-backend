@@ -10,7 +10,6 @@ WORKDIR /usr/src/app
 COPY ./backend/requirements.txt /usr/src/app/.
 
 RUN pip3 install -r requirements.txt
-RUN pip3 install watchdog argh
 
 COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
