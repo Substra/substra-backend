@@ -10,20 +10,28 @@ build:
         manual:
         - src: backend/manage.py
           dest: /usr/src/app/
+          strip: backend/
         - src: backend/libs/**/*
           dest: /usr/src/app/libs
+          strip: backend/libs/
         - src: backend/substrapp/**/*
           dest: /usr/src/app/substrapp
+          strip: backend/substrapp/
         - src: backend/events/**/*
           dest: /usr/src/app/events
+          strip: backend/events/
         - src: backend/backend/**/*
           dest: /usr/src/app/backend
+          strip: backend/backend/
         - src: backend/node/**/*
           dest: /usr/src/app/node
+          strip: backend/node/
         - src: backend/node-register/**/*
           dest: /usr/src/app/node-register
+          strip: backend/node-register/
         - src: backend/users/**/*
           dest: /usr/src/app/users
+          strip: backend/users/
 
     - image: substrafoundation/celerybeat
       context: .
@@ -33,14 +41,19 @@ build:
         manual:
         - src: backend/libs/**/*
           dest: /usr/src/app/libs
+          strip: backend/libs/
         - src: backend/substrapp/**/*
           dest: /usr/src/app/substrapp
+          strip: backend/substrapp/
         - src: backend/backend/**/*
           dest: /usr/src/app/backend
+          strip: backend/backend/
         - src: backend/node/**/*
           dest: /usr/src/app/node
+          strip: backend/node/
         - src: backend/users/**/*
           dest: /usr/src/app/users
+          strip: backend/users/
 
     - image: substrafoundation/celeryworker
       context: .
@@ -50,14 +63,19 @@ build:
         manual:
         - src: backend/libs/**/*
           dest: /usr/src/app/libs
+          strip: backend/libs/
         - src: backend/substrapp/**/*
           dest: /usr/src/app/substrapp
+          strip: backend/substrapp/
         - src: backend/backend/**/*
           dest: /usr/src/app/backend
+          strip: backend/backend/
         - src: backend/node/**/*
           dest: /usr/src/app/node
+          strip: backend/node/
         - src: backend/users/**/*
           dest: /usr/src/app/users
+          strip: backend/users/
 
     - image: substrafoundation/flower
       context: .
@@ -67,14 +85,19 @@ build:
         manual:
         - src: backend/libs/**/*
           dest: /usr/src/app/libs
+          strip: backend/libs/
         - src: backend/substrapp/**/*
           dest: /usr/src/app/substrapp
+          strip: backend/substrapp/
         - src: backend/backend/**/*
           dest: /usr/src/app/backend
+          strip: backend/backend/
         - src: backend/node/**/*
           dest: /usr/src/app/node
+          strip: backend/node/
         - src: backend/users/**/*
           dest: /usr/src/app/users
+          strip: backend/users/
 
 deploy:
   helm:
