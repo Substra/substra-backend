@@ -109,7 +109,7 @@ LOGGING = {
         'celery': {
             'level': 'INFO',
             'handlers': ['console'],
-            'propagate': True,
+            'propagate': True,  # without this, celery logs aren't displayed at all
         },
     },
 }
