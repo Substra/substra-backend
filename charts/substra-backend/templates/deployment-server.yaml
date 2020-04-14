@@ -36,7 +36,7 @@ spec:
         {{- if eq .Values.backend.settings "prod" }}
         args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
         {{- else }}
-        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} --py-autoreload 3"]
+        args: ["-c", "update-ca-certificates && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
