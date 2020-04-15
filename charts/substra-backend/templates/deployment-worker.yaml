@@ -20,6 +20,16 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" . }}-server
+            topologyKey: kubernetes.io/hostname
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
