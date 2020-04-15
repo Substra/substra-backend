@@ -4,6 +4,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ template "substra.fullname" $ }}-{{ .name }}
+  namespace: {{ $.Release.Namespace }}
 spec:
   storageClassName: ""
   accessModes:
@@ -48,6 +49,7 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ template "substra.fullname" $ }}-servermedias
+  namespace: {{ $.Release.Namespace }}
 spec:
   storageClassName: ""
   accessModes:
