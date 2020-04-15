@@ -9,6 +9,7 @@ from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
+from substrapp.metrics import statsd_client
 
 from kubernetes import client, config
 
@@ -18,31 +19,6 @@ DOCKER_LABEL = 'substra_task'
 logger = logging.getLogger(__name__)
 
 import time
-from statsd import StatsClient
-
-
-def get_statsd_client(prefix=None):
-    return StatsClient(
-        host='graphite-0.graphite.monitoring.svc.cluster.local',
-        port=8125,
-        prefix='backend',
-        maxudpsize=512,
-    )
-
-
-statsd_client = get_statsd_client()
-
-
-def timeit(function):
-    def timed(*args, **kw):
-        ts = time.time()
-        result = function(*args, **kw)
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
-        statsd_client = get_statsd_client()
-        statsd_client.timing(function.__name__, elaps)
-        return result
-    return timed
 
 
 def authenticate_worker(node_id):

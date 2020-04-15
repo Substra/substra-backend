@@ -210,3 +210,11 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24*60)))
 
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
+
+
+STATSD_ENABLED = to_bool(os.environ.get('STATSD_ENABLED', True))
+STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
+STATSD_PORT = os.environ.get('STATSD_PORT', 8125)
+STATSD_PREFIX = os.environ.get('STATSD_PREFIX', 'substra-backend')
+STATSD_MAXUDPSIZE = 512
+STATSD_IPV6 = 0

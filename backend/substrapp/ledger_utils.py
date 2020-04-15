@@ -7,12 +7,11 @@ import time
 from django.conf import settings
 from rest_framework import status
 from grpc import RpcError
-from substrapp.tasks.utils import get_statsd_client
+from substrapp.metrics import statsd_client
 
 
 LEDGER = getattr(settings, 'LEDGER', None)
 logger = logging.getLogger(__name__)
-statsd_client = get_statsd_client()
 
 
 class LedgerError(Exception):

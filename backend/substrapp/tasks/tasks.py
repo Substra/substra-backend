@@ -19,7 +19,6 @@ from rest_framework.reverse import reverse
 from celery.result import AsyncResult
 from celery.exceptions import Ignore
 from celery.task import Task
-from statsd import StatsClient
 
 import boto3
 
@@ -30,6 +29,7 @@ from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
                                    list_files, get_k8s_client, do_not_raise, ExceptionThread)
 from substrapp.tasks.exception_handler import compute_error_code
+from substrapp.metrics import statsd_client
 
 logger = logging.getLogger(__name__)
 
@@ -45,18 +45,6 @@ TAG_VALUE_FOR_TRANSFER_BUCKET = "transferBucket"
 ACCESS_KEY = os.getenv('BUCKET_TRANSFER_ID')
 SECRET_KEY = os.getenv('BUCKET_TRANSFER_SECRET')
 BUCKET_NAME = os.getenv('BUCKET_TRANSFER_NAME')
-
-
-def get_statsd_client(prefix=None):
-    return StatsClient(
-        host='graphite-0.graphite.monitoring.svc.cluster.local',
-        port=8125,
-        prefix='backend',
-        maxudpsize=512,
-    )
-
-
-statsd_client = get_statsd_client()
 
 
 class TasksError(Exception):

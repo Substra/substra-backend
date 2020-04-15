@@ -66,6 +66,16 @@ deploy:
           users:
             - name: "node-1"
               secret: "p@$swr0d44"
+          extraEnv:
+            - name: STATSD_ENABLED
+              value: "true"
+            - name: STATSD_HOST
+              value: "graphite-0.graphite.monitoring.svc.cluster.local"
+            - name: STATSD_PORT
+              value: "8125"
+            - name: STATSD_PREFIX
+              value: substra-backend-org-1
+
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -108,3 +118,12 @@ deploy:
           users:
             - name: "node-2"
               secret: "p@$swr0d45"
+          extraEnv:
+            - name: STATSD_ENABLED
+              value: "true"
+            - name: STATSD_HOST
+              value: "graphite-0.graphite.monitoring.svc.cluster.local"
+            - name: STATSD_PORT
+              value: "8125"
+            - name: STATSD_PREFIX
+              value: substra-backend-org-2
