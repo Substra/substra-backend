@@ -72,7 +72,7 @@ def generate_docker_compose_file(conf, launch_settings):
                 'hostname': 'celerybeat',
                 'image': 'substra/celerybeat',
                 'restart': 'unless-stopped',
-                'command': f'/bin/bash -c "{wait_rabbit}'
+                'command': f'/bin/bash -c "{wait_rabbit};'
                            'celery -A backend beat -l info"',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
