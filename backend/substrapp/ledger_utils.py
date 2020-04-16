@@ -292,6 +292,7 @@ def call_ledger(call_type, fcn, *args, **kwargs):
         # add a log even if the function raises an exception
         te = time.time()
         elaps = (te - ts) * 1000
+        statsd_client.timing(f'call_ledger_{fcn}', elaps)
         logger.info(f'smartcontract {call_type}:{fcn}; elaps={elaps:.2f}ms; error={error}')
 
 
