@@ -14,7 +14,7 @@ class LedgerDataManagerSerializer(serializers.Serializer):
     type = serializers.CharField(max_length=30)
     objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
-    metadata = DictField(child=CharField())
+    metadata = DictField(child=CharField(), required=False)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')

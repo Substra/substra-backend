@@ -13,7 +13,7 @@ class LedgerTestTupleSerializer(serializers.Serializer):
                                                   min_length=0,
                                                   required=False, allow_null=True)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
-    metadata = DictField(child=CharField())
+    metadata = DictField(child=CharField(), required=False)
 
     def get_args(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')

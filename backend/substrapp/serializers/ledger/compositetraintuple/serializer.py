@@ -19,7 +19,7 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
-    metadata = DictField(child=CharField())
+    metadata = DictField(child=CharField(), required=False)
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')

@@ -12,7 +12,7 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 class LedgerAggregateAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=100)
     permissions = PermissionsSerializer()
-    metadata = DictField(child=CharField())
+    metadata = DictField(child=CharField(), required=False)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
