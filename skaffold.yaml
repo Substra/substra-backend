@@ -40,7 +40,7 @@ deploy:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
             settings: dev
-            defaultDomain: http://substra-backend.node-1.com
+            defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
             ingress:
               enabled: true
               hosts:
@@ -82,7 +82,7 @@ deploy:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           backend:
             settings: dev
-            defaultDomain: http://substra-backend.node-2.com
+            defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
             ingress:
               enabled: true
               hosts:
