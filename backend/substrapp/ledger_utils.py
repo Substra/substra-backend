@@ -273,6 +273,10 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         except json.decoder.JSONDecodeError:
             raise LedgerInvalidResponse(response)
 
+        # Set the ledger inside timer as a metric
+        duration = response.pop('duration', None)
+        if duration:
+            metrics_client.timing(f'legder_execution_{fcn}', duration)
         # Raise errors if status is not ok
         _raise_for_status(response)
 
