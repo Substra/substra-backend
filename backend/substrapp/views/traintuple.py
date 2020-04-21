@@ -40,7 +40,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             # list of train data keys (which are stored in the train worker node)
             'train_data_sample_keys': request.data.get('train_data_sample_keys'),
             'tag': request.data.get('tag', ''),
-            'metadata': request.data.get('metadata', {})
+            'metadata': request.data.get('metadata')
         }
 
         serializer = self.get_serializer(data=data)

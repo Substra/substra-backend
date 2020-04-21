@@ -38,7 +38,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
             'in_models_keys': request.data.get('in_models_keys'),
             'worker': request.data.get('worker'),
             'tag': request.data.get('tag', ''),
-            'metadata': request.data.get('metadata', {})
+            'metadata': request.data.get('metadata')
         }
 
         serializer = self.get_serializer(data=data)

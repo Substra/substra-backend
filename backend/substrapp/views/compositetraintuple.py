@@ -41,7 +41,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             'out_trunk_model_permissions': request.data.get('out_trunk_model_permissions'),
             'train_data_sample_keys': request.data.get('train_data_sample_keys'),
             'tag': request.data.get('tag', ''),
-            'metadata': request.data.get('metadata', {})
+            'metadata': request.data.get('metadata')
         }
 
         serializer = self.get_serializer(data=data)

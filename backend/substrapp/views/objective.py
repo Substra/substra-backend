@@ -31,6 +31,17 @@ def replace_storage_addresses(request, objective):
     )
 
 
+def get_metadata_as_dict(data):
+    if not data:
+        return data
+
+    return {
+        k[9:]: v
+        for k,v in data.items()
+        if k.startswith('metadata_')
+    }
+
+
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
@@ -63,7 +74,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
-            'metadata': request.data.get('metadata', {})
+            'metadata': get_metadata_as_dict(request.data)
         }
         ledger_data.update({'instance': instance})
         ledger_serializer = LedgerObjectiveSerializer(data=ledger_data,

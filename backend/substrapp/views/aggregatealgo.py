@@ -82,7 +82,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             'pkhash': pkhash,
             'file': file,
             'description': request.data.get('description'),
-            'metadata': request.data.get('metadata', {})
+            'metadata': request.data.get('metadata')
         })
 
         try:

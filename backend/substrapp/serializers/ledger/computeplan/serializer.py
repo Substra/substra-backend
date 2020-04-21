@@ -63,7 +63,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     aggregatetuples = ComputePlanAggregatetupleSerializer(many=True, required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
-    metadata = DictField(child=CharField(), required=False)
+    metadata = DictField(child=CharField(allow_blank=True), required=False)
 
     def get_args(self, data):
         # convert snake case fields to camel case fields to match chaincode expected inputs

@@ -16,7 +16,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
-    metadata = DictField(child=CharField(), required=False)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')
@@ -27,7 +27,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
-        metadata = validated_data.get('metadata', {})
+        metadata = validated_data.get('metadata')
 
         args = {
             'algoKey': algo_key,
