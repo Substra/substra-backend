@@ -9,9 +9,10 @@ from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
-from substrapp.metrics import statsd_client
+from substrapp.metrics import get_metrics_client
 
 from kubernetes import client, config
+metrics_client = get_metrics_client()
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 DOCKER_LABEL = 'substra_task'
@@ -45,7 +46,7 @@ def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt
                                            content_dst_path=content_dst_path, salt=salt)
 
 
-@statsd_client.timer('fetch_model')
+@metrics_client.timer('fetch_model')
 def get_cpu_count(client):
     # Get CPU count from docker container through the API
     # Because the docker execution may be remote
@@ -77,7 +78,7 @@ def get_cpu_count(client):
     return cpu_count
 
 
-@statsd_client.timer('fetch_model')
+@metrics_client.timer('fetch_model')
 def get_cpu_sets(client, concurrency):
     cpu_count = get_cpu_count(client)
     cpu_step = max(1, cpu_count // concurrency)

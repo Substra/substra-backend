@@ -29,9 +29,10 @@ from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
                                    list_files, get_k8s_client, do_not_raise, ExceptionThread)
 from substrapp.tasks.exception_handler import compute_error_code
-from substrapp.metrics import statsd_client
+from substrapp.metrics import get_metrics_client
 
 logger = logging.getLogger(__name__)
+metrics_client = get_metrics_client()
 
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
@@ -80,7 +81,7 @@ def get_objective(tuple_):
     return objective.metrics.read()
 
 
-@statsd_client.timer('prepare_objective')
+@metrics_client.timer('prepare_objective')
 def prepare_objective(directory, tuple_):
     """Prepare objective for tuple execution."""
     metrics_content = get_objective(tuple_)
@@ -111,7 +112,7 @@ def get_algo(tuple_type, tuple_):
     return content
 
 
-@statsd_client.timer('prepare_objective')
+@metrics_client.timer('prepare_objective')
 def prepare_algo(directory, tuple_type, tuple_):
     """Prepare algo for tuple execution."""
     content = get_algo(tuple_type, tuple_)
@@ -174,7 +175,7 @@ def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
             raise Exception('Local Model Hash in Subtuple is not the same as in local medias')
 
 
-@statsd_client.timer('fetch_model')
+@metrics_client.timer('fetch_model')
 def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
 
     tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])
@@ -311,7 +312,7 @@ def prepare_testtuple_input_models(directory, tuple_):
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
 
-@statsd_client.timer('prepare_models')
+@metrics_client.timer('prepare_models')
 def prepare_models(directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
@@ -333,7 +334,7 @@ def prepare_models(directory, tuple_type, tuple_):
         raise TasksError(f"task of type : {tuple_type} not implemented")
 
 
-@statsd_client.timer('prepare_opener')
+@metrics_client.timer('prepare_opener')
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
@@ -354,7 +355,7 @@ def prepare_opener(directory, tuple_):
             raise Exception('DataOpener Hash in Subtuple is not the same as in local medias')
 
 
-@statsd_client.timer('prepare_data_sample')
+@metrics_client.timer('prepare_data_sample')
 def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
@@ -566,7 +567,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     return result
 
 
-@statsd_client.timer('prepare_materials')
+@metrics_client.timer('prepare_materials')
 def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
@@ -594,7 +595,7 @@ def prepare_materials(subtuple, tuple_type):
     list_files(directory)
 
 
-@statsd_client.timer('do_task')
+@metrics_client.timer('do_task')
 def do_task(subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple)
     org_name = getattr(settings, 'ORG_NAME')
@@ -881,7 +882,7 @@ def transfer_to_bucket(tuple_key, paths):
         s3.upload_file(tar_path, BUCKET_NAME, tar_name)
 
 
-@statsd_client.timer('save_model')
+@metrics_client.timer('save_model')
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
     end_model_path = path.join(subtuple_directory, f'model/{filename}')
