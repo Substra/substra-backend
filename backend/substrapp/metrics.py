@@ -29,14 +29,13 @@ class NullStatsClient(StatsClient):
         return passthrough
 
 
-_statsd_client = NullStatsClient()
+_statsd_client = None
 
 
 def initialize():
     global _statsd_client
 
-    statsd_enabled = getattr(settings, 'STATSD_ENABLED', False)
-    if statsd_enabled:
+    if settings.STATSD_ENABLED:
         statsd_host = getattr(settings, 'STATSD_HOST', defaults.HOST)
         statsd_port = getattr(settings, 'STATSD_PORT', defaults.PORT)
         statsd_prefix = getattr(settings, 'STATSD_PREFIX', defaults.PREFIX)
@@ -50,6 +49,8 @@ def initialize():
             maxudpsize=statsd_maxudpsize,
             ipv6=statsd_ipv6
         )
+    else:
+        _statsd_client = NullStatsClient()
 
     return _statsd_client
 

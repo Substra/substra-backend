@@ -212,7 +212,7 @@ EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFET
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
 
-STATSD_ENABLED = to_bool(os.environ.get('STATSD_ENABLED', True))
+STATSD_ENABLED = to_bool(os.environ.get('STATSD_ENABLED', False))
 STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
 STATSD_PORT = os.environ.get('STATSD_PORT', 8125)
 STATSD_PREFIX = os.environ.get('STATSD_PREFIX', 'substra-backend')

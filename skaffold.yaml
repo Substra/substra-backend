@@ -68,7 +68,7 @@ deploy:
               secret: "p@$swr0d44"
           extraEnv:
             - name: STATSD_ENABLED
-              value: "true"
+              value: "false"
             - name: STATSD_HOST
               value: "graphite-0.graphite.monitoring.svc.cluster.local"
             - name: STATSD_PORT
@@ -120,7 +120,7 @@ deploy:
               secret: "p@$swr0d45"
           extraEnv:
             - name: STATSD_ENABLED
-              value: "true"
+              value: "false"
             - name: STATSD_HOST
               value: "graphite-0.graphite.monitoring.svc.cluster.local"
             - name: STATSD_PORT
