@@ -14,7 +14,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
-                                   get_remote_asset, node_has_process_permission)
+                                   get_remote_asset, node_has_process_permission, get_metadata_as_dict)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -44,6 +44,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         ledger_data = {
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
+            'metadata': get_metadata_as_dict(request.data)
         }
 
         # init ledger serializer
