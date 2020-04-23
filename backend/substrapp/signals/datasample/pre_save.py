@@ -10,8 +10,8 @@ logger = logging.getLogger(__name__)
 
 
 def data_sample_pre_save(sender, instance, **kwargs):
-    src_path = normpath(instance.path)
     destination_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.pk))
+    src_path = normpath(instance.path)
 
     # try to make an hard link to keep a free copy of the data
     # if not possible, keep the real path location

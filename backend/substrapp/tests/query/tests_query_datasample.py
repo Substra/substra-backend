@@ -486,7 +486,7 @@ class DataSampleQueryTests(APITestCase):
                                                   description=self.data_description2,
                                                   data_opener=self.data_data_opener2)
 
-        d = DataSample(path=self.data_file)
+        d = DataSample(path=self.data_file_filename)
         # trigger pre save
         d.save()
 

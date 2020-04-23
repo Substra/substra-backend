@@ -220,7 +220,7 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample)
+        data_sample = DataSample(pkhash='foo', path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
