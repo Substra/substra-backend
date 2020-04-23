@@ -18,7 +18,7 @@ def data_sample_pre_save(sender, instance, **kwargs):
     try:
         shutil.copytree(src_path, destination_path, copy_function=link)
     except Exception as e:
-        logger.error(f'error happend while copying data from {src_path} to {destination_path} {e}')
+        logger.exception(f'error happend while copying data from {src_path} to {destination_path} {e}')
         shutil.rmtree(destination_path, ignore_errors=True)
         logger.info(f'directory {destination_path} deleted')
     else:
