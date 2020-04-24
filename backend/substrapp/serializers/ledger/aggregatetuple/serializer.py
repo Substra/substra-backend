@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import CharField, DictField
 
 from substrapp import ledger
+from substrapp.views.utils import get_metadata_as_dict
 
 
 class LedgerAggregateTupleSerializer(serializers.Serializer):
@@ -24,7 +25,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
         compute_plan_id = validated_data.get('compute_plan_id', '')
         in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
-        metadata = validated_data.get('metadata')
+        metadata = get_metadata_as_dict(validated_data)
 
         args = {
             'algoKey': algo_key,
