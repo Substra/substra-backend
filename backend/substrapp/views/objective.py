@@ -19,7 +19,7 @@ from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
-                                   node_has_process_permission)
+                                   node_has_process_permission, get_metadata_as_dict)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -29,18 +29,6 @@ def replace_storage_addresses(request, objective):
     objective['metrics']['storageAddress'] = request.build_absolute_uri(
         reverse('substrapp:objective-metrics', args=[objective['key']])
     )
-
-
-def get_metadata_as_dict(data):
-    if not data:
-        return data
-
-    return {
-        k[9:]: v
-        for k,v in data.items()
-        if k.startswith('metadata_')
-    }
-
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
