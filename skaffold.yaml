@@ -23,6 +23,7 @@ build:
         dockerfile: docker/flower/Dockerfile
 
 deploy:
+  statusCheckDeadlineSeconds: 300
   helm:
     releases:
       - name: backend-org-1
