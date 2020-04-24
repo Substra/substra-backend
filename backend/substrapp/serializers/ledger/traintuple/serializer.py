@@ -7,13 +7,14 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
-    compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
+    compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
+                                            allow_null=True)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
-                                           required=False)
+                                           required=False, allow_null=True)
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')

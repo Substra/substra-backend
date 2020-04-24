@@ -38,11 +38,8 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             'compute_plan_id': request.data.get('compute_plan_id', ''),
             'in_head_model_key': request.data.get('in_head_model_key', ''),
             'in_trunk_model_key': request.data.get('in_trunk_model_key', ''),
-            'out_trunk_model_permissions': {
-                'public': False,
-                'authorized_ids': request.data.getlist('out_trunk_model_permissions_authorized_ids', []),
-            },
-            'train_data_sample_keys': request.data.getlist('train_data_sample_keys'),
+            'out_trunk_model_permissions': request.data.get('out_trunk_model_permissions'),
+            'train_data_sample_keys': request.data.get('train_data_sample_keys'),
             'tag': request.data.get('tag', '')
         }
 

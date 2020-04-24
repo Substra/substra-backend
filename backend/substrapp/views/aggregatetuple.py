@@ -35,7 +35,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
             'algo_key': request.data.get('algo_key'),
             'rank': request.data.get('rank'),
             'compute_plan_id': request.data.get('compute_plan_id', ''),
-            'in_models_keys': request.data.getlist('in_models_keys'),
+            'in_models_keys': request.data.get('in_models_keys'),
             'worker': request.data.get('worker'),
             'tag': request.data.get('tag', '')
         }

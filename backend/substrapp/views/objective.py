@@ -58,16 +58,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # init ledger serializer
         ledger_data = {
-            'test_data_sample_keys': request.data.getlist('test_data_sample_keys', []),
+            'test_data_sample_keys': request.data.get('test_data_sample_keys') or [],
             'test_data_manager_key': request.data.get('test_data_manager_key', ''),
             'name': request.data.get('name'),
-            # XXX workaround because input is a QueryDict and not a JSON object. This
-            #     is due to the fact that we are sending file object and body in a
-            #     single HTTP request
-            'permissions': {
-                'public': request.data.get('permissions_public'),
-                'authorized_ids': request.data.getlist('permissions_authorized_ids', []),
-            },
+            'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
         }
         ledger_data.update({'instance': instance})

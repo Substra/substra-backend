@@ -7,11 +7,12 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     worker = serializers.CharField()
-    compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
+    compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
+                                            allow_null=True)
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
-                                           required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+                                           required=False, allow_null=True)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
     def get_args(self, validated_data):
         algo_key = validated_data.get('algo_key')

@@ -2,6 +2,7 @@ import copy
 import os
 import shutil
 import logging
+import json
 
 import mock
 import urllib.parse
@@ -198,13 +199,19 @@ class AlgoViewTests(APITestCase):
 
         pkhash = get_hash(algo_path)
 
-        data = {'name': 'Logistic regression',
-                'file': open(algo_path, 'rb'),
-                'description': open(description_path, 'rb'),
+        data = {
+            'json': json.dumps({
+                'name': 'Logistic regression',
                 'objective_key': get_hash(os.path.join(
                     dir_path, '../../../../fixtures/chunantes/objectives/objective0/description.md')),
-                'permissions_public': True,
-                'permissions_authorized_ids': []}
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                }
+            }),
+            'file': open(algo_path, 'rb'),
+            'description': open(description_path, 'rb'),
+        }
 
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
 
