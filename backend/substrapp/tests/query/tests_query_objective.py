@@ -15,7 +15,7 @@ from substrapp.models import Objective, DataManager
 from substrapp.utils import get_hash, compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_temporary_text_file, AuthenticatedClient, get_sample_objective_metadata
+    AuthenticatedClient, get_sample_objective_metadata
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
