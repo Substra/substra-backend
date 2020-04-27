@@ -109,29 +109,3 @@ class DataManagerQueryTests(APITestCase):
         }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_add_datamanager_no_version(self):
-
-        _, data = self.get_default_datamanager_data()
-
-        url = reverse('substrapp:data_manager-list')
-
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_datamanager_wrong_version(self):
-
-        _, data = self.get_default_datamanager_data()
-
-        url = reverse('substrapp:data_manager-list')
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)

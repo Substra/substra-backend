@@ -440,42 +440,6 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(r['message'], "[ErrorDetail(string='Failed', code='invalid')]")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_sample_no_version(self):
-
-        self.add_default_data_manager()
-
-        url = reverse('substrapp:data_sample-list')
-
-        data = {
-            'file': self.data_file,
-            'data_manager_keys': [get_hash(self.data_description)],
-            'test_only': True,
-        }
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_data_sample_wrong_version(self):
-
-        self.add_default_data_manager()
-
-        url = reverse('substrapp:data_sample-list')
-
-        data = {
-            'file': self.script,
-            'data_manager_keys': ['XXXX'],
-        }
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
     def test_bulk_update_data(self):
 
         # add associated data opener
