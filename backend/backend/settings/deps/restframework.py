@@ -15,7 +15,6 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'UNICODE_JSON': False,
-    'DEFAULT_VERSIONING_CLASS': 'libs.versioning.AcceptHeaderVersioningRequired',
     'ALLOWED_VERSIONS': ('0.0',),
     'DEFAULT_VERSION': '0.0',
     'EXCEPTION_HANDLER': 'substrapp.exceptions.api_exception_handler',

@@ -129,47 +129,6 @@ class TraintupleQueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_traintuple_no_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:traintuple-list')
-
-        data = {
-            'train_data_sample_keys': self.train_data_sample_keys,
-            'datamanager_key': self.fake_key,
-            'model_key': self.fake_key,
-            'algo_key': self.fake_key}
-
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_traintuple_wrong_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:traintuple-list')
-
-        data = {
-            'train_data_sample_keys': self.train_data_sample_keys,
-            'datamanager_key': self.fake_key,
-            'model_key': self.fake_key,
-            'algo_key': self.fake_key}
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(LEDGER_SYNC_ENABLED=True)
@@ -267,43 +226,3 @@ class TesttupleQueryTests(APITestCase):
         r = response.json()
         self.assertIn('This field may not be null.', r['traintuple_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    def test_add_testtuple_no_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:testtuple-list')
-
-        data = {
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'traintuple_key': self.fake_key,
-            'data_manager_key': self.fake_key}
-
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_testtuple_wrong_version(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:testtuple-list')
-
-        data = {
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'traintuple_key': self.fake_key,
-            'data_manager_key': self.fake_key}
-
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
