@@ -12,7 +12,6 @@ import tarfile
 
 import docker
 import kubernetes
-from checksumdir import dirhash
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
@@ -21,7 +20,7 @@ from celery.task import Task
 import boto3
 
 from backend.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal, get_dir_hash
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
@@ -347,7 +346,7 @@ def prepare_data_sample(directory, tuple_):
     from substrapp.models import DataSample
     for data_sample_key in tuple_['dataset']['keys']:
         data_sample = DataSample.objects.get(pk=data_sample_key)
-        data_sample_hash = dirhash(data_sample.path, 'sha256')
+        data_sample_hash = get_dir_hash(data_sample.path)
         if data_sample_hash != data_sample_key:
             raise Exception('Data Sample Hash in tuple is not the same as in local db')
 

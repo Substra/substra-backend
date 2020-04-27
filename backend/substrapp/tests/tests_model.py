@@ -2,11 +2,10 @@ import os
 import shutil
 import tempfile
 
-from checksumdir import dirhash
 from django.test import TestCase, override_settings
 
 from substrapp.models import Objective, DataManager, DataSample, Algo, Model
-from substrapp.utils import get_hash
+from substrapp.utils import get_hash, get_dir_hash
 
 from .common import get_sample_objective, get_sample_datamanager, \
     get_sample_script, get_sample_model
@@ -43,7 +42,7 @@ class ModelTests(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308')
         data_sample = DataSample.objects.create(path=path)
-        self.assertEqual(data_sample.pkhash, dirhash(path, 'sha256'))
+        self.assertEqual(data_sample.pkhash, get_dir_hash(path))
         self.assertFalse(data_sample.validated)
         self.assertIn(f'pkhash {data_sample.pkhash}', str(data_sample))
         self.assertIn(f'validated {data_sample.validated}', str(data_sample))

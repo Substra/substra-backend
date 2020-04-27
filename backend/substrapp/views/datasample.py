@@ -5,7 +5,6 @@ import os
 import ntpath
 import shutil
 
-from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -17,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp import ledger
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
-from substrapp.utils import store_datasamples_archive
+from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
@@ -135,7 +134,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                pkhash = dirhash(path, 'sha256')
+                pkhash = get_dir_hash(path)
                 try:
                     data[pkhash]
                 except KeyError:
