@@ -20,11 +20,26 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      # Run the worker on the same pod as the server.
+      # That's necessary because the worker and the server use the same PV.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" . }}-server
+            topologyKey: kubernetes.io/hostname
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
+      {{- end }}
+      {{- if .Values.celeryworker.rbac.enable }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
       {{- end }}
       containers:
         - name: worker
@@ -32,8 +47,8 @@ spec:
           {{- if .Values.celeryworker.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
           {{- end }}
-          command: ["celery"]
-          args: ["-A", "backend", "worker", "-E", "-l", "info", "-n", "{{ .Values.organization.name }}", "-Q", "{{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery", "--hostname", "{{ .Values.organization.name }}.worker"]
+          command: ["/bin/bash"]
+          args: ["-c", "update-ca-certificates && celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -59,14 +74,24 @@ spec:
               value: "1"
             - name: "CELERYWORKER_IMAGE"
               value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
+            {{- if .Values.privateCa.enabled }}
+            - name: REQUESTS_CA_BUNDLE
+              value: /etc/ssl/certs/ca-certificates.crt
+            {{- end }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
           volumeMounts:
             - name: dockersocket
               mountPath: /var/run/docker.sock
-            - name: data
-              mountPath: {{ .Values.persistence.hostPath }}
+            {{- range .Values.persistence.volumes }}
+            - name: data-{{ .name }}
+              mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+              readOnly: {{ .readOnly.worker }}
+            {{- end }}
+            - name: data-servermedias
+              mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+              readOnly: true
             - name: config
               mountPath: /conf/{{ .Values.organization.name }}/substra-backend
               readOnly: true
@@ -80,15 +105,25 @@ spec:
               mountPath: /var/hyperledger/tls/client/pair
             - name: cacert
               mountPath: /var/hyperledger/ca
+            {{- if .Values.privateCa.enabled }}
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            {{- end }}
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
       - name: dockersocket
         hostPath:
           path: /var/run/docker.sock
-      - name: data
+      {{- range .Values.persistence.volumes }}
+      - name: data-{{ .name }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" . }}
+          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+      {{- end }}
+      - name: data-servermedias
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
@@ -104,6 +139,11 @@ spec:
       - name: peer-tls-client
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
+      {{- if .Values.privateCa.enabled }}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
+      {{- end }}
       - name: cacert
         secret:
           secretName: {{ $.Values.secrets.caCert }}

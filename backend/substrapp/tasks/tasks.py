@@ -13,7 +13,6 @@ import tarfile
 import docker
 import kubernetes
 from checksumdir import dirhash
-from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
@@ -23,7 +22,7 @@ from celery.task import Task
 import boto3
 
 from backend.celery import app
-from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content
+from substrapp.utils import get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (ResourcesManager, compute_docker, get_asset_content, get_and_put_asset_content,
@@ -53,32 +52,17 @@ class TasksError(Exception):
 
 
 def get_objective(tuple_):
-    from substrapp.models import Objective
 
     objective_hash = tuple_['objective']['hash']
+    objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
 
-    try:
-        objective = Objective.objects.get(pk=objective_hash)
-    except ObjectDoesNotExist:
-        objective = None
+    objective_content = get_asset_content(
+        objective_metadata['metrics']['storageAddress'],
+        objective_metadata['owner'],
+        objective_metadata['metrics']['hash'],
+    )
 
-    # get objective from ledger as it is not available in local db and store it in local db
-    if objective is None or not objective.metrics:
-        objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
-
-        content = get_asset_content(
-            objective_metadata['metrics']['storageAddress'],
-            objective_metadata['owner'],
-            objective_metadata['metrics']['hash'],
-        )
-
-        objective, _ = Objective.objects.update_or_create(pkhash=objective_hash, validated=True)
-
-        tmp_file = tempfile.TemporaryFile()
-        tmp_file.write(content)
-        objective.metrics.save('metrics.archive', tmp_file)
-
-    return objective.metrics.read()
+    return objective_content
 
 
 @metrics_client.timer('prepare_objective')
@@ -168,7 +152,7 @@ def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
         raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
-        os.link(model.file.path, model_dst_path)
+        os.symlink(model.file.path, model_dst_path)
     else:
         # verify that local subtuple model file is not corrupted
         if get_hash(model_dst_path, tuple_key) != out_model['hash']:
@@ -184,6 +168,7 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
         raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
 
     model_dst_path = path.join(directory, f'model/{input_model["traintupleKey"]}')
+    raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
@@ -262,6 +247,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
         raise TasksError(f'CompositeTraintuple: invalid head input model: type={tuple_type}')
     # get the output head model
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
+    raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
     get_and_put_local_model_content(
         head_model_key, metadata['outHeadModel']['outModel'], head_model_dst_path
     )
@@ -270,6 +256,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     trunk_model_key = trunk_model['traintupleKey']
     tuple_type, metadata = find_training_step_tuple_from_key(trunk_model_key)
     trunk_model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{trunk_model_key}')
+    raise_if_path_traversal([trunk_model_dst_path], path.join(directory, 'model/'))
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
@@ -293,6 +280,7 @@ def prepare_testtuple_input_models(directory, tuple_):
     if traintuple_type == TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryTraintuple')
         model_dst_path = path.join(directory, f'model/{traintuple_key}')
+        raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
             traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
         )
@@ -300,10 +288,12 @@ def prepare_testtuple_input_models(directory, tuple_):
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
+        raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
         get_and_put_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'],
                                         head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
+        raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
             traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
         )
@@ -348,7 +338,7 @@ def prepare_opener(directory, tuple_):
 
     opener_dst_path = path.join(directory, 'opener/opener.py')
     if not os.path.exists(opener_dst_path):
-        os.link(datamanager.data_opener.path, opener_dst_path)
+        os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
         # verify that local subtuple data opener file is not corrupted
         if get_hash(opener_dst_path) != data_opener_hash:
@@ -403,6 +393,12 @@ def remove_subtuple_materials(subtuple_directory):
 
 
 def remove_local_folders(compute_plan_id):
+    if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
+        logger.info(f'Skipping remove local volume of compute plan {compute_plan_id}')
+        return
+
+    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
+
     client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
 
@@ -642,11 +638,16 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     environment = {}
 
     # VOLUMES
-
     symlinks_volume = {}
     for subfolder in os.listdir(data_path):
         real_path = os.path.realpath(os.path.join(data_path, subfolder))
         symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
+
+    for subtuple_folder in ['opener', 'model', 'metrics']:
+        for subitem in os.listdir(path.join(subtuple_directory, subtuple_folder)):
+            real_path = os.path.realpath(os.path.join(subtuple_directory, subtuple_folder, subitem))
+            if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
+                symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
@@ -912,26 +913,51 @@ def get_subtuple_directory(subtuple):
 
 
 def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan', compute_plan_id, 'chainkeys')
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
 
 
 def remove_algo_images(algo_hashes):
     client = docker.from_env()
     for algo_hash in algo_hashes:
         algo_docker = get_algo_image_name(algo_hash)
-        logger.info(f'Remove docker image {algo_docker}')
-        client.images.remove(algo_docker, force=True)
+
+        try:
+            if client.images.get(algo_docker):
+                logger.info(f'Remove docker image {algo_docker}')
+                client.images.remove(algo_docker, force=True)
+
+        except docker.errors.ImageNotFound:
+            pass
+        except docker.errors.APIError as e:
+            logger.exception(e)
+
+
+def remove_intermediary_models(model_hashes):
+    from substrapp.models import Model
+
+    models = Model.objects.filter(pkhash__in=model_hashes, validated=True)
+    filtered_model_hashes = [model.pk for model in models]
+
+    models.delete()
+
+    log_model_hashes = '\n\t- '.join(filtered_model_hashes)
+    logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
 
 
 @app.task(ignore_result=False)
-def on_finished_compute_plan(compute_plan):
+def on_compute_plan(compute_plan):
 
     compute_plan_id = compute_plan['computePlanID']
     algo_hashes = compute_plan['algoKeys']
+    model_hashes = compute_plan['modelsToDelete']
+    status = compute_plan['status']
 
-    # Remove local folder when compute plan is finished
-    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
-    remove_local_folders(compute_plan_id)
+    # Remove local folder and algo when compute plan is finished
+    if status in ['done', 'failed', 'canceled']:
+        remove_local_folders(compute_plan_id)
+        remove_algo_images(algo_hashes)
 
-    # Remove algorithm images
-    remove_algo_images(algo_hashes)
+    # Remove intermediary models
+    if model_hashes:
+        remove_intermediary_models(model_hashes)

@@ -15,7 +15,7 @@ from substrapp.models import Objective, DataManager
 from substrapp.utils import get_hash, compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
-    get_temporary_text_file, AuthenticatedClient, get_sample_objective_metadata
+    AuthenticatedClient, get_sample_objective_metadata
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -165,56 +165,6 @@ class ObjectiveQueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_objective_no_version(self):
-        url = reverse('substrapp:objective-list')
-
-        description_content = 'My Super top objective'
-        metrics_content = 'def metrics():\n\tpass'
-
-        description = get_temporary_text_file(description_content,
-                                              'description.md')
-        metrics = get_temporary_text_file(metrics_content, 'metrics.py')
-
-        data = {
-            'name': 'tough objective',
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'description': description,
-            'metrics': metrics,
-        }
-
-        response = self.client.post(url, data, format='multipart')
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_add_objective_wrong_version(self):
-        url = reverse('substrapp:objective-list')
-
-        description_content = 'My Super top objective'
-        metrics_content = 'def metrics():\n\tpass'
-
-        description = get_temporary_text_file(description_content,
-                                              'description.md')
-        metrics = get_temporary_text_file(metrics_content, 'metrics.py')
-
-        data = {
-            'name': 'tough objective',
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'description': description,
-            'metrics': metrics,
-        }
-
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
     def test_get_objective_metrics(self):
         objective = Objective.objects.create(
             description=self.objective_description,
@@ -235,25 +185,3 @@ class ObjectiveQueryTests(APITestCase):
                                 compute_hash(response.getvalue()))
             self.assertEqual(self.objective_metrics_filename,
                              response.filename)
-
-    def test_get_objective_metrics_no_version(self):
-        objective = Objective.objects.create(
-            description=self.objective_description,
-            metrics=self.objective_metrics)
-        response = self.client.get(f'/objective/{objective.pkhash}/metrics/')
-        r = response.json()
-        self.assertEqual(r, {'detail': 'A version is required.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)
-
-    def test_get_objective_metrics_wrong_version(self):
-        objective = Objective.objects.create(
-            description=self.objective_description,
-            metrics=self.objective_metrics)
-        extra = {
-            'HTTP_ACCEPT': 'application/json;version=-1.0',
-        }
-        response = self.client.get(f'/objective/{objective.pkhash}/metrics/',
-                                   **extra)
-        r = response.json()
-        self.assertEqual(r, {'detail': 'Invalid version in "Accept" header.'})
-        self.assertEqual(response.status_code, status.HTTP_406_NOT_ACCEPTABLE)

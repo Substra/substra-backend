@@ -4,11 +4,13 @@ from django.contrib.auth.models import User
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet
-from rest_framework.decorators import action
+from rest_framework.decorators import action, throttle_classes
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
 
+from libs.user_login_throttle import UserLoginThrottle
 from users.serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 
 import tldextract
@@ -37,6 +39,7 @@ class UserViewSet(GenericViewSet):
         return host
 
     @action(methods=['post'], detail=False)
+    @throttle_classes([AnonRateThrottle, UserLoginThrottle])
     def login(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
 

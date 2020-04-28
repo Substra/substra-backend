@@ -8,6 +8,14 @@ from .deps.restframework import *
 DEBUG = True
 # LEDGER_CALL_RETRY = False  # uncomment to overwrite the ledger setting value
 
+# Enable Browsable API
+REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] += (
+    'rest_framework.renderers.BrowsableAPIRenderer',
+)
+REST_FRAMEWORK['DEFAULT_AUTHENTICATION_CLASSES'] += [
+    'libs.session_authentication.CustomSessionAuthentication',
+]
+
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
@@ -78,7 +86,7 @@ LOGGING = {
         'celery': {
             'level': 'INFO',
             'handlers': ['console'],
-            'propagate': False,
+            'propagate': True,  # without this, celery logs aren't displayed at all
         },
     }
 }

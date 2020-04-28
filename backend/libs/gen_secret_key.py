@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from random import choice
+from secrets import choice
 
 
 def gen_secret_key(r):

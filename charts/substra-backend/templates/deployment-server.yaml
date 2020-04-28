@@ -34,9 +34,9 @@ spec:
         {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
+        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.prod "]
         {{- else }}
-        args: ["-c", "python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }}"]
+        args: ["-c", "update-ca-certificates && python manage.py runserver --noreload 0.0.0.0:{{ .Values.backend.service.port }} --settings=backend.settings.server.{{ .Values.backend.settings }}"]
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
@@ -67,6 +67,10 @@ spec:
             value: "1"
           - name: GZIP_MODELS
             value: {{ .Values.backend.gzipModels | quote }}
+          {{- if .Values.privateCa.enabled }}
+          - name: REQUESTS_CA_BUNDLE
+            value: /etc/ssl/certs/ca-certificates.crt
+          {{- end }}
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}
@@ -75,8 +79,14 @@ spec:
             containerPort: {{ .Values.backend.service.port }}
             protocol: TCP
         volumeMounts:
-          - name: data
-            mountPath: {{ .Values.persistence.hostPath }}
+          {{- range .Values.persistence.volumes }}
+          - name: data-{{ .name }}
+            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            readOnly: {{ .readOnly.server }}
+          {{- end }}
+          - name: data-servermedias
+            mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+            readOnly: true
           - name: statics
             mountPath: /usr/src/app/backend/statics
           - name: config
@@ -92,6 +102,11 @@ spec:
             mountPath: /var/hyperledger/tls/client/pair
           - name: cacert
             mountPath: /var/hyperledger/ca
+          {{- if .Values.privateCa.enabled }}
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+            name: private-ca
+            subPath: {{ .Values.privateCa.configMap.fileName }}
+          {{- end }}
         livenessProbe:
           httpGet:
             path: /liveness
@@ -149,9 +164,14 @@ spec:
             mountPath: /usr/src/app/backend/statics
       {{- end }}
       volumes:
-      - name: data
+      {{- range .Values.persistence.volumes }}
+      - name: data-{{ .name }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" . }}
+          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+      {{- end }}
+      - name: data-servermedias
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: statics
         emptyDir: {}
       - name: config
@@ -169,6 +189,11 @@ spec:
       - name: peer-tls-client
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
+      {{- if .Values.privateCa.enabled }}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
+      {{- end }}
       - name: cacert
         secret:
           secretName: {{ $.Values.secrets.caCert }}

@@ -64,7 +64,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -124,6 +123,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'backend.wsgi.application'
+
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SESSION_COOKIE_HTTPONLY = True
+CSRF_COOKIE_HTTPONLY = True
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
@@ -211,10 +214,11 @@ EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFET
 
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
-
 STATSD_ENABLED = to_bool(os.environ.get('STATSD_ENABLED', False))
 STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
 STATSD_PORT = os.environ.get('STATSD_PORT', 8125)
 STATSD_PREFIX = os.environ.get('STATSD_PREFIX', 'substra-backend')
 STATSD_MAXUDPSIZE = 512
 STATSD_IPV6 = 0
+
+ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))

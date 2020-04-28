@@ -61,33 +61,18 @@ def generate_docker_compose_file(conf, launch_settings):
         import yaml
 
     wait_rabbit = f'while ! {{ nc -z {RABBITMQ_DOMAIN} {RABBITMQ_PORT} 2>&1; }}; do sleep 1; done'
-    wait_psql = 'while ! { nc -z postgresql 5432 2>&1; }; do sleep 1; done'
 
     # Docker compose config
     docker_compose = {
         'backend_services': {},
         'backend_tools': {
-            'postgresql': {
-                'container_name': 'postgresql',
-                'labels': ['substra'],
-                'image': 'substra/postgresql',
-                'restart': 'unless-stopped',
-                'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
-                'environment': [
-                    f'POSTGRES_USER={POSTGRES_USER}',
-                    f'USER={USER}',
-                    f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
-                    f'POSTGRES_DB={POSTGRES_DB}'],
-                'volumes': [
-                    f'{SUBSTRA_FOLDER}/backup/postgres-data:/var/lib/postgresql/data'],
-            },
             'celerybeat': {
                 'container_name': 'celerybeat',
                 'labels': ['substra'],
                 'hostname': 'celerybeat',
                 'image': 'substra/celerybeat',
                 'restart': 'unless-stopped',
-                'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
+                'command': f'/bin/bash -c "{wait_rabbit};'
                            'celery -A backend beat -l info"',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
@@ -95,7 +80,7 @@ def generate_docker_compose_file(conf, launch_settings):
                     f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                     f'SCHEDULE_TASK_PERIOD={3 * 3600}',
                     f'DJANGO_SETTINGS_MODULE=backend.settings.common'],
-                'depends_on': ['postgresql', 'rabbit']
+                'depends_on': ['rabbit']
             },
             'rabbit': {
                 'container_name': 'rabbit',
@@ -122,7 +107,7 @@ def generate_docker_compose_file(conf, launch_settings):
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [f'CELERY_BROKER_URL={CELERY_BROKER_URL}',
                                 'DJANGO_SETTINGS_MODULE=backend.settings.common'],
-                'depends_on': ['rabbit', 'postgresql']
+                'depends_on': ['rabbit']
             }
         },
         'path': os.path.join(dir_path, './docker-compose-dynamic.yaml')}
@@ -130,6 +115,8 @@ def generate_docker_compose_file(conf, launch_settings):
     for org in conf:
         org_name = org['name']
         org_name_stripped = org_name.replace('-', '')
+
+        wait_psql = f'while ! {{ nc -z postgresql{org_name_stripped} 5432 2>&1; }}; do sleep 1; done'
 
         port = BACKEND_PORT[org_name_stripped]
         credentials = BACKEND_CREDENTIALS[org_name_stripped]
@@ -150,7 +137,7 @@ def generate_docker_compose_file(conf, launch_settings):
             f'LEDGER_CONFIG_FILE={SUBSTRA_FOLDER}/conf/{org_name}/substra-backend/conf.json',
 
             'PYTHONUNBUFFERED=1',
-            'DATABASE_HOST=postgresql',
+            f'DATABASE_HOST=postgresql{org_name_stripped}',
 
             f"TASK_CAPTURE_LOGS=True",
             f"TASK_CLEAN_EXECUTION_ENVIRONMENT=True",
@@ -188,6 +175,8 @@ def generate_docker_compose_file(conf, launch_settings):
             password = credentials['password'].replace('$', '$$')
             user_command = f"python manage.py add_user {credentials['username']} '{password}'"
 
+        MEDIA_ROOT = f'{SUBSTRA_FOLDER}/medias/{org_name_stripped}'
+
         backend = {
             'container_name': f'substra-backend.{org_name_stripped}.xyz',
             'labels': ['substra'],
@@ -199,10 +188,16 @@ def generate_docker_compose_file(conf, launch_settings):
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
             'volumes': [
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{MEDIA_ROOT}/algos:{MEDIA_ROOT}/algos:rw',
+                f'{MEDIA_ROOT}/aggregatealgos:{MEDIA_ROOT}/aggregatealgos:rw',
+                f'{MEDIA_ROOT}/compositealgos:{MEDIA_ROOT}/compositealgos:rw',
+                f'{MEDIA_ROOT}/datamanagers:{MEDIA_ROOT}/datamanagers:rw',
+                f'{MEDIA_ROOT}/datasamples:{MEDIA_ROOT}/datasamples:rw',
+                f'{MEDIA_ROOT}/objectives:{MEDIA_ROOT}/objectives:rw',
+                f'{MEDIA_ROOT}/models:{MEDIA_ROOT}/models:ro',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro',
-                f'{SUBSTRA_FOLDER}/static:/usr/src/app/backend/statics'] + hlf_volumes,
-            'depends_on': ['postgresql', 'rabbit']}
+                f'{SUBSTRA_FOLDER}/static:/usr/src/app/backend/statics:rw'] + hlf_volumes,
+            'depends_on': [f'postgresql{org_name_stripped}', 'rabbit']}
 
         scheduler = {
             'container_name': f'{org_name_stripped}.scheduler',
@@ -216,7 +211,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': celery_global_env.copy(),
             'volumes': hlf_volumes,
-            'depends_on': [f'backend{org_name_stripped}', 'postgresql', 'rabbit']}
+            'depends_on': [f'backend{org_name_stripped}', f'postgresql{org_name_stripped}', 'rabbit']}
 
         worker = {
             'container_name': f'{org_name_stripped}.worker',
@@ -231,16 +226,39 @@ def generate_docker_compose_file(conf, launch_settings):
             'environment': celery_global_env.copy(),
             'volumes': [
                 '/var/run/docker.sock:/var/run/docker.sock',
-                f'{SUBSTRA_FOLDER}/medias:{SUBSTRA_FOLDER}/medias:rw',
+                f'{MEDIA_ROOT}/algos:{MEDIA_ROOT}/algos:ro',
+                f'{MEDIA_ROOT}/aggregatealgos:{MEDIA_ROOT}/aggregatealgos:ro',
+                f'{MEDIA_ROOT}/compositealgos:{MEDIA_ROOT}/compositealgos:ro',
+                f'{MEDIA_ROOT}/datamanagers:{MEDIA_ROOT}/datamanagers:ro',
+                f'{MEDIA_ROOT}/datasamples:{MEDIA_ROOT}/datasamples:ro',
+                f'{MEDIA_ROOT}/objectives:{MEDIA_ROOT}/objectives:ro',
+                f'{MEDIA_ROOT}/models:{MEDIA_ROOT}/models:rw',
+                f'{MEDIA_ROOT}/subtuple:{MEDIA_ROOT}/subtuple:rw',
                 f'{SUBSTRA_FOLDER}/servermedias:{SUBSTRA_FOLDER}/servermedias:ro'] + hlf_volumes,
             'depends_on': [f'backend{org_name_stripped}', 'rabbit']}
+
+        database = {
+            'container_name': f'{org_name_stripped}.postgresql',
+            'hostname': f'{org_name}.postgresql',
+            'labels': ['substra'],
+            'image': 'substra/postgresql',
+            'restart': 'unless-stopped',
+            'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
+            'environment': [
+                f'POSTGRES_USER={POSTGRES_USER}',
+                f'USER={USER}',
+                f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
+                f'POSTGRES_DB={POSTGRES_DB}'],
+            'volumes': [
+                f'{SUBSTRA_FOLDER}/backup/{org_name_stripped}/postgres-data:/var/lib/postgresql/data'],
+        }
 
         # Check if we have nvidia docker
         if 'nvidia' in check_output(['docker', 'system', 'info', '-f', '"{{.Runtimes}}"']).decode('utf-8'):
             worker['runtime'] = 'nvidia'
 
         if launch_settings == 'dev':
-            media_root = f'MEDIA_ROOT={SUBSTRA_FOLDER}/medias/{org_name_stripped}'
+            media_root = f'MEDIA_ROOT={MEDIA_ROOT}'
             worker['environment'].append(media_root)
             backend['environment'].append(media_root)
         else:
@@ -256,6 +274,8 @@ def generate_docker_compose_file(conf, launch_settings):
         docker_compose['backend_services']['backend' + org_name_stripped] = backend
         docker_compose['backend_services']['scheduler' + org_name_stripped] = scheduler
         docker_compose['backend_services']['worker' + org_name_stripped] = worker
+        docker_compose['backend_services']['postgresql' + org_name_stripped] = database
+
     # Create all services along to conf
 
     COMPOSITION = {'services': {}, 'version': '2.3', 'networks': {'default': {'external': {'name': 'net_substra'}}}}
@@ -295,7 +315,7 @@ def start(conf, launch_settings, no_backup):
             print('Clean medias directory\n')
             call(['sh', os.path.join(dir_path, '../scripts/clean_media.sh')])
             print('Remove postgresql database\n')
-            call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/postgres-data'])
+            call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/*/postgres-data'])
             print('Remove rabbit database\n')
             call(['rm', '-rf', f'{SUBSTRA_FOLDER}/backup/rabbit-data'])
 

@@ -14,6 +14,10 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 os.environ['HTTPS'] = "on"
 os.environ['wsgi.url_scheme'] = 'https'
 
+SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 365 * 24 * 3600))  # 1 year
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
@@ -105,7 +109,7 @@ LOGGING = {
         'celery': {
             'level': 'INFO',
             'handlers': ['console'],
-            'propagate': False,
+            'propagate': True,  # without this, celery logs aren't displayed at all
         },
     },
 }
