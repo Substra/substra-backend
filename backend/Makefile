@@ -10,4 +10,5 @@ coverage:
 
 .PHONY: exception_map
 exception_map:
+	rm substrapp/tasks/exceptions.json
 	$(PYTHON) substrapp/tasks/exception_handler.py
