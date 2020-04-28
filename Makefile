@@ -1,13 +1,13 @@
-PYTHON = python
+# See Makefile in the backend/ folder
 
 .PHONY: test
 test:
-	cd backend; DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
+	$(MAKE) -C backend test
 
 .PHONY: coverage
 coverage:
-	cd backend;coverage report
+	$(MAKE) -C backend coverage
 
 .PHONY: exception_map
 exception_map:
-	cd backend; $(PYTHON) substrapp/tasks/exception_handler.py
+	$(MAKE) -C backend exception_map
