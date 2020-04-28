@@ -103,7 +103,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         metrics = request.data.get('metrics')
         description = request.data.get('description')
 
-        pkhash = get_hash(description)
+        try:
+            pkhash = get_hash(description)
+        except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
+            raise ValidationException(e.args, '(not computed)', st)
 
         serializer = self.get_serializer(data={
             'pkhash': pkhash,

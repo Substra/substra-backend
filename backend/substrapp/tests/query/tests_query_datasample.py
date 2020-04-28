@@ -17,7 +17,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
-from substrapp.utils import get_hash, get_dir_hash, store_datasamples_archive
+from substrapp.utils import get_hash, get_archive_hash, store_datasamples_archive
 from substrapp.ledger_utils import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
@@ -62,7 +62,7 @@ class DataSampleQueryTests(APITestCase):
                                    data_opener=self.data_data_opener2)
 
     def get_default_datasample_data(self):
-        expected_hash = get_dir_hash(self.data_file.file)
+        expected_hash = get_archive_hash(self.data_file.file)
         self.data_file.file.seek(0)
         data = {
             'file': self.data_file,
@@ -121,15 +121,15 @@ class DataSampleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.create_datasamples') as mcreate_ledger_assets:
             self.data_file.seek(0)
             self.data_file_2.seek(0)
-            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': True}
+            ledger_data = {'pkhash': [get_archive_hash(file_mock), get_archive_hash(file_mock2)], 'validated': True}
             mcreate_ledger_assets.return_value = ledger_data
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(len(r), 2)
-            self.assertEqual(r[0]['pkhash'], get_dir_hash(file_mock))
-            self.assertTrue(r[0]['path'].endswith(f'/datasamples/{get_dir_hash(file_mock)}'))
+            self.assertEqual(r[0]['pkhash'], get_archive_hash(file_mock))
+            self.assertTrue(r[0]['path'].endswith(f'/datasamples/{get_archive_hash(file_mock)}'))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -269,7 +269,7 @@ class DataSampleQueryTests(APITestCase):
             r = response.json()
             self.assertEqual(
                 r['message'],
-                {'pkhash': [get_dir_hash(file_mock)], 'validated': False})
+                {'pkhash': [get_archive_hash(file_mock)], 'validated': False})
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
@@ -336,7 +336,7 @@ class DataSampleQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            ledger_data = {'pkhash': [get_dir_hash(file_mock), get_dir_hash(file_mock2)], 'validated': False}
+            ledger_data = {'pkhash': [get_archive_hash(file_mock), get_archive_hash(file_mock2)], 'validated': False}
             mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
 
             response = self.client.post(url, data, format='multipart', **extra)
