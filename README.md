@@ -142,11 +142,10 @@ BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --setti
 ## Test with unit and functional tests
 
 ```shell
-    DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
-    coverage report    # For shell report
-    coverage html      # For HTML report
+    make test
+    make coverage  # For shell report
+    coverage html  # For HTML report
 ```
-
 
 ## Test by creating a traintuple
 
