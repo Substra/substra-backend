@@ -507,5 +507,7 @@
     "WantX509LookupError": "0507",
     "WatchmanUnavailable": "0508",
     "X509StoreContextError": "0509",
-    "ZeroReturnError": "0510"
+    "ZeroReturnError": "0510",
+    "ArgumentError": "0511",
+    "CertificateError": "0512"
 }
