@@ -29,5 +29,3 @@ uwsgi==2.0.18
 zxcvbn==4.4.28
 boto3==1.11.9
 git+git://github.com/hyperledger/fabric-sdk-py.git@5f6407810f07c6901b10cd3b518dd82aed7482fb
-watchdog==0.10.2
-argh==0.26.2
