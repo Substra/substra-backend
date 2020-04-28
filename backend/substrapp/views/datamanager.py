@@ -86,7 +86,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         return d
 
     def _create(self, request, data_opener):
-        pkhash = get_hash(data_opener)
+
+        try:
+            pkhash = get_hash(data_opener)
+        except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
+            raise ValidationException(e.args, '(not computed)', st)
+
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'data_opener': data_opener,
