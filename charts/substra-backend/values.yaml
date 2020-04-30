@@ -129,13 +129,13 @@ secrets:
   caCert: hlf-cacert
   user:
     # Certificate, saved under key 'cert.pem'
-    cert: hlf-idcert
+    cert: hlf-msp-cert-user
     # Key, saved under 'key.pem'
-    key: hlf-idkey
+    key: hlf-msp-key-user
   peer:
     tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
-      client: hlf-client-tls
-      server: hlf-tls
+      client: hlf-tls-user
+      server: hlf-tls-admin
 
 organization:
   name: substra
