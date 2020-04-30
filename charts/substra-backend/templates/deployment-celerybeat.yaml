@@ -32,8 +32,12 @@ spec:
           {{- if .Values.celerybeat.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celerybeat.image.pullPolicy }}"
           {{- end }}
-          command: ["celery"]
-          args: ["-A", "backend", "beat", "-l", "debug"]
+          command: ["/bin/bash"]
+          {{- if eq .Values.backend.settings "prod" }}
+          args: ["-c", "celery -A backend beat -l debug"]
+          {{ else }}
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend beat -l debug"]
+          {{ end }}
           env:
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
