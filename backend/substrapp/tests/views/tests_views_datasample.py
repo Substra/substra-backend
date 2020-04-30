@@ -1,6 +1,7 @@
 import os
 import shutil
 import logging
+import json
 
 import mock
 
@@ -70,8 +71,10 @@ class DataSampleViewTests(APITestCase):
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
-            'data_manager_keys': data_manager_keys,
-            'test_only': False
+            'json': json.dumps({
+                'data_manager_keys': data_manager_keys,
+                'test_only': False
+            })
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
@@ -101,8 +104,10 @@ class DataSampleViewTests(APITestCase):
 
         data = {
             'file': open(data_path, 'rb'),
-            'data_manager_keys': data_manager_keys,
-            'test_only': False
+            'json': json.dumps({
+                'data_manager_keys': data_manager_keys,
+                'test_only': False
+            })
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
@@ -147,7 +152,7 @@ class DataSampleViewTests(APITestCase):
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = {'keys': [pkhash]}
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
+            response = self.client.post(url, data=data, format='json', **self.extra)
 
         self.assertEqual(response.data[0]['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -180,7 +185,7 @@ class DataSampleViewTests(APITestCase):
 
             mdatamanager.return_value = FakeFilterDataManager(1)
             mcreate.return_value = {'keys': [pkhash]}
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
+            response = self.client.post(url, data=data, format='json', **self.extra)
 
         self.assertEqual(response.data[0]['pkhash'], pkhash)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)

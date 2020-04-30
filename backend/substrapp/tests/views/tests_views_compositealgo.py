@@ -2,6 +2,7 @@ import copy
 import os
 import shutil
 import logging
+import json
 
 import mock
 
@@ -212,13 +213,19 @@ class CompositeAlgoViewTests(APITestCase):
 
         pkhash = get_hash(composite_algo_path)
 
-        data = {'name': 'Composite Algo',
-                'file': open(composite_algo_path, 'rb'),
-                'description': open(description_path, 'rb'),
+        data = {
+            'json': json.dumps({
+                'name': 'Composite Algo',
                 'objective_key': get_hash(os.path.join(
                     dir_path, '../../../../fixtures/chunantes/objectives/objective0/description.md')),
-                'permissions_public': True,
-                'permissions_authorized_ids': []}
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            }),
+            'file': open(composite_algo_path, 'rb'),
+            'description': open(description_path, 'rb'),
+        }
 
         with mock.patch.object(LedgerCompositeAlgoSerializer, 'create') as mcreate:
 

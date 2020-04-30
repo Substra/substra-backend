@@ -25,6 +25,11 @@ REST_FRAMEWORK = {
         'anon': '120/minute',
         'login': '120/minute',
     },
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'libs.json_multipart_parser.JsonMultiPartParser'
+    ],
 }
 
 SIMPLE_JWT = {

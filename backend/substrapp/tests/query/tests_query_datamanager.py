@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import json
 
 import mock
 
@@ -38,11 +39,15 @@ class DataManagerQueryTests(APITestCase):
     def get_default_datamanager_data(self):
         expected_hash = get_hash(self.data_data_opener)
         data = {
-            'name': 'slide opener',
-            'type': 'images',
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
-            'objective_key': '',
+            'json': json.dumps({
+                'name': 'slide opener',
+                'type': 'images',
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+                'objective_key': '',
+            }),
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }

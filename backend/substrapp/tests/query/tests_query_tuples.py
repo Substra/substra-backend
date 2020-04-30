@@ -64,7 +64,7 @@ class TraintupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -102,7 +102,7 @@ class TraintupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -118,7 +118,7 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(url, data, format='json', **extra)
         r = response.json()
         self.assertIn('This field may not be null.', r['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -126,7 +126,7 @@ class TraintupleQueryTests(APITestCase):
         Objective.objects.create(description=self.objective_description,
                                  metrics=self.objective_metrics)
         data = {'objective': get_hash(self.objective_description)}
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(url, data, format='json', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
@@ -172,7 +172,7 @@ class TesttupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
@@ -207,7 +207,7 @@ class TesttupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
@@ -222,7 +222,7 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(url, data, format='json', **extra)
         r = response.json()
         self.assertIn('This field may not be null.', r['traintuple_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

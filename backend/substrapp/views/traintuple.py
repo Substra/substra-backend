@@ -36,9 +36,9 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'data_manager_key': request.data.get('data_manager_key'),
             'rank': request.data.get('rank'),
             'compute_plan_id': request.data.get('compute_plan_id', ''),
-            'in_models_keys': request.data.getlist('in_models_keys'),
+            'in_models_keys': request.data.get('in_models_keys'),
             # list of train data keys (which are stored in the train worker node)
-            'train_data_sample_keys': request.data.getlist('train_data_sample_keys'),
+            'train_data_sample_keys': request.data.get('train_data_sample_keys'),
             'tag': request.data.get('tag', '')
         }
 

@@ -15,7 +15,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
         child=serializers.CharField(min_length=1, max_length=64),
         min_length=0,
         required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
@@ -26,7 +26,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
         child=serializers.CharField(min_length=64, max_length=64),
         min_length=0,
         required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
 
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
@@ -41,7 +41,7 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
     in_trunk_model_id = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
                                               allow_null=True)
     out_trunk_model_permissions = PermissionsSerializer()
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
 
 class ComputePlanAggregatetupleSerializer(serializers.Serializer):
@@ -52,7 +52,7 @@ class ComputePlanAggregatetupleSerializer(serializers.Serializer):
         child=serializers.CharField(min_length=1, max_length=64),
         min_length=0,
         required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
 
 class LedgerComputePlanSerializer(serializers.Serializer):
@@ -60,7 +60,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     testtuples = ComputePlanTesttupleSerializer(many=True, required=False)
     composite_traintuples = ComputePlanCompositeTrainTupleSerializer(many=True, required=False)
     aggregatetuples = ComputePlanAggregatetupleSerializer(many=True, required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
 
     def get_args(self, data):

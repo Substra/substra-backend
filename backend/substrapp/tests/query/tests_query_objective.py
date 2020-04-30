@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import json
 
 import mock
 
@@ -56,14 +57,18 @@ class ObjectiveQueryTests(APITestCase):
 
         expected_hash = get_hash(self.objective_description)
         data = {
-            'name': 'tough objective',
-            'test_data_manager_key': get_hash(self.data_data_opener),
-            'test_data_sample_keys': self.test_data_sample_keys,
             'description': self.objective_description,
             'metrics': self.objective_metrics,
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
-            'metrics_name': 'accuracy'
+            'json': json.dumps({
+                'name': 'tough objective',
+                'test_data_manager_key': get_hash(self.data_data_opener),
+                'test_data_sample_keys': self.test_data_sample_keys,
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+                'metrics_name': 'accuracy'
+            }),
         }
         return expected_hash, data
 

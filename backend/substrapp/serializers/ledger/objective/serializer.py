@@ -13,7 +13,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                                                   min_length=0,
                                                   required=False)
     name = serializers.CharField(min_length=1, max_length=100)
-    test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
 

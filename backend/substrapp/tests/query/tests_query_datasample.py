@@ -3,6 +3,7 @@ import shutil
 import tempfile
 import zipfile
 from unittest.mock import MagicMock
+import json
 
 import mock
 from django.core.files import File
@@ -66,8 +67,10 @@ class DataSampleQueryTests(APITestCase):
         self.data_file.file.seek(0)
         data = {
             'file': self.data_file,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            }),
         }
 
         return expected_hash, data
@@ -111,8 +114,10 @@ class DataSampleQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'data_manager_keys': [get_hash(self.data_data_opener), get_hash(self.data_data_opener2)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener), get_hash(self.data_data_opener2)],
+                'test_only': True,
+            }),
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -164,7 +169,7 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(url, data, format='json', **extra)
         r = response.json()
         self.assertEqual(
             r['message'],
@@ -204,8 +209,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -230,8 +237,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -254,8 +263,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -288,8 +299,10 @@ class DataSampleQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -324,8 +337,10 @@ class DataSampleQueryTests(APITestCase):
         data = {
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            }),
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -360,8 +375,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -387,8 +404,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            }),
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -419,8 +438,10 @@ class DataSampleQueryTests(APITestCase):
 
         data = {
             'file': file_mock,
-            'data_manager_keys': [get_hash(self.data_data_opener)],
-            'test_only': True,
+            'json': json.dumps({
+                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'test_only': True,
+            })
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -469,7 +490,7 @@ class DataSampleQueryTests(APITestCase):
             minvoke_ledger.return_value = {'keys': [
                 d.pkhash]}
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
             r = response.json()
             self.assertEqual(r['keys'], [d.pkhash])
             self.assertEqual(response.status_code, status.HTTP_200_OK)

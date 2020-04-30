@@ -6,11 +6,12 @@ from substrapp import ledger
 class LedgerTestTupleSerializer(serializers.Serializer):
     traintuple_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.CharField(min_length=64, max_length=64)
-    data_manager_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False)
+    data_manager_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
+                                             allow_null=True)
     test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                   min_length=0,
-                                                  required=False)
-    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False)
+                                                  required=False, allow_null=True)
+    tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
     def get_args(self, validated_data):
         traintuple_key = validated_data.get('traintuple_key')
