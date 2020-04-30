@@ -324,6 +324,87 @@ def list_files(startpath):
         logger.info(f'{startpath} does not exist.')
 
 
+def build_docker_image(dockerfile_path, image_name):
+    dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
+    current_namespace = os.getenv('NAMESPACE')
+    docker_cache = os.getenv('DOCKER_CACHE_PVC')
+
+    config.load_incluster_config()
+
+    batch_v1 = client.BatchV1Api()
+
+    container = client.V1Container(
+        name="kaniko",
+        image="gcr.io/kaniko-project/executor:latest",
+        args=[
+            f"--dockerfile={dockerfile_fullpath}",
+            f"--context=dir://{dockerfile_path}",
+            f"--destination={os.getenv('REGISTRY')}:5000/{image_name}",
+            "--cache=true",
+            "--insecure"
+        ],
+        volume_mounts=[
+            {'name': 'dockerfile', 'mountPath': f"{os.getenv('MEDIA_ROOT')}subtuple", 'readOnly': True},
+            {'name': 'cache', 'mountPath': '/cache', 'readOnly': False}
+        ]
+    )
+
+    template = client.V1PodTemplateSpec(
+        metadata=client.V1ObjectMeta(labels={"app": "substra"}),
+        spec=client.V1PodSpec(
+            restart_policy="Never",
+            containers=[container],
+            volumes=[
+                {
+                    'name': 'dockerfile',
+                    'persistentVolumeClaim': {'claimName': os.getenv('DOCKERFILES_PVC')}
+                },
+                {
+                    'name': 'cache',
+                    'persistentVolumeClaim': {'claimName': docker_cache}
+                }
+            ]
+        )
+    )
+    spec = client.V1JobSpec(template=template, backoff_limit=4)
+    job = client.V1Job(
+        api_version="batch/v1",
+        kind="Job",
+        metadata=client.V1ObjectMeta(name="kaniko"),
+        spec=spec
+    )
+
+    batch_v1.create_namespaced_job(body=job, namespace=current_namespace)
+
+    status = batch_v1.list_namespaced_job(current_namespace)
+
+    kanikoJob = None
+
+    for job in status.items:
+        if job.metadata.name == "kaniko":
+            kanikoJob = job
+            break
+
+    while kanikoJob.status.succeeded is None:
+        if kanikoJob.status.failed == 4:
+            break
+        time.sleep(10)
+        status = batch_v1.list_namespaced_job(current_namespace)
+        for job in status.items:
+            if job.metadata.name == "kaniko":
+                kanikoJob = job
+                break
+
+    batch_v1.delete_namespaced_job(
+        name="kaniko",
+        namespace=current_namespace,
+        body=client.V1DeleteOptions(
+            propagation_policy='Foreground',
+            grace_period_seconds=5
+        )
+    )
+
+
 def compute_docker(client, dockerfile_path, image_name, container_name, volumes, command,
                    environment, remove_image=True, remove_container=True, capture_logs=True):
 
@@ -348,6 +429,7 @@ def compute_docker(client, dockerfile_path, image_name, container_name, volumes,
 
     if build_image:
         try:
+            build_docker_image(dockerfile_path, image_name)
             ts = time.time()
             client.images.build(path=dockerfile_path,
                                 tag=image_name,

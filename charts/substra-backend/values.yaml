@@ -172,6 +172,12 @@ rabbitmq:
   persistence:
     enabled: false
 
+docker-registry:
+  enabled: true
+  storage: filesystem
+  persistence:
+    enabled: false
+
 flower:
   enabled: true
   host: flower
