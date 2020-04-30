@@ -345,7 +345,7 @@ def build_docker_image(dockerfile_path, image_name):
         ],
         volume_mounts=[
             {'name': 'dockerfile', 'mountPath': f"{os.getenv('MEDIA_ROOT')}subtuple", 'readOnly': True},
-            {'name': 'cache', 'mountPath': '/cache', 'readOnly': False}
+            {'name': 'cache', 'mountPath': '/cache', 'readOnly': True}
         ]
     )
 
