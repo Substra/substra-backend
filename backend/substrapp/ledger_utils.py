@@ -274,7 +274,8 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
             raise LedgerInvalidResponse(response)
 
         # Set the ledger inside timer as a metric
-        duration = response.pop('duration', None)
+        metrics = response.pop('__metrics__', None)
+        duration = metrics.get('duration', None)
         if duration:
             metrics_client.timing(f'legder_execution_{fcn}', duration)
         # Raise errors if status is not ok
