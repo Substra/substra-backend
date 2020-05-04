@@ -293,10 +293,6 @@ class FakeRequest(object):
         self.status_code = status
         self.content = content
 
-    def raise_for_status(self):
-        if self.status_code != 200:
-            raise Exception(f'HTTP Exception : {self.status_code}')
-
 
 class FakeTask(object):
     def __init__(self, task_id):
