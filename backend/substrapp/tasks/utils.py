@@ -4,6 +4,7 @@ import docker
 import logging
 import functools
 import threading
+import requests
 
 from subprocess import check_output
 from django.conf import settings
@@ -328,9 +329,8 @@ def build_docker_image(dockerfile_path, image_name):
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     current_namespace = os.getenv('NAMESPACE')
     docker_cache = os.getenv('DOCKER_CACHE_PVC')
-
     config.load_incluster_config()
-
+    dockerfile_mount_path = os.path.join(os.path.realpath(os.getenv('MEDIA_ROOT')), 'subtuple')
     batch_v1 = client.BatchV1Api()
 
     container = client.V1Container(
@@ -344,7 +344,7 @@ def build_docker_image(dockerfile_path, image_name):
             "--insecure"
         ],
         volume_mounts=[
-            {'name': 'dockerfile', 'mountPath': f"{os.getenv('MEDIA_ROOT')}subtuple", 'readOnly': True},
+            {'name': 'dockerfile', 'mountPath': dockerfile_mount_path, 'readOnly': True},
             {'name': 'cache', 'mountPath': '/cache', 'readOnly': True}
         ]
     )
@@ -376,41 +376,94 @@ def build_docker_image(dockerfile_path, image_name):
 
     batch_v1.create_namespaced_job(body=job, namespace=current_namespace)
 
-    status = batch_v1.list_namespaced_job(current_namespace)
-
-    kanikoJob = None
-
-    for job in status.items:
-        if job.metadata.name == "kaniko":
-            kanikoJob = job
-            break
-
-    while kanikoJob.status.succeeded is None:
-        if kanikoJob.status.failed == 4:
-            break
-        time.sleep(10)
-        status = batch_v1.list_namespaced_job(current_namespace)
-        for job in status.items:
-            if job.metadata.name == "kaniko":
-                kanikoJob = job
-                break
-
-    batch_v1.delete_namespaced_job(
-        name="kaniko",
-        namespace=current_namespace,
-        body=client.V1DeleteOptions(
-            propagation_policy='Foreground',
-            grace_period_seconds=5
+    try:
+        watch_job(current_namespace, 'kaniko')
+    except Exception as e:
+        logger.error(f'Kaniko build failed, error: {e}')
+    finally:
+        batch_v1.delete_namespaced_job(
+            name="kaniko",
+            namespace=current_namespace,
+            body=client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
         )
+
+
+def watch_job(namespace, job_name):
+    api = client.BatchV1Api()
+    job = None
+    watch_job = True
+
+    while watch_job:
+        job = api.read_namespaced_job(job_name, namespace)
+        if job.status.succeeded == job.spec.completions:
+            watch_job = False
+            logger.info(f'The job {namespace}/{job_name} succeeded')
+        elif job.status.failed == job.spec.backoff_limit:
+            logger.error(f'The job {namespace}/{job_name} failed')
+            raise
+        time.sleep(5)
+
+    return job
+
+
+def get_dockerfile_fullpath(dockerfile_path):
+    dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
+    if not os.path.exists(dockerfile_fullpath):
+        raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
+
+    return dockerfile_fullpath
+
+
+def get_image_manifest(image_name):
+    r = requests.get(
+        f"http://{os.getenv('REGISTRY')}:5000/v2/{image_name}/manifests/latest",
+        headers={'Accept': 'application/json'}
     )
+    if r.status_code == requests.status_codes.codes.ok:
+        pass
+    else:
+        raise Exception(f'Error when querying docker-registry, status code: {r.status_code}')
+    return r.json()
+
+
+def compute_kubernetes(dockerfile_path, image_name):
+
+    build_image = True
+
+    try:
+        ts = time.time()
+        get_image_manifest(image_name)
+    except Exception:
+        logger.info(f'ImageNotFound: {image_name}. Building it')
+    else:
+        logger.info(f'ImageFound: {image_name}. Use it')
+        build_image = False
+    finally:
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'kubernetes.image.get - elaps={elaps:.2f}ms')
+
+    if build_image:
+        try:
+            ts = time.time()
+            build_docker_image(dockerfile_path, image_name)
+        except Exception as e:
+            logger.error(f'BuildError: {e}')
+            raise
+        else:
+            logger.info(f'BuildSuccess - {image_name} - keep cache : True')
+            elaps = (time.time() - ts) * 1000
+            logger.info(f'kubernetes.images.build - elaps={elaps:.2f}ms')
 
 
 def compute_docker(client, dockerfile_path, image_name, container_name, volumes, command,
                    environment, remove_image=True, remove_container=True, capture_logs=True):
 
-    dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
-    if not os.path.exists(dockerfile_fullpath):
-        raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
+    get_dockerfile_fullpath(dockerfile_path)
+
+    compute_kubernetes(dockerfile_path, image_name)
 
     build_image = True
 
