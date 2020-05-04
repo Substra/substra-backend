@@ -338,6 +338,10 @@ def prepare_opener(directory, tuple_):
 
     datamanager = DataManager.objects.get(pk=data_opener_hash)
 
+    # verify that local db opener file exists
+    if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
+        raise Exception(f'DataOpener file ({datamanager.data_opener.path}) is missing in local db ')
+
     # verify that local db opener file is not corrupted
     if get_hash(datamanager.data_opener.path) != data_opener_hash:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
@@ -357,6 +361,13 @@ def prepare_data_sample(directory, tuple_):
     from substrapp.models import DataSample
     for data_sample_key in tuple_['dataset']['keys']:
         data_sample = DataSample.objects.get(pk=data_sample_key)
+
+        if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
+            raise Exception(f'Data Sample ({data_sample.path}) is missing in local db')
+
+        if not os.listdir(data_sample.path):
+            raise Exception(f'Data Sample ({data_sample.path}) is empty in local db')
+
         data_sample_hash = get_dir_hash(data_sample.path)
         if data_sample_hash != data_sample_key:
             raise Exception('Data Sample Hash in tuple is not the same as in local db')
