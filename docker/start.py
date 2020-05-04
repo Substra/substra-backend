@@ -60,7 +60,8 @@ def generate_docker_compose_file(conf, launch_settings):
     except ImportError:
         import yaml
 
-    wait_rabbit = f'while ! {{ nc -z {RABBITMQ_DOMAIN} {RABBITMQ_PORT} 2>&1; }}; do sleep 1; done'
+    install_netcat = 'apt update && apt install -y netcat'
+    wait_rabbit = f' while ! {{ nc -z {RABBITMQ_DOMAIN} {RABBITMQ_PORT} 2>&1; }}; do sleep 1; done'
 
     # Docker compose config
     docker_compose = {
@@ -72,7 +73,7 @@ def generate_docker_compose_file(conf, launch_settings):
                 'hostname': 'celerybeat',
                 'image': 'substra/celerybeat',
                 'restart': 'unless-stopped',
-                'command': f'/bin/bash -c "{wait_rabbit};'
+                'command': f'/bin/bash -c "{install_netcat};{wait_rabbit};'
                            'celery -A backend beat -l info"',
                 'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
                 'environment': [
@@ -183,7 +184,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'image': 'substra/substra-backend',
             'restart': 'unless-stopped',
             'ports': [f'{port}:{port}'],
-            'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
+            'command': f'/bin/bash -c "{install_netcat}; {wait_rabbit}; {wait_psql}; '
                        f'yes | python manage.py migrate; {fixtures_command}; {user_command}; {django_server}"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
             'environment': backend_global_env.copy(),
@@ -205,7 +206,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'hostname': f'{org_name}.scheduler',
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
-            'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
+            'command': f'/bin/bash -c "{install_netcat}; {wait_rabbit}; {wait_psql}; '
                        f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},scheduler,celery --hostname {org_name}.scheduler"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
@@ -219,7 +220,7 @@ def generate_docker_compose_file(conf, launch_settings):
             'hostname': f'{org_name}.worker',
             'image': 'substra/celeryworker',
             'restart': 'unless-stopped',
-            'command': f'/bin/bash -c "{wait_rabbit}; {wait_psql}; '
+            'command': f'/bin/bash -c "{install_netcat}; {wait_rabbit}; {wait_psql}; '
                        f'celery -A backend worker -l info -n {org_name_stripped} '
                        f'-Q {org_name},{org_name}.worker,celery --hostname {org_name}.worker"',
             'logging': {'driver': 'json-file', 'options': {'max-size': '20m', 'max-file': '5'}},
