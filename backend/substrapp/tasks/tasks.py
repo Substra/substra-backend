@@ -363,10 +363,10 @@ def prepare_data_sample(directory, tuple_):
         data_sample = DataSample.objects.get(pk=data_sample_key)
 
         if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
-            raise Exception(f'Data Sample ({data_sample.path}) is missing in local db')
+            raise Exception(f'Data Sample ({data_sample.path}) is missing in local storage')
 
         if not os.listdir(data_sample.path):
-            raise Exception(f'Data Sample ({data_sample.path}) is empty in local db')
+            raise Exception(f'Data Sample ({data_sample.path}) is empty in local storage')
 
         data_sample_hash = get_dir_hash(data_sample.path)
         if data_sample_hash != data_sample_key:
