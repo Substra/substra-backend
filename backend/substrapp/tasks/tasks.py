@@ -338,9 +338,9 @@ def prepare_opener(directory, tuple_):
 
     datamanager = DataManager.objects.get(pk=data_opener_hash)
 
-    # verify that local db opener file exists
+    # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
-        raise Exception(f'DataOpener file ({datamanager.data_opener.path}) is missing in local db ')
+        raise Exception(f'DataOpener file ({datamanager.data_opener.path}) is missing in local storage')
 
     # verify that local db opener file is not corrupted
     if get_hash(datamanager.data_opener.path) != data_opener_hash:
