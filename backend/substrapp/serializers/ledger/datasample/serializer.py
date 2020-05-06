@@ -21,3 +21,19 @@ class LedgerDataSampleSerializer(serializers.Serializer):
             'testOnly': json.dumps(test_only),
         }
         return ledger.create_datasamples(args, [x.pk for x in instances])
+
+
+class LedgerDataSampleUpdateSerializer(serializers.Serializer):
+    data_manager_keys = serializers.ListField(
+        child=serializers.CharField(min_length=64, max_length=64),
+        min_length=1)
+    data_sample_keys = serializers.ListField(
+        child=serializers.CharField(min_length=64, max_length=64),
+        min_length=1)
+
+    def create(self, validated_data):
+        args = {
+            'hashes': validated_data.get('data_sample_keys'),
+            'dataManagerKeys': validated_data.get('data_manager_keys'),
+        }
+        return ledger.update_datasample(args)

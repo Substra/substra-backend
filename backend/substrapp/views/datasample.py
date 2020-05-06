@@ -13,9 +13,8 @@ from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp import ledger
 from substrapp.models import DataSample, DataManager
-from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
+from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
@@ -218,39 +217,21 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return Response(data, status=status.HTTP_200_OK)
 
-    def validate_bulk_update(self, data):
-        data_manager_keys = data.get('data_manager_keys')
-        if not data_manager_keys:
-            raise Exception('Please pass a non empty data_manager_keys key param')
-
-        data_sample_keys = data.get('data_sample_keys')
-        if not data_sample_keys:
-            raise Exception('Please pass a non empty data_sample_keys key param')
-
-        return data_manager_keys, data_sample_keys
-
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
+        ledger_serializer = LedgerDataSampleUpdateSerializer(data=dict(request.data))
+        ledger_serializer.is_valid(raise_exception=True)
+
         try:
-            data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            st = status.HTTP_200_OK
         else:
-            args = {
-                'hashes': data_sample_keys,
-                'dataManagerKeys': data_manager_keys,
-            }
-
-            if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                st = status.HTTP_200_OK
-            else:
-                st = status.HTTP_202_ACCEPTED
-
-            try:
-                data = ledger.update_datasample(args)
-            except LedgerError as e:
-                return Response({'message': str(e.msg)}, status=e.status)
-            return Response(data, status=st)
+            st = status.HTTP_202_ACCEPTED
+        return Response(data, status=st)
 
 
 def path_leaf(path):
