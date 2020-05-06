@@ -249,7 +249,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             try:
                 data = ledger.update_datasample(args)
             except LedgerError as e:
-                return Response({'message': str(e.msg)}, status=e.st)
+                return Response({'message': str(e.msg)}, status=e.status)
             return Response(data, status=st)
 
 
