@@ -474,6 +474,7 @@ class DataSampleQueryTests(APITestCase):
         d = DataSample(path=self.data_file_filename)
         # trigger pre save
         d.save()
+        d.pkhash = 'fake' * 16  # set pkhash manually otherwise it's empty
 
         url = reverse('substrapp:data_sample-bulk-update')
 
