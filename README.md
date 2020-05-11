@@ -152,6 +152,7 @@ BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --setti
 ###### Clean environment
 
 Run the `populate.py` script which will create data in the ledger with a traintuple.
+`populate.py` dependencies are defined in backend/requirements-dev.txt.
 Check the status of the created traintuple `http://localhost:8000/traintuple/`
 If everything run correctly, its status should pas from `todo->train->trained->testing->tested->done`.
 
