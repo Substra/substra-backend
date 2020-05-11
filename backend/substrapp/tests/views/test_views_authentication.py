@@ -113,7 +113,7 @@ class AuthenticationTests(APITestCase):
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
         self.assertEqual(response.status_code, 200)
         token = response.json()['token']
-        self.assertTrue(token_old)
+        self.assertTrue(token)
 
         # tokens should be different
         self.assertNotEqual(token_old, token)
