@@ -149,7 +149,7 @@ class AuthenticationTests(APITestCase):
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
         self.assertEqual(response.status_code, 200)
 
-        invalid_auth_token_header = f"Token nope"
+        invalid_auth_token_header = 'Token nope'
         self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
         response = self.client.post('/api-token-auth/',
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)

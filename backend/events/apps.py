@@ -188,7 +188,7 @@ def wait():
                                                              'chaincode-updates',
                                                              onEvent=on_event)
 
-                    logger.error(f'Connect to Channel Event Hub')
+                    logger.error('Connect to Channel Event Hub')
                     loop.run_until_complete(stream)
 
                 except RpcError as e:

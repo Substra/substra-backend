@@ -355,7 +355,7 @@ def compute_docker(client, dockerfile_path, image_name, container_name, volumes,
         except docker.errors.BuildError as e:
             # catch build errors and print them for easier debugging of failed build
             lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-            lines = [l for l in lines if l]
+            lines = [line for line in lines if line]
             error = '\n'.join(lines)
             logger.error(f'BuildError: {error}')
             raise
