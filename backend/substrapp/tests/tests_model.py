@@ -25,7 +25,7 @@ class ModelTests(TestCase):
         objective = Objective.objects.create(description=description,
                                              metrics=metrics)
 
-        self.assertEqual(objective.pkhash, get_hash(description))
+        self.assertEqual(objective.pkhash, get_hash(metrics))
         self.assertFalse(objective.validated)
         self.assertIn(f'pkhash {objective.pkhash}', str(objective))
         self.assertIn(f'validated {objective.validated}', str(objective))

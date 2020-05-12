@@ -18,7 +18,7 @@ class Objective(TimeStamped):
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = get_hash(self.description)
+            self.pkhash = get_hash(self.metrics)
         super(Objective, self).save(*args, **kwargs)
 
     def __str__(self):

@@ -188,7 +188,7 @@ class Command(BaseCommand):
             filename = path_leaf(objective['description'])
             description = ContentFile(f.read(), filename)
 
-        pkhash = get_hash(description)
+        pkhash = get_hash(metrics)
         serializer = ObjectiveSerializer(data={
             'pkhash': pkhash,
             'metrics': metrics,

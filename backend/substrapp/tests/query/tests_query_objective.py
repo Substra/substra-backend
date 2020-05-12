@@ -55,7 +55,7 @@ class ObjectiveQueryTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
-        expected_hash = get_hash(self.objective_description)
+        expected_hash = get_hash(self.objective_metrics)
         data = {
             'description': self.objective_description,
             'metrics': self.objective_metrics,
@@ -184,6 +184,8 @@ class ObjectiveQueryTests(APITestCase):
             }
             response = self.client.get(
                 f'/objective/{objective.pkhash}/metrics/', **extra)
+            print(response)
+            print(response.getvalue())
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertNotEqual(objective.pkhash,

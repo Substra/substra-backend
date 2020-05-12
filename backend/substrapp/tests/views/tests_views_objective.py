@@ -209,7 +209,7 @@ class ObjectiveViewTests(APITestCase):
 
         zip_folder(objective_path, metrics_path)
 
-        pkhash = get_hash(description_path)
+        pkhash = get_hash(metrics_path)
 
         test_data_manager_key = get_hash(os.path.join(
             dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
