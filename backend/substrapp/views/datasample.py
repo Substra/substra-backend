@@ -149,7 +149,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 }
 
         if not data:
-            raise Exception(f'No data sample provided.')
+            raise Exception('No data sample provided.')
 
         return list(data.values())
 
