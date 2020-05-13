@@ -1,9 +1,9 @@
 import os
 import json
 import docker
-import threading
 import logging
 import functools
+import threading
 
 from subprocess import check_output
 from django.conf import settings
@@ -15,6 +15,7 @@ from kubernetes import client, config
 metrics_client = get_metrics_client()
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
+CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
 DOCKER_LABEL = 'substra_task'
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,56 @@ def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt
                                            content_dst_path=content_dst_path, salt=salt)
 
 
-@metrics_client.timer('fetch_model')
+def local_memory_limit():
+    # Max memory in mb
+    try:
+        return int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2)) // CELERY_WORKER_CONCURRENCY
+    except ValueError:
+        # fixes macOS issue https://github.com/SubstraFoundation/substra-backend/issues/262
+        return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // CELERY_WORKER_CONCURRENCY
+
+
+def docker_memory_limit():
+    docker_client = docker.from_env()
+    # Get memory limit from docker container through the API
+    # Because the docker execution may be remote
+
+    cmd = f'python3 -u -c "import os; print(int(os.sysconf("SC_PAGE_SIZE") '\
+          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {CELERY_WORKER_CONCURRENCY}), end=\'\')"'
+
+    task_args = {
+        'image': CELERYWORKER_IMAGE,
+        'command': cmd,
+        'detach': False,
+        'stdout': True,
+        'stderr': True,
+        'auto_remove': False,
+        'remove': True,
+        'network_disabled': True,
+        'network_mode': 'none',
+        'privileged': False,
+        'cap_drop': ['ALL'],
+    }
+
+    memory_limit_bytes = docker_client.containers.run(**task_args)
+
+    return int(memory_limit_bytes)
+
+
+@metrics_client.timer('get_memory_limit')
+def get_memory_limit():
+
+    try:
+        memory_limit = docker_memory_limit()
+    except (docker.errors.ContainerError, docker.errors.ImageNotFound,
+            docker.errors.APIError, ValueError):
+        logger.info('[Warning] Cannot get memory limit from remote, get it from local.')
+        memory_limit = local_memory_limit()
+
+    return memory_limit
+
+
+@metrics_client.timer('get_cpu_count')
 def get_cpu_count(client):
     # Get CPU count from docker container through the API
     # Because the docker execution may be remote
@@ -188,6 +238,60 @@ def filter_gpu_sets(used_gpu_sets, gpu_sets):
     return filter_resources_sets(used_gpu_sets, gpu_sets, expand_gpu_set, reduce_gpu_set)
 
 
+def get_cpu_gpu_sets():
+
+    docker_client = docker.from_env()
+
+    cpu_sets = get_cpu_sets(docker_client, CELERY_WORKER_CONCURRENCY)
+    gpu_sets = get_gpu_sets(docker_client, CELERY_WORKER_CONCURRENCY)  # Can be None if no gpu
+
+    cpu_set = None
+    gpu_set = None
+
+    while cpu_set is None:
+
+        # Get ressources used
+        filters = {'status': 'running',
+                   'label': [DOCKER_LABEL]}
+
+        try:
+            containers = [container.attrs
+                          for container in docker_client.containers.list(filters=filters)]
+        except docker.errors.APIError as e:
+            logger.error(e, exc_info=True)
+            continue
+
+        # CPU
+        used_cpu_sets = [container['HostConfig']['CpusetCpus']
+                         for container in containers
+                         if container['HostConfig']['CpusetCpus']]
+
+        cpu_sets_available = filter_cpu_sets(used_cpu_sets, cpu_sets)
+
+        if cpu_sets_available:
+            cpu_set = cpu_sets_available.pop()
+
+        # GPU
+        if gpu_sets is not None:
+            env_containers = [container['Config']['Env']
+                              for container in containers]
+
+            used_gpu_sets = []
+
+            for env_list in env_containers:
+                nvidia_env_var = [s.split('=')[1]
+                                  for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
+
+                used_gpu_sets.extend(nvidia_env_var)
+
+            gpu_sets_available = filter_gpu_sets(used_gpu_sets, gpu_sets)
+
+            if gpu_sets_available:
+                gpu_set = gpu_sets_available.pop()
+
+    return cpu_set, gpu_set
+
+
 def container_format_log(container_name, container_logs):
     logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
     for log in logs:
@@ -212,7 +316,7 @@ def list_files(startpath):
         logger.info(f'{startpath} does not exist.')
 
 
-def compute_docker(client, resources_manager, dockerfile_path, image_name, container_name, volumes, command,
+def compute_docker(client, dockerfile_path, image_name, container_name, volumes, command,
                    environment, remove_image=True, remove_container=True, capture_logs=True):
 
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
@@ -243,7 +347,7 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
         except docker.errors.BuildError as e:
             # catch build errors and print them for easier debugging of failed build
             lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-            lines = [l for l in lines if l]
+            lines = [line for line in lines if line]
             error = '\n'.join(lines)
             logger.error(f'BuildError: {error}')
             raise
@@ -253,8 +357,10 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
             logger.info(f'client.images.build - elaps={elaps:.2f}ms')
 
     # Limit ressources
-    memory_limit_mb = f'{resources_manager.memory_limit_mb()}M'
-    cpu_set, gpu_set = resources_manager.get_cpu_gpu_sets()    # blocking call
+    memory_limit_mb = f'{get_memory_limit()}M'
+    cpu_set, gpu_set = get_cpu_gpu_sets()    # blocking call
+
+    logger.info(f'Launch container {container_name} with {cpu_set} CPU - {gpu_set} GPU - {memory_limit_mb}.')
 
     task_args = {
         'image': image_name,
@@ -301,86 +407,6 @@ def compute_docker(client, resources_manager, dockerfile_path, image_name, conta
 
         elaps = (time.time() - ts) * 1000
         logger.info(f'client.images.run - elaps={elaps:.2f}ms')
-
-
-class ResourcesManager():
-
-    __concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
-
-    __lock = threading.Lock()
-    __docker = docker.from_env()
-
-    __cpu_sets = 'unknown'
-    __gpu_sets = 'unknown'
-
-    @classmethod
-    def ressources_sets(cls):
-        if cls.__cpu_sets == 'unknown':
-            cls.__cpu_sets = get_cpu_sets(cls.__docker, cls.__concurrency)
-
-        if cls.__gpu_sets == 'unknown':
-            cls.__gpu_sets = get_gpu_sets(cls.__docker, cls.__concurrency)  # Can be None if no gpu
-
-    @classmethod
-    def memory_limit_mb(cls):
-        try:
-            return int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2)) // cls.__concurrency
-        except ValueError:
-            # fixes macOS issue https://github.com/SubstraFoundation/substra-backend/issues/262
-            return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // cls.__concurrency
-
-    @classmethod
-    def get_cpu_gpu_sets(cls):
-
-        cls.ressources_sets()
-
-        cpu_set = None
-        gpu_set = None
-
-        with cls.__lock:
-            # We can just wait for cpu because cpu and gpu is allocated the same way
-            while cpu_set is None:
-
-                # Get ressources used
-                filters = {'status': 'running',
-                           'label': [DOCKER_LABEL]}
-
-                try:
-                    containers = [container.attrs
-                                  for container in cls.__docker.containers.list(filters=filters)]
-                except docker.errors.APIError as e:
-                    logger.error(e, exc_info=True)
-                    continue
-
-                # CPU
-                used_cpu_sets = [container['HostConfig']['CpusetCpus']
-                                 for container in containers
-                                 if container['HostConfig']['CpusetCpus']]
-
-                cpu_sets_available = filter_cpu_sets(used_cpu_sets, cls.__cpu_sets)
-
-                if cpu_sets_available:
-                    cpu_set = cpu_sets_available.pop()
-
-                # GPU
-                if cls.__gpu_sets is not None:
-                    env_containers = [container['Config']['Env']
-                                      for container in containers]
-
-                    used_gpu_sets = []
-
-                    for env_list in env_containers:
-                        nvidia_env_var = [s.split('=')[1]
-                                          for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
-
-                        used_gpu_sets.extend(nvidia_env_var)
-
-                    gpu_sets_available = filter_gpu_sets(used_gpu_sets, cls.__gpu_sets)
-
-                    if gpu_sets_available:
-                        gpu_set = gpu_sets_available.pop()
-
-        return cpu_set, gpu_set
 
 
 def get_k8s_client():

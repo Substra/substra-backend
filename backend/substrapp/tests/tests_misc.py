@@ -152,5 +152,5 @@ class MiscTests(TestCase):
 
         # Models
         with self.assertRaises(Exception):
-            model_dst_path = os.path.join(DIRECTORY, f'model/../../hackermodel')
+            model_dst_path = os.path.join(DIRECTORY, 'model/../../hackermodel')
             raise_if_path_traversal([model_dst_path], os.path.join(DIRECTORY, 'model/'))

@@ -26,7 +26,13 @@ class JsonException(Exception):
         super(JsonException, self).__init__()
 
 
-def get_dir_hash(archive_object):
+def get_dir_hash(dir):
+    if not os.listdir(dir):
+        raise Exception(f"Cannot compute hash of folder {dir}: folder is empty.")
+    return dirhash(dir, 'sha256')
+
+
+def get_archive_hash(archive_object):
     with tempfile.TemporaryDirectory() as temp_dir:
         try:
             content = archive_object.read()
@@ -36,7 +42,7 @@ def get_dir_hash(archive_object):
             logger.error(e)
             raise e
         else:
-            return dirhash(temp_dir, 'sha256')
+            return get_dir_hash(temp_dir)
 
 
 def store_datasamples_archive(archive_object):
@@ -61,27 +67,27 @@ def store_datasamples_archive(archive_object):
     else:
         # return the directory hash of the uncompressed file and the path of
         # the temporary directory. The removal should be handled externally.
-        return dirhash(tmp_datasamples_path, 'sha256'), tmp_datasamples_path
+        return get_dir_hash(tmp_datasamples_path), tmp_datasamples_path
 
 
 def get_hash(file, key=None):
     if file is None:
-        return ''
-    else:
-        if isinstance(file, (str, bytes, os.PathLike)):
-            if isfile(file):
-                with open(file, 'rb') as f:
-                    data = f.read()
-            elif isdir(file):
-                return dirhash(file, 'sha256')
-            else:
-                return ''
-        else:
-            openedfile = file.open()
-            data = openedfile.read()
-            openedfile.seek(0)
+        raise Exception(f"Can't get hash of file {file}: file is 'None'")
 
-        return compute_hash(data, key)
+    if isinstance(file, (str, bytes, os.PathLike)):
+        if isfile(file):
+            with open(file, 'rb') as f:
+                data = f.read()
+        elif isdir(file):
+            return get_dir_hash(file)
+        else:
+            return ''
+    else:
+        openedfile = file.open()
+        data = openedfile.read()
+        openedfile.seek(0)
+
+    return compute_hash(data, key)
 
 
 def get_owner():

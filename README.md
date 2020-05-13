@@ -142,17 +142,17 @@ BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --setti
 ## Test with unit and functional tests
 
 ```shell
-    DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
-    coverage report    # For shell report
-    coverage html      # For HTML report
+    make test
+    make coverage  # For shell report
+    coverage html  # For HTML report
 ```
-
 
 ## Test by creating a traintuple
 
 ###### Clean environment
 
 Run the `populate.py` script which will create data in the ledger with a traintuple.
+`populate.py` dependencies are defined in backend/requirements-dev.txt.
 Check the status of the created traintuple `http://localhost:8000/traintuple/`
 If everything run correctly, its status should pas from `todo->train->trained->testing->tested->done`.
 

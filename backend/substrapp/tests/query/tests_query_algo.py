@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import json
 
 import mock
 
@@ -56,10 +57,14 @@ class AlgoQueryTests(APITestCase):
         data = {
             'file': self.algo,
             'description': self.data_description,  # fake it
-            'name': 'super top algo',
-            'objective_key': get_hash(self.objective_description),
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
+            'json': json.dumps({
+                'name': 'super top algo',
+                'objective_key': get_hash(self.objective_description),
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            }),
         }
 
         return expected_hash, data
@@ -70,10 +75,14 @@ class AlgoQueryTests(APITestCase):
         data = {
             'file': self.algo_zip,
             'description': self.data_description,  # fake it
-            'name': 'super top algo',
-            'objective_key': get_hash(self.objective_description),
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
+            'json': json.dumps({
+                'name': 'super top algo',
+                'objective_key': get_hash(self.objective_description),
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            })
         }
 
         return expected_hash, data
@@ -139,10 +148,14 @@ class AlgoQueryTests(APITestCase):
         data = {
             'file': self.algo,
             'description': self.data_description,
-            'name': 'super top algo',
-            'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
+            'json': json.dumps({
+                'name': 'super top algo',
+                'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            }),
         }
         extra = {
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -163,17 +176,21 @@ class AlgoQueryTests(APITestCase):
             data = {
                 'name': 'super top algo',
                 'objective_key': get_hash(self.objective_description),
-                'permissions_public': True,
-                'permissions_authorized_ids': [],
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
             }
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
             # missing ledger field
             data = {
                 'file': self.algo,
                 'description': self.data_description,
-                'objective_key': get_hash(self.objective_description),
+                'json': json.dumps({
+                    'objective_key': get_hash(self.objective_description),
+                })
             }
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

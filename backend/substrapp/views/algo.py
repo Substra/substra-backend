@@ -43,13 +43,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         ledger_data = {
             'name': request.data.get('name'),
-            # XXX workaround because input is a QueryDict and not a JSON object. This
-            #     is due to the fact that we are sending file object and body in a
-            #     single HTTP request
-            'permissions': {
-                'public': request.data.get('permissions_public'),
-                'authorized_ids': request.data.getlist('permissions_authorized_ids', []),
-            },
+            'permissions': request.data.get('permissions'),
         }
 
         # init ledger serializer
@@ -82,8 +76,12 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return d
 
     def _create(self, request, file):
+        try:
+            pkhash = get_hash(file)
+        except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
+            raise ValidationException(e.args, '(not computed)', st)
 
-        pkhash = get_hash(file)
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'file': file,

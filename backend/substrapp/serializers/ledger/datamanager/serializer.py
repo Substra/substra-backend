@@ -11,7 +11,7 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 class LedgerDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
-    objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False)
+    objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
 
     def create(self, validated_data):

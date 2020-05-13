@@ -13,7 +13,8 @@ from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
-from substrapp.tasks.utils import ResourcesManager, compute_docker
+from substrapp.tasks.utils import (get_cpu_gpu_sets, get_memory_limit, compute_docker, get_cpu_sets,
+                                   get_gpu_sets)
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
@@ -32,6 +33,7 @@ MEDIA_ROOT = "/tmp/unittests_tasks/"
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(CELERY_WORKER_CONCURRENCY=1)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TasksTests(APITestCase):
 
@@ -47,8 +49,6 @@ class TasksTests(APITestCase):
         self.data_sample, self.data_sample_filename = get_sample_zip_data_sample()
         self.data_sample_tar, self.data_sample_tar_filename = get_sample_tar_data_sample()
         self.model, self.model_filename = get_sample_model()
-
-        self.ResourcesManager = ResourcesManager()
 
     @classmethod
     def setUpTestData(cls):
@@ -99,15 +99,19 @@ class TasksTests(APITestCase):
                 # contents (by pkhash) are different
                 get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
 
-    def test_resource_manager(self):
+    def test_resources(self):
 
-        self.assertTrue(isinstance(self.ResourcesManager.memory_limit_mb(), int))
+        docker_client = docker.from_env()
 
-        cpu_set, gpu_set = self.ResourcesManager.get_cpu_gpu_sets()
-        self.assertIn(cpu_set, self.ResourcesManager._ResourcesManager__cpu_sets)
+        self.assertTrue(isinstance(get_memory_limit(), int))
+
+        cpu_set, gpu_set = get_cpu_gpu_sets()
+        cpu_sets = get_cpu_sets(docker_client, 1)
+        self.assertIn(cpu_set, cpu_sets)
 
         if gpu_set is not None:
-            self.assertIn(gpu_set, self.ResourcesManager._ResourcesManager__gpu_sets)
+            gpu_sets = get_gpu_sets(docker_client, 1)
+            self.assertIn(gpu_set, gpu_sets)
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
@@ -220,7 +224,7 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample)
+        data_sample = DataSample(pkhash='foo', path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
@@ -323,7 +327,7 @@ class TasksTests(APITestCase):
             f.write('FROM library/hello-world')
 
         hash_docker = uuid.uuid4().hex
-        compute_docker(client, self.ResourcesManager,
+        compute_docker(client,
                        self.subtuple_path, 'test_compute_docker_' + hash_docker,
                        'test_compute_docker_name_' + hash_docker, None, None, environment={})
 

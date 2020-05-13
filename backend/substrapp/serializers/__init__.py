@@ -2,17 +2,17 @@
 
 from .datasample import DataSampleSerializer
 from .objective import ObjectiveSerializer
-from .model import ModelSerializer
 from .datamanager import DataManagerSerializer
 from .algo import AlgoSerializer
 from .compositealgo import CompositeAlgoSerializer
 from .aggregatealgo import AggregateAlgoSerializer
 from .ledger import *
 
-__all__ = ['DataSampleSerializer', 'ObjectiveSerializer', 'ModelSerializer',
+__all__ = ['DataSampleSerializer', 'ObjectiveSerializer',
            'DataManagerSerializer', 'AlgoSerializer', 'CompositeAlgoSerializer',
            'LedgerObjectiveSerializer', 'LedgerModelSerializer',
-           'LedgerDataSampleSerializer', 'LedgerAlgoSerializer',
+           'LedgerDataSampleSerializer', 'LedgerDataSampleUpdateSerializer',
+           'LedgerAlgoSerializer',
            'LedgerTrainTupleSerializer', 'LedgerTestTupleSerializer',
            'LedgerDataManagerSerializer', 'LedgerComputePlanSerializer',
            'LedgerCompositeTraintupleSerializer', 'LedgerCompositeAlgoSerializer',

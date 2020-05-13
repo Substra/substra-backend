@@ -3,6 +3,7 @@ import shutil
 import logging
 import zipfile
 import copy
+import json
 
 import mock
 
@@ -214,14 +215,18 @@ class ObjectiveViewTests(APITestCase):
             dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
 
         data = {
-            'name': 'Simplified skin lesion classification',
+            'json': json.dumps({
+                'name': 'Simplified skin lesion classification',
+                'metrics_name': 'macro-average recall',
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+                'test_data_sample_keys': self.test_data_sample_keys,
+                'test_data_manager_key': test_data_manager_key,
+            }),
             'description': open(description_path, 'rb'),
-            'metrics_name': 'macro-average recall',
             'metrics': open(metrics_path, 'rb'),
-            'permissions_public': True,
-            'permissions_authorized_ids': [],
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'test_data_manager_key': test_data_manager_key
         }
 
         with mock.patch.object(LedgerObjectiveSerializer, 'create') as mcreate:

@@ -42,13 +42,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         # create on ledger + db
         ledger_data = {
             'name': request.data.get('name'),
-            # XXX workaround because input is a QueryDict and not a JSON object. This
-            #     is due to the fact that we are sending file object and body in a
-            #     single HTTP request
-            'permissions': {
-                'public': request.data.get('permissions_public'),
-                'authorized_ids': request.data.getlist('permissions_authorized_ids', []),
-            },
+            'permissions': request.data.get('permissions'),
             'type': request.data.get('type'),
             'objective_key': request.data.get('objective_key', ''),
         }
@@ -86,7 +80,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         return d
 
     def _create(self, request, data_opener):
-        pkhash = get_hash(data_opener)
+
+        try:
+            pkhash = get_hash(data_opener)
+        except Exception as e:
+            st = status.HTTP_400_BAD_REQUEST
+            raise ValidationException(e.args, '(not computed)', st)
+
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'data_opener': data_opener,

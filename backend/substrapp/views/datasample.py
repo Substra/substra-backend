@@ -5,7 +5,6 @@ import os
 import ntpath
 import shutil
 
-from checksumdir import dirhash
 from django.conf import settings
 from rest_framework import status, mixins
 from rest_framework.decorators import action
@@ -14,10 +13,9 @@ from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp import ledger
 from substrapp.models import DataSample, DataManager
-from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer
-from substrapp.utils import store_datasamples_archive
+from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
+from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
@@ -108,8 +106,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 }
 
         else:  # files must be available on local filesystem
-            path = request.POST.get('path')
-            paths = request.POST.getlist('paths')
+            path = request.data.get('path')
+            paths = request.data.get('paths') or []
 
             if path and paths:
                 raise Exception('Cannot use path and paths together.')
@@ -135,7 +133,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                pkhash = dirhash(path, 'sha256')
+                pkhash = get_dir_hash(path)
                 try:
                     data[pkhash]
                 except KeyError:
@@ -151,7 +149,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 }
 
         if not data:
-            raise Exception(f'No data sample provided.')
+            raise Exception('No data sample provided.')
 
         return list(data.values())
 
@@ -195,7 +193,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def create(self, request, *args, **kwargs):
         test_only = request.data.get('test_only', False)
-        data_manager_keys = request.data.getlist('data_manager_keys', [])
+        data_manager_keys = request.data.get('data_manager_keys') or []
 
         try:
             data, st = self._create(request, data_manager_keys, test_only)
@@ -219,45 +217,21 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         return Response(data, status=status.HTTP_200_OK)
 
-    def validate_bulk_update(self, data):
-        try:
-            data_manager_keys = data.getlist('data_manager_keys')
-        except KeyError:
-            data_manager_keys = []
-        if not data_manager_keys:
-            raise Exception('Please pass a non empty data_manager_keys key param')
-
-        try:
-            data_sample_keys = data.getlist('data_sample_keys')
-        except KeyError:
-            data_sample_keys = []
-        if not data_sample_keys:
-            raise Exception('Please pass a non empty data_sample_keys key param')
-
-        return data_manager_keys, data_sample_keys
-
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):
+        ledger_serializer = LedgerDataSampleUpdateSerializer(data=dict(request.data))
+        ledger_serializer.is_valid(raise_exception=True)
+
         try:
-            data_manager_keys, data_sample_keys = self.validate_bulk_update(request.data)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = ledger_serializer.create(ledger_serializer.validated_data)
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+            st = status.HTTP_200_OK
         else:
-            args = {
-                'hashes': data_sample_keys,
-                'dataManagerKeys': data_manager_keys,
-            }
-
-            if getattr(settings, 'LEDGER_SYNC_ENABLED'):
-                st = status.HTTP_200_OK
-            else:
-                st = status.HTTP_202_ACCEPTED
-
-            try:
-                data = ledger.update_datasample(args)
-            except LedgerError as e:
-                return Response({'message': str(e.msg)}, status=e.st)
-            return Response(data, status=st)
+            st = status.HTTP_202_ACCEPTED
+        return Response(data, status=st)
 
 
 def path_leaf(path):

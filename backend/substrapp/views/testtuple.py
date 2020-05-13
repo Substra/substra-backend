@@ -35,7 +35,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             'objective_key': request.data.get('objective_key'),
             'traintuple_key': request.data.get('traintuple_key'),
             'data_manager_key': request.data.get('data_manager_key', ''),
-            'test_data_sample_keys': request.data.getlist('test_data_sample_keys'),
+            'test_data_sample_keys': request.data.get('test_data_sample_keys'),
             'tag': request.data.get('tag', '')
         }
 

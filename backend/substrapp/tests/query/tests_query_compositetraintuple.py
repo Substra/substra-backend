@@ -57,8 +57,10 @@ class CompositeTraintupleQueryTests(APITestCase):
             'compute_plan_id': self.fake_key,
             'in_head_model_key': self.fake_key,
             'in_trunk_model_key': self.fake_key,
-            'out_trunk_model_permissions_public': False,
-            'out_trunk_model_permissions_authorized_ids': ["Node-1", "Node-2"],
+            'out_trunk_model_permissions': {
+                'public': False,
+                'authorized_ids': ["Node-1", "Node-2"],
+            },
         }
 
         extra = {
@@ -72,7 +74,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = {'pkhash': raw_pkhash}
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -99,8 +101,10 @@ class CompositeTraintupleQueryTests(APITestCase):
             'compute_plan_id': self.fake_key,
             'in_head_model_key': self.fake_key,
             'in_trunk_model_key': self.fake_key,
-            'out_trunk_model_permissions_public': False,
-            'out_trunk_model_permissions_authorized_ids': ["Node-1", "Node-2"],
+            'out_trunk_model_permissions': {
+                'public': False,
+                'authorized_ids': ["Node-1", "Node-2"],
+            },
         }
 
         extra = {
@@ -114,7 +118,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             mquery_ledger.return_value = {'key': raw_pkhash}
             minvoke_ledger.return_value = None
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(url, data, format='json', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 

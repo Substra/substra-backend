@@ -105,8 +105,41 @@ class AuthenticationTests(APITestCase):
         response = self.client.post('/api-token-auth/',
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
         self.assertEqual(response.status_code, 200)
+        token_old = response.json()['token']
+        self.assertTrue(token_old)
+
+        # token should be update after a second post
+        response = self.client.post('/api-token-auth/',
+                                    {'username': 'foo', 'password': 'bar'}, **self.extra)
+        self.assertEqual(response.status_code, 200)
         token = response.json()['token']
         self.assertTrue(token)
+
+        # tokens should be different
+        self.assertNotEqual(token_old, token)
+
+        # test tokens validity
+        invalid_auth_token_header = f"Token {token_old}"
+        self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
+
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = get_sample_algo_metadata()
+            response = self.client.get(self.algo_url, **self.extra)
+
+            self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+        valid_auth_token_header = f"Token {token}"
+        self.client.credentials(HTTP_AUTHORIZATION=valid_auth_token_header)
+
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch('substrapp.views.utils.get_object_from_ledger') \
+                as mget_object_from_ledger:
+            mget_object_from_ledger.return_value = get_sample_algo_metadata()
+            response = self.client.get(self.algo_url, **self.extra)
+
+            self.assertEqual(status.HTTP_200_OK, response.status_code)
 
         # usage with an existing token
         # the token should be ignored since the purpose of the view is to authenticate via user/password
@@ -116,7 +149,7 @@ class AuthenticationTests(APITestCase):
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
         self.assertEqual(response.status_code, 200)
 
-        invalid_auth_token_header = f"Token nope"
+        invalid_auth_token_header = 'Token nope'
         self.client.credentials(HTTP_AUTHORIZATION=invalid_auth_token_header)
         response = self.client.post('/api-token-auth/',
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
