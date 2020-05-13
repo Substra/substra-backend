@@ -279,7 +279,7 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
             duration = metrics.get('duration', None)
             if duration:
                 logger.debug(f'smartcontract {fcn} duration: {duration }ms')
-                metrics_client.timing(f'smartcontract-{fcn}', duration)
+                metrics_client.timing(f'smartcontract_{fcn}', duration)
         # Raise errors if status is not ok
         _raise_for_status(response)
 
