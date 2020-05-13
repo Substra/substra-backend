@@ -274,10 +274,12 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
             raise LedgerInvalidResponse(response)
 
         # Set the ledger inside timer as a metric
-        metrics = response.pop('__metrics__', None)
-        duration = metrics.get('duration', None)
-        if duration:
-            metrics_client.timing(f'legder_execution_{fcn}', duration)
+        if '__metrics__' in response:
+            metrics = response.pop('__metrics__', None)
+            duration = metrics.get('duration', None)
+            if duration:
+                logger.debug(f'smartcontract {fcn} duration: {duration }ms')
+                metrics_client.timing(f'smartcontract-{fcn}', duration)
         # Raise errors if status is not ok
         _raise_for_status(response)
 
