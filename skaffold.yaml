@@ -130,7 +130,7 @@ deploy:
           organization:
             name: MyOrg1
           peer:
-            host: network-org-1-peer-1.org-1
+            host: network-org-1-peer-1-hlf-peer.org-1
             port: 7051
             mspID: MyOrg1MSP
           persistence:
@@ -176,7 +176,7 @@ deploy:
           organization:
             name: MyOrg2
           peer:
-            host: network-org-2-peer-1.org-2
+            host: network-org-2-peer-1-hlf-peer.org-2
             port: 7051
             mspID: MyOrg2MSP
           persistence:
