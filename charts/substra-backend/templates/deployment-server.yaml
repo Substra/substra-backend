@@ -34,7 +34,7 @@ spec:
         {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
+        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --http-timeout 300 --socket-timeout 300 --harakiri 300 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
         {{- else }}
         args: ["-c", "update-ca-certificates && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
         {{- end }}
