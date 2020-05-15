@@ -14,7 +14,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
                                               allow_null=True)
     in_trunk_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
                                                allow_null=True)
-    out_trunk_model_permissions = PrivatePermissionsSerializer()
+    out_trunk_model_permissions = PrivatePermissionsSerializer(required=False, allow_null=True,
+                                                               default={'authorized_ids': []})
     train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                                    min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
@@ -28,7 +29,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_head_model_key = validated_data.get('in_head_model_key')
         in_trunk_model_key = validated_data.get('in_trunk_model_key')
-        out_trunk_model_permissions = validated_data.get('out_trunk_model_permissions')
+        out_trunk_model_permissions = validated_data.get('out_trunk_model_permissions') \
+            or self.get_fields()['out_trunk_model_permissions'].default
         tag = validated_data.get('tag', '')
 
         args = {

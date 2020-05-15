@@ -10,12 +10,13 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 
 class LedgerAlgoSerializer(serializers.Serializer):
     name = serializers.CharField(min_length=1, max_length=100)
-    permissions = PermissionsSerializer()
+    permissions = PermissionsSerializer(required=False, allow_null=True,
+                                        default={'public': False, 'authorized_ids': []})
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
-        permissions = validated_data.get('permissions')
+        permissions = validated_data.get('permissions') or self.get_fields()['permissions'].default
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")

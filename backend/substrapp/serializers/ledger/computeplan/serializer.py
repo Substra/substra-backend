@@ -1,7 +1,7 @@
 from rest_framework import serializers
 
 from substrapp import ledger
-from substrapp.serializers.ledger.utils import PermissionsSerializer
+from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 
 
 class ComputePlanTraintupleSerializer(serializers.Serializer):
@@ -40,7 +40,8 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
                                              allow_null=True)
     in_trunk_model_id = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
                                               allow_null=True)
-    out_trunk_model_permissions = PermissionsSerializer()
+    out_trunk_model_permissions = PrivatePermissionsSerializer(required=False, allow_null=True,
+                                                               default={'authorized_ids': []})
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
 
 

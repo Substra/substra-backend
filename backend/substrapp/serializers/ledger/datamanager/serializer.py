@@ -12,13 +12,14 @@ class LedgerDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
     objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
-    permissions = PermissionsSerializer()
+    permissions = PermissionsSerializer(required=False, allow_null=True,
+                                        default={'public': False, 'authorized_ids': []})
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         data_type = validated_data.get('type')
-        permissions = validated_data.get('permissions')
+        permissions = validated_data.get('permissions') or self.get_fields()['permissions'].default
         objective_key = validated_data.get('objective_key', '')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website

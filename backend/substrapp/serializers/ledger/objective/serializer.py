@@ -14,14 +14,15 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                                                   required=False)
     name = serializers.CharField(min_length=1, max_length=100)
     test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
-    permissions = PermissionsSerializer()
+    permissions = PermissionsSerializer(required=False, allow_null=True,
+                                        default={'public': False, 'authorized_ids': []})
     metrics_name = serializers.CharField(min_length=1, max_length=100)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         metrics_name = validated_data.get('metrics_name')
-        permissions = validated_data.get('permissions')
+        permissions = validated_data.get('permissions') or self.get_fields()['permissions'].default
         test_data_manager_key = validated_data.get('test_data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
 
