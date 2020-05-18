@@ -22,8 +22,8 @@ REST_FRAMEWORK = {
         'rest_framework.throttling.AnonRateThrottle',
     ],
     'DEFAULT_THROTTLE_RATES': {
-        'anon': '120/minute',
-        'login': '120/minute',
+        'anon': f'{os.environ.get("DEFAULT_THROTTLE_RATES", 40)}/minute',
+        'login': f'{os.environ.get("DEFAULT_THROTTLE_RATES", 40)}/minute',
     },
     'DEFAULT_PARSER_CLASSES': [
         'rest_framework.parsers.JSONParser',
