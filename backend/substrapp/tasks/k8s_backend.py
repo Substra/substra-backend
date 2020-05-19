@@ -1,8 +1,46 @@
 import docker
+import kubernetes
 import time
-
+import requests
+import os
 import logging
 logger = logging.getLogger(__name__)
+
+
+REGISTRY = os.getenv('REGISTRY')
+NAMESPACE = os.getenv('NAMESPACE')
+DOCKER_CACHE_PVC = os.getenv('DOCKER_CACHE_PVC')
+DOCKERFILES_PVC = os.getenv('DOCKERFILES_PVC')
+
+
+class ImageNotFound(Exception):
+    pass
+
+
+class BuildError(Exception):
+    pass
+
+
+def watch_job(namespace, job_name):
+    api = kubernetes.client.BatchV1Api()
+
+    job = None
+    watch_job = True
+
+    while watch_job:
+        job = api.read_namespaced_job(job_name, namespace)
+
+        if job.status.succeeded == job.spec.completions:
+            watch_job = False
+            logger.info(f'The job {namespace}/{job_name} succeeded')
+
+        elif job.status.failed == job.spec.backoff_limit:
+            logger.error(f'The job {namespace}/{job_name} failed')
+            raise
+
+        time.sleep(5)
+
+    return job
 
 
 def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
@@ -136,13 +174,93 @@ def container_format_log(container_name, container_logs):
 
 
 def k8s_build_image(path, tag, rm):
-    docker_client = docker.from_env()
-    return docker_client.images.build(path=path, tag=tag, rm=rm)
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.BatchV1Api()
+
+    dockerfile_fullpath = os.path.join(path, 'Dockerfile')
+    dockerfile_mount_subpath = os.path.basename(path)
+    dockerfile_mount_path = os.path.join(os.path.realpath(os.getenv('MEDIA_ROOT')), 'subtuple')
+
+    container = kubernetes.client.V1Container(
+        name="kaniko",
+        image="gcr.io/kaniko-project/executor:latest",
+        args=[
+            f"--dockerfile={dockerfile_fullpath}",
+            f"--context=dir://{path}",
+            f"--destination={os.getenv('REGISTRY')}:5000/{tag}",
+            f"--cache={str(not(rm)).lower()}",
+            "--insecure"
+        ],
+        volume_mounts=[
+            {'name': 'dockerfile',
+             'mountPath': dockerfile_mount_path,
+             'subPath': dockerfile_mount_subpath,
+             'readOnly': True},
+
+            {'name': 'cache',
+             'mountPath': '/cache',
+             'readOnly': True}
+        ]
+    )
+
+    template = kubernetes.client.V1PodTemplateSpec(
+        metadata=kubernetes.client.V1ObjectMeta(labels={"app": "substra"}),
+        spec=kubernetes.client.V1PodSpec(
+            restart_policy="Never",
+            containers=[container],
+            volumes=[
+                {
+                    'name': 'dockerfile',
+                    'persistentVolumeClaim': {'claimName': DOCKERFILES_PVC}
+                },
+                {
+                    'name': 'cache',
+                    'persistentVolumeClaim': {'claimName': DOCKER_CACHE_PVC}
+                }
+            ]
+        )
+    )
+
+    spec = kubernetes.client.V1JobSpec(
+        template=template,
+        backoff_limit=4
+    )
+
+    job = kubernetes.client.V1Job(
+        api_version="batch/v1",
+        kind="Job",
+        metadata=kubernetes.client.V1ObjectMeta(name="kaniko"),
+        spec=spec
+    )
+
+    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+
+    try:
+        watch_job(NAMESPACE, 'kaniko')
+    except Exception as e:
+        logger.error(f'Kaniko build failed, error: {e}')
+        raise BuildError(f'Kaniko build failed, error: {e}')
+    finally:
+        k8s_client.delete_namespaced_job(
+            name="kaniko",
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
+        )
 
 
 def k8s_get_image(image_name):
-    docker_client = docker.from_env()
-    return docker_client.images.get(image_name)
+    response = requests.get(
+        f"http://{REGISTRY}:5000/v2/{image_name}/manifests/latest",
+        headers={'Accept': 'application/json'}
+    )
+    if response.status_code != requests.status_codes.codes.ok:
+        raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
+
+    return response.json()
 
 
 def k8s_get_or_create_local_volume(volume_id):

@@ -35,6 +35,7 @@ from django.conf import settings
 settings_task = copy.deepcopy(settings.TASK)
 settings_task['COMPUTE_BACKEND'] = 'docker'
 
+
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(CELERY_WORKER_CONCURRENCY=1)
