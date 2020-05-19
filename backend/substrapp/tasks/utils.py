@@ -325,7 +325,7 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
     try:
         ts = time.time()
         BACKEND[COMPUTE_BACKEND]['get_image'](image_name)
-    except docker.errors.ImageNotFound, ImageNotFound:
+    except (docker.errors.ImageNotFound, ImageNotFound):
         logger.info(f'ImageNotFound: {image_name}. Building it')
     else:
         logger.info(f'ImageFound: {image_name}. Use it')
@@ -341,7 +341,7 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
                 path=dockerfile_path,
                 tag=image_name,
                 rm=remove_image)
-        except docker.errors.BuildError, BuildError as e:
+        except (docker.errors.BuildError, BuildError) as e:
             if isinstance(e, docker.errors.BuildError):
                 # catch build errors and print them for easier debugging of failed build
                 lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
