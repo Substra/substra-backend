@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 REGISTRY = os.getenv('REGISTRY')
 NAMESPACE = os.getenv('NAMESPACE')
 DOCKER_CACHE_PVC = os.getenv('DOCKER_CACHE_PVC')
-DOCKERFILES_PVC = os.getenv('DOCKERFILES_PVC')
+SUBTUPLE_PVC = os.getenv('SUBTUPLE_PVC')
 
 
 class ImageNotFound(Exception):
@@ -179,7 +179,7 @@ def k8s_build_image(path, tag, rm):
     k8s_client = kubernetes.client.BatchV1Api()
 
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
-    dockerfile_mount_path = os.path.join(os.path.realpath(os.getenv('MEDIA_ROOT')), 'subtuple')
+    dockerfile_mount_subpath = os.path.basename(path)
 
     container = kubernetes.client.V1Container(
         name="kaniko",
@@ -187,13 +187,14 @@ def k8s_build_image(path, tag, rm):
         args=[
             f"--dockerfile={dockerfile_fullpath}",
             f"--context=dir://{path}",
-            f"--destination={os.getenv('REGISTRY')}:5000/{tag}",
+            f"--destination={REGISTRY}:5000/{tag}",
             f"--cache={str(not(rm)).lower()}",
             "--insecure"
         ],
         volume_mounts=[
             {'name': 'dockerfile',
-             'mountPath': dockerfile_mount_path,
+             'mountPath': path,
+             'subPath': dockerfile_mount_subpath,
              'readOnly': True},
 
             {'name': 'cache',
@@ -210,7 +211,7 @@ def k8s_build_image(path, tag, rm):
             volumes=[
                 {
                     'name': 'dockerfile',
-                    'persistentVolumeClaim': {'claimName': DOCKERFILES_PVC}
+                    'persistentVolumeClaim': {'claimName': SUBTUPLE_PVC}
                 },
                 {
                     'name': 'cache',
@@ -252,7 +253,7 @@ def k8s_build_image(path, tag, rm):
 
 def k8s_get_image(image_name):
     response = requests.get(
-        f"http://{REGISTRY}:5000/v2/{image_name}/manifests/latest",
+        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
         headers={'Accept': 'application/json'}
     )
     if response.status_code != requests.status_codes.codes.ok:
@@ -303,7 +304,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     docker_client = docker.from_env()
 
     task_args = {
-        'image': image_name,
+        'image': f'{REGISTRY}:5000/{image_name}',
         'name': job_name,
         'cpuset_cpus': cpu_set,
         'mem_limit': memory_limit_mb,

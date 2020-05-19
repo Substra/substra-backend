@@ -84,7 +84,7 @@ spec:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
             {{- end }}
-            - name: DOCKERFILES_PVC
+            - name: SUBTUPLE_PVC
               value: {{ include "substra.fullname" $ }}-subtuple
             - name: REGISTRY
               value: {{ .Release.Name }}-docker-registry
