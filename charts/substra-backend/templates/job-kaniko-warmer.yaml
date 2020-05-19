@@ -1,0 +1,31 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-kaniko-cache-warmer
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-kaniko-cache-warmer
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  template:
+    spec:
+      containers:
+      - name: kaniko-cache-warmer
+        image: gcr.io/kaniko-project/warmer:latest
+        args:
+        - "--cache-dir=/cache"
+        {{- range .Values.prePulledImages }}
+        - "--image={{ . }}"
+        {{- end }}
+        volumeMounts:
+        - name: kaniko-cache
+          mountPath: /cache
+          readOnly: False
+      restartPolicy: Never
+      volumes:
+      - name: kaniko-cache
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-docker-cache
+  backoffLimit: 4
