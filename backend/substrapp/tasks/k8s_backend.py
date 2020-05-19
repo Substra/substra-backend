@@ -179,7 +179,6 @@ def k8s_build_image(path, tag, rm):
     k8s_client = kubernetes.client.BatchV1Api()
 
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
-    dockerfile_mount_subpath = os.path.basename(path)
     dockerfile_mount_path = os.path.join(os.path.realpath(os.getenv('MEDIA_ROOT')), 'subtuple')
 
     container = kubernetes.client.V1Container(
@@ -195,7 +194,6 @@ def k8s_build_image(path, tag, rm):
         volume_mounts=[
             {'name': 'dockerfile',
              'mountPath': dockerfile_mount_path,
-             'subPath': dockerfile_mount_subpath,
              'readOnly': True},
 
             {'name': 'cache',
