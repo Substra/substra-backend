@@ -13,7 +13,7 @@ from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
-from substrapp.tasks.utils import (get_cpu_gpu_sets, get_memory_limit, compute_docker, get_cpu_sets,
+from substrapp.tasks.utils import (get_cpu_gpu_sets, get_memory_limit, compute_job, get_cpu_sets,
                                    get_gpu_sets)
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
@@ -26,14 +26,19 @@ from . import assets
 from node.models import OutgoingNode
 
 import zipfile
-import docker
 MEDIA_ROOT = "/tmp/unittests_tasks/"
 # MEDIA_ROOT = tempfile.mkdtemp()
 
 
+import copy
+from django.conf import settings
+settings_task = copy.deepcopy(settings.TASK)
+settings_task['COMPUTE_BACKEND'] = 'docker'
+
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(CELERY_WORKER_CONCURRENCY=1)
+@override_settings(TASK=settings_task)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TasksTests(APITestCase):
 
@@ -101,16 +106,14 @@ class TasksTests(APITestCase):
 
     def test_resources(self):
 
-        docker_client = docker.from_env()
-
         self.assertTrue(isinstance(get_memory_limit(), int))
 
         cpu_set, gpu_set = get_cpu_gpu_sets()
-        cpu_sets = get_cpu_sets(docker_client, 1)
+        cpu_sets = get_cpu_sets()
         self.assertIn(cpu_set, cpu_sets)
 
         if gpu_set is not None:
-            gpu_sets = get_gpu_sets(docker_client, 1)
+            gpu_sets = get_gpu_sets()
             self.assertIn(gpu_set, gpu_sets)
 
     def test_uncompress_content_tar(self):
@@ -318,18 +321,18 @@ class TasksTests(APITestCase):
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)
 
-    def test_compute_docker(self):
+    def test_compute_job(self):
         cpu_set, gpu_set = None, None
-        client = docker.from_env()
 
         dockerfile_path = os.path.join(self.subtuple_path, 'Dockerfile')
         with open(dockerfile_path, 'w') as f:
             f.write('FROM library/hello-world')
 
         hash_docker = uuid.uuid4().hex
-        compute_docker(client,
-                       self.subtuple_path, 'test_compute_docker_' + hash_docker,
-                       'test_compute_docker_name_' + hash_docker, None, None, environment={})
+        compute_job(
+            self.subtuple_path, 'test_compute_job_' + hash_docker,
+            'test_compute_job_name_' + hash_docker, None, None, environment={}
+        )
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
@@ -441,8 +444,8 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker:
-                mcompute_docker.return_value = 'DONE'
+            with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job:
+                mcompute_job.return_value = 'DONE'
                 do_task(subtuple, 'traintuple')
 
     def test_compute_task(self):
@@ -465,12 +468,12 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.tasks.compute_docker') as mcompute_docker, \
+            with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job, \
                     mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
                     mock.patch('substrapp.tasks.tasks.prepare_materials') as mprepare_materials, \
                     mock.patch('substrapp.tasks.tasks.log_success_tuple') as mlog_success_tuple:
 
-                mcompute_docker.return_value = 'DONE'
+                mcompute_job.return_value = 'DONE'
                 mprepare_materials.return_value = 'DONE'
                 mdo_task.return_value = 'DONE'
 

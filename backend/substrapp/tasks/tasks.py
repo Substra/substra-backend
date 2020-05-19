@@ -11,6 +11,7 @@ import tarfile
 
 import docker
 import kubernetes
+
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
@@ -23,8 +24,9 @@ from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_c
                              get_dir_hash)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import (compute_docker, get_asset_content, get_and_put_asset_content,
-                                   list_files, get_k8s_client, do_not_raise, timeit, ExceptionThread)
+from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
+                                   list_files, do_not_raise, timeit, ExceptionThread,
+                                   remove_local_volume, get_or_create_local_volume, remove_image)
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -419,16 +421,9 @@ def remove_local_folders(compute_plan_id):
 
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
 
-    client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
 
-    try:
-        local_volume = client.volumes.get(volume_id=volume_id)
-        local_volume.remove(force=True)
-    except docker.errors.NotFound:
-        pass
-    except Exception:
-        logger.error(f'Cannot remove volume {volume_id}', exc_info=True)
+    remove_local_volume(volume_id)
 
     if settings.TASK['CHAINKEYS_ENABLED']:
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
@@ -628,10 +623,7 @@ def do_task(subtuple, tuple_type):
         compute_plan = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
 
-    client = docker.from_env()
-
     return _do_task(
-        client,
         subtuple_directory,
         tuple_type,
         subtuple,
@@ -642,10 +634,10 @@ def do_task(subtuple, tuple_type):
     )
 
 
-def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
+def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
 
     common_volumes, compute_volumes = prepare_volumes(
-        client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
+        subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
 
     # Add node index to environment variable for the compute
     node_index = os.getenv('NODE_INDEX')
@@ -660,14 +652,13 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
             environment['TESTTUPLE_TAG'] = TAG_VALUE_FOR_TRANSFER_BUCKET
 
-    container_name = f'{tuple_type}_{subtuple["key"][0:8]}_{TUPLE_COMMANDS[tuple_type]}'
+    job_name = f'{tuple_type}_{subtuple["key"][0:8]}_{TUPLE_COMMANDS[tuple_type]}'
     command = generate_command(tuple_type, subtuple, rank)
 
-    compute_docker(
-        client=client,
+    compute_job(
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['hash']),
-        container_name=container_name,
+        job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
         remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
@@ -683,11 +674,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
 
-        compute_docker(
-            client=client,
+        compute_job(
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
-            container_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
+            job_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
             volumes=common_volumes,
             command=None,
             remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
@@ -711,7 +701,7 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     return result
 
 
-def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
+def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
 
     model_path = path.join(subtuple_directory, 'model')
     pred_path = path.join(subtuple_directory, 'pred')
@@ -746,10 +736,7 @@ def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, com
     # local volume for train like tuples in compute plan
     if compute_plan_id is not None:
         volume_id = get_volume_id(compute_plan_id)
-        try:
-            client.volumes.get(volume_id=volume_id)
-        except docker.errors.NotFound:
-            client.volumes.create(name=volume_id)
+        get_or_create_local_volume(volume_id)
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
@@ -759,6 +746,12 @@ def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, com
         chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag)
 
     return {**volumes, **symlinks_volume}, {**model_volume, **chainkeys_volume}
+
+
+# SHOULD BE MOVED IN K8S BACKEND
+def get_k8s_client():
+    kubernetes.config.load_incluster_config()
+    return kubernetes.client.CoreV1Api()
 
 
 def prepare_chainkeys(compute_plan_id, compute_plan_tag):
@@ -819,6 +812,8 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
     list_files(chainkeys_directory)
 
     return chainkeys_volume
+
+# END OF SHOULD BE MOVED IN K8S BACKEND
 
 
 def generate_command(tuple_type, subtuple, rank):
@@ -980,19 +975,10 @@ def get_chainkeys_directory(compute_plan_id):
 
 
 def remove_algo_images(algo_hashes):
-    client = docker.from_env()
     for algo_hash in algo_hashes:
-        algo_docker = get_algo_image_name(algo_hash)
+        algo_image_name = get_algo_image_name(algo_hash)
 
-        try:
-            if client.images.get(algo_docker):
-                logger.info(f'Remove docker image {algo_docker}')
-                client.images.remove(algo_docker, force=True)
-
-        except docker.errors.ImageNotFound:
-            pass
-        except docker.errors.APIError as e:
-            logger.exception(e)
+        remove_image(algo_image_name)
 
 
 def remove_intermediary_models(model_hashes):
