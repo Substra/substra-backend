@@ -172,6 +172,15 @@ rabbitmq:
   persistence:
     enabled: false
 
+docker-registry:
+  enabled: true
+  storage: filesystem
+  persistence:
+    enabled: false
+
+prePulledImages:
+- substrafoundation/substra-tools:0.5.0
+
 flower:
   enabled: true
   host: flower

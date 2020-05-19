@@ -5,5 +5,8 @@ dependencies:
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
   version: 8.10.5
-digest: sha256:a32edfcb2781ef841a28fa1725562e2a180e9bb96225c908c1e68a5404748b12
-generated: "2020-06-05T17:46:30.053799+02:00"
+- name: docker-registry
+  repository: https://kubernetes-charts.storage.googleapis.com/
+  version: 1.9.2
+digest: sha256:64aac206900eb10b6099efc2fb5d6f0a41975fb211c778f5c61108d5675eaa47
+generated: "2020-06-09T15:23:33.702043+02:00"

@@ -114,6 +114,15 @@ deploy:
           celeryworker.image: substrafoundation/celeryworker
           flower.image: substrafoundation/flower
         overrides:
+          docker-registry:
+            ingress:
+              enabled: true
+              hosts:
+                - substra-registry.node-1.com
+              annotations:
+                kubernetes.io/ingress.class: nginx
+                nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
+                nginx.ingress.kubernetes.io/proxy-body-size: 100m
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
@@ -164,6 +173,15 @@ deploy:
           celeryworker.image: substrafoundation/celeryworker
           flower.image: substrafoundation/flower
         overrides:
+          docker-registry:
+            ingress:
+              enabled: true
+              hosts:
+                - substra-registry.node-2.com
+              annotations:
+                kubernetes.io/ingress.class: nginx
+                nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
+                nginx.ingress.kubernetes.io/proxy-body-size: 100m
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           backend:
