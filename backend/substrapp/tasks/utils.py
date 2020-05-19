@@ -16,7 +16,9 @@ from substrapp.tasks.docker_backend import (
     docker_compute)
 from substrapp.tasks.k8s_backend import (
     k8s_memory_limit, k8s_cpu_count, k8s_cpu_used, k8s_gpu_list, k8s_gpu_used, k8s_get_image, k8s_build_image,
-    k8s_remove_local_volume, k8s_get_or_create_local_volume, k8s_remove_image, k8s_compute)
+    k8s_remove_local_volume, k8s_get_or_create_local_volume, k8s_remove_image, k8s_compute, ImageNotFound,
+    BuildError)
+
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
@@ -315,8 +317,6 @@ def container_format_log(container_name, container_logs):
 def compute_job(dockerfile_path, image_name, job_name, volumes, command,
                 environment, remove_image=True, remove_container=True, capture_logs=True):
 
-    client = docker.from_env()
-
     raise_if_no_dockerfile(dockerfile_path)
 
     build_image = True
@@ -325,14 +325,14 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
     try:
         ts = time.time()
         BACKEND[COMPUTE_BACKEND]['get_image'](image_name)
-    except docker.errors.ImageNotFound:
+    except docker.errors.ImageNotFound, ImageNotFound:
         logger.info(f'ImageNotFound: {image_name}. Building it')
     else:
         logger.info(f'ImageFound: {image_name}. Use it')
         build_image = False
     finally:
         elaps = (time.time() - ts) * 1000
-        logger.info(f'client.images.get - elaps={elaps:.2f}ms')
+        logger.info(f'{COMPUTE_BACKEND} get image  - elaps={elaps:.2f}ms')
 
     if build_image:
         try:
@@ -341,11 +341,14 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
                 path=dockerfile_path,
                 tag=image_name,
                 rm=remove_image)
-        except docker.errors.BuildError as e:
-            # catch build errors and print them for easier debugging of failed build
-            lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-            lines = [line for line in lines if line]
-            error = '\n'.join(lines)
+        except docker.errors.BuildError, BuildError as e:
+            if isinstance(e, docker.errors.BuildError):
+                # catch build errors and print them for easier debugging of failed build
+                lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
+                lines = [line for line in lines if line]
+                error = '\n'.join(lines)
+            else:
+                error = '\n' + str(e)
             logger.error(f'BuildError: {error}')
             raise
         else:
