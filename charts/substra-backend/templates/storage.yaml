@@ -86,3 +86,51 @@ spec:
   hostPath:
     path: {{ $.Values.persistence.hostPath }}/servermedias
     type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ template "substra.fullname" $ }}-docker-cache
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      app.kubernetes.io/managed-by: {{ $.Release.Service }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
+      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "substra.fullname" $ }}-docker-cache
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
+spec:
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Recycle
+  claimRef:
+    name: {{ template "substra.fullname" $ }}-docker-cache
+    namespace: {{ .Release.Namespace }}
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ .Values.persistence.hostPath }}/cache
+    type: DirectoryOrCreate
