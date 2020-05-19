@@ -10,15 +10,53 @@ from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
 
-from kubernetes import client, config
+from substrapp.tasks.docker_backend import (
+    docker_memory_limit, docker_cpu_count, docker_cpu_used, docker_gpu_list, docker_gpu_used, docker_get_image,
+    docker_build_image, docker_remove_local_volume, docker_get_or_create_local_volume, docker_remove_image,
+    docker_compute)
+from substrapp.tasks.k8s_backend import (
+    k8s_memory_limit, k8s_cpu_count, k8s_cpu_used, k8s_gpu_list, k8s_gpu_used, k8s_get_image, k8s_build_image,
+    k8s_remove_local_volume, k8s_get_or_create_local_volume, k8s_remove_image, k8s_compute)
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
-DOCKER_LABEL = 'substra_task'
+TASK_LABEL = 'substra_task'
+COMPUTE_BACKEND = settings.TASK['COMPUTE_BACKEND']
 
 logger = logging.getLogger(__name__)
 
 import time
+
+BACKEND = {
+    'docker': {
+        'get_memory': docker_memory_limit,
+        'get_cpu': docker_cpu_count,
+        'get_cpu_used': docker_cpu_used,
+        'get_gpu': docker_gpu_list,
+        'get_gpu_used': docker_gpu_used,
+        'get_image': docker_get_image,
+        'build_image': docker_build_image,
+        'local_volume': docker_get_or_create_local_volume,
+        'rm_local_volume': docker_remove_local_volume,
+        'rm_image': docker_remove_image,
+        'compute': docker_compute,
+    },
+
+    'k8s': {
+        'get_memory': k8s_memory_limit,
+        'get_cpu': k8s_cpu_count,
+        'get_cpu_used': k8s_cpu_used,
+        'get_gpu': k8s_gpu_list,
+        'get_gpu_used': k8s_gpu_used,
+        'get_image': k8s_get_image,
+        'build_image': k8s_build_image,
+        'local_volume': k8s_get_or_create_local_volume,
+        'rm_local_volume': k8s_remove_local_volume,
+        'rm_image': k8s_remove_image,
+        'compute': k8s_compute,
+    },
+
+}
 
 
 def timeit(function):
@@ -64,38 +102,14 @@ def local_memory_limit():
         return int(check_output(['sysctl', '-n', 'hw.memsize']).strip()) // CELERY_WORKER_CONCURRENCY
 
 
-def docker_memory_limit():
-    docker_client = docker.from_env()
-    # Get memory limit from docker container through the API
-    # Because the docker execution may be remote
-
-    cmd = f'python3 -u -c "import os; print(int(os.sysconf("SC_PAGE_SIZE") '\
-          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {CELERY_WORKER_CONCURRENCY}), end=\'\')"'
-
-    task_args = {
-        'image': CELERYWORKER_IMAGE,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
-
-    memory_limit_bytes = docker_client.containers.run(**task_args)
-
-    return int(memory_limit_bytes)
-
-
 @timeit
-def get_memory_limit():
+def get_memory_limit(concurrency=None):
+
+    if concurrency is None:
+        concurrency = CELERY_WORKER_CONCURRENCY
 
     try:
-        memory_limit = docker_memory_limit()
+        memory_limit = BACKEND[COMPUTE_BACKEND]['get_memory'](concurrency, CELERYWORKER_IMAGE)
     except (docker.errors.ContainerError, docker.errors.ImageNotFound,
             docker.errors.APIError, ValueError):
         logger.info('[Warning] Cannot get memory limit from remote, get it from local.')
@@ -105,28 +119,12 @@ def get_memory_limit():
 
 
 @timeit
-def get_cpu_count(client):
-    # Get CPU count from docker container through the API
-    # Because the docker execution may be remote
-
-    task_args = {
-        'image': CELERYWORKER_IMAGE,
-        'command': 'python3 -u -c "import os; print(os.cpu_count())"',
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
+def get_cpu_count():
 
     cpu_count = os.cpu_count()
 
     try:
-        cpu_count_bytes = client.containers.run(**task_args).strip()
+        cpu_count_bytes = BACKEND[COMPUTE_BACKEND]['get_cpu'](CELERYWORKER_IMAGE)
     except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
         logger.info('[Warning] Cannot get cpu count from remote')
     else:
@@ -137,8 +135,12 @@ def get_cpu_count(client):
 
 
 @timeit
-def get_cpu_sets(client, concurrency):
-    cpu_count = get_cpu_count(client)
+def get_cpu_sets(concurrency=None):
+
+    if concurrency is None:
+        concurrency = CELERY_WORKER_CONCURRENCY
+
+    cpu_count = get_cpu_count()
     cpu_step = max(1, cpu_count // concurrency)
     cpu_sets = []
 
@@ -151,33 +153,12 @@ def get_cpu_sets(client, concurrency):
     return cpu_sets
 
 
-def get_gpu_list(client):
-    # Get GPU list from docker container through the API
-    # Because the docker execution may be remote
-    cmd = 'python3 -u -c "import GPUtil as gputil;import json;'\
-          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
-
-    task_args = {
-        'image': CELERYWORKER_IMAGE,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-        'environment': {'CUDA_DEVICE_ORDER': 'PCI_BUS_ID',
-                        'NVIDIA_VISIBLE_DEVICES': 'all'},
-        'runtime': 'nvidia'
-    }
+def get_gpu_list():
 
     gpu_list = []
 
     try:
-        gpu_list_bytes = client.containers.run(**task_args)
+        gpu_list_bytes = BACKEND[COMPUTE_BACKEND]['get_gpu'](CELERYWORKER_IMAGE)
     except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
         logger.info('[Warning] Cannot get nvidia gpu list from remote')
     else:
@@ -186,9 +167,12 @@ def get_gpu_list(client):
     return gpu_list
 
 
-def get_gpu_sets(client, concurrency):
+def get_gpu_sets(concurrency=None):
 
-    gpu_list = get_gpu_list(client)
+    if concurrency is None:
+        concurrency = CELERY_WORKER_CONCURRENCY
+
+    gpu_list = get_gpu_list()
 
     if gpu_list:
         gpu_count = len(gpu_list)
@@ -248,10 +232,8 @@ def filter_gpu_sets(used_gpu_sets, gpu_sets):
 
 def get_cpu_gpu_sets():
 
-    docker_client = docker.from_env()
-
-    cpu_sets = get_cpu_sets(docker_client, CELERY_WORKER_CONCURRENCY)
-    gpu_sets = get_gpu_sets(docker_client, CELERY_WORKER_CONCURRENCY)  # Can be None if no gpu
+    cpu_sets = get_cpu_sets()
+    gpu_sets = get_gpu_sets()  # Can be None if no gpu
 
     cpu_set = None
     gpu_set = None
@@ -259,20 +241,11 @@ def get_cpu_gpu_sets():
     while cpu_set is None:
 
         # Get ressources used
-        filters = {'status': 'running',
-                   'label': [DOCKER_LABEL]}
-
         try:
-            containers = [container.attrs
-                          for container in docker_client.containers.list(filters=filters)]
+            used_cpu_sets = BACKEND[COMPUTE_BACKEND]['get_cpu_used'](TASK_LABEL)
         except docker.errors.APIError as e:
             logger.error(e, exc_info=True)
             continue
-
-        # CPU
-        used_cpu_sets = [container['HostConfig']['CpusetCpus']
-                         for container in containers
-                         if container['HostConfig']['CpusetCpus']]
 
         cpu_sets_available = filter_cpu_sets(used_cpu_sets, cpu_sets)
 
@@ -281,29 +254,16 @@ def get_cpu_gpu_sets():
 
         # GPU
         if gpu_sets is not None:
-            env_containers = [container['Config']['Env']
-                              for container in containers]
-
-            used_gpu_sets = []
-
-            for env_list in env_containers:
-                nvidia_env_var = [s.split('=')[1]
-                                  for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
-
-                used_gpu_sets.extend(nvidia_env_var)
-
-            gpu_sets_available = filter_gpu_sets(used_gpu_sets, gpu_sets)
-
-            if gpu_sets_available:
-                gpu_set = gpu_sets_available.pop()
+            try:
+                used_gpu_sets = BACKEND[COMPUTE_BACKEND]['get_gpu_used'](TASK_LABEL)
+            except docker.errors.APIError as e:
+                logger.error(e, exc_info=True)
+            else:
+                gpu_sets_available = filter_gpu_sets(used_gpu_sets, gpu_sets)
+                if gpu_sets_available:
+                    gpu_set = gpu_sets_available.pop()
 
     return cpu_set, gpu_set
-
-
-def container_format_log(container_name, container_logs):
-    logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
-    for log in logs:
-        logger.info(log)
 
 
 def list_files(startpath):
@@ -324,19 +284,43 @@ def list_files(startpath):
         logger.info(f'{startpath} does not exist.')
 
 
-def compute_docker(client, dockerfile_path, image_name, container_name, volumes, command,
-                   environment, remove_image=True, remove_container=True, capture_logs=True):
+def get_or_create_local_volume(volume_id):
+    return BACKEND[COMPUTE_BACKEND]['local_volume'](volume_id)
 
+
+def remove_local_volume(volume_id):
+    return BACKEND[COMPUTE_BACKEND]['rm_local_volume'](volume_id)
+
+
+def remove_image(image_name):
+    return BACKEND[COMPUTE_BACKEND]['remove_image'](image_name)
+
+
+def raise_if_no_dockerfile(dockerfile_path):
     dockerfile_fullpath = os.path.join(dockerfile_path, 'Dockerfile')
     if not os.path.exists(dockerfile_fullpath):
         raise Exception(f'Dockerfile does not exist : {dockerfile_fullpath}')
+
+
+def container_format_log(container_name, container_logs):
+    logs = [f'[{container_name}] {log}' for log in container_logs.decode().split('\n')]
+    for log in logs:
+        logger.info(log)
+
+
+def compute_job(dockerfile_path, image_name, job_name, volumes, command,
+                environment, remove_image=True, remove_container=True, capture_logs=True):
+
+    client = docker.from_env()
+
+    raise_if_no_dockerfile(dockerfile_path)
 
     build_image = True
 
     # Check if image already exist
     try:
         ts = time.time()
-        client.images.get(image_name)
+        BACKEND[COMPUTE_BACKEND]['get_image'](image_name)
     except docker.errors.ImageNotFound:
         logger.info(f'ImageNotFound: {image_name}. Building it')
     else:
@@ -349,9 +333,10 @@ def compute_docker(client, dockerfile_path, image_name, container_name, volumes,
     if build_image:
         try:
             ts = time.time()
-            client.images.build(path=dockerfile_path,
-                                tag=image_name,
-                                rm=remove_image)
+            BACKEND[COMPUTE_BACKEND]['build_image'](
+                path=dockerfile_path,
+                tag=image_name,
+                rm=remove_image)
         except docker.errors.BuildError as e:
             # catch build errors and print them for easier debugging of failed build
             lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
@@ -368,58 +353,21 @@ def compute_docker(client, dockerfile_path, image_name, container_name, volumes,
     memory_limit_mb = f'{get_memory_limit()}M'
     cpu_set, gpu_set = get_cpu_gpu_sets()    # blocking call
 
-    logger.info(f'Launch container {container_name} with {cpu_set} CPU - {gpu_set} GPU - {memory_limit_mb}.')
+    logger.info(f'Launch container {job_name} with {cpu_set} CPU - {gpu_set} GPU - {memory_limit_mb}.')
 
-    task_args = {
-        'image': image_name,
-        'name': container_name,
-        'cpuset_cpus': cpu_set,
-        'mem_limit': memory_limit_mb,
-        'command': command,
-        'volumes': volumes,
-        'shm_size': '8G',
-        'labels': [DOCKER_LABEL],
-        'detach': False,
-        'stdout': capture_logs,
-        'stderr': capture_logs,
-        'auto_remove': False,
-        'remove': False,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-        'environment': environment
-    }
-
-    if gpu_set is not None:
-        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
-        task_args['runtime'] = 'nvidia'
-
-    try:
-        ts = time.time()
-        client.containers.run(**task_args)
-    finally:
-        # we need to remove the containers to be able to remove the local
-        # volume in case of compute plan
-        container = client.containers.get(container_name)
-        if capture_logs:
-            container_format_log(
-                container_name,
-                container.logs()
-            )
-        container.remove()
-
-        # Remove images
-        if remove_image:
-            client.images.remove(image_name, force=True)
-
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'client.images.run - elaps={elaps:.2f}ms')
-
-
-def get_k8s_client():
-    config.load_incluster_config()
-    return client.CoreV1Api()
+    BACKEND[COMPUTE_BACKEND]['compute'](
+        image_name,
+        job_name,
+        cpu_set,
+        memory_limit_mb,
+        command,
+        volumes,
+        TASK_LABEL,
+        capture_logs,
+        environment,
+        gpu_set,
+        remove_image
+    )
 
 
 def do_not_raise(fn):
