@@ -10,7 +10,6 @@ from substrapp.ledger_utils import LedgerNotFound, LedgerInvalidResponse
 from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
     log_success_tuple, query_tuples
 
-import docker
 import os
 
 
@@ -58,7 +57,7 @@ class MiscTests(TestCase):
             mget_cpu_count.return_value = cpu_count
             for concurrency in range(1, cpu_count + 1, 1):
                 self.assertEqual(concurrency,
-                                 len(get_cpu_sets(docker.from_env(), concurrency)))
+                                 len(get_cpu_sets(concurrency)))
 
     def test_gpu_sets(self):
         gpu_list = ['0', '1']
@@ -66,9 +65,9 @@ class MiscTests(TestCase):
             mget_gpu_list.return_value = gpu_list
             for concurrency in range(1, len(gpu_list) + 1, 1):
                 self.assertEqual(concurrency,
-                                 len(get_gpu_sets(docker.from_env(), concurrency)))
+                                 len(get_gpu_sets(concurrency)))
 
-        self.assertFalse(get_gpu_sets(docker.from_env(), concurrency))
+        self.assertFalse(get_gpu_sets(concurrency))
 
     def test_get_object_from_ledger(self):
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
