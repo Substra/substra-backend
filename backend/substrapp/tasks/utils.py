@@ -319,6 +319,9 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
 
     raise_if_no_dockerfile(dockerfile_path)
 
+    # improve that to pass real tuple key instead of retrieving it
+    subtuple_key = dockerfile_path.split('/subtuple/')[-1]
+
     build_image = True
 
     # Check if image already exist
@@ -373,7 +376,8 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
         capture_logs,
         environment,
         gpu_set,
-        remove_image
+        remove_image,
+        subtuple_key
     )
 
 

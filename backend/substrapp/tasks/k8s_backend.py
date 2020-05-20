@@ -10,8 +10,10 @@ logger = logging.getLogger(__name__)
 REGISTRY = os.getenv('REGISTRY')
 REGISTRY_HOST = os.getenv('REGISTRY_HOST')
 NAMESPACE = os.getenv('NAMESPACE')
-DOCKER_CACHE_PVC = os.getenv('DOCKER_CACHE_PVC')
-SUBTUPLE_PVC = os.getenv('SUBTUPLE_PVC')
+
+K8S_PVC = {
+    env_key: env_value for env_key, env_value in os.environ if '_PVC' in env_key
+}
 
 
 class ImageNotFound(Exception):
@@ -50,12 +52,19 @@ def get_pod_name(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    api_response = k8s_client.list_namespaced_pod(
-        NAMESPACE,
-        label_selector=f'app={name}'
-    )
+    pod = None
 
-    return api_response.items[0].metadata.name
+    while pod is None:
+        api_response = k8s_client.list_namespaced_pod(
+            NAMESPACE,
+            label_selector=f'app={name}'
+        )
+        if api_response.items:
+            pod = api_response.items.pop()
+
+        time.sleep(5)
+
+    return pod.metadata.name
 
 
 def watch_pod(name):
@@ -68,8 +77,6 @@ def watch_pod(name):
         pretty=True
     )
 
-    # logger.info(f"Pod read.\n{api_response}")
-
     finished = False
 
     while not finished:
@@ -78,7 +85,6 @@ def watch_pod(name):
             namespace=NAMESPACE,
             pretty=True
         )
-        print(f"Pod {name} read status.\n{api_response.status.container_statuses}")
 
         if api_response.status.container_statuses:
             for container in api_response.status.container_statuses:
@@ -276,11 +282,11 @@ def k8s_build_image(path, tag, rm):
             volumes=[
                 {
                     'name': 'dockerfile',
-                    'persistentVolumeClaim': {'claimName': SUBTUPLE_PVC}
+                    'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
                 },
                 {
                     'name': 'cache',
-                    'persistentVolumeClaim': {'claimName': DOCKER_CACHE_PVC}
+                    'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
                 }
             ]
         )
@@ -386,7 +392,7 @@ def k8s_remove_image(image_name):
 
 
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image):
+                capture_logs, environment, gpu_set, remove_image, subtuple_key):
 
     docker_client = docker.from_env()
 
@@ -416,14 +422,21 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         task_args['runtime'] = 'nvidia'
 
     k8s_job_name = job_name.replace("_", "-")
-
+    pod_name = None
     try:
         ts = time.time()
-        deployment = create_deployment_object(k8s_job_name, task_args)
+
+        # DOCKER
+        docker_client.containers.run(**task_args)
+
+        # K8S
+        deployment = create_deployment_object(k8s_job_name, task_args, subtuple_key)
         create_deployment(deployment)
         pod_name = get_pod_name(k8s_job_name)
-        docker_client.containers.run(**task_args)
         watch_pod(pod_name)
+    except Exception as e:
+        logger.exception(e)
+        raise
     finally:
         # we need to remove the containers to be able to remove the local
         # volume in case of compute plan
@@ -433,11 +446,12 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
                 job_name,
                 container.logs()
             )
-            container_format_log(
-                k8s_job_name,
-                get_pod_logs(name=pod_name,
-                             container=k8s_job_name)
-            )
+            if pod_name is not None:
+                container_format_log(
+                    k8s_job_name,
+                    get_pod_logs(name=pod_name,
+                                 container=k8s_job_name)
+                )
         container.remove()
 
         delete_deployment(k8s_job_name)
@@ -450,7 +464,9 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
 
 
-def create_deployment_object(name, task_args):
+def create_deployment_object(name, task_args, subtuple_key):
+
+    print(task_args['volumes'])
 
     # Configureate Pod template container
     container_nginx = kubernetes.client.V1Container(
@@ -466,7 +482,14 @@ def create_deployment_object(name, task_args):
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
-        args=task_args['command'].split(" "),
+        args=task_args['command'].split(" ") if task_args['command'] is not None else None,
+        volume_mounts=[
+            {'name': 'subtuple',
+             'mountPath': '/sandbox/',
+             'subPath': subtuple_key,
+             'readOnly': True}
+        ]
+
         # resources=kubernetes.client.V1ResourceRequirements(
         #     limits={'cpu': len(task_args['cpuset_cpus']), 'memory': task_args['mem_limit']}
         # )
@@ -476,7 +499,13 @@ def create_deployment_object(name, task_args):
     template = kubernetes.client.V1PodTemplateSpec(
         metadata=kubernetes.client.V1ObjectMeta(labels={'app': name}),
         spec=kubernetes.client.V1PodSpec(
-            containers=[container_compute, container_nginx]
+            containers=[container_compute, container_nginx],
+            volumes=[
+                {
+                    'name': 'subtuple',
+                    'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
+                }
+            ]
         )
     )
 
@@ -500,12 +529,12 @@ def create_deployment(deployment):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.AppsV1Api()
 
-    api_response = k8s_client.create_namespaced_deployment(
+    k8s_client.create_namespaced_deployment(
         body=deployment,
         namespace=NAMESPACE
     )
 
-    logger.info("Deployment created. status='%s'" % str(api_response.status))
+    logger.info(f'Deployment {deployment.metadata.name} created.')
 
 
 def delete_deployment(name):
@@ -513,7 +542,7 @@ def delete_deployment(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.AppsV1Api()
 
-    api_response = k8s_client.delete_namespaced_deployment(
+    k8s_client.delete_namespaced_deployment(
         name=name,
         namespace=NAMESPACE,
         body=kubernetes.client.V1DeleteOptions(
@@ -522,4 +551,4 @@ def delete_deployment(name):
         )
     )
 
-    logger.info("Deployment deleted. status='%s'" % str(api_response.status))
+    logger.info(f'Deployment {name} deleted.')
