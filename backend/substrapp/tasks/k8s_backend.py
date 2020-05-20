@@ -71,6 +71,7 @@ def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
 
     return int(memory_limit_bytes)
 
+
 def k8s_cpu_count(celeryworker_image):
     docker_client = docker.from_env()
     # Get CPU count from docker container through the API
