@@ -177,6 +177,7 @@ docker-registry:
   storage: filesystem
   persistence:
     enabled: false
+    deleteEnabled: true
 
 prePulledImages:
 - substrafoundation/substra-tools:0.5.0
