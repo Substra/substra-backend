@@ -180,7 +180,8 @@ def k8s_build_image(path, tag, rm):
     k8s_client = kubernetes.client.BatchV1Api()
 
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
-    dockerfile_mount_subpath = os.path.basename(path)
+
+    dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
     container = kubernetes.client.V1Container(
         name="kaniko",
