@@ -159,6 +159,8 @@ deploy:
               value: '["http://substra-frontend.node-1.com/"]'
             - name: DEFAULT_THROTTLE_RATES
               value: '30'
+            - name: REGISTRY_HOST
+              value: 'substra-registry.node-1.com'
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -216,6 +218,8 @@ deploy:
               value: '["http://substra-frontend.node-2.com/"]'
             - name: DEFAULT_THROTTLE_RATES
               value: '30'
+            - name: REGISTRY_HOST
+              value: 'substra-registry.node-2.com'
 
 profiles:
   - name: prod

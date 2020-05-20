@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 REGISTRY = os.getenv('REGISTRY')
+REGISTRY_HOST = os.getenv('REGISTRY_HOST')
 NAMESPACE = os.getenv('NAMESPACE')
 DOCKER_CACHE_PVC = os.getenv('DOCKER_CACHE_PVC')
 SUBTUPLE_PVC = os.getenv('SUBTUPLE_PVC')
@@ -262,6 +263,28 @@ def k8s_get_image(image_name):
     return response.json()
 
 
+def k8s_delete_image(image_name):
+
+    response = requests.get(
+        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
+        headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+    )
+
+    if response.status_code != requests.status_codes.codes.ok:
+        raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
+
+    digest = response.headers['Docker-Content-Digest']
+
+    response = requests.delete(
+        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/{digest}',
+        headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+    )
+    if response.status_code != requests.status_codes.codes.accepted:
+        raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
+
+    return response
+
+
 def k8s_get_or_create_local_volume(volume_id):
 
     docker_client = docker.from_env()
@@ -304,7 +327,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     docker_client = docker.from_env()
 
     task_args = {
-        'image': f'{REGISTRY}:5000/{image_name}',
+        'image': f'{REGISTRY_HOST}/{image_name}',
         'name': job_name,
         'cpuset_cpus': cpu_set,
         'mem_limit': memory_limit_mb,
@@ -344,7 +367,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
 
         # Remove images
         if remove_image:
-            docker_client.images.remove(image_name, force=True)
+            k8s_delete_image(image_name)
 
         elaps = (time.time() - ts) * 1000
         logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
