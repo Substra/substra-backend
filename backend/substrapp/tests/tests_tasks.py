@@ -30,16 +30,9 @@ MEDIA_ROOT = "/tmp/unittests_tasks/"
 # MEDIA_ROOT = tempfile.mkdtemp()
 
 
-import copy
-from django.conf import settings
-settings_task = copy.deepcopy(settings.TASK)
-settings_task['COMPUTE_BACKEND'] = 'docker'
-
-
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(CELERY_WORKER_CONCURRENCY=1)
-@override_settings(TASK=settings_task)
 @override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TasksTests(APITestCase):
 
@@ -55,6 +48,9 @@ class TasksTests(APITestCase):
         self.data_sample, self.data_sample_filename = get_sample_zip_data_sample()
         self.data_sample_tar, self.data_sample_tar_filename = get_sample_tar_data_sample()
         self.model, self.model_filename = get_sample_model()
+
+        self.mock_compute_backend = mock.patch('substrapp.tasks.utils.COMPUTE_BACKEND',
+                                               'docker')
 
     @classmethod
     def setUpTestData(cls):
@@ -323,6 +319,7 @@ class TasksTests(APITestCase):
             self.assertEqual(objective, metrics_content)
 
     def test_compute_job(self):
+
         cpu_set, gpu_set = None, None
 
         dockerfile_path = os.path.join(self.subtuple_path, 'Dockerfile')
@@ -330,10 +327,11 @@ class TasksTests(APITestCase):
             f.write('FROM library/hello-world')
 
         hash_docker = uuid.uuid4().hex
-        compute_job(
-            self.subtuple_path, 'test_compute_job_' + hash_docker,
-            'test_compute_job_name_' + hash_docker, None, None, environment={}
-        )
+        with self.mock_compute_backend:
+            compute_job(
+                self.subtuple_path, 'test_compute_job_' + hash_docker,
+                'test_compute_job_name_' + hash_docker, None, None, environment={}
+            )
 
         self.assertIsNone(cpu_set)
         self.assertIsNone(gpu_set)
