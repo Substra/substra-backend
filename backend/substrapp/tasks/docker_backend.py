@@ -10,8 +10,9 @@ def docker_memory_limit(celery_worker_concurrency, celeryworker_image):
     # Get memory limit from docker container through the API
     # Because the docker execution may be remote
 
-    cmd = f'python3 -u -c "import os; print(int(os.sysconf("SC_PAGE_SIZE") '\
-          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {celery_worker_concurrency}), end=\'\')"'
+    memory_value = "int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))"
+
+    cmd = f'python3 -u -c "import os; print({memory_value} // {celery_worker_concurrency}, end=\'\', flush=True)"'
 
     task_args = {
         'image': celeryworker_image,
