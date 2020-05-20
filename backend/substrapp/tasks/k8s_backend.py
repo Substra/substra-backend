@@ -22,21 +22,22 @@ class BuildError(Exception):
     pass
 
 
-def watch_job(namespace, job_name):
+def watch_job(name):
+    kubernetes.config.load_incluster_config()
     api = kubernetes.client.BatchV1Api()
 
     job = None
-    watch_job = True
+    finished = False
 
-    while watch_job:
-        job = api.read_namespaced_job(job_name, namespace)
+    while not finished:
+        job = api.read_namespaced_job(name, NAMESPACE)
 
         if job.status.succeeded == job.spec.completions:
-            watch_job = False
-            logger.info(f'The job {namespace}/{job_name} succeeded')
+            finished = True
+            logger.info(f'The job {NAMESPACE}/{name} succeeded')
 
         elif job.status.failed == job.spec.backoff_limit:
-            logger.error(f'The job {namespace}/{job_name} failed')
+            logger.error(f'The job {NAMESPACE}/{name} failed')
             raise
 
         time.sleep(5)
@@ -44,36 +45,58 @@ def watch_job(namespace, job_name):
     return job
 
 
-def watch_pod(pod_name):
+def get_pod_name(name):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    api_response = k8s_client.list_namespaced_pod(
+        NAMESPACE,
+        label_selector=f'app={name}'
+    )
+
+    return api_response.items[0].metadata.name
+
+
+def watch_pod(name):
+    kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
     api_response = k8s_client.read_namespaced_pod(
-        name=pod_name,
+        name=name,
         namespace=NAMESPACE,
         pretty=True
     )
-    logger.info(f"Pod read.\n{api_response}")
+
+    # logger.info(f"Pod read.\n{api_response}")
 
     finished = False
 
     while not finished:
         api_response = k8s_client.read_namespaced_pod_status(
-            name=pod_name,
+            name=name,
             namespace=NAMESPACE,
             pretty=True
         )
-        print(f"Pod {pod_name} read status.\n{api_response.status.container_statuses}")
+        print(f"Pod {name} read status.\n{api_response.status.container_statuses}")
 
         if api_response.status.container_statuses:
             for container in api_response.status.container_statuses:
                 finished = True if container.state.terminated is not None else False
 
-        time.sleep(1)
+        time.sleep(5)
 
 
-def get_pod_logs(namespace, name):
+def get_pod_logs(name, container):
+
+    kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
-    return k8s_client.read_namespaced_pod_log(name, namespace)
+
+    return k8s_client.read_namespaced_pod_log(
+        name=name,
+        namespace=NAMESPACE,
+        container=container
+    )
 
 
 def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
@@ -246,7 +269,7 @@ def k8s_build_image(path, tag, rm):
     )
 
     template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': 'substra'}),
+        metadata=kubernetes.client.V1ObjectMeta(labels={'app': job_name}),
         spec=kubernetes.client.V1PodSpec(
             restart_policy='Never',
             containers=[container],
@@ -278,7 +301,7 @@ def k8s_build_image(path, tag, rm):
     k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
 
     try:
-        watch_job(NAMESPACE, job_name)
+        watch_job(job_name)
     except Exception as e:
         logger.error(f'Kaniko build failed, error: {e}')
         raise BuildError(f'Kaniko build failed, error: {e}')
@@ -392,12 +415,15 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 
+    k8s_job_name = job_name.replace("_", "-")
+
     try:
         ts = time.time()
-        deployment = create_deployment_object(job_name.replace("_", "-"), task_args)
+        deployment = create_deployment_object(k8s_job_name, task_args)
         create_deployment(deployment)
+        pod_name = get_pod_name(k8s_job_name)
         docker_client.containers.run(**task_args)
-        watch_pod(job_name.replace("_", "-"))
+        watch_pod(pod_name)
     finally:
         # we need to remove the containers to be able to remove the local
         # volume in case of compute plan
@@ -408,13 +434,13 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
                 container.logs()
             )
             container_format_log(
-                job_name.replace("_", "-"),
-                get_pod_logs(namespace=NAMESPACE,
-                             name=job_name.replace("_", "-"))
+                k8s_job_name,
+                get_pod_logs(name=pod_name,
+                             container=k8s_job_name)
             )
         container.remove()
 
-        delete_deployment(job_name.replace("_", "-"))
+        delete_deployment(k8s_job_name)
 
         # Remove images
         if remove_image:
@@ -424,7 +450,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
 
 
-def create_deployment_object(deployment_name, task_args):
+def create_deployment_object(name, task_args):
 
     # Configureate Pod template container
     container_nginx = kubernetes.client.V1Container(
@@ -438,8 +464,9 @@ def create_deployment_object(deployment_name, task_args):
     )
 
     container_compute = kubernetes.client.V1Container(
-        name=task_args['name'].replace("_", "-"),
+        name=name,
         image=task_args['image'],
+        args=task_args['command'].split(" "),
         # resources=kubernetes.client.V1ResourceRequirements(
         #     limits={'cpu': len(task_args['cpuset_cpus']), 'memory': task_args['mem_limit']}
         # )
@@ -447,19 +474,22 @@ def create_deployment_object(deployment_name, task_args):
 
     # Create and configurate a spec section
     template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': 'substra-job'}),
-        spec=kubernetes.client.V1PodSpec(containers=[container_compute, container_nginx]))
+        metadata=kubernetes.client.V1ObjectMeta(labels={'app': name}),
+        spec=kubernetes.client.V1PodSpec(
+            containers=[container_compute, container_nginx]
+        )
+    )
 
     # Create the specification of deployment
     spec = kubernetes.client.V1DeploymentSpec(
         replicas=1,
         template=template,
-        selector={'matchLabels': {'app': 'substra-job'}})
+        selector={'matchLabels': {'app': name}})
     # Instantiate the deployment object
     deployment = kubernetes.client.V1Deployment(
         api_version="apps/v1",
         kind="Deployment",
-        metadata=kubernetes.client.V1ObjectMeta(name=deployment_name),
+        metadata=kubernetes.client.V1ObjectMeta(name=name),
         spec=spec)
 
     return deployment
@@ -470,22 +500,26 @@ def create_deployment(deployment):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.AppsV1Api()
 
-    # Create deployement
     api_response = k8s_client.create_namespaced_deployment(
         body=deployment,
-        namespace=NAMESPACE)
+        namespace=NAMESPACE
+    )
+
     logger.info("Deployment created. status='%s'" % str(api_response.status))
 
 
-def delete_deployment(deployment_name):
+def delete_deployment(name):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.AppsV1Api()
 
     api_response = k8s_client.delete_namespaced_deployment(
-        name=deployment_name,
+        name=name,
         namespace=NAMESPACE,
         body=kubernetes.client.V1DeleteOptions(
             propagation_policy='Foreground',
-            grace_period_seconds=5))
+            grace_period_seconds=5
+        )
+    )
+
     logger.info("Deployment deleted. status='%s'" % str(api_response.status))
