@@ -82,8 +82,12 @@ spec:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
             {{- end }}
-            - name: SUBTUPLE_PVC
-              value: {{ include "substra.fullname" $ }}-subtuple
+            {{- range .Values.persistence.volumes }}
+            - name: {{ .name | upper }}_PVC
+              value: {{ include "substra.fullname" $ }}-{{ .name }}
+            {{- end }}
+            - name: SERVERMEDIAS_PVC
+              value: {{ template "substra.fullname" $ }}-servermedias
             - name: REGISTRY
               value: {{ .Release.Name }}-docker-registry
             - name: NAMESPACE
