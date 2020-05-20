@@ -49,8 +49,9 @@ def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
     # Get memory limit from docker container through the API
     # Because the docker execution may be remote
 
-    cmd = f'python3 -u -c "import os; print(int(os.sysconf("SC_PAGE_SIZE") '\
-          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {celery_worker_concurrency}), end=\'\')"'
+    memory_value = "int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))"
+
+    cmd = f'python3 -u -c "import os; print({memory_value} // {celery_worker_concurrency}, end=\'\', flush=True)"'
 
     task_args = {
         'image': celeryworker_image,
@@ -69,7 +70,6 @@ def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
     memory_limit_bytes = docker_client.containers.run(**task_args)
 
     return int(memory_limit_bytes)
-
 
 def k8s_cpu_count(celeryworker_image):
     docker_client = docker.from_env()
