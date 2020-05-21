@@ -374,7 +374,7 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
         environment,
         gpu_set,
         remove_image,
-        subtuple_directory=dockerfile_path
+        subtuple_directory=dockerfile_path.replace('/metrics', '')  # in case of testtuple eval // DIRTY
     )
 
 
