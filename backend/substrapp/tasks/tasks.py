@@ -48,6 +48,7 @@ TUPLE_COMMANDS = {
 
 MODEL_FOLDER = '/sandbox/model'
 OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
+OUTPUT_PERF_PATH = '/sandbox/perf/perf.json'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
 OUTPUT_TRUNK_MODEL_FILENAME = 'trunk_model'
 
@@ -394,7 +395,7 @@ def build_subtuple_folders(subtuple):
     subtuple_directory = get_subtuple_directory(subtuple)
     create_directory(subtuple_directory)
 
-    for folder in ['opener', 'data', 'model', 'output_model', 'pred', 'metrics']:
+    for folder in ['opener', 'data', 'model', 'output_model', 'pred', 'perf', 'metrics']:
         create_directory(path.join(subtuple_directory, folder))
 
     return subtuple_directory
@@ -668,12 +669,16 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
 
+        # We set pred folder to ro during evalutation
+        pred_path = path.join(subtuple_directory, 'pred')
+        common_volumes[pred_path]['mode'] = 'ro'
+
         compute_job(
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
             job_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
             volumes=common_volumes,
-            command=None,
+            command=f'--output-perf-path {OUTPUT_PERF_PATH}',
             remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
@@ -682,9 +687,10 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
 
         model_path = path.join(subtuple_directory, 'model')
         pred_path = path.join(subtuple_directory, 'pred')
+        perf_path = path.join(subtuple_directory, 'perf')
 
         # load performance
-        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
+        with open(path.join(perf_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
 
         result['global_perf'] = perf['all']
@@ -692,7 +698,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         # Use tag to tranfer or not performances and models
         tag = subtuple.get("tag")
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
-            transfer_to_bucket(subtuple['key'], [pred_path, model_path])
+            transfer_to_bucket(subtuple['key'], [pred_path, perf_path, model_path])
 
     return result
 
@@ -702,6 +708,7 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
     model_path = path.join(subtuple_directory, 'model')
     output_model_path = path.join(subtuple_directory, 'output_model')
     pred_path = path.join(subtuple_directory, 'pred')
+    perf_path = path.join(subtuple_directory, 'perf')
     opener_path = path.join(subtuple_directory, 'opener')
 
     symlinks_volume = {}
@@ -723,11 +730,11 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
 
     if tuple_type == TESTTUPLE_TYPE:
         volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
+        volumes[perf_path] = {'bind': '/sandbox/perf', 'mode': 'rw'}
 
     model_volume = {
         model_path: {'bind': MODEL_FOLDER, 'mode': 'ro'},
         output_model_path: {'bind': OUTPUT_MODEL_FOLDER, 'mode': 'rw'}
-
     }
 
     # local volume for train like tuples in compute plan
