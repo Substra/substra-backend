@@ -5,7 +5,7 @@ import requests
 import os
 import logging
 
-import secrets
+from substrapp.utils import get_remote_file
 
 
 logger = logging.getLogger(__name__)
@@ -397,9 +397,9 @@ def k8s_remove_image(image_name):
 
 
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image, subtuple_key):
+                capture_logs, environment, gpu_set, remove_image, subtuple_directory):
 
-    docker_client = docker.from_env()
+    # docker_client = docker.from_env()
 
     task_args = {
         'image': f'{REGISTRY_HOST}/{image_name}',
@@ -431,42 +431,59 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     try:
         ts = time.time()
 
-        # DOCKER
-        docker_client.containers.run(**task_args)
+        # # DOCKER
+        # docker_client.containers.run(**task_args)
 
         # K8S
-        deployment = create_deployment_object(k8s_job_name, task_args, subtuple_key)
+        deployment = create_deployment_object(k8s_job_name, task_args)
         create_deployment(deployment)
+        create_service(k8s_job_name)
         pod_name = get_pod_name(k8s_job_name)
         watch_pod(pod_name)
+
     except Exception as e:
         logger.exception(e)
         raise
     finally:
         # we need to remove the containers to be able to remove the local
         # volume in case of compute plan
-        container = docker_client.containers.get(job_name)
+
+        # container = docker_client.containers.get(job_name)
         if capture_logs:
+            # container_format_log(
+            #     job_name,
+            #     container.logs()
+            # )
+
             container_format_log(
-                job_name,
-                container.logs()
+                k8s_job_name,
+                get_pod_logs(name=pod_name,
+                             container=k8s_job_name)
             )
-            if pod_name is not None:
-                container_format_log(
-                    k8s_job_name,
-                    get_pod_logs(name=pod_name,
-                                 container=k8s_job_name)
-                )
-        container.remove()
+        # container.remove()
+
+        fetch_outputs(pod_name, subtuple_directory,
+                      generate_filepaths(volumes))
 
         delete_deployment(k8s_job_name)
+        delete_service(k8s_job_name)
 
         # Remove images
         if remove_image:
             k8s_delete_image(image_name)
 
         elaps = (time.time() - ts) * 1000
-        logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
+        logger.info(f'k8s_client.images.run - elaps={elaps:.2f}ms')
+
+
+def generate_filepaths(volume_binds):
+    filepaths = []
+
+    for path, bind in volume_binds.items():
+        if '/pred' in path:
+            filepaths.append('pred/pred')
+        elif '/output_model' in path:
+            filepaths.append('output_model/model')
 
 
 def generate_volumes(volume_binds):
@@ -521,7 +538,16 @@ def generate_volumes(volume_binds):
     return volume_mounts, volumes
 
 
-def create_deployment_object(name, task_args, subtuple_key):
+def fetch_outputs(pod_name, subtuple_directory, filepaths):
+    for filepath in filepaths:
+        get_remote_file(
+            url=f'http://{pod_name}/{filepath}',
+            auth=None,
+            content_dst_path=os.path.join(subtuple_directory, filepath)
+        )
+
+
+def create_deployment_object(name, task_args):
 
     # Writable volumes
     volumes_rw = [
@@ -548,6 +574,7 @@ def create_deployment_object(name, task_args, subtuple_key):
 
     volume_mounts, volumes = generate_volumes(task_args['volumes'])
 
+    # Should be in a job as it will end
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
@@ -611,3 +638,39 @@ def delete_deployment(name):
     )
 
     logger.info(f'Deployment {name} deleted.')
+
+
+def create_service(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    service = kubernetes.client.V1Service(
+        api_version="v1",
+        kind="Service",
+        metadata=kubernetes.client.V1ObjectMeta(name=name),
+        spec=kubernetes.client.V1ServiceSpec(
+            type="ClusterIP",
+            ports=[kubernetes.client.V1ServicePort(name="http", protocol="TCP", port=80, target_port=80)],
+            selector={'app': name}
+        )
+    )
+
+    k8s_client.create_namespaced_service(namespace=NAMESPACE, body=service)
+
+    logger.info(f'Service {name} created.')
+
+
+def delete_service(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    k8s_client.delete_namespaced_service(
+        name=name,
+        namespace=NAMESPACE,
+        body=kubernetes.client.V1DeleteOptions(
+            propagation_policy='Foreground',
+            grace_period_seconds=5
+        )
+    )
+
+    logger.info(f'Service {name} deleted.')
