@@ -4,15 +4,20 @@ import time
 import requests
 import os
 import logging
+
+import secrets
+
+
 logger = logging.getLogger(__name__)
 
 
+MEDIA_ROOT = os.getenv('MEDIA_ROOT')
 REGISTRY = os.getenv('REGISTRY')
 REGISTRY_HOST = os.getenv('REGISTRY_HOST')
 NAMESPACE = os.getenv('NAMESPACE')
 
 K8S_PVC = {
-    env_key: env_value for env_key, env_value in os.environ if '_PVC' in env_key
+    env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
 }
 
 
@@ -464,31 +469,90 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
 
 
+def generate_volumes(volume_binds):
+    volume_mounts = []
+    volumes = []
+
+    for path, bind in volume_binds.items():
+        # /HOST/PATH/servermedias/...
+        if '/servermedias/' in path:
+            volume_name = 'servermedias'
+        # /HOST/PATH/medias/volume_name/...
+        else:
+            volume_name = path.split('/medias/')[-1].split('/')[0]
+
+        if '/pred' in path:
+            volume_mounts.append({
+                'name': 'pred',
+                'mountPath': bind['bind']
+            })
+            # Volume will be added later in create_deployment_object
+            # see volumes_rw
+        elif '/output_model' in path:
+            volume_mounts.append({
+                'name': 'output-model',
+                'mountPath': bind['bind']
+            })
+            # Volume will be added later in create_deployment_object
+            # see volumes_rw
+        else:
+            subpath = path.split(f'/{volume_name}/')[-1]
+
+            pvc_name = [key for key in K8S_PVC.keys()
+                        if volume_name in key.lower()].pop()
+
+            volume_mounts.append({
+                'name': volume_name,
+                'mountPath': bind['bind'],
+                'subPath': subpath,
+                'readOnly': True
+
+            })
+
+            volumes.append({
+                'name': volume_name,
+                'persistentVolumeClaim': {'claimName': K8S_PVC[pvc_name]}
+
+            })
+
+    # Unique volumes
+    volumes = list({v['name']: v for v in volumes}.values())
+
+    return volume_mounts, volumes
+
+
 def create_deployment_object(name, task_args, subtuple_key):
 
-    print(task_args['volumes'])
+    # Writable volumes
+    volumes_rw = [
+        {'name': 'output-model', 'emptyDir': {}},
+        {'name': 'pred', 'emptyDir': {}}
+    ]
 
     # Configureate Pod template container
     container_nginx = kubernetes.client.V1Container(
         name='nginx',
         image='nginx:1.17.10',
         ports=[kubernetes.client.V1ContainerPort(container_port=80)],
+        volume_mounts=[
+            {'name': 'output-model',
+             'mountPath': '/usr/share/nginx/html/output_model'},
+            {'name': 'pred',
+             'mountPath': '/usr/share/nginx/html/pred'},
+        ]
         # resources=kubernetes.client.V1ResourceRequirements(
         #     requests={'cpu': '100m', 'memory': '200Mi'},
         #     limits={'cpu': '500m', 'memory': '500Mi'}
         # )
     )
 
+    volume_mounts, volumes = generate_volumes(task_args['volumes'])
+
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
-        volume_mounts=[
-            {'name': 'subtuple',
-             'mountPath': '/sandbox/',
-             'subPath': subtuple_key,
-             'readOnly': True}
-        ]
+        volume_mounts=volume_mounts
 
         # resources=kubernetes.client.V1ResourceRequirements(
         #     limits={'cpu': len(task_args['cpuset_cpus']), 'memory': task_args['mem_limit']}
@@ -500,12 +564,7 @@ def create_deployment_object(name, task_args, subtuple_key):
         metadata=kubernetes.client.V1ObjectMeta(labels={'app': name}),
         spec=kubernetes.client.V1PodSpec(
             containers=[container_compute, container_nginx],
-            volumes=[
-                {
-                    'name': 'subtuple',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
-                }
-            ]
+            volumes=volumes + volumes_rw
         )
     )
 
