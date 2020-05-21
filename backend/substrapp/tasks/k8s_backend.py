@@ -6,7 +6,7 @@ import os
 import logging
 
 from substrapp.utils import get_remote_file
-
+from kubernetes.stream import stream
 
 logger = logging.getLogger(__name__)
 
@@ -140,11 +140,16 @@ def get_pod_logs(name, container):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    return k8s_client.read_namespaced_pod_log(
-        name=name,
-        namespace=NAMESPACE,
-        container=container
-    )
+    logs = f'No pod {name}'
+
+    if pod_exists(name):
+        logs = k8s_client.read_namespaced_pod_log(
+            name=name,
+            namespace=NAMESPACE,
+            container=container
+        )
+
+    return logs
 
 
 def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
@@ -468,14 +473,15 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     try:
         ts = time.time()
 
-        # # DOCKER
-        # docker_client.containers.run(**task_args)
-
-        # K8S
         create_volume(k8s_job_name)
         create_nginx(k8s_job_name)
         create_compute_job(k8s_job_name, task_args)
         watch_job(k8s_job_name)
+
+        # Fetch model and pred files
+        fetch_outputs(f'nginx-{k8s_job_name}', subtuple_directory,
+                      generate_filepaths(f'nginx-{k8s_job_name}'))
+    finally:
 
         if capture_logs:
             container_format_log(
@@ -483,26 +489,6 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
                 get_pod_logs(name=get_pod_name(k8s_job_name),
                              container=k8s_job_name)
             )
-
-        # Fetch model and pred file
-        fetch_outputs(f'nginx-{k8s_job_name}', subtuple_directory,
-                      generate_filepaths(volumes))
-
-    except Exception as e:
-        logger.exception(e)
-        raise
-    finally:
-        # we need to remove the containers to be able to remove the local
-        # volume in case of compute plan
-
-        # container = docker_client.containers.get(job_name)
-        # if capture_logs:
-        #     container_format_log(
-        #         job_name,
-        #         container.logs()
-        #     )
-
-        #     container.remove()
 
         delete_compute_job(k8s_job_name)
         delete_nginx(k8s_job_name)
@@ -516,14 +502,43 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         logger.info(f'k8s_client.images.run - elaps={elaps:.2f}ms')
 
 
-def generate_filepaths(volume_binds):
-    filepaths = []
+def generate_filepaths(name):
 
-    for path, bind in volume_binds.items():
-        if '/pred' in path:
-            filepaths.append('pred/perf.json')
-        elif '/output_model' in path:
-            filepaths.append('output_model/model')
+    base_nginx = '/usr/share/nginx/html'
+
+    volume_binds = [
+        'output_model',
+        'pred',
+        'perf'
+    ]
+
+    filepaths = []
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    for bind in volume_binds:
+        path = os.path.join(base_nginx, bind)
+        exec_command = [
+            '/bin/sh',
+            '-c',
+            f'ls {path}']
+
+        api_response = stream(
+            k8s_client.connect_get_namespaced_pod_exec,
+            name,
+            NAMESPACE,
+            command=exec_command,
+            stderr=True, stdin=True,
+            stdout=True, tty=True
+        )
+
+        if api_response:
+            files = [
+                os.path.join(bind, file)
+                for file in api_response.strip().split("\n")
+            ]
+
+            filepaths.extend(files)
 
     return filepaths
 
@@ -540,18 +555,32 @@ def generate_volumes(volume_binds, name):
         else:
             volume_name = path.split('/medias/')[-1].split('/')[0]
 
-        if '/pred' in path:
+        if '/pred' in path and bind['mode'] == 'rw':
             volume_mounts.append({
                 'name': name,
                 'mountPath': bind['bind'],
                 'subPath': 'pred'
             })
             # Volume will be added later, see volumes_rw
-        elif '/output_model' in path:
+        elif '/output_model' in path and bind['mode'] == 'rw':
             volume_mounts.append({
                 'name': name,
                 'mountPath': bind['bind'],
                 'subPath': 'output_model'
+            })
+            # Volume will be added later, see
+        elif '/perf' in path and bind['mode'] == 'rw':
+            volume_mounts.append({
+                'name': name,
+                'mountPath': bind['bind'],
+                'subPath': 'perf'
+            })
+            # Volume will be added later, see volumes_rw
+        elif '/export' in path and bind['mode'] == 'rw':
+            volume_mounts.append({
+                'name': name,
+                'mountPath': bind['bind'],
+                'subPath': 'export'
             })
             # Volume will be added later, see volumes_rw
         else:
@@ -580,12 +609,12 @@ def generate_volumes(volume_binds, name):
     return volume_mounts, volumes
 
 
-def fetch_outputs(pod_name, subtuple_directory, filepaths):
+def fetch_outputs(service_name, subtuple_directory, filepaths):
     for filepath in filepaths:
         content_dst_path = os.path.join(subtuple_directory, filepath)
-        logger.info(f'Fetch http://{pod_name}/{filepath} to {content_dst_path}')
+        logger.info(f'Fetch http://{service_name}/{filepath} to {content_dst_path}')
         get_remote_file(
-            url=f'http://{pod_name}/{filepath}',
+            url=f'http://{service_name}/{filepath}',
             auth=None,
             content_dst_path=content_dst_path,
             stream=True)
@@ -596,10 +625,7 @@ def create_compute_job(name, task_args):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.BatchV1Api()
 
-    # Writable volumes
     volumes_rw = [
-        # {'name': f'output-model-{name}', 'emptyDir': {}},
-        # {'name': f'pred-{name}', 'emptyDir': {}}
         {'name': name,
          'persistentVolumeClaim': {'claimName': name}},
     ]
@@ -657,10 +683,7 @@ def create_nginx_pod(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    # Writable volumes
     volumes_rw = [
-        # {'name': f'output-model-{name}', 'emptyDir': {}},
-        # {'name': f'pred-{name}', 'emptyDir': {}}
         {'name': name,
          'persistentVolumeClaim': {'claimName': name}},
 
@@ -678,6 +701,10 @@ def create_nginx_pod(name):
             {'name': name,
              'mountPath': '/usr/share/nginx/html/pred',
              'subPath': 'pred',
+             'readOnly': True},
+            {'name': name,
+             'mountPath': '/usr/share/nginx/html/perf',
+             'subPath': 'perf',
              'readOnly': True},
         ]
         # resources=kubernetes.client.V1ResourceRequirements(
