@@ -52,6 +52,24 @@ def watch_job(name):
     return job
 
 
+def job_exists(name):
+    kubernetes.config.load_incluster_config()
+    api = kubernetes.client.BatchV1Api()
+
+    try:
+        api.read_namespaced_job(name, NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def wait_for_job_deletion(name):
+
+    while job_exists(name):
+        time.sleep(5)
+
+
 def get_pod_name(name):
 
     kubernetes.config.load_incluster_config()
@@ -95,6 +113,25 @@ def watch_pod(name):
             for container in api_response.status.container_statuses:
                 finished = True if container.state.terminated is not None else False
 
+        time.sleep(5)
+
+
+def pod_exists(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    try:
+        k8s_client.read_namespaced_pod(
+            name=name,
+            namespace=NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def wait_for_pod_deletion(name):
+    while pod_exists(name):
         time.sleep(5)
 
 
@@ -427,7 +464,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         task_args['runtime'] = 'nvidia'
 
     k8s_job_name = job_name.replace("_", "-")
-    pod_name = None
+
     try:
         ts = time.time()
 
@@ -435,11 +472,21 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         # docker_client.containers.run(**task_args)
 
         # K8S
-        deployment = create_deployment_object(k8s_job_name, task_args)
-        create_deployment(deployment)
-        create_service(k8s_job_name)
-        pod_name = get_pod_name(k8s_job_name)
-        watch_pod(pod_name)
+        create_volume(k8s_job_name)
+        create_nginx(k8s_job_name)
+        create_compute_job(k8s_job_name, task_args)
+        watch_job(k8s_job_name)
+
+        if capture_logs:
+            container_format_log(
+                k8s_job_name,
+                get_pod_logs(name=get_pod_name(k8s_job_name),
+                             container=k8s_job_name)
+            )
+
+        # Fetch model and pred file
+        fetch_outputs(f'nginx-{k8s_job_name}', subtuple_directory,
+                      generate_filepaths(volumes))
 
     except Exception as e:
         logger.exception(e)
@@ -449,24 +496,17 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         # volume in case of compute plan
 
         # container = docker_client.containers.get(job_name)
-        if capture_logs:
-            # container_format_log(
-            #     job_name,
-            #     container.logs()
-            # )
+        # if capture_logs:
+        #     container_format_log(
+        #         job_name,
+        #         container.logs()
+        #     )
 
-            container_format_log(
-                k8s_job_name,
-                get_pod_logs(name=pod_name,
-                             container=k8s_job_name)
-            )
-        # container.remove()
+        #     container.remove()
 
-        fetch_outputs(pod_name, subtuple_directory,
-                      generate_filepaths(volumes))
-
-        delete_deployment(k8s_job_name)
-        delete_service(k8s_job_name)
+        delete_compute_job(k8s_job_name)
+        delete_nginx(k8s_job_name)
+        delete_volume(k8s_job_name)
 
         # Remove images
         if remove_image:
@@ -481,12 +521,14 @@ def generate_filepaths(volume_binds):
 
     for path, bind in volume_binds.items():
         if '/pred' in path:
-            filepaths.append('pred/pred')
+            filepaths.append('pred/perf.json')
         elif '/output_model' in path:
             filepaths.append('output_model/model')
 
+    return filepaths
 
-def generate_volumes(volume_binds):
+
+def generate_volumes(volume_binds, name):
     volume_mounts = []
     volumes = []
 
@@ -500,18 +542,18 @@ def generate_volumes(volume_binds):
 
         if '/pred' in path:
             volume_mounts.append({
-                'name': 'pred',
-                'mountPath': bind['bind']
+                'name': name,
+                'mountPath': bind['bind'],
+                'subPath': 'pred'
             })
-            # Volume will be added later in create_deployment_object
-            # see volumes_rw
+            # Volume will be added later, see volumes_rw
         elif '/output_model' in path:
             volume_mounts.append({
-                'name': 'output-model',
-                'mountPath': bind['bind']
+                'name': name,
+                'mountPath': bind['bind'],
+                'subPath': 'output_model'
             })
-            # Volume will be added later in create_deployment_object
-            # see volumes_rw
+            # Volume will be added later, see volumes_rw
         else:
             subpath = path.split(f'/{volume_name}/')[-1]
 
@@ -540,39 +582,29 @@ def generate_volumes(volume_binds):
 
 def fetch_outputs(pod_name, subtuple_directory, filepaths):
     for filepath in filepaths:
+        content_dst_path = os.path.join(subtuple_directory, filepath)
+        logger.info(f'Fetch http://{pod_name}/{filepath} to {content_dst_path}')
         get_remote_file(
             url=f'http://{pod_name}/{filepath}',
             auth=None,
-            content_dst_path=os.path.join(subtuple_directory, filepath)
-        )
+            content_dst_path=content_dst_path,
+            stream=True)
 
 
-def create_deployment_object(name, task_args):
+def create_compute_job(name, task_args):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.BatchV1Api()
 
     # Writable volumes
     volumes_rw = [
-        {'name': 'output-model', 'emptyDir': {}},
-        {'name': 'pred', 'emptyDir': {}}
+        # {'name': f'output-model-{name}', 'emptyDir': {}},
+        # {'name': f'pred-{name}', 'emptyDir': {}}
+        {'name': name,
+         'persistentVolumeClaim': {'claimName': name}},
     ]
 
-    # Configureate Pod template container
-    container_nginx = kubernetes.client.V1Container(
-        name='nginx',
-        image='nginx:1.17.10',
-        ports=[kubernetes.client.V1ContainerPort(container_port=80)],
-        volume_mounts=[
-            {'name': 'output-model',
-             'mountPath': '/usr/share/nginx/html/output_model'},
-            {'name': 'pred',
-             'mountPath': '/usr/share/nginx/html/pred'},
-        ]
-        # resources=kubernetes.client.V1ResourceRequirements(
-        #     requests={'cpu': '100m', 'memory': '200Mi'},
-        #     limits={'cpu': '500m', 'memory': '500Mi'}
-        # )
-    )
-
-    volume_mounts, volumes = generate_volumes(task_args['volumes'])
+    volume_mounts, volumes = generate_volumes(task_args['volumes'], name)
 
     # Should be in a job as it will end
     container_compute = kubernetes.client.V1Container(
@@ -580,7 +612,6 @@ def create_deployment_object(name, task_args):
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts
-
         # resources=kubernetes.client.V1ResourceRequirements(
         #     limits={'cpu': len(task_args['cpuset_cpus']), 'memory': task_args['mem_limit']}
         # )
@@ -590,87 +621,246 @@ def create_deployment_object(name, task_args):
     template = kubernetes.client.V1PodTemplateSpec(
         metadata=kubernetes.client.V1ObjectMeta(labels={'app': name}),
         spec=kubernetes.client.V1PodSpec(
-            containers=[container_compute, container_nginx],
+            restart_policy='Never',
+            containers=[container_compute],
             volumes=volumes + volumes_rw
         )
     )
 
-    # Create the specification of deployment
-    spec = kubernetes.client.V1DeploymentSpec(
-        replicas=1,
+    spec = kubernetes.client.V1JobSpec(
         template=template,
-        selector={'matchLabels': {'app': name}})
-    # Instantiate the deployment object
-    deployment = kubernetes.client.V1Deployment(
-        api_version="apps/v1",
-        kind="Deployment",
+        backoff_limit=4
+    )
+
+    job = kubernetes.client.V1Job(
+        api_version='batch/v1',
+        kind='Job',
         metadata=kubernetes.client.V1ObjectMeta(name=name),
-        spec=spec)
+        spec=spec
+    )
 
-    return deployment
+    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
 
 
-def create_deployment(deployment):
+def create_nginx(name):
+    create_nginx_pod(name)
+    create_nginx_service(name)
+
+
+def delete_nginx(name):
+    delete_pod(f'nginx-{name}')
+    delete_nginx_service(name)
+
+
+def create_nginx_pod(name):
 
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.AppsV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
 
-    k8s_client.create_namespaced_deployment(
-        body=deployment,
+    # Writable volumes
+    volumes_rw = [
+        # {'name': f'output-model-{name}', 'emptyDir': {}},
+        # {'name': f'pred-{name}', 'emptyDir': {}}
+        {'name': name,
+         'persistentVolumeClaim': {'claimName': name}},
+
+    ]
+
+    container_nginx = kubernetes.client.V1Container(
+        name=f'nginx-{name}',
+        image='nginx:1.17.10',
+        ports=[kubernetes.client.V1ContainerPort(container_port=80)],
+        volume_mounts=[
+            {'name': name,
+             'mountPath': '/usr/share/nginx/html/output_model',
+             'subPath': 'output_model',
+             'readOnly': True},
+            {'name': name,
+             'mountPath': '/usr/share/nginx/html/pred',
+             'subPath': 'pred',
+             'readOnly': True},
+        ]
+        # resources=kubernetes.client.V1ResourceRequirements(
+        #     requests={'cpu': '100m', 'memory': '200Mi'},
+        #     limits={'cpu': '500m', 'memory': '500Mi'}
+        # )
+    )
+
+    spec = kubernetes.client.V1PodSpec(
+        containers=[container_nginx],
+        volumes=volumes_rw
+    )
+
+    # Instantiate the pod object
+    pod = kubernetes.client.V1Pod(
+        api_version="v1",
+        kind="Pod",
+        metadata=kubernetes.client.V1ObjectMeta(name=f'nginx-{name}', labels={'app': f'nginx-{name}'}),
+        spec=spec
+    )
+
+    # Create pod
+    k8s_client.create_namespaced_pod(
+        body=pod,
         namespace=NAMESPACE
     )
 
-    logger.info(f'Deployment {deployment.metadata.name} created.')
+    print(f"Pod {name} created.")
 
 
-def delete_deployment(name):
+def delete_compute_job(name):
 
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.AppsV1Api()
+    if job_exists(name):
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.BatchV1Api()
 
-    k8s_client.delete_namespaced_deployment(
-        name=name,
-        namespace=NAMESPACE,
-        body=kubernetes.client.V1DeleteOptions(
-            propagation_policy='Foreground',
-            grace_period_seconds=5
+        k8s_client.delete_namespaced_job(
+            name=name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
         )
-    )
 
-    logger.info(f'Deployment {name} deleted.')
+    wait_for_job_deletion(name)
+    logger.info(f'Compute Job {name} deleted.')
 
 
-def create_service(name):
+def delete_pod(name):
+
+    if pod_exists(name):
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.CoreV1Api()
+
+        api_response = k8s_client.delete_namespaced_pod(
+            name=name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
+        )
+
+    wait_for_pod_deletion(name)
+    logger.info(f"Pod {name} deleted.")
+
+    if api_response.status == 'Failure':
+        raise Exception(f'Failed to delete Pod {name}.')
+
+
+def create_nginx_service(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
     service = kubernetes.client.V1Service(
         api_version="v1",
         kind="Service",
-        metadata=kubernetes.client.V1ObjectMeta(name=name),
+        metadata=kubernetes.client.V1ObjectMeta(name=f'nginx-{name}'),
         spec=kubernetes.client.V1ServiceSpec(
             type="ClusterIP",
             ports=[kubernetes.client.V1ServicePort(name="http", protocol="TCP", port=80, target_port=80)],
-            selector={'app': name}
+            selector={'app': f'nginx-{name}'}
         )
     )
 
     k8s_client.create_namespaced_service(namespace=NAMESPACE, body=service)
 
-    logger.info(f'Service {name} created.')
+    logger.info(f'Service nginx-{name} created.')
 
 
-def delete_service(name):
+def service_exists(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    k8s_client.delete_namespaced_service(
-        name=name,
-        namespace=NAMESPACE,
-        body=kubernetes.client.V1DeleteOptions(
-            propagation_policy='Foreground',
-            grace_period_seconds=5
+    try:
+        k8s_client.read_namespaced_service(
+            name=name,
+            namespace=NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def wait_for_service_deletion(name):
+    while service_exists(name):
+        time.sleep(5)
+
+
+def delete_nginx_service(name):
+
+    if service_exists(name):
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.CoreV1Api()
+
+        k8s_client.delete_namespaced_service(
+            name=name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
+        )
+
+    wait_for_service_deletion(name)
+    logger.info(f'Service nginx-{name} deleted.')
+
+
+def create_volume(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    pvc = kubernetes.client.V1PersistentVolumeClaim(
+        api_version="v1",
+        kind="PersistentVolumeClaim",
+        metadata=kubernetes.client.V1ObjectMeta(name=name),
+        spec=kubernetes.client.V1PersistentVolumeClaimSpec(
+            access_modes=["ReadWriteOnce"],
+            resources={
+                "requests": {"storage": "10Gi"}
+            },
         )
     )
 
-    logger.info(f'Service {name} deleted.')
+    k8s_client.create_namespaced_persistent_volume_claim(NAMESPACE, body=pvc)
+
+    logger.info(f'PVC {name} created.')
+
+
+def pvc_exists(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    try:
+        k8s_client.read_namespaced_persistent_volume_claim(
+            name=name,
+            namespace=NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def wait_for_pvc_deletion(name):
+    while pvc_exists(name):
+        time.sleep(5)
+
+
+def delete_volume(name):
+
+    if pvc_exists(name):
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.CoreV1Api()
+
+        k8s_client.delete_namespaced_persistent_volume_claim(
+            name=name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
+        )
+
+    wait_for_pvc_deletion(name)
+    logger.info(f'PVC {name} deleted.')
