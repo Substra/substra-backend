@@ -47,6 +47,7 @@ TUPLE_COMMANDS = {
 }
 
 MODEL_FOLDER = '/sandbox/model'
+OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
 OUTPUT_TRUNK_MODEL_FILENAME = 'trunk_model'
 
@@ -348,7 +349,7 @@ def prepare_opener(directory, tuple_):
     if get_hash(datamanager.data_opener.path) != data_opener_hash:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
-    opener_dst_path = path.join(directory, 'opener/opener.py')
+    opener_dst_path = path.join(directory, 'opener/__init__.py')
     if not os.path.exists(opener_dst_path):
         os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
@@ -393,7 +394,7 @@ def build_subtuple_folders(subtuple):
     subtuple_directory = get_subtuple_directory(subtuple)
     create_directory(subtuple_directory)
 
-    for folder in ['opener', 'data', 'model', 'pred', 'metrics']:
+    for folder in ['opener', 'data', 'model', 'output_model', 'pred', 'metrics']:
         create_directory(path.join(subtuple_directory, folder))
 
     return subtuple_directory
@@ -699,7 +700,9 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
 def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
 
     model_path = path.join(subtuple_directory, 'model')
+    output_model_path = path.join(subtuple_directory, 'output_model')
     pred_path = path.join(subtuple_directory, 'pred')
+    opener_path = path.join(subtuple_directory, 'opener')
 
     symlinks_volume = {}
     data_path = path.join(subtuple_directory, 'data')
@@ -713,17 +716,18 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
             if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
                 symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
-    opener_file = path.join(subtuple_directory, 'opener/opener.py')
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
+        opener_path: {'bind': '/sandbox/opener', 'mode': 'ro'}
     }
 
     if tuple_type == TESTTUPLE_TYPE:
         volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
 
     model_volume = {
-        model_path: {'bind': MODEL_FOLDER, 'mode': 'rw'}
+        model_path: {'bind': MODEL_FOLDER, 'mode': 'ro'},
+        output_model_path: {'bind': OUTPUT_MODEL_FOLDER, 'mode': 'rw'}
+
     }
 
     # local volume for train like tuples in compute plan
@@ -819,6 +823,8 @@ def generate_command(tuple_type, subtuple, rank):
             in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
             command = f"{command} {' '.join(in_traintuple_keys)}"
 
+        command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
+
         if rank is not None:
             command = f"{command} --rank {rank}"
 
@@ -835,7 +841,7 @@ def generate_command(tuple_type, subtuple, rank):
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
 
-        command = f"{command} --output-models-path {MODEL_FOLDER}"
+        command = f"{command} --output-models-path {OUTPUT_MODEL_FOLDER}"
         command = f"{command} --output-head-model-filename {OUTPUT_HEAD_MODEL_FILENAME}"
         command = f"{command} --output-trunk-model-filename {OUTPUT_TRUNK_MODEL_FILENAME}"
 
@@ -858,6 +864,8 @@ def generate_command(tuple_type, subtuple, rank):
         if subtuple['inModels'] is not None:
             in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
             command = f"{command} {' '.join(in_aggregatetuple_keys)}"
+
+        command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
 
         if rank is not None:
             command = f"{command} --rank {rank}"
@@ -936,7 +944,7 @@ def extract_result_from_models(tuple_type, models):
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
 
-    end_model_path = path.join(subtuple_directory, f'model/{filename}')
+    end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
     end_model_file_hash = get_hash(end_model_path, subtuple_key)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
 
