@@ -299,7 +299,7 @@ def k8s_build_image(path, tag, rm):
 
     spec = kubernetes.client.V1JobSpec(
         template=template,
-        backoff_limit=4
+        backoff_limit=2
     )
 
     job = kubernetes.client.V1Job(
@@ -554,7 +554,7 @@ def create_compute_job(name, task_args, subtuple_key):
 
     spec = kubernetes.client.V1JobSpec(
         template=template,
-        backoff_limit=4
+        backoff_limit=0
     )
 
     job = kubernetes.client.V1Job(
@@ -681,7 +681,7 @@ def clean_outputs(subtuple_key):
 
     spec = kubernetes.client.V1JobSpec(
         template=template,
-        backoff_limit=4
+        backoff_limit=0
     )
 
     job = kubernetes.client.V1Job(
