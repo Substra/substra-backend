@@ -776,11 +776,6 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
 
 
 # SHOULD BE MOVED IN K8S BACKEND
-def get_k8s_client():
-    kubernetes.config.load_incluster_config()
-    return kubernetes.client.CoreV1Api()
-
-
 def prepare_chainkeys(compute_plan_id, compute_plan_tag):
     chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
@@ -791,7 +786,9 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
     if not os.path.exists(chainkeys_directory):
         os.makedirs(chainkeys_directory)
 
-        k8s_client = get_k8s_client()
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.CoreV1Api()
+
         secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
         label_selector = f'compute_plan={compute_plan_tag}'
 
