@@ -172,7 +172,7 @@ class TasksTests(APITestCase):
             # test work
             prepare_opener(self.subtuple_path, {'dataset': {'openerHash': opener_hash}})
 
-            opener_path = os.path.join(opener_directory, 'opener.py')
+            opener_path = os.path.join(opener_directory, '__init__.py')
             self.assertTrue(os.path.exists(opener_path))
 
             # test corrupted
@@ -440,7 +440,7 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'pred/perf.json'), 'w') as f:
                 f.write(f'{{"all": {perf}}}')
 
-            with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
+            with open(os.path.join(subtuple_directory, 'output_model/model'), 'w') as f:
                 f.write("MODEL")
 
             with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job:
