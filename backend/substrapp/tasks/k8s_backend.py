@@ -659,7 +659,7 @@ def clean_outputs(subtuple_key):
               f'/clean/{subtuple_key}'],
         volume_mounts=[
             {'name': 'outputs',
-             'mountPath': f'/clean',
+             'mountPath': '/clean',
              'subPath': subtuple_key},
 
         ]
