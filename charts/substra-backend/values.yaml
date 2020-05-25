@@ -118,6 +118,12 @@ persistence:
       readOnly:
         server: true
         worker: false
+    # Writable by jobs only
+    - name: outputs
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: true
     - name: computeplan
       size: "10Gi"
       readOnly:
