@@ -647,7 +647,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     else:
         environment = {}
 
-    job_name = f'{tuple_type}_{subtuple["key"][0:8]}_{TUPLE_COMMANDS[tuple_type]}'
+    job_name = f'{tuple_type}-{subtuple["key"][0:8]}-{TUPLE_COMMANDS[tuple_type]}'.lower()
     command = generate_command(tuple_type, subtuple, rank)
 
     compute_job(
@@ -676,7 +676,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         compute_job(
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
-            job_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
+            job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
             remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),

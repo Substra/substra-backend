@@ -29,98 +29,6 @@ class BuildError(Exception):
     pass
 
 
-def watch_job(name):
-    kubernetes.config.load_incluster_config()
-    api = kubernetes.client.BatchV1Api()
-
-    job = None
-    finished = False
-
-    while not finished:
-        job = api.read_namespaced_job(name, NAMESPACE)
-
-        if job.status.succeeded == job.spec.completions:
-            finished = True
-            logger.info(f'The job {NAMESPACE}/{name} succeeded')
-
-        elif job.status.failed == job.spec.backoff_limit:
-            logger.error(f'The job {NAMESPACE}/{name} failed')
-            raise
-
-        time.sleep(5)
-
-    return job
-
-
-def job_exists(name):
-    kubernetes.config.load_incluster_config()
-    api = kubernetes.client.BatchV1Api()
-
-    try:
-        api.read_namespaced_job(name, NAMESPACE)
-    except Exception:
-        return False
-    else:
-        return True
-
-
-def wait_for_job_deletion(name):
-
-    while job_exists(name):
-        time.sleep(5)
-
-
-def get_pod_name(name):
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    pod = None
-
-    while pod is None:
-        api_response = k8s_client.list_namespaced_pod(
-            NAMESPACE,
-            label_selector=f'app={name}'
-        )
-        if api_response.items:
-            pod = api_response.items.pop()
-
-        time.sleep(5)
-
-    return pod.metadata.name
-
-
-def pod_exists(name):
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    try:
-        k8s_client.read_namespaced_pod(
-            name=name,
-            namespace=NAMESPACE)
-    except Exception:
-        return False
-    else:
-        return True
-
-
-def get_pod_logs(name, container):
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    logs = f'No pod {name}'
-
-    if pod_exists(name):
-        logs = k8s_client.read_namespaced_pod_log(
-            name=name,
-            namespace=NAMESPACE,
-            container=container
-        )
-
-    return logs
-
-
 def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
     docker_client = docker.from_env()
     # Get memory limit from docker container through the API
@@ -233,6 +141,98 @@ def k8s_gpu_used(task_label):
     return used_gpu_sets
 
 
+def watch_job(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.BatchV1Api()
+
+    job = None
+    finished = False
+
+    while not finished:
+        job = k8s_client.read_namespaced_job(name, NAMESPACE)
+
+        if job.status.succeeded and job.status.succeeded >= job.spec.completions:
+            finished = True
+            logger.info(f'The job {NAMESPACE}/{name} succeeded')
+
+        elif job.status.failed and job.status.failed >= job.spec.backoff_limit:
+            logger.error(f'The job {NAMESPACE}/{name} failed')
+            raise Exception(f'The job {NAMESPACE}/{name} failed')
+
+        time.sleep(2)
+
+    return job
+
+
+def job_exists(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.BatchV1Api()
+
+    try:
+        k8s_client.read_namespaced_job(name, NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def wait_for_job_deletion(name):
+
+    while job_exists(name):
+        time.sleep(2)
+
+
+def get_pod_name(name):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    pod = None
+
+    while pod is None:
+        api_response = k8s_client.list_namespaced_pod(
+            NAMESPACE,
+            label_selector=f'app={name}'
+        )
+        if api_response.items:
+            pod = api_response.items.pop()
+
+        time.sleep(2)
+
+    return pod.metadata.name
+
+
+def pod_exists(name):
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    try:
+        k8s_client.read_namespaced_pod(
+            name=name,
+            namespace=NAMESPACE)
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def get_pod_logs(name, container):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    logs = f'No pod {name}'
+
+    if pod_exists(name):
+        logs = k8s_client.read_namespaced_pod_log(
+            name=name,
+            namespace=NAMESPACE,
+            container=container
+        )
+
+    return logs
+
+
 def container_format_log(container_name, container_logs):
 
     if isinstance(container_logs, bytes):
@@ -338,61 +338,28 @@ def k8s_get_image(image_name):
     return response.json()
 
 
-def k8s_delete_image(image_name):
-
-    response = requests.get(
-        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
-        headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
-    )
-
-    if response.status_code != requests.status_codes.codes.ok:
-        raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
-
-    digest = response.headers['Docker-Content-Digest']
-
-    response = requests.delete(
-        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/{digest}',
-        headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
-    )
-    if response.status_code != requests.status_codes.codes.accepted:
-        raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
-
-    return response
-
-
-def k8s_get_or_create_local_volume(volume_id):
-
-    docker_client = docker.from_env()
-
-    try:
-        docker_client.volumes.get(volume_id=volume_id)
-    except docker.errors.NotFound:
-        docker_client.volumes.create(name=volume_id)
-
-
-def k8s_remove_local_volume(volume_id):
-
-    docker_client = docker.from_env()
-
-    try:
-        local_volume = docker_client.volumes.get(volume_id=volume_id)
-        local_volume.remove(force=True)
-    except docker.errors.NotFound:
-        pass
-    except Exception:
-        logger.error(f'Cannot remove volume {volume_id}', exc_info=True)
-
-
 def k8s_remove_image(image_name):
-    docker_client = docker.from_env()
-    try:
-        if docker_client.images.get(image_name):
-            logger.info(f'Remove docker image {image_name}')
-            docker_client.images.remove(image_name, force=True)
 
-    except docker.errors.ImageNotFound:
-        pass
-    except docker.errors.APIError as e:
+    try:
+        response = requests.get(
+            f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
+            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+        )
+
+        if response.status_code != requests.status_codes.codes.ok:
+            # raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
+            return
+
+        digest = response.headers['Docker-Content-Digest']
+
+        response = requests.delete(
+            f'http://{REGISTRY}:5000/v2/{image_name}/manifests/{digest}',
+            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+        )
+        if response.status_code != requests.status_codes.codes.accepted:
+            # raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
+            return
+    except Exception as e:
         logger.exception(e)
 
 
@@ -426,13 +393,11 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 
-    k8s_job_name = job_name.replace("_", "-")
-
     try:
         ts = time.time()
 
-        create_compute_job(k8s_job_name, task_args, subtuple_key)
-        watch_job(k8s_job_name)
+        create_compute_job(job_name, task_args, subtuple_key)
+        watch_job(job_name)
         copy_outputs(subtuple_directory)
     except Exception as e:
         logger.exception(e)
@@ -441,20 +406,17 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
 
         if capture_logs:
             container_format_log(
-                k8s_job_name,
-                get_pod_logs(name=get_pod_name(k8s_job_name),
-                             container=k8s_job_name)
+                job_name,
+                get_pod_logs(name=get_pod_name(job_name),
+                             container=job_name)
             )
 
-        delete_compute_job(k8s_job_name)
-        try:
-            clean_outputs(subtuple_key)
-        except Exception as e:
-            logger.exception(e)
+        delete_compute_job(job_name)
+        clean_outputs(subtuple_key)
 
         # Remove images
         if remove_image:
-            k8s_delete_image(image_name)
+            k8s_remove_image(image_name)
 
         elaps = (time.time() - ts) * 1000
         logger.info(f'k8s_client.images.run - elaps={elaps:.2f}ms')
@@ -467,6 +429,20 @@ def generate_volumes(volume_binds, name, subtuple_key):
     for path, bind in volume_binds.items():
 
         volume_processed = False
+
+        # Handle local volume
+        if 'local-' in path:
+            volume_mounts.append({
+                'name': 'local',
+                'mountPath': bind['bind'],
+                'subPath': path
+            })
+            volumes.append(
+                {'name': 'local',
+                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}}
+            )
+
+            volume_processed = True
 
         # Handle outputs paths which need to be writable
         for subpath in ['/pred', '/output_model', '/perf']:
@@ -496,7 +472,11 @@ def generate_volumes(volume_binds, name, subtuple_key):
             subpath = path.split(f'/{volume_name}/')[-1]
 
             pvc_name = [key for key in K8S_PVC.keys()
-                        if volume_name in key.lower()].pop()
+                        if volume_name in key.lower()]
+            if pvc_name:
+                pvc_name = pvc_name.pop()
+            else:
+                raise Exception(f'PVC for {volume_name} not found')
 
             volume_mounts.append({
                 'name': volume_name,
@@ -524,6 +504,69 @@ def copy_outputs(subtuple_directory):
         if os.path.exists(content_path):
             logger.info(f'Copy {content_path} to {content_dst_path}')
             copy_tree(content_path, content_dst_path)
+
+
+def clean_outputs(subtuple_key):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.BatchV1Api()
+    job_name = f'clean-outputs-{subtuple_key[:10]}'
+
+    container = kubernetes.client.V1Container(
+        name=job_name,
+        image='busybox',
+        args=['rm',
+              '-rf',
+              f'/clean/{subtuple_key}'],
+        volume_mounts=[
+            {'name': 'outputs',
+             'mountPath': '/clean',
+             'subPath': subtuple_key},
+
+        ]
+    )
+
+    template = kubernetes.client.V1PodTemplateSpec(
+        metadata=kubernetes.client.V1ObjectMeta(labels={'app': job_name}),
+        spec=kubernetes.client.V1PodSpec(
+            restart_policy='Never',
+            containers=[container],
+            volumes=[
+                {
+                    'name': 'outputs',
+                    'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
+                },
+            ]
+        )
+    )
+
+    spec = kubernetes.client.V1JobSpec(
+        template=template,
+        backoff_limit=0
+    )
+
+    job = kubernetes.client.V1Job(
+        api_version='batch/v1',
+        kind='Job',
+        metadata=kubernetes.client.V1ObjectMeta(name=job_name),
+        spec=spec
+    )
+
+    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+
+    try:
+        watch_job(job_name)
+    except Exception as e:
+        logger.error(f'Cleaning failed, error: {e}')
+    finally:
+        k8s_client.delete_namespaced_job(
+            name=job_name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=5
+            )
+        )
 
 
 def create_compute_job(name, task_args, subtuple_key):
@@ -586,81 +629,27 @@ def delete_compute_job(name):
     logger.info(f'Compute Job {name} deleted.')
 
 
-def create_volume(name):
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    pvc = kubernetes.client.V1PersistentVolumeClaim(
-        api_version="v1",
-        kind="PersistentVolumeClaim",
-        metadata=kubernetes.client.V1ObjectMeta(name=name),
-        spec=kubernetes.client.V1PersistentVolumeClaimSpec(
-            access_modes=["ReadWriteOnce"],
-            resources={
-                "requests": {"storage": "10Gi"}
-            },
-        )
-    )
-
-    k8s_client.create_namespaced_persistent_volume_claim(NAMESPACE, body=pvc)
-
-    logger.info(f'PVC {name} created.')
+def k8s_get_or_create_local_volume(volume_id):
+    pvc = K8S_PVC['LOCAL_PVC']
+    logger.info(f'{volume_id} will be created in the PVC {pvc}')
 
 
-def pvc_exists(name):
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    try:
-        k8s_client.read_namespaced_persistent_volume_claim(
-            name=name,
-            namespace=NAMESPACE)
-    except Exception:
-        return False
-    else:
-        return True
-
-
-def wait_for_pvc_deletion(name):
-    while pvc_exists(name):
-        time.sleep(5)
-
-
-def delete_volume(name):
-
-    if pvc_exists(name):
-        kubernetes.config.load_incluster_config()
-        k8s_client = kubernetes.client.CoreV1Api()
-
-        k8s_client.delete_namespaced_persistent_volume_claim(
-            name=name,
-            namespace=NAMESPACE,
-            body=kubernetes.client.V1DeleteOptions(
-                propagation_policy='Foreground',
-                grace_period_seconds=0
-            )
-        )
-
-    wait_for_pvc_deletion(name)
-    logger.info(f'PVC {name} deleted.')
-
-
-def clean_outputs(subtuple_key):
+def k8s_remove_local_volume(volume_id):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.BatchV1Api()
-    job_name = f'clean-outputs-{subtuple_key[:10]}'
+    job_name = f'clean-outputs-{volume_id[:20]}'
 
     container = kubernetes.client.V1Container(
         name=job_name,
         image='busybox',
         args=['rm',
               '-rf',
-              f'/clean/{subtuple_key}'],
+              f'/clean/{volume_id}'],
         volume_mounts=[
-            {'name': 'outputs',
+            {'name': 'local',
              'mountPath': '/clean',
-             'subPath': subtuple_key},
+             'subPath': volume_id},
 
         ]
     )
@@ -672,8 +661,8 @@ def clean_outputs(subtuple_key):
             containers=[container],
             volumes=[
                 {
-                    'name': 'outputs',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
+                    'name': 'local',
+                    'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
                 },
             ]
         )
