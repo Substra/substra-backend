@@ -118,17 +118,23 @@ persistence:
       readOnly:
         server: true
         worker: false
+    - name: computeplan
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: false
     # Writable by jobs only
     - name: outputs
       size: "10Gi"
       readOnly:
         server: true
         worker: true
-    - name: computeplan
+    # Writable by jobs only
+    - name: local
       size: "10Gi"
       readOnly:
         server: true
-        worker: false
+        worker: true
 
 # Secrets names
 secrets:

@@ -40,7 +40,7 @@ BACKEND = {
         'build_image': docker_build_image,
         'local_volume': docker_get_or_create_local_volume,
         'rm_local_volume': docker_remove_local_volume,
-        'rm_image': docker_remove_image,
+        'remove_image': docker_remove_image,
         'compute': docker_compute,
     },
 
@@ -54,7 +54,7 @@ BACKEND = {
         'build_image': k8s_build_image,
         'local_volume': k8s_get_or_create_local_volume,
         'rm_local_volume': k8s_remove_local_volume,
-        'rm_image': k8s_remove_image,
+        'remove_image': k8s_remove_image,
         'compute': k8s_compute,
     },
 
