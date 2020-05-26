@@ -159,7 +159,8 @@ def watch_job(name):
             logger.error(f'The job {NAMESPACE}/{name} failed')
             raise Exception(f'The job {NAMESPACE}/{name} failed')
 
-        time.sleep(2)
+        if not finished:
+            time.sleep(0.5)
 
     return job
 
@@ -179,7 +180,7 @@ def job_exists(name):
 def wait_for_job_deletion(name):
 
     while job_exists(name):
-        time.sleep(2)
+        pass
 
 
 def get_pod_name(name):
@@ -187,17 +188,12 @@ def get_pod_name(name):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    pod = None
-
-    while pod is None:
-        api_response = k8s_client.list_namespaced_pod(
-            NAMESPACE,
-            label_selector=f'app={name}'
-        )
-        if api_response.items:
-            pod = api_response.items.pop()
-
-        time.sleep(2)
+    api_response = k8s_client.list_namespaced_pod(
+        NAMESPACE,
+        label_selector=f'app={name}'
+    )
+    if api_response.items:
+        pod = api_response.items.pop()
 
     return pod.metadata.name
 
@@ -396,8 +392,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     try:
         ts = time.time()
 
-        create_compute_job(job_name, task_args, subtuple_key)
-        watch_job(job_name)
+        _k8s_compute(job_name, task_args, subtuple_key)
         copy_outputs(subtuple_directory)
     except Exception as e:
         logger.exception(e)
@@ -569,7 +564,7 @@ def clean_outputs(subtuple_key):
         )
 
 
-def create_compute_job(name, task_args, subtuple_key):
+def _k8s_compute(name, task_args, subtuple_key):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.BatchV1Api()
@@ -608,6 +603,8 @@ def create_compute_job(name, task_args, subtuple_key):
     )
 
     k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+
+    watch_job(name)
 
 
 def delete_compute_job(name):
