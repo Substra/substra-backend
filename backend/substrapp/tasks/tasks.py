@@ -21,11 +21,11 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash)
+                             get_dir_hash, get_subtuple_directory, timeit)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
-                                   list_files, do_not_raise, timeit, ExceptionThread,
+                                   list_files, do_not_raise, ExceptionThread,
                                    remove_local_volume, get_or_create_local_volume, remove_image)
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -393,7 +393,7 @@ def prepare_data_sample(directory, tuple_):
 
 def build_subtuple_folders(subtuple):
     # create a folder named `subtuple['key']` in /medias/subtuple/ with 5 subfolders opener, data, model, pred, metrics
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     create_directory(subtuple_directory)
 
     for folder in ['opener', 'data', 'model', 'output_model', 'pred', 'perf', 'metrics', 'export']:
@@ -416,6 +416,7 @@ def remove_subtuple_materials(subtuple_directory):
             list_files(subtuple_directory)
 
 
+@timeit
 def remove_local_folders(compute_plan_id):
     if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
         logger.info(f'Skipping remove local volume of compute plan {compute_plan_id}')
@@ -567,7 +568,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     finally:
         if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
             try:
-                subtuple_directory = get_subtuple_directory(subtuple)
+                subtuple_directory = get_subtuple_directory(subtuple['key'])
                 if os.path.exists(subtuple_directory):
                     remove_subtuple_materials(subtuple_directory)
             except Exception as e_removal:
@@ -581,7 +582,7 @@ def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
     # clean directory if exists (on retry)
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     if os.path.exists(subtuple_directory):
         remove_subtuple_materials(subtuple_directory)
 
@@ -611,7 +612,7 @@ def prepare_materials(subtuple, tuple_type):
 
 @timeit
 def do_task(subtuple, tuple_type):
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     org_name = getattr(settings, 'ORG_NAME')
 
     # compute plan / federated learning variables
@@ -657,7 +658,9 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     job_name = f'{tuple_type}-{subtuple["key"][0:8]}-{TUPLE_COMMANDS[tuple_type]}'.lower()
     command = generate_command(tuple_type, subtuple, rank)
 
+    # train or predict
     compute_job(
+        subtuple_key=subtuple["key"],
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['hash']),
         job_name=job_name,
@@ -680,7 +683,9 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         pred_path = path.join(subtuple_directory, 'pred')
         common_volumes[pred_path]['mode'] = 'ro'
 
+        # eval
         compute_job(
+            subtuple_key=subtuple["key"],
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
             job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
@@ -708,6 +713,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     return result
 
 
+@timeit
 def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
 
     model_path = path.join(subtuple_directory, 'model')
@@ -975,10 +981,6 @@ def get_volume_id(compute_plan_id, prefix='local'):
 def get_algo_image_name(algo_hash):
     # tag must be lowercase for docker
     return f'substra/algo_{algo_hash[0:8]}'.lower()
-
-
-def get_subtuple_directory(subtuple):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
 
 
 def get_chainkeys_directory(compute_plan_id):
