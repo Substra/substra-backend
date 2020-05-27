@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 MEDIA_ROOT = os.getenv('MEDIA_ROOT')
 REGISTRY = os.getenv('REGISTRY')
-REGISTRY_HOST = os.getenv('REGISTRY_HOST')
 NAMESPACE = os.getenv('NAMESPACE')
 
 K8S_PVC = {
@@ -359,13 +358,40 @@ def k8s_remove_image(image_name):
         logger.exception(e)
 
 
+def get_service_address(name):
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    res = k8s_client.read_namespaced_service(
+        name=name,
+        namespace=NAMESPACE)
+
+    ports = res.spec.ports.pop()  # first ports
+
+    # NodePort
+    local_ip = '127.0.0.1'
+    local_port = ports.node_port
+
+    # CLusterIp
+    service_port = ports.port
+    service_cluster_ip = res.spec.cluster_ip
+
+    if local_port is not None:
+        return f'{local_ip}:{local_port}'
+    else:
+        return f'{service_cluster_ip}:{service_port}'
+
+
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
                 capture_logs, environment, gpu_set, remove_image, subtuple_directory):
 
     subtuple_key = subtuple_directory.split('/')[-1]
 
+    registry_host = get_service_address(REGISTRY)
+
     task_args = {
-        'image': f'{REGISTRY_HOST}/{image_name}',
+        'image': f'{registry_host}/{image_name}',
         'name': job_name,
         # 'cpuset_cpus': cpu_set,
         # 'mem_limit': memory_limit_mb,
