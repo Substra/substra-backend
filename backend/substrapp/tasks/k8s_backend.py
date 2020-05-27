@@ -5,6 +5,8 @@ import requests
 import os
 import logging
 
+
+from substrapp.utils import get_subtuple_directory, timeit
 from distutils.dir_util import copy_tree
 
 
@@ -383,12 +385,15 @@ def get_service_address(name):
         return f'{service_cluster_ip}:{service_port}'
 
 
+@timeit
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image, subtuple_directory):
-
-    subtuple_key = subtuple_directory.split('/')[-1]
+                capture_logs, environment, gpu_set, remove_image, subtuple_key):
 
     registry_host = get_service_address(REGISTRY)
+
+    # We cannot currently set up shm_size
+    # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
+    # 'shm_size': '8G'
 
     task_args = {
         'image': f'{registry_host}/{image_name}',
@@ -397,17 +402,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         # 'mem_limit': memory_limit_mb,
         'command': command,
         'volumes': volumes,
-        # 'shm_size': '8G',
-        # 'labels': [task_label],
-        # 'detach': False,
-        # 'stdout': capture_logs,
-        # 'stderr': capture_logs,
-        # 'auto_remove': False,
-        # 'remove': False,
-        # 'network_disabled': True,
-        # 'network_mode': 'none',
-        # 'privileged': False,
-        # 'cap_drop': ['ALL'],
+        'label': task_label,
         'environment': environment
     }
 
@@ -416,10 +411,8 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         task_args['runtime'] = 'nvidia'
 
     try:
-        ts = time.time()
-
         _k8s_compute(job_name, task_args, subtuple_key)
-        copy_outputs(subtuple_directory)
+        copy_outputs(subtuple_key)
     except Exception as e:
         logger.exception(e)
         raise
@@ -438,9 +431,6 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         # Remove images
         if remove_image:
             k8s_remove_image(image_name)
-
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'k8s_client.images.run - elaps={elaps:.2f}ms')
 
 
 def generate_volumes(volume_binds, name, subtuple_key):
@@ -518,7 +508,8 @@ def generate_volumes(volume_binds, name, subtuple_key):
     return volume_mounts, volumes
 
 
-def copy_outputs(subtuple_directory):
+def copy_outputs(subtuple_key):
+    subtuple_directory = get_subtuple_directory(subtuple_key)
     for output_folder in ['output_model', 'pred', 'perf', 'export']:
         content_dst_path = os.path.join(subtuple_directory, output_folder)
         content_path = content_dst_path.replace('subtuple', 'outputs')
@@ -597,18 +588,26 @@ def _k8s_compute(name, task_args, subtuple_key):
 
     volume_mounts, volumes = generate_volumes(task_args['volumes'], name, subtuple_key)
 
+    # security
+    security_context = kubernetes.client.V1SecurityContext(
+        privileged=False,
+        allow_privilege_escalation=False,
+        capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
+    )
+
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
-        volume_mounts=volume_mounts
-        # resources=kubernetes.client.V1ResourceRequirements(
-        #     limits={'cpu': len(task_args['cpuset_cpus']), 'memory': task_args['mem_limit']}
-        # )
+        volume_mounts=volume_mounts,
+        security_context=security_context
     )
 
     template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': name}),
+        metadata=kubernetes.client.V1ObjectMeta(name=name,
+                                                labels={'app': name,
+                                                        'task': task_args['label']}
+                                                ),
         spec=kubernetes.client.V1PodSpec(
             restart_policy='Never',
             containers=[container_compute],
@@ -624,7 +623,10 @@ def _k8s_compute(name, task_args, subtuple_key):
     job = kubernetes.client.V1Job(
         api_version='batch/v1',
         kind='Job',
-        metadata=kubernetes.client.V1ObjectMeta(name=name),
+        metadata=kubernetes.client.V1ObjectMeta(name=name,
+                                                labels={'app': name,
+                                                        'task': task_args['label']}
+                                                ),
         spec=spec
     )
 

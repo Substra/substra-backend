@@ -1,5 +1,6 @@
 import docker
-import time
+
+from substrapp.utils import timeit
 
 import logging
 logger = logging.getLogger(__name__)
@@ -182,8 +183,9 @@ def docker_remove_image(image_name):
         logger.exception(e)
 
 
+@timeit
 def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                   capture_logs, environment, gpu_set, remove_image, subtuple_directory):
+                   capture_logs, environment, gpu_set, remove_image, subtuple_key):
 
     docker_client = docker.from_env()
 
@@ -213,7 +215,6 @@ def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volu
         task_args['runtime'] = 'nvidia'
 
     try:
-        ts = time.time()
         docker_client.containers.run(**task_args)
     finally:
         # we need to remove the containers to be able to remove the local
@@ -229,6 +230,3 @@ def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volu
         # Remove images
         if remove_image:
             docker_client.images.remove(image_name, force=True)
-
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'docker_client.images.run - elaps={elaps:.2f}ms')
