@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 MEDIA_ROOT = os.getenv('MEDIA_ROOT')
 REGISTRY = os.getenv('REGISTRY')
+REGISTRY_SCHEME = os.getenv('REGISTRY_SCHEME')
+REGISTRY_PULL_DOMAIN = os.getenv('REGISTRY_PULL_DOMAIN')
 NAMESPACE = os.getenv('NAMESPACE')
 
 K8S_PVC = {
@@ -254,16 +256,20 @@ def k8s_build_image(path, tag, rm):
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
+    args = [
+        f'--dockerfile={dockerfile_fullpath}',
+        f'--context=dir://{path}',
+        f'--destination={REGISTRY}/{tag}',
+        f'--cache={str(not(rm)).lower()}'
+    ]
+
+    if REGISTRY_SCHEME == 'http':
+        args.append('--insecure')
+
     container = kubernetes.client.V1Container(
         name=job_name,
         image='gcr.io/kaniko-project/executor:latest',
-        args=[
-            f'--dockerfile={dockerfile_fullpath}',
-            f'--context=dir://{path}',
-            f'--destination={REGISTRY}:5000/{tag}',
-            f'--cache={str(not(rm)).lower()}',
-            '--insecure'
-        ],
+        args=args,
         volume_mounts=[
             {'name': 'dockerfile',
              'mountPath': path,
@@ -326,7 +332,7 @@ def k8s_build_image(path, tag, rm):
 
 def k8s_get_image(image_name):
     response = requests.get(
-        f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
+        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/latest',
         headers={'Accept': 'application/json'}
     )
     if response.status_code != requests.status_codes.codes.ok:
@@ -339,7 +345,7 @@ def k8s_remove_image(image_name):
 
     try:
         response = requests.get(
-            f'http://{REGISTRY}:5000/v2/{image_name}/manifests/latest',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/latest',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
         )
 
@@ -350,7 +356,7 @@ def k8s_remove_image(image_name):
         digest = response.headers['Docker-Content-Digest']
 
         response = requests.delete(
-            f'http://{REGISTRY}:5000/v2/{image_name}/manifests/{digest}',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/{digest}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
         )
         if response.status_code != requests.status_codes.codes.accepted:
@@ -360,43 +366,16 @@ def k8s_remove_image(image_name):
         logger.exception(e)
 
 
-def get_service_address(name):
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    res = k8s_client.read_namespaced_service(
-        name=name,
-        namespace=NAMESPACE)
-
-    ports = res.spec.ports.pop()  # first ports
-
-    # NodePort
-    local_ip = '127.0.0.1'
-    local_port = ports.node_port
-
-    # CLusterIp
-    service_port = ports.port
-    service_cluster_ip = res.spec.cluster_ip
-
-    if local_port is not None:
-        return f'{local_ip}:{local_port}'
-    else:
-        return f'{service_cluster_ip}:{service_port}'
-
-
 @timeit
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
                 capture_logs, environment, gpu_set, remove_image, subtuple_key):
-
-    registry_host = get_service_address(REGISTRY)
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
     task_args = {
-        'image': f'{registry_host}/{image_name}',
+        'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}',
         'name': job_name,
         # 'cpuset_cpus': cpu_set,
         # 'mem_limit': memory_limit_mb,

@@ -120,6 +120,11 @@ deploy:
           docker-registry:
             service:
               type: NodePort
+              nodePort: 32001
+          registry:
+            local: true
+            scheme: http
+            pullDomain: 127.0.0.1:32001
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
@@ -178,6 +183,11 @@ deploy:
           docker-registry:
             service:
               type: NodePort
+              nodePort: 32002
+          registry:
+            local: true
+            scheme: http
+            pullDomain: 127.0.0.1:32002
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           backend:
