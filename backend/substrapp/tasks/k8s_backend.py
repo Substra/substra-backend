@@ -603,6 +603,25 @@ def _k8s_compute(name, task_args, subtuple_key):
         security_context=security_context
     )
 
+    pod_affinity = kubernetes.client.V1Affinity(
+        pod_affinity=kubernetes.client.V1PodAffinity(
+            required_during_scheduling_ignored_during_execution=[
+                kubernetes.client.V1PodAffinityTerm(
+                    label_selector=kubernetes.client.V1LabelSelector(
+                        match_expressions=[
+                            kubernetes.client.V1LabelSelectorRequirement(
+                                key="app.kubernetes.io/component",
+                                operator="In",
+                                values=["substra-worker"]
+                            )
+                        ]
+                    ),
+                    topology_key="kubernetes.io/hostname"
+                )
+            ]
+        )
+    )
+
     template = kubernetes.client.V1PodTemplateSpec(
         metadata=kubernetes.client.V1ObjectMeta(name=name,
                                                 labels={'app': name,
@@ -610,6 +629,7 @@ def _k8s_compute(name, task_args, subtuple_key):
                                                 ),
         spec=kubernetes.client.V1PodSpec(
             restart_policy='Never',
+            affinity=pod_affinity,
             containers=[container_compute],
             volumes=volumes
         )
