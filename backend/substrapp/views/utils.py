@@ -142,17 +142,6 @@ class PermissionMixin(object):
         return response
 
 
-def get_metadata_as_dict(data):
-    if not data:
-        return data
-
-    return {
-        k[9:]: v
-        for k, v in data.items()
-        if k.startswith('metadata_')
-    }
-
-
 def find_primary_key_error(validation_error, key_name='pkhash'):
     detail = validation_error.detail
 

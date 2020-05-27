@@ -19,7 +19,7 @@ from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
-                                   node_has_process_permission, get_metadata_as_dict)
+                                   node_has_process_permission)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -62,7 +62,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
-            'metadata': get_metadata_as_dict(request.data)
+            'metadata': request.data.get('metadata') or {}
         }
         ledger_data.update({'instance': instance})
         ledger_serializer = LedgerObjectiveSerializer(data=ledger_data,

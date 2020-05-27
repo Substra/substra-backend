@@ -17,6 +17,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
         min_length=0,
         required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
@@ -28,6 +29,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
         min_length=0,
         required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
@@ -63,7 +65,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     aggregatetuples = ComputePlanAggregatetupleSerializer(many=True, required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
-    metadata = DictField(child=CharField(allow_blank=True), required=False)
+    metadata = DictField(child=CharField(allow_blank=True), required=False, allow_null=True)
 
     def get_args(self, data):
         # convert snake case fields to camel case fields to match chaincode expected inputs
@@ -141,7 +143,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             'aggregatetuples': aggregatetuples,
             'tag': data.get('tag'),
             'cleanModels': data.get('clean_models', False),
-            'metadata': data.get('metadata'),
+            'metadata': data.get('metadata', {}),
         }
 
     def create(self, validated_data):

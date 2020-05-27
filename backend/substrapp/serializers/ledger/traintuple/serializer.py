@@ -27,7 +27,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
         in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
-        metadata = validated_data.get('metadata')
+        metadata = validated_data.get('metadata', {})
 
         args = {
             'algoKey': algo_key,

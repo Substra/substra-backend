@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.serializers import LedgerCompositeTraintupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException, get_metadata_as_dict
+from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
 
 
 class CompositeTraintupleViewSet(mixins.CreateModelMixin,
@@ -41,7 +41,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             'out_trunk_model_permissions': request.data.get('out_trunk_model_permissions'),
             'train_data_sample_keys': request.data.get('train_data_sample_keys'),
             'tag': request.data.get('tag', ''),
-            'metadata': get_metadata_as_dict(request.data)
+            'metadata': request.data.get('metadata')
         }
 
         serializer = self.get_serializer(data=data)

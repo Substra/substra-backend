@@ -17,7 +17,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
-    metadata = DictField(child=CharField(), required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True, allow_empty=True)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
