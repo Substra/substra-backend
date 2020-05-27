@@ -8,7 +8,7 @@ import threading
 from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
+from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
 
 from substrapp.tasks.docker_backend import (
     docker_memory_limit, docker_cpu_count, docker_cpu_used, docker_gpu_list, docker_gpu_used, docker_get_image,
@@ -59,16 +59,6 @@ BACKEND = {
     },
 
 }
-
-
-def timeit(function):
-    def timed(*args, **kw):
-        ts = time.time()
-        result = function(*args, **kw)
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
-        return result
-    return timed
 
 
 def authenticate_worker(node_id):
@@ -310,7 +300,8 @@ def container_format_log(container_name, container_logs):
         logger.info(log)
 
 
-def compute_job(dockerfile_path, image_name, job_name, volumes, command,
+@timeit
+def compute_job(subtuple_key, dockerfile_path, image_name, job_name, volumes, command,
                 environment, remove_image=True, remove_container=True, capture_logs=True):
 
     raise_if_no_dockerfile(dockerfile_path)
@@ -350,7 +341,7 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
         else:
             logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
             elaps = (time.time() - ts) * 1000
-            logger.info(f'client.images.build - elaps={elaps:.2f}ms')
+            logger.info(f'{COMPUTE_BACKEND} build image - elaps={elaps:.2f}ms')
 
     # Limit ressources
     memory_limit_mb = f'{get_memory_limit()}M'
@@ -370,7 +361,7 @@ def compute_job(dockerfile_path, image_name, job_name, volumes, command,
         environment,
         gpu_set,
         remove_image,
-        subtuple_directory=dockerfile_path.replace('/metrics', '')  # in case of testtuple eval // DIRTY
+        subtuple_key=subtuple_key
     )
 
 
