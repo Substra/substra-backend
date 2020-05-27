@@ -287,3 +287,11 @@ privateCa:
     name: substra-private-ca
 #    data: nil
     fileName: private-ca.crt
+
+
+registry:
+  local: true    # false if you use external docker-registry (host and port will be taken into account)
+  host: 127.0.0.1
+  port: 32000
+  scheme: http
+  pullDomain: 127.0.0.1:32000

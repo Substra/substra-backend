@@ -89,8 +89,17 @@ spec:
             {{- end }}
             - name: SERVERMEDIAS_PVC
               value: {{ template "substra.fullname" $ }}-servermedias
+            {{- if .Values.registry.local }}
             - name: REGISTRY
-              value: {{ .Release.Name }}-docker-registry
+              value: {{ .Release.Name }}-docker-registry:5000
+            {{ else }}
+            - name: REGISTRY
+              value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
+            {{ end }}
+            - name: REGISTRY_SCHEME
+              value: {{ .Values.registry.scheme}}
+            - name: REGISTRY_PULL_DOMAIN
+              value: {{ .Values.registry.pullDomain}}
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
             - name: DOCKER_CACHE_PVC
