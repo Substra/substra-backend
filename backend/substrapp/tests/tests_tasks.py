@@ -102,16 +102,16 @@ class TasksTests(APITestCase):
                 get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
 
     def test_resources(self):
+        with self.mock_compute_backend:
+            self.assertTrue(isinstance(get_memory_limit(), int))
 
-        self.assertTrue(isinstance(get_memory_limit(), int))
+            cpu_set, gpu_set = get_cpu_gpu_sets()
+            cpu_sets = get_cpu_sets()
+            self.assertIn(cpu_set, cpu_sets)
 
-        cpu_set, gpu_set = get_cpu_gpu_sets()
-        cpu_sets = get_cpu_sets()
-        self.assertIn(cpu_set, cpu_sets)
-
-        if gpu_set is not None:
-            gpu_sets = get_gpu_sets()
-            self.assertIn(gpu_set, gpu_sets)
+            if gpu_set is not None:
+                gpu_sets = get_gpu_sets()
+                self.assertIn(gpu_set, gpu_sets)
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
