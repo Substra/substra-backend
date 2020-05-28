@@ -70,7 +70,7 @@ def docker_memory_limit():
     # Because the docker execution may be remote
 
     cmd = f'python3 -u -c "import os; print(int(os.sysconf("SC_PAGE_SIZE") '\
-          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {CELERY_WORKER_CONCURRENCY}), end=\'\')"'
+          f'* os.sysconf("SC_PHYS_PAGES") / (1024. ** 2)) // {CELERY_WORKER_CONCURRENCY}), flush=True, end=\'\')"'
 
     task_args = {
         'image': CELERYWORKER_IMAGE,
@@ -111,7 +111,7 @@ def get_cpu_count(client):
 
     task_args = {
         'image': CELERYWORKER_IMAGE,
-        'command': 'python3 -u -c "import os; print(os.cpu_count())"',
+        'command': 'python3 -u -c "import os; print(os.cpu_count(), flush=True)"',
         'detach': False,
         'stdout': True,
         'stderr': True,
@@ -155,7 +155,7 @@ def get_gpu_list(client):
     # Get GPU list from docker container through the API
     # Because the docker execution may be remote
     cmd = 'python3 -u -c "import GPUtil as gputil;import json;'\
-          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
+          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), flush=True, end=\'\')"'
 
     task_args = {
         'image': CELERYWORKER_IMAGE,
@@ -181,7 +181,11 @@ def get_gpu_list(client):
     except (docker.errors.ContainerError, docker.errors.ImageNotFound, docker.errors.APIError):
         logger.info('[Warning] Cannot get nvidia gpu list from remote')
     else:
-        gpu_list = json.loads(gpu_list_bytes)
+        if gpu_list_bytes:
+            try:
+                gpu_list = json.loads(gpu_list_bytes)
+            except json.JSONDecodeError:
+                logger.info(f'[Warning] Cannot get nvidia gpu list from remote (JSONDecodeError on: "{gpu_list_bytes}"')
 
     return gpu_list
 
