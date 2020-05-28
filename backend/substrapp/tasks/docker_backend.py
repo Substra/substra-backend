@@ -211,6 +211,7 @@ def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volu
     }
 
     if gpu_set is not None:
+        task_args['environment'].update({'CUDA_DEVICE_ORDER': 'PCI_BUS_ID'})
         task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
         task_args['runtime'] = 'nvidia'
 

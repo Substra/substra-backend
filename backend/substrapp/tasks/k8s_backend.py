@@ -1,4 +1,4 @@
-import docker
+import math
 import kubernetes
 import time
 import requests
@@ -18,6 +18,7 @@ REGISTRY = os.getenv('REGISTRY')
 REGISTRY_SCHEME = os.getenv('REGISTRY_SCHEME')
 REGISTRY_PULL_DOMAIN = os.getenv('REGISTRY_PULL_DOMAIN')
 NAMESPACE = os.getenv('NAMESPACE')
+NODE_NAME = os.getenv('NODE_NAME')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -33,115 +34,72 @@ class BuildError(Exception):
 
 
 def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
-    docker_client = docker.from_env()
-    # Get memory limit from docker container through the API
-    # Because the docker execution may be remote
+    # celeryworker_image useless but for compatiblity
+    # Get memory limit from node through the API
 
-    memory_value = "int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))"
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
 
-    cmd = f'python3 -u -c "import os; print({memory_value} // {celery_worker_concurrency}, end=\'\', flush=True)"'
+    node = k8s_client.read_node(NODE_NAME)
 
-    task_args = {
-        'image': celeryworker_image,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
-
-    memory_limit_bytes = docker_client.containers.run(**task_args)
-
-    return int(memory_limit_bytes)
+    return (int(node.status.allocatable['memory'][:-2]) / 1024) // celery_worker_concurrency
 
 
 def k8s_cpu_count(celeryworker_image):
-    docker_client = docker.from_env()
-    # Get CPU count from docker container through the API
-    # Because the docker execution may be remote
+    # celeryworker_image useless but for compatiblity
+    # Get CPU count from node through the API
 
-    task_args = {
-        'image': celeryworker_image,
-        'command': 'python3 -u -c "import os; print(os.cpu_count())"',
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
 
-    cpu_count_bytes = docker_client.containers.run(**task_args).strip()
+    node = k8s_client.read_node(NODE_NAME)
 
-    return cpu_count_bytes
+    return max(1, math.floor(float(node.status.capacity['cpu'])))
 
 
 def k8s_gpu_list(celeryworker_image):
-    docker_client = docker.from_env()
-    # Get GPU list from docker container through the API
-    # Because the docker execution may be remote
 
-    cmd = 'python3 -u -c "import GPUtil as gputil;import json;'\
-          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
+    # if you don't request GPUs when using the device plugin with
+    # NVIDIA images all the GPUs on the machine will be exposed inside your container.
 
-    task_args = {
-        'image': celeryworker_image,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-        'environment': {'CUDA_DEVICE_ORDER': 'PCI_BUS_ID',
-                        'NVIDIA_VISIBLE_DEVICES': 'all'},
-        'runtime': 'nvidia'
-    }
+    import GPUtil
+    import json
 
-    gpu_list_bytes = docker_client.containers.run(**task_args)
-
-    return gpu_list_bytes
+    return json.dumps([str(gpu.id) for gpu in GPUtil.getGPUs()])
 
 
 def k8s_cpu_used(task_label):
-    # CPU used is handle by kubernetes
-    return []
+    # Get CPU used from node through the API
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    node = k8s_client.read_node(NODE_NAME)
+
+    cpu_used = math.ceil(float(node.status.capacity['cpu']) - float(node.status.allocatable['cpu']))
+    return list(range(cpu_used))
 
 
 def k8s_gpu_used(task_label):
-    docker_client = docker.from_env()
-    # Get GPU used from docker container through the API
-    # Because the docker execution may be remote
+    # Get GPU used from k8s through the API
+    # Because the execution may be remote
 
-    filters = {'status': 'running',
-               'label': [task_label]}
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
 
-    containers = [container.attrs
-                  for container in docker_client.containers.list(filters=filters)]
+    api_response = k8s_client.list_namespaced_pod(
+        NAMESPACE,
+        label_selector=f'task={task_label}'
+    )
 
-    env_containers = [container['Config']['Env']
-                      for container in containers]
+    gpu_used = 0
 
-    used_gpu_sets = []
+    for pod in api_response.items:
+        for container in pod.spec.containers:
+            if container.resources.limits is not None:
+                gpu_used += int(getattr(container.resources.limits, 'nvidia.com/gpu', 0))
 
-    for env_list in env_containers:
-        nvidia_env_var = [s.split('=')[1]
-                          for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
-
-        used_gpu_sets.extend(nvidia_env_var)
-
-    return used_gpu_sets
+    return list(range(gpu_used))
 
 
 def watch_job(name):
@@ -374,20 +332,22 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
+    cpu_set_start, cpu_set_stop = map(int, cpu_set.split('-'))
+    cpu_set = set(range(cpu_set_start, cpu_set_stop + 1))
+    if gpu_set is not None:
+        gpu_set = set(gpu_set.split(','))
+
     task_args = {
         'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}',
         'name': job_name,
-        # 'cpuset_cpus': cpu_set,
-        # 'mem_limit': memory_limit_mb,
+        'cpu_set': cpu_set,
+        'mem_limit': memory_limit_mb,
+        'gpu_set': gpu_set,
         'command': command,
         'volumes': volumes,
         'label': task_label,
         'environment': environment
     }
-
-    if gpu_set is not None:
-        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
-        task_args['runtime'] = 'nvidia'
 
     try:
         _k8s_compute(job_name, task_args, subtuple_key)
@@ -567,6 +527,26 @@ def _k8s_compute(name, task_args, subtuple_key):
 
     volume_mounts, volumes = generate_volumes(task_args['volumes'], name, subtuple_key)
 
+    # Resources
+
+    # Set minimal requests
+    r_requests = {
+        'cpu': 2,
+        'memory': '2000m'
+    }
+
+    r_limits = {
+        'cpu': len(task_args['cpu_set']),
+        'memory': task_args['mem_limit']
+    }
+
+    if task_args['gpu_set'] is not None:
+        r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
+
+    resources = kubernetes.client.V1ResourceRequirements(
+        limits=r_limits, requests=r_requests
+    )
+
     # security
     security_context = kubernetes.client.V1SecurityContext(
         privileged=False,
@@ -579,6 +559,7 @@ def _k8s_compute(name, task_args, subtuple_key):
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
+        resources=resources,
         security_context=security_context
     )
 
