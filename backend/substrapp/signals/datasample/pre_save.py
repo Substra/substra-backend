@@ -21,6 +21,7 @@ def data_sample_pre_save(sender, instance, **kwargs):
         logger.exception(f'error happened while copying data from {src_path} to {destination_path}')
         shutil.rmtree(destination_path, ignore_errors=True)
         logger.info(f'directory {destination_path} deleted')
+        raise
     else:
         # override path for getting our hardlink
         instance.path = destination_path
