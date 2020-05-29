@@ -127,6 +127,9 @@ deploy:
             pullDomain: 127.0.0.1:32001
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
+          celeryworker:
+            rbac:
+              enable: true
           backend:
             settings: dev
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
@@ -190,6 +193,9 @@ deploy:
             pullDomain: 127.0.0.1:32002
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
+          celeryworker:
+            rbac:
+              enable: true
           backend:
             settings: dev
             defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
