@@ -30,6 +30,7 @@ def replace_storage_addresses(request, objective):
         reverse('substrapp:objective-metrics', args=[objective['key']])
     )
 
+
 class ObjectiveViewSet(mixins.CreateModelMixin,
                        mixins.ListModelMixin,
                        mixins.RetrieveModelMixin,
