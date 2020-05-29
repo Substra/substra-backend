@@ -13,6 +13,9 @@ def data_sample_pre_save(sender, instance, **kwargs):
     destination_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.pk))
     src_path = normpath(instance.path)
 
+    if path.exists(destination_path):
+        raise FileExistsError(f'File exists: {destination_path}')
+
     # try to make an hard link to keep a free copy of the data
     # if not possible, keep the real path location
     try:
@@ -21,7 +24,6 @@ def data_sample_pre_save(sender, instance, **kwargs):
         logger.exception(f'error happened while copying data from {src_path} to {destination_path}')
         shutil.rmtree(destination_path, ignore_errors=True)
         logger.info(f'directory {destination_path} deleted')
-        raise
     else:
         # override path for getting our hardlink
         instance.path = destination_path
