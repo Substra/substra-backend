@@ -887,7 +887,7 @@ def transfer_to_bucket(tuple_key, paths):
             's3',
             aws_access_key_id=ACCESS_KEY,
             aws_secret_access_key=SECRET_KEY)
-        s3.upload_file(tar_path, BUCKET_NAME, f'{S3_PREFIX}{tar_name}' if S3_PREFIX else tar_name)
+        s3.upload_file(tar_path, BUCKET_NAME, f'{S3_PREFIX}/{tar_name}' if S3_PREFIX else tar_name)
 
 
 @timeit
