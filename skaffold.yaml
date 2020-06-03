@@ -149,7 +149,7 @@ deploy:
             - name: CORS_ORIGIN_WHITELIST
               value: '["http://substra-frontend.node-1.com/"]'
             - name: CORS_ALLOW_CREDENTIALS
-              value: "false"
+              value: "true"
             - name: DEFAULT_THROTTLE_RATES
               value: '120'
 
@@ -199,7 +199,7 @@ deploy:
             - name: CORS_ORIGIN_WHITELIST
               value: '["http://substra-frontend.node-2.com/"]'
             - name: CORS_ALLOW_CREDENTIALS
-              value: "false"
+              value: "true"
             - name: DEFAULT_THROTTLE_RATES
               value: '120'
 
