@@ -676,6 +676,10 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
+        # Use tag to tranfer or not performances and models
+        tag = subtuple.get("tag")
+        if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
+            environment['TESTTUPLE_TAG'] = TAG_VALUE_FOR_TRANSFER_BUCKET
 
         compute_docker(
             client=client,
@@ -690,8 +694,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
             environment=environment
         )
 
-        model_path = path.join(subtuple_directory, 'model')
         pred_path = path.join(subtuple_directory, 'pred')
+        export_path = path.join(subtuple_directory, 'export')
 
         # load performance
         with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
@@ -699,10 +703,8 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
         result['global_perf'] = perf['all']
 
-        # Use tag to tranfer or not performances and models
-        tag = subtuple.get("tag")
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
-            transfer_to_bucket(subtuple['key'], [pred_path, model_path])
+            transfer_to_bucket(subtuple['key'], [pred_path, export_path])
 
     return result
 
@@ -711,6 +713,7 @@ def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, com
 
     model_path = path.join(subtuple_directory, 'model')
     pred_path = path.join(subtuple_directory, 'pred')
+    export_path = path.join(subtuple_directory, 'export')
 
     symlinks_volume = {}
     data_path = path.join(subtuple_directory, 'data')
@@ -732,6 +735,7 @@ def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, com
 
     if tuple_type == TESTTUPLE_TYPE:
         volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
+        volumes[export_path] = {'bind': '/sandbox/export', 'mode': 'rw'}
 
     model_volume = {
         model_path: {'bind': MODEL_FOLDER, 'mode': 'rw'}
