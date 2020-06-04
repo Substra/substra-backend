@@ -1,6 +1,5 @@
 import math
 import kubernetes
-import time
 import requests
 import os
 import logging
@@ -114,46 +113,22 @@ def k8s_gpu_used(task_label):
     return [','.join(range(gpu_used))]
 
 
-def watch_job(name):
+def watch_pod(name):
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
 
-    job = None
     finished = False
 
     while not finished:
-        job = k8s_client.read_namespaced_job(name, NAMESPACE)
+        api_response = k8s_client.read_namespaced_pod_status(
+            name=name,
+            namespace=NAMESPACE,
+            pretty=True
+        )
 
-        if job.status.succeeded and job.status.succeeded >= job.spec.completions:
-            finished = True
-            logger.info(f'The job {NAMESPACE}/{name} succeeded')
-
-        elif job.status.failed and job.status.failed >= job.spec.backoff_limit:
-            logger.error(f'The job {NAMESPACE}/{name} failed')
-            raise Exception(f'The job {NAMESPACE}/{name} failed')
-
-        if not finished:
-            time.sleep(0.5)
-
-    return job
-
-
-def job_exists(name):
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
-
-    try:
-        k8s_client.read_namespaced_job(name, NAMESPACE)
-    except Exception:
-        return False
-    else:
-        return True
-
-
-def wait_for_job_deletion(name):
-
-    while job_exists(name):
-        pass
+        if api_response.status.container_statuses:
+            for container in api_response.status.container_statuses:
+                finished = True if container.state.terminated is not None else False
 
 
 def get_pod_name(name):
@@ -185,6 +160,12 @@ def pod_exists(name):
         return True
 
 
+def wait_for_pod_deletion(name):
+    while pod_exists(name):
+        pass
+
+
+@timeit
 def get_pod_logs(name, container):
 
     kubernetes.config.load_incluster_config()
@@ -216,11 +197,11 @@ def container_format_log(container_name, container_logs):
 def k8s_build_image(path, tag, rm):
 
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
 
     job_name = f'kaniko-{tag.split("/")[-1].replace("_", "-")}'
 
-    logger.info(f'The job {NAMESPACE}/{job_name} started')
+    logger.info(f'The pod {NAMESPACE}/{job_name} started')
 
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
 
@@ -252,50 +233,42 @@ def k8s_build_image(path, tag, rm):
         ]
     )
 
-    template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': job_name}),
-        spec=kubernetes.client.V1PodSpec(
-            restart_policy='Never',
-            containers=[container],
-            volumes=[
-                {
-                    'name': 'dockerfile',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
-                },
-                {
-                    'name': 'cache',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
-                }
-            ]
-        )
+    spec = kubernetes.client.V1PodSpec(
+        restart_policy='Never',
+        containers=[container],
+        volumes=[
+            {
+                'name': 'dockerfile',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
+            },
+            {
+                'name': 'cache',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
+            }
+        ]
     )
 
-    spec = kubernetes.client.V1JobSpec(
-        template=template,
-        backoff_limit=2
-    )
-
-    job = kubernetes.client.V1Job(
-        api_version='batch/v1',
-        kind='Job',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name),
+    pod = kubernetes.client.V1Pod(
+        api_version='v1',
+        kind='Pod',
+        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
         spec=spec
     )
 
-    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
     try:
-        watch_job(job_name)
+        watch_pod(job_name)
     except Exception as e:
         logger.error(f'Kaniko build failed, error: {e}')
         raise BuildError(f'Kaniko build failed, error: {e}')
     finally:
-        k8s_client.delete_namespaced_job(
+        k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
             body=kubernetes.client.V1DeleteOptions(
                 propagation_policy='Foreground',
-                grace_period_seconds=5
+                grace_period_seconds=0
             )
         )
 
@@ -376,7 +349,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
                              container=job_name)
             )
 
-        delete_compute_job(job_name)
+        delete_compute_pod(job_name)
         clean_outputs(subtuple_key)
 
         # Remove images
@@ -469,10 +442,11 @@ def copy_outputs(subtuple_key):
             copy_tree(content_path, content_dst_path)
 
 
+@timeit
 def clean_outputs(subtuple_key):
 
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
     job_name = f'clean-outputs-{subtuple_key[:10]}'
 
     container = kubernetes.client.V1Container(
@@ -489,53 +463,46 @@ def clean_outputs(subtuple_key):
         ]
     )
 
-    template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': job_name}),
-        spec=kubernetes.client.V1PodSpec(
-            restart_policy='Never',
-            containers=[container],
-            volumes=[
-                {
-                    'name': 'outputs',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
-                },
-            ]
-        )
+    spec = kubernetes.client.V1PodSpec(
+        restart_policy='Never',
+        containers=[container],
+        volumes=[
+            {
+                'name': 'outputs',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
+            },
+        ]
     )
 
-    spec = kubernetes.client.V1JobSpec(
-        template=template,
-        backoff_limit=0
-    )
-
-    job = kubernetes.client.V1Job(
-        api_version='batch/v1',
-        kind='Job',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name),
+    pod = kubernetes.client.V1Pod(
+        api_version='v1',
+        kind='Pod',
+        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
         spec=spec
     )
 
-    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
     try:
-        watch_job(job_name)
+        watch_pod(job_name)
     except Exception as e:
         logger.error(f'Cleaning failed, error: {e}')
     finally:
-        k8s_client.delete_namespaced_job(
+        k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
             body=kubernetes.client.V1DeleteOptions(
                 propagation_policy='Foreground',
-                grace_period_seconds=5
+                grace_period_seconds=0
             )
         )
 
 
+@timeit
 def _k8s_compute(name, task_args, subtuple_key):
 
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
 
     volume_mounts, volumes = generate_volumes(task_args['volumes'], name, subtuple_key)
 
@@ -594,27 +561,16 @@ def _k8s_compute(name, task_args, subtuple_key):
         )
     )
 
-    template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(name=name,
-                                                labels={'app': name,
-                                                        'task': task_args['label']}
-                                                ),
-        spec=kubernetes.client.V1PodSpec(
-            restart_policy='Never',
-            affinity=pod_affinity,
-            containers=[container_compute],
-            volumes=volumes
-        )
+    spec = kubernetes.client.V1PodSpec(
+        restart_policy='Never',
+        affinity=pod_affinity,
+        containers=[container_compute],
+        volumes=volumes
     )
 
-    spec = kubernetes.client.V1JobSpec(
-        template=template,
-        backoff_limit=0
-    )
-
-    job = kubernetes.client.V1Job(
-        api_version='batch/v1',
-        kind='Job',
+    pod = kubernetes.client.V1Pod(
+        api_version='v1',
+        kind='Pod',
         metadata=kubernetes.client.V1ObjectMeta(name=name,
                                                 labels={'app': name,
                                                         'task': task_args['label']}
@@ -622,18 +578,19 @@ def _k8s_compute(name, task_args, subtuple_key):
         spec=spec
     )
 
-    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
-    watch_job(name)
+    watch_pod(name)
 
 
-def delete_compute_job(name):
+@timeit
+def delete_compute_pod(name):
 
-    if job_exists(name):
+    if pod_exists(name):
         kubernetes.config.load_incluster_config()
-        k8s_client = kubernetes.client.BatchV1Api()
+        k8s_client = kubernetes.client.CoreV1Api()
 
-        k8s_client.delete_namespaced_job(
+        k8s_client.delete_namespaced_pod(
             name=name,
             namespace=NAMESPACE,
             body=kubernetes.client.V1DeleteOptions(
@@ -642,8 +599,8 @@ def delete_compute_job(name):
             )
         )
 
-    wait_for_job_deletion(name)
-    logger.info(f'Compute Job {name} deleted.')
+    wait_for_pod_deletion(name)
+    logger.info(f'Compute Pod {name} deleted.')
 
 
 def k8s_get_or_create_local_volume(volume_id):
@@ -654,7 +611,7 @@ def k8s_get_or_create_local_volume(volume_id):
 def k8s_remove_local_volume(volume_id):
 
     kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.BatchV1Api()
+    k8s_client = kubernetes.client.CoreV1Api()
     job_name = f'clean-outputs-{volume_id[:20]}'
 
     container = kubernetes.client.V1Container(
@@ -671,44 +628,36 @@ def k8s_remove_local_volume(volume_id):
         ]
     )
 
-    template = kubernetes.client.V1PodTemplateSpec(
-        metadata=kubernetes.client.V1ObjectMeta(labels={'app': job_name}),
-        spec=kubernetes.client.V1PodSpec(
-            restart_policy='Never',
-            containers=[container],
-            volumes=[
-                {
-                    'name': 'local',
-                    'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
-                },
-            ]
-        )
+    spec = kubernetes.client.V1PodSpec(
+        restart_policy='Never',
+        containers=[container],
+        volumes=[
+            {
+                'name': 'local',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
+            },
+        ]
     )
 
-    spec = kubernetes.client.V1JobSpec(
-        template=template,
-        backoff_limit=0
-    )
-
-    job = kubernetes.client.V1Job(
-        api_version='batch/v1',
-        kind='Job',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name),
+    pod = kubernetes.client.V1Pod(
+        api_version='v1',
+        kind='Pod',
+        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
         spec=spec
     )
 
-    k8s_client.create_namespaced_job(body=job, namespace=NAMESPACE)
+    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
     try:
-        watch_job(job_name)
+        watch_pod(job_name)
     except Exception as e:
         logger.error(f'Cleaning failed, error: {e}')
     finally:
-        k8s_client.delete_namespaced_job(
+        k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
             body=kubernetes.client.V1DeleteOptions(
                 propagation_policy='Foreground',
-                grace_period_seconds=5
+                grace_period_seconds=0
             )
         )

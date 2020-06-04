@@ -343,7 +343,7 @@ def compute_job(subtuple_key, dockerfile_path, image_name, job_name, volumes, co
             logger.error(f'BuildError: {error}')
             raise
         else:
-            logger.info(f'BuildSuccess - {image_name} - keep cache : {remove_image}')
+            logger.info(f'BuildSuccess - {image_name} - keep cache : {not remove_image}')
             elaps = (time.time() - ts) * 1000
             logger.info(f'{COMPUTE_BACKEND} build image - elaps={elaps:.2f}ms')
 
