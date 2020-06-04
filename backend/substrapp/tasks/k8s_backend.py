@@ -76,7 +76,13 @@ def k8s_cpu_used(task_label):
 
     node = k8s_client.read_node(NODE_NAME)
 
-    cpu_used = math.ceil(float(node.status.capacity['cpu']) - float(node.status.allocatable['cpu']))
+    cpu_allocable = node.status.allocatable['cpu']
+
+    # convert XXXXm cpu to X.XXX cpu
+    if 'm' in cpu_allocable:
+        cpu_allocable = float(cpu_allocable.replace('m', '')) / 1000.0
+
+    cpu_used = math.ceil(float(node.status.capacity['cpu']) - float(cpu_allocable))
     return list(range(cpu_used))
 
 
