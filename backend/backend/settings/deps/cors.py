@@ -13,7 +13,7 @@ common.MIDDLEWARE.insert(0, 'corsheaders.middleware.CorsMiddleware')
 
 CORS_ORIGIN_WHITELIST = json.loads(os.environ.get('CORS_ORIGIN_WHITELIST', "[]"))
 CORS_ORIGIN_ALLOW_ALL = False if CORS_ORIGIN_WHITELIST else True
-CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_CREDENTIALS = common.to_bool(os.environ.get('CORS_ALLOW_CREDENTIALS', False))
 CORS_ALLOW_HEADERS = (
     'accept',
     'accept-encoding',
