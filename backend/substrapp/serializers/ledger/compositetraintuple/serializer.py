@@ -32,7 +32,7 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
         in_trunk_model_key = validated_data.get('in_trunk_model_key')
         out_trunk_model_permissions = validated_data.get('out_trunk_model_permissions')
         tag = validated_data.get('tag', '')
-        metadata = validated_data.get('metadata', {})
+        metadata = validated_data.get('metadata')
 
         args = {
             'algoKey': algo_key,

@@ -208,10 +208,6 @@ class AlgoViewTests(APITestCase):
                     'public': True,
                     'authorized_ids': [],
                 },
-                'metadata': {
-                    "one": "foo",
-                    "two": "bar"
-                }
             }),
             'file': open(algo_path, 'rb'),
             'description': open(description_path, 'rb'),
