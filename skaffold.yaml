@@ -166,8 +166,11 @@ deploy:
               value: "true"
             - name: DEFAULT_THROTTLE_RATES
               value: '120'
-            - name: REGISTRY_HOST
-              value: 'substra-registry.node-1.com'
+              value: '30'
+            - name: TASK_CACHE_DOCKER_IMAGES
+              value: 'False'
+            - name: COMPUTE_BACKEND
+              value: 'k8s'
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -232,8 +235,10 @@ deploy:
               value: "true"
             - name: DEFAULT_THROTTLE_RATES
               value: '120'
-            - name: REGISTRY_HOST
-              value: 'substra-registry.node-2.com'
+            - name: TASK_CACHE_DOCKER_IMAGES
+              value: 'False'
+            - name: COMPUTE_BACKEND
+              value: 'k8s'
 
 profiles:
   - name: prod
