@@ -74,16 +74,22 @@ def k8s_cpu_used(task_label):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    node = k8s_client.read_node(NODE_NAME)
+    api_response = k8s_client.list_namespaced_pod(
+        NAMESPACE,
+        label_selector=f'task={task_label}'
+    )
 
-    cpu_allocable = node.status.allocatable['cpu']
+    cpu_used = 0
 
-    # convert XXXXm cpu to X.XXX cpu
-    if 'm' in cpu_allocable:
-        cpu_allocable = float(cpu_allocable.replace('m', '')) / 1000.0
+    for pod in api_response.items:
+        for container in pod.spec.containers:
+            if container.resources.limits is not None:
+                cpu_used += int(getattr(container.resources.limits, 'cpu', 0))
 
-    cpu_used = math.ceil(float(node.status.capacity['cpu']) - float(cpu_allocable))
-    return list(range(cpu_used))
+    if cpu_used:
+        return [f'0-{cpu_used}']
+    else:
+        return []
 
 
 def k8s_gpu_used(task_label):
@@ -105,7 +111,7 @@ def k8s_gpu_used(task_label):
             if container.resources.limits is not None:
                 gpu_used += int(getattr(container.resources.limits, 'nvidia.com/gpu', 0))
 
-    return list(range(gpu_used))
+    return [','.join(range(gpu_used))]
 
 
 def watch_job(name):
