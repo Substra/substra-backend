@@ -1,9 +1,9 @@
 dependencies:
   - name: rabbitmq
-    repository: https://kubernetes-charts.storage.googleapis.com/
+    repository: https://charts.bitnami.com/bitnami
     condition: rabbitmq.enabled
-    version: ~6.17.0
+    version: 6.25.13
   - name: postgresql
-    repository: https://kubernetes-charts.storage.googleapis.com/
-    version: ~7.0.0
+    repository:  https://charts.bitnami.com/bitnami
+    version: 8.10.5
     condition: postgresql.enabled
