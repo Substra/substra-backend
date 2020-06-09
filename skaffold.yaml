@@ -166,7 +166,6 @@ deploy:
               value: "true"
             - name: DEFAULT_THROTTLE_RATES
               value: '120'
-              value: '30'
             - name: TASK_CACHE_DOCKER_IMAGES
               value: 'False'
             - name: COMPUTE_BACKEND
