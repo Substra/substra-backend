@@ -227,6 +227,7 @@ celeryscheduler:
 
 celeryworker:
   replicaCount: 1
+  updateStrategy: RollingUpdate
   image:
     repository: substrafoundation/celeryworker
     tag: latest
