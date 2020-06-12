@@ -48,20 +48,20 @@ spec:
       {{- end }}
       initContainers:
       {{- if .Values.privateCa.enabled }}
-        - name: add-cert
-          image: alpine:latest
-          imagePullPolicy: Always
-          command:
-          - sh
-          - -c
-          - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
-          volumeMounts:
-            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-              name: private-ca
-              subPath: {{ .Values.privateCa.configMap.fileName }}
-            - mountPath: /tmp/certs/
-              name: ssl-certs
-      {{- end }}    
+      - name: add-cert
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+        volumeMounts:
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+            name: private-ca
+            subPath: {{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /tmp/certs/
+            name: ssl-certs
+      {{- end }}
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
