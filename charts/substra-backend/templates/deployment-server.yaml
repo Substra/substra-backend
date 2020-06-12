@@ -153,18 +153,22 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      - name: chmod-pvc
+      {{- if .Values.securityContext.enabled }}
+      - name: chown-pvc
         image: alpine:latest
         imagePullPolicy: IfNotPresent
-        command:
-        - sh
-        - -c
-        - for dir in `ls -d {{ $.Values.persistence.hostPath }}/medias/*`; do chmod -R 777 $dir; done
+        command: ["sh", "-c"]
+        args:
+        - |
+          for dir in `ls -d {{ $.Values.persistence.hostPath }}/medias/*`; do
+            chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
+          done
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
             mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
           {{- end }}
+      {{- end }}
       - name: wait-postgresql
         image: jwilder/dockerize
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
