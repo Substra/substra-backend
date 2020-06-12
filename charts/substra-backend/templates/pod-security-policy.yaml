@@ -1,0 +1,39 @@
+{{- if .Values.psp.create }}
+apiVersion: {{ include "podsecuritypolicy.apiVersion" .}}
+kind: PodSecurityPolicy
+metadata:
+  name: {{ template "substra.fullname" . }}-psp
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-psp
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  priviledged: false
+  allowPrivilegeEscalation: false
+  volumes:
+    - 'configMap'
+    - 'secret'
+    - 'persistentVolumeClaim'
+    - 'emptyDir'
+    - 'projected'
+  hostNetwork: false
+  hostIPC: false
+  hostPID: false
+  runAsUser:
+    rule: 'MustRunAsNonRoot'
+  seLinux:
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+    - min: 1
+      max: 65535
+  readOnlyRootFilesystem: false
+{{- end }}

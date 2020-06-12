@@ -33,6 +33,10 @@ spec:
                 values:
                 - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
@@ -42,17 +46,37 @@ spec:
       {{- if .Values.celeryworker.rbac.enable }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker
       {{- end }}
+      initContainers:
+      {{- if .Values.privateCa.enabled }}
+        - name: add-cert
+          image: alpine:latest
+          imagePullPolicy: Always
+          command:
+          - sh
+          - -c
+          - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /tmp/certs/
+              name: ssl-certs
+      {{- end }}    
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
           {{- if .Values.celeryworker.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
           {{- end }}
+          {{- if .Values.securityContext.enabled }}
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+          {{- end }}
           command: ["/bin/bash"]
           {{- if eq .Values.backend.settings "prod" }}
-          args: ["-c", "update-ca-certificates && celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
+          args: ["-c", "celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
           {{ else }}
-          args: ["-c", "update-ca-certificates && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},{{ .Values.organization.name }}.worker,celery --hostname {{ .Values.organization.name }}.worker"]
           {{ end }}
           env:
             - name: DJANGO_SETTINGS_MODULE
@@ -138,9 +162,8 @@ spec:
             - name: cacert
               mountPath: /var/hyperledger/ca
             {{- if .Values.privateCa.enabled }}
-            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-              name: private-ca
-              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
             {{- end }}
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
@@ -174,6 +197,8 @@ spec:
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
       - name: private-ca
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
