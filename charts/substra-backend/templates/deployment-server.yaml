@@ -20,6 +20,10 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
       {{- with $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
@@ -32,11 +36,15 @@ spec:
         {{- if .Values.backend.image.pullPolicy }}
         imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
         {{- end }}
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+        {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --http-timeout 300 --socket-timeout 300 --harakiri 300 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
+        args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --http-timeout 300 --socket-timeout 300 --harakiri 300 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
         {{- else }}
-        args: ["-c", "update-ca-certificates && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
+        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
@@ -103,9 +111,8 @@ spec:
           - name: cacert
             mountPath: /var/hyperledger/ca
           {{- if .Values.privateCa.enabled }}
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-            name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
           {{- end }}
         livenessProbe:
           httpGet:
@@ -131,6 +138,33 @@ spec:
         resources:
           {{- toYaml .Values.backend.resources | nindent 12 }}
       initContainers:
+      {{- if .Values.privateCa.enabled }}
+      - name: add-cert
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+        volumeMounts:
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+            name: private-ca
+            subPath: {{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /tmp/certs/
+            name: ssl-certs
+      {{- end }}
+      - name: chmod-pvc
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command:
+        - sh
+        - -c
+        - for dir in `ls -d {{ $.Values.persistence.hostPath }}/medias/*`; do chmod -R 777 $dir; done
+        volumeMounts:
+          {{- range .Values.persistence.volumes }}
+          - name: data-{{ .name }}
+            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+          {{- end }}
       - name: wait-postgresql
         image: jwilder/dockerize
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
@@ -188,6 +222,8 @@ spec:
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
       - name: private-ca
         configMap:
           name: {{ .Values.privateCa.configMap.name }}

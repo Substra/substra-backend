@@ -20,11 +20,31 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
       {{- with $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
+      {{- end }}
+      initContainers:
+      {{- if .Values.privateCa.enabled }}
+        - name: add-cert
+          image: alpine:latest
+          imagePullPolicy: Always
+          command:
+          - sh
+          - -c
+          - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /tmp/certs/
+              name: ssl-certs
       {{- end }}
       containers:
         - name: scheduler
@@ -32,8 +52,12 @@ spec:
           {{- if .Values.celeryworker.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
           {{- end }}
+          {{- if .Values.securityContext.enabled }}
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+          {{- end }}
           command: ["/bin/bash"]
-          args: ["-c", "update-ca-certificates && celery -A backend worker -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},scheduler,celery --hostname {{ .Values.organization.name }}.scheduler"]
+          args: ["-c", "celery -A backend worker -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},scheduler,celery --hostname {{ .Values.organization.name }}.scheduler"]
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -68,9 +92,8 @@ spec:
             - name: cacert
               mountPath: /var/hyperledger/ca
             {{- if .Values.privateCa.enabled }}
-            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-              name: private-ca
-              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
             {{- end }}
           resources:
             {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
@@ -91,6 +114,8 @@ spec:
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
       - name: private-ca
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
