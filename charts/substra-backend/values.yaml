@@ -279,7 +279,7 @@ celeryworker:
   affinity: {}
 
   rbac:
-    enable: False
+    enable: True
   # Add ServiceAccount for celeryworker
 
 extraEnv: []
@@ -300,3 +300,15 @@ registry:
   port: 32000
   scheme: http
   pullDomain: 127.0.0.1:32000
+## Pod Security Policy
+## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+psp:
+  create: True
+
+## Pod Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+securityContext:
+  enabled: True
+  fsGroup: 1001
+  runAsUser: 1001
+  runAsGroup: 1001
