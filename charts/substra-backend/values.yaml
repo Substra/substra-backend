@@ -2,15 +2,6 @@ gpu:
   enabled: false
   platform: ubuntu # or cos
 
-docker:
-  # Path of the docker socket on the host
-  socket: /var/run/docker.sock
-  # Dockerconfig to be used to pull the images (base64'd)
-  config: null
-  # Images to pull
-  pullImages: []
-    # - substrafoundation/substra-tools:0.0.1
-
 backend:
   replicaCount: 1
   settings: prod
