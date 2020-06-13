@@ -112,8 +112,8 @@ spec:
           - name: cacert
             mountPath: /var/hyperledger/ca
           {{- if .Values.privateCa.enabled }}
-            - mountPath: /etc/ssl/certs
-              name: ssl-certs
+          - mountPath: /etc/ssl/certs
+            name: ssl-certs
           {{- end }}
         livenessProbe:
           httpGet:
