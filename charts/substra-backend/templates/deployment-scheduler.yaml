@@ -55,6 +55,7 @@ spec:
           {{- if .Values.securityContext.enabled }}
           securityContext:
             runAsUser: {{ .Values.securityContext.runAsUser }}
+            runAsGroup: {{ .Values.securityContext.runAsGroup }}
           {{- end }}
           command: ["/bin/bash"]
           args: ["-c", "celery -A backend worker -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},scheduler,celery --hostname {{ .Values.organization.name }}.scheduler"]
