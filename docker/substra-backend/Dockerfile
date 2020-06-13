@@ -1,4 +1,4 @@
-FROM python:3.8
+FROM python:3.6
 
 ARG USER_ID=1001
 ARG GROUP=1001
