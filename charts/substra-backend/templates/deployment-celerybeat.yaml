@@ -32,6 +32,10 @@ spec:
           {{- if .Values.celerybeat.image.pullPolicy }}
           imagePullPolicy: "{{ .Values.celerybeat.image.pullPolicy }}"
           {{- end }}
+          {{- if .Values.securityContext.enabled }}
+          securityContext:
+            runAsUser: {{ .Values.securityContext.runAsUser }}
+          {{- end }}
           command: ["/bin/bash"]
           {{- if eq .Values.backend.settings "prod" }}
           args: ["-c", "celery -A backend beat -l debug"]
