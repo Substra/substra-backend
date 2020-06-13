@@ -62,6 +62,5 @@ subjects:
 roleRef:
   kind: ClusterRole
   name: {{ template "substra.fullname" . }}-worker
-  namespace: {{ .Release.Namespace }}
   apiGroup: rbac.authorization.k8s.io
 {{- end }}

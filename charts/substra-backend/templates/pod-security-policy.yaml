@@ -10,7 +10,6 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}-psp
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
-  priviledged: false
   allowPrivilegeEscalation: false
   volumes:
     - 'configMap'
