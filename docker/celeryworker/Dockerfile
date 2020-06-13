@@ -7,7 +7,7 @@ RUN apt-get update && \
 ARG USER_ID=1001
 ARG GROUP=1001
 
-RUN mkdir -p /usr/src/app && chown ${USER_ID}:${GROUP} /usr/src/app
+RUN mkdir -p /usr/src/app && chown -R ${USER_ID}:${GROUP} /usr/src/app
 WORKDIR /usr/src/app
 
 COPY --chown=${USER_ID}:${GROUP} ./backend/requirements.txt /usr/src/app/.
