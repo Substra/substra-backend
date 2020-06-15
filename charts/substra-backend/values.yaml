@@ -20,6 +20,10 @@ backend:
   uwsgiThreads: 2
   gzipModels: false
 
+  dockerSocket:
+    enabled: false
+    hostPath: /var/run/docker.sock
+
   image:
     repository: substrafoundation/substra-backend
     tag: latest
