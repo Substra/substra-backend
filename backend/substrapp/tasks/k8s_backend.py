@@ -53,7 +53,13 @@ def k8s_cpu_count(celeryworker_image):
 
     node = k8s_client.read_node(NODE_NAME)
 
-    return max(1, math.floor(float(node.status.capacity['cpu'])))
+    cpu_allocatable = node.status.allocatable['cpu']
+
+    # convert XXXXm cpu to X.XXX cpu
+    if 'm' in cpu_allocatable:
+        cpu_allocatable = float(cpu_allocatable.replace('m', '')) / 1000.0
+
+    return max(1, math.floor(float(cpu_allocatable)))
 
 
 def k8s_gpu_list(celeryworker_image):
@@ -510,7 +516,7 @@ def _k8s_compute(name, task_args, subtuple_key):
 
     # Set minimal requests
     r_requests = {
-        'cpu': 2,
+        'cpu': 1,
         'memory': '2000m'
     }
 
