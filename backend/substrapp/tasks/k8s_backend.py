@@ -547,7 +547,9 @@ def _k8s_compute(name, task_args, subtuple_key):
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
         # resources=resources,
-        security_context=security_context
+        security_context=security_context,
+        env=[kubernetes.client.V1EnvVar(name=env_name, value=env_value)
+             for env_name, env_value in task_args['environment'].items()]
     )
 
     pod_affinity = kubernetes.client.V1Affinity(
