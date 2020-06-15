@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import DictField, CharField
 
 from substrapp import ledger
 from substrapp.serializers.ledger.utils import PermissionsSerializer
@@ -16,6 +17,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
         min_length=0,
         required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
@@ -27,6 +29,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
         min_length=0,
         required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
@@ -42,6 +45,7 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
                                               allow_null=True)
     out_trunk_model_permissions = PermissionsSerializer()
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class ComputePlanAggregatetupleSerializer(serializers.Serializer):
@@ -53,6 +57,7 @@ class ComputePlanAggregatetupleSerializer(serializers.Serializer):
         min_length=0,
         required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
 
 class LedgerComputePlanSerializer(serializers.Serializer):
@@ -61,6 +66,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     composite_traintuples = ComputePlanCompositeTrainTupleSerializer(many=True, required=False)
     aggregatetuples = ComputePlanAggregatetupleSerializer(many=True, required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
 
     def get_args(self, data):
@@ -75,6 +81,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             }
             if 'in_models_ids' in data_traintuple:
                 traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
+            if 'metadata' in data_traintuple:
+                traintuple['metadata'] = data_traintuple['metadata']
             if 'tag' in data_traintuple:
                 traintuple['tag'] = data_traintuple['tag']
 
@@ -86,6 +94,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'traintupleID': data_testtuple['traintuple_id'],
                 'objectiveKey': data_testtuple['objective_key'],
             }
+            if 'metadata' in data_testtuple:
+                testtuple['metadata'] = data_testtuple['metadata']
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
@@ -104,6 +114,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'id': data_composite_traintuple['composite_traintuple_id'],
             }
 
+            if 'metadata' in data_composite_traintuple:
+                composite_traintuple['metadata'] = data_composite_traintuple['metadata']
             if 'tag' in data_composite_traintuple:
                 composite_traintuple['tag'] = data_composite_traintuple['tag']
             if 'in_head_model_id' in data_composite_traintuple:
@@ -127,6 +139,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
 
             if 'in_models_ids' in data_aggregatetuple:
                 aggregatetuple['inModelsIDs'] = data_aggregatetuple['in_models_ids']
+            if 'metadata' in data_aggregatetuple:
+                aggregatetuple['metadata'] = data_aggregatetuple['metadata']
             if 'tag' in data_aggregatetuple:
                 aggregatetuple['tag'] = data_aggregatetuple['tag']
 
@@ -137,6 +151,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             'testtuples': testtuples,
             'compositeTraintuples': composite_traintuples,
             'aggregatetuples': aggregatetuples,
+            'metadata': data.get('metadata'),
             'tag': data.get('tag'),
             'cleanModels': data.get('clean_models', False),
         }
