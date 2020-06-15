@@ -24,6 +24,7 @@ CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/cel
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
 TASK_LABEL = 'substra_task'
 COMPUTE_BACKEND = settings.TASK['COMPUTE_BACKEND']
+BUILD_IMAGE = settings.TASK['BUILD_IMAGE']
 
 logger = logging.getLogger(__name__)
 
@@ -310,14 +311,17 @@ def compute_job(subtuple_key, dockerfile_path, image_name, job_name, volumes, co
 
     raise_if_no_dockerfile(dockerfile_path)
 
-    build_image = True
+    build_image = BUILD_IMAGE
 
     # Check if image already exist
     try:
         ts = time.time()
         BACKEND[COMPUTE_BACKEND]['get_image'](image_name)
     except (docker.errors.ImageNotFound, ImageNotFound):
-        logger.info(f'ImageNotFound: {image_name}. Building it')
+        if build_image:
+            logger.info(f'ImageNotFound: {image_name}. Building it')
+        else:
+            logger.info(f'ImageNotFound: {image_name}')
     else:
         logger.info(f'ImageFound: {image_name}. Use it')
         build_image = False
