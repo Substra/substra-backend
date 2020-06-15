@@ -515,22 +515,24 @@ def _k8s_compute(name, task_args, subtuple_key):
     # Resources
 
     # Set minimal requests
-    r_requests = {
-        'cpu': 1,
-        'memory': '2000m'
-    }
 
-    r_limits = {
-        'cpu': len(task_args['cpu_set']),
-        'memory': task_args['mem_limit']
-    }
+    # r_requests = {
+    #     'cpu': 1,
+    #     'memory': '2000m'
+    # }
 
-    if task_args['gpu_set'] is not None:
-        r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
+    # # Disable for now, we let kubernetes decide
+    # r_limits = {
+    #     'cpu': len(task_args['cpu_set']),
+    #     'memory': task_args['mem_limit']
+    # }
 
-    resources = kubernetes.client.V1ResourceRequirements(
-        limits=r_limits, requests=r_requests
-    )
+    # if task_args['gpu_set'] is not None:
+    #     r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
+
+    # resources = kubernetes.client.V1ResourceRequirements(
+    #     limits=r_limits, requests=r_requests
+    # )
 
     # security
     security_context = kubernetes.client.V1SecurityContext(
@@ -544,7 +546,7 @@ def _k8s_compute(name, task_args, subtuple_key):
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
-        resources=resources,
+        # resources=resources,
         security_context=security_context
     )
 
