@@ -199,6 +199,7 @@ TASK = {
     'CHAINKEYS_ENABLED': to_bool(os.environ.get('TASK_CHAINKEYS_ENABLED', False)),
     'LIST_WORKSPACE': to_bool(os.environ.get('TASK_LIST_WORKSPACE', True)),
     'COMPUTE_BACKEND': os.environ.get('COMPUTE_BACKEND', 'k8s'),  # 'docker' or 'k8s'
+    'BUILD_IMAGE': to_bool(os.environ.get('BUILD_IMAGE', True)),
 }
 
 CELERY_ACCEPT_CONTENT = ['application/json']

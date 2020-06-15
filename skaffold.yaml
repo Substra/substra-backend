@@ -170,6 +170,8 @@ deploy:
               value: 'False'
             - name: COMPUTE_BACKEND
               value: 'k8s'
+            - name: BUILD_IMAGE
+              value: 'True'
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -238,6 +240,8 @@ deploy:
               value: 'False'
             - name: COMPUTE_BACKEND
               value: 'k8s'
+            - name: BUILD_IMAGE
+              value: 'True'
 
 profiles:
   - name: prod
