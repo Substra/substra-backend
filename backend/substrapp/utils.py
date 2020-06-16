@@ -271,6 +271,11 @@ def get_subtuple_directory(subtuple_key):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple_key)
 
 
+def get_chainkeys_directory(compute_plan_id):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
+
+
 def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
