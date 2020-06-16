@@ -147,8 +147,6 @@ deploy:
             host: network-org-1-peer-1-hlf-peer.org-1
             port: 7051
             mspID: MyOrg1MSP
-          persistence:
-            hostPath: /tmp/org-1
           incomingNodes:
             - { name: MyOrg1MSP, secret: selfSecret1 }
             - { name: MyOrg2MSP, secret: nodeSecret1w2 }
@@ -217,8 +215,6 @@ deploy:
             host: network-org-2-peer-1-hlf-peer.org-2
             port: 7051
             mspID: MyOrg2MSP
-          persistence:
-            hostPath: /tmp/org-2
           incomingNodes:
             - { name: MyOrg1MSP, secret: nodeSecret2w1 }
             - { name: MyOrg2MSP, secret: selfSecret2 }
