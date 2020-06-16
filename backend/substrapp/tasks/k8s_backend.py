@@ -5,7 +5,7 @@ import os
 import logging
 
 
-from substrapp.utils import get_subtuple_directory, timeit
+from substrapp.utils import get_subtuple_directory, get_chainkeys_directory, timeit
 from distutils.dir_util import copy_tree
 
 
@@ -386,7 +386,7 @@ def generate_volumes(volume_binds, name, subtuple_key):
             volume_processed = True
 
         # Handle outputs paths which need to be writable
-        for subpath in ['/pred', '/output_model', '/perf', '/export']:
+        for subpath in ['/pred', '/output_model', '/perf', '/export', '/chainkeys']:
             if subpath in path and bind['mode'] == 'rw':
                 volume_mounts.append({
                     'name': 'outputs',
@@ -438,7 +438,7 @@ def generate_volumes(volume_binds, name, subtuple_key):
     return volume_mounts, volumes
 
 
-def copy_outputs(subtuple_key):
+def copy_outputs(subtuple_key, compute_plan_id):
     subtuple_directory = get_subtuple_directory(subtuple_key)
     for output_folder in ['output_model', 'pred', 'perf', 'export']:
         content_dst_path = os.path.join(subtuple_directory, output_folder)
@@ -446,6 +446,15 @@ def copy_outputs(subtuple_key):
         if os.path.exists(content_path):
             logger.info(f'Copy {content_path} to {content_dst_path}')
             copy_tree(content_path, content_dst_path)
+
+    # Copy chainkeys content
+    content_dst_path = get_chainkeys_directory(compute_plan_id)
+    # Content path is under subtuple_key and not compute_plan_id as we copy from worker to
+    # ouputs/chainkeys folder before launching the ml job
+    content_path = os.path.join(subtuple_directory, 'chainkeys').replace('subtuple', 'outputs')
+    if os.path.exists(content_path):
+        logger.info(f'Copy {content_path} to {content_dst_path}')
+        copy_tree(content_path, content_dst_path)
 
 
 @timeit
@@ -645,6 +654,72 @@ def k8s_remove_local_volume(volume_id):
             {
                 'name': 'local',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
+            },
+        ]
+    )
+
+    pod = kubernetes.client.V1Pod(
+        api_version='v1',
+        kind='Pod',
+        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
+        spec=spec
+    )
+
+    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+
+    try:
+        watch_pod(job_name)
+    except Exception as e:
+        logger.error(f'Cleaning failed, error: {e}')
+    finally:
+        k8s_client.delete_namespaced_pod(
+            name=job_name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(
+                propagation_policy='Foreground',
+                grace_period_seconds=0
+            )
+        )
+
+
+def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
+
+    subtuple_key = subtuple_directory.split('subtuple/')[-1]
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+    job_name = f'copy-chainkeys-{subtuple_key[:10]}'
+
+    container = kubernetes.client.V1Container(
+        name=job_name,
+        image='busybox',
+        args=['cp',
+              '-R',
+              f'/chainkeys_worker/*',
+              '/chainkeys_for_job/'],
+        volume_mounts=[
+            {'name': 'computeplan',
+             'mountPath': '/chainkeys_worker',
+             'subPath': chainkeys_directory,
+             'readOnly': True},
+            {'name': 'outputs',
+             'mountPath': '/chainkeys_for_job',
+             'subPath': f'{subtuple_key}/chainkeys'},
+
+        ]
+    )
+
+    spec = kubernetes.client.V1PodSpec(
+        restart_policy='Never',
+        containers=[container],
+        volumes=[
+            {
+                'name': 'computeplan',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['COMPUTEPLAN_PVC']}
+            },
+            {
+                'name': 'outputs',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
         ]
     )
