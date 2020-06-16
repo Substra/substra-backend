@@ -70,7 +70,8 @@ users: []
   #   secret: password
 
 persistence:
-  hostPath: "/substra"
+  # storageClassName: ""
+  # hostPath: "/substra"
   size: "10Gi"
   volumes:
     - name: algos

@@ -71,7 +71,7 @@ spec:
           - name: LEDGER_CONFIG_FILE
             value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
           - name: MEDIA_ROOT
-            value: {{ .Values.persistence.hostPath }}/medias/
+            value: /var/substra/medias/
           - name: PYTHONUNBUFFERED
             value: "1"
           - name: GZIP_MODELS
@@ -90,11 +90,11 @@ spec:
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
-            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            mountPath: /var/substra/medias/{{ .name }}
             readOnly: {{ .readOnly.server }}
           {{- end }}
           - name: data-servermedias
-            mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+            mountPath: /var/substra/servermedias
             readOnly: true
           - name: statics
             mountPath: /usr/src/app/backend/statics
@@ -154,20 +154,20 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if .Values.securityContext.enabled }}
+      {{- if and .Values.securityContext.enabled .Values.persistence.hostPath }}
       - name: chown-pvc
         image: alpine:latest
         imagePullPolicy: IfNotPresent
         command: ["sh", "-c"]
         args:
         - |
-          for dir in `ls -d {{ $.Values.persistence.hostPath }}/medias/*`; do
+          for dir in `ls -d /var/substra/medias/*`; do
             chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
           done
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
-            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            mountPath: /var/substra/medias/{{ .name }}
           {{- end }}
       {{- end }}
       - name: wait-postgresql

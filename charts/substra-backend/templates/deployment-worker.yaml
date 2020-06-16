@@ -103,7 +103,7 @@ spec:
             - name: LEDGER_CONFIG_FILE
               value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
             - name: MEDIA_ROOT
-              value: {{ .Values.persistence.hostPath }}/medias/
+              value: /var/substra/medias/
             - name: PYTHONUNBUFFERED
               value: "1"
             - name: "CELERYWORKER_IMAGE"
@@ -147,11 +147,11 @@ spec:
             {{- end }}
             {{- range .Values.persistence.volumes }}
             - name: data-{{ .name }}
-              mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+              mountPath: /var/substra/medias/{{ .name }}
               readOnly: {{ .readOnly.worker }}
             {{- end }}
             - name: data-servermedias
-              mountPath: {{ $.Values.persistence.hostPath }}/servermedias
+              mountPath: /var/substra/servermedias
               readOnly: true
             - name: config
               mountPath: /conf/{{ .Values.organization.name }}/substra-backend
