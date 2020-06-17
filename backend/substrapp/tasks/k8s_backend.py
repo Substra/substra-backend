@@ -276,6 +276,8 @@ def k8s_build_image(path, tag, rm):
 
     k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
+    logger.info(pod.to_str())
+
     try:
         watch_pod(job_name)
     except Exception as e:
