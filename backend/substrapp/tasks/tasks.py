@@ -679,6 +679,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     # train or predict
     compute_job(
         subtuple_key=subtuple["key"],
+        compute_plan_id=compute_plan_id,
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['hash']),
         job_name=job_name,
@@ -704,6 +705,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         # eval
         compute_job(
             subtuple_key=subtuple["key"],
+            compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
             job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
