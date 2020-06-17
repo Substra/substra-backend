@@ -689,6 +689,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
     job_name = f'copy-chainkeys-{subtuple_key[:10]}'
+    chainkeys_directory_subpath = chainkeys_directory.split('computeplan/')[-1]
 
     container = kubernetes.client.V1Container(
         name=job_name,
@@ -700,7 +701,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
         volume_mounts=[
             {'name': 'computeplan',
              'mountPath': '/chainkeys_worker',
-             'subPath': chainkeys_directory,
+             'subPath': chainkeys_directory_subpath,
              'readOnly': True},
             {'name': 'outputs',
              'mountPath': '/chainkeys_for_job',
