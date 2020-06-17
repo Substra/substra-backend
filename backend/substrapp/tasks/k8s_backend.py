@@ -126,8 +126,9 @@ def watch_pod(name):
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
-    trials = 0
-    while (not finished) and (trials < 5):
+    attempt = 1
+    max_attempts = 5
+    while (not finished) and (attempt <= max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
                 name=name,
@@ -138,8 +139,9 @@ def watch_pod(name):
             if api_response.status.container_statuses:
                 for container in api_response.status.container_statuses:
                     finished = True if container.state.terminated is not None else False
-        except Exception:
-            trials += 1
+        except Exception as e:
+            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
+            attempt += 1
 
 
 def get_pod_name(name):
@@ -279,6 +281,12 @@ def k8s_build_image(path, tag, rm):
     except Exception as e:
         logger.error(f'Kaniko build failed, error: {e}')
         raise BuildError(f'Kaniko build failed, error: {e}')
+    else:
+        container_format_log(
+            job_name,
+            get_pod_logs(name=get_pod_name(job_name),
+                         container=job_name)
+        )
     finally:
         k8s_client.delete_namespaced_pod(
             name=job_name,
