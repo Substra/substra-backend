@@ -987,9 +987,6 @@ def get_algo_image_name(algo_hash):
     return f'substra/algo_{algo_hash[0:8]}'.lower()
 
 
-
-
-
 def remove_algo_images(algo_hashes):
     for algo_hash in algo_hashes:
         algo_image_name = get_algo_image_name(algo_hash)

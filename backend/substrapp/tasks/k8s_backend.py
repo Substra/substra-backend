@@ -696,7 +696,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
         image='busybox',
         args=['cp',
               '-R',
-              f'/chainkeys_worker/*',
+              '/chainkeys_worker/*',
               '/chainkeys_for_job/'],
         volume_mounts=[
             {'name': 'computeplan',
