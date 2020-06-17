@@ -154,20 +154,20 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if .Values.securityContext.enabled }}
+      {{- if and .Values.securityContext.enabled .Values.persistence.hostPath }}
       - name: chown-pvc
         image: alpine:latest
         imagePullPolicy: IfNotPresent
         command: ["sh", "-c"]
         args:
         - |
-          for dir in `ls -d {{ $.Values.persistence.hostPath }}/medias/*`; do
+          for dir in `ls -d /var/substra/medias/*`; do
             chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
           done
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
-            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            mountPath: /var/substra/medias/{{ .name }}
           {{- end }}
       {{- end }}
       - name: wait-postgresql
