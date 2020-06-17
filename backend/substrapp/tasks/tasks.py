@@ -831,7 +831,7 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
 
     if settings.TASK['COMPUTE_BACKEND'] == 'k8s':
         copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory)
-        list_files(subtuple_directory.replace('subtuple', 'outputs'))
+        list_files(os.path.join(subtuple_directory.replace('subtuple', 'outputs'), 'chainkeys'))
 
     return chainkeys_volume
 

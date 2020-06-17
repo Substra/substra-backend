@@ -697,7 +697,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
         name=job_name,
         image='busybox',
         args=['cp',
-              '-R',
+              '-Rv',
               '/chainkeys_worker/*',
               '/chainkeys_for_job/'],
         volume_mounts=[
@@ -741,6 +741,12 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
     except Exception as e:
         logger.error(f'Cleaning failed, error: {e}')
     finally:
+        container_format_log(
+            job_name,
+            get_pod_logs(name=get_pod_name(job_name),
+                         container=job_name)
+        )
+
         k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
