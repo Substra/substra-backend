@@ -126,17 +126,20 @@ def watch_pod(name):
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
+    trials = 0
+    while (not finished) and (trials < 5):
+        try:
+            api_response = k8s_client.read_namespaced_pod_status(
+                name=name,
+                namespace=NAMESPACE,
+                pretty=True
+            )
 
-    while not finished:
-        api_response = k8s_client.read_namespaced_pod_status(
-            name=name,
-            namespace=NAMESPACE,
-            pretty=True
-        )
-
-        if api_response.status.container_statuses:
-            for container in api_response.status.container_statuses:
-                finished = True if container.state.terminated is not None else False
+            if api_response.status.container_statuses:
+                for container in api_response.status.container_statuses:
+                    finished = True if container.state.terminated is not None else False
+        except Exception:
+            trials += 1
 
 
 def get_pod_name(name):
