@@ -179,14 +179,17 @@ def get_pod_logs(name, container):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    logs = f'No pod {name}'
+    logs = f'No logs for pod {name}'
 
     if pod_exists(name):
-        logs = k8s_client.read_namespaced_pod_log(
-            name=name,
-            namespace=NAMESPACE,
-            container=container
-        )
+        try:
+            logs = k8s_client.read_namespaced_pod_log(
+                name=name,
+                namespace=NAMESPACE,
+                container=container
+            )
+        except Exception:
+            pass
 
     return logs
 
