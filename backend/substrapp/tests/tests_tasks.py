@@ -329,7 +329,7 @@ class TasksTests(APITestCase):
         hash_docker = uuid.uuid4().hex
         with self.mock_compute_backend:
             compute_job(
-                'subtuple_key', self.subtuple_path, 'test_compute_job_' + hash_docker,
+                'subtuple_key', 'compute_plan_id', self.subtuple_path, 'test_compute_job_' + hash_docker,
                 'test_compute_job_name_' + hash_docker, None, None, environment={}
             )
 

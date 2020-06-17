@@ -306,7 +306,7 @@ def container_format_log(container_name, container_logs):
 
 
 @timeit
-def compute_job(subtuple_key, dockerfile_path, image_name, job_name, volumes, command,
+def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_name, volumes, command,
                 environment, remove_image=True, remove_container=True, capture_logs=True):
 
     raise_if_no_dockerfile(dockerfile_path)
@@ -369,7 +369,8 @@ def compute_job(subtuple_key, dockerfile_path, image_name, job_name, volumes, co
         environment,
         gpu_set,
         remove_image,
-        subtuple_key=subtuple_key
+        subtuple_key=subtuple_key,
+        compute_plan_id=compute_plan_id
     )
 
 

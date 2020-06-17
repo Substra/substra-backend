@@ -4,6 +4,7 @@ import requests
 import os
 import logging
 
+from django.conf import settings
 
 from substrapp.utils import get_subtuple_directory, get_chainkeys_directory, timeit
 from distutils.dir_util import copy_tree
@@ -317,7 +318,7 @@ def k8s_remove_image(image_name):
 
 @timeit
 def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image, subtuple_key):
+                capture_logs, environment, gpu_set, remove_image, subtuple_key, compute_plan_id):
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
@@ -342,7 +343,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
 
     try:
         _k8s_compute(job_name, task_args, subtuple_key)
-        copy_outputs(subtuple_key)
+        copy_outputs(subtuple_key, compute_plan_id)
     except Exception as e:
         logger.exception(e)
         raise
@@ -447,14 +448,15 @@ def copy_outputs(subtuple_key, compute_plan_id):
             logger.info(f'Copy {content_path} to {content_dst_path}')
             copy_tree(content_path, content_dst_path)
 
-    # Copy chainkeys content
-    content_dst_path = get_chainkeys_directory(compute_plan_id)
-    # Content path is under subtuple_key and not compute_plan_id as we copy from worker to
-    # ouputs/chainkeys folder before launching the ml job
-    content_path = os.path.join(subtuple_directory, 'chainkeys').replace('subtuple', 'outputs')
-    if os.path.exists(content_path):
-        logger.info(f'Copy {content_path} to {content_dst_path}')
-        copy_tree(content_path, content_dst_path)
+    if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
+        # Copy chainkeys content
+        content_dst_path = get_chainkeys_directory(compute_plan_id)
+        # Content path is under subtuple_key and not compute_plan_id as we copy from worker to
+        # ouputs/chainkeys folder before launching the ml job
+        content_path = os.path.join(subtuple_directory, 'chainkeys').replace('subtuple', 'outputs')
+        if os.path.exists(content_path):
+            logger.info(f'Copy {content_path} to {content_dst_path}')
+            copy_tree(content_path, content_dst_path)
 
 
 @timeit
