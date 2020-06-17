@@ -696,10 +696,12 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
     container = kubernetes.client.V1Container(
         name=job_name,
         image='busybox',
-        args=['cp',
-              '-Rv',
-              '/chainkeys_worker/*',
-              '/chainkeys_for_job/'],
+        args=[
+            'cp',
+            '-Rv',
+            '/chainkeys_worker/.',  # do not use wildcard
+            '/chainkeys_for_job/',
+        ],
         volume_mounts=[
             {'name': 'computeplan',
              'mountPath': '/chainkeys_worker',
