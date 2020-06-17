@@ -21,12 +21,14 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash, get_subtuple_directory, timeit)
+                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory, timeit)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, ExceptionThread,
                                    remove_local_volume, get_or_create_local_volume, remove_image)
+
+from substrapp.tasks.k8s_backend import copy_chainkeys_to_output_pvc
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -661,6 +663,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
     # train or predict
     compute_job(
         subtuple_key=subtuple["key"],
+        compute_plan_id=compute_plan_id,
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['hash']),
         job_name=job_name,
@@ -686,6 +689,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         # eval
         compute_job(
             subtuple_key=subtuple["key"],
+            compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
             job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
@@ -760,13 +764,13 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
 
     chainkeys_volume = {}
     if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag)
+        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag,
+                                             subtuple_directory)
 
     return {**volumes, **symlinks_volume}, {**model_volume, **chainkeys_volume}
 
 
-# SHOULD BE MOVED IN K8S BACKEND
-def prepare_chainkeys(compute_plan_id, compute_plan_tag):
+def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
     chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
     chainkeys_volume = {
@@ -825,9 +829,11 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
 
     list_files(chainkeys_directory)
 
-    return chainkeys_volume
+    if settings.TASK['COMPUTE_BACKEND'] == 'k8s':
+        copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory)
+        list_files(subtuple_directory.replace('subtuple', 'outputs'))
 
-# END OF SHOULD BE MOVED IN K8S BACKEND
+    return chainkeys_volume
 
 
 def generate_command(tuple_type, subtuple, rank):
@@ -981,11 +987,6 @@ def get_volume_id(compute_plan_id, prefix='local'):
 def get_algo_image_name(algo_hash):
     # tag must be lowercase for docker
     return f'substra/algo_{algo_hash[0:8]}'.lower()
-
-
-def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
-                     compute_plan_id, 'chainkeys')
 
 
 def remove_algo_images(algo_hashes):

@@ -185,7 +185,7 @@ def docker_remove_image(image_name):
 
 @timeit
 def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                   capture_logs, environment, gpu_set, remove_image, subtuple_key):
+                   capture_logs, environment, gpu_set, remove_image, subtuple_key, compute_plan_id):
 
     docker_client = docker.from_env()
 
