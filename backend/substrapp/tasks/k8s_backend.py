@@ -19,6 +19,7 @@ REGISTRY_SCHEME = os.getenv('REGISTRY_SCHEME')
 REGISTRY_PULL_DOMAIN = os.getenv('REGISTRY_PULL_DOMAIN')
 NAMESPACE = os.getenv('NAMESPACE')
 NODE_NAME = os.getenv('NODE_NAME')
+COMPONENT = 'substra-compute'
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -258,7 +259,10 @@ def k8s_build_image(path, tag, rm):
     pod = kubernetes.client.V1Pod(
         api_version='v1',
         kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
+        metadata=kubernetes.client.V1ObjectMeta(
+            name=job_name,
+            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+        ),
         spec=spec
     )
 
@@ -494,7 +498,10 @@ def clean_outputs(subtuple_key):
     pod = kubernetes.client.V1Pod(
         api_version='v1',
         kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
+        metadata=kubernetes.client.V1ObjectMeta(
+            name=job_name,
+            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+        ),
         spec=spec
     )
 
@@ -594,7 +601,8 @@ def _k8s_compute(name, task_args, subtuple_key):
         kind='Pod',
         metadata=kubernetes.client.V1ObjectMeta(name=name,
                                                 labels={'app': name,
-                                                        'task': task_args['label']}
+                                                        'task': task_args['label'],
+                                                        'app.kubernetes.io/component': COMPONENT}
                                                 ),
         spec=spec
     )
@@ -663,7 +671,10 @@ def k8s_remove_local_volume(volume_id):
     pod = kubernetes.client.V1Pod(
         api_version='v1',
         kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
+        metadata=kubernetes.client.V1ObjectMeta(
+            name=job_name,
+            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+        ),
         spec=spec
     )
 
@@ -732,7 +743,10 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
     pod = kubernetes.client.V1Pod(
         api_version='v1',
         kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(name=job_name, labels={'app': job_name}),
+        metadata=kubernetes.client.V1ObjectMeta(
+            name=job_name,
+            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+        ),
         spec=spec
     )
 
