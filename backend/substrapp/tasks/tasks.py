@@ -28,7 +28,6 @@ from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_a
                                    list_files, do_not_raise, ExceptionThread,
                                    remove_local_volume, get_or_create_local_volume, remove_image)
 
-from substrapp.tasks.k8s_backend import copy_chainkeys_to_output_pvc
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -844,10 +843,6 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
             logger.info(f'{len(secrets)} secrets have been removed')
 
     list_files(chainkeys_directory)
-
-    if settings.TASK['COMPUTE_BACKEND'] == 'k8s':
-        copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory)
-        list_files(os.path.join(subtuple_directory.replace('subtuple', 'outputs'), 'chainkeys'))
 
     return chainkeys_volume
 
