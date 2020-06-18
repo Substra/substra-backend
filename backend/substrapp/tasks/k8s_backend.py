@@ -509,11 +509,11 @@ def clean_outputs(subtuple_key):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        security_context=get_security_context(),
+        # security_context=get_security_context(),  # issue with hostpath file permissions
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
         args=[
-            f'ls -lA /clean/ ; chown -Rv {RUN_AS_USER}:{RUN_AS_GROUP} /clean/ ; rm -rvf /clean/'
+            f'rm -rvf /clean/*'
         ],
         volume_mounts=[
             {'name': 'outputs',
@@ -552,7 +552,7 @@ def clean_outputs(subtuple_key):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
         ],
-        security_context=get_pod_security_context()
+        # security_context=get_pod_security_context()  # issue with hostpath file permissions
     )
 
     pod = kubernetes.client.V1Pod(
@@ -704,10 +704,10 @@ def k8s_remove_local_volume(volume_id):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        security_context=get_security_context(),
+        # security_context=get_security_context(),  # issue with hostpath file permissions
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
-        args=['rm -rvf /clean/'],
+        args=['rm -rvf /clean/*'],
         volume_mounts=[
             {'name': 'local',
              'mountPath': '/clean',
@@ -745,7 +745,7 @@ def k8s_remove_local_volume(volume_id):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
             },
         ],
-        security_context=get_pod_security_context()
+        # security_context=get_pod_security_context()  # issue with hostpath file permissions
     )
 
     pod = kubernetes.client.V1Pod(
@@ -791,10 +791,10 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        security_context=get_security_context(),
+        # security_context=get_security_context(),  # issue with hostpath file permissions
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
-        args=['cp -Rv /chainkeys_worker/. /chainkeys_for_job/'],
+        args=['cp -Rv /chainkeys_worker/* /chainkeys_for_job/'],
         volume_mounts=[
             {'name': 'computeplan',
              'mountPath': '/chainkeys_worker',
@@ -840,7 +840,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
         ],
-        security_context=get_pod_security_context()
+        # security_context=get_pod_security_context()  # issue with hostpath file permissions
     )
 
     pod = kubernetes.client.V1Pod(
