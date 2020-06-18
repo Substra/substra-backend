@@ -139,6 +139,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: RUN_AS_USER
+              value: {{ .Values.securityContext.runAsUser | quote}}
+            - name: RUN_AS_GROUP
+              value: {{ .Values.securityContext.runAsGroup | quote }}
+            - name: FS_GROUP
+              value: {{ .Values.securityContext.fsGroup | quote }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
