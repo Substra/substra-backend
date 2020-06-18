@@ -17,6 +17,7 @@ MEDIA_ROOT = os.getenv('MEDIA_ROOT')
 REGISTRY = os.getenv('REGISTRY')
 REGISTRY_SCHEME = os.getenv('REGISTRY_SCHEME')
 REGISTRY_PULL_DOMAIN = os.getenv('REGISTRY_PULL_DOMAIN')
+REGISTRY_DOCKER_CONFIG = os.getenv('REGISTRY_DOCKER_CONFIG')
 NAMESPACE = os.getenv('NAMESPACE')
 NODE_NAME = os.getenv('NODE_NAME')
 COMPONENT = 'substra-compute'
@@ -248,6 +249,11 @@ def k8s_build_image(path, tag, rm):
              'readOnly': True}
         ]
     )
+    if REGISTRY_DOCKER_CONFIG:
+        container.volume_mounts.append({
+            'name': 'docker-config',
+            'mountPath': '/kaniko/.docker'
+        })
 
     pod_affinity = kubernetes.client.V1Affinity(
         pod_affinity=kubernetes.client.V1PodAffinity(
@@ -283,6 +289,17 @@ def k8s_build_image(path, tag, rm):
             }
         ]
     )
+    if REGISTRY_DOCKER_CONFIG:
+        spec.volumes.append({
+            'name': 'docker-config',
+            'secret': {
+                'secretName': REGISTRY_DOCKER_CONFIG,
+                'items': [{
+                    'key': '.dockerconfigjson',
+                    'path': 'config.json'
+                }]
+            }
+        })
 
     pod = kubernetes.client.V1Pod(
         api_version='v1',

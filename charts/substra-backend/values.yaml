@@ -287,11 +287,13 @@ privateCa:
 
 
 registry:
-  local: true    # false if you use external docker-registry (host and port will be taken into account)
+  local: true    # false if you use external docker-registry (host, port and dockerConfig will be taken into account)
   host: 127.0.0.1
   port: 32000
   scheme: http
   pullDomain: 127.0.0.1:32000
+  ## The name of a Secret of type=kubernetes.io/dockerconfigjson
+  # dockerConfig: docker-config
 ## Pod Security Policy
 ## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
 psp:

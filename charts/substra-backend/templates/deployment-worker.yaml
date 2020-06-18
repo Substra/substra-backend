@@ -131,6 +131,10 @@ spec:
               value: {{ .Values.registry.scheme}}
             - name: REGISTRY_PULL_DOMAIN
               value: {{ .Values.registry.pullDomain}}
+            {{- if .Values.registry.dockerConfig }}
+            - name: REGISTRY_DOCKER_CONFIG
+              value: {{ .Values.registry.dockerConfig }}
+            {{- end }}
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
             - name: DOCKER_CACHE_PVC
