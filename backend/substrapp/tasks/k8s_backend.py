@@ -20,6 +20,9 @@ REGISTRY_PULL_DOMAIN = os.getenv('REGISTRY_PULL_DOMAIN')
 NAMESPACE = os.getenv('NAMESPACE')
 NODE_NAME = os.getenv('NODE_NAME')
 COMPONENT = 'substra-compute'
+RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
+RUN_AS_USER = os.getenv('RUN_AS_USER')
+FS_GROUP = os.getenv('FS_GROUP')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -226,7 +229,7 @@ def k8s_build_image(path, tag, rm):
     args = [
         f'--dockerfile={dockerfile_fullpath}',
         f'--context=dir://{path}',
-        f'--destination={REGISTRY}/{tag}',
+        f'--destination={REGISTRY}/{tag}:substra',
         f'--cache={str(not(rm)).lower()}'
     ]
 
@@ -235,7 +238,7 @@ def k8s_build_image(path, tag, rm):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='gcr.io/kaniko-project/executor:latest',
+        image='gcr.io/kaniko-project/executor:v0.23.0',
         args=args,
         volume_mounts=[
             {'name': 'dockerfile',
@@ -296,8 +299,6 @@ def k8s_build_image(path, tag, rm):
 
     k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
-    logger.info(pod.to_str())
-
     try:
         watch_pod(job_name)
     except Exception as e:
@@ -322,7 +323,7 @@ def k8s_build_image(path, tag, rm):
 
 def k8s_get_image(image_name):
     response = requests.get(
-        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/latest',
+        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
         headers={'Accept': 'application/json'}
     )
     if response.status_code != requests.status_codes.codes.ok:
@@ -335,7 +336,7 @@ def k8s_remove_image(image_name):
 
     try:
         response = requests.get(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/latest',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
         )
 
@@ -370,7 +371,7 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
         gpu_set = set(gpu_set.split(','))
 
     task_args = {
-        'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}',
+        'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}:substra',
         'name': job_name,
         'cpu_set': cpu_set,
         'mem_limit': memory_limit_mb,
@@ -508,10 +509,12 @@ def clean_outputs(subtuple_key):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='busybox',
-        args=['rm',
-              '-rf',
-              f'/clean/{subtuple_key}'],
+        security_context=get_security_context(),
+        image='busybox:1.31.1',
+        command=['/bin/sh', '-c'],
+        args=[
+            f'ls -lA /clean/ ; chown -Rv {RUN_AS_USER}:{RUN_AS_GROUP} /clean/ ; rm -rvf /clean/'
+        ],
         volume_mounts=[
             {'name': 'outputs',
              'mountPath': '/clean',
@@ -548,7 +551,8 @@ def clean_outputs(subtuple_key):
                 'name': 'outputs',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
-        ]
+        ],
+        security_context=get_pod_security_context()
     )
 
     pod = kubernetes.client.V1Pod(
@@ -568,6 +572,11 @@ def clean_outputs(subtuple_key):
     except Exception as e:
         logger.error(f'Cleaning failed, error: {e}')
     finally:
+        container_format_log(
+            job_name,
+            get_pod_logs(name=get_pod_name(job_name),
+                         container=job_name)
+        )
         k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
@@ -608,20 +617,13 @@ def _k8s_compute(name, task_args, subtuple_key):
     #     limits=r_limits, requests=r_requests
     # )
 
-    # security
-    security_context = kubernetes.client.V1SecurityContext(
-        privileged=False,
-        allow_privilege_escalation=False,
-        capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
-    )
-
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
         # resources=resources,
-        security_context=security_context,
+        security_context=get_security_context(),
         env=[kubernetes.client.V1EnvVar(name=env_name, value=env_value)
              for env_name, env_value in task_args['environment'].items()]
     )
@@ -649,7 +651,8 @@ def _k8s_compute(name, task_args, subtuple_key):
         restart_policy='Never',
         affinity=pod_affinity,
         containers=[container_compute],
-        volumes=volumes
+        volumes=volumes,
+        security_context=get_pod_security_context()
     )
 
     pod = kubernetes.client.V1Pod(
@@ -701,10 +704,10 @@ def k8s_remove_local_volume(volume_id):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='busybox',
-        args=['rm',
-              '-rf',
-              f'/clean/{volume_id}'],
+        security_context=get_security_context(),
+        image='busybox:1.31.1',
+        command=['/bin/sh', '-c'],
+        args=['rm -rvf /clean/'],
         volume_mounts=[
             {'name': 'local',
              'mountPath': '/clean',
@@ -741,7 +744,8 @@ def k8s_remove_local_volume(volume_id):
                 'name': 'local',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
             },
-        ]
+        ],
+        security_context=get_pod_security_context()
     )
 
     pod = kubernetes.client.V1Pod(
@@ -761,6 +765,11 @@ def k8s_remove_local_volume(volume_id):
     except Exception as e:
         logger.error(f'Cleaning failed, error: {e}')
     finally:
+        container_format_log(
+            job_name,
+            get_pod_logs(name=get_pod_name(job_name),
+                         container=job_name)
+        )
         k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
@@ -782,13 +791,10 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='busybox',
-        args=[
-            'cp',
-            '-Rv',
-            '/chainkeys_worker/.',  # do not use wildcard
-            '/chainkeys_for_job/',
-        ],
+        security_context=get_security_context(),
+        image='busybox:1.31.1',
+        command=['/bin/sh', '-c'],
+        args=['cp -Rv /chainkeys_worker/. /chainkeys_for_job/'],
         volume_mounts=[
             {'name': 'computeplan',
              'mountPath': '/chainkeys_worker',
@@ -833,7 +839,8 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
                 'name': 'outputs',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
-        ]
+        ],
+        security_context=get_pod_security_context()
     )
 
     pod = kubernetes.client.V1Pod(
@@ -867,3 +874,25 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
                 grace_period_seconds=0
             )
         )
+
+
+def get_security_context():
+
+    return kubernetes.client.V1SecurityContext(
+        privileged=False,
+        allow_privilege_escalation=False,
+        capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
+        run_as_non_root=True,
+        run_as_group=int(RUN_AS_GROUP),
+        run_as_user=int(RUN_AS_USER)
+    )
+
+
+def get_pod_security_context():
+
+    return kubernetes.client.V1PodSecurityContext(
+        run_as_non_root=True,
+        fs_group=int(FS_GROUP),
+        run_as_group=int(RUN_AS_GROUP),
+        run_as_user=int(RUN_AS_USER)
+    )
