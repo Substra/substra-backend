@@ -95,7 +95,6 @@ spec:
           {{- end }}
           - name: data-servermedias
             mountPath: /var/substra/servermedias
-            readOnly: true
           - name: statics
             mountPath: /usr/src/app/backend/statics
           - name: config
