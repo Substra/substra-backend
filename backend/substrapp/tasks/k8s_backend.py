@@ -249,8 +249,28 @@ def k8s_build_image(path, tag, rm):
         ]
     )
 
+    pod_affinity = kubernetes.client.V1Affinity(
+        pod_affinity=kubernetes.client.V1PodAffinity(
+            required_during_scheduling_ignored_during_execution=[
+                kubernetes.client.V1PodAffinityTerm(
+                    label_selector=kubernetes.client.V1LabelSelector(
+                        match_expressions=[
+                            kubernetes.client.V1LabelSelectorRequirement(
+                                key="app.kubernetes.io/component",
+                                operator="In",
+                                values=["substra-worker"]
+                            )
+                        ]
+                    ),
+                    topology_key="kubernetes.io/hostname"
+                )
+            ]
+        )
+    )
+
     spec = kubernetes.client.V1PodSpec(
         restart_policy='Never',
+        affinity=pod_affinity,
         containers=[container],
         volumes=[
             {
@@ -500,9 +520,29 @@ def clean_outputs(subtuple_key):
         ]
     )
 
+    pod_affinity = kubernetes.client.V1Affinity(
+        pod_affinity=kubernetes.client.V1PodAffinity(
+            required_during_scheduling_ignored_during_execution=[
+                kubernetes.client.V1PodAffinityTerm(
+                    label_selector=kubernetes.client.V1LabelSelector(
+                        match_expressions=[
+                            kubernetes.client.V1LabelSelectorRequirement(
+                                key="app.kubernetes.io/component",
+                                operator="In",
+                                values=["substra-worker"]
+                            )
+                        ]
+                    ),
+                    topology_key="kubernetes.io/hostname"
+                )
+            ]
+        )
+    )
+
     spec = kubernetes.client.V1PodSpec(
         restart_policy='Never',
         containers=[container],
+        affinity=pod_affinity,
         volumes=[
             {
                 'name': 'outputs',
@@ -673,9 +713,29 @@ def k8s_remove_local_volume(volume_id):
         ]
     )
 
+    pod_affinity = kubernetes.client.V1Affinity(
+        pod_affinity=kubernetes.client.V1PodAffinity(
+            required_during_scheduling_ignored_during_execution=[
+                kubernetes.client.V1PodAffinityTerm(
+                    label_selector=kubernetes.client.V1LabelSelector(
+                        match_expressions=[
+                            kubernetes.client.V1LabelSelectorRequirement(
+                                key="app.kubernetes.io/component",
+                                operator="In",
+                                values=["substra-worker"]
+                            )
+                        ]
+                    ),
+                    topology_key="kubernetes.io/hostname"
+                )
+            ]
+        )
+    )
+
     spec = kubernetes.client.V1PodSpec(
         restart_policy='Never',
         containers=[container],
+        affinity=pod_affinity,
         volumes=[
             {
                 'name': 'local',
@@ -741,9 +801,29 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
         ]
     )
 
+    pod_affinity = kubernetes.client.V1Affinity(
+        pod_affinity=kubernetes.client.V1PodAffinity(
+            required_during_scheduling_ignored_during_execution=[
+                kubernetes.client.V1PodAffinityTerm(
+                    label_selector=kubernetes.client.V1LabelSelector(
+                        match_expressions=[
+                            kubernetes.client.V1LabelSelectorRequirement(
+                                key="app.kubernetes.io/component",
+                                operator="In",
+                                values=["substra-worker"]
+                            )
+                        ]
+                    ),
+                    topology_key="kubernetes.io/hostname"
+                )
+            ]
+        )
+    )
+
     spec = kubernetes.client.V1PodSpec(
         restart_policy='Never',
         containers=[container],
+        affinity=pod_affinity,
         volumes=[
             {
                 'name': 'computeplan',
