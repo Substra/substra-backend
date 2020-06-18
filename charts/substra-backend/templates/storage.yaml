@@ -55,7 +55,7 @@ metadata:
   name: {{ template "substra.fullname" $ }}-servermedias
 spec:
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: {{ $.Values.persistence.size | quote }}
@@ -91,7 +91,7 @@ spec:
   capacity:
     storage: {{ $.Values.persistence.size | quote }}
   accessModes:
-    - ReadOnlyMany
+    - ReadWriteOnce
   hostPath:
     path: {{ $.Values.persistence.hostPath }}/servermedias
     type: DirectoryOrCreate
