@@ -39,10 +39,6 @@ spec:
                 values:
                 - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
-      {{- if .Values.securityContext.enabled }}
-      securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-      {{- end }}
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
