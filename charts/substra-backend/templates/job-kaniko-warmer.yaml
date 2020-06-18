@@ -11,6 +11,20 @@ metadata:
 spec:
   template:
     spec:
+      # Run the cache warmer on the same node as the worker.
+      # This pod and the kaniko pod both use the "docker-cache" PV.
+      # To be successfully mounted on both pods, this PV and the 2 pods all need to
+      # be scheduled on the same node.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" . }}-worker
+            topologyKey: kubernetes.io/hostname
       containers:
       - name: kaniko-cache-warmer
         image: gcr.io/kaniko-project/warmer:latest
