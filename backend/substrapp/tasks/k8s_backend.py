@@ -1,14 +1,13 @@
 import math
+import json
 import kubernetes
 import requests
 import os
 import logging
 
-from django.conf import settings
+from substrapp.utils import timeit, to_bool
 
-from substrapp.utils import get_subtuple_directory, get_chainkeys_directory, timeit, to_bool
-from distutils.dir_util import copy_tree
-
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 SC_ON_CLEAN = to_bool(os.getenv('SC_ON_CLEAN'))
+IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -130,9 +130,11 @@ def watch_pod(name):
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
-    attempt = 1
+    attempt = 0
     max_attempts = 5
-    while (not finished) and (attempt <= max_attempts):
+    error = None
+
+    while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
                 name=name,
@@ -142,10 +144,29 @@ def watch_pod(name):
 
             if api_response.status.container_statuses:
                 for container in api_response.status.container_statuses:
-                    finished = True if container.state.terminated is not None else False
+                    if container.state.terminated:
+                        finished = True
+                        error = None
+                        if container.state.terminated.exit_code != 0:
+                            error = container.state.terminated.reason
+
+                    else:
+                        # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
+                        #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
+                        if container.state.waiting and container.state.waiting.reason not in ['ContainerCreating']:
+                            error = container.state.waiting.reason
+                            attempt += 1
+                            logger.error(f'Container for pod "{name}" waiting status '
+                                         f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
+                            time.sleep(0.5)
+
         except Exception as e:
-            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
             attempt += 1
+            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
+
+    if not finished or error is not None:
+        raise Exception(f'Pod {name} could not have a completed state '
+                        f'after {attempt}/{max_attempts} attempts : {error}')
 
 
 def get_pod_name(name):
@@ -219,7 +240,7 @@ def k8s_build_image(path, tag, rm):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    job_name = f'kaniko-{tag.split("/")[-1].replace("_", "-")}'
+    job_name = f'{IMAGE_BUILDER}-{tag.split("/")[-1].replace("_", "-")}'
 
     logger.info(f'The pod {NAMESPACE}/{job_name} started')
 
@@ -227,19 +248,68 @@ def k8s_build_image(path, tag, rm):
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
-    args = [
-        f'--dockerfile={dockerfile_fullpath}',
-        f'--context=dir://{path}',
-        f'--destination={REGISTRY}/{tag}:substra',
-        f'--cache={str(not(rm)).lower()}'
-    ]
+    if IMAGE_BUILDER == 'kaniko':
+        image = 'gcr.io/kaniko-project/executor:v0.23.0'
+        command = None
+        mount_path_cache = '/cache'
+        args = [
+            f'--dockerfile={dockerfile_fullpath}',
+            f'--context=dir://{path}',
+            f'--destination={REGISTRY}/{tag}:substra',
+            f'--cache={str(not(rm)).lower()}'
+        ]
 
-    if REGISTRY_SCHEME == 'http':
-        args.append('--insecure')
+        if REGISTRY_SCHEME == 'http':
+            args.append('--insecure')
+
+        pod_security_context = None
+        container_security_context = None
+
+    elif IMAGE_BUILDER == 'makisu':
+        image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
+        command = None
+        mount_path_cache = '/tmp'
+        args = [
+            'build',
+            f'--push={REGISTRY}',
+            f'-t={tag}:substra',
+        ]
+
+        if REGISTRY_SCHEME == 'http':
+            registry_config = json.dumps(
+                {"*": {"*": {"security": {"tls": {"client": {"disabled": True}}}}}}
+            )
+            args.extend(['--registry-config', registry_config])
+
+        args.append(path)
+
+        pod_security_context = get_pod_security_context()
+        container_security_context = get_security_context()
+
+    elif IMAGE_BUILDER == 'dind':
+        image = 'docker:19.03-dind'
+        command = ['/bin/sh', '-c']
+        mount_path_cache = '/var/lib/docker'
+        wait_for_docker = 'while ! (docker ps); do sleep 1; done'
+        build_args = (
+            f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
+            f'docker push {REGISTRY}/{tag}:substra')
+
+        if REGISTRY_SCHEME == 'http':
+            extra_options = f'--insecure-registry={REGISTRY}'
+        else:
+            extra_options = ''
+        args = [f'(dockerd-entrypoint.sh {extra_options}) & {wait_for_docker}; {build_args}']
+
+        pod_security_context = None
+        container_security_context = kubernetes.client.V1SecurityContext(
+            privileged=True
+        )
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='gcr.io/kaniko-project/executor:v0.23.0',
+        image=image,
+        command=command,
         args=args,
         volume_mounts=[
             {'name': 'dockerfile',
@@ -248,9 +318,10 @@ def k8s_build_image(path, tag, rm):
              'readOnly': True},
 
             {'name': 'cache',
-             'mountPath': '/cache',
-             'readOnly': True}
-        ]
+             'mountPath': mount_path_cache,
+             'readOnly': (IMAGE_BUILDER == 'kaniko')}
+        ],
+        security_context=container_security_context
     )
 
     pod_affinity = kubernetes.client.V1Affinity(
@@ -285,7 +356,8 @@ def k8s_build_image(path, tag, rm):
                 'name': 'cache',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
             }
-        ]
+        ],
+        security_context=pod_security_context
     )
 
     pod = kubernetes.client.V1Pod(
@@ -303,15 +375,14 @@ def k8s_build_image(path, tag, rm):
     try:
         watch_pod(job_name)
     except Exception as e:
-        logger.error(f'Kaniko build failed, error: {e}')
-        raise BuildError(f'Kaniko build failed, error: {e}')
-    else:
+        logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
+        raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
+    finally:
         container_format_log(
             job_name,
             get_pod_logs(name=get_pod_name(job_name),
                          container=job_name)
         )
-    finally:
         k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
@@ -385,7 +456,6 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
 
     try:
         _k8s_compute(job_name, task_args, subtuple_key)
-        copy_outputs(subtuple_key, compute_plan_id)
     except Exception as e:
         logger.exception(e)
         raise
@@ -399,7 +469,6 @@ def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes
             )
 
         delete_compute_pod(job_name)
-        clean_outputs(subtuple_key)
 
         # Remove images
         if remove_image:
@@ -412,8 +481,6 @@ def generate_volumes(volume_binds, name, subtuple_key):
 
     for path, bind in volume_binds.items():
 
-        volume_processed = False
-
         # Handle local volume
         if 'local-' in path:
             volume_mounts.append({
@@ -425,32 +492,12 @@ def generate_volumes(volume_binds, name, subtuple_key):
                 {'name': 'local',
                  'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}}
             )
-
-            volume_processed = True
-
-        # Handle outputs paths which need to be writable
-        for subpath in ['/pred', '/output_model', '/perf', '/export', '/chainkeys']:
-            if subpath in path and bind['mode'] == 'rw':
-                volume_mounts.append({
-                    'name': 'outputs',
-                    'mountPath': bind['bind'],
-                    'subPath': f'{subtuple_key}{subpath}'
-                })
-                volumes.append(
-                    {'name': 'outputs',
-                     'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}}
-                )
-
-                volume_processed = True
-
-        if not volume_processed:
-            # Handle read-only paths
-
-            # /HOST/PATH/servermedias/...
+        else:
             if '/servermedias/' in path:
+                # /MOUNT/PATH/servermedias/...
                 volume_name = 'servermedias'
-            # /HOST/PATH/medias/volume_name/...
             else:
+                # /MOUNT/PATH/medias/volume_name/...
                 volume_name = path.split('/medias/')[-1].split('/')[0]
 
             subpath = path.split(f'/{volume_name}/')[-1]
@@ -466,7 +513,7 @@ def generate_volumes(volume_binds, name, subtuple_key):
                 'name': volume_name,
                 'mountPath': bind['bind'],
                 'subPath': subpath,
-                'readOnly': True
+                'readOnly': bind['mode'] != 'rw'
 
             })
 
@@ -481,113 +528,6 @@ def generate_volumes(volume_binds, name, subtuple_key):
     return volume_mounts, volumes
 
 
-def copy_outputs(subtuple_key, compute_plan_id):
-    subtuple_directory = get_subtuple_directory(subtuple_key)
-    for output_folder in ['output_model', 'pred', 'perf', 'export']:
-        content_dst_path = os.path.join(subtuple_directory, output_folder)
-        content_path = content_dst_path.replace('subtuple', 'outputs')
-        if os.path.exists(content_path):
-            logger.info(f'Copy {content_path} to {content_dst_path}')
-            copy_tree(content_path, content_dst_path)
-
-    if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
-        # Copy chainkeys content
-        content_dst_path = get_chainkeys_directory(compute_plan_id)
-        # Content path is under subtuple_key and not compute_plan_id as we copy from worker to
-        # ouputs/chainkeys folder before launching the ml job
-        content_path = os.path.join(subtuple_directory, 'chainkeys').replace('subtuple', 'outputs')
-        if os.path.exists(content_path):
-            logger.info(f'Copy {content_path} to {content_dst_path}')
-            copy_tree(content_path, content_dst_path)
-
-
-@timeit
-def clean_outputs(subtuple_key):
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-    job_name = f'clean-outputs-{subtuple_key[:10]}'
-
-    container = kubernetes.client.V1Container(
-        name=job_name,
-        security_context=get_security_context(SC_ON_CLEAN),
-        image='busybox:1.31.1',
-        command=['/bin/sh', '-c'],
-        args=[
-            f'rm -rvf /clean/*'
-        ],
-        volume_mounts=[
-            {'name': 'outputs',
-             'mountPath': '/clean',
-             'subPath': subtuple_key},
-
-        ]
-    )
-
-    pod_affinity = kubernetes.client.V1Affinity(
-        pod_affinity=kubernetes.client.V1PodAffinity(
-            required_during_scheduling_ignored_during_execution=[
-                kubernetes.client.V1PodAffinityTerm(
-                    label_selector=kubernetes.client.V1LabelSelector(
-                        match_expressions=[
-                            kubernetes.client.V1LabelSelectorRequirement(
-                                key="app.kubernetes.io/component",
-                                operator="In",
-                                values=["substra-worker"]
-                            )
-                        ]
-                    ),
-                    topology_key="kubernetes.io/hostname"
-                )
-            ]
-        )
-    )
-
-    spec = kubernetes.client.V1PodSpec(
-        restart_policy='Never',
-        containers=[container],
-        affinity=pod_affinity,
-        volumes=[
-            {
-                'name': 'outputs',
-                'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
-            },
-        ],
-        security_context=get_pod_security_context(SC_ON_CLEAN)
-    )
-
-    pod = kubernetes.client.V1Pod(
-        api_version='v1',
-        kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(
-            name=job_name,
-            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
-        ),
-        spec=spec
-    )
-
-    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
-
-    try:
-        watch_pod(job_name)
-    except Exception as e:
-        logger.error(f'Cleaning failed, error: {e}')
-    finally:
-        container_format_log(
-            job_name,
-            get_pod_logs(name=get_pod_name(job_name),
-                         container=job_name)
-        )
-        k8s_client.delete_namespaced_pod(
-            name=job_name,
-            namespace=NAMESPACE,
-            body=kubernetes.client.V1DeleteOptions(
-                propagation_policy='Foreground',
-                grace_period_seconds=0
-            )
-        )
-
-
 @timeit
 def _k8s_compute(name, task_args, subtuple_key):
 
@@ -596,34 +536,12 @@ def _k8s_compute(name, task_args, subtuple_key):
 
     volume_mounts, volumes = generate_volumes(task_args['volumes'], name, subtuple_key)
 
-    # Resources
-
-    # Set minimal requests
-
-    # r_requests = {
-    #     'cpu': 1,
-    #     'memory': '2000m'
-    # }
-
-    # # Disable for now, we let kubernetes decide
-    # r_limits = {
-    #     'cpu': len(task_args['cpu_set']),
-    #     'memory': task_args['mem_limit']
-    # }
-
-    # if task_args['gpu_set'] is not None:
-    #     r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
-
-    # resources = kubernetes.client.V1ResourceRequirements(
-    #     limits=r_limits, requests=r_requests
-    # )
-
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
         args=task_args['command'].split(" ") if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
-        # resources=resources,
+        # resources=get_resources(task_args),
         security_context=get_security_context(),
         env=[kubernetes.client.V1EnvVar(name=env_name, value=env_value)
              for env_name, env_value in task_args['environment'].items()]
@@ -701,7 +619,7 @@ def k8s_remove_local_volume(volume_id):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
-    job_name = f'clean-outputs-{volume_id[:20]}'
+    job_name = f'clean-local-volume-{volume_id[:20]}'
 
     container = kubernetes.client.V1Container(
         name=job_name,
@@ -781,102 +699,6 @@ def k8s_remove_local_volume(volume_id):
         )
 
 
-def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
-
-    subtuple_key = subtuple_directory.split('subtuple/')[-1]
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-    job_name = f'copy-chainkeys-{subtuple_key[:10]}'
-    chainkeys_directory_subpath = chainkeys_directory.split('computeplan/')[-1]
-
-    container = kubernetes.client.V1Container(
-        name=job_name,
-        security_context=get_security_context(SC_ON_CLEAN),
-        image='busybox:1.31.1',
-        command=['/bin/sh', '-c'],
-        args=['cp -Rv /chainkeys_worker/* /chainkeys_for_job/'],
-        volume_mounts=[
-            {'name': 'computeplan',
-             'mountPath': '/chainkeys_worker',
-             'subPath': chainkeys_directory_subpath,
-             'readOnly': True},
-            {'name': 'outputs',
-             'mountPath': '/chainkeys_for_job',
-             'subPath': f'{subtuple_key}/chainkeys'},
-
-        ]
-    )
-
-    pod_affinity = kubernetes.client.V1Affinity(
-        pod_affinity=kubernetes.client.V1PodAffinity(
-            required_during_scheduling_ignored_during_execution=[
-                kubernetes.client.V1PodAffinityTerm(
-                    label_selector=kubernetes.client.V1LabelSelector(
-                        match_expressions=[
-                            kubernetes.client.V1LabelSelectorRequirement(
-                                key="app.kubernetes.io/component",
-                                operator="In",
-                                values=["substra-worker"]
-                            )
-                        ]
-                    ),
-                    topology_key="kubernetes.io/hostname"
-                )
-            ]
-        )
-    )
-
-    spec = kubernetes.client.V1PodSpec(
-        restart_policy='Never',
-        containers=[container],
-        affinity=pod_affinity,
-        volumes=[
-            {
-                'name': 'computeplan',
-                'persistentVolumeClaim': {'claimName': K8S_PVC['COMPUTEPLAN_PVC']}
-            },
-            {
-                'name': 'outputs',
-                'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
-            },
-        ],
-        security_context=get_pod_security_context(SC_ON_CLEAN)
-    )
-
-    pod = kubernetes.client.V1Pod(
-        api_version='v1',
-        kind='Pod',
-        metadata=kubernetes.client.V1ObjectMeta(
-            name=job_name,
-            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
-        ),
-        spec=spec
-    )
-
-    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
-
-    try:
-        watch_pod(job_name)
-    except Exception as e:
-        logger.error(f'Cleaning failed, error: {e}')
-    finally:
-        container_format_log(
-            job_name,
-            get_pod_logs(name=get_pod_name(job_name),
-                         container=job_name)
-        )
-
-        k8s_client.delete_namespaced_pod(
-            name=job_name,
-            namespace=NAMESPACE,
-            body=kubernetes.client.V1DeleteOptions(
-                propagation_policy='Foreground',
-                grace_period_seconds=0
-            )
-        )
-
-
 def get_security_context(enabled=True):
     if enabled:
         return kubernetes.client.V1SecurityContext(
@@ -901,3 +723,24 @@ def get_pod_security_context(enabled=True):
         )
 
     return None
+
+
+def get_resources(task_args):
+
+    r_requests = {
+        'cpu': 1,
+        'memory': '2000m'
+    }
+
+    # Disable for now, we let kubernetes decide
+    r_limits = {
+        'cpu': len(task_args['cpu_set']),
+        'memory': task_args['mem_limit']
+    }
+
+    if task_args['gpu_set'] is not None:
+        r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
+
+    return kubernetes.client.V1ResourceRequirements(
+        limits=r_limits, requests=r_requests
+    )

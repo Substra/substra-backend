@@ -15,6 +15,11 @@ backend:
     enabled: false
     hostPath: /var/run/docker.sock
 
+  imageBuilder:
+    # type: kaniko
+    # type: dind
+    type: makisu
+
   image:
     repository: substrafoundation/substra-backend
     tag: latest
@@ -119,12 +124,6 @@ persistence:
       readOnly:
         server: true
         worker: false
-    # Writable by jobs only
-    - name: outputs
-      size: "10Gi"
-      readOnly:
-        server: true
-        worker: true
     # Writable by jobs only
     - name: local
       size: "10Gi"
