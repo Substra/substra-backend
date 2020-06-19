@@ -1,13 +1,13 @@
 import math
+import json
 import kubernetes
 import requests
 import os
 import logging
 
-from django.conf import settings
-
 from substrapp.utils import timeit, to_bool
 
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +23,7 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 SC_ON_CLEAN = to_bool(os.getenv('SC_ON_CLEAN'))
+IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -129,9 +130,11 @@ def watch_pod(name):
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
-    attempt = 1
+    attempt = 0
     max_attempts = 5
-    while (not finished) and (attempt <= max_attempts):
+    error = None
+
+    while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
                 name=name,
@@ -141,10 +144,29 @@ def watch_pod(name):
 
             if api_response.status.container_statuses:
                 for container in api_response.status.container_statuses:
-                    finished = True if container.state.terminated is not None else False
+                    if container.state.terminated:
+                        finished = True
+                        error = None
+                        if container.state.terminated.exit_code != 0:
+                            error = container.state.terminated.reason
+
+                    else:
+                        # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
+                        #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
+                        if container.state.waiting and container.state.waiting.reason not in ['ContainerCreating']:
+                            error = container.state.waiting.reason
+                            attempt += 1
+                            logger.error(f'Container for pod "{name}" waiting status '
+                                         f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
+                            time.sleep(0.5)
+
         except Exception as e:
-            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
             attempt += 1
+            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
+
+    if not finished or error is not None:
+        raise Exception(f'Pod {name} could not have a completed state '
+                        f'after {attempt}/{max_attempts} attempts : {error}')
 
 
 def get_pod_name(name):
@@ -218,7 +240,7 @@ def k8s_build_image(path, tag, rm):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    job_name = f'kaniko-{tag.split("/")[-1].replace("_", "-")}'
+    job_name = f'{IMAGE_BUILDER}-{tag.split("/")[-1].replace("_", "-")}'
 
     logger.info(f'The pod {NAMESPACE}/{job_name} started')
 
@@ -226,19 +248,68 @@ def k8s_build_image(path, tag, rm):
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
-    args = [
-        f'--dockerfile={dockerfile_fullpath}',
-        f'--context=dir://{path}',
-        f'--destination={REGISTRY}/{tag}:substra',
-        f'--cache={str(not(rm)).lower()}'
-    ]
+    if IMAGE_BUILDER == 'kaniko':
+        image = 'gcr.io/kaniko-project/executor:v0.23.0'
+        command = None
+        mount_path_cache = '/cache'
+        args = [
+            f'--dockerfile={dockerfile_fullpath}',
+            f'--context=dir://{path}',
+            f'--destination={REGISTRY}/{tag}:substra',
+            f'--cache={str(not(rm)).lower()}'
+        ]
 
-    if REGISTRY_SCHEME == 'http':
-        args.append('--insecure')
+        if REGISTRY_SCHEME == 'http':
+            args.append('--insecure')
+
+        pod_security_context = None
+        container_security_context = None
+
+    elif IMAGE_BUILDER == 'makisu':
+        image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
+        command = None
+        mount_path_cache = '/tmp'
+        args = [
+            'build',
+            f'--push={REGISTRY}',
+            f'-t={tag}:substra',
+        ]
+
+        if REGISTRY_SCHEME == 'http':
+            registry_config = json.dumps(
+                {"*": {"*": {"security": {"tls": {"client": {"disabled": True}}}}}}
+            )
+            args.extend(['--registry-config', registry_config])
+
+        args.append(path)
+
+        pod_security_context = get_pod_security_context()
+        container_security_context = get_security_context()
+
+    elif IMAGE_BUILDER == 'dind':
+        image = 'docker:19.03-dind'
+        command = ['/bin/sh', '-c']
+        mount_path_cache = '/var/lib/docker'
+        wait_for_docker = 'while ! (docker ps); do sleep 1; done'
+        build_args = (
+            f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
+            f'docker push {REGISTRY}/{tag}:substra')
+
+        if REGISTRY_SCHEME == 'http':
+            extra_options = f'--insecure-registry={REGISTRY}'
+        else:
+            extra_options = ''
+        args = [f'(dockerd-entrypoint.sh {extra_options}) & {wait_for_docker}; {build_args}']
+
+        pod_security_context = None
+        container_security_context = kubernetes.client.V1SecurityContext(
+            privileged=True
+        )
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image='gcr.io/kaniko-project/executor:v0.23.0',
+        image=image,
+        command=command,
         args=args,
         volume_mounts=[
             {'name': 'dockerfile',
@@ -247,9 +318,10 @@ def k8s_build_image(path, tag, rm):
              'readOnly': True},
 
             {'name': 'cache',
-             'mountPath': '/cache',
-             'readOnly': True}
-        ]
+             'mountPath': mount_path_cache,
+             'readOnly': (IMAGE_BUILDER == 'kaniko')}
+        ],
+        security_context=container_security_context
     )
 
     pod_affinity = kubernetes.client.V1Affinity(
@@ -284,7 +356,8 @@ def k8s_build_image(path, tag, rm):
                 'name': 'cache',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
             }
-        ]
+        ],
+        security_context=pod_security_context
     )
 
     pod = kubernetes.client.V1Pod(
@@ -302,15 +375,14 @@ def k8s_build_image(path, tag, rm):
     try:
         watch_pod(job_name)
     except Exception as e:
-        logger.error(f'Kaniko build failed, error: {e}')
-        raise BuildError(f'Kaniko build failed, error: {e}')
-    else:
+        logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
+        raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
+    finally:
         container_format_log(
             job_name,
             get_pod_logs(name=get_pod_name(job_name),
                          container=job_name)
         )
-    finally:
         k8s_client.delete_namespaced_pod(
             name=job_name,
             namespace=NAMESPACE,
