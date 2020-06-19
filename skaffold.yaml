@@ -130,6 +130,8 @@ deploy:
           backend:
             settings: dev
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
+            imageBuilder:
+              type: makisu
             ingress:
               enabled: true
               hosts:
@@ -167,6 +169,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+          securityContext:
+            onClean: false
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -195,6 +199,8 @@ deploy:
           backend:
             settings: dev
             defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
+            imageBuilder:
+              type: dind
             ingress:
               enabled: true
               hosts:
@@ -232,6 +238,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+          securityContext:
+            onClean: false
 
 profiles:
   - name: prod

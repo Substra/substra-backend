@@ -39,10 +39,6 @@ spec:
                 values:
                 - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
-      {{- if .Values.securityContext.enabled }}
-      securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-      {{- end }}
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
@@ -139,6 +135,16 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
+            - name: RUN_AS_USER
+              value: {{ .Values.securityContext.runAsUser | quote}}
+            - name: RUN_AS_GROUP
+              value: {{ .Values.securityContext.runAsGroup | quote }}
+            - name: FS_GROUP
+              value: {{ .Values.securityContext.fsGroup | quote }}
+            - name: SC_ON_CLEAN
+              value: {{ .Values.securityContext.onClean | quote }}
+            - name: IMAGE_BUILDER
+              value: {{ .Values.backend.imageBuilder.type}}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
