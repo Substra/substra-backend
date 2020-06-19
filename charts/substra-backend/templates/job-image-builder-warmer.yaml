@@ -1,0 +1,96 @@
+{{- if eq .Values.backend.imageBuilder.type "kaniko" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-kaniko-cache-warmer
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-kaniko-cache-warmer
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  template:
+    spec:
+      # Run the cache warmer on the same node as the worker.
+      # This pod and the kaniko pod both use the "docker-cache" PV.
+      # To be successfully mounted on both pods, this PV and the 2 pods all need to
+      # be scheduled on the same node.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" . }}-worker
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: kaniko-cache-warmer
+        image: gcr.io/kaniko-project/warmer:latest
+        args:
+        - "--cache-dir=/cache"
+        {{- range .Values.prePulledImages }}
+        - "--image={{ . }}"
+        {{- end }}
+        volumeMounts:
+        - name: kaniko-cache
+          mountPath: /cache
+          readOnly: False
+      restartPolicy: Never
+      volumes:
+      - name: kaniko-cache
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-docker-cache
+  backoffLimit: 4
+
+{{ end}}
+
+{{- if eq .Values.backend.imageBuilder.type "dind" }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-dind-cache-warmer
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-dind-cache-warmer
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  template:
+    spec:
+      # Run the cache warmer on the same node as the worker.
+      # This pod and the kaniko pod both use the "docker-cache" PV.
+      # To be successfully mounted on both pods, this PV and the 2 pods all need to
+      # be scheduled on the same node.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" . }}-worker
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: dind-cache-warmer
+        image: docker:19.03-dind
+        command: ['/bin/sh', '-c']
+        args:
+        - "dockerd-entrypoint.sh & while ! (docker ps); do sleep 1; done; docker pull {{ join "; docker pull " .Values.prePulledImages }}"
+        volumeMounts:
+        - name: dind-cache
+          mountPath: /var/lib/docker
+          readOnly: False
+        securityContext:
+            privileged: true
+      restartPolicy: Never
+      volumes:
+      - name: dind-cache
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-docker-cache
+  backoffLimit: 4
+{{ end }}
