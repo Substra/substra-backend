@@ -251,6 +251,7 @@ def k8s_build_image(path, tag, rm):
     if IMAGE_BUILDER == 'kaniko':
         image = 'gcr.io/kaniko-project/executor:v0.23.0'
         command = None
+        mount_path_dockerfile = path
         mount_path_cache = '/cache'
         args = [
             f'--dockerfile={dockerfile_fullpath}',
@@ -268,12 +269,13 @@ def k8s_build_image(path, tag, rm):
     elif IMAGE_BUILDER == 'makisu':
         image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
         command = None
-        mount_path_cache = '/tmp'
+        mount_path_dockerfile = '/makisu-context'
+        mount_path_cache = None
         args = [
             'build',
             f'--push={REGISTRY}',
             f'-t={tag}:substra',
-            '--modifyfs=false',
+            '--modifyfs=true',
         ]
 
         if REGISTRY_SCHEME == 'http':
@@ -282,14 +284,15 @@ def k8s_build_image(path, tag, rm):
             )
             args.extend(['--registry-config', registry_config])
 
-        args.append(path)
+        args.append(mount_path_dockerfile)
 
-        pod_security_context = get_pod_security_context()
-        container_security_context = get_security_context()
+        pod_security_context = None #get_pod_security_context()
+        container_security_context = None #get_security_context()
 
     elif IMAGE_BUILDER == 'dind':
         image = 'docker:19.03-dind'
         command = ['/bin/sh', '-c']
+        mount_path_dockerfile = path
         mount_path_cache = '/var/lib/docker'
         wait_for_docker = 'while ! (docker ps); do sleep 1; done'
         build_args = (
@@ -314,16 +317,19 @@ def k8s_build_image(path, tag, rm):
         args=args,
         volume_mounts=[
             {'name': 'dockerfile',
-             'mountPath': path,
+             'mountPath': mount_path_dockerfile,
              'subPath': dockerfile_mount_subpath,
-             'readOnly': True},
-
-            {'name': 'cache',
-             'mountPath': mount_path_cache,
-             'readOnly': (IMAGE_BUILDER == 'kaniko')}
+             'readOnly': (IMAGE_BUILDER != 'makisu')}
         ],
         security_context=container_security_context
     )
+
+    if mount_path_cache is not None:
+        container.volume_mounts.append({
+            'name': 'cache',
+            'mountPath': mount_path_cache,
+            'readOnly': (IMAGE_BUILDER == 'kaniko')
+        })
 
     pod_affinity = kubernetes.client.V1Affinity(
         pod_affinity=kubernetes.client.V1PodAffinity(
@@ -352,14 +358,16 @@ def k8s_build_image(path, tag, rm):
             {
                 'name': 'dockerfile',
                 'persistentVolumeClaim': {'claimName': K8S_PVC['SUBTUPLE_PVC']}
-            },
-            {
-                'name': 'cache',
-                'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
             }
         ],
         security_context=pod_security_context
     )
+
+    if mount_path_cache is not None:
+        spec.volumes.append({
+                'name': 'cache',
+                'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
+            })
 
     pod = kubernetes.client.V1Pod(
         api_version='v1',
