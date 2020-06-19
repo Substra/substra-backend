@@ -6,7 +6,7 @@ import logging
 
 from django.conf import settings
 
-from substrapp.utils import get_subtuple_directory, get_chainkeys_directory, timeit
+from substrapp.utils import get_subtuple_directory, get_chainkeys_directory, timeit, to_bool
 from distutils.dir_util import copy_tree
 
 
@@ -23,6 +23,7 @@ COMPONENT = 'substra-compute'
 RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
+SC_ON_CLEAN = to_bool(os.getenv('SC_ON_CLEAN'))
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -509,7 +510,7 @@ def clean_outputs(subtuple_key):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        # security_context=get_security_context(),  # issue with hostpath file permissions
+        security_context=get_security_context(SC_ON_CLEAN),
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
         args=[
@@ -552,7 +553,7 @@ def clean_outputs(subtuple_key):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
         ],
-        # security_context=get_pod_security_context()  # issue with hostpath file permissions
+        security_context=get_pod_security_context(SC_ON_CLEAN)
     )
 
     pod = kubernetes.client.V1Pod(
@@ -704,7 +705,7 @@ def k8s_remove_local_volume(volume_id):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        # security_context=get_security_context(),  # issue with hostpath file permissions
+        security_context=get_security_context(SC_ON_CLEAN),
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
         args=['rm -rvf /clean/*'],
@@ -745,7 +746,7 @@ def k8s_remove_local_volume(volume_id):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
             },
         ],
-        # security_context=get_pod_security_context()  # issue with hostpath file permissions
+        security_context=get_pod_security_context(SC_ON_CLEAN)
     )
 
     pod = kubernetes.client.V1Pod(
@@ -791,7 +792,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        # security_context=get_security_context(),  # issue with hostpath file permissions
+        security_context=get_security_context(SC_ON_CLEAN),
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
         args=['cp -Rv /chainkeys_worker/* /chainkeys_for_job/'],
@@ -840,7 +841,7 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['OUTPUTS_PVC']}
             },
         ],
-        # security_context=get_pod_security_context()  # issue with hostpath file permissions
+        security_context=get_pod_security_context(SC_ON_CLEAN)
     )
 
     pod = kubernetes.client.V1Pod(
@@ -876,23 +877,27 @@ def copy_chainkeys_to_output_pvc(chainkeys_directory, subtuple_directory):
         )
 
 
-def get_security_context():
+def get_security_context(enabled=True):
+    if enabled:
+        return kubernetes.client.V1SecurityContext(
+            privileged=False,
+            allow_privilege_escalation=False,
+            capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
+            run_as_non_root=True,
+            run_as_group=int(RUN_AS_GROUP),
+            run_as_user=int(RUN_AS_USER)
+        )
 
-    return kubernetes.client.V1SecurityContext(
-        privileged=False,
-        allow_privilege_escalation=False,
-        capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
-        run_as_non_root=True,
-        run_as_group=int(RUN_AS_GROUP),
-        run_as_user=int(RUN_AS_USER)
-    )
+    return None
 
 
-def get_pod_security_context():
+def get_pod_security_context(enabled=True):
+    if enabled:
+        return kubernetes.client.V1PodSecurityContext(
+            run_as_non_root=True,
+            fs_group=int(FS_GROUP),
+            run_as_group=int(RUN_AS_GROUP),
+            run_as_user=int(RUN_AS_USER)
+        )
 
-    return kubernetes.client.V1PodSecurityContext(
-        run_as_non_root=True,
-        fs_group=int(FS_GROUP),
-        run_as_group=int(RUN_AS_GROUP),
-        run_as_user=int(RUN_AS_USER)
-    )
+    return None
