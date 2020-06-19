@@ -246,7 +246,12 @@ def k8s_build_image(path, tag, rm):
         build_args = (
             f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
             f'docker push {REGISTRY}/{tag}:substra')
-        args = [f'(dockerd-entrypoint.sh --insecure-registry={REGISTRY}) & {wait_for_docker}; {build_args}']
+
+        if REGISTRY_SCHEME == 'http':
+            extra_options = f'--insecure-registry={REGISTRY}'
+        else:
+            extra_options = ''
+        args = [f'(dockerd-entrypoint.sh {extra_options}) & {wait_for_docker}; {build_args}']
 
     container = kubernetes.client.V1Container(
         name=job_name,
