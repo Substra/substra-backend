@@ -17,7 +17,8 @@ backend:
 
   imageBuilder:
     # type: kaniko
-    type: dind
+    # type: dind
+    type: makisu
 
   image:
     repository: substrafoundation/substra-backend

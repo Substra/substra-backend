@@ -94,3 +94,11 @@ spec:
           claimName: {{ include "substra.fullname" $ }}-docker-cache
   backoffLimit: 4
 {{ end }}
+
+{{- if eq .Values.backend.imageBuilder.type "makisu" }}
+# TO DO
+# Makisu cannot pull image through a cmd
+# We need to fake a build of the image to cache it
+# Maybe using a configmap Dockerfile for each element of prePulledImages
+# FROM <image>
+{{ end }}

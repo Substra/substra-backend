@@ -1,4 +1,5 @@
 import math
+import json
 import kubernetes
 import requests
 import os
@@ -238,6 +239,24 @@ def k8s_build_image(path, tag, rm):
         if REGISTRY_SCHEME == 'http':
             args.append('--insecure')
 
+    elif IMAGE_BUILDER == 'makisu':
+        image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
+        command = None
+        mount_path_cache = '/tmp'
+        args = [
+            'build',
+            f'--push={REGISTRY}',
+            f'-t={tag}:substra',
+        ]
+
+        if REGISTRY_SCHEME == 'http':
+            registry_config = json.dumps(
+                {"*": {"*": {"security": {"tls": {"client": {"disabled": True}}}}}}
+            )
+            args.extend(['--registry-config', registry_config])
+
+        args.append(path)
+
     elif IMAGE_BUILDER == 'dind':
         image = 'docker:19.03-dind'
         command = ['/bin/sh', '-c']
@@ -266,7 +285,7 @@ def k8s_build_image(path, tag, rm):
 
             {'name': 'cache',
              'mountPath': mount_path_cache,
-             'readOnly': (IMAGE_BUILDER != 'dind')}
+             'readOnly': (IMAGE_BUILDER == 'kaniko')}
         ],
         security_context=kubernetes.client.V1SecurityContext(
             privileged=(IMAGE_BUILDER == 'dind')
