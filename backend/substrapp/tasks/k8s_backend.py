@@ -273,6 +273,7 @@ def k8s_build_image(path, tag, rm):
             'build',
             f'--push={REGISTRY}',
             f'-t={tag}:substra',
+            '--modifyfs=false',
         ]
 
         if REGISTRY_SCHEME == 'http':
