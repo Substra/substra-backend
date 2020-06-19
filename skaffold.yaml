@@ -167,6 +167,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+          securityContext:
+            onClean: false
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -232,6 +234,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+          securityContext:
+            onClean: false
 
 profiles:
   - name: prod

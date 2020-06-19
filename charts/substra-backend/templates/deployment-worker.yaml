@@ -141,6 +141,8 @@ spec:
               value: {{ .Values.securityContext.runAsGroup | quote }}
             - name: FS_GROUP
               value: {{ .Values.securityContext.fsGroup | quote }}
+            - name: SC_ON_CLEAN
+              value: {{ .Values.securityContext.onClean | quote }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
