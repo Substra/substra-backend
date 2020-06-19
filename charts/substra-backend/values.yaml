@@ -11,6 +11,11 @@ backend:
     enabled: false
     hostPath: /var/run/docker.sock
 
+  imageBuilder:
+    # type: kaniko
+    # type: dind
+    type: makisu
+
   image:
     repository: substrafoundation/substra-backend
     tag: latest
