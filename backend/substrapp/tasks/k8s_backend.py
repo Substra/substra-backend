@@ -286,8 +286,8 @@ def k8s_build_image(path, tag, rm):
 
         args.append(mount_path_dockerfile)
 
-        pod_security_context = None #get_pod_security_context()
-        container_security_context = None #get_security_context()
+        pod_security_context = None  # get_pod_security_context()
+        container_security_context = None  # get_security_context()
 
     elif IMAGE_BUILDER == 'dind':
         image = 'docker:19.03-dind'
@@ -365,9 +365,9 @@ def k8s_build_image(path, tag, rm):
 
     if mount_path_cache is not None:
         spec.volumes.append({
-                'name': 'cache',
-                'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
-            })
+            'name': 'cache',
+            'persistentVolumeClaim': {'claimName': K8S_PVC['DOCKER_CACHE_PVC']}
+        })
 
     pod = kubernetes.client.V1Pod(
         api_version='v1',
