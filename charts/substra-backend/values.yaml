@@ -296,7 +296,6 @@ psp:
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
 securityContext:
   enabled: True
-  onClean: True
   fsGroup: 1001
   runAsUser: 1001
   runAsGroup: 1001
