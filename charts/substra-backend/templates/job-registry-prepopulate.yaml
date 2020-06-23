@@ -1,3 +1,4 @@
+{{ if .Values.registry.local }}
 {{ range $index, $item :=  .Values.registry.prepopulate }}
 ---
 apiVersion: apps/v1
@@ -58,4 +59,5 @@ metadata:
 data:
     Dockerfile: |
       FROM {{ .sourceRegistry }}/{{ .image }}
+{{- end }}
 {{- end }}
