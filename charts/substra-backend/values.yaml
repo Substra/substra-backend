@@ -291,6 +291,11 @@ registry:
   port: 32000
   scheme: http
   pullDomain: 127.0.0.1:32000
+  prepopulate: []
+    # - image: substrafoundation/substra-tools:0.5.0
+    #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
+    #   dockerConfigSecretName: docker-config
+
 ## Pod Security Policy
 ## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
 psp:
