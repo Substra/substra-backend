@@ -45,7 +45,7 @@ spec:
           claimName: {{ include "substra.fullname" $ }}-docker-cache
   backoffLimit: 4
 
-{{ end}}
+{{- end}}
 
 {{- if eq .Values.backend.imageBuilder.type "dind" }}
 apiVersion: batch/v1
@@ -62,7 +62,7 @@ spec:
   template:
     spec:
       # Run the cache warmer on the same node as the worker.
-      # This pod and the kaniko pod both use the "docker-cache" PV.
+      # This pod and the dind pod both use the "docker-cache" PV.
       # To be successfully mounted on both pods, this PV and the 2 pods all need to
       # be scheduled on the same node.
       affinity:
@@ -93,7 +93,7 @@ spec:
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-docker-cache
   backoffLimit: 4
-{{ end }}
+{{- end }}
 
 {{- if eq .Values.backend.imageBuilder.type "makisu" }}
 # TO DO
@@ -101,4 +101,71 @@ spec:
 # We need to fake a build of the image to cache it
 # Maybe using a configmap Dockerfile for each element of prePulledImages
 # FROM <image>
-{{ end }}
+
+{{ range $index, $img :=  .Values.prePulledImages }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" $ }}-makisu-cache-warmer-{{ $index }}
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-makisu-cache-warmer
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}
+spec:
+  template:
+    spec:
+      # Run the cache warmer on the same node as the worker.
+      # This pod and the makisu pod both use the "docker-cache" PV.
+      # To be successfully mounted on both pods, this PV and the 2 pods all need to
+      # be scheduled on the same node.
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app.kubernetes.io/name
+                operator: In
+                values:
+                - {{ template "substra.name" $ }}-worker
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: makisu-cache-warmer
+        image: gcr.io/uber-container-tools/makisu:v0.2.0
+        args:
+          - "build"
+          - "-t={{ $img }}:warm"
+          - "/makisu-context"
+        volumeMounts:
+        - name: makisu-cache
+          mountPath: /makisu-storage
+          readOnly: False
+        - name: dockerfile
+          mountPath: /makisu-context
+          readOnly: true
+      restartPolicy: Never
+      volumes:
+      - name: makisu-cache
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-docker-cache
+      - name: dockerfile
+        configMap:
+          name: {{ template "substra.fullname" $ }}-makisu-dockerfile-{{ $index }}
+  backoffLimit: 4
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" $ }}-makisu-dockerfile-{{ $index }}
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}
+data:
+  Dockerfile: |
+    FROM {{ $img }}
+---
+{{- end }}
+{{- end }}
