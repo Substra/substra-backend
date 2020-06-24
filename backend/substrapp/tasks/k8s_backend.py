@@ -315,6 +315,33 @@ def k8s_build_image(path, tag, rm):
         pod_security_context = get_pod_security_context(root=True)
         container_security_context = get_security_context(root=True, privileged=True)
 
+    elif IMAGE_BUILDER == 'img':
+
+        image = 'r.j3ss.co/img:v0.5.9'
+        command = ['/bin/sh', '-c']
+        mount_path_dockerfile = path
+        mount_path_cache = '/home/user/.local/'
+
+        if REGISTRY_SCHEME == 'http':
+            extra_options = f'--insecure-registry=true'
+        else:
+            extra_options = ''
+
+        args = [(
+            f'img build -t "{REGISTRY}/{tag}:substra" {path} ;'
+            f'img push {extra_options} {REGISTRY}/{tag}:substra')]
+
+        capabilities = ['SETUID', 'SETGID', 'CAP_SYS_ADMIN']
+
+        if NODE_NAME not in ['docker-desktop', 'minikube']:
+            pod_security_context = get_pod_security_context(user=1000, group=1000, fs_group=1000)
+            container_security_context = get_security_context(user=1000, group=1000, add_capabilities=capabilities)
+        else:
+            pod_security_context = None
+            container_security_context = None
+
+    print(pod_security_context, container_security_context)
+
     container = kubernetes.client.V1Container(
         name=job_name,
         image=image,
@@ -713,7 +740,8 @@ def k8s_remove_local_volume(volume_id):
         )
 
 
-def get_security_context(enabled=True, root=False, privileged=False, add_capabilities=None):
+def get_security_context(enabled=True, root=False, privileged=False, add_capabilities=None,
+                         user=None, group=None):
     if enabled:
         if not root:
             return kubernetes.client.V1SecurityContext(
@@ -722,8 +750,8 @@ def get_security_context(enabled=True, root=False, privileged=False, add_capabil
                 capabilities=kubernetes.client.V1Capabilities(drop=['ALL'],
                                                               add=add_capabilities),
                 run_as_non_root=True,
-                run_as_group=int(RUN_AS_GROUP),
-                run_as_user=int(RUN_AS_USER)
+                run_as_group=group if group is not None else int(RUN_AS_GROUP),
+                run_as_user=user if user is not None else int(RUN_AS_USER)
             )
         else:
             return kubernetes.client.V1SecurityContext(
@@ -736,14 +764,15 @@ def get_security_context(enabled=True, root=False, privileged=False, add_capabil
     return None
 
 
-def get_pod_security_context(enabled=True, root=False):
+def get_pod_security_context(enabled=True, root=False,
+                             user=None, group=None, fs_group=None):
     if enabled:
         if not root:
             return kubernetes.client.V1PodSecurityContext(
                 run_as_non_root=True,
-                fs_group=int(FS_GROUP),
-                run_as_group=int(RUN_AS_GROUP),
-                run_as_user=int(RUN_AS_USER)
+                fs_group=fs_group if fs_group is not None else int(FS_GROUP),
+                run_as_group=group if group is not None else int(RUN_AS_GROUP),
+                run_as_user=user if user is not None else int(RUN_AS_USER)
             )
 
     return None
