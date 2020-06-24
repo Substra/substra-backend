@@ -5,7 +5,7 @@ import requests
 import os
 import logging
 
-from substrapp.utils import timeit, to_bool
+from substrapp.utils import timeit
 
 import time
 
@@ -22,7 +22,6 @@ COMPONENT = 'substra-compute'
 RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
-SC_ON_CLEAN = to_bool(os.getenv('SC_ON_CLEAN'))
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 
 K8S_PVC = {
@@ -148,13 +147,13 @@ def watch_pod(name):
                         finished = True
                         error = None
                         if container.state.terminated.exit_code != 0:
-                            error = container.state.terminated.reason
+                            error = f'{container.state.terminated.reason} - {container.state.terminated.message}'
 
                     else:
                         # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
                         #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
                         if container.state.waiting and container.state.waiting.reason not in ['ContainerCreating']:
-                            error = container.state.waiting.reason
+                            error = f'{container.state.waiting.reason} - {container.state.waiting.message}'
                             attempt += 1
                             logger.error(f'Container for pod "{name}" waiting status '
                                          f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
@@ -165,8 +164,7 @@ def watch_pod(name):
             logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
 
     if not finished or error is not None:
-        raise Exception(f'Pod {name} could not have a completed state '
-                        f'after {attempt}/{max_attempts} attempts : {error}')
+        raise Exception(f'Pod {name} could not have a completed state : {error}')
 
 
 def get_pod_name(name):
@@ -249,6 +247,8 @@ def k8s_build_image(path, tag, rm):
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
     if IMAGE_BUILDER == 'kaniko':
+        # kaniko build can be launched without privilege but
+        # it needs some capabilities and to be root
         image = 'gcr.io/kaniko-project/executor:v0.23.0'
         command = None
         mount_path_dockerfile = path
@@ -263,19 +263,24 @@ def k8s_build_image(path, tag, rm):
         if REGISTRY_SCHEME == 'http':
             args.append('--insecure')
 
-        pod_security_context = None
-        container_security_context = None
+        # https://github.com/GoogleContainerTools/kaniko/issues/778
+        capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
+        pod_security_context = get_pod_security_context(root=True)
+        container_security_context = get_security_context(root=True, add_capabilities=capabilities)
 
     elif IMAGE_BUILDER == 'makisu':
+        # makisu build can be launched without privilege but
+        # it needs to be root
         image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
         command = None
         mount_path_dockerfile = '/makisu-context'
-        mount_path_cache = None
+        mount_path_cache = '/makisu-storage'
         args = [
             'build',
             f'--push={REGISTRY}',
             f'-t={tag}:substra',
             '--modifyfs=true',
+            f'--storage={mount_path_cache}'
         ]
 
         if REGISTRY_SCHEME == 'http':
@@ -286,10 +291,12 @@ def k8s_build_image(path, tag, rm):
 
         args.append(mount_path_dockerfile)
 
-        pod_security_context = None  # get_pod_security_context()
-        container_security_context = None  # get_security_context()
+        pod_security_context = get_pod_security_context(root=True)
+        container_security_context = get_security_context(root=True)
 
     elif IMAGE_BUILDER == 'dind':
+        # dind build must be launched with privilege
+
         image = 'docker:19.03-dind'
         command = ['/bin/sh', '-c']
         mount_path_dockerfile = path
@@ -305,10 +312,8 @@ def k8s_build_image(path, tag, rm):
             extra_options = ''
         args = [f'(dockerd-entrypoint.sh {extra_options}) & {wait_for_docker}; {build_args}']
 
-        pod_security_context = None
-        container_security_context = kubernetes.client.V1SecurityContext(
-            privileged=True
-        )
+        pod_security_context = get_pod_security_context(root=True)
+        container_security_context = get_security_context(root=True, privileged=True)
 
     container = kubernetes.client.V1Container(
         name=job_name,
@@ -632,7 +637,7 @@ def k8s_remove_local_volume(volume_id):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        security_context=get_security_context(SC_ON_CLEAN),
+        security_context=get_security_context(root=True),
         image='busybox:1.31.1',
         command=['/bin/sh', '-c'],
         args=['rm -rvf /clean/*'],
@@ -673,7 +678,7 @@ def k8s_remove_local_volume(volume_id):
                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}
             },
         ],
-        security_context=get_pod_security_context(SC_ON_CLEAN)
+        security_context=get_pod_security_context(root=True)
     )
 
     pod = kubernetes.client.V1Pod(
@@ -708,28 +713,38 @@ def k8s_remove_local_volume(volume_id):
         )
 
 
-def get_security_context(enabled=True):
+def get_security_context(enabled=True, root=False, privileged=False, add_capabilities=None):
     if enabled:
-        return kubernetes.client.V1SecurityContext(
-            privileged=False,
-            allow_privilege_escalation=False,
-            capabilities=kubernetes.client.V1Capabilities(drop=['ALL']),
-            run_as_non_root=True,
-            run_as_group=int(RUN_AS_GROUP),
-            run_as_user=int(RUN_AS_USER)
-        )
+        if not root:
+            return kubernetes.client.V1SecurityContext(
+                privileged=privileged,
+                allow_privilege_escalation=privileged,
+                capabilities=kubernetes.client.V1Capabilities(drop=['ALL'],
+                                                              add=add_capabilities),
+                run_as_non_root=True,
+                run_as_group=int(RUN_AS_GROUP),
+                run_as_user=int(RUN_AS_USER)
+            )
+        else:
+            return kubernetes.client.V1SecurityContext(
+                privileged=privileged,
+                allow_privilege_escalation=privileged,
+                capabilities=kubernetes.client.V1Capabilities(drop=['ALL'],
+                                                              add=add_capabilities),
+            )
 
     return None
 
 
-def get_pod_security_context(enabled=True):
+def get_pod_security_context(enabled=True, root=False):
     if enabled:
-        return kubernetes.client.V1PodSecurityContext(
-            run_as_non_root=True,
-            fs_group=int(FS_GROUP),
-            run_as_group=int(RUN_AS_GROUP),
-            run_as_user=int(RUN_AS_USER)
-        )
+        if not root:
+            return kubernetes.client.V1PodSecurityContext(
+                run_as_non_root=True,
+                fs_group=int(FS_GROUP),
+                run_as_group=int(RUN_AS_GROUP),
+                run_as_user=int(RUN_AS_USER)
+            )
 
     return None
 
