@@ -20,6 +20,10 @@ backend:
     # type: dind
     type: kaniko
 
+    kaniko:
+      mirror: false  # If true, kaniko will pull base images from the local registry
+      registry: null  # Pull the kaniko image from a custom registry instead of GCR
+
   image:
     repository: substrafoundation/substra-backend
     tag: latest

@@ -23,6 +23,8 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
+KANIKO_MIRROR = os.getenv('KANIKO_MIRROR')
+KANIKO_REGISTRY = os.getenv('KANIKO_REGISTRY')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -249,7 +251,8 @@ def k8s_build_image(path, tag, rm):
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
         # it needs some capabilities and to be root
-        image = 'gcr.io/kaniko-project/executor:v0.23.0'
+        kaniko_image = 'kaniko-project/executor:v0.23.0'
+        image = f'gcr.io/{kaniko_image}' if not KANIKO_REGISTRY else f'{KANIKO_REGISTRY}/{kaniko_image}'
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
@@ -262,6 +265,9 @@ def k8s_build_image(path, tag, rm):
 
         if REGISTRY_SCHEME == 'http':
             args.append('--insecure')
+
+        if KANIKO_MIRROR:
+            args.append(f'--registry-mirror={KANIKO_MIRROR}')
 
         # https://github.com/GoogleContainerTools/kaniko/issues/778
         capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
