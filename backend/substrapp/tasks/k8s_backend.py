@@ -24,7 +24,7 @@ RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 KANIKO_IMAGE = os.getenv('KANIKO_IMAGE')
-KANIKO_MIRROR = os.getenv('KANIKO_MIRROR')
+KANIKO_MIRROR = os.getenv('KANIKO_MIRROR').lower() == 'true'
 KANIKO_REGISTRY = os.getenv('KANIKO_REGISTRY')
 
 K8S_PVC = {
