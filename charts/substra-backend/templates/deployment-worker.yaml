@@ -143,6 +143,8 @@ spec:
               value: {{ .Values.securityContext.fsGroup | quote }}
             - name: IMAGE_BUILDER
               value: {{ .Values.backend.imageBuilder.type}}
+            - name: KANIKO_IMAGE
+              value: {{ .Values.backend.imageBuilder.kaniko.image}}
             - name: KANIKO_MIRROR
               value: {{ .Values.backend.imageBuilder.kaniko.mirror}}
             - name: KANIKO_REGISTRY

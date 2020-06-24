@@ -23,6 +23,7 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
+KANIKO_IMAGE = os.getenv('KANIKO_IMAGE')
 KANIKO_MIRROR = os.getenv('KANIKO_MIRROR')
 KANIKO_REGISTRY = os.getenv('KANIKO_REGISTRY')
 
@@ -251,8 +252,7 @@ def k8s_build_image(path, tag, rm):
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
         # it needs some capabilities and to be root
-        kaniko_image = 'kaniko-project/executor:v0.23.0'
-        image = f'gcr.io/{kaniko_image}' if not KANIKO_REGISTRY else f'{KANIKO_REGISTRY}/{kaniko_image}'
+        image = KANIKO_IMAGE if not KANIKO_REGISTRY else KANIKO_IMAGE.replace('gcr.io', KANIKO_REGISTRY)
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
