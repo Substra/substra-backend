@@ -16,9 +16,9 @@ backend:
     hostPath: /var/run/docker.sock
 
   imageBuilder:
-    # type: kaniko
+    # type: makisu
     # type: dind
-    type: makisu
+    type: kaniko
 
   image:
     repository: substrafoundation/substra-backend
