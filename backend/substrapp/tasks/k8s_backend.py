@@ -254,7 +254,7 @@ def k8s_build_image(path, tag, rm):
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
         # it needs some capabilities and to be root
-        image = KANIKO_IMAGE if not KANIKO_REGISTRY else KANIKO_IMAGE.replace('gcr.io', KANIKO_REGISTRY)
+        image = KANIKO_IMAGE if not KANIKO_REGISTRY else f'{KANIKO_REGISTRY}/{KANIKO_IMAGE}'
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
