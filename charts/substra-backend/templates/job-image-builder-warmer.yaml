@@ -1,3 +1,4 @@
+{{- if .Values.prePulledImages }}
 {{- if eq .Values.backend.imageBuilder.type "kaniko" }}
 apiVersion: batch/v1
 kind: Job
@@ -167,5 +168,6 @@ data:
   Dockerfile: |
     FROM {{ $img }}
 ---
+{{- end }}
 {{- end }}
 {{- end }}

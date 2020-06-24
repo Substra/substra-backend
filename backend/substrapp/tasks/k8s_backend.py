@@ -5,6 +5,7 @@ import requests
 import os
 import logging
 
+from django.conf import settings
 from substrapp.utils import timeit
 
 import time
@@ -23,9 +24,10 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
-KANIKO_IMAGE = os.getenv('KANIKO_IMAGE')
-KANIKO_MIRROR = os.getenv('KANIKO_MIRROR').lower() == 'true'
-KANIKO_REGISTRY = os.getenv('KANIKO_REGISTRY')
+KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
+KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
+KANIKO_REGISTRY = settings.TASK['KANIKO_REGISTRY']
+
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
