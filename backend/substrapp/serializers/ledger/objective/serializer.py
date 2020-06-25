@@ -1,6 +1,7 @@
 from rest_framework import serializers
 # from django.contrib.sites.models import Site
 from django.conf import settings
+from rest_framework.fields import CharField, DictField
 from rest_framework.reverse import reverse
 
 from substrapp import ledger
@@ -16,6 +17,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
     test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
+    metadata = DictField(child=CharField(), required=False, allow_null=True)
 
     def create(self, validated_data):
         instance = self.initial_data.get('instance')
@@ -24,6 +26,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         permissions = validated_data.get('permissions')
         test_data_manager_key = validated_data.get('test_data_manager_key', '')
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
+        metadata = validated_data.get('metadata')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
@@ -42,6 +45,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorizedIDs': permissions.get('authorized_ids'),
-            }}
+            }},
+            'metadata': metadata
         }
         return ledger.create_objective(args, instance.pkhash)

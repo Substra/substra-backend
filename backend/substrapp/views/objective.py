@@ -63,6 +63,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
+            'metadata': request.data.get('metadata')
         }
         ledger_data.update({'instance': instance})
         ledger_serializer = LedgerObjectiveSerializer(data=ledger_data,

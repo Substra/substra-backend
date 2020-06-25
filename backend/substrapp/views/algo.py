@@ -44,6 +44,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         ledger_data = {
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
+            'metadata': request.data.get('metadata')
         }
 
         # init ledger serializer

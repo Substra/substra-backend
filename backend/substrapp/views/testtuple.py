@@ -36,7 +36,8 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             'traintuple_key': request.data.get('traintuple_key'),
             'data_manager_key': request.data.get('data_manager_key', ''),
             'test_data_sample_keys': request.data.get('test_data_sample_keys'),
-            'tag': request.data.get('tag', '')
+            'tag': request.data.get('tag', ''),
+            'metadata': request.data.get('metadata')
         }
 
         serializer = self.get_serializer(data=data)

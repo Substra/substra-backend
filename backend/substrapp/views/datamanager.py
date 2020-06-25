@@ -45,6 +45,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'permissions': request.data.get('permissions'),
             'type': request.data.get('type'),
             'objective_key': request.data.get('objective_key', ''),
+            'metadata': request.data.get('metadata')
         }
 
         # create on db

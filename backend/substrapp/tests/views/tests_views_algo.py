@@ -207,7 +207,7 @@ class AlgoViewTests(APITestCase):
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
-                }
+                },
             }),
             'file': open(algo_path, 'rb'),
             'description': open(description_path, 'rb'),
@@ -216,7 +216,6 @@ class AlgoViewTests(APITestCase):
         with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
 
             mcreate.return_value = {}
-
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
         self.assertEqual(response.data['pkhash'], pkhash)
