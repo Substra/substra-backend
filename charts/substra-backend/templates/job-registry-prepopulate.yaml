@@ -1,0 +1,63 @@
+{{ if .Values.registry.local }}
+{{ range $index, $item :=  .Values.registry.prepopulate }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" $ }}-registry-prepopulate-{{ $index }}
+  labels:
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
+    app.kubernetes.io/part-of: {{ template "substra.name" $ }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+    spec:
+      initContainers:
+      - name: kaniko
+        image: {{ $.Values.backend.imageBuilder.kaniko.image }}
+        args: ["--context=/docker-context",
+                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
+                "--insecure"]
+        volumeMounts:
+          - name: dockerfile
+            mountPath: /docker-context
+          {{- if .dockerConfigSecretName }}
+          - name: docker-config
+            mountPath: /kaniko/.docker
+          {{- end }}
+      containers:
+      - image: gcr.io/google-containers/pause:2.0
+        name: pause
+      volumes:
+      - name: dockerfile
+        configMap:
+          name: {{ template "substra.fullname" $ }}-registry-prepopulate-dockerfile-{{ $index }}
+      {{- if .dockerConfigSecretName }}
+      - name: docker-config
+        secret:
+          secretName: {{ .dockerConfigSecretName }}
+          items:
+          - key: .dockerconfigjson
+            path: config.json
+      {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: {{ template "substra.fullname" $ }}-registry-prepopulate-dockerfile-{{ $index }}
+data:
+    Dockerfile: |
+      FROM {{ .sourceRegistry }}/{{ .image }}
+{{- end }}
+{{- end }}
