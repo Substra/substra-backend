@@ -16,6 +16,13 @@ backend:
     # type: dind
     type: kaniko
 
+    kaniko:
+      image: gcr.io/kaniko-project/executor:v0.23.0
+      mirror: false  # If true, kaniko will pull base images from the local registry
+
+  compute:
+    registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
+
   image:
     repository: substrafoundation/substra-backend
     tag: latest
@@ -287,6 +294,13 @@ registry:
   port: 32000
   scheme: http
   pullDomain: 127.0.0.1:32000
+
+  ## Local registry pre-populate
+  prepopulate: []
+    # - image: substrafoundation/substra-tools:0.5.0
+    #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
+    #   dockerConfigSecretName: docker-config
+
 ## Pod Security Policy
 ## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
 psp:
