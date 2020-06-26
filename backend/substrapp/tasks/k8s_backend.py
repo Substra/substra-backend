@@ -5,6 +5,7 @@ import requests
 import os
 import logging
 
+from django.conf import settings
 from substrapp.utils import timeit
 
 import time
@@ -23,6 +24,10 @@ RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
 IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
+KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
+KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
+COMPUTE_REGISTRY = settings.TASK['COMPUTE_REGISTRY']
+
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -249,7 +254,7 @@ def k8s_build_image(path, tag, rm):
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
         # it needs some capabilities and to be root
-        image = 'gcr.io/kaniko-project/executor:v0.23.0'
+        image = KANIKO_IMAGE
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
@@ -262,6 +267,11 @@ def k8s_build_image(path, tag, rm):
 
         if REGISTRY_SCHEME == 'http':
             args.append('--insecure')
+
+        if KANIKO_MIRROR:
+            args.append(f'--registry-mirror={REGISTRY}')
+            if REGISTRY_SCHEME == 'http':
+                args.append(f'--insecure-pull')
 
         # https://github.com/GoogleContainerTools/kaniko/issues/778
         capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
@@ -317,7 +327,7 @@ def k8s_build_image(path, tag, rm):
 
     container = kubernetes.client.V1Container(
         name=job_name,
-        image=image,
+        image=image if not COMPUTE_REGISTRY else f'{COMPUTE_REGISTRY}/{image}',
         command=command,
         args=args,
         volume_mounts=[
@@ -634,11 +644,12 @@ def k8s_remove_local_volume(volume_id):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
     job_name = f'clean-local-volume-{volume_id[:20]}'
+    image = 'busybox:1.31.1'
 
     container = kubernetes.client.V1Container(
         name=job_name,
         security_context=get_security_context(root=True),
-        image='busybox:1.31.1',
+        image=image if not COMPUTE_REGISTRY else f'{COMPUTE_REGISTRY}/{image}',
         command=['/bin/sh', '-c'],
         args=['rm -rvf /clean/*'],
         volume_mounts=[
