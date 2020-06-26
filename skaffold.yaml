@@ -131,7 +131,7 @@ deploy:
             settings: dev
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
             imageBuilder:
-              type: makisu
+              type: dind
             ingress:
               enabled: true
               hosts:
@@ -169,6 +169,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+            - name: CELERY_WORKER_CONCURRENCY
+              value: "4"
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -236,6 +238,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+            - name: CELERY_WORKER_CONCURRENCY
+              value: "4"
 
 profiles:
   - name: prod
