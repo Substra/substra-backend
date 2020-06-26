@@ -495,6 +495,9 @@ def do_populate():
         'data_manager_key': data_manager_org1_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': 'substra',
+        'out_trunk_model_permissions': {
+            'authorized_ids': [],
+        },
     }
 
     composite_traintuple_key = get_or_create(data, org_0, 'composite_traintuple')
