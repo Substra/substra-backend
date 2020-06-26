@@ -84,7 +84,12 @@ spec:
         - "dockerd-entrypoint.sh & while ! (docker ps); do sleep 1; done; docker pull {{ join "; docker pull " .Values.prePulledImages }}"
         volumeMounts:
         - name: dind-cache
-          mountPath: /var/lib/docker
+          mountPath: /var/lib/docker/image
+          subPath: image
+          readOnly: False
+        - name: dind-cache
+          mountPath: /var/lib/docker/overlay2
+          subPath: overlay2
           readOnly: False
         securityContext:
             privileged: true
