@@ -290,7 +290,8 @@ def k8s_build_image(path, tag, rm):
         mount_path_dockerfile = '/makisu-context'
         # if celery worker concurrency > 1 we cannot share /makisu-storage between builder pods
         # it raises errors
-        mount_path_cache = None if celery_worker_concurrency > 1 else '/makisu-storage'
+        # mount_path_cache = None if celery_worker_concurrency > 1 else '/makisu-storage'
+        mount_path_cache = '/makisu-storage'
         mount_subpath_cache = []
         args = [
             'build',

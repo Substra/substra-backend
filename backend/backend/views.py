@@ -19,8 +19,9 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         user = serializer.validated_data['user']
 
         # token should be new each time, remove the old one
-        Token.objects.filter(user=user).delete()
-        token = Token.objects.create(user=user)
+        # Token.objects.filter(user=user).delete()
+        # token = Token.objects.create(user=user)
+        token, created = Token.objects.get_or_create(user=user)
 
         return Response({
             'token': token.key,
