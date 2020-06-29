@@ -76,23 +76,49 @@ spec:
                 values:
                 - {{ template "substra.name" . }}-worker
             topologyKey: kubernetes.io/hostname
-      containers:
-      - name: dind-cache-warmer
+      initContainers:
+      - name: populate-warmup-folder
         image: docker:19.03-dind
         command: ['/bin/sh', '-c']
         args:
         - "dockerd-entrypoint.sh & while ! (docker ps); do sleep 1; done; docker pull {{ join "; docker pull " .Values.prePulledImages }}"
         volumeMounts:
         - name: dind-cache
-          mountPath: /var/lib/docker/image
-          subPath: image
-          readOnly: False
-        - name: dind-cache
-          mountPath: /var/lib/docker/overlay2
-          subPath: overlay2
+          mountPath: /var/lib/docker
+          subPath: warm
           readOnly: False
         securityContext:
             privileged: true
+      - name: copy-to-cache
+        image: alpine:latest
+        command: ['sh', '-c']
+        args:
+        - |
+          if [ ${CONCURRENCY} -eq 1 ]; then
+            mv ${WARM_PATH}/* ${CACHE_PATH}/
+          else
+            for i in `seq ${CONCURRENCY}`; do
+              cp -R ${WARM_PATH} ${CACHE_PATH}/$i;
+            done
+          fi
+
+          rm -rf ${WARM_PATH}
+          find ${CACHE_PATH} -maxdepth 2
+        env:
+          - name: CONCURRENCY
+            value: {{ .Values.celeryworker.concurrency | quote }}
+          - name: CACHE_PATH
+            value: /var/lib/docker
+          - name: WARM_PATH
+            value: /var/lib/docker/warm
+        volumeMounts:
+        - name: dind-cache
+          mountPath: /var/lib/docker
+          readOnly: False
+      containers:
+      - name: success
+        image: alpine:latest
+        command: ['sh', '-c', 'echo Job completed.']
       restartPolicy: Never
       volumes:
       - name: dind-cache
@@ -136,8 +162,8 @@ spec:
                 values:
                 - {{ template "substra.name" $ }}-worker
             topologyKey: kubernetes.io/hostname
-      containers:
-      - name: makisu-cache-warmer
+      initContainers:
+      - name: populate-warmup-folder
         image: gcr.io/uber-container-tools/makisu:v0.2.0
         args:
           - "build"
@@ -147,10 +173,41 @@ spec:
         volumeMounts:
         - name: makisu-cache
           mountPath: /makisu-storage
+          subPath: warm-{{ $index }}
           readOnly: False
         - name: dockerfile
           mountPath: /makisu-context
           readOnly: true
+      - name: copy-to-cache
+        image: alpine:latest
+        command: ['sh', '-c']
+        args:
+        - |
+          if [ ${CONCURRENCY} -eq 1 ]; then
+            mv ${WARM_PATH}/* ${CACHE_PATH}/
+          else
+            for i in `seq ${CONCURRENCY}`; do
+              cp -R ${WARM_PATH} ${CACHE_PATH}/$i;
+            done
+          fi
+
+          rm -rf ${WARM_PATH}
+          find ${CACHE_PATH} -maxdepth 2
+        env:
+          - name: CONCURRENCY
+            value: {{ $.Values.celeryworker.concurrency | quote }}
+          - name: CACHE_PATH
+            value: /makisu-storage
+          - name: WARM_PATH
+            value: /makisu-storage/warm-{{ $index }}
+        volumeMounts:
+        - name: makisu-cache
+          mountPath: /makisu-storage
+          readOnly: False
+      containers:
+      - name: success
+        image: alpine:latest
+        command: ['sh', '-c', 'echo Job completed.']
       restartPolicy: Never
       volumes:
       - name: makisu-cache
