@@ -173,7 +173,9 @@ deploy:
             - name: BUILD_IMAGE
               value: 'True'
             - name: CELERY_WORKER_CONCURRENCY
-              value: "4"
+              value: '4'
+            - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
+              value: '120'
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -245,7 +247,9 @@ deploy:
             - name: BUILD_IMAGE
               value: 'True'
             - name: CELERY_WORKER_CONCURRENCY
-              value: "4"
+              value: '4'
+            - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
+              value: '120'
 
 profiles:
   - name: prod

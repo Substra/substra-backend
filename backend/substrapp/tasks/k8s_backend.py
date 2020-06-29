@@ -9,6 +9,7 @@ from django.conf import settings
 from django.conf import settings
 from substrapp.utils import timeit
 import time
+import random
 
 logger = logging.getLogger(__name__)
 
@@ -128,6 +129,43 @@ def k8s_gpu_used(task_label):
                 gpu_used += int(getattr(container.resources.limits, 'nvidia.com/gpu', 0))
 
     return [','.join(range(gpu_used))]
+
+
+def k8s_get_cache_index():
+
+    # Get cached index used from k8s through the API
+    # Because the execution may be remote
+    celery_worker_concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
+
+    if celery_worker_concurrency == 1:
+        return None
+
+    cache_list = list(range(1, celery_worker_concurrency + 1))
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    cache_index = None
+    while cache_index is None:
+
+        cache_used = []
+
+        api_response = k8s_client.list_namespaced_pod(
+            NAMESPACE,
+            label_selector=f'task=build'
+        )
+
+        for pod in api_response.items:
+            pod_cache_index = pod.metadata.labels.get('cache-index', None)
+            if pod_cache_index:
+                cache_used.append(int(pod_cache_index))
+
+        res = [i for i in cache_list if i not in cache_used]
+
+        if res:
+            cache_index = random.choice(res)
+
+    return str(cache_index)
 
 
 def watch_pod(name):
@@ -252,7 +290,8 @@ def k8s_build_image(path, tag, rm):
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
-    celery_worker_concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
+    logger.info(f'Get cache_index for cache sharing')
+    cache_index = k8s_get_cache_index()
 
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
@@ -261,7 +300,7 @@ def k8s_build_image(path, tag, rm):
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
-        mount_subpath_cache = []
+
         args = [
             f'--dockerfile={dockerfile_fullpath}',
             f'--context=dir://{path}',
@@ -288,11 +327,7 @@ def k8s_build_image(path, tag, rm):
         image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
         command = None
         mount_path_dockerfile = '/makisu-context'
-        # if celery worker concurrency > 1 we cannot share /makisu-storage between builder pods
-        # it raises errors
-        # mount_path_cache = None if celery_worker_concurrency > 1 else '/makisu-storage'
         mount_path_cache = '/makisu-storage'
-        mount_subpath_cache = []
         args = [
             'build',
             f'--push={REGISTRY}',
@@ -319,12 +354,8 @@ def k8s_build_image(path, tag, rm):
         image = 'docker:19.03-dind'
         command = ['/bin/sh', '-c']
         mount_path_dockerfile = path
-        # if celery worker concurrency > 1 we cannot share /makisu-storage between builder pods
-        # it raises errors
-        # mount_path_cache = None if celery_worker_concurrency > 1 else '/var/lib/docker'
-        # mount_subpath_cache = [] if celery_worker_concurrency > 1 else ['overlay2', 'image']
         mount_path_cache = '/var/lib/docker'
-        mount_subpath_cache = ['overlay2', 'image']
+
         wait_for_docker = 'while ! (docker ps); do sleep 1; done'
         build_args = (
             f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
@@ -354,20 +385,12 @@ def k8s_build_image(path, tag, rm):
     )
 
     if mount_path_cache is not None:
-        if mount_subpath_cache:
-            for subpath_cache in mount_subpath_cache:
-                container.volume_mounts.append({
-                    'name': 'cache',
-                    'mountPath': os.path.join(mount_path_cache, subpath_cache),
-                    'subPath': subpath_cache,
-                    'readOnly': (IMAGE_BUILDER == 'kaniko')
-                })
-        else:
-            container.volume_mounts.append({
-                'name': 'cache',
-                'mountPath': mount_path_cache,
-                'readOnly': (IMAGE_BUILDER == 'kaniko')
-            })
+        container.volume_mounts.append({
+            'name': 'cache',
+            'mountPath': mount_path_cache,
+            'subPath': cache_index,
+            'readOnly': (IMAGE_BUILDER == 'kaniko')
+        })
 
     pod_affinity = kubernetes.client.V1Affinity(
         pod_affinity=kubernetes.client.V1PodAffinity(
@@ -412,7 +435,9 @@ def k8s_build_image(path, tag, rm):
         kind='Pod',
         metadata=kubernetes.client.V1ObjectMeta(
             name=job_name,
-            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+            labels={'app': job_name, 'task': 'build',
+                    'cache-index': str(cache_index) if cache_index is not None else '',
+                    'app.kubernetes.io/component': COMPONENT}
         ),
         spec=spec
     )
