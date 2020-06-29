@@ -109,6 +109,8 @@ spec:
               value: "1"
             - name: "CELERYWORKER_IMAGE"
               value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
+            - name: "CELERY_WORKER_CONCURRENCY"
+              value: {{ .Values.celeryworker.concurrency | quote }}
             {{- if .Values.privateCa.enabled }}
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt

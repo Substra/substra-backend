@@ -125,6 +125,7 @@ deploy:
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           celeryworker:
+            concurrency: 4
             rbac:
               enable: true
           backend:
@@ -169,8 +170,6 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
-            - name: CELERY_WORKER_CONCURRENCY
-              value: '4'
             - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
               value: '120'
 
@@ -196,6 +195,7 @@ deploy:
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           celeryworker:
+            concurrency: 4
             rbac:
               enable: true
           backend:
@@ -240,8 +240,6 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
-            - name: CELERY_WORKER_CONCURRENCY
-              value: '4'
             - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
               value: '120'
 
