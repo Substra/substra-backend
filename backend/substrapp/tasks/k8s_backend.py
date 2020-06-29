@@ -131,41 +131,43 @@ def k8s_gpu_used(task_label):
     return [','.join(range(gpu_used))]
 
 
-def k8s_get_cache_index():
+def k8s_get_cache_index_lock_file(cache_index):
+    return f'/tmp/cache-index-{cache_index}.lock'
 
-    # Get cached index used from k8s through the API
-    # Because the execution may be remote
+
+def k8s_try_create_file(path):
+    try:
+        fd = os.open(path,  os.O_CREAT | os.O_EXCL)
+        os.close(fd)
+        return True
+    except FileExistsError:
+        return False
+
+
+def k8s_acquire_cache_index():
     celery_worker_concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
-
     if celery_worker_concurrency == 1:
         return None
+    max_attempts = 12
+    attempt = 0
+    logger.info(f'Get cache_index for cache sharing')
+    while attempt < max_attempts:
+        for cache_index in range(1, celery_worker_concurrency + 1):
+            lock_file = k8s_get_cache_index_lock_file(cache_index)
+            if k8s_try_create_file(lock_file):
+                return str(cache_index)
+            attempt += 1
+    raise Exception(f'Could not acquire cache index after {max_attempts} attempts')
 
-    cache_list = list(range(1, celery_worker_concurrency + 1))
 
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    cache_index = None
-    while cache_index is None:
-
-        cache_used = []
-
-        api_response = k8s_client.list_namespaced_pod(
-            NAMESPACE,
-            label_selector=f'task=build'
-        )
-
-        for pod in api_response.items:
-            pod_cache_index = pod.metadata.labels.get('cache-index', None)
-            if pod_cache_index:
-                cache_used.append(int(pod_cache_index))
-
-        res = [i for i in cache_list if i not in cache_used]
-
-        if res:
-            cache_index = random.choice(res)
-
-    return str(cache_index)
+def k8s_release_cache_index(cache_index):
+    if cache_index is None:
+        return
+    lock_file = k8s_get_cache_index_lock_file(cache_index)
+    try:
+        os.remove(lock_file)
+    except FileNotFoundError:
+        pass
 
 
 def watch_pod(name):
@@ -278,6 +280,16 @@ def container_format_log(container_name, container_logs):
 
 
 def k8s_build_image(path, tag, rm):
+    try:
+        cache_index = k8s_acquire_cache_index()
+        _k8s_build_image(path, tag, rm, cache_index)
+    except:
+        raise
+    finally:
+        k8s_release_cache_index(cache_index)
+
+
+def _k8s_build_image(path, tag, rm, cache_index):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
@@ -289,9 +301,6 @@ def k8s_build_image(path, tag, rm):
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
-
-    logger.info(f'Get cache_index for cache sharing')
-    cache_index = k8s_get_cache_index()
 
     if IMAGE_BUILDER == 'kaniko':
         # kaniko build can be launched without privilege but
@@ -436,7 +445,6 @@ def k8s_build_image(path, tag, rm):
         metadata=kubernetes.client.V1ObjectMeta(
             name=job_name,
             labels={'app': job_name, 'task': 'build',
-                    'cache-index': str(cache_index) if cache_index is not None else '',
                     'app.kubernetes.io/component': COMPONENT}
         ),
         spec=spec
