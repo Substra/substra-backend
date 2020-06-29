@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}-worker
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.celeryworker.replicaCount }}
   strategy:
     type: {{ .Values.celeryworker.updateStrategy }}
   selector:
