@@ -442,8 +442,8 @@ def k8s_build_image(path, tag, rm):
         spec=spec
     )
 
-    build_image = not pod_exists(job_name)
-    if build_image:
+    create_pod = not pod_exists(job_name)
+    if create_pod:
         k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
     try:
@@ -451,11 +451,11 @@ def k8s_build_image(path, tag, rm):
     except Exception as e:
         # In case of concurrent build, it may fail
         # check if image exists
-        if not k8s_image_exits(tag):
+        if not k8s_image_exists(tag):
             logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
             raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
     finally:
-        if build_image:
+        if create_pod:
             container_format_log(
                 job_name,
                 get_pod_logs(name=get_pod_name(job_name),
@@ -482,7 +482,7 @@ def k8s_get_image(image_name):
     return response.json()
 
 
-def k8s_image_exits(image_name):
+def k8s_image_exists(image_name):
     try:
         k8s_get_image(image_name)
     except ImageNotFound:
