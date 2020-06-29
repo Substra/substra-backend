@@ -142,6 +142,7 @@ spec:
         args:
           - "build"
           - "-t={{ $img }}:warm"
+          - "--modifyfs=true"
           - "/makisu-context"
         volumeMounts:
         - name: makisu-cache
