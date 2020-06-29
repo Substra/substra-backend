@@ -251,6 +251,7 @@ celeryscheduler:
 
 celeryworker:
   replicaCount: 1
+  concurrency: 1  # Max number of tasks to process in parallel
   updateStrategy: RollingUpdate
   image:
     repository: substrafoundation/celeryworker
