@@ -9,7 +9,6 @@ from django.conf import settings
 from django.conf import settings
 from substrapp.utils import timeit
 import time
-import random
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +136,7 @@ def k8s_get_cache_index_lock_file(cache_index):
 
 def k8s_try_create_file(path):
     try:
-        fd = os.open(path,  os.O_CREAT | os.O_EXCL)
+        fd = os.open(path, os.O_CREAT | os.O_EXCL)
         os.close(fd)
         return True
     except FileExistsError:
@@ -146,17 +145,21 @@ def k8s_try_create_file(path):
 
 def k8s_acquire_cache_index():
     celery_worker_concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
+
     if celery_worker_concurrency == 1:
         return None
+
     max_attempts = 12
     attempt = 0
     logger.info(f'Get cache_index for cache sharing')
+
     while attempt < max_attempts:
         for cache_index in range(1, celery_worker_concurrency + 1):
             lock_file = k8s_get_cache_index_lock_file(cache_index)
             if k8s_try_create_file(lock_file):
                 return str(cache_index)
             attempt += 1
+
     raise Exception(f'Could not acquire cache index after {max_attempts} attempts')
 
 
@@ -283,7 +286,7 @@ def k8s_build_image(path, tag, rm):
     try:
         cache_index = k8s_acquire_cache_index()
         _k8s_build_image(path, tag, rm, cache_index)
-    except:
+    except Exception:
         raise
     finally:
         k8s_release_cache_index(cache_index)

@@ -125,7 +125,7 @@ deploy:
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           celeryworker:
-            concurrency: 4
+            concurrency: 3
             rbac:
               enable: true
           backend:
@@ -195,7 +195,7 @@ deploy:
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           celeryworker:
-            concurrency: 4
+            concurrency: 3
             rbac:
               enable: true
           backend:
