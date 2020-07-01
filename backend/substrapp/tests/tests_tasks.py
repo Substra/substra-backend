@@ -13,8 +13,7 @@ from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
-from substrapp.tasks.utils import (get_cpu_gpu_sets, get_memory_limit, compute_job, get_cpu_sets,
-                                   get_gpu_sets)
+from substrapp.tasks.utils import compute_job
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
@@ -100,18 +99,6 @@ class TasksTests(APITestCase):
             with self.assertRaises(Exception):
                 # contents (by pkhash) are different
                 get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
-
-    def test_resources(self):
-        with self.mock_compute_backend:
-            self.assertTrue(isinstance(get_memory_limit(), int))
-
-            cpu_set, gpu_set = get_cpu_gpu_sets()
-            cpu_sets = get_cpu_sets()
-            self.assertIn(cpu_set, cpu_sets)
-
-            if gpu_set is not None:
-                gpu_sets = get_gpu_sets()
-                self.assertIn(gpu_set, gpu_sets)
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
@@ -320,8 +307,6 @@ class TasksTests(APITestCase):
 
     def test_compute_job(self):
 
-        cpu_set, gpu_set = None, None
-
         dockerfile_path = os.path.join(self.subtuple_path, 'Dockerfile')
         with open(dockerfile_path, 'w') as f:
             f.write('FROM library/hello-world')
@@ -332,9 +317,6 @@ class TasksTests(APITestCase):
                 'subtuple_key', 'compute_plan_id', self.subtuple_path, 'test_compute_job_' + hash_docker,
                 'test_compute_job_name_' + hash_docker, None, None, environment={}
             )
-
-        self.assertIsNone(cpu_set)
-        self.assertIsNone(gpu_set)
 
     def test_build_subtuple_folders(self):
         with mock.patch('substrapp.tasks.tasks.getattr') as getattr:

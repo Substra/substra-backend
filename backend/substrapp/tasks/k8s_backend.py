@@ -1,4 +1,3 @@
-import math
 import json
 import kubernetes
 import requests
@@ -41,93 +40,6 @@ class ImageNotFound(Exception):
 
 class BuildError(Exception):
     pass
-
-
-def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
-    # celeryworker_image useless but for compatiblity
-    # Get memory limit from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    node = k8s_client.read_node(NODE_NAME)
-
-    return (int(node.status.allocatable['memory'][:-2]) / 1024) // celery_worker_concurrency
-
-
-def k8s_cpu_count(celeryworker_image):
-    # celeryworker_image useless but for compatiblity
-    # Get CPU count from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    node = k8s_client.read_node(NODE_NAME)
-
-    cpu_allocatable = node.status.allocatable['cpu']
-
-    # convert XXXXm cpu to X.XXX cpu
-    if 'm' in cpu_allocatable:
-        cpu_allocatable = float(cpu_allocatable.replace('m', '')) / 1000.0
-
-    return max(1, math.floor(float(cpu_allocatable)))
-
-
-def k8s_gpu_list(celeryworker_image):
-
-    # if you don't request GPUs when using the device plugin with
-    # NVIDIA images all the GPUs on the machine will be exposed inside your container.
-
-    import GPUtil
-    import json
-
-    return json.dumps([str(gpu.id) for gpu in GPUtil.getGPUs()])
-
-
-def k8s_cpu_used(task_label):
-    # Get CPU used from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    api_response = k8s_client.list_namespaced_pod(
-        NAMESPACE,
-        label_selector=f'task={task_label}'
-    )
-
-    cpu_used = 0
-
-    for pod in api_response.items:
-        for container in pod.spec.containers:
-            if container.resources.limits is not None:
-                cpu_used += int(getattr(container.resources.limits, 'cpu', 0))
-
-    if cpu_used:
-        return [f'0-{cpu_used}']
-    else:
-        return []
-
-
-def k8s_gpu_used(task_label):
-    # Get GPU used from k8s through the API
-    # Because the execution may be remote
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    api_response = k8s_client.list_namespaced_pod(
-        NAMESPACE,
-        label_selector=f'task={task_label}'
-    )
-
-    gpu_used = 0
-
-    for pod in api_response.items:
-        for container in pod.spec.containers:
-            if container.resources.limits is not None:
-                gpu_used += int(getattr(container.resources.limits, 'nvidia.com/gpu', 0))
-
-    return [','.join(range(gpu_used))]
 
 
 def k8s_get_cache_index_lock_file(cache_index):
@@ -528,24 +440,16 @@ def k8s_remove_image(image_name):
 
 
 @timeit
-def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image, subtuple_key, compute_plan_id):
+def k8s_compute(image_name, job_name, command, volumes, task_label,
+                capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
-    cpu_set_start, cpu_set_stop = map(int, cpu_set.split('-'))
-    cpu_set = set(range(cpu_set_start, cpu_set_stop + 1))
-    if gpu_set is not None:
-        gpu_set = set(gpu_set.split(','))
-
     task_args = {
         'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}:substra',
         'name': job_name,
-        'cpu_set': cpu_set,
-        'mem_limit': memory_limit_mb,
-        'gpu_set': gpu_set,
         'command': command,
         'volumes': volumes,
         'label': task_label,
@@ -832,24 +736,3 @@ def get_pod_security_context(enabled=True, root=False):
             )
 
     return None
-
-
-def get_resources(task_args):
-
-    r_requests = {
-        'cpu': 1,
-        'memory': '2000m'
-    }
-
-    # Disable for now, we let kubernetes decide
-    r_limits = {
-        'cpu': len(task_args['cpu_set']),
-        'memory': task_args['mem_limit']
-    }
-
-    if task_args['gpu_set'] is not None:
-        r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
-
-    return kubernetes.client.V1ResourceRequirements(
-        limits=r_limits, requests=r_requests
-    )
