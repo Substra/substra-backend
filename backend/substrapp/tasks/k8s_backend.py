@@ -63,7 +63,7 @@ def k8s_acquire_cache_index():
 
     max_attempts = 12
     attempt = 0
-    logger.info(f'Get cache_index for cache sharing')
+    logger.info('Get cache_index for cache sharing')
 
     while attempt < max_attempts:
         for cache_index in range(1, celery_worker_concurrency + 1):

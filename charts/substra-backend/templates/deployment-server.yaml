@@ -76,6 +76,8 @@ spec:
             value: "1"
           - name: GZIP_MODELS
             value: {{ .Values.backend.gzipModels | quote }}
+          - name: TOKEN_STRATEGY
+            value: {{ .Values.backend.tokenStrategy }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt

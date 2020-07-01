@@ -1,11 +1,9 @@
 import os
-import json
 import docker
 import logging
 import functools
 import threading
 
-from subprocess import check_output
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
