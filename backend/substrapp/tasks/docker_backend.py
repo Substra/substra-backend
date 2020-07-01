@@ -1,134 +1,9 @@
 import docker
-
+import GPUtil
 from substrapp.utils import timeit
 
 import logging
 logger = logging.getLogger(__name__)
-
-
-def docker_memory_limit(celery_worker_concurrency, celeryworker_image):
-    docker_client = docker.from_env()
-    # Get memory limit from docker container through the API
-    # Because the docker execution may be remote
-
-    memory_value = "int(os.sysconf('SC_PAGE_SIZE') * os.sysconf('SC_PHYS_PAGES') / (1024. ** 2))"
-
-    cmd = f'python3 -u -c "import os; print({memory_value} // {celery_worker_concurrency}, end=\'\', flush=True)"'
-
-    task_args = {
-        'image': celeryworker_image,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
-
-    memory_limit_bytes = docker_client.containers.run(**task_args)
-
-    return int(memory_limit_bytes)
-
-
-def docker_cpu_count(celeryworker_image):
-    docker_client = docker.from_env()
-    # Get CPU count from docker container through the API
-    # Because the docker execution may be remote
-
-    task_args = {
-        'image': celeryworker_image,
-        'command': 'python3 -u -c "import os; print(os.cpu_count())"',
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-    }
-
-    cpu_count_bytes = docker_client.containers.run(**task_args).strip()
-
-    return cpu_count_bytes
-
-
-def docker_gpu_list(celeryworker_image):
-    docker_client = docker.from_env()
-    # Get GPU list from docker container through the API
-    # Because the docker execution may be remote
-
-    cmd = 'python3 -u -c "import GPUtil as gputil;import json;'\
-          'print(json.dumps([str(gpu.id) for gpu in gputil.getGPUs()]), end=\'\')"'
-
-    task_args = {
-        'image': celeryworker_image,
-        'command': cmd,
-        'detach': False,
-        'stdout': True,
-        'stderr': True,
-        'auto_remove': False,
-        'remove': True,
-        'network_disabled': True,
-        'network_mode': 'none',
-        'privileged': False,
-        'cap_drop': ['ALL'],
-        'environment': {'CUDA_DEVICE_ORDER': 'PCI_BUS_ID',
-                        'NVIDIA_VISIBLE_DEVICES': 'all'},
-        'runtime': 'nvidia'
-    }
-
-    gpu_list_bytes = docker_client.containers.run(**task_args)
-
-    return gpu_list_bytes
-
-
-def docker_cpu_used(task_label):
-    docker_client = docker.from_env()
-    # Get CPU used from docker container through the API
-    # Because the docker execution may be remote
-
-    filters = {'status': 'running',
-               'label': [task_label]}
-
-    containers = [container.attrs
-                  for container in docker_client.containers.list(filters=filters)]
-
-    used_cpu_sets = [container['HostConfig']['CpusetCpus']
-                     for container in containers
-                     if container['HostConfig']['CpusetCpus']]
-
-    return used_cpu_sets
-
-
-def docker_gpu_used(task_label):
-    docker_client = docker.from_env()
-    # Get GPU used from docker container through the API
-    # Because the docker execution may be remote
-
-    filters = {'status': 'running',
-               'label': [task_label]}
-
-    containers = [container.attrs
-                  for container in docker_client.containers.list(filters=filters)]
-
-    env_containers = [container['Config']['Env']
-                      for container in containers]
-
-    used_gpu_sets = []
-
-    for env_list in env_containers:
-        nvidia_env_var = [s.split('=')[1]
-                          for s in env_list if "NVIDIA_VISIBLE_DEVICES" in s]
-
-        used_gpu_sets.extend(nvidia_env_var)
-
-    return used_gpu_sets
 
 
 def container_format_log(container_name, container_logs):
@@ -184,16 +59,14 @@ def docker_remove_image(image_name):
 
 
 @timeit
-def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                   capture_logs, environment, gpu_set, remove_image, subtuple_key, compute_plan_id):
+def docker_compute(image_name, job_name, command, volumes, task_label,
+                   capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
 
     docker_client = docker.from_env()
 
     task_args = {
         'image': image_name,
         'name': job_name,
-        'cpuset_cpus': cpu_set,
-        'mem_limit': memory_limit_mb,
         'command': command,
         'volumes': volumes,
         'shm_size': '8G',
@@ -210,9 +83,9 @@ def docker_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volu
         'environment': environment
     }
 
-    if gpu_set is not None:
+    if GPUtil.getGPUs():
         task_args['environment'].update({'CUDA_DEVICE_ORDER': 'PCI_BUS_ID'})
-        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': gpu_set})
+        task_args['environment'].update({'NVIDIA_VISIBLE_DEVICES': 'all'})
         task_args['runtime'] = 'nvidia'
 
     try:
