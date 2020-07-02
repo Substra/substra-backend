@@ -16,7 +16,6 @@ logging.basicConfig(filename='populate.log',
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-USER, PASSWORD = ('admin', 'admin')
 SUBSTRA_FOLDER = os.getenv('SUBSTRA_PATH', '/substra')
 server_path = f'{SUBSTRA_FOLDER}/servermedias'
 
@@ -26,18 +25,52 @@ client = substra.Client()
 PUBLIC_PERMISSIONS = {'public': True, 'authorized_ids': []}
 
 
+DOCKER_PROFILES = {
+    'owkin': {
+        'username': 'substra',
+        'password': 'p@$swr0d44',
+        'url': 'http://substra-backend.owkin.xyz:8000',
+    },
+    'chunantes': {
+        'username': 'substra',
+        'password': 'p@$swr0d45',
+        'url': 'http://substra-backend.chunantes.xyz:8001',
+    },
+    'clb': {
+        'username': 'substra',
+        'password': 'p@$swr0d46',
+        'url': 'http://substra-backend.clb.xyz:8002',
+    },
+}
+
+SKAFFOLD_PROFILES = {
+    'owkin': {
+        'username': 'node-1',
+        'password': 'p@$swr0d44',
+        'url': 'http://substra-backend.node-1.com',
+    },
+    'chunantes': {
+        'username': 'node-2',
+        'password': 'p@$swr0d45',
+        'url': 'http://substra-backend.node-2.com',
+    },
+    'clb': {
+        'username': 'node-3',
+        'password': 'p@$swr0d46',
+        'url': 'http://substra-backend.node-3.com',
+    },
+}
+
+
+def get_profiles(network):
+    return DOCKER_PROFILES if network == 'docker' else SKAFFOLD_PROFILES
+
+
 def setup_config(network='docker'):
     print('Init config for owkin and chunantes')
-    if network == 'docker':
-        # get first available user
-        client.add_profile('owkin', 'substra', 'p@$swr0d44', 'http://substra-backend.owkin.xyz:8000', '0.0')
-        client.add_profile('chunantes', 'substra', 'p@$swr0d45', 'http://substra-backend.chunantes.xyz:8001', '0.0')
-        client.add_profile('clb', 'substra', 'p@$swr0d46', 'http://substra-backend.clb.xyz:8002', '0.0')
-    if network == 'skaffold':
-        # the usernames and passwords are defined in the skaffold.yaml file
-        client.add_profile('owkin', 'node-1', 'p@$swr0d44', 'http://substra-backend.node-1.com', '0.0')
-        client.add_profile('chunantes', 'node-2', 'p@$swr0d45', 'http://substra-backend.node-2.com', '0.0')
-        client.add_profile('clb', 'node-3', 'p@$swr0d46', 'http://substra-backend.node-3.com', '0.0')
+    profiles = get_profiles(network)
+    for name, profile in profiles.items():
+        client.add_profile(name, profile['url'], '0.0')
 
 
 def zip_folder(path, destination):
@@ -92,12 +125,14 @@ def update_datamanager(data_manager_key, data, profile):
         print(colored(json.dumps(r, indent=2), 'green'))
 
 
-def login(*args):
-    for org in args:
+def login(network, orgs):
+    profiles = get_profiles(network)
+    for org in orgs:
         print(f'Login with {org}')
+        profile = profiles[org]
         client.set_profile(org)
         try:
-            client.login()
+            client.login(profile['username'], profile['password'])
         except Exception as e:
             raise Exception(f'login failed: {str(e)}')
 
@@ -157,7 +192,7 @@ def do_populate():
     else:
         raise Exception(f"Number of orgs {args['nb_org']} not in [1, 2, 3]")
 
-    login(org_0, org_1, org_2)
+    login(network_type, [org_0, org_1, org_2])
 
     print(f'will create datamanager with {org_1}')
     # create datamanager with org1
@@ -460,6 +495,9 @@ def do_populate():
         'data_manager_key': data_manager_org1_key,
         'train_data_sample_keys': train_data_sample_keys[:2],
         'tag': 'substra',
+        'out_trunk_model_permissions': {
+            'authorized_ids': [],
+        },
     }
 
     composite_traintuple_key = get_or_create(data, org_0, 'composite_traintuple')
