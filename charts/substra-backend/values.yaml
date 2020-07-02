@@ -306,8 +306,8 @@ registry:
   pullDomain: 127.0.0.1:32000
 
   ## Local registry pre-populate
-  prepopulate: []
-    # - image: substrafoundation/substra-tools:0.5.0
+  prepopulate:
+    - image: substrafoundation/substra-tools:0.5.0
     #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
     #   dockerConfigSecretName: docker-config
 
