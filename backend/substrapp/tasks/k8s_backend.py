@@ -161,6 +161,8 @@ def get_pod_name(name):
     )
     if api_response.items:
         pod = api_response.items.pop()
+    else:
+        raise Exception(f'Could not get pod name {name}')
 
     return pod.metadata.name
 
