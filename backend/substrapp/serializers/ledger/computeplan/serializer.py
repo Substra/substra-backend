@@ -78,11 +78,10 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'dataSampleKeys': data_traintuple['train_data_sample_keys'],
                 'algoKey': data_traintuple['algo_key'],
                 'id': data_traintuple['traintuple_id'],
+                'metadata': data_traintuple.get('metadata'),
             }
             if 'in_models_ids' in data_traintuple:
                 traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
-            if 'metadata' in data_traintuple:
-                traintuple['metadata'] = data_traintuple['metadata']
             if 'tag' in data_traintuple:
                 traintuple['tag'] = data_traintuple['tag']
 
@@ -93,9 +92,8 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             testtuple = {
                 'traintupleID': data_testtuple['traintuple_id'],
                 'objectiveKey': data_testtuple['objective_key'],
+                'metadata': data_testtuple.get('metadata'),
             }
-            if 'metadata' in data_testtuple:
-                testtuple['metadata'] = data_testtuple['metadata']
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
@@ -112,10 +110,9 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'dataManagerKey': data_composite_traintuple['data_manager_key'],
                 'dataSampleKeys': data_composite_traintuple['train_data_sample_keys'],
                 'id': data_composite_traintuple['composite_traintuple_id'],
+                'metadata': data_composite_traintuple.get('metadata'),
             }
 
-            if 'metadata' in data_composite_traintuple:
-                composite_traintuple['metadata'] = data_composite_traintuple['metadata']
             if 'tag' in data_composite_traintuple:
                 composite_traintuple['tag'] = data_composite_traintuple['tag']
             if 'in_head_model_id' in data_composite_traintuple:
@@ -135,12 +132,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'algoKey': data_aggregatetuple['algo_key'],
                 'worker': data_aggregatetuple['worker'],
                 'id': data_aggregatetuple['aggregatetuple_id'],
+                'metadata': data_aggregatetuple.get('metadata'),
             }
 
             if 'in_models_ids' in data_aggregatetuple:
                 aggregatetuple['inModelsIDs'] = data_aggregatetuple['in_models_ids']
-            if 'metadata' in data_aggregatetuple:
-                aggregatetuple['metadata'] = data_aggregatetuple['metadata']
             if 'tag' in data_aggregatetuple:
                 aggregatetuple['tag'] = data_aggregatetuple['tag']
 
