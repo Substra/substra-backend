@@ -58,6 +58,10 @@ metadata:
     name: {{ template "substra.fullname" $ }}-registry-prepopulate-dockerfile-{{ $index }}
 data:
     Dockerfile: |
+      {{- if .sourceRegistry }}
       FROM {{ .sourceRegistry }}/{{ .image }}
+      {{- else }}
+      FROM {{ .image }}
+      {{ end }}
 {{- end }}
 {{- end }}
