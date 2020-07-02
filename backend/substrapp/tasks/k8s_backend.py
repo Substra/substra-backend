@@ -85,40 +85,62 @@ def k8s_release_cache_index(cache_index):
         pass
 
 
-def watch_pod(name):
+def watch_pod(name, watch_init_container=False):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
     attempt = 0
-    max_attempts = 5
+    max_attempts = 5 + (5 if watch_init_container else 0)
     error = None
+    watch_container = not watch_init_container
 
     while (not finished) and (attempt < max_attempts):
         try:
+            logger.error(f'Checking for pod {name} {watch_init_container} {watch_container}')
             api_response = k8s_client.read_namespaced_pod_status(
                 name=name,
                 namespace=NAMESPACE,
                 pretty=True
             )
 
-            if api_response.status.container_statuses:
-                for container in api_response.status.container_statuses:
-                    if container.state.terminated:
-                        finished = True
-                        error = None
-                        if container.state.terminated.exit_code != 0:
-                            error = f'{container.state.terminated.reason} - {container.state.terminated.message}'
+            if watch_init_container:
+                if api_response.status.init_container_statuses:
+                    for init_container in api_response.status.init_container_statuses:
+                        if init_container.state.terminated:
+                            # TODO: support multiple init containers
+                            if init_container.state.terminated.exit_code != 0:
+                                finished = True
+                                error = f'InitContainer: {init_container.state.terminated.reason} - {init_container.state.terminated.message}'
+                            else:
+                                watch_container = True # Init container is ready
+                        else:
+                            if init_container.state.waiting and init_container.state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'{init_container.state.waiting.reason} - {init_container.state.waiting.message}'
+                                attempt += 1
+                                logger.error(f'InitContainer for pod "{name}" waiting status '
+                                            f'(attempt {attempt}/{max_attempts}): {init_container.state.waiting.message}')
 
-                    else:
-                        # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
-                        #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
-                        if container.state.waiting and container.state.waiting.reason not in ['ContainerCreating']:
-                            error = f'{container.state.waiting.reason} - {container.state.waiting.message}'
-                            attempt += 1
-                            logger.error(f'Container for pod "{name}" waiting status '
-                                         f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
-                            time.sleep(0.5)
+            if watch_container:
+                if api_response.status.container_statuses:
+                    for container in api_response.status.container_statuses:
+                        if container.state.terminated:
+                            finished = True
+                            error = None
+                            if container.state.terminated.exit_code != 0:
+                                error = f'{container.state.terminated.reason} - {container.state.terminated.message}'
+
+                        else:
+                            # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
+                            #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
+                            if container.state.waiting and container.state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'Container: {container.state.waiting.reason} - {container.state.waiting.message}'
+                                attempt += 1
+                                logger.error(f'Container for pod "{name}" waiting status '
+                                            f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
+
+            if not finished:
+                time.sleep(0.2)
 
         except Exception as e:
             attempt += 1
