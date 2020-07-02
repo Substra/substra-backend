@@ -140,12 +140,15 @@ spec:
       initContainers:
       {{- if .Values.privateCa.enabled }}
       - name: add-cert
-        image: alpine:latest
-        imagePullPolicy: IfNotPresent
-        command:
-        - sh
-        - -c
-        - apk add --update ca-certificates openssl && update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+        image: {{ .Values.privateCa.image.repository }}
+        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+        command: ['sh', '-c']
+        args:
+        - |
+          {{- if .Values.privateCa.image.apkAdd }}
+          apk add --update ca-certificates openssl
+          {{- end }}
+          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
         volumeMounts:
           - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
             name: private-ca
