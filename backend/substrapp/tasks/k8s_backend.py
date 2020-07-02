@@ -4,8 +4,6 @@ import requests
 import os
 import logging
 from django.conf import settings
-
-from django.conf import settings
 from substrapp.utils import timeit
 import time
 
@@ -26,7 +24,6 @@ IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
 KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
 COMPUTE_REGISTRY = settings.TASK['COMPUTE_REGISTRY']
-
 
 
 K8S_PVC = {
@@ -107,37 +104,39 @@ def watch_pod(name, watch_init_container=False):
             if watch_init_container:
                 if api_response.status.init_container_statuses:
                     for init_container in api_response.status.init_container_statuses:
-                        if init_container.state.terminated:
+                        state = init_container.state
+                        if state.terminated:
                             # TODO: support multiple init containers
-                            if init_container.state.terminated.exit_code != 0:
+                            if state.terminated.exit_code != 0:
                                 finished = True
-                                error = f'InitContainer: {init_container.state.terminated.reason} - {init_container.state.terminated.message}'
+                                error = f'InitContainer: {state.terminated.reason} - {state.terminated.message}'
                             else:
-                                watch_container = True # Init container is ready
+                                watch_container = True  # Init container is ready
                         else:
-                            if init_container.state.waiting and init_container.state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = f'{init_container.state.waiting.reason} - {init_container.state.waiting.message}'
+                            if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'{state.waiting.reason} - {state.waiting.message}'
                                 attempt += 1
                                 logger.error(f'InitContainer for pod "{name}" waiting status '
-                                            f'(attempt {attempt}/{max_attempts}): {init_container.state.waiting.message}')
+                                             f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
 
             if watch_container:
                 if api_response.status.container_statuses:
                     for container in api_response.status.container_statuses:
-                        if container.state.terminated:
+                        state = container.state
+                        if state.terminated:
                             finished = True
                             error = None
-                            if container.state.terminated.exit_code != 0:
-                                error = f'{container.state.terminated.reason} - {container.state.terminated.message}'
+                            if state.terminated.exit_code != 0:
+                                error = f'{state.terminated.reason} - {state.terminated.message}'
 
                         else:
                             # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
                             #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
-                            if container.state.waiting and container.state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = f'Container: {container.state.waiting.reason} - {container.state.waiting.message}'
+                            if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'Container: {state.waiting.reason} - {state.waiting.message}'
                                 attempt += 1
                                 logger.error(f'Container for pod "{name}" waiting status '
-                                            f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
+                                             f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
 
             if not finished:
                 time.sleep(0.2)
