@@ -49,8 +49,8 @@ spec:
 {{- end}}
 
 {{- if eq .Values.backend.imageBuilder.type "dind" }}
-apiVersion: batch/v1
-kind: Job
+apiVersion: apps/v1
+kind: Deployment
 metadata:
   name: {{ template "substra.fullname" . }}-dind-cache-warmer
   labels:
@@ -60,7 +60,18 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}-dind-cache-warmer
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
+  strategy:
+    type: Recreate
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" $ }}-dind-cache-warmer
+        app.kubernetes.io/instance: {{ $.Release.Name }}
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" $ }}-dind-cache-warmer
+        app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:
       # Run the cache warmer on the same node as the worker.
       # This pod and the dind pod both use the "docker-cache" PV.
@@ -118,8 +129,7 @@ spec:
       containers:
       - name: success
         image: alpine:latest
-        command: ['sh', '-c', 'echo Job completed.']
-      restartPolicy: Never
+        command: ['sh', '-c', 'sleep infinity']
       volumes:
       - name: dind-cache
         persistentVolumeClaim:
