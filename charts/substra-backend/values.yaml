@@ -282,6 +282,10 @@ extraEnv: []
 
 privateCa:
   enabled: false
+  image:
+    repository: alpine:latest
+    pullPolicy: IfNotPresent
+    apkAdd: true
   configMap:
     name: substra-private-ca
 #    data: nil
