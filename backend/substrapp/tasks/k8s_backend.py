@@ -271,7 +271,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
     elif IMAGE_BUILDER == 'makisu':
         # makisu build can be launched without privilege but
         # it needs to be root
-        image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
+        image = 'gcr.io/uber-container-tools/makisu-alpine:v0.2.0'
         command = None
         mount_path_dockerfile = '/makisu-context'
         mount_path_cache = '/makisu-storage'
