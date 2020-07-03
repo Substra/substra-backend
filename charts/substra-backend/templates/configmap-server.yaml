@@ -38,7 +38,6 @@ data:
     }
 
 ---
-
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -46,7 +45,6 @@ metadata:
 data:
   uwsgi.ini: |
     [uwsgi]
-    # chdir           = /usr/src/app
     module          = backend.wsgi
     env             = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
     static-map      = /static=/usr/src/app/backend/statics
@@ -54,11 +52,47 @@ data:
     master          = true
     processes       = {{ .Values.backend.uwsgiProcesses }}
     threads         = {{ .Values.backend.uwsgiThreads }}
-    http            = :{{ .Values.backend.service.port }}
-    # socket          = /tmp/substra-backend.sock
-    # chmod-socket    = 664
+    socket          = /usr/src/app/backend/socket/substra-backend.sock
+    chmod-socket = 666
+    # uid = www-data
+    # gid = www-data
+    vacuum          = true
 
     need-app        = true
     http-timeout    = 300
     socket-timeout  = 300
     harakiri        = 300
+
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-server-nginx
+data:
+  nginx.conf: |
+    # user www-data www-data;
+    worker_processes  auto;
+
+    events {
+      # worker_connections  4096;  ## Default: 1024
+    }
+    http {
+
+      # the upstream component nginx needs to connect to
+      upstream django {
+          server unix:///usr/src/app/backend/socket/substra-backend.sock; # for a file socket
+      }
+
+      # configuration of the server
+      server {
+          listen      {{ .Values.backend.service.port }};
+          client_max_body_size 0;
+          location /static {
+              alias /usr/src/app/backend/statics;
+          }
+          location / {
+              include uwsgi_params;
+              uwsgi_pass      unix:///usr/src/app/backend/socket/substra-backend.sock;
+          }
+      }
+    }

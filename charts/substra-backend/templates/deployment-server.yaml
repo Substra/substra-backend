@@ -85,10 +85,6 @@ spec:
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}
-        ports:
-          - name: http
-            containerPort: {{ .Values.backend.service.port }}
-            protocol: TCP
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
@@ -99,6 +95,8 @@ spec:
             mountPath: /var/substra/servermedias
           - name: statics
             mountPath: /usr/src/app/backend/statics
+          - name: uwsgi-socket
+            mountPath: /usr/src/app/backend/socket
           - name: config
             mountPath: /conf/{{ .Values.organization.name }}/substra-backend
             readOnly: true
@@ -116,6 +114,36 @@ spec:
             mountPath: /var/hyperledger/tls/client/pair
           - name: cacert
             mountPath: /var/hyperledger/ca
+          {{- if .Values.privateCa.enabled }}
+          - mountPath: /etc/ssl/certs
+            name: ssl-certs
+          {{- end }}
+        resources:
+          {{- toYaml .Values.backend.resources | nindent 12 }}
+      - name: {{ template "substra.name" . }}-nginx
+        image: nginx
+        {{- if .Values.backend.image.pullPolicy }}
+        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+        {{- end }}
+        env:
+          {{- if .Values.privateCa.enabled }}
+          - name: REQUESTS_CA_BUNDLE
+            value: /etc/ssl/certs/ca-certificates.crt
+          {{- end }}
+        ports:
+          - name: http
+            containerPort: {{ .Values.backend.service.port }}
+            protocol: TCP
+        volumeMounts:
+          - name: statics
+            mountPath: /usr/src/app/backend/statics
+            readOnly: true
+          - name: uwsgi-socket
+            mountPath: /usr/src/app/backend/socket
+          - name: nginx-config
+            mountPath: /etc/nginx/nginx.conf
+            subPath: nginx.conf
+            readOnly: true
           {{- if .Values.privateCa.enabled }}
           - mountPath: /etc/ssl/certs
             name: ssl-certs
@@ -229,12 +257,17 @@ spec:
           claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: statics
         emptyDir: {}
+      - name: uwsgi-socket
+        emptyDir: {}
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
       - name: uwsgi
         configMap:
           name: {{ include "substra.fullname" . }}-server-uwsgi
+      - name: nginx-config
+        configMap:
+          name: {{ include "substra.fullname" . }}-server-nginx
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}
