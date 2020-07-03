@@ -121,7 +121,7 @@ spec:
         resources:
           {{- toYaml .Values.backend.resources | nindent 12 }}
       - name: {{ template "substra.name" . }}-nginx
-        image: nginx
+        image: nginx:1.19.0
         {{- if .Values.backend.image.pullPolicy }}
         imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
         {{- end }}
