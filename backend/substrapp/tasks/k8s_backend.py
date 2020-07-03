@@ -271,7 +271,7 @@ def k8s_build_image(path, tag, rm):
         if KANIKO_MIRROR:
             args.append(f'--registry-mirror={REGISTRY}')
             if REGISTRY_SCHEME == 'http':
-                args.append(f'--insecure-pull')
+                args.append('--insecure-pull')
 
         # https://github.com/GoogleContainerTools/kaniko/issues/778
         capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
