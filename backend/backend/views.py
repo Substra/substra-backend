@@ -5,7 +5,7 @@ from rest_framework.throttling import AnonRateThrottle
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 
-from libs.expiry_token_authentication import expires_at
+from libs.expiry_token_authentication import token_expire_handler, expires_at
 from libs.user_login_throttle import UserLoginThrottle
 
 
@@ -21,6 +21,10 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
 
         if os.environ.get('TOKEN_STRATEGY', 'unique') == 'reuse':
             token, created = Token.objects.get_or_create(user=user)
+
+            # token_expire_handler will check, if the token is expired it will generate new one
+            is_expired, token = token_expire_handler(token)
+
         else:
             # token should be new each time, remove the old one
             Token.objects.filter(user=user).delete()
