@@ -43,9 +43,9 @@ spec:
         {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --http-timeout 300 --socket-timeout 300 --harakiri 300 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
+        args: ["-c", "uwsgi --ini uwsgi.ini"]
         {{- else }}
-        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
+        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
@@ -101,6 +101,10 @@ spec:
             mountPath: /usr/src/app/backend/statics
           - name: config
             mountPath: /conf/{{ .Values.organization.name }}/substra-backend
+            readOnly: true
+          - name: uwsgi
+            mountPath: /usr/src/app/uwsgi.ini
+            subPath: uwsgi.ini
             readOnly: true
           - name: user-cert
             mountPath: /var/hyperledger/msp/signcerts
@@ -228,6 +232,9 @@ spec:
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
+      - name: uwsgi
+        configMap:
+          name: {{ include "substra.fullname" . }}-server-uwsgi
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}
