@@ -486,7 +486,7 @@ def prepare_tuple(subtuple, tuple_type):
     # Early return if subtuple status is not todo
     # Can happen if we re-process all events
     if subtuple['status'] != 'todo':
-        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple["status"]})"\n{subtuple}')
+        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple["status"]}.\n{subtuple}')
         return
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
