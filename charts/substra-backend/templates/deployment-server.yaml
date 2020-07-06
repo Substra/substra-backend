@@ -96,7 +96,7 @@ spec:
           - name: statics
             mountPath: /usr/src/app/backend/statics
           - name: uwsgi-socket
-            mountPath: /usr/src/app/backend/socket
+            mountPath: /var/substra/socket
           - name: config
             mountPath: /conf/{{ .Values.organization.name }}/substra-backend
             readOnly: true
@@ -139,7 +139,7 @@ spec:
             mountPath: /usr/src/app/backend/statics
             readOnly: true
           - name: uwsgi-socket
-            mountPath: /usr/src/app/backend/socket
+            mountPath: /var/substra/socket
           - name: nginx-config
             mountPath: /etc/nginx/nginx.conf
             subPath: nginx.conf

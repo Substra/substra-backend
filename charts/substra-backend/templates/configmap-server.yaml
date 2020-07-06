@@ -52,10 +52,8 @@ data:
     master          = true
     processes       = {{ .Values.backend.uwsgiProcesses }}
     threads         = {{ .Values.backend.uwsgiThreads }}
-    socket          = /usr/src/app/backend/socket/substra-backend.sock
-    chmod-socket = 666
-    # uid = www-data
-    # gid = www-data
+    socket          = /var/substra/socket/uswgi.sock
+    chmod-socket    = 666
     vacuum          = true
 
     need-app        = true
@@ -70,7 +68,6 @@ metadata:
   name: {{ template "substra.fullname" . }}-server-nginx
 data:
   nginx.conf: |
-    # user www-data www-data;
     worker_processes  auto;
 
     events {
@@ -78,12 +75,10 @@ data:
     }
     http {
 
-      # the upstream component nginx needs to connect to
       upstream django {
-          server unix:///usr/src/app/backend/socket/substra-backend.sock; # for a file socket
+          server unix:///var/substra/socket/uswgi.sock;
       }
 
-      # configuration of the server
       server {
           listen      {{ .Values.backend.service.port }};
           client_max_body_size 0;
@@ -92,7 +87,7 @@ data:
           }
           location / {
               include uwsgi_params;
-              uwsgi_pass      unix:///usr/src/app/backend/socket/substra-backend.sock;
+              uwsgi_pass      unix:///var/substra/socket/uswgi.sock;
           }
       }
     }
