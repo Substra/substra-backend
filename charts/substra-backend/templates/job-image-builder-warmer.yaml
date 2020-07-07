@@ -13,10 +13,11 @@ metadata:
 spec:
   template:
     spec:
-      # Run the cache warmer on the same node as the worker.
-      # This pod and the kaniko pod both use the "docker-cache" PV.
-      # To be successfully mounted on both pods, this PV and the 2 pods all need to
-      # be scheduled on the same node.
+      # Run the cache warmer on the same node as the worker pod, because
+      # they both use the "docker-cache" PV.
+      # Use "server" pod affinity (and not "worker" pod) because the server
+      # is started earlier, so the warmer can also start earlier. The worker
+      # is always scheduled on the same node as the server.
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -25,7 +26,7 @@ spec:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                - {{ template "substra.name" . }}-worker
+                - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
       containers:
       - name: kaniko-cache-warmer
@@ -73,10 +74,11 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" $ }}-dind-cache-warmer
         app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:
-      # Run the cache warmer on the same node as the worker.
-      # This pod and the dind pod both use the "docker-cache" PV.
-      # To be successfully mounted on both pods, this PV and the 2 pods all need to
-      # be scheduled on the same node.
+      # Run the cache warmer on the same node as the worker pod, because
+      # they both use the "docker-cache" PV.
+      # Use "server" pod affinity (and not "worker" pod) because the server
+      # is started earlier, so the warmer can also start earlier. The worker
+      # is always scheduled on the same node as the server.
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -85,7 +87,7 @@ spec:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                - {{ template "substra.name" . }}-worker
+                - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
       initContainers:
       - name: populate-warmup-folder
@@ -161,10 +163,11 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-makisu-cache-warmer
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
-      # Run the cache warmer on the same node as the worker.
-      # This pod and the makisu pod both use the "docker-cache" PV.
-      # To be successfully mounted on both pods, this PV and the 2 pods all need to
-      # be scheduled on the same node.
+      # Run the cache warmer on the same node as the worker pod, because
+      # they both use the "docker-cache" PV.
+      # Use "server" pod affinity (and not "worker" pod) because the server
+      # is started earlier, so the warmer can also start earlier. The worker
+      # is always scheduled on the same node as the server.
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -173,7 +176,7 @@ spec:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                - {{ template "substra.name" . }}-worker
+                - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
       initContainers:
       {{ range $index, $img := .Values.prePulledImages }}
