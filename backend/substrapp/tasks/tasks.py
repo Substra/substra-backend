@@ -483,6 +483,12 @@ def prepare_tuple(subtuple, tuple_type):
     compute_plan_id = None
     worker_queue = f"{settings.LEDGER['name']}.worker"
 
+    # Early return if subtuple status is not todo
+    # Can happen if we re-process all events
+    if subtuple['status'] != 'todo':
+        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple["status"]}.\n{subtuple}')
+        return
+
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
         flresults = TaskResult.objects.filter(
