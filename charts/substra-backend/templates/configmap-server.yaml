@@ -46,19 +46,26 @@ metadata:
 data:
   uwsgi.ini: |
     [uwsgi]
-    # chdir           = /usr/src/app
-    module          = backend.wsgi
-    env             = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
-    static-map      = /static=/usr/src/app/backend/statics
+    module                        = backend.wsgi
+    env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
+    static-map                    = /static=/usr/src/app/backend/statics
 
-    master          = true
-    processes       = {{ .Values.backend.uwsgiProcesses }}
-    threads         = {{ .Values.backend.uwsgiThreads }}
-    http            = :{{ .Values.backend.service.port }}
-    # socket          = /tmp/substra-backend.sock
-    # chmod-socket    = 664
+    master                        = 1
+    processes                     = {{ .Values.backend.uwsgiProcesses }}
+    threads                       = {{ .Values.backend.uwsgiThreads }}
 
-    need-app        = true
-    http-timeout    = 300
-    socket-timeout  = 300
-    harakiri        = 300
+    cheaper-algo                  = spare
+    cheaper                       = 2           # workers nb to try to keep idle
+    cheaper-initial               = 8           # starts with minimal workers
+    cheaper-step                  = 4           # spawn at most 'cheaper-step' workers at once
+
+    http-socket                   = :{{ .Values.backend.service.port }}
+
+    need-app                      = true
+    http-timeout                  = 300
+    http-keepalive                = 300
+    harakiri                      = 300
+    harakiri-verbose              = true
+    die-on-term                   = 1
+
+    add-header                    = Connection: Keep-Alive
