@@ -4,7 +4,7 @@ backend:
   tokenStrategy: 'unique'  # 'reuse'
   siteHost: localhost
   defaultDomain: localhost
-  uwsgiProcesses: 8
+  uwsgiProcesses: 20
   uwsgiThreads: 2
   gzipModels: false
 
