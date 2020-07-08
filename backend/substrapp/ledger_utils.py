@@ -149,7 +149,7 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
                     _nbtries -= 1
                     if not nbtries:
                         raise
-                    _delay *= _backoff
+                    _delay += _backoff
                     time.sleep(_delay)
                     logger.warning(f'Function {fn.__name__} failed ({type(e)}): {e} retrying in {_delay}s')
 
