@@ -147,7 +147,7 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
                     return fn(*args, **kwargs)
                 except exceptions_to_retry as e:
                     _nbtries -= 1
-                    if not nbtries:
+                    if not _nbtries:
                         raise
                     _delay += _backoff
                     time.sleep(_delay)

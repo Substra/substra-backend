@@ -381,7 +381,8 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.uncompress_content'), \
                 mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
                 mock.patch('substrapp.tasks.tasks.AsyncResult') as masyncres, \
-                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner:
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
+                mock.patch('substrapp.tasks.tasks.find_training_step_tuple_from_key') as gettuple:
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
@@ -392,6 +393,7 @@ class TasksTests(APITestCase):
             mprepare_opener.return_value = 'opener'
             mprepare_data_sample.return_value = 'data'
             get_owner.return_value = 'foo'
+            gettuple.return_value = None, subtuple[0]
 
             masyncres.return_value.state = 'PENDING'
 
