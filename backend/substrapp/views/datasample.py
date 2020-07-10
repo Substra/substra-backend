@@ -53,7 +53,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
@@ -209,7 +209,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryDataSamples', args=[])
+            data = query_ledger('mychannel', fcn='queryDataSamples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -223,7 +223,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         ledger_serializer.is_valid(raise_exception=True)
 
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

@@ -140,7 +140,7 @@ def filter_list(object_type, data, query_params):
                 # Filter by other asset
 
                 # Get other asset list
-                filtering_data = query_ledger(fcn=FILTER_QUERIES[filter_key], args=[])
+                filtering_data = query_ledger('mychannel', fcn=FILTER_QUERIES[filter_key], args=[])
 
                 filtering_data = filtering_data if filtering_data else []
 

@@ -152,12 +152,12 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             'cleanModels': data.get('clean_models', False),
         }
 
-    def create(self, validated_data):
+    def create(self, channel, validated_data):
         args = self.get_args(validated_data)
-        return ledger.create_computeplan(args)
+        return ledger.create_computeplan(channel, args)
 
-    def update(self, compute_plan_id, validated_data):
+    def update(self, channel, compute_plan_id, validated_data):
         args = self.get_args(validated_data)
         del args['tag']
         args['computePlanID'] = compute_plan_id
-        return ledger.update_computeplan(args)
+        return ledger.update_computeplan(channel, args)

@@ -46,7 +46,7 @@ def tuple_get_worker(event_type, asset):
     return asset['dataset']['worker']
 
 
-def on_tuples_event(block_number, tx_id, tx_status, event_type, asset):
+def on_tuples_event(channel, block_number, tx_id, tx_status, event_type, asset):
 
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
@@ -80,13 +80,13 @@ def on_tuples_event(block_number, tx_id, tx_status, event_type, asset):
         return
 
     prepare_tuple.apply_async(
-        (asset, event_type),
+        (channel, asset, event_type),
         task_id=key,
         queue=worker_queue
     )
 
 
-def on_compute_plan_event(block_number, tx_id, tx_status, asset):
+def on_compute_plan_event(channel, block_number, tx_id, tx_status, asset):
 
     worker_queue = f"{LEDGER['name']}.worker"
 
@@ -112,13 +112,13 @@ def on_compute_plan_event(block_number, tx_id, tx_status, asset):
         return
 
     on_compute_plan.apply_async(
-        (asset, ),
+        (channel, asset, ),
         task_id=task_id,
         queue=worker_queue
     )
 
 
-def on_event(cc_event, block_number, tx_id, tx_status):
+def on_event(channel, cc_event, block_number, tx_id, tx_status):
     payload = json.loads(cc_event['payload'])
 
     for event_type, assets in payload.items():
@@ -129,14 +129,17 @@ def on_event(cc_event, block_number, tx_id, tx_status):
         for asset in assets:
 
             if event_type == 'computePlan':
-                on_compute_plan_event(block_number, tx_id, tx_status, asset)
+                on_compute_plan_event(channel, block_number, tx_id, tx_status, asset)
             else:
-                on_tuples_event(block_number, tx_id, tx_status, event_type, asset)
+                on_tuples_event(channel, block_number, tx_id, tx_status, event_type, asset)
 
 
-def wait():
+def wait(channel_name):
+
+    def on_channel_event(cc_event, block_number, tx_id, tx_status):
+        on_event(channel_name, cc_event, block_number, tx_id, tx_status)
+
     with get_event_loop() as loop:
-        channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
         peer = LEDGER['peer']
 
@@ -192,33 +195,36 @@ def wait():
 
                     channel_event_hub.registerChaincodeEvent(chaincode_name,
                                                              'chaincode-updates',
-                                                             onEvent=on_event)
+                                                             onEvent=on_channel_event)
 
-                    logger.error('Connect to Channel Event Hub')
+                    logger.error(f'Connect to Channel Event Hub ({channel_name})')
                     loop.run_until_complete(stream)
 
                 except RpcError as e:
-                    logger.error(f'Channel Event Hub failed ({type(e)}): {e} re-connecting in 5s')
+                    logger.error(f'Channel Event Hub failed for {channel_name} ({type(e)}): {e} re-connecting in 5s')
                     time.sleep(5)
 
 
 class EventsConfig(AppConfig):
     name = 'events'
 
-    def ready(self):
-
+    def listen_to_channel(self, channel):
         # We try to connect a client first, if it fails the backend will not start
         # It avoid potential issue when we launch the channel event hub in a subprocess
         while True:
             try:
-                with get_hfc() as (loop, client):
-                    logger.info('Start the event application.')
+                with get_hfc(channel) as (loop, client):
+                    logger.info(f'Events: Connected to channel {channel}.')
             except Exception as e:
                 logger.exception(e)
                 time.sleep(5)
-                logger.error('Retry to connect the event application to the ledger')
+                logger.error(f'Events: Retry connecting to channel {channel}.')
             else:
                 break
 
-        p1 = multiprocessing.Process(target=wait)
+        p1 = multiprocessing.Process(target=wait, args=[channel])
         p1.start()
+
+    def ready(self):
+        for channel in LEDGER['channels']:
+            self.listen_to_channel(channel)

@@ -42,6 +42,6 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
 
         return args
 
-    def create(self, validated_data):
+    def create(self, channel, validated_data):
         args = self.get_args(validated_data)
-        return ledger.create_traintuple(args)
+        return ledger.create_traintuple(channel, args)

@@ -30,11 +30,13 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument('data_input', type=str)
+        parser.add_argument('channel', type=str)
 
     def handle(self, *args, **options):
 
         # load args
         args = options['data_input']
+        channel = options['channel']
         try:
             data_input = json.loads(args)
         except Exception:
@@ -115,6 +117,7 @@ class Command(BaseCommand):
                 else:
                     # create on ledger
                     res, st = ledger_serializer.create(
+                        channel,
                         ledger_serializer.validated_data)
 
                     if st not in (status.HTTP_201_CREATED, status.HTTP_202_ACCEPTED, status.HTTP_408_REQUEST_TIMEOUT):

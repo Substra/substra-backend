@@ -19,7 +19,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
     metrics_name = serializers.CharField(min_length=1, max_length=100)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
-    def create(self, validated_data):
+    def create(self, channel, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         metrics_name = validated_data.get('metrics_name')
@@ -48,4 +48,4 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.create_objective(args, instance.pkhash)
+        return ledger.create_objective(channel, args, instance.pkhash)

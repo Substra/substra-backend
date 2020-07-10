@@ -15,7 +15,7 @@ class NodeViewSet(mixins.ListModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            nodes = query_ledger(fcn=self.ledger_query_call)
+            nodes = query_ledger('mychannel', fcn=self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

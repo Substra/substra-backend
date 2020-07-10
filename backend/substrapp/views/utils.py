@@ -74,7 +74,7 @@ class PermissionMixin(object):
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(pk, self.ledger_query_call)
+            asset = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -97,7 +97,7 @@ class PermissionMixin(object):
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(pk, self.ledger_query_call)
+            asset = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
         except LedgerError as e:
             return HttpResponse({'message': str(e.msg)}, status=e.status)
 

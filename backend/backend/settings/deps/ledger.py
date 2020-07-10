@@ -34,7 +34,7 @@ LEDGER['requestor'] = create_user(
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('BACKEND_PEER_PORT', 'external')]
 
 
-def get_hfc_client():
+def get_hfc_client(channel_name):
 
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -64,17 +64,17 @@ def get_hfc_client():
 
     channels = [ch.channel_id for ch in response.channels]
 
-    if not LEDGER['channel_name'] in channels:
-        raise Exception(f'Peer has not joined channel: {LEDGER["channel_name"]}')
+    if not channel_name in channels:
+        raise Exception(f'Peer has not joined channel: {channel_name}')
 
-    channel = client.new_channel(LEDGER['channel_name'])
+    channel = client.new_channel(channel_name)
 
     # Check chaincode is instantiated in the channel
 
     responses = loop.run_until_complete(
         client.query_instantiated_chaincodes(
             requestor=LEDGER['requestor'],
-            channel_name=LEDGER['channel_name'],
+            channel_name=channel_name,
             peers=[peer],
             decode=True
         )
@@ -86,7 +86,7 @@ def get_hfc_client():
 
     if not LEDGER['chaincode_name'] in chaincodes:
         raise Exception(f'Chaincode : {LEDGER["chaincode_name"]}'
-                        f' is not instantiated in the channel :  {LEDGER["channel_name"]}')
+                        f' is not instantiated in the channel :  {channel_name}')
 
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
