@@ -158,8 +158,8 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
 
 
 @contextlib.contextmanager
-def get_hfc():
-    loop, client = LEDGER['hfc']()
+def get_hfc(channel):
+    loop, client = LEDGER['hfc'](channel)
     try:
         yield (loop, client)
     finally:
@@ -195,9 +195,9 @@ def get_query_endorsing_peers(current_peer, all_peers):
     )
 
 
-def _call_ledger(call_type, fcn, args=None, kwargs=None):
+def _call_ledger(channel, call_type, fcn, args=None, kwargs=None):
 
-    with get_hfc() as (loop, client):
+    with get_hfc(channel) as (loop, client):
         if not args:
             args = []
         else:
@@ -211,7 +211,6 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
             'query': client.chaincode_query,
         }
 
-        channel_name = LEDGER['channel_name']
         chaincode_name = LEDGER['chaincode_name']
 
         all_peers = client._peers.keys()
@@ -224,7 +223,7 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
 
         params = {
             'requestor': requestor,
-            'channel_name': channel_name,
+            'channel_name': channel,
             'peers': peers[call_type],
             'args': args,
             'cc_name': chaincode_name,
@@ -277,12 +276,12 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         return response
 
 
-def call_ledger(call_type, fcn, *args, **kwargs):
+def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
     """Call ledger and log each request."""
     ts = time.time()
     error = None
     try:
-        return _call_ledger(call_type, fcn, *args, **kwargs)
+        return _call_ledger(channel_name, call_type, fcn, *args, **kwargs)
     except Exception as e:
         error = e.__class__.__name__
         raise
@@ -293,7 +292,7 @@ def call_ledger(call_type, fcn, *args, **kwargs):
         logger.info(f'smartcontract {call_type}:{fcn}; elaps={elaps:.2f}ms; error={error}')
 
 
-def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
+def _invoke_ledger(channel, fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
     params = {
         'wait_for_event': sync,
         'grpc_broker_unavailable_retry': 5,
@@ -307,7 +306,7 @@ def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True
     if cc_pattern:
         params['cc_pattern'] = cc_pattern
 
-    response = call_ledger('invoke', fcn=fcn, args=args, kwargs=params)
+    response = call_ledger(channel, 'invoke', fcn=fcn, args=args, kwargs=params)
 
     if only_pkhash:
         return {'pkhash': response.get('key', response.get('keys'))}
@@ -316,23 +315,24 @@ def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True
 
 
 @retry_on_error(exceptions=[LedgerTimeout])
-def query_ledger(fcn, args=None):
+def query_ledger(channel, fcn, args=None):
     # careful, passing invoke parameters to query_ledger will NOT fail
-    return call_ledger('query', fcn=fcn, args=args)
+    return call_ledger(channel, 'query', fcn=fcn, args=args)
 
 
 @retry_on_error()
-def invoke_ledger(*args, **kwargs):
-    return _invoke_ledger(*args, **kwargs)
+def invoke_ledger(channel, *args, **kwargs):
+    return _invoke_ledger(channel, *args, **kwargs)
 
 
 @retry_on_error(exceptions=[LedgerTimeout])
-def update_ledger(*args, **kwargs):
-    return _invoke_ledger(*args, **kwargs)
+def update_ledger(channel, *args, **kwargs):
+    return _invoke_ledger(channel, *args, **kwargs)
 
 
-def query_tuples(tuple_type, data_owner):
+def query_tuples(channel, tuple_type, data_owner):
     data = query_ledger(
+        channel,
         fcn="queryFilter",
         args={
             'indexName': f'{tuple_type}~worker~status',
@@ -345,8 +345,8 @@ def query_tuples(tuple_type, data_owner):
     return data
 
 
-def get_object_from_ledger(pk, query):
-    return query_ledger(fcn=query, args={'key': pk})
+def get_object_from_ledger(channel, pk, query):
+    return query_ledger(channel, fcn=query, args={'key': pk})
 
 
 LOG_TUPLE_INVOKE_FCNS = {
@@ -371,7 +371,7 @@ LOG_TUPLE_INVOKE_FCNS = {
 }
 
 
-def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
+def _update_tuple_status(channel, tuple_type, tuple_key, status, extra_kwargs=None):
     """Update tuple status to doing, done or failed.
 
     In case of ledger timeout, query the ledger until the status has been updated.
@@ -387,22 +387,22 @@ def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
     if extra_kwargs:
         invoke_args.update(extra_kwargs)
 
-    update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
+    update_ledger(channel, fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
-def log_start_tuple(tuple_type, tuple_key):
-    _update_tuple_status(tuple_type, tuple_key, 'doing')
+def log_start_tuple(channel, tuple_type, tuple_key):
+    _update_tuple_status(channel, tuple_type, tuple_key, 'doing')
 
 
-def log_fail_tuple(tuple_type, tuple_key, err_msg):
+def log_fail_tuple(channel, tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     extra_kwargs = {
         'log': err_msg,
     }
-    _update_tuple_status(tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
+    _update_tuple_status(channel, tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
 
 
-def log_success_tuple(tuple_type, tuple_key, res):
+def log_success_tuple(channel, tuple_type, tuple_key, res):
     extra_kwargs = {
         'log': '',
     }
@@ -431,4 +431,4 @@ def log_success_tuple(tuple_type, tuple_key, res):
             'perf': float(res["global_perf"]),
         })
 
-    _update_tuple_status(tuple_type, tuple_key, 'done', extra_kwargs=extra_kwargs)
+    _update_tuple_status(channel, tuple_type, tuple_key, 'done', extra_kwargs=extra_kwargs)

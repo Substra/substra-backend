@@ -151,7 +151,9 @@ peer:
   port: 443
   mspID: OwkinPeerMSP
 
-channel: mychannel
+channels:
+- mychannel
+- yourchannel
 
 chaincode:
   name: mycc

@@ -14,7 +14,7 @@ class LedgerAggregateAlgoSerializer(serializers.Serializer):
     permissions = PermissionsSerializer()
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
-    def create(self, validated_data):
+    def create(self, channel, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         permissions = validated_data.get('permissions')
@@ -37,4 +37,4 @@ class LedgerAggregateAlgoSerializer(serializers.Serializer):
             'metadata': metadata
         }
 
-        return ledger.create_aggregatealgo(args, instance.pkhash)
+        return ledger.create_aggregatealgo(channel, args, instance.pkhash)

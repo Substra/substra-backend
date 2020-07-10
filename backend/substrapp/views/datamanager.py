@@ -62,7 +62,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -159,7 +159,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
-        data = get_object_from_ledger(pk, 'queryDataset')
+        data = get_object_from_ledger('mychannel', pk, 'queryDataset')
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -195,7 +195,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
 
         try:
-            data = query_ledger(fcn='queryDataManagers', args=[])
+            data = query_ledger('mychannel', fcn='queryDataManagers', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -242,7 +242,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = status.HTTP_202_ACCEPTED
 
         try:
-            data = ledger.update_datamanager(args)
+            data = ledger.update_datamanager('mychannel', args)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

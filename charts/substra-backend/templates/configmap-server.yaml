@@ -7,7 +7,7 @@ data:
     {
       "name": "{{ .Values.organization.name }}",
       "core_peer_mspconfigpath": "/var/hyperledger/msp",
-      "channel_name": "{{ .Values.channel }}",
+      "channels": {{ .Values.channels | toJson }},
       "chaincode_name": "{{ .Values.chaincode.name }}",
       "chaincode_version": "{{ .Values.chaincode.version }}",
       "client": {

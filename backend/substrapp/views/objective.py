@@ -76,7 +76,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -154,7 +154,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
-        data = get_object_from_ledger(pk, self.ledger_query_call)
+        data = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -190,7 +190,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryObjectives', args=[])
+            data = query_ledger('mychannel', fcn='queryObjectives', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -237,7 +237,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            leaderboard = query_ledger(fcn='queryObjectiveLeaderboard', args={
+            leaderboard = query_ledger('mychannel', fcn='queryObjectiveLeaderboard', args={
                 'objectiveKey': pk,
                 'ascendingOrder': sort == 'asc',
             })

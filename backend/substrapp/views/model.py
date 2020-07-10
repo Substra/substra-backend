@@ -44,7 +44,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     def _retrieve(self, pk):
         validate_pk(pk)
 
-        data = get_object_from_ledger(pk, self.ledger_query_call)
+        data = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
 
         compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
@@ -73,7 +73,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryModels', args=[])
+            data = query_ledger('mychannel', fcn='queryModels', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

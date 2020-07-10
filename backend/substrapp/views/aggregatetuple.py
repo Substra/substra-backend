@@ -24,7 +24,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
     def commit(self, serializer, pkhash):
         # create on ledger
         try:
-            data = serializer.create(serializer.validated_data)
+            data = serializer.create('mychannel', serializer.validated_data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
         else:
@@ -48,7 +48,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger(fcn='createAggregatetuple', args=args)
+            data = query_ledger('mychannel', fcn='createAggregatetuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
@@ -69,7 +69,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryAggregatetuples', args=[])
+            data = query_ledger('mychannel', fcn='queryAggregatetuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -89,7 +89,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
 
     def _retrieve(self, pk):
         validate_pk(pk)
-        return get_object_from_ledger(pk, self.ledger_query_call)
+        return get_object_from_ledger('mychannel', pk, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field

@@ -16,7 +16,7 @@ class LedgerDataManagerSerializer(serializers.Serializer):
     permissions = PermissionsSerializer()
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
-    def create(self, validated_data):
+    def create(self, channel, validated_data):
         instance = self.initial_data.get('instance')
         name = validated_data.get('name')
         data_type = validated_data.get('type')
@@ -42,4 +42,4 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.create_datamanager(args, instance.pkhash)
+        return ledger.create_datamanager(channel, args, instance.pkhash)

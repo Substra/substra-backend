@@ -25,6 +25,7 @@ from node.models import OutgoingNode
 import zipfile
 MEDIA_ROOT = "/tmp/unittests_tasks/"
 # MEDIA_ROOT = tempfile.mkdtemp()
+CHANNEL = 'mychannel'
 
 
 # APITestCase
@@ -282,7 +283,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             get_object_from_ledger.return_value = assets.algo[0]
 
-            data = get_algo('traintuple', subtuple)
+            data = get_algo(CHANNEL, 'traintuple', subtuple)
             self.assertEqual(algo_content, data)
 
     def test_get_objective(self):
@@ -295,7 +296,7 @@ class TasksTests(APITestCase):
 
             mget_remote_file.return_value = metrics_content
 
-            objective = get_objective({'objective': {'hash': objective_hash,
+            objective = get_objective(CHANNEL, {'objective': {'hash': objective_hash,
                                                      'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)
@@ -371,13 +372,13 @@ class TasksTests(APITestCase):
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
                 mlog_start_tuple.side_effect = LedgerStatusError('Bad Response')
-                prepare_task('traintuple')
+                prepare_task(CHANNEL, 'traintuple')
 
             with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
                     mock.patch('substrapp.tasks.tasks.compute_task.apply_async') as mapply_async:
                 mlog_start_tuple.return_value = 'data', 201
                 mapply_async.return_value = 'do_task'
-                prepare_task('traintuple')
+                prepare_task(CHANNEL, 'traintuple')
 
     def test_do_task(self):
 
@@ -411,7 +412,7 @@ class TasksTests(APITestCase):
 
             with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job:
                 mcompute_job.return_value = 'DONE'
-                do_task(subtuple, 'traintuple')
+                do_task(CHANNEL, subtuple, 'traintuple')
 
     def test_compute_task(self):
 
@@ -443,16 +444,16 @@ class TasksTests(APITestCase):
                 mdo_task.return_value = 'DONE'
 
                 mlog_success_tuple.return_value = 'data', 201
-                compute_task('traintuple', subtuple, None)
+                compute_task(CHANNEL, 'traintuple', subtuple, None)
 
                 mlog_success_tuple.return_value = 'data', 404
-                compute_task('traintuple', subtuple, None)
+                compute_task(CHANNEL, 'traintuple', subtuple, None)
 
                 with mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
                     mdo_task.side_effect = Exception("Test")
                     mlog_fail_tuple.return_value = 'data', 404
                     with self.assertRaises(Exception) as exc:
-                        compute_task('traintuple', subtuple, None)
+                        compute_task(CHANNEL, 'traintuple', subtuple, None)
                     self.assertEqual(str(exc.exception), "Test")
 
     def test_prepare_materials(self):
@@ -490,5 +491,5 @@ class TasksTests(APITestCase):
             mget_algo.return_value = 'algo', 'algo_hash'
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
 
-            prepare_materials(subtuple[0], 'traintuple')
-            prepare_materials(subtuple[0], 'testtuple')
+            prepare_materials(CHANNEL, subtuple[0], 'traintuple')
+            prepare_materials(CHANNEL, subtuple[0], 'testtuple')
