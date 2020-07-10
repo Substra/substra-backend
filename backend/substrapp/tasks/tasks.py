@@ -485,7 +485,10 @@ def prepare_tuple(subtuple, tuple_type):
 
     # Early return if subtuple status is not todo
     # Can happen if we re-process all events
-    if subtuple['status'] != 'todo':
+    # But we need to fetch the subtuple again to get the last
+    # version of it
+    _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
+    if subtuple_check['status'] != 'todo':
         logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple["status"]}).\n{subtuple}')
         return
 
