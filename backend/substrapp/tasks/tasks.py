@@ -489,7 +489,7 @@ def prepare_tuple(subtuple, tuple_type):
     # version of it
     _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
     if subtuple_check['status'] != 'todo':
-        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple["status"]}).\n{subtuple}')
+        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).\n{subtuple_check}')
         return
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
