@@ -487,10 +487,15 @@ def prepare_tuple(subtuple, tuple_type):
     # Can happen if we re-process all events
     # But we need to fetch the subtuple again to get the last
     # version of it
-    _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
-    if subtuple_check['status'] != 'todo':
-        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).\n{subtuple_check}')
-        return
+    try:
+        _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
+        if subtuple_check['status'] != 'todo':
+            logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).'
+                         f'\n{subtuple_check}')
+            return
+    except Exception:
+        # use the provided subtuple if the previous call fail
+        pass
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
