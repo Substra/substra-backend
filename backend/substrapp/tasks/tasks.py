@@ -925,6 +925,7 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
                 subtuple_directory,
                 subtuple_key,
                 filename=filename,
+                extraKey=type_model
             )
 
             models[type_model] = {
@@ -954,11 +955,11 @@ def extract_result_from_models(tuple_type, models):
 
 
 @timeit
-def save_model(subtuple_directory, subtuple_key, filename='model'):
+def save_model(subtuple_directory, subtuple_key, filename='model', extraKey=''):
     from substrapp.models import Model
 
     end_model_path = path.join(subtuple_directory, f'model/{filename}')
-    end_model_file_hash = get_hash(end_model_path, subtuple_key)
+    end_model_file_hash = get_hash(end_model_path, subtuple_key + extraKey)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
 
     with open(end_model_path, 'rb') as f:
