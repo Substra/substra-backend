@@ -71,7 +71,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryTraintuples', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
