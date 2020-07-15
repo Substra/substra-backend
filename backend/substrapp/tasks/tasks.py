@@ -484,13 +484,20 @@ def prepare_tuple(subtuple, tuple_type):
     worker_queue = f"{settings.LEDGER['name']}.worker"
 
     # Early return if subtuple status is not todo
-    # Can happen if we re-process all events
-    # But we need to fetch the subtuple again to get the last
-    # version of it
-    _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
-    if subtuple_check['status'] != 'todo':
-        logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).\n{subtuple_check}')
-        return
+    # Can happen if we re-process all events (backend-server restart)
+    # We need to fetch the subtuple again to get the last
+    # version of it in case of processing old events
+    try:
+        _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
+        if subtuple_check['status'] != 'todo':
+            logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).'
+                         f'\n{subtuple_check}')
+            return
+    except TasksError:
+        # use the provided subtuple if the previous call fail
+        # It can happen for new subtuple that are not already
+        # in the ledger local db
+        pass
 
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
