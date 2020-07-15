@@ -58,7 +58,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
+            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -131,7 +131,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def _retrieve(self, request, pk):
         validate_pk(pk)
-        data = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
+        data = get_object_from_ledger(request.user.channel.name, pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -168,7 +168,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryAggregateAlgos', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryAggregateAlgos', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

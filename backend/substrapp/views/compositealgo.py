@@ -58,7 +58,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
+            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
