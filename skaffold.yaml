@@ -144,6 +144,7 @@ deploy:
           users:
             - name: "node-1"
               secret: "p@$swr0d44"
+              channel: "mychannel"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
@@ -194,6 +195,7 @@ deploy:
           users:
             - name: "node-2"
               secret: "p@$swr0d45"
+              channel: "mychannel"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
