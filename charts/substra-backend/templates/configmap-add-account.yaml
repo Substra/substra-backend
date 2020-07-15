@@ -5,7 +5,7 @@ metadata:
 data:
   users: |
     {{- range .Values.users }}
-      {{ .name }} {{ .secret }}
+      {{ .name }} {{ .secret }} {{.channel}}
     {{- end }}
   incoming_nodes: |
     {{- range .Values.incomingNodes }}
