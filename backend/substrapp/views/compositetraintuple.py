@@ -21,10 +21,10 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def commit(self, serializer, pkhash):
+    def commit(self, serializer, channel_name, pkhash):
         # create on ledger
         try:
-            data = serializer.create('mychannel', serializer.validated_data)
+            data = serializer.create(channel_name, serializer.validated_data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
         else:
@@ -51,14 +51,14 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger('mychannel', fcn='createCompositeTraintuple', args=args)
+            data = query_ledger(request.user.channel.name, fcn='createCompositeTraintuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             pkhash = data.get('key')
-            return self.commit(serializer, pkhash)
+            return self.commit(serializer, request.user.channel.name, pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -72,7 +72,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryCompositeTraintuples', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryCompositeTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -82,6 +82,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 compositetraintuple_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='composite_traintuple',
                     data=data,
                     query_params=query_params)
@@ -90,9 +91,9 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
 
         return Response(compositetraintuple_list, status=status.HTTP_200_OK)
 
-    def _retrieve(self, pk):
+    def _retrieve(self, channel_name, pk):
         validate_pk(pk)
-        return get_object_from_ledger('mychannel', pk, self.ledger_query_call)
+        return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field

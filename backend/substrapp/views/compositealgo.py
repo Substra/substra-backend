@@ -131,7 +131,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
     def _retrieve(self, request, pk):
         validate_pk(pk)
-        data = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
+        data = get_object_from_ledger(request.user.channel.name, pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -168,7 +168,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryCompositeAlgos', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryCompositeAlgos', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -179,6 +179,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 composite_algos_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='composite_algo',
                     data=data,
                     query_params=query_params)

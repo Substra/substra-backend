@@ -39,7 +39,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                             f'Please create them before. DataManager keys: {data_manager_keys}')
 
     @staticmethod
-    def commit(serializer, ledger_data):
+    def commit(serializer, channel_name, ledger_data):
         instances = serializer.save()
         # init ledger serializer
         ledger_data.update({'instances': instances})
@@ -53,7 +53,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
+            data = ledger_serializer.create(channel_name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -189,7 +189,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
                                'data_manager_keys': data_manager_keys}
-                data, st = self.commit(serializer, ledger_data)  # pre_save signal executed
+                data, st = self.commit(request.user.channel.name, serializer, ledger_data)  # pre_save signal executed
                 return data, st
         finally:
             for gpath in paths_to_remove:
@@ -213,7 +213,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryDataSamples', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryDataSamples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -227,7 +227,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         ledger_serializer.is_valid(raise_exception=True)
 
         try:
-            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
+            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

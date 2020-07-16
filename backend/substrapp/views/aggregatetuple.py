@@ -79,6 +79,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 aggregatetuple_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='aggregatetuple',
                     data=data,
                     query_params=query_params)

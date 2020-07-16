@@ -21,10 +21,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def commit(self, serializer, pkhash):
+    def commit(self, serializer, channel_name, pkhash):
         # create on ledger
         try:
-            data = serializer.create('mychannel', serializer.validated_data)
+            data = serializer.create(channel_name, serializer.validated_data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
         else:
@@ -50,14 +50,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger('mychannel', fcn='createTraintuple', args=args)
+            data = query_ledger(request.user.channel.name, fcn='createTraintuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             pkhash = data.get('key')
-            return self.commit(serializer, pkhash)
+            return self.commit(serializer, request.user.channel.name, pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -81,6 +81,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 traintuple_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='traintuple',
                     data=data,
                     query_params=query_params)
@@ -89,16 +90,16 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         return Response(traintuple_list, status=status.HTTP_200_OK)
 
-    def _retrieve(self, pk):
+    def _retrieve(self, channel_name, pk):
         validate_pk(pk)
-        return get_object_from_ledger('mychannel', pk, self.ledger_query_call)
+        return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request.user.channel.name, pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
