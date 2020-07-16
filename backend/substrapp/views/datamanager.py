@@ -62,7 +62,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create('mychannel', ledger_serializer.validated_data)
+            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
@@ -155,7 +155,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
-        data = get_object_from_ledger('mychannel', pk, 'queryDataset')
+        data = get_object_from_ledger(request.user.channel.name, pk, 'queryDataset')
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -191,7 +191,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
 
         try:
-            data = query_ledger('mychannel', fcn='queryDataManagers', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryDataManagers', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -203,6 +203,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 data_managers_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='dataset',
                     data=data,
                     query_params=query_params)
@@ -238,7 +239,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = status.HTTP_202_ACCEPTED
 
         try:
-            data = ledger.update_datamanager('mychannel', args)
+            data = ledger.update_datamanager(request.user.channel.name, args)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

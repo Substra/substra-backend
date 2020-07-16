@@ -41,10 +41,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, channel_name, pk):
         validate_pk(pk)
 
-        data = get_object_from_ledger('mychannel', pk, self.ledger_query_call)
+        data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
         compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
@@ -61,7 +61,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(request.user.channel.name, pk)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
@@ -73,7 +73,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger('mychannel', fcn='queryModels', args=[])
+            data = query_ledger(request.user.channel.name, fcn='queryModels', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -83,6 +83,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         if query_params is not None:
             try:
                 models_list = filter_list(
+                    channel_name=request.user.channel.name,
                     object_type='model',
                     data=data,
                     query_params=query_params)
