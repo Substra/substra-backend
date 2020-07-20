@@ -1,7 +1,3 @@
-gpu:
-  enabled: false
-  platform: ubuntu # or cos
-
 docker:
   # Path of the docker socket on the host
   socket: /var/run/docker.sock
