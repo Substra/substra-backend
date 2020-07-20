@@ -10,6 +10,8 @@ Look at the corresponding chart for that (chart-hlf-k8s)
 
 You will also need a postgresql instance on the cluster, it should already be the case if you install the network first.
 
+If you want gpu compatibility you need to install nvidia device plugin for kubernetes : https://github.com/NVIDIA/k8s-device-plugin or https://github.com/NVIDIA/gpu-operator
+
 ## Install the package
 ```
 helm install --name hlf-k8s owkin/hlf-k8s
