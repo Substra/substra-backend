@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
+from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException, get_channel_name
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
@@ -47,14 +47,14 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger(request.user.channel.name, fcn='createTesttuple', args=args)
+            data = query_ledger(get_channel_name(request), fcn='createTesttuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             pkhash = data.get('key')
-            return self.commit(serializer, request.user.channel.name, pkhash)
+            return self.commit(serializer, get_channel_name(request), pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -68,7 +68,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(request.user.channel.name, fcn='queryTesttuples', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryTesttuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -78,7 +78,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 testtuple_list = filter_list(
-                    channel_name=request.user.channel.name,
+                    channel_name=get_channel_name(request),
                     object_type='testtuple',
                     data=data,
                     query_params=query_params)
@@ -96,7 +96,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request.user.channel.name, pk)
+            data = self._retrieve(get_channel_name(request), pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:

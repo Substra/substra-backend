@@ -74,7 +74,7 @@ class PermissionMixin(object):
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(request.user.channel.name, pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -97,7 +97,7 @@ class PermissionMixin(object):
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(request.user.channel.name, pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
         except LedgerError as e:
             return HttpResponse({'message': str(e.msg)}, status=e.status)
 
@@ -206,3 +206,14 @@ def get_success_create_code():
         return status.HTTP_201_CREATED
     else:
         return status.HTTP_202_ACCEPTED
+
+
+def get_channel_name(request):
+
+    if hasattr(request.user, 'channel'):
+        return request.user.channel.name
+
+    if 'channel-name' in request.headers:
+        return request.headers['channel-name']
+
+    raise exceptions.BadRequestError('Could not determine channel name')
