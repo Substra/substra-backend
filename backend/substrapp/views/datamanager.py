@@ -124,7 +124,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_datamanager(self, instance, datamanager, pk):
+    def create_or_update_datamanager(self, channel_name, instance, datamanager, pk):
 
         # create instance if does not exist
         if not instance:
@@ -134,7 +134,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.data_opener:
             url = datamanager['opener']['storageAddress']
 
-            content = get_remote_asset(url, datamanager['owner'], datamanager['opener']['hash'])
+            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['opener']['hash'])
 
             f = tempfile.TemporaryFile()
             f.write(content)
@@ -146,7 +146,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.description:
             url = datamanager['description']['storageAddress']
 
-            content = get_remote_asset(url, datamanager['owner'], datamanager['description']['hash'])
+            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['description']['hash'])
 
             f = tempfile.TemporaryFile()
             f.write(content)
@@ -171,7 +171,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description or data_opener
                 if not instance or not instance.description or not instance.data_opener:
-                    instance = self.create_or_update_datamanager(instance, data, pk)
+                    instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, pk)
 
                 # do not give access to local files address
                 serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))

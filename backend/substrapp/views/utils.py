@@ -33,9 +33,9 @@ def authenticate_outgoing_request(outgoing_node_id):
     return HTTPBasicAuth(current_node_id, outgoing.secret)
 
 
-def get_remote_asset(url, node_id, content_hash, salt=None):
+def get_remote_asset(channel_name, url, node_id, content_hash, salt=None):
     auth = authenticate_outgoing_request(node_id)
-    return get_remote_file_content(url, auth, content_hash, salt=salt)
+    return get_remote_file_content(channel_name, url, auth, content_hash, salt=salt)
 
 
 class CustomFileResponse(FileResponse):
@@ -88,7 +88,7 @@ class PermissionMixin(object):
         if get_owner() == asset['owner']:
             response = self._download_local_file(django_field)
         else:
-            response = self._download_remote_file(ledger_field, asset)
+            response = self._download_remote_file(get_channel_name(request), ledger_field, asset)
 
         return response
 
@@ -120,10 +120,10 @@ class PermissionMixin(object):
         )
         return response
 
-    def _download_remote_file(self, ledger_field, asset):
+    def _download_remote_file(self, channel_name, ledger_field, asset):
         node_id = asset['owner']
         auth = authenticate_outgoing_request(node_id)
-        r = get_remote_file(asset[ledger_field]['storageAddress'], auth, stream=True)
+        r = get_remote_file(channel_name, asset[ledger_field]['storageAddress'], auth, stream=True)
         if not r.ok:
             return Response({
                 'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'

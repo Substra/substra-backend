@@ -138,11 +138,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_objective(self, objective, pk):
+    def create_or_update_objective(self, channel_name, objective, pk):
         # get description from remote node
         url = objective['description']['storageAddress']
 
-        content = get_remote_asset(url, objective['owner'], pk)
+        content = get_remote_asset(channel_name, url, objective['owner'], pk)
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
@@ -165,7 +165,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 instance = None
 
             if not instance or not instance.description:
-                instance = self.create_or_update_objective(data, pk)
+                instance = self.create_or_update_objective(get_channel_name(request), data, pk)
 
             # For security reason, do not give access to local file address
             # Restrain data to some fields

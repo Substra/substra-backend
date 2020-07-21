@@ -114,11 +114,11 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_aggregate_algo(self, aggregate_algo, pk):
+    def create_or_update_aggregate_algo(self, channel_name, aggregate_algo, pk):
         # get Aggregatealgo description from remote node
         url = aggregate_algo['description']['storageAddress']
 
-        content = get_remote_asset(url, aggregate_algo['owner'], aggregate_algo['description']['hash'])
+        content = get_remote_asset(channel_name, url, aggregate_algo['owner'], aggregate_algo['description']['hash'])
 
         f = tempfile.TemporaryFile()
         f.write(content)
@@ -143,7 +143,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_aggregate_algo(data, pk)
+                    instance = self.create_or_update_aggregate_algo(get_channel_name(request), data, pk)
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields

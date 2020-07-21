@@ -118,11 +118,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_algo(self, algo, pk):
+    def create_or_update_algo(self, channel_name, algo, pk):
         # get algo description from remote node
         url = algo['description']['storageAddress']
 
-        content = get_remote_asset(url, algo['owner'], algo['description']['hash'])
+        content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['hash'])
 
         f = tempfile.TemporaryFile()
         f.write(content)
@@ -147,7 +147,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_algo(data, pk)
+                    instance = self.create_or_update_algo(get_channel_name(request), data, pk)
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields

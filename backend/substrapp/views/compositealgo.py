@@ -114,11 +114,11 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_composite_algo(self, composite_algo, pk):
+    def create_or_update_composite_algo(self, channel_name, composite_algo, pk):
         # get Compositealgo description from remote node
         url = composite_algo['description']['storageAddress']
 
-        content = get_remote_asset(url, composite_algo['owner'], composite_algo['description']['hash'])
+        content = get_remote_asset(channel_name, url, composite_algo['owner'], composite_algo['description']['hash'])
 
         f = tempfile.TemporaryFile()
         f.write(content)
@@ -143,7 +143,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_composite_algo(data, pk)
+                    instance = self.create_or_update_composite_algo(get_channel_name(request), data, pk)
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields

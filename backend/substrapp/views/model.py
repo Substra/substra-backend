@@ -24,14 +24,14 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     ledger_query_call = 'queryModelDetails'
     # permission_classes = (permissions.IsAuthenticated,)
 
-    def create_or_update_model(self, traintuple, pk):
+    def create_or_update_model(self, channel_name, traintuple, pk):
         if traintuple['outModel'] is None:
             raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
 
         # get model from remote node
         url = traintuple['outModel']['storageAddress']
 
-        content = get_remote_asset(url, traintuple['creator'], traintuple['key'])
+        content = get_remote_asset(channel_name, url, traintuple['creator'], traintuple['key'])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
