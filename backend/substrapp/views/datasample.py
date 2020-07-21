@@ -17,7 +17,7 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
-    get_success_create_code
+    get_success_create_code, get_channel_name
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
 
 logger = logging.getLogger(__name__)
@@ -185,7 +185,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 # create on ledger + db
                 ledger_data = {'test_only': test_only,
                                'data_manager_keys': data_manager_keys}
-                data, st = self.commit(request.user.channel.name, serializer, ledger_data)  # pre_save signal executed
+                data, st = self.commit(serializer, get_channel_name(request), ledger_data)  # pre_save signal executed
                 return data, st
         finally:
             for gpath in paths_to_remove:
@@ -209,7 +209,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(request.user.channel.name, fcn='queryDataSamples', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryDataSamples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -223,7 +223,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         ledger_serializer.is_valid(raise_exception=True)
 
         try:
-            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
+            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

@@ -14,7 +14,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
-                                   get_remote_asset, node_has_process_permission)
+                                   get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -58,7 +58,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(request.user.channel.name, ledger_serializer.validated_data)
+            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
             data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
             raise LedgerException(data, e.status)
@@ -127,7 +127,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def _retrieve(self, request, pk):
         validate_pk(pk)
-        data = get_object_from_ledger(request.user.channel.name, pk, self.ledger_query_call)
+        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -164,7 +164,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(request.user.channel.name, fcn='queryAggregateAlgos', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryAggregateAlgos', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -175,7 +175,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 aggregate_algos_list = filter_list(
-                    channel_name=request.user.channel.name,
+                    channel_name=get_channel_name(request),
                     object_type='aggregate_algo',
                     data=data,
                     query_params=query_params)

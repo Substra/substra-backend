@@ -65,6 +65,7 @@ def get_objective(channel, tuple_):
     objective_metadata = get_object_from_ledger(channel, objective_hash, 'queryObjective')
 
     objective_content = get_asset_content(
+        channel,
         objective_metadata['metrics']['storageAddress'],
         objective_metadata['owner'],
         objective_metadata['metrics']['hash'],
@@ -97,6 +98,7 @@ def get_algo(channel, tuple_type, tuple_):
     metadata = get_object_from_ledger(channel, key, method_name)
 
     content = get_asset_content(
+        channel,
         metadata['content']['storageAddress'],
         metadata['owner'],
         metadata['content']['hash'],
@@ -137,10 +139,11 @@ def find_training_step_tuple_from_key(channel, tuple_key):
         f'Key {tuple_key}: no tuple found for training step: model: {metadata}')
 
 
-def get_and_put_model_content(tuple_type, tuple_key, tuple_, out_model, model_dst_path):
+def get_and_put_model_content(channel_name, tuple_type, tuple_key, tuple_, out_model, model_dst_path):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
     return get_and_put_asset_content(
+        channel_name,
         out_model['storageAddress'],
         owner,
         out_model['hash'],
@@ -180,15 +183,15 @@ def fetch_model(channel, parent_tuple_type, authorized_types, input_model, direc
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            channel, tuple_type, input_model['traintupleKey'], metadata, metadata['outTrunkModel']['outModel'], model_dst_path
         )
     else:
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
@@ -268,11 +271,11 @@ def prepare_composite_traintuple_input_models(channel, directory, tuple_):
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outTrunkModel']['outModel'], trunk_model_dst_path
+            channel, tuple_type, trunk_model_key, metadata, metadata['outTrunkModel']['outModel'], trunk_model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
+            channel, tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
         )
     else:
         raise TasksError(f'CompositeTraintuple: invalid trunk input model: type={tuple_type}')
@@ -290,7 +293,7 @@ def prepare_testtuple_input_models(channel, directory, tuple_):
         model_dst_path = path.join(directory, f'model/{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
+            channel, traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
         )
 
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
@@ -303,7 +306,7 @@ def prepare_testtuple_input_models(channel, directory, tuple_):
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            channel, traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
         )
 
     else:

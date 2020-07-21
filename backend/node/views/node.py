@@ -4,6 +4,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.ledger_utils import query_ledger, LedgerError
 from substrapp.utils import get_owner
+from substrapp.views.utils import get_channel_name
 
 
 class NodeViewSet(mixins.ListModelMixin,
@@ -15,7 +16,7 @@ class NodeViewSet(mixins.ListModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            nodes = query_ledger(request.user.channel.name, fcn=self.ledger_query_call)
+            nodes = query_ledger(get_channel_name(request), fcn=self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

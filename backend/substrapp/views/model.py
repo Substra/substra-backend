@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin
+from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
 logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request.user.channel.name, pk)
+            data = self._retrieve(get_channel_name(request), pk)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
@@ -73,7 +73,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(request.user.channel.name, fcn='queryModels', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryModels', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -83,7 +83,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         if query_params is not None:
             try:
                 models_list = filter_list(
-                    channel_name=request.user.channel.name,
+                    channel_name=get_channel_name(request),
                     object_type='model',
                     data=data,
                     query_params=query_params)
