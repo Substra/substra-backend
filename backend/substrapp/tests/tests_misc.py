@@ -17,6 +17,7 @@ import os
 DIRECTORY = '/tmp/testmisc/'
 CHANNEL = 'mychannel'
 
+
 class MockDevice():
     """A mock device to temporarily suppress output to stdout
     Similar to UNIX /dev/null.
