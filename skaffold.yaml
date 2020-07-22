@@ -163,6 +163,9 @@ deploy:
             - name: "node-1"
               secret: "p@$swr0d44"
               channel: "mychannel"
+            - name: "node-1-yourchannel"
+              secret: "p@$swr0d44"
+              channel: "yourchannel"
           persistence:
             hostPathServerMedias: "/tmp/org-1/"
           extraEnv:
@@ -240,6 +243,9 @@ deploy:
             - name: "node-2"
               secret: "p@$swr0d45"
               channel: "mychannel"
+            - name: "node-2-yourchannel"
+              secret: "p@$swr0d45"
+              channel: "yourchannel"
           persistence:
             hostPathServerMedias: "/tmp/org-2/"
           extraEnv:
