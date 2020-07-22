@@ -46,7 +46,7 @@ def tuple_get_worker(event_type, asset):
     return asset['dataset']['worker']
 
 
-def on_tuples_event(channel, block_number, tx_id, tx_status, event_type, asset):
+def on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset):
 
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
@@ -80,13 +80,13 @@ def on_tuples_event(channel, block_number, tx_id, tx_status, event_type, asset):
         return
 
     prepare_tuple.apply_async(
-        (channel, asset, event_type),
+        (channel_name, asset, event_type),
         task_id=key,
         queue=worker_queue
     )
 
 
-def on_compute_plan_event(channel, block_number, tx_id, tx_status, asset):
+def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
 
     worker_queue = f"{LEDGER['name']}.worker"
 
@@ -112,13 +112,13 @@ def on_compute_plan_event(channel, block_number, tx_id, tx_status, asset):
         return
 
     on_compute_plan.apply_async(
-        (channel, asset, ),
+        (channel_name, asset, ),
         task_id=task_id,
         queue=worker_queue
     )
 
 
-def on_event(channel, cc_event, block_number, tx_id, tx_status):
+def on_event(channel_name, cc_event, block_number, tx_id, tx_status):
     payload = json.loads(cc_event['payload'])
 
     for event_type, assets in payload.items():
@@ -129,9 +129,9 @@ def on_event(channel, cc_event, block_number, tx_id, tx_status):
         for asset in assets:
 
             if event_type == 'computePlan':
-                on_compute_plan_event(channel, block_number, tx_id, tx_status, asset)
+                on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset)
             else:
-                on_tuples_event(channel, block_number, tx_id, tx_status, event_type, asset)
+                on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset)
 
 
 def wait(channel_name):
@@ -208,23 +208,23 @@ def wait(channel_name):
 class EventsConfig(AppConfig):
     name = 'events'
 
-    def listen_to_channel(self, channel):
+    def listen_to_channel(self, channel_name):
         # We try to connect a client first, if it fails the backend will not start
         # It avoid potential issue when we launch the channel event hub in a subprocess
         while True:
             try:
-                with get_hfc(channel) as (loop, client):
-                    logger.info(f'Events: Connected to channel {channel}.')
+                with get_hfc(channel_name) as (loop, client):
+                    logger.info(f'Events: Connected to channel {channel_name}.')
             except Exception as e:
                 logger.exception(e)
                 time.sleep(5)
-                logger.error(f'Events: Retry connecting to channel {channel}.')
+                logger.error(f'Events: Retry connecting to channel {channel_name}.')
             else:
                 break
 
-        p1 = multiprocessing.Process(target=wait, args=[channel])
+        p1 = multiprocessing.Process(target=wait, args=[channel_name])
         p1.start()
 
     def ready(self):
-        for channel in LEDGER['channels']:
-            self.listen_to_channel(channel)
+        for channel_name in LEDGER['channels']:
+            self.listen_to_channel(channel_name)
