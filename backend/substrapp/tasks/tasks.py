@@ -198,7 +198,12 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            channel_name,
+            tuple_type,
+            input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            model_dst_path
         )
     else:
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
@@ -278,7 +283,12 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
-            channel_name, tuple_type, trunk_model_key + HASH_KEY_SUFFIX_TRUNK, metadata, metadata, metadata['outTrunkModel']['outModel'], trunk_model_dst_path
+            channel_name,
+            tuple_type,
+            trunk_model_key + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            trunk_model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
@@ -313,7 +323,12 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            channel_name, traintuple_type, traintuple_key + HASH_KEY_SUFFIX_TRUNK, metadata, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            channel_name,
+            traintuple_type,
+            traintuple_key + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            model_dst_path
         )
 
     else:
