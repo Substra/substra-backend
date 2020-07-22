@@ -92,9 +92,9 @@ def watch_pod(name, watch_init_container=False):
     error = None
     watch_container = not watch_init_container
 
+    logger.error(f'Checking for pod {name} init: {watch_init_container} main: {watch_container}')
     while (not finished) and (attempt < max_attempts):
         try:
-            logger.error(f'Checking for pod {name} {watch_init_container} {watch_container}')
             api_response = k8s_client.read_namespaced_pod_status(
                 name=name,
                 namespace=NAMESPACE,

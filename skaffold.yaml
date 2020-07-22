@@ -144,6 +144,8 @@ deploy:
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
                 nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
                 nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
+                nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
           organization:
             name: MyOrg1
           peer:
@@ -217,6 +219,8 @@ deploy:
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
                 nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
                 nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
+                nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
           organization:
             name: MyOrg2
           peer:
