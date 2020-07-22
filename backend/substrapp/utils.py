@@ -213,12 +213,12 @@ class NodeError(Exception):
     pass
 
 
-def get_remote_file(channel, url, auth, content_dst_path=None, **kwargs):
+def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
 
     kwargs.update({
         'headers': {
             'Accept': 'application/json;version=0.0',
-            'channel-name': channel},
+            'channel-name': channel_name},
         'auth': auth
     })
 
@@ -242,9 +242,9 @@ def get_remote_file(channel, url, auth, content_dst_path=None, **kwargs):
     return response
 
 
-def get_remote_file_content(channel, url, auth, content_hash, salt=None):
+def get_remote_file_content(channel_name, url, auth, content_hash, salt=None):
 
-    response = get_remote_file(channel, url, auth)
+    response = get_remote_file(channel_name, url, auth)
 
     if response.status_code != status.HTTP_200_OK:
         logger.error(response.text)
@@ -256,9 +256,9 @@ def get_remote_file_content(channel, url, auth, content_hash, salt=None):
     return response.content
 
 
-def get_and_put_remote_file_content(channel, url, auth, content_hash, content_dst_path, hash_key):
+def get_and_put_remote_file_content(channel_name, url, auth, content_hash, content_dst_path, hash_key):
 
-    response = get_remote_file(channel, url, auth, content_dst_path, stream=True)
+    response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
 
     if response.status_code != status.HTTP_200_OK:
         logger.error(response.text)

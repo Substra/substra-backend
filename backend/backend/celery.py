@@ -31,14 +31,14 @@ def setup_periodic_tasks(sender, **kwargs):
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
 
-    for channel in LEDGER['channels']:
-        sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler', args=[channel],
+    for channel_name in LEDGER['channels']:
+        sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler', args=[channel_name],
                                  name='query Traintuples to prepare train task on todo traintuples')
-        sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler', args=[channel],
+        sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler', args=[channel_name],
                                  name='query Testuples to prepare test task on todo testuples')
-        sender.add_periodic_task(period, prepare_aggregate_task.s(), queue='scheduler', args=[channel],
+        sender.add_periodic_task(period, prepare_aggregate_task.s(), queue='scheduler', args=[channel_name],
                                  name='query Aggregatetuples to prepare task on todo aggregatetuples')
-        sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler', args=[channel],
+        sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler', args=[channel_name],
                                  name='query CompositeTraintuples to prepare task on todo composite_traintuples')
 
     from users.tasks import flush_expired_tokens

@@ -13,22 +13,22 @@ LEDGER = getattr(settings, 'LEDGER', None)
 class NodeRegisterConfig(AppConfig):
     name = 'node-register'
 
-    def register_node(self, channel):
+    def register_node(self, channel_name):
         # We try until success, if it fails the backend will not start
         while True:
             try:
                 # args is set to empty because fabric-sdk-py doesn't allow None args for invoke operations
-                invoke_ledger(channel, fcn='registerNode', args=[''], sync=True)
+                invoke_ledger(channel_name, fcn='registerNode', args=[''], sync=True)
             except RpcError as e:
                 if not settings.DEBUG:
                     raise
                 logger.exception(e)
                 time.sleep(5)
-                logger.info(f'({channel}) Retry to register the node to the ledger')
+                logger.info(f'({channel_name}) Retry to register the node to the ledger')
             else:
-                logger.error(f'({channel}) Node registered in the ledger')
+                logger.error(f'({channel_name}) Node registered in the ledger')
                 return
 
     def ready(self):
-        for channel in LEDGER['channels']:
-            self.register_node(channel)
+        for channel_name in LEDGER['channels']:
+            self.register_node(channel_name)
