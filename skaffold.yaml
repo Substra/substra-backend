@@ -114,6 +114,9 @@ deploy:
           celeryworker.image: substrafoundation/celeryworker
           flower.image: substrafoundation/flower
         overrides:
+          rabbitmq:
+            rabbitmq:
+              erlangCookie: rabbitmqErlangCookie
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           backend:
@@ -164,6 +167,9 @@ deploy:
           celeryworker.image: substrafoundation/celeryworker
           flower.image: substrafoundation/flower
         overrides:
+          rabbitmq:
+            rabbitmq:
+              erlangCookie: rabbitmqErlangCookie
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           backend:
