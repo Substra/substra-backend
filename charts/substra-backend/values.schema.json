@@ -1,5 +1,5 @@
 {
-    "$schema": "substra-backend validation schema",
+    "$schema": "http://json-schema.org/draft-07/schema",
     "$id": "values.yaml",
     "type": "object",
     "title": "substra-backend values schema",
@@ -7,6 +7,9 @@
     "default": {},
     "examples": [
         {
+            "backend": {
+                "settings": "prod"
+            },
             "users": [
                 {
                     "name": "node-1",
@@ -16,74 +19,122 @@
         }
     ],
     "required": [
-        "users"
+        "users",
+        "backend"
     ],
     "additionalProperties": true,
     "properties": {
-        "users": {
-            "$id": "#/properties/users",
-            "type": "array",
-            "title": "The backend users validation schema",
-            "description": "Verification that the users created within the chart match the backend users requirements",
-            "default": [],
+        "backend": {
+            "$id": "#/properties/backend",
+            "type": "object",
+            "title": "The backend validation schema",
+            "description": "Verification of the backend values",
+            "default": {},
             "examples": [
-                [
-                    {
-                        "name": "node-1",
-                        "secret": "str0ngp@$swr0d44forbackend"
-                    }
-                ]
+                {
+                    "settings": "prod"
+                }
             ],
-            "additionalItems": true,
-            "items": {
-                "anyOf": [
-                    {
-                        "$id": "#/properties/users/items/anyOf/0",
-                        "type": "object",
-                        "title": "The first anyOf schema",
-                        "description": "User items",
-                        "default": {},
-                        "examples": [
-                            {
-                                "name": "node-1",
-                                "secret": "str0ngp@$swr0d44forbackend"
-                            }
-                        ],
-                        "required": [
-                            "name",
-                            "secret"
-                        ],
-                        "additionalProperties": true,
-                        "properties": {
-                            "name": {
-                                "$id": "#/properties/users/items/anyOf/0/properties/name",
-                                "type": "string",
-                                "title": "Username schema",
-                                "description": "Backend user names",
-                                "default": "",
-                                "examples": [
-                                    "node-1"
-                                ]
-                            },
-                            "secret": {
-                                "$id": "#/properties/users/items/anyOf/0/properties/secret",
-                                "type": "string",
-                                "title": "Password schema",
-                                "description": "Backend user password",
-                                "default": "",
-                                "examples": [
-                                    "str0ngp@$swr0d44forbackend"
-                                ],
-                                "maxLength": 64,
-                                "minLength": 20,
-                                "pattern": "(.*[A-z].*)"
+            "required": [
+                "settings"
+            ],
+            "additionalProperties": true,
+            "properties": {
+                "settings": {
+                    "$id": "#/properties/backend/properties/settings",
+                    "type": "string",
+                    "title": "The settings schema",
+                    "description": "validation of the backend settings value",
+                    "default": "",
+                    "examples": [
+                        "prod",
+                        "dev"
+                    ]
+                }   
+            }
+        }
+    },
+    "if": {
+        "type": "object",
+        "properties": {
+            "backend":{
+                "type": "object",
+                "properties": {
+                    "settings": {
+                        "const": "prod"
+                    }
+                }
+            }
+        }
+    },
+    "then": {
+        "type": "object",
+        "properties": {
+            "users": {
+                "$id": "#/properties/users",
+                "type": "array",
+                "title": "The backend users validation schema",
+                "description": "Verification that the users created within the chart match the backend users requirements",
+                "default": [],
+                "examples": [
+                    [
+                        {
+                            "name": "node-1",
+                            "secret": "str0ngp@$swr0d44forbackend"
+                        }
+                    ]
+                ],
+                "additionalItems": true,
+                "items": {
+                    "anyOf": [
+                        {
+                            "$id": "#/properties/users/items/anyOf/0",
+                            "type": "object",
+                            "title": "The first anyOf schema",
+                            "description": "User items",
+                            "default": {},
+                            "examples": [
+                                {
+                                    "name": "node-1",
+                                    "secret": "str0ngp@$swr0d44forbackend"
+                                }
+                            ],
+                            "required": [
+                                "name",
+                                "secret"
+                            ],
+                            "additionalProperties": true,
+                            "properties": {
+                                "name": {
+                                    "$id": "#/properties/users/items/anyOf/0/properties/name",
+                                    "type": "string",
+                                    "title": "Username schema",
+                                    "description": "Backend user names",
+                                    "default": "",
+                                    "examples": [
+                                        "node-1"
+                                    ]
+                                },
+                                "secret": {
+                                    "$id": "#/properties/users/items/anyOf/0/properties/secret",
+                                    "type": "string",
+                                    "title": "Password schema",
+                                    "description": "Backend user password",
+                                    "default": "",
+                                    "examples": [
+                                        "str0ngp@$swr0d44forbackend"
+                                    ],
+                                    "maxLength": 64,
+                                    "minLength": 20,
+                                    "pattern": "(.*[A-z].*)"
+                                }
                             }
                         }
-                    }
-                ],
-                "$id": "#/properties/users/items"
-            },
-            "uniqueItems": true
+                    ],
+                    "$id": "#/properties/users/items"
+                },
+                "uniqueItems": true
+            }
         }
     }
 }
