@@ -145,9 +145,9 @@ deploy:
             - name: "node-1"
               secret: "p@$swr0d44"
               channel: "mychannel"
-            # - name: "node-1-yourchannel"
-            #   secret: "p@$swr0d44"
-            #   channel: "yourchannel"
+            - name: "node-1-yourchannel"
+              secret: "p@$swr0d44"
+              channel: "yourchannel"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
@@ -199,9 +199,9 @@ deploy:
             - name: "node-2"
               secret: "p@$swr0d45"
               channel: "mychannel"
-            # - name: "node-2-yourchannel"
-            #   secret: "p@$swr0d45"
-            #   channel: "yourchannel"
+            - name: "node-2-yourchannel"
+              secret: "p@$swr0d45"
+              channel: "yourchannel"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
