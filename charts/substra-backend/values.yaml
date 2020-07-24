@@ -146,7 +146,6 @@ peer:
 
 channels:
 - mychannel
-- yourchannel
 
 chaincode:
   name: mycc
