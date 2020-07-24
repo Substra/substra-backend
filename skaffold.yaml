@@ -262,6 +262,9 @@ deploy:
               value: 'True'
             - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
               value: '120'
+          channels:
+            - mychannel
+            - yourchannel
 
 profiles:
   - name: prod
