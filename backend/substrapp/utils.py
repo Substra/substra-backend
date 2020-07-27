@@ -17,8 +17,12 @@ from checksumdir import dirhash
 
 from django.conf import settings
 from rest_framework import status
+from substrapp import constants
 
 logger = logging.getLogger(__name__)
+
+HASH_SALT_HEAD = constants.HASH_SALT_HEAD
+HASH_SALT_TRUNK = constants.HASH_SALT_TRUNK
 
 
 class JsonException(Exception):
@@ -254,7 +258,7 @@ def get_remote_file_content(url, auth, content_hash, salt=None):
     return response.content
 
 
-def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, salt=None):
+def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, hash_key):
 
     response = get_remote_file(url, auth, content_dst_path, stream=True)
 
@@ -262,9 +266,14 @@ def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, s
         logger.error(response.text)
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    computed_hash = get_hash(content_dst_path, key=salt)
+    computed_hash = get_hash(content_dst_path, key=hash_key)
     if computed_hash != content_hash:
-        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+        if settings.SUPPORT_LEGACY_MODEL_SALT and hash_key.endswith(HASH_SALT_TRUNK):
+            hash_key = hash_key[:-len(HASH_SALT_TRUNK)]
+            if get_hash(content_dst_path, key=hash_key) != content_hash:
+                raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+        else:
+            raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
 
 
 def get_subtuple_directory(subtuple_key):

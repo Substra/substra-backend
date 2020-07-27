@@ -40,9 +40,9 @@ def get_asset_content(url, node_id, content_hash, salt=None):
     return get_remote_file_content(url, authenticate_worker(node_id), content_hash, salt=salt)
 
 
-def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, salt=None):
+def get_and_put_asset_content(url, node_id, content_hash, content_dst_path, hash_key):
     return get_and_put_remote_file_content(url, authenticate_worker(node_id), content_hash,
-                                           content_dst_path=content_dst_path, salt=salt)
+                                           content_dst_path=content_dst_path, hash_key=hash_key)
 
 
 def list_files(startpath):
