@@ -23,6 +23,7 @@ class ModelViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 

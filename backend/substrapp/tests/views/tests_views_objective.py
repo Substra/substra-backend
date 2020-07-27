@@ -57,6 +57,7 @@ class ObjectiveViewTests(APITestCase):
         ]
 
         self.extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
