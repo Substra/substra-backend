@@ -84,7 +84,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote = get_remote_file_content(remote_file, 'external_node_id', pkhash)
+            content_remote = get_remote_file_content('mychannel', remote_file, 'external_node_id', pkhash)
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
@@ -297,7 +297,7 @@ class TasksTests(APITestCase):
             mget_remote_file.return_value = metrics_content
 
             objective = get_objective(CHANNEL, {'objective': {'hash': objective_hash,
-                                                     'metrics': ''}})
+                                                'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)
 
