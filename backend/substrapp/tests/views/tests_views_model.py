@@ -33,6 +33,7 @@ class ModelViewTests(APITestCase):
         self.model, self.model_filename = get_sample_model()
 
         self.extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 

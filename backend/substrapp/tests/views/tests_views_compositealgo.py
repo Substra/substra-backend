@@ -39,6 +39,7 @@ class CompositeAlgoViewTests(APITestCase):
         self.compositealgo, self.algo_filename = get_sample_composite_algo()
 
         self.extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
         self.logger = logging.getLogger('django.request')

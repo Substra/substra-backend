@@ -54,6 +54,7 @@ class TraintupleQueryTests(APITestCase):
             'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -92,6 +93,7 @@ class TraintupleQueryTests(APITestCase):
             'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -115,6 +117,7 @@ class TraintupleQueryTests(APITestCase):
         }
 
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -162,6 +165,7 @@ class TesttupleQueryTests(APITestCase):
             'traintuple_key': self.fake_key,
             'data_manager_key': self.fake_key}
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -197,6 +201,7 @@ class TesttupleQueryTests(APITestCase):
             'traintuple_key': self.fake_key,
             'data_manager_key': self.fake_key}
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -219,6 +224,7 @@ class TesttupleQueryTests(APITestCase):
         }
 
         extra = {
+            'HTTP_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
