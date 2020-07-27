@@ -36,7 +36,7 @@ class DataManagerViewTests(APITestCase):
             self.data_data_opener, self.data_opener_filename = get_sample_datamanager()
 
         self.extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 

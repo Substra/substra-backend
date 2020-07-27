@@ -64,7 +64,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         }
 
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -109,7 +109,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         }
 
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -133,7 +133,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         }
 
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -164,7 +164,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             mget_object_from_ledger.return_value = permissions
             mtype.return_value = NodeUser
             extra = {
-                'HTTP_CHANNEL_NAME': 'mychannel',
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
@@ -185,7 +185,7 @@ class CompositeTraintupleQueryTests(APITestCase):
                 as mget_object_from_ledger:
             mget_object_from_ledger.return_value = permissions
             extra = {
-                'HTTP_CHANNEL_NAME': 'mychannel',
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
@@ -208,7 +208,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             mtype.return_value = NodeUser
 
             extra = {
-                'HTTP_CHANNEL_NAME': 'mychannel',
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)

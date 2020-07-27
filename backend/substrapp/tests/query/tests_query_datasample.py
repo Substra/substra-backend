@@ -82,7 +82,7 @@ class DataSampleQueryTests(APITestCase):
 
         url = reverse('substrapp:data_sample-list')
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -121,7 +121,7 @@ class DataSampleQueryTests(APITestCase):
             }),
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -152,7 +152,7 @@ class DataSampleQueryTests(APITestCase):
 
         url = reverse('substrapp:data_sample-list')
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -169,7 +169,7 @@ class DataSampleQueryTests(APITestCase):
         # missing datamanager
         data = {'data_manager_keys': ['toto']}
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -219,7 +219,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -248,7 +248,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -275,7 +275,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -312,7 +312,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -351,7 +351,7 @@ class DataSampleQueryTests(APITestCase):
             }),
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -390,7 +390,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -420,7 +420,7 @@ class DataSampleQueryTests(APITestCase):
             }),
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -455,7 +455,7 @@ class DataSampleQueryTests(APITestCase):
             })
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -495,7 +495,7 @@ class DataSampleQueryTests(APITestCase):
             'data_sample_keys': [d.pkhash],
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 

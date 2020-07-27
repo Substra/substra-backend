@@ -93,7 +93,7 @@ class AlgoQueryTests(APITestCase):
 
         url = reverse('substrapp:algo-list')
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -124,7 +124,7 @@ class AlgoQueryTests(APITestCase):
 
         url = reverse('substrapp:algo-list')
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
@@ -160,7 +160,7 @@ class AlgoQueryTests(APITestCase):
             }),
         }
         extra = {
-            'HTTP_CHANNEL_NAME': 'mychannel',
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -206,7 +206,7 @@ class AlgoQueryTests(APITestCase):
             mget_object_from_ledger.return_value = get_sample_algo_metadata()
 
             extra = {
-                'HTTP_CHANNEL_NAME': 'mychannel',
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)

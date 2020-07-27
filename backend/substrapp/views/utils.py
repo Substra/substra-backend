@@ -213,7 +213,7 @@ def get_channel_name(request):
     if hasattr(request.user, 'channel'):
         return request.user.channel.name
 
-    if 'channel-name' in request.headers:
-        return request.headers['channel-name']
+    if 'Substra-Channel-Name' in request.headers:
+        return request.headers['Substra-Channel-Name']
 
     raise exceptions.BadRequestError('Could not determine channel name')
