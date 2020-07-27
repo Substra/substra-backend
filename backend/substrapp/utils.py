@@ -217,7 +217,7 @@ def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
     kwargs.update({
         'headers': {
             'Accept': 'application/json;version=0.0',
-            'channel-name': channel_name},
+            'Substra-Channel-Name': channel_name},
         'auth': auth
     })
 
