@@ -69,6 +69,7 @@ incomingNodes: []
 users: []
   # - name: username
   #   secret: password
+  #   channel: mychannel
 
 persistence:
   hostPath: "/substra"
