@@ -368,7 +368,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey'}]
+        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey', 'status': 'todo'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch.object(TaskResult.objects, 'filter') as mtaskresult, \
@@ -383,7 +383,8 @@ class TasksTests(APITestCase):
                 mock.patch('substrapp.tasks.tasks.uncompress_content'), \
                 mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
                 mock.patch('substrapp.tasks.tasks.AsyncResult') as masyncres, \
-                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner:
+                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
+                mock.patch('substrapp.tasks.tasks.find_training_step_tuple_from_key') as gettuple:
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
@@ -394,6 +395,7 @@ class TasksTests(APITestCase):
             mprepare_opener.return_value = 'opener'
             mprepare_data_sample.return_value = 'data'
             get_owner.return_value = 'foo'
+            gettuple.return_value = None, subtuple[0]
 
             masyncres.return_value.state = 'PENDING'
 
