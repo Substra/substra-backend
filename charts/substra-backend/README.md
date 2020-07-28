@@ -1,24 +1,34 @@
-# Main deployment package of Substra
+# Substra Backend
 
-## Requirements
+Substra Backend is a component of [Substra](https://github.com/SubstraFoundation/substra).
 
-Having a Kubernetes cluster working with Helm initialized. You can do that locally by installing Minikube and grabbing Helm binary from github.
-Then simply launch your cluster using `minikube start` and configure helm with `helm init`.
+## Prerequisites
 
-You will also need the Hyperledger Fabric network setup on the cluster.
-Look at the corresponding chart for that (chart-hlf-k8s)
+- Kubernetes 1.14+
+- If you want to enable GPU support, install the nvidia device plugin for kubernetes: https://github.com/NVIDIA/k8s-device-plugin or https://github.com/NVIDIA/gpu-operator
 
-You will also need a postgresql instance on the cluster, it should already be the case if you install the network first.
+## Changelog
 
-If you want gpu compatibility you need to install nvidia device plugin for kubernetes : https://github.com/NVIDIA/k8s-device-plugin or https://github.com/NVIDIA/gpu-operator
+See [CHANGELOG.md](./CHANGELOG.md)
 
-## Install the package
-```
-helm install --name hlf-k8s owkin/hlf-k8s
-helm install --name substra owkin/substra
-```
+## Configuration
 
-### Cleanup
-```
-helm delete --purge hlf-k8s substra
-```
+The following table lists the configurable parameters of the substra-backend chart and default values.
+
+:warning: This list is a work in progress. Please refer to [values.yaml](./values.yaml) for full configuration options.
+
+| Parameter                          | Description                                     | Default                                                    |
+| ---------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
+| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `[mychannel]` |
+| `users` | A list of users who can log into the backend | `[]` |
+| `users[].name` | The user login | (undefined) |
+| `users[].password` | The user password | (undefined) |
+| `users[].channel` | The user channel. This is the name of a Hyperledger Fabric channel (see [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s)). All operations by the user will be executed against this channel. | (undefined) |
+
+
+## Usage
+
+### Basic example
+
+For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
+
