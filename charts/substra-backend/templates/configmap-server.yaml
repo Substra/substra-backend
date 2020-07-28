@@ -55,11 +55,6 @@ data:
     processes                     = {{ .Values.backend.uwsgiProcesses }}
     threads                       = {{ .Values.backend.uwsgiThreads }}
 
-    cheaper-algo                  = spare
-    cheaper                       = 2           # workers nb to try to keep idle
-    cheaper-initial               = 8           # starts with minimal workers
-    cheaper-step                  = 4           # spawn at most 'cheaper-step' workers at once
-
     http-socket                   = :{{ .Values.backend.service.port }}
 
     need-app                      = true
