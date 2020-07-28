@@ -653,7 +653,6 @@ def prepare_materials(channel_name, subtuple, tuple_type):
 @timeit
 def do_task(channel_name, subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple['key'])
-    subtuple_directory = get_subtuple_directory(subtuple)
     org_name = getattr(settings, 'ORG_NAME')
 
     # compute plan / federated learning variables
