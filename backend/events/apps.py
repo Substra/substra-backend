@@ -46,7 +46,7 @@ def tuple_get_worker(event_type, asset):
     return asset['dataset']['worker']
 
 
-def on_tuples_event(tx_status, event_type, asset):
+def on_tuples_event(block_number, tx_id, tx_status, event_type, asset):
 
     owner = get_owner()
     worker_queue = f"{LEDGER['name']}.worker"
@@ -71,8 +71,8 @@ def on_tuples_event(tx_status, event_type, asset):
     tuple_owner = tuple_get_worker(event_type, asset)
 
     if tuple_owner != owner:
-        logger.debug(f'Skipping task {key}: owner does not match'
-                     f' ({tuple_owner} vs {owner})')
+        logger.info(f'Skipping task {key}: owner does not match'
+                    f' ({tuple_owner} vs {owner})')
         return
 
     if AsyncResult(key).state != 'PENDING':
@@ -86,7 +86,7 @@ def on_tuples_event(tx_status, event_type, asset):
     )
 
 
-def on_compute_plan_event(tx_status, asset):
+def on_compute_plan_event(block_number, tx_id, tx_status, asset):
 
     worker_queue = f"{LEDGER['name']}.worker"
 
@@ -105,9 +105,15 @@ def on_compute_plan_event(tx_status, asset):
 
     logger.info(f'Processing cleaning task {key}: type=computePlan status={status}')
 
+    task_id = f'{key}-{block_number}'
+
+    if AsyncResult(task_id).state != 'PENDING':
+        logger.info(f'Skipping cleaning task {key} (from block {block_number}): already exists')
+        return
+
     on_compute_plan.apply_async(
         (asset, ),
-        task_id=key,
+        task_id=task_id,
         queue=worker_queue
     )
 
@@ -123,9 +129,9 @@ def on_event(cc_event, block_number, tx_id, tx_status):
         for asset in assets:
 
             if event_type == 'computePlan':
-                on_compute_plan_event(tx_status, asset)
+                on_compute_plan_event(block_number, tx_id, tx_status, asset)
             else:
-                on_tuples_event(tx_status, event_type, asset)
+                on_tuples_event(block_number, tx_id, tx_status, event_type, asset)
 
 
 def wait():
