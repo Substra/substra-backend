@@ -1037,5 +1037,5 @@ def on_compute_plan(compute_plan):
         remove_algo_images(algo_hashes)
 
     # Remove intermediary models
-    if model_hashes:
+    if model_hashes and len(model_hashes) > 0:
         remove_intermediary_models(model_hashes)
