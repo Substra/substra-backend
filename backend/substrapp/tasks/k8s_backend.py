@@ -1,4 +1,3 @@
-import json
 import kubernetes
 import requests
 import os
@@ -20,7 +19,6 @@ COMPONENT = 'substra-compute'
 RUN_AS_GROUP = os.getenv('RUN_AS_GROUP')
 RUN_AS_USER = os.getenv('RUN_AS_USER')
 FS_GROUP = os.getenv('FS_GROUP')
-IMAGE_BUILDER = os.getenv('IMAGE_BUILDER')
 KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
 KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
 COMPUTE_REGISTRY = settings.TASK['COMPUTE_REGISTRY']
@@ -232,7 +230,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
-    job_name = f'{IMAGE_BUILDER}-{tag.split("/")[-1].replace("_", "-")}'
+    job_name = f'kaniko-{tag.split("/")[-1].replace("_", "-")}'
 
     logger.info(f'The pod {NAMESPACE}/{job_name} started')
 
@@ -240,82 +238,32 @@ def _k8s_build_image(path, tag, rm, cache_index):
 
     dockerfile_mount_subpath = path.split('/subtuple/')[-1]
 
-    if IMAGE_BUILDER == 'kaniko':
-        # kaniko build can be launched without privilege but
-        # it needs some capabilities and to be root
-        image = KANIKO_IMAGE
-        command = None
-        mount_path_dockerfile = path
-        mount_path_cache = '/cache'
+    # kaniko build can be launched without privilege but
+    # it needs some capabilities and to be root
+    image = KANIKO_IMAGE
+    command = None
+    mount_path_dockerfile = path
+    mount_path_cache = '/cache'
 
-        args = [
-            f'--dockerfile={dockerfile_fullpath}',
-            f'--context=dir://{path}',
-            f'--destination={REGISTRY}/{tag}:substra',
-            f'--cache={str(not(rm)).lower()}'
-        ]
+    args = [
+        f'--dockerfile={dockerfile_fullpath}',
+        f'--context=dir://{path}',
+        f'--destination={REGISTRY}/{tag}:substra',
+        f'--cache={str(not(rm)).lower()}'
+    ]
 
+    if REGISTRY_SCHEME == 'http':
+        args.append('--insecure')
+
+    if KANIKO_MIRROR:
+        args.append(f'--registry-mirror={REGISTRY}')
         if REGISTRY_SCHEME == 'http':
-            args.append('--insecure')
+            args.append('--insecure-pull')
 
-        if KANIKO_MIRROR:
-            args.append(f'--registry-mirror={REGISTRY}')
-            if REGISTRY_SCHEME == 'http':
-                args.append('--insecure-pull')
-
-        # https://github.com/GoogleContainerTools/kaniko/issues/778
-        capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
-        pod_security_context = get_pod_security_context(root=True)
-        container_security_context = get_security_context(root=True, add_capabilities=capabilities)
-
-    elif IMAGE_BUILDER == 'makisu':
-        # makisu build can be launched without privilege but
-        # it needs to be root
-        image = 'gcr.io/uber-container-tools/makisu-alpine:v0.2.0'
-        command = None
-        mount_path_dockerfile = '/makisu-context'
-        mount_path_cache = '/makisu-storage'
-        args = [
-            'build',
-            f'--push={REGISTRY}',
-            f'-t={tag}:substra',
-            '--modifyfs=true',
-        ]
-        if mount_path_cache is not None:
-            args.append(f'--storage={mount_path_cache}')
-
-        if REGISTRY_SCHEME == 'http':
-            registry_config = json.dumps(
-                {"*": {"*": {"security": {"tls": {"client": {"disabled": True}}}}}}
-            )
-            args.extend(['--registry-config', registry_config])
-
-        args.append(mount_path_dockerfile)
-
-        pod_security_context = get_pod_security_context(root=True)
-        container_security_context = get_security_context(root=True)
-
-    elif IMAGE_BUILDER == 'dind':
-        # dind build must be launched with privilege
-
-        image = 'docker:19.03-dind'
-        command = ['/bin/sh', '-c']
-        mount_path_dockerfile = path
-        mount_path_cache = '/var/lib/docker'
-
-        wait_for_docker = 'while ! (docker ps); do sleep 1; done'
-        build_args = (
-            f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
-            f'docker push {REGISTRY}/{tag}:substra')
-
-        if REGISTRY_SCHEME == 'http':
-            extra_options = f'--insecure-registry={REGISTRY}'
-        else:
-            extra_options = ''
-        args = [f'(dockerd-entrypoint.sh {extra_options}) & {wait_for_docker}; {build_args}']
-
-        pod_security_context = get_pod_security_context(root=True)
-        container_security_context = get_security_context(root=True, privileged=True)
+    # https://github.com/GoogleContainerTools/kaniko/issues/778
+    capabilities = ['CHOWN', 'SETUID', 'SETGID', 'FOWNER', 'DAC_OVERRIDE']
+    pod_security_context = get_pod_security_context(root=True)
+    container_security_context = get_security_context(root=True, add_capabilities=capabilities)
 
     container = kubernetes.client.V1Container(
         name=job_name,
@@ -326,7 +274,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
             {'name': 'dockerfile',
              'mountPath': mount_path_dockerfile,
              'subPath': dockerfile_mount_subpath,
-             'readOnly': (IMAGE_BUILDER != 'makisu')}
+             'readOnly': True}
         ],
         security_context=container_security_context
     )
@@ -336,7 +284,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
             'name': 'cache',
             'mountPath': mount_path_cache,
             'subPath': cache_index,
-            'readOnly': (IMAGE_BUILDER == 'kaniko')
+            'readOnly': True
         })
 
     pod_affinity = kubernetes.client.V1Affinity(
@@ -398,8 +346,8 @@ def _k8s_build_image(path, tag, rm, cache_index):
         # In case of concurrent build, it may fail
         # check if image exists
         if not k8s_image_exists(tag):
-            logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
-            raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
+            logger.error(f'Kaniko build failed, error: {e}')
+            raise BuildError(f'Kaniko build failed, error: {e}')
     finally:
         if create_pod:
             container_format_log(

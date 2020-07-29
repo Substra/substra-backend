@@ -1,7 +1,6 @@
 import os
 import shutil
 import mock
-import uuid
 from unittest.mock import MagicMock
 
 from django.test import override_settings
@@ -13,7 +12,6 @@ from substrapp.models import DataSample
 from substrapp.ledger_utils import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
-from substrapp.tasks.utils import compute_job
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
@@ -47,9 +45,6 @@ class TasksTests(APITestCase):
         self.data_sample, self.data_sample_filename = get_sample_zip_data_sample()
         self.data_sample_tar, self.data_sample_tar_filename = get_sample_tar_data_sample()
         self.model, self.model_filename = get_sample_model()
-
-        self.mock_compute_backend = mock.patch('substrapp.tasks.utils.COMPUTE_BACKEND',
-                                               'docker')
 
     @classmethod
     def setUpTestData(cls):
@@ -304,19 +299,6 @@ class TasksTests(APITestCase):
                                                      'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)
-
-    def test_compute_job(self):
-
-        dockerfile_path = os.path.join(self.subtuple_path, 'Dockerfile')
-        with open(dockerfile_path, 'w') as f:
-            f.write('FROM library/hello-world')
-
-        hash_docker = uuid.uuid4().hex
-        with self.mock_compute_backend:
-            compute_job(
-                'subtuple_key', 'compute_plan_id', self.subtuple_path, 'test_compute_job_' + hash_docker,
-                'test_compute_job_name_' + hash_docker, None, None, environment={}
-            )
 
     def test_build_subtuple_folders(self):
         with mock.patch('substrapp.tasks.tasks.getattr') as getattr:

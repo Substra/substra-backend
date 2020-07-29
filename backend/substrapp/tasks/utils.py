@@ -1,5 +1,5 @@
 import os
-import docker
+import time
 import logging
 import functools
 import threading
@@ -8,9 +8,6 @@ from django.conf import settings
 from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
 
-from substrapp.tasks.docker_backend import (
-    docker_get_image, docker_build_image, docker_remove_local_volume, docker_get_or_create_local_volume,
-    docker_remove_image, docker_compute)
 from substrapp.tasks.k8s_backend import (
     k8s_get_image, k8s_build_image, k8s_remove_local_volume, k8s_get_or_create_local_volume,
     k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
@@ -19,33 +16,9 @@ from substrapp.tasks.k8s_backend import (
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
 TASK_LABEL = 'substra_task'
-COMPUTE_BACKEND = settings.TASK['COMPUTE_BACKEND']
 BUILD_IMAGE = settings.TASK['BUILD_IMAGE']
 
 logger = logging.getLogger(__name__)
-
-import time
-
-BACKEND = {
-    'docker': {
-        'get_image': docker_get_image,
-        'build_image': docker_build_image,
-        'local_volume': docker_get_or_create_local_volume,
-        'rm_local_volume': docker_remove_local_volume,
-        'remove_image': docker_remove_image,
-        'compute': docker_compute,
-    },
-
-    'k8s': {
-        'get_image': k8s_get_image,
-        'build_image': k8s_build_image,
-        'local_volume': k8s_get_or_create_local_volume,
-        'rm_local_volume': k8s_remove_local_volume,
-        'remove_image': k8s_remove_image,
-        'compute': k8s_compute,
-    },
-
-}
 
 
 def authenticate_worker(node_id):
@@ -91,15 +64,15 @@ def list_files(startpath):
 
 
 def get_or_create_local_volume(volume_id):
-    return BACKEND[COMPUTE_BACKEND]['local_volume'](volume_id)
+    return k8s_get_or_create_local_volume(volume_id)
 
 
 def remove_local_volume(volume_id):
-    return BACKEND[COMPUTE_BACKEND]['rm_local_volume'](volume_id)
+    return k8s_remove_local_volume(volume_id)
 
 
 def remove_image(image_name):
-    return BACKEND[COMPUTE_BACKEND]['remove_image'](image_name)
+    return k8s_remove_image(image_name)
 
 
 def raise_if_no_dockerfile(dockerfile_path):
@@ -125,8 +98,8 @@ def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_
     # Check if image already exist
     try:
         ts = time.time()
-        BACKEND[COMPUTE_BACKEND]['get_image'](image_name)
-    except (docker.errors.ImageNotFound, ImageNotFound):
+        k8s_get_image(image_name)
+    except ImageNotFound:
         if build_image:
             logger.info(f'ImageNotFound: {image_name}. Building it')
         else:
@@ -136,31 +109,25 @@ def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_
         build_image = False
     finally:
         elaps = (time.time() - ts) * 1000
-        logger.info(f'{COMPUTE_BACKEND} get image  - elaps={elaps:.2f}ms')
+        logger.info(f'Get image  - elaps={elaps:.2f}ms')
 
     if build_image:
         try:
             ts = time.time()
-            BACKEND[COMPUTE_BACKEND]['build_image'](
+            k8s_build_image(
                 path=dockerfile_path,
                 tag=image_name,
                 rm=remove_image)
-        except (docker.errors.BuildError, BuildError) as e:
-            if isinstance(e, docker.errors.BuildError):
-                # catch build errors and print them for easier debugging of failed build
-                lines = [line['stream'].strip() for line in e.build_log if 'stream' in line]
-                lines = [line for line in lines if line]
-                error = '\n'.join(lines)
-            else:
-                error = '\n' + str(e)
+        except BuildError as e:
+            error = '\n' + str(e)
             logger.error(f'BuildError: {error}')
             raise
         else:
             logger.info(f'BuildSuccess - {image_name} - keep cache : {not remove_image}')
             elaps = (time.time() - ts) * 1000
-            logger.info(f'{COMPUTE_BACKEND} build image - elaps={elaps:.2f}ms')
+            logger.info(f'Build image - elaps={elaps:.2f}ms')
 
-    BACKEND[COMPUTE_BACKEND]['compute'](
+    k8s_compute(
         image_name,
         job_name,
         command,

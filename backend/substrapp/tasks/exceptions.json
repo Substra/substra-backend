@@ -442,5 +442,8 @@
     "error": "0441",
     "gaierror": "0442",
     "herror": "0443",
-    "timeout": "0444"
+    "timeout": "0444",
+    "BadGzipFile": "0445",
+    "InvalidCacheKey": "0446",
+    "_GiveupOnFastCopy": "0447"
 }

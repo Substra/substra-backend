@@ -9,7 +9,6 @@ import json
 import logging
 import tarfile
 
-import docker
 import kubernetes
 
 from django.conf import settings
@@ -543,11 +542,9 @@ class ComputeTask(Task):
             # Do not show traceback if it's a container error as we already see them in
             # container log
             type_exc = type(exc)
-            exc_info = not(type_exc == docker.errors.ContainerError)
-
             type_value = str(type_exc).split("'")[1]
             logger.error(f'{tuple_type} {subtuple["key"]} {error_code} - {type_value}',
-                         exc_info=exc_info)
+                         exc_info=True)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
             logger.exception(e)

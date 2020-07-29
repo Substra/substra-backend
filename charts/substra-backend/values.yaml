@@ -12,14 +12,9 @@ backend:
     enabled: false
     hostPath: /var/run/docker.sock
 
-  imageBuilder:
-    # type: makisu
-    # type: dind
-    type: kaniko
-
-    kaniko:
-      image: gcr.io/kaniko-project/executor:v0.23.0
-      mirror: false  # If true, kaniko will pull base images from the local registry
+  kaniko:
+    image: gcr.io/kaniko-project/executor:v0.23.0
+    mirror: false  # If true, kaniko will pull base images from the local registry
 
   compute:
     registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry

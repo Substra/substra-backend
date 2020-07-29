@@ -8,7 +8,6 @@ django-celery-results==1.1.2
 django-rest-swagger==2.2.0
 djangorestframework==3.11.0
 djangorestframework-simplejwt==4.4.0
-docker==4.1.0
 GPUtil==1.4.0
 ipython==7.11.1
 ipython-genutils==0.2.0

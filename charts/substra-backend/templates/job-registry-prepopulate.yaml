@@ -25,7 +25,7 @@ spec:
     spec:
       initContainers:
       - name: kaniko
-        image: {{ $.Values.backend.imageBuilder.kaniko.image }}
+        image: {{ $.Values.backend.kaniko.image }}
         args: ["--context=/docker-context",
                 "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
                 "--insecure"]

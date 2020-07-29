@@ -135,8 +135,6 @@ deploy:
             settings: dev
             tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
-            imageBuilder:
-              type: dind
             ingress:
               enabled: true
               hosts:
@@ -174,8 +172,6 @@ deploy:
               value: '120'
             - name: TASK_CACHE_DOCKER_IMAGES
               value: 'False'
-            - name: COMPUTE_BACKEND
-              value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
             - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
@@ -213,8 +209,6 @@ deploy:
             settings: dev
             tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
-            imageBuilder:
-              type: dind
             ingress:
               enabled: true
               hosts:
@@ -252,8 +246,6 @@ deploy:
               value: '120'
             - name: TASK_CACHE_DOCKER_IMAGES
               value: 'False'
-            - name: COMPUTE_BACKEND
-              value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
             - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'

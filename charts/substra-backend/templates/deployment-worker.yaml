@@ -146,12 +146,10 @@ spec:
               value: {{ .Values.securityContext.runAsGroup | quote }}
             - name: FS_GROUP
               value: {{ .Values.securityContext.fsGroup | quote }}
-            - name: IMAGE_BUILDER
-              value: {{ .Values.backend.imageBuilder.type | quote }}
             - name: KANIKO_IMAGE
-              value: {{ .Values.backend.imageBuilder.kaniko.image | quote }}
+              value: {{ .Values.backend.kaniko.image | quote }}
             - name: KANIKO_MIRROR
-              value: {{ .Values.backend.imageBuilder.kaniko.mirror | quote }}
+              value: {{ .Values.backend.kaniko.mirror | quote }}
             - name: COMPUTE_REGISTRY
               value: {{ .Values.backend.compute.registry | quote }}
           {{- with .Values.extraEnv }}
