@@ -1019,8 +1019,9 @@ def remove_intermediary_models(model_hashes):
 
     models.delete()
 
-    log_model_hashes = '\n\t- '.join(filtered_model_hashes)
-    logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
+    if filter_model_hashes:
+        log_model_hashes = '\n\t- '.join(filtered_model_hashes)
+        logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
 
 
 @app.task(ignore_result=False)
@@ -1037,5 +1038,5 @@ def on_compute_plan(compute_plan):
         remove_algo_images(algo_hashes)
 
     # Remove intermediary models
-    if model_hashes and len(model_hashes) > 0:
+    if model_hashes:
         remove_intermediary_models(model_hashes)
