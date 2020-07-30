@@ -34,8 +34,8 @@ logger = logging.getLogger(__name__)
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
 
-HASH_SUFFIX_HEAD = 'HEAD'
-HASH_SUFFIX_TRUNK = 'TRUNK'
+HASH_KEY_SUFFIX_HEAD = 'HEAD'
+HASH_KEY_SUFFIX_TRUNK = 'TRUNK'
 
 TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
@@ -195,7 +195,7 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'] + HASH_SUFFIX_TRUNK, metadata,
+            tuple_type, input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK, metadata,
             metadata['outTrunkModel']['outModel'], model_dst_path,
         )
     else:
@@ -265,7 +265,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
     raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
     get_and_put_local_model_content(
-        head_model_key + HASH_SUFFIX_HEAD, metadata['outHeadModel']['outModel'], head_model_dst_path
+        head_model_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'], head_model_dst_path
     )
 
     # get trunk model
@@ -276,7 +276,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
-            tuple_type, trunk_model_key + HASH_SUFFIX_TRUNK, metadata,
+            tuple_type, trunk_model_key + HASH_KEY_SUFFIX_TRUNK, metadata,
             metadata['outTrunkModel']['outModel'], trunk_model_dst_path,
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
@@ -306,13 +306,13 @@ def prepare_testtuple_input_models(directory, tuple_):
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
         raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
-        get_and_put_local_model_content(traintuple_key + HASH_SUFFIX_HEAD, metadata['outHeadModel']['outModel'],
+        get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'],
                                         head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key + HASH_SUFFIX_TRUNK, metadata,
+            traintuple_type, traintuple_key + HASH_KEY_SUFFIX_TRUNK, metadata,
             metadata['outTrunkModel']['outModel'], model_dst_path,
         )
 
@@ -944,8 +944,8 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
         }
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        for type_model, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_SUFFIX_HEAD),
-                                                ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_SUFFIX_TRUNK)]:
+        for type_model, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
+                                                ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
             file, file_hash = save_model(
                 subtuple_directory,
                 subtuple_key + hash_salt,
