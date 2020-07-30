@@ -33,7 +33,7 @@ def main(network):
                 'It is generated using substrapp/tests/generate_assets.py\n\n'
                 'In order to update this file:\n'
                 '1. start a clean instance of substra\n'
-                '2. run populate.py\n'
+                '2. run computation on it (with e2e tests for instance)\n'
                 '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
             v = v.replace('substra-backend.node-1.com', 'testserver')
