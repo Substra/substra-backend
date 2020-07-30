@@ -944,15 +944,15 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
         }
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        for type_model, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
-                                                ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
+        for type, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
+                                          ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
             file, file_hash = save_model(
                 subtuple_directory,
                 subtuple_key + hash_salt,
                 filename=filename,
             )
 
-            models[type_model] = {
+            models[type] = {
                 'file': file,
                 'hash': file_hash
             }
