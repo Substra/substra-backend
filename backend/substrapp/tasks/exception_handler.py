@@ -133,3 +133,4 @@ if __name__ == '__main__':
     json_exceptions = generate_exceptions_map()
     with open(EXCEPTION_PATH, 'w') as outfile:
         json.dump(json_exceptions, outfile, indent=4)
+        outfile.write('\n')  # Add newline cause Py JSON does not

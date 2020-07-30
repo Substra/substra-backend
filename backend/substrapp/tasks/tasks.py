@@ -817,6 +817,7 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
 
         with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
             json.dump({'chain_keys': formatted_secrets}, f)
+            f.write('\n')  # Add newline cause Py JSON does not
 
         # remove secrets:
         # do not delete secrets as a running k8s operator will recreate them, instead
