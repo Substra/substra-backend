@@ -35,6 +35,7 @@ spec:
         {{- range .Values.prePulledImages }}
         - "--image={{ . }}"
         {{- end }}
+        - "--verbosity=debug"
         volumeMounts:
         - name: kaniko-cache
           mountPath: /cache
