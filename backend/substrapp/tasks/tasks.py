@@ -1019,8 +1019,9 @@ def remove_intermediary_models(model_hashes):
 
     models.delete()
 
-    log_model_hashes = '\n\t- '.join(filtered_model_hashes)
-    logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
+    if filtered_model_hashes:
+        log_model_hashes = '\n\t- '.join(filtered_model_hashes)
+        logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
 
 
 @app.task(ignore_result=False)
