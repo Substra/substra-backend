@@ -21,9 +21,6 @@ from substrapp import constants
 
 logger = logging.getLogger(__name__)
 
-HASH_SALT_HEAD = constants.HASH_SALT_HEAD
-HASH_SALT_TRUNK = constants.HASH_SALT_TRUNK
-
 
 class JsonException(Exception):
     def __init__(self, msg):
@@ -268,12 +265,7 @@ def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, h
 
     computed_hash = get_hash(content_dst_path, key=hash_key)
     if computed_hash != content_hash:
-        if settings.SUPPORT_LEGACY_MODEL_SALT and hash_key.endswith(HASH_SALT_TRUNK):
-            hash_key = hash_key[:-len(HASH_SALT_TRUNK)]
-            if get_hash(content_dst_path, key=hash_key) != content_hash:
-                raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
-        else:
-            raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
 
 
 def get_subtuple_directory(subtuple_key):

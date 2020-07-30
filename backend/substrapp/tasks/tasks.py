@@ -29,15 +29,13 @@ from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_a
 
 from substrapp.tasks.exception_handler import compute_error_code
 
-from substrapp import constants
-
 logger = logging.getLogger(__name__)
 
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
 
-HASH_SALT_HEAD = constants.HASH_SALT_HEAD
-HASH_SALT_TRUNK = constants.HASH_SALT_TRUNK
+HASH_SALT_HEAD = 'HEAD'
+HASH_SALT_TRUNK = 'TRUNK'
 
 TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
@@ -166,23 +164,13 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     model = Model.objects.get(pk=out_model['hash'])
 
     # verify that local db model file is not corrupted
-    def validate_hash(path, key, expected):
-        if get_hash(model.file.path, key) == expected:
-            return True
-
-        if settings.SUPPORT_LEGACY_MODEL_SALT and key.endswith(HASH_SALT_HEAD):
-            key = key[:-len(HASH_SALT_HEAD)]
-            return get_hash(model.file.path, key) == expected
-        else:
-            return False
-
-    if not validate_hash(model.file.path, hash_key, out_model['hash']):
+    if get_hash(model.file.path, hash_key) != out_model['hash']:
         raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
         os.symlink(model.file.path, model_dst_path)
     else:
-        if not validate_hash(model_dst_path, hash_key, out_model['hash']):
+        if get_hash(model_dst_path, hash_key) != out_model['hash']:
             raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
 

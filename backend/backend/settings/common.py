@@ -220,9 +220,3 @@ EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFET
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
 ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))
-
-# The algorithm used to compute out-model hashes was changed to support more use-cases.
-# The following flag ensures backward compatibility: it makes it so that hashes computed
-# using the 'old' algorithm are still treated as valid.
-# This flag should ultimately set to False, and the associated code should be removed.
-SUPPORT_LEGACY_MODEL_SALT = True
