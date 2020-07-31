@@ -8,10 +8,6 @@ backend:
   uwsgiThreads: 2
   gzipModels: false
 
-  dockerSocket:
-    enabled: false
-    hostPath: /var/run/docker.sock
-
   kaniko:
     image: gcr.io/kaniko-project/executor:v0.23.0
     mirror: false  # If true, kaniko will pull base images from the local registry
@@ -76,6 +72,7 @@ users: []
 persistence:
   # storageClassName: ""
   # hostPath: "/substra"
+  # hostPathServerMedias: "/host/servermedias"
   size: "10Gi"
   volumes:
     - name: algos

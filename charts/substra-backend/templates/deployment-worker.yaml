@@ -156,10 +156,6 @@ spec:
 {{ toYaml . | indent 12 }}
           {{- end }}
           volumeMounts:
-            {{- if .Values.backend.dockerSocket.enabled }}
-            - name: dockersocket
-              mountPath: /var/run/docker.sock
-            {{- end }}
             {{- range .Values.persistence.volumes }}
             - name: data-{{ .name }}
               mountPath: /var/substra/medias/{{ .name }}
@@ -188,11 +184,6 @@ spec:
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
-      {{- if .Values.backend.dockerSocket.enabled }}
-      - name: dockersocket
-        hostPath:
-          path: {{ .Values.backend.dockerSocket.hostPath }}
-      {{ end }}
       {{- range .Values.persistence.volumes }}
       - name: data-{{ .name }}
         persistentVolumeClaim:
