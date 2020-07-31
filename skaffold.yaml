@@ -162,6 +162,8 @@ deploy:
           users:
             - name: "node-1"
               secret: "p@$swr0d44"
+          persistence:
+            hostPathServerMedias: "/tmp/org-1/"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
@@ -236,6 +238,8 @@ deploy:
           users:
             - name: "node-2"
               secret: "p@$swr0d45"
+          persistence:
+            hostPathServerMedias: "/tmp/org-2/"
           extraEnv:
             # Should be a json list
             - name: CORS_ORIGIN_WHITELIST
