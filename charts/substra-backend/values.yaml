@@ -1,20 +1,23 @@
-docker:
-  # Path of the docker socket on the host
-  socket: /var/run/docker.sock
-  # Dockerconfig to be used to pull the images (base64'd)
-  config: null
-  # Images to pull
-  pullImages: []
-    # - substrafoundation/substra-tools:0.0.1
-
 backend:
   replicaCount: 1
   settings: prod
+  tokenStrategy: 'unique'  # 'reuse'
   siteHost: localhost
   defaultDomain: localhost
-  uwsgiProcesses: 8
+  uwsgiProcesses: 20
   uwsgiThreads: 2
   gzipModels: false
+
+  dockerSocket:
+    enabled: false
+    hostPath: /var/run/docker.sock
+
+  kaniko:
+    image: gcr.io/kaniko-project/executor:v0.23.0
+    mirror: false  # If true, kaniko will pull base images from the local registry
+
+  compute:
+    registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
 
   image:
     repository: substrafoundation/substra-backend
@@ -71,7 +74,8 @@ users: []
   #   secret: password
 
 persistence:
-  hostPath: "/substra"
+  # storageClassName: ""
+  # hostPath: "/substra"
   size: "10Gi"
   volumes:
     - name: algos
@@ -119,6 +123,12 @@ persistence:
       readOnly:
         server: true
         worker: false
+    # Writable by jobs only
+    - name: local
+      size: "10Gi"
+      readOnly:
+        server: true
+        worker: true
 
 # Secrets names
 secrets:
@@ -167,6 +177,17 @@ rabbitmq:
   port: 5672
   persistence:
     enabled: false
+
+docker-registry:
+  enabled: true
+  storage: filesystem
+  persistence:
+    enabled: false
+    deleteEnabled: true
+
+prePulledImages:
+- substrafoundation/substra-tools:0.6.1
+- substrafoundation/substra-tools:0.6.1-minimal
 
 flower:
   enabled: true
@@ -223,6 +244,7 @@ celeryscheduler:
 
 celeryworker:
   replicaCount: 1
+  concurrency: 1  # Max number of tasks to process in parallel
   updateStrategy: RollingUpdate
   image:
     repository: substrafoundation/celeryworker
@@ -249,7 +271,7 @@ celeryworker:
   affinity: {}
 
   rbac:
-    enable: False
+    enable: True
   # Add ServiceAccount for celeryworker
 
 extraEnv: []
@@ -258,7 +280,38 @@ extraEnv: []
 
 privateCa:
   enabled: false
+  image:
+    repository: alpine:latest
+    pullPolicy: IfNotPresent
+    apkAdd: true
   configMap:
     name: substra-private-ca
 #    data: nil
     fileName: private-ca.crt
+
+
+registry:
+  local: true    # false if you use external docker-registry (host and port will be taken into account)
+  host: 127.0.0.1
+  port: 32000
+  scheme: http
+  pullDomain: 127.0.0.1:32000
+
+  ## Local registry pre-populate
+  prepopulate:
+    - image: substrafoundation/substra-tools:0.5.0
+    #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
+    #   dockerConfigSecretName: docker-config
+
+## Pod Security Policy
+## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
+psp:
+  create: True
+
+## Pod Security Context
+## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
+securityContext:
+  enabled: True
+  fsGroup: 1001
+  runAsUser: 1001
+  runAsGroup: 1001

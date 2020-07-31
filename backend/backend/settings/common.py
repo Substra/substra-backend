@@ -198,6 +198,10 @@ TASK = {
     'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
     'CHAINKEYS_ENABLED': to_bool(os.environ.get('TASK_CHAINKEYS_ENABLED', False)),
     'LIST_WORKSPACE': to_bool(os.environ.get('TASK_LIST_WORKSPACE', True)),
+    'BUILD_IMAGE': to_bool(os.environ.get('BUILD_IMAGE', True)),
+    'KANIKO_MIRROR': to_bool(os.environ.get('KANIKO_MIRROR', False)),
+    'KANIKO_IMAGE': os.environ.get('KANIKO_IMAGE'),
+    'COMPUTE_REGISTRY': os.environ.get('COMPUTE_REGISTRY'),
 }
 
 CELERY_ACCEPT_CONTENT = ['application/json']
@@ -206,7 +210,7 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_TASK_TRACK_STARTED = True  # since 4.0
 CELERY_TASK_MAX_RETRIES = 5
 CELERY_TASK_RETRY_DELAY_SECONDS = 2
-CELERY_WORKER_CONCURRENCY = 1
+CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', 1))
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//'),
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000

@@ -20,6 +20,10 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
       {{- with $.Values.backend.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
@@ -32,11 +36,16 @@ spec:
         {{- if .Values.backend.image.pullPolicy }}
         imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
         {{- end }}
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        {{- end }}
         command: ["/bin/bash"]
         {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "update-ca-certificates && uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --http-timeout 300 --socket-timeout 300 --harakiri 300 --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }} "]
+        args: ["-c", "uwsgi --ini uwsgi.ini"]
         {{- else }}
-        args: ["-c", "update-ca-certificates && watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --http :{{ .Values.backend.service.port }} --module backend.wsgi --static-map /static=/usr/src/app/backend/statics --master --processes {{ .Values.backend.uwsgiProcesses }} --threads {{ .Values.backend.uwsgiThreads }} --need-app --env DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}"]
+        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
         {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
@@ -62,11 +71,13 @@ spec:
           - name: LEDGER_CONFIG_FILE
             value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
           - name: MEDIA_ROOT
-            value: {{ .Values.persistence.hostPath }}/medias/
+            value: /var/substra/medias/
           - name: PYTHONUNBUFFERED
             value: "1"
           - name: GZIP_MODELS
             value: {{ .Values.backend.gzipModels | quote }}
+          - name: TOKEN_STRATEGY
+            value: {{ .Values.backend.tokenStrategy }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
@@ -81,16 +92,19 @@ spec:
         volumeMounts:
           {{- range .Values.persistence.volumes }}
           - name: data-{{ .name }}
-            mountPath: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+            mountPath: /var/substra/medias/{{ .name }}
             readOnly: {{ .readOnly.server }}
           {{- end }}
           - name: data-servermedias
-            mountPath: {{ $.Values.persistence.hostPath }}/servermedias
-            readOnly: true
+            mountPath: /var/substra/servermedias
           - name: statics
             mountPath: /usr/src/app/backend/statics
           - name: config
             mountPath: /conf/{{ .Values.organization.name }}/substra-backend
+            readOnly: true
+          - name: uwsgi
+            mountPath: /usr/src/app/uwsgi.ini
+            subPath: uwsgi.ini
             readOnly: true
           - name: user-cert
             mountPath: /var/hyperledger/msp/signcerts
@@ -103,9 +117,8 @@ spec:
           - name: cacert
             mountPath: /var/hyperledger/ca
           {{- if .Values.privateCa.enabled }}
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-            name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /etc/ssl/certs
+            name: ssl-certs
           {{- end }}
         livenessProbe:
           httpGet:
@@ -131,12 +144,51 @@ spec:
         resources:
           {{- toYaml .Values.backend.resources | nindent 12 }}
       initContainers:
+      {{- if .Values.privateCa.enabled }}
+      - name: add-cert
+        image: {{ .Values.privateCa.image.repository }}
+        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+        command: ['sh', '-c']
+        args:
+        - |
+          {{- if .Values.privateCa.image.apkAdd }}
+          apk add --update ca-certificates openssl
+          {{- end }}
+          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+        volumeMounts:
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+            name: private-ca
+            subPath: {{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /tmp/certs/
+            name: ssl-certs
+      {{- end }}
+      {{- if and .Values.securityContext.enabled .Values.persistence.hostPath }}
+      - name: chown-pvc
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c"]
+        args:
+        - |
+          for dir in `ls -d /var/substra/medias/*`; do
+            chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
+          done
+        volumeMounts:
+          {{- range .Values.persistence.volumes }}
+          - name: data-{{ .name }}
+            mountPath: /var/substra/medias/{{ .name }}
+          {{- end }}
+      {{- end }}
       - name: wait-postgresql
         image: jwilder/dockerize
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
       - name: init-migrate
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'migrate']
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        {{- end }}
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.backend.settings }}
@@ -153,6 +205,11 @@ spec:
       - name: init-collectstatic
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        {{- end }}
         env:
           - name: DJANGO_SETTINGS_MODULE
             value: backend.settings.prod
@@ -175,6 +232,9 @@ spec:
       - name: config
         configMap:
           name: {{ include "substra.fullname" . }}-server
+      - name: uwsgi
+        configMap:
+          name: {{ include "substra.fullname" . }}-server-uwsgi
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}
@@ -188,6 +248,8 @@ spec:
         secret:
           secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
       - name: private-ca
         configMap:
           name: {{ .Values.privateCa.configMap.name }}

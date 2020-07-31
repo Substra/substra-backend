@@ -8,7 +8,7 @@ It is generated using substrapp/tests/generate_assets.py
 
 In order to update this file:
 1. start a clean instance of substra
-2. run populate.py
+2. run computation on it (with e2e tests for instance)
 3. run substrapp/tests/generate_assets.py
 """
 

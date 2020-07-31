@@ -1,9 +1,6 @@
 import os
 import uuid
-import docker.errors
-import traceback
 import json
-import re
 import inspect
 
 
@@ -31,34 +28,10 @@ else:
     EXCEPTIONS_MAP = dict()
 
 
-def get_exception_codes_from_docker_trace():
-    container_code = EXCEPTIONS_MAP[docker.errors.ContainerError.__name__]
-
-    # Get last line of the docker traceback which contains the traceback inside the container
-    docker_traceback = traceback.format_exc().splitlines()[-1].encode('utf_8').decode('unicode_escape')
-    docker_traceback = re.split(':| |\n', docker_traceback)
-
-    exception_codes = [code for exception, code in EXCEPTIONS_MAP.items()
-                       if exception in docker_traceback and code != container_code]
-
-    return exception_codes
-
-
 def get_exception_code(exception_type):
 
     service_code = SERVICES['System']
     exception_code = EXCEPTIONS_MAP.get(exception_type.__name__, '0000')    # '0000' is default exception code
-
-    # Exception inside a docker container
-    if docker.errors.ContainerError.__name__ in EXCEPTIONS_MAP and \
-       exception_code == EXCEPTIONS_MAP[docker.errors.ContainerError.__name__]:
-
-        exception_codes = get_exception_codes_from_docker_trace()
-
-        if len(exception_codes) > 0:
-            # Take the first code in the list (may have more if multiple exceptions are raised)
-            service_code = SERVICES['Docker']
-            exception_code = exception_codes.pop()
 
     return exception_code, service_code
 
@@ -116,7 +89,7 @@ def generate_exceptions_map(append=True):
     import rest_framework.exceptions
 
     # Modules to inspect
-    MODULES = [docker.errors, requests.exceptions, celery.exceptions, tarfile,   # noqa: N806
+    MODULES = [requests.exceptions, celery.exceptions, tarfile,   # noqa: N806
                django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
                django.utils, rest_framework.exceptions]
 
@@ -160,3 +133,4 @@ if __name__ == '__main__':
     json_exceptions = generate_exceptions_map()
     with open(EXCEPTION_PATH, 'w') as outfile:
         json.dump(json_exceptions, outfile, indent=4)
+        outfile.write('\n')  # Add newline cause Py JSON does not

@@ -11,6 +11,7 @@ import requests
 import tarfile
 import zipfile
 import uuid
+import time
 
 from checksumdir import dirhash
 
@@ -264,3 +265,22 @@ def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, s
     computed_hash = get_hash(content_dst_path, key=salt)
     if computed_hash != content_hash:
         raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+
+
+def get_subtuple_directory(subtuple_key):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple_key)
+
+
+def get_chainkeys_directory(compute_plan_id):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
+                     compute_plan_id, 'chainkeys')
+
+
+def timeit(function):
+    def timed(*args, **kw):
+        ts = time.time()
+        result = function(*args, **kw)
+        elaps = (time.time() - ts) * 1000
+        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
+        return result
+    return timed

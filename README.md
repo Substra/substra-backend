@@ -131,7 +131,6 @@ A django admin command is available for registering a user:
 ./manage.py add_user $USERNAME $PASSWORD
 ```
 
-The populate.py file will use for each organization credentials `substra/p@$swr0d44` for connection.
 Create these users with:
 
 ```shell
@@ -148,23 +147,6 @@ BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --setti
 ```
 
 ## Test by creating a traintuple
-
-###### Clean environment
-
-Run the `populate.py` script which will create data in the ledger with a traintuple.
-`populate.py` dependencies are defined in backend/requirements-dev.txt.
-Check the status of the created traintuple `http://localhost:8000/traintuple/`
-If everything run correctly, its status should pas from `todo->train->trained->testing->tested->done`.
-
-When you want to re-run the testing process:
-- Close every connections to the databases.
-- Stop all your services and containers.
-- Rerun `recreate_db.sh` and `clean_media.sh` scripts.
-- Run the django migrations.
-- Relaunch your hlf-k8s network.
-- Run the owkin and chunantes substra-backend servers.
-- Run celery beat and celery owkin and chu-nantes.
-- Run the `populate.py` python script.
 
 ###### With fixtures
 

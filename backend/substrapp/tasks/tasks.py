@@ -9,8 +9,8 @@ import json
 import logging
 import tarfile
 
-import docker
 import kubernetes
+
 from django.conf import settings
 from rest_framework.reverse import reverse
 from celery.result import AsyncResult
@@ -20,11 +20,13 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash)
+                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory, timeit)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
-from substrapp.tasks.utils import (compute_docker, get_asset_content, get_and_put_asset_content,
-                                   list_files, get_k8s_client, do_not_raise, timeit, ExceptionThread)
+from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
+                                   list_files, do_not_raise, ExceptionThread,
+                                   remove_local_volume, get_or_create_local_volume, remove_image)
+
 from substrapp.tasks.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
@@ -45,6 +47,8 @@ TUPLE_COMMANDS = {
 }
 
 MODEL_FOLDER = '/sandbox/model'
+OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
+OUTPUT_PERF_PATH = '/sandbox/perf/perf.json'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
 OUTPUT_TRUNK_MODEL_FILENAME = 'trunk_model'
 
@@ -53,6 +57,7 @@ ACCESS_KEY = os.getenv('BUCKET_TRANSFER_ID')
 SECRET_KEY = os.getenv('BUCKET_TRANSFER_SECRET')
 BUCKET_NAME = os.getenv('BUCKET_TRANSFER_NAME')
 S3_PREFIX = os.getenv('BUCKET_TRANSFER_PREFIX')
+S3_REGION_NAME = os.getenv('BUCKET_TRANSFER_REGION', 'eu-west-1')
 
 
 class TasksError(Exception):
@@ -347,7 +352,7 @@ def prepare_opener(directory, tuple_):
     if get_hash(datamanager.data_opener.path) != data_opener_hash:
         raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
 
-    opener_dst_path = path.join(directory, 'opener/opener.py')
+    opener_dst_path = path.join(directory, 'opener/__init__.py')
     if not os.path.exists(opener_dst_path):
         os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
@@ -389,10 +394,10 @@ def prepare_data_sample(directory, tuple_):
 
 def build_subtuple_folders(subtuple):
     # create a folder named `subtuple['key']` in /medias/subtuple/ with 5 subfolders opener, data, model, pred, metrics
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     create_directory(subtuple_directory)
 
-    for folder in ['opener', 'data', 'model', 'pred', 'metrics', 'export']:
+    for folder in ['opener', 'data', 'model', 'output_model', 'pred', 'perf', 'metrics', 'export']:
         create_directory(path.join(subtuple_directory, folder))
 
     return subtuple_directory
@@ -412,6 +417,7 @@ def remove_subtuple_materials(subtuple_directory):
             list_files(subtuple_directory)
 
 
+@timeit
 def remove_local_folders(compute_plan_id):
     if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
         logger.info(f'Skipping remove local volume of compute plan {compute_plan_id}')
@@ -419,16 +425,9 @@ def remove_local_folders(compute_plan_id):
 
     logger.info(f'Remove local volume of compute plan {compute_plan_id}')
 
-    client = docker.from_env()
     volume_id = get_volume_id(compute_plan_id)
 
-    try:
-        local_volume = client.volumes.get(volume_id=volume_id)
-        local_volume.remove(force=True)
-    except docker.errors.NotFound:
-        pass
-    except Exception:
-        logger.error(f'Cannot remove volume {volume_id}', exc_info=True)
+    remove_local_volume(volume_id)
 
     if settings.TASK['CHAINKEYS_ENABLED']:
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
@@ -543,11 +542,9 @@ class ComputeTask(Task):
             # Do not show traceback if it's a container error as we already see them in
             # container log
             type_exc = type(exc)
-            exc_info = not(type_exc == docker.errors.ContainerError)
-
             type_value = str(type_exc).split("'")[1]
             logger.error(f'{tuple_type} {subtuple["key"]} {error_code} - {type_value}',
-                         exc_info=exc_info)
+                         exc_info=True)
             log_fail_tuple(tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
             logger.exception(e)
@@ -586,7 +583,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     finally:
         if settings.TASK['CLEAN_EXECUTION_ENVIRONMENT']:
             try:
-                subtuple_directory = get_subtuple_directory(subtuple)
+                subtuple_directory = get_subtuple_directory(subtuple['key'])
                 if os.path.exists(subtuple_directory):
                     remove_subtuple_materials(subtuple_directory)
             except Exception as e_removal:
@@ -600,7 +597,7 @@ def prepare_materials(subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
     # clean directory if exists (on retry)
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     if os.path.exists(subtuple_directory):
         remove_subtuple_materials(subtuple_directory)
 
@@ -630,7 +627,7 @@ def prepare_materials(subtuple, tuple_type):
 
 @timeit
 def do_task(subtuple, tuple_type):
-    subtuple_directory = get_subtuple_directory(subtuple)
+    subtuple_directory = get_subtuple_directory(subtuple['key'])
     org_name = getattr(settings, 'ORG_NAME')
 
     # compute plan / federated learning variables
@@ -644,10 +641,7 @@ def do_task(subtuple, tuple_type):
         compute_plan = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
 
-    client = docker.from_env()
-
     return _do_task(
-        client,
         subtuple_directory,
         tuple_type,
         subtuple,
@@ -658,10 +652,10 @@ def do_task(subtuple, tuple_type):
     )
 
 
-def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
+def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
 
     common_volumes, compute_volumes = prepare_volumes(
-        client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
+        subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
 
     # Add node index to environment variable for the compute
     node_index = os.getenv('NODE_INDEX')
@@ -676,14 +670,16 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
             environment['TESTTUPLE_TAG'] = TAG_VALUE_FOR_TRANSFER_BUCKET
 
-    container_name = f'{tuple_type}_{subtuple["key"][0:8]}_{TUPLE_COMMANDS[tuple_type]}'
+    job_name = f'{tuple_type}-{subtuple["key"][0:8]}-{TUPLE_COMMANDS[tuple_type]}'.lower()
     command = generate_command(tuple_type, subtuple, rank)
 
-    compute_docker(
-        client=client,
+    # train or predict
+    compute_job(
+        subtuple_key=subtuple["key"],
+        compute_plan_id=compute_plan_id,
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['hash']),
-        container_name=container_name,
+        job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
         remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
@@ -699,13 +695,19 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
 
-        compute_docker(
-            client=client,
+        # We set pred folder to ro during evalutation
+        pred_path = path.join(subtuple_directory, 'pred')
+        common_volumes[pred_path]['mode'] = 'ro'
+
+        # eval
+        compute_job(
+            subtuple_key=subtuple["key"],
+            compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
-            container_name=f'{tuple_type}_{subtuple["key"][0:8]}_eval',
+            job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
-            command=None,
+            command=f'--output-perf-path {OUTPUT_PERF_PATH}',
             remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
@@ -714,24 +716,29 @@ def _do_task(client, subtuple_directory, tuple_type, subtuple, compute_plan_id, 
 
         pred_path = path.join(subtuple_directory, 'pred')
         export_path = path.join(subtuple_directory, 'export')
+        perf_path = path.join(subtuple_directory, 'perf')
 
         # load performance
-        with open(path.join(pred_path, 'perf.json'), 'r') as perf_file:
+        with open(path.join(perf_path, 'perf.json'), 'r') as perf_file:
             perf = json.load(perf_file)
 
         result['global_perf'] = perf['all']
 
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
-            transfer_to_bucket(subtuple['key'], [pred_path, export_path])
+            transfer_to_bucket(subtuple['key'], [pred_path, perf_path, export_path])
 
     return result
 
 
-def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
+@timeit
+def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
 
     model_path = path.join(subtuple_directory, 'model')
+    output_model_path = path.join(subtuple_directory, 'output_model')
     pred_path = path.join(subtuple_directory, 'pred')
     export_path = path.join(subtuple_directory, 'export')
+    perf_path = path.join(subtuple_directory, 'perf')
+    opener_path = path.join(subtuple_directory, 'opener')
 
     symlinks_volume = {}
     data_path = path.join(subtuple_directory, 'data')
@@ -745,39 +752,38 @@ def prepare_volumes(client, subtuple_directory, tuple_type, compute_plan_id, com
             if real_path != os.path.join(subtuple_directory, subtuple_folder, subitem):
                 symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
-    opener_file = path.join(subtuple_directory, 'opener/opener.py')
     volumes = {
         data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
-        opener_file: {'bind': '/sandbox/opener/__init__.py', 'mode': 'ro'}
+        opener_path: {'bind': '/sandbox/opener', 'mode': 'ro'}
     }
 
     if tuple_type == TESTTUPLE_TYPE:
         volumes[pred_path] = {'bind': '/sandbox/pred', 'mode': 'rw'}
         volumes[export_path] = {'bind': '/sandbox/export', 'mode': 'rw'}
+        volumes[perf_path] = {'bind': '/sandbox/perf', 'mode': 'rw'}
 
     model_volume = {
-        model_path: {'bind': MODEL_FOLDER, 'mode': 'rw'}
+        model_path: {'bind': MODEL_FOLDER, 'mode': 'ro'},
+        output_model_path: {'bind': OUTPUT_MODEL_FOLDER, 'mode': 'rw'}
     }
 
     # local volume for train like tuples in compute plan
     if compute_plan_id is not None:
         volume_id = get_volume_id(compute_plan_id)
-        try:
-            client.volumes.get(volume_id=volume_id)
-        except docker.errors.NotFound:
-            client.volumes.create(name=volume_id)
+        get_or_create_local_volume(volume_id)
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
 
     chainkeys_volume = {}
     if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag)
+        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag,
+                                             subtuple_directory)
 
     return {**volumes, **symlinks_volume}, {**model_volume, **chainkeys_volume}
 
 
-def prepare_chainkeys(compute_plan_id, compute_plan_tag):
+def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
     chainkeys_directory = get_chainkeys_directory(compute_plan_id)
 
     chainkeys_volume = {
@@ -787,7 +793,9 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
     if not os.path.exists(chainkeys_directory):
         os.makedirs(chainkeys_directory)
 
-        k8s_client = get_k8s_client()
+        kubernetes.config.load_incluster_config()
+        k8s_client = kubernetes.client.CoreV1Api()
+
         secret_namespace = os.getenv('K8S_SECRET_NAMESPACE', 'default')
         label_selector = f'compute_plan={compute_plan_tag}'
 
@@ -809,6 +817,7 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag):
 
         with open(path.join(chainkeys_directory, 'chainkeys.json'), 'w') as f:
             json.dump({'chain_keys': formatted_secrets}, f)
+            f.write('\n')  # Add newline cause Py JSON does not
 
         # remove secrets:
         # do not delete secrets as a running k8s operator will recreate them, instead
@@ -847,6 +856,8 @@ def generate_command(tuple_type, subtuple, rank):
             in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
             command = f"{command} {' '.join(in_traintuple_keys)}"
 
+        command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
+
         if rank is not None:
             command = f"{command} --rank {rank}"
 
@@ -863,7 +874,7 @@ def generate_command(tuple_type, subtuple, rank):
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
 
-        command = f"{command} --output-models-path {MODEL_FOLDER}"
+        command = f"{command} --output-models-path {OUTPUT_MODEL_FOLDER}"
         command = f"{command} --output-head-model-filename {OUTPUT_HEAD_MODEL_FILENAME}"
         command = f"{command} --output-trunk-model-filename {OUTPUT_TRUNK_MODEL_FILENAME}"
 
@@ -887,6 +898,8 @@ def generate_command(tuple_type, subtuple, rank):
             in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
             command = f"{command} {' '.join(in_aggregatetuple_keys)}"
 
+        command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
+
         if rank is not None:
             command = f"{command} --rank {rank}"
 
@@ -908,7 +921,8 @@ def transfer_to_bucket(tuple_key, paths):
         s3 = boto3.client(
             's3',
             aws_access_key_id=ACCESS_KEY,
-            aws_secret_access_key=SECRET_KEY)
+            aws_secret_access_key=SECRET_KEY,
+            region_name=S3_REGION_NAME)
         s3.upload_file(tar_path, BUCKET_NAME, f'{S3_PREFIX}/{tar_name}' if S3_PREFIX else tar_name)
 
 
@@ -964,7 +978,7 @@ def extract_result_from_models(tuple_type, models):
 def save_model(subtuple_directory, subtuple_key, filename='model'):
     from substrapp.models import Model
 
-    end_model_path = path.join(subtuple_directory, f'model/{filename}')
+    end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
     end_model_file_hash = get_hash(end_model_path, subtuple_key)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
 
@@ -986,29 +1000,10 @@ def get_algo_image_name(algo_hash):
     return f'substra/algo_{algo_hash[0:8]}'.lower()
 
 
-def get_subtuple_directory(subtuple):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple['key'])
-
-
-def get_chainkeys_directory(compute_plan_id):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
-                     compute_plan_id, 'chainkeys')
-
-
 def remove_algo_images(algo_hashes):
-    client = docker.from_env()
     for algo_hash in algo_hashes:
-        algo_docker = get_algo_image_name(algo_hash)
-
-        try:
-            if client.images.get(algo_docker):
-                logger.info(f'Remove docker image {algo_docker}')
-                client.images.remove(algo_docker, force=True)
-
-        except (docker.errors.ImageNotFound, docker.errors.NotFound):
-            pass
-        except docker.errors.APIError as e:
-            logger.exception(e)
+        algo_image_name = get_algo_image_name(algo_hash)
+        remove_image(algo_image_name)
 
 
 def remove_intermediary_models(model_hashes):

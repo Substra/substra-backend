@@ -8,11 +8,10 @@ django-celery-results==1.1.2
 django-rest-swagger==2.2.0
 djangorestframework==3.11.0
 djangorestframework-simplejwt==4.4.0
-docker==4.1.0
 GPUtil==1.4.0
 ipython==7.11.1
 ipython-genutils==0.2.0
-kubernetes==10.0.1
+kubernetes==11.0.0
 mock==3.0.5
 psycopg2-binary==2.8.4
 raven==6.10.0

@@ -1,4 +1,3 @@
-import argparse
 import os
 import json
 import substra
@@ -11,15 +10,8 @@ assets_path = os.path.join(dir_path, 'assets.py')
 def main(network):
 
     client = substra.Client()
-    if network == 'docker':
-        client.add_profile('default', 'http://substra-backend.owkin.xyz', '0.0')
-        client.login('substra', 'p@$swr0d44')
-    elif network == 'skaffold':
-        client.add_profile('default', 'http://substra-backend.node-1.com', '0.0')
-        client.login('node-1', 'p@$swr0d44')
-    else:
-        raise Exception('Unknow network')
-
+    client.add_profile('default', 'http://substra-backend.node-1.com', '0.0')
+    client.login('node-1', 'p@$swr0d44')
     client.set_profile('default')
 
     assets = {}
@@ -41,15 +33,11 @@ def main(network):
                 'It is generated using substrapp/tests/generate_assets.py\n\n'
                 'In order to update this file:\n'
                 '1. start a clean instance of substra\n'
-                '2. run populate.py\n'
+                '2. run computation on it (with e2e tests for instance)\n'
                 '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
-            if network == 'docker':
-                v = v.replace('substra-backend.owkin.xyz:8000', 'testserver')
-                v = v.replace('substra-backend.chunantes.xyz:8001', 'testserver')
-            if network == 'skaffold':
-                v = v.replace('substra-backend.node-1.com', 'testserver')
-                v = v.replace('substra-backend.node-2.com', 'testserver')
+            v = v.replace('substra-backend.node-1.com', 'testserver')
+            v = v.replace('substra-backend.node-2.com', 'testserver')
             v = v.replace('true', 'True')
             v = v.replace('false', 'False')
             v = v.replace('null', 'None')
@@ -58,11 +46,4 @@ def main(network):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-s', '--skaffold', action='store_true',
-                        help='Launch generate_assets with skaffold (K8S) network')
-
-    args = parser.parse_args()
-    network = 'skaffold' if args.skaffold else 'docker'
-
-    main(network)
+    main()
