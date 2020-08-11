@@ -2,7 +2,6 @@ import os
 
 from .common import *
 from .deps.cors import *
-from .deps.raven import *
 from .deps.org import *
 from .deps.restframework import *
 
@@ -48,7 +47,7 @@ LOGGING = {
     'disable_existing_loggers': False,
     'root': {
         'level': 'WARNING',
-        'handlers': ['sentry'],
+        'handlers': [],
     },
     'formatters': {
         'verbose': {
@@ -56,11 +55,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'sentry': {
-            'level': 'ERROR',
-            'class': 'raven.contrib.django.raven_compat.handlers.SentryHandler',
-            'tags': {'custom-tag': 'x'},
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
@@ -86,17 +80,6 @@ LOGGING = {
             'propagate': False,
         },
         'events': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        # third-party libraries
-        'sentry.errors': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'raven': {
             'level': 'INFO',
             'handlers': ['console'],
             'propagate': False,

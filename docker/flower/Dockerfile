@@ -9,6 +9,7 @@ WORKDIR /usr/src/app
 COPY ./backend/requirements.txt /usr/src/app/.
 RUN chown -R ${USER_ID}:${GROUP_ID} /usr/src/app
 
+RUN pip3 install --upgrade pip
 RUN pip3 install -r requirements.txt
 RUN pip3 install flower
 
