@@ -191,7 +191,8 @@ docker-registry:
   enabled: true
   storage: filesystem
   persistence:
-    enabled: false
+    enabled: true
+    size: 10Gi
     deleteEnabled: true
 
 prePulledImages:
