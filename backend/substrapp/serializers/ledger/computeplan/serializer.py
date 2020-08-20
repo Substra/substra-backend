@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import DictField, CharField
 
 from substrapp import ledger
-from substrapp.serializers.ledger.utils import PermissionsSerializer
+from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 
 
 class ComputePlanTraintupleSerializer(serializers.Serializer):
@@ -43,7 +43,7 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
                                              allow_null=True)
     in_trunk_model_id = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
                                               allow_null=True)
-    out_trunk_model_permissions = PermissionsSerializer()
+    out_trunk_model_permissions = PrivatePermissionsSerializer()
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -120,9 +120,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             if 'in_trunk_model_id' in data_composite_traintuple:
                 composite_traintuple['inTrunkModelID'] = data_composite_traintuple['in_trunk_model_id']
             if 'out_trunk_model_permissions' in data_composite_traintuple:
-                composite_traintuple['outTrunkModelPermissions'] = data_composite_traintuple[
-                    'out_trunk_model_permissions'
-                ]
+                composite_traintuple['outTrunkModelPermissions'] = {
+                    'process': {
+                        'authorizedIDs': data_composite_traintuple['out_trunk_model_permissions']['authorized_ids']
+                    }
+                }
 
             composite_traintuples.append(composite_traintuple)
 
