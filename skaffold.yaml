@@ -125,13 +125,15 @@ deploy:
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           celeryworker:
+            concurrency: 3
             rbac:
               enable: true
           backend:
             settings: dev
+            tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
             imageBuilder:
-              type: makisu
+              type: dind
             ingress:
               enabled: true
               hosts:
@@ -140,6 +142,10 @@ deploy:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
+                nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
+                nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
           organization:
             name: MyOrg1
           peer:
@@ -169,6 +175,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+            - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
+              value: '120'
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -192,10 +200,12 @@ deploy:
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           celeryworker:
+            concurrency: 3
             rbac:
               enable: true
           backend:
             settings: dev
+            tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
             imageBuilder:
               type: dind
@@ -207,6 +217,10 @@ deploy:
                 kubernetes.io/ingress.class: nginx
                 nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
                 nginx.ingress.kubernetes.io/proxy-body-size: 100m
+                nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+                nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
+                nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
           organization:
             name: MyOrg2
           peer:
@@ -236,6 +250,8 @@ deploy:
               value: 'k8s'
             - name: BUILD_IMAGE
               value: 'True'
+            - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
+              value: '120'
 
 profiles:
   - name: prod

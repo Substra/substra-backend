@@ -3,7 +3,6 @@ from django.test import TestCase
 from mock import patch
 
 from substrapp.utils import raise_if_path_traversal, uncompress_path
-from substrapp.tasks.utils import get_cpu_sets, get_gpu_sets
 
 from substrapp.ledger_utils import LedgerNotFound, LedgerInvalidResponse
 
@@ -50,24 +49,6 @@ class MockArchive:
 
 class MiscTests(TestCase):
     """Misc tests"""
-
-    def test_cpu_sets(self):
-        cpu_count = 16
-        with patch('substrapp.tasks.utils.get_cpu_count') as mget_cpu_count:
-            mget_cpu_count.return_value = cpu_count
-            for concurrency in range(1, cpu_count + 1, 1):
-                self.assertEqual(concurrency,
-                                 len(get_cpu_sets(concurrency)))
-
-    def test_gpu_sets(self):
-        gpu_list = ['0', '1']
-        with patch('substrapp.tasks.utils.get_gpu_list') as mget_gpu_list:
-            mget_gpu_list.return_value = gpu_list
-            for concurrency in range(1, len(gpu_list) + 1, 1):
-                self.assertEqual(concurrency,
-                                 len(get_gpu_sets(concurrency)))
-
-        self.assertFalse(get_gpu_sets(concurrency))
 
     def test_get_object_from_ledger(self):
         with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:

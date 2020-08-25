@@ -3,6 +3,7 @@ import functools
 import json
 import logging
 import time
+import random
 
 from django.conf import settings
 from rest_framework import status
@@ -147,9 +148,9 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
                     return fn(*args, **kwargs)
                 except exceptions_to_retry as e:
                     _nbtries -= 1
-                    if not nbtries:
+                    if not _nbtries:
                         raise
-                    _delay *= _backoff
+                    _delay += random.randint(_backoff, 5 * _backoff)
                     time.sleep(_delay)
                     logger.warning(f'Function {fn.__name__} failed ({type(e)}): {e} retrying in {_delay}s')
 

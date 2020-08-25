@@ -5,9 +5,10 @@ gpu:
 backend:
   replicaCount: 1
   settings: prod
+  tokenStrategy: 'unique'  # 'reuse'
   siteHost: localhost
   defaultDomain: localhost
-  uwsgiProcesses: 8
+  uwsgiProcesses: 20
   uwsgiThreads: 2
   gzipModels: false
 
@@ -190,7 +191,8 @@ docker-registry:
   enabled: true
   storage: filesystem
   persistence:
-    enabled: false
+    enabled: true
+    size: 10Gi
     deleteEnabled: true
 
 prePulledImages:
@@ -251,6 +253,7 @@ celeryscheduler:
 
 celeryworker:
   replicaCount: 1
+  concurrency: 1  # Max number of tasks to process in parallel
   updateStrategy: RollingUpdate
   image:
     repository: substrafoundation/celeryworker
@@ -304,8 +307,8 @@ registry:
   pullDomain: 127.0.0.1:32000
 
   ## Local registry pre-populate
-  prepopulate: []
-    # - image: substrafoundation/substra-tools:0.5.0
+  prepopulate:
+    - image: substrafoundation/substra-tools:0.5.0
     #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
     #   dockerConfigSecretName: docker-config
 

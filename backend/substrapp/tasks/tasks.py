@@ -483,6 +483,22 @@ def prepare_tuple(subtuple, tuple_type):
     compute_plan_id = None
     worker_queue = f"{settings.LEDGER['name']}.worker"
 
+    # Early return if subtuple status is not todo
+    # Can happen if we re-process all events (backend-server restart)
+    # We need to fetch the subtuple again to get the last
+    # version of it in case of processing old events
+    try:
+        _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
+        if subtuple_check['status'] != 'todo':
+            logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).'
+                         f'\n{subtuple_check}')
+            return
+    except TasksError:
+        # use the provided subtuple if the previous call fail
+        # It can happen for new subtuple that are not already
+        # in the ledger local db
+        pass
+
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
         flresults = TaskResult.objects.filter(
@@ -691,11 +707,11 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
             subtuple_key=subtuple["key"],
             compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
-            image_name=f'substra/metrics_{subtuple["key"][0:8]}'.lower(),
+            image_name=f'substra/metrics_{subtuple["objective"]["hash"][0:8]}'.lower(),
             job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
-            remove_image=not(settings.TASK['CACHE_DOCKER_IMAGES']),
+            remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
             environment=environment

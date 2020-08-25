@@ -1,13 +1,10 @@
-import math
 import json
 import kubernetes
 import requests
 import os
 import logging
-
 from django.conf import settings
 from substrapp.utils import timeit
-
 import time
 
 logger = logging.getLogger(__name__)
@@ -42,102 +39,60 @@ class BuildError(Exception):
     pass
 
 
-def k8s_memory_limit(celery_worker_concurrency, celeryworker_image):
-    # celeryworker_image useless but for compatiblity
-    # Get memory limit from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    node = k8s_client.read_node(NODE_NAME)
-
-    return (int(node.status.allocatable['memory'][:-2]) / 1024) // celery_worker_concurrency
+def k8s_get_cache_index_lock_file(cache_index):
+    return f'/tmp/cache-index-{cache_index}.lock'
 
 
-def k8s_cpu_count(celeryworker_image):
-    # celeryworker_image useless but for compatiblity
-    # Get CPU count from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    node = k8s_client.read_node(NODE_NAME)
-
-    cpu_allocatable = node.status.allocatable['cpu']
-
-    # convert XXXXm cpu to X.XXX cpu
-    if 'm' in cpu_allocatable:
-        cpu_allocatable = float(cpu_allocatable.replace('m', '')) / 1000.0
-
-    return max(1, math.floor(float(cpu_allocatable)))
+def k8s_try_create_file(path):
+    try:
+        fd = os.open(path, os.O_CREAT | os.O_EXCL)
+        os.close(fd)
+        return True
+    except FileExistsError:
+        return False
 
 
-def k8s_gpu_list(celeryworker_image):
+def k8s_acquire_cache_index():
+    celery_worker_concurrency = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
 
-    # if you don't request GPUs when using the device plugin with
-    # NVIDIA images all the GPUs on the machine will be exposed inside your container.
+    if celery_worker_concurrency == 1:
+        return None
 
-    import GPUtil
-    import json
+    max_attempts = 12
+    attempt = 0
+    logger.info('Get cache_index for cache sharing')
 
-    return json.dumps([str(gpu.id) for gpu in GPUtil.getGPUs()])
+    while attempt < max_attempts:
+        for cache_index in range(1, celery_worker_concurrency + 1):
+            lock_file = k8s_get_cache_index_lock_file(cache_index)
+            if k8s_try_create_file(lock_file):
+                return str(cache_index)
+            attempt += 1
 
-
-def k8s_cpu_used(task_label):
-    # Get CPU used from node through the API
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    api_response = k8s_client.list_namespaced_pod(
-        NAMESPACE,
-        label_selector=f'task={task_label}'
-    )
-
-    cpu_used = 0
-
-    for pod in api_response.items:
-        for container in pod.spec.containers:
-            if container.resources.limits is not None:
-                cpu_used += int(getattr(container.resources.limits, 'cpu', 0))
-
-    if cpu_used:
-        return [f'0-{cpu_used}']
-    else:
-        return []
+    raise Exception(f'Could not acquire cache index after {max_attempts} attempts')
 
 
-def k8s_gpu_used(task_label):
-    # Get GPU used from k8s through the API
-    # Because the execution may be remote
-
-    kubernetes.config.load_incluster_config()
-    k8s_client = kubernetes.client.CoreV1Api()
-
-    api_response = k8s_client.list_namespaced_pod(
-        NAMESPACE,
-        label_selector=f'task={task_label}'
-    )
-
-    gpu_used = 0
-
-    for pod in api_response.items:
-        for container in pod.spec.containers:
-            if container.resources.limits is not None:
-                gpu_used += int(getattr(container.resources.limits, 'nvidia.com/gpu', 0))
-
-    return [','.join(range(gpu_used))]
+def k8s_release_cache_index(cache_index):
+    if cache_index is None:
+        return
+    lock_file = k8s_get_cache_index_lock_file(cache_index)
+    try:
+        os.remove(lock_file)
+    except FileNotFoundError:
+        pass
 
 
-def watch_pod(name):
+def watch_pod(name, watch_init_container=False):
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
 
     finished = False
     attempt = 0
-    max_attempts = 5
+    max_attempts = 5 + (5 if watch_init_container else 0)
     error = None
+    watch_container = not watch_init_container
 
+    logger.error(f'Checking for pod {name} init: {watch_init_container} main: {watch_container}')
     while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
@@ -146,23 +101,45 @@ def watch_pod(name):
                 pretty=True
             )
 
-            if api_response.status.container_statuses:
-                for container in api_response.status.container_statuses:
-                    if container.state.terminated:
-                        finished = True
-                        error = None
-                        if container.state.terminated.exit_code != 0:
-                            error = f'{container.state.terminated.reason} - {container.state.terminated.message}'
+            if watch_init_container:
+                if api_response.status.init_container_statuses:
+                    for init_container in api_response.status.init_container_statuses:
+                        state = init_container.state
+                        if state.terminated:
+                            # TODO: support multiple init containers
+                            if state.terminated.exit_code != 0:
+                                finished = True
+                                error = f'InitContainer: {state.terminated.reason} - {state.terminated.message}'
+                            else:
+                                watch_container = True  # Init container is ready
+                        else:
+                            if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'{state.waiting.reason} - {state.waiting.message}'
+                                attempt += 1
+                                logger.error(f'InitContainer for pod "{name}" waiting status '
+                                             f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
 
-                    else:
-                        # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
-                        #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
-                        if container.state.waiting and container.state.waiting.reason not in ['ContainerCreating']:
-                            error = f'{container.state.waiting.reason} - {container.state.waiting.message}'
-                            attempt += 1
-                            logger.error(f'Container for pod "{name}" waiting status '
-                                         f'(attempt {attempt}/{max_attempts}): {container.state.waiting.message}')
-                            time.sleep(0.5)
+            if watch_container:
+                if api_response.status.container_statuses:
+                    for container in api_response.status.container_statuses:
+                        state = container.state
+                        if state.terminated:
+                            finished = True
+                            error = None
+                            if state.terminated.exit_code != 0:
+                                error = f'{state.terminated.reason} - {state.terminated.message}'
+
+                        else:
+                            # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
+                            #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
+                            if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
+                                error = f'Container: {state.waiting.reason} - {state.waiting.message}'
+                                attempt += 1
+                                logger.error(f'Container for pod "{name}" waiting status '
+                                             f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
+
+            if not finished:
+                time.sleep(0.2)
 
         except Exception as e:
             attempt += 1
@@ -183,6 +160,8 @@ def get_pod_name(name):
     )
     if api_response.items:
         pod = api_response.items.pop()
+    else:
+        raise Exception(f'Could not get pod name {name}')
 
     return pod.metadata.name
 
@@ -239,6 +218,16 @@ def container_format_log(container_name, container_logs):
 
 
 def k8s_build_image(path, tag, rm):
+    try:
+        cache_index = k8s_acquire_cache_index()
+        _k8s_build_image(path, tag, rm, cache_index)
+    except Exception:
+        raise
+    finally:
+        k8s_release_cache_index(cache_index)
+
+
+def _k8s_build_image(path, tag, rm, cache_index):
 
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
@@ -258,6 +247,7 @@ def k8s_build_image(path, tag, rm):
         command = None
         mount_path_dockerfile = path
         mount_path_cache = '/cache'
+
         args = [
             f'--dockerfile={dockerfile_fullpath}',
             f'--context=dir://{path}',
@@ -281,7 +271,7 @@ def k8s_build_image(path, tag, rm):
     elif IMAGE_BUILDER == 'makisu':
         # makisu build can be launched without privilege but
         # it needs to be root
-        image = 'gcr.io/uber-container-tools/makisu:v0.2.0'
+        image = 'gcr.io/uber-container-tools/makisu-alpine:v0.2.0'
         command = None
         mount_path_dockerfile = '/makisu-context'
         mount_path_cache = '/makisu-storage'
@@ -290,8 +280,9 @@ def k8s_build_image(path, tag, rm):
             f'--push={REGISTRY}',
             f'-t={tag}:substra',
             '--modifyfs=true',
-            f'--storage={mount_path_cache}'
         ]
+        if mount_path_cache is not None:
+            args.append(f'--storage={mount_path_cache}')
 
         if REGISTRY_SCHEME == 'http':
             registry_config = json.dumps(
@@ -311,6 +302,7 @@ def k8s_build_image(path, tag, rm):
         command = ['/bin/sh', '-c']
         mount_path_dockerfile = path
         mount_path_cache = '/var/lib/docker'
+
         wait_for_docker = 'while ! (docker ps); do sleep 1; done'
         build_args = (
             f'docker build -t "{REGISTRY}/{tag}:substra" {path} ;'
@@ -343,6 +335,7 @@ def k8s_build_image(path, tag, rm):
         container.volume_mounts.append({
             'name': 'cache',
             'mountPath': mount_path_cache,
+            'subPath': cache_index,
             'readOnly': (IMAGE_BUILDER == 'kaniko')
         })
 
@@ -389,32 +382,39 @@ def k8s_build_image(path, tag, rm):
         kind='Pod',
         metadata=kubernetes.client.V1ObjectMeta(
             name=job_name,
-            labels={'app': job_name, 'app.kubernetes.io/component': COMPONENT}
+            labels={'app': job_name, 'task': 'build',
+                    'app.kubernetes.io/component': COMPONENT}
         ),
         spec=spec
     )
 
-    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+    create_pod = not pod_exists(job_name)
+    if create_pod:
+        k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
 
     try:
         watch_pod(job_name)
     except Exception as e:
-        logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
-        raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
+        # In case of concurrent build, it may fail
+        # check if image exists
+        if not k8s_image_exists(tag):
+            logger.error(f'{IMAGE_BUILDER} build failed, error: {e}')
+            raise BuildError(f'{IMAGE_BUILDER} build failed, error: {e}')
     finally:
-        container_format_log(
-            job_name,
-            get_pod_logs(name=get_pod_name(job_name),
-                         container=job_name)
-        )
-        k8s_client.delete_namespaced_pod(
-            name=job_name,
-            namespace=NAMESPACE,
-            body=kubernetes.client.V1DeleteOptions(
-                propagation_policy='Foreground',
-                grace_period_seconds=0
+        if create_pod:
+            container_format_log(
+                job_name,
+                get_pod_logs(name=get_pod_name(job_name),
+                             container=job_name)
             )
-        )
+            k8s_client.delete_namespaced_pod(
+                name=job_name,
+                namespace=NAMESPACE,
+                body=kubernetes.client.V1DeleteOptions(
+                    propagation_policy='Foreground',
+                    grace_period_seconds=0
+                )
+            )
 
 
 def k8s_get_image(image_name):
@@ -426,6 +426,15 @@ def k8s_get_image(image_name):
         raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
 
     return response.json()
+
+
+def k8s_image_exists(image_name):
+    try:
+        k8s_get_image(image_name)
+    except ImageNotFound:
+        return False
+    else:
+        return True
 
 
 def k8s_remove_image(image_name):
@@ -454,24 +463,16 @@ def k8s_remove_image(image_name):
 
 
 @timeit
-def k8s_compute(image_name, job_name, cpu_set, memory_limit_mb, command, volumes, task_label,
-                capture_logs, environment, gpu_set, remove_image, subtuple_key, compute_plan_id):
+def k8s_compute(image_name, job_name, command, volumes, task_label,
+                capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
-    cpu_set_start, cpu_set_stop = map(int, cpu_set.split('-'))
-    cpu_set = set(range(cpu_set_start, cpu_set_stop + 1))
-    if gpu_set is not None:
-        gpu_set = set(gpu_set.split(','))
-
     task_args = {
         'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}:substra',
         'name': job_name,
-        'cpu_set': cpu_set,
-        'mem_limit': memory_limit_mb,
-        'gpu_set': gpu_set,
         'command': command,
         'volumes': volumes,
         'label': task_label,
@@ -758,24 +759,3 @@ def get_pod_security_context(enabled=True, root=False):
             )
 
     return None
-
-
-def get_resources(task_args):
-
-    r_requests = {
-        'cpu': 1,
-        'memory': '2000m'
-    }
-
-    # Disable for now, we let kubernetes decide
-    r_limits = {
-        'cpu': len(task_args['cpu_set']),
-        'memory': task_args['mem_limit']
-    }
-
-    if task_args['gpu_set'] is not None:
-        r_limits['nvidia.com/gpu'] = len(task_args['gpu_set'])
-
-    return kubernetes.client.V1ResourceRequirements(
-        limits=r_limits, requests=r_requests
-    )

@@ -77,7 +77,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            data = {'pkhash': [x['pkhash'] for x in serializer.data], 'validated': False}
+            if isinstance(serializer.data, list):
+                pkhash = [x['pkhash'] for x in serializer.data]
+            else:
+                pkhash = [serializer.data['pkhash']]
+            data = {'pkhash': pkhash, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
             raise ValidationException(e.msg, e.pkhash, e.status)

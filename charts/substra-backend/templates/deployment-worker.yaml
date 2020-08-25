@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}-worker
     app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ .Values.celeryworker.replicaCount }}
   strategy:
     type: {{ .Values.celeryworker.updateStrategy }}
   selector:
@@ -109,6 +109,8 @@ spec:
               value: "1"
             - name: "CELERYWORKER_IMAGE"
               value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
+            - name: "CELERY_WORKER_CONCURRENCY"
+              value: {{ .Values.celeryworker.concurrency | quote }}
             {{- if .Values.privateCa.enabled }}
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
