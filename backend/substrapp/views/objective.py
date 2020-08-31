@@ -19,7 +19,7 @@ from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
-                                   node_has_process_permission)
+                                   node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -76,7 +76,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -138,11 +138,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_objective(self, objective, pk):
+    def create_or_update_objective(self, channel_name, objective, pk):
         # get description from remote node
         url = objective['description']['storageAddress']
 
-        content = get_remote_asset(url, objective['owner'], pk)
+        content = get_remote_asset(channel_name, url, objective['owner'], pk)
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
@@ -154,7 +154,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def _retrieve(self, request, pk):
         validate_pk(pk)
         # get instance from remote node
-        data = get_object_from_ledger(pk, self.ledger_query_call)
+        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -165,7 +165,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 instance = None
 
             if not instance or not instance.description:
-                instance = self.create_or_update_objective(data, pk)
+                instance = self.create_or_update_objective(get_channel_name(request), data, pk)
 
             # For security reason, do not give access to local file address
             # Restrain data to some fields
@@ -190,7 +190,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryObjectives', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryObjectives', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -200,6 +200,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 objectives_list = filter_list(
+                    channel_name=get_channel_name(request),
                     object_type='objective',
                     data=data,
                     query_params=query_params)
@@ -237,7 +238,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            leaderboard = query_ledger(fcn='queryObjectiveLeaderboard', args={
+            leaderboard = query_ledger(get_channel_name(request), fcn='queryObjectiveLeaderboard', args={
                 'objectiveKey': pk,
                 'ascendingOrder': sort == 'asc',
             })

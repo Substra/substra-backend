@@ -78,6 +78,7 @@ class ObjectiveQueryTests(APITestCase):
 
         url = reverse('substrapp:objective-list')
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -108,6 +109,7 @@ class ObjectiveQueryTests(APITestCase):
 
         url = reverse('substrapp:objective-list')
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
@@ -135,6 +137,7 @@ class ObjectiveQueryTests(APITestCase):
         url = reverse('substrapp:objective-list')
 
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -160,6 +163,7 @@ class ObjectiveQueryTests(APITestCase):
 
         data = {'name': 'empty objective'}
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)
@@ -180,6 +184,7 @@ class ObjectiveQueryTests(APITestCase):
                 as mget_object_from_ledger:
             mget_object_from_ledger.return_value = get_sample_objective_metadata()
             extra = {
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(

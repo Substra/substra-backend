@@ -99,7 +99,7 @@ def _get_model_tuple(model):
         raise NotImplementedError
 
 
-def filter_list(object_type, data, query_params):
+def filter_list(channel_name, object_type, data, query_params):
     try:
         filters = get_filters(query_params)
     except Exception:
@@ -140,7 +140,7 @@ def filter_list(object_type, data, query_params):
                 # Filter by other asset
 
                 # Get other asset list
-                filtering_data = query_ledger(fcn=FILTER_QUERIES[filter_key], args=[])
+                filtering_data = query_ledger(channel_name, fcn=FILTER_QUERIES[filter_key], args=[])
 
                 filtering_data = filtering_data if filtering_data else []
 

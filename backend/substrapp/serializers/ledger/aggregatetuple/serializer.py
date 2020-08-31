@@ -38,6 +38,6 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
 
         return args
 
-    def create(self, validated_data):
+    def create(self, channel_name, validated_data):
         args = self.get_args(validated_data)
-        return ledger.create_aggregatetuple(args)
+        return ledger.create_aggregatetuple(channel_name, args)

@@ -59,6 +59,7 @@ class DataManagerQueryTests(APITestCase):
 
         url = reverse('substrapp:data_manager-list')
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -88,6 +89,7 @@ class DataManagerQueryTests(APITestCase):
 
         url = reverse('substrapp:data_manager-list')
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
@@ -110,6 +112,7 @@ class DataManagerQueryTests(APITestCase):
 
         url = reverse('substrapp:data_manager-list')
         extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
         response = self.client.post(url, data, format='multipart', **extra)

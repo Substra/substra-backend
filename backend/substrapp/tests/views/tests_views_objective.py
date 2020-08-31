@@ -23,6 +23,7 @@ from ..common import get_sample_objective, AuthenticatedClient
 from ..assets import objective, datamanager, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
+CHANNEL = 'mychannel'
 
 
 def zip_folder(path, destination):
@@ -56,6 +57,7 @@ class ObjectiveViewTests(APITestCase):
         ]
 
         self.extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
@@ -248,6 +250,7 @@ class ObjectiveViewTests(APITestCase):
 
             self.client.get(url, data={'sort': 'desc'}, **self.extra)
             mquery_ledger.assert_called_with(
+                CHANNEL,
                 fcn='queryObjectiveLeaderboard',
                 args={
                     'objectiveKey': objective[0]['key'],
@@ -256,6 +259,7 @@ class ObjectiveViewTests(APITestCase):
 
             self.client.get(url, data={'sort': 'asc'}, **self.extra)
             mquery_ledger.assert_called_with(
+                CHANNEL,
                 fcn='queryObjectiveLeaderboard',
                 args={
                     'objectiveKey': objective[0]['key'],

@@ -23,6 +23,6 @@ class ViewTests(APITestCase):
 
         with mock.patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = objective
-            data = get_object_from_ledger('', 'queryObjective')
+            data = get_object_from_ledger('mychannel', '', 'queryObjective')
 
             self.assertEqual(data, objective)

@@ -68,6 +68,7 @@ incomingNodes: []
 users: []
   # - name: username
   #   secret: password
+  #   channel: mychannel
 
 persistence:
   # storageClassName: ""
@@ -151,7 +152,8 @@ peer:
   port: 443
   mspID: OwkinPeerMSP
 
-channel: mychannel
+channels:
+- mychannel
 
 chaincode:
   name: mycc

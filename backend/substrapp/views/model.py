@@ -11,7 +11,7 @@ from rest_framework.viewsets import GenericViewSet
 from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
-from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin
+from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
 logger = logging.getLogger(__name__)
@@ -24,14 +24,14 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     ledger_query_call = 'queryModelDetails'
     # permission_classes = (permissions.IsAuthenticated,)
 
-    def create_or_update_model(self, traintuple, pk):
+    def create_or_update_model(self, channel_name, traintuple, pk):
         if traintuple['outModel'] is None:
             raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
 
         # get model from remote node
         url = traintuple['outModel']['storageAddress']
 
-        content = get_remote_asset(url, traintuple['creator'], traintuple['key'])
+        content = get_remote_asset(channel_name, url, traintuple['creator'], traintuple['key'])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
@@ -41,10 +41,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         return instance
 
-    def _retrieve(self, pk):
+    def _retrieve(self, channel_name, pk):
         validate_pk(pk)
 
-        data = get_object_from_ledger(pk, self.ledger_query_call)
+        data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
         compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
@@ -61,7 +61,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(get_channel_name(request), pk)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)
@@ -73,7 +73,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryModels', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryModels', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -83,6 +83,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         if query_params is not None:
             try:
                 models_list = filter_list(
+                    channel_name=get_channel_name(request),
                     object_type='model',
                     data=data,
                     query_params=query_params)

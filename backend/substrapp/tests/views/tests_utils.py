@@ -13,6 +13,7 @@ from substrapp.views.utils import PermissionMixin
 
 class MockRequest:
     user = None
+    headers = {'Substra-Channel-Name': 'mychannel'}
 
 
 def with_permission_mixin(remote, same_file_property, has_access):

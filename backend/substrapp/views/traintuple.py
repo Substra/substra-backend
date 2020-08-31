@@ -5,7 +5,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException
+from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException, get_channel_name
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
@@ -21,10 +21,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def commit(self, serializer, pkhash):
+    def commit(self, serializer, channel_name, pkhash):
         # create on ledger
         try:
-            data = serializer.create(serializer.validated_data)
+            data = serializer.create(channel_name, serializer.validated_data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
         else:
@@ -50,14 +50,14 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(serializer.validated_data)
 
         try:
-            data = query_ledger(fcn='createTraintuple', args=args)
+            data = query_ledger(get_channel_name(request), fcn='createTraintuple', args=args)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             pkhash = data.get('key')
-            return self.commit(serializer, pkhash)
+            return self.commit(serializer, get_channel_name(request), pkhash)
 
     def create(self, request, *args, **kwargs):
         try:
@@ -71,7 +71,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryTraintuples', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryTraintuples', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -81,6 +81,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 traintuple_list = filter_list(
+                    channel_name=get_channel_name(request),
                     object_type='traintuple',
                     data=data,
                     query_params=query_params)
@@ -89,16 +90,16 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         return Response(traintuple_list, status=status.HTTP_200_OK)
 
-    def _retrieve(self, pk):
+    def _retrieve(self, channel_name, pk):
         validate_pk(pk)
-        return get_object_from_ledger(pk, self.ledger_query_call)
+        return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(pk)
+            data = self._retrieve(get_channel_name(request), pk)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:

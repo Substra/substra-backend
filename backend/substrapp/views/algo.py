@@ -14,7 +14,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
-                                   get_remote_asset, node_has_process_permission)
+                                   get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -58,7 +58,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         # create on ledger
         try:
-            data = ledger_serializer.create(ledger_serializer.validated_data)
+            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
                 pkhash = [x['pkhash'] for x in serializer.data]
@@ -118,11 +118,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_algo(self, algo, pk):
+    def create_or_update_algo(self, channel_name, algo, pk):
         # get algo description from remote node
         url = algo['description']['storageAddress']
 
-        content = get_remote_asset(url, algo['owner'], algo['description']['hash'])
+        content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['hash'])
 
         f = tempfile.TemporaryFile()
         f.write(content)
@@ -135,7 +135,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def _retrieve(self, request, pk):
         validate_pk(pk)
-        data = get_object_from_ledger(pk, self.ledger_query_call)
+        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -147,7 +147,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_algo(data, pk)
+                    instance = self.create_or_update_algo(get_channel_name(request), data, pk)
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields
@@ -172,7 +172,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(fcn='queryAlgos', args=[])
+            data = query_ledger(get_channel_name(request), fcn='queryAlgos', args=[])
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -184,6 +184,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 algos_list = filter_list(
+                    channel_name=get_channel_name(request),
                     object_type='algo',
                     data=data,
                     query_params=query_params)

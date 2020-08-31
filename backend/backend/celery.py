@@ -7,6 +7,10 @@ from celery.signals import after_task_publish
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
 
+from django.conf import settings
+
+LEDGER = getattr(settings, 'LEDGER', None)
+
 app = Celery('backend')
 
 # Using a string here means the worker doesn't have to serialize
@@ -27,14 +31,16 @@ def setup_periodic_tasks(sender, **kwargs):
                                        prepare_composite_training_task)
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
-    sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler',
-                             name='query Traintuples to prepare train task on todo traintuples')
-    sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler',
-                             name='query Testuples to prepare test task on todo testuples')
-    sender.add_periodic_task(period, prepare_aggregate_task.s(), queue='scheduler',
-                             name='query Aggregatetuples to prepare task on todo aggregatetuples')
-    sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler',
-                             name='query CompositeTraintuples to prepare task on todo composite_traintuples')
+
+    for channel_name in LEDGER['channels']:
+        sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler', args=[channel_name],
+                                 name='query Traintuples to prepare train task on todo traintuples')
+        sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler', args=[channel_name],
+                                 name='query Testuples to prepare test task on todo testuples')
+        sender.add_periodic_task(period, prepare_aggregate_task.s(), queue='scheduler', args=[channel_name],
+                                 name='query Aggregatetuples to prepare task on todo aggregatetuples')
+        sender.add_periodic_task(period, prepare_composite_training_task.s(), queue='scheduler', args=[channel_name],
+                                 name='query CompositeTraintuples to prepare task on todo composite_traintuples')
 
     from users.tasks import flush_expired_tokens
 

@@ -67,12 +67,13 @@ class TasksError(Exception):
     pass
 
 
-def get_objective(tuple_):
+def get_objective(channel_name, tuple_):
 
     objective_hash = tuple_['objective']['hash']
-    objective_metadata = get_object_from_ledger(objective_hash, 'queryObjective')
+    objective_metadata = get_object_from_ledger(channel_name, objective_hash, 'queryObjective')
 
     objective_content = get_asset_content(
+        channel_name,
         objective_metadata['metrics']['storageAddress'],
         objective_metadata['owner'],
         objective_metadata['metrics']['hash'],
@@ -82,14 +83,14 @@ def get_objective(tuple_):
 
 
 @timeit
-def prepare_objective(directory, tuple_):
+def prepare_objective(channel_name, directory, tuple_):
     """Prepare objective for tuple execution."""
-    metrics_content = get_objective(tuple_)
+    metrics_content = get_objective(channel_name, tuple_)
     dst_path = path.join(directory, 'metrics/')
     uncompress_content(metrics_content, dst_path)
 
 
-def get_algo(tuple_type, tuple_):
+def get_algo(channel_name, tuple_type, tuple_):
     """Get algo from ledger."""
     query_method_names_mapper = {
         TRAINTUPLE_TYPE: 'queryAlgo',
@@ -102,9 +103,10 @@ def get_algo(tuple_type, tuple_):
     method_name = query_method_names_mapper[tuple_type]
 
     key = tuple_['algo']['hash']
-    metadata = get_object_from_ledger(key, method_name)
+    metadata = get_object_from_ledger(channel_name, key, method_name)
 
     content = get_asset_content(
+        channel_name,
         metadata['content']['storageAddress'],
         metadata['owner'],
         metadata['content']['hash'],
@@ -113,9 +115,9 @@ def get_algo(tuple_type, tuple_):
 
 
 @timeit
-def prepare_algo(directory, tuple_type, tuple_):
+def prepare_algo(channel_name, directory, tuple_type, tuple_):
     """Prepare algo for tuple execution."""
-    content = get_algo(tuple_type, tuple_)
+    content = get_algo(channel_name, tuple_type, tuple_)
     uncompress_content(content, directory)
 
 
@@ -129,12 +131,12 @@ def tuple_get_owner(tuple_type, tuple_):
     return tuple_['dataset']['worker']
 
 
-def find_training_step_tuple_from_key(tuple_key):
+def find_training_step_tuple_from_key(channel_name, tuple_key):
     """Get tuple type and tuple metadata from tuple key.
 
     Applies to traintuple, composite traintuple and aggregatetuple.
     """
-    metadata = get_object_from_ledger(tuple_key, 'queryModelDetails')
+    metadata = get_object_from_ledger(channel_name, tuple_key, 'queryModelDetails')
     if metadata.get('aggregatetuple'):
         return AGGREGATETUPLE_TYPE, metadata['aggregatetuple']
     if metadata.get('compositeTraintuple'):
@@ -145,10 +147,11 @@ def find_training_step_tuple_from_key(tuple_key):
         f'Key {tuple_key}: no tuple found for training step: model: {metadata}')
 
 
-def get_and_put_model_content(tuple_type, hash_key, tuple_, out_model, model_dst_path):
+def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_model, model_dst_path):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
     return get_and_put_asset_content(
+        channel_name,
         out_model['storageAddress'],
         owner,
         out_model['hash'],
@@ -175,9 +178,9 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
 
 
 @timeit
-def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
+def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, directory):
 
-    tuple_type, metadata = find_training_step_tuple_from_key(input_model['traintupleKey'])
+    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, input_model['traintupleKey'])
 
     if tuple_type not in authorized_types:
         raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
@@ -187,28 +190,32 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel_name, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel_name, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK, metadata,
-            metadata['outTrunkModel']['outModel'], model_dst_path,
+            channel_name,
+            tuple_type,
+            input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            model_dst_path
         )
     else:
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
 
 
-def fetch_models(tuple_type, authorized_types, input_models, directory):
+def fetch_models(channel_name, tuple_type, authorized_types, input_models, directory):
 
     models = []
 
     for input_model in input_models:
         proc = ExceptionThread(target=fetch_model,
-                               args=(tuple_type, authorized_types, input_model, directory))
+                               args=(channel_name, tuple_type, authorized_types, input_model, directory))
         models.append(proc)
         proc.start()
 
@@ -226,7 +233,7 @@ def fetch_models(tuple_type, authorized_types, input_models, directory):
             raise Exception(exceptions)
 
 
-def prepare_traintuple_input_models(directory, tuple_):
+def prepare_traintuple_input_models(channel_name, directory, tuple_):
     """Get traintuple input models content."""
     input_models = tuple_.get('inModels')
     if not input_models:
@@ -234,10 +241,10 @@ def prepare_traintuple_input_models(directory, tuple_):
 
     authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE)
 
-    fetch_models(TRAINTUPLE_TYPE, authorized_types, input_models, directory)
+    fetch_models(channel_name, TRAINTUPLE_TYPE, authorized_types, input_models, directory)
 
 
-def prepare_aggregatetuple_input_models(directory, tuple_):
+def prepare_aggregatetuple_input_models(channel_name, directory, tuple_):
     """Get aggregatetuple input models content."""
     input_models = tuple_.get('inModels')
     if not input_models:
@@ -245,10 +252,10 @@ def prepare_aggregatetuple_input_models(directory, tuple_):
 
     authorized_types = (AGGREGATETUPLE_TYPE, TRAINTUPLE_TYPE, COMPOSITE_TRAINTUPLE_TYPE)
 
-    fetch_models(AGGREGATETUPLE_TYPE, authorized_types, input_models, directory)
+    fetch_models(channel_name, AGGREGATETUPLE_TYPE, authorized_types, input_models, directory)
 
 
-def prepare_composite_traintuple_input_models(directory, tuple_):
+def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
     """Get composite traintuple input models content."""
     head_model = tuple_.get('inHeadModel')
     trunk_model = tuple_.get('inTrunkModel')
@@ -257,7 +264,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
 
     # get head model
     head_model_key = head_model['traintupleKey']
-    tuple_type, metadata = find_training_step_tuple_from_key(head_model_key)
+    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, head_model_key)
     # head model must refer to a composite traintuple
     if tuple_type != COMPOSITE_TRAINTUPLE_TYPE:
         raise TasksError(f'CompositeTraintuple: invalid head input model: type={tuple_type}')
@@ -270,24 +277,28 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
 
     # get trunk model
     trunk_model_key = trunk_model['traintupleKey']
-    tuple_type, metadata = find_training_step_tuple_from_key(trunk_model_key)
+    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, trunk_model_key)
     trunk_model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{trunk_model_key}')
     raise_if_path_traversal([trunk_model_dst_path], path.join(directory, 'model/'))
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
-            tuple_type, trunk_model_key + HASH_KEY_SUFFIX_TRUNK, metadata,
-            metadata['outTrunkModel']['outModel'], trunk_model_dst_path,
+            channel_name,
+            tuple_type,
+            trunk_model_key + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            trunk_model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
+            channel_name, tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
         )
     else:
         raise TasksError(f'CompositeTraintuple: invalid trunk input model: type={tuple_type}')
 
 
-def prepare_testtuple_input_models(directory, tuple_):
+def prepare_testtuple_input_models(channel_name, directory, tuple_):
     """Get testtuple input models content."""
     traintuple_type = tuple_['traintupleType']
     traintuple_key = tuple_['traintupleKey']
@@ -295,15 +306,15 @@ def prepare_testtuple_input_models(directory, tuple_):
     # TODO we should use the find method to be consistent with the traintuple
 
     if traintuple_type == TRAINTUPLE_TYPE:
-        metadata = get_object_from_ledger(traintuple_key, 'queryTraintuple')
+        metadata = get_object_from_ledger(channel_name, traintuple_key, 'queryTraintuple')
         model_dst_path = path.join(directory, f'model/{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
+            channel_name, traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
         )
 
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
+        metadata = get_object_from_ledger(channel_name, traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
         raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
         get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'],
@@ -312,30 +323,34 @@ def prepare_testtuple_input_models(directory, tuple_):
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key + HASH_KEY_SUFFIX_TRUNK, metadata,
-            metadata['outTrunkModel']['outModel'], model_dst_path,
+            channel_name,
+            traintuple_type,
+            traintuple_key + HASH_KEY_SUFFIX_TRUNK,
+            metadata,
+            metadata['outTrunkModel']['outModel'],
+            model_dst_path
         )
 
     else:
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
 
-def prepare_models(directory, tuple_type, tuple_):
+def prepare_models(channel_name, directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
 
     Checks that all input models are compatible with the current tuple to execute.
     """
     if tuple_type == TESTTUPLE_TYPE:
-        prepare_testtuple_input_models(directory, tuple_)
+        prepare_testtuple_input_models(channel_name, directory, tuple_)
 
     elif tuple_type == TRAINTUPLE_TYPE:
-        prepare_traintuple_input_models(directory, tuple_)
+        prepare_traintuple_input_models(channel_name, directory, tuple_)
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        prepare_composite_traintuple_input_models(directory, tuple_)
+        prepare_composite_traintuple_input_models(channel_name, directory, tuple_)
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
-        prepare_aggregatetuple_input_models(directory, tuple_)
+        prepare_aggregatetuple_input_models(channel_name, directory, tuple_)
 
     else:
         raise TasksError(f"task of type : {tuple_type} not implemented")
@@ -443,45 +458,49 @@ def remove_local_folders(compute_plan_id):
 
 
 @app.task(ignore_result=True)
-def prepare_training_task():
-    prepare_task(TRAINTUPLE_TYPE)
+def prepare_training_task(channel_name):
+    prepare_task(channel_name, TRAINTUPLE_TYPE)
 
 
 @app.task(ignore_result=True)
-def prepare_testing_task():
-    prepare_task(TESTTUPLE_TYPE)
+def prepare_testing_task(channel_name):
+    prepare_task(channel_name, TESTTUPLE_TYPE)
 
 
 @app.task(ignore_result=True)
-def prepare_composite_training_task():
-    prepare_task(COMPOSITE_TRAINTUPLE_TYPE)
+def prepare_composite_training_task(channel_name):
+    prepare_task(channel_name, COMPOSITE_TRAINTUPLE_TYPE)
 
 
 @app.task(ignore_result=True)
-def prepare_aggregate_task():
-    prepare_task(AGGREGATETUPLE_TYPE)
+def prepare_aggregate_task(channel_name):
+    prepare_task(channel_name, AGGREGATETUPLE_TYPE)
 
 
-def prepare_task(tuple_type):
+def prepare_task(channel_name, tuple_type):
+    prepare_channel_task(channel_name, tuple_type)
+
+
+def prepare_channel_task(channel_name, tuple_type):
     data_owner = get_owner()
     worker_queue = f"{settings.LEDGER['name']}.worker"
-    tuples = query_tuples(tuple_type, data_owner)
+    tuples = query_tuples(channel_name, tuple_type, data_owner)
 
     for subtuple in tuples:
         tkey = subtuple['key']
         # Verify that tuple task does not already exist
         if AsyncResult(tkey).state == 'PENDING':
             prepare_tuple.apply_async(
-                (subtuple, tuple_type),
+                (channel_name, subtuple, tuple_type),
                 task_id=tkey,
                 queue=worker_queue
             )
         else:
-            print(f'[Scheduler] Tuple task ({tkey}) already exists')
+            print(f'[Scheduler ({channel_name})] Tuple task ({tkey}) already exists')
 
 
 @app.task(ignore_result=False)
-def prepare_tuple(subtuple, tuple_type):
+def prepare_tuple(channel_name, subtuple, tuple_type):
     from django_celery_results.models import TaskResult
 
     compute_plan_id = None
@@ -492,7 +511,7 @@ def prepare_tuple(subtuple, tuple_type):
     # We need to fetch the subtuple again to get the last
     # version of it in case of processing old events
     try:
-        _, subtuple_check = find_training_step_tuple_from_key(subtuple['key'])
+        _, subtuple_check = find_training_step_tuple_from_key(channel_name, subtuple['key'])
         if subtuple_check['status'] != 'todo':
             logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).'
                          f'\n{subtuple_check}')
@@ -513,7 +532,7 @@ def prepare_tuple(subtuple, tuple_type):
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
     try:
-        log_start_tuple(tuple_type, subtuple['key'])
+        log_start_tuple(channel_name, tuple_type, subtuple['key'])
     except LedgerStatusError as e:
         # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
         # in case of multiple instances of substra backend running for the same organisation
@@ -522,7 +541,7 @@ def prepare_tuple(subtuple, tuple_type):
         raise Ignore()
 
     compute_task.apply_async(
-        (tuple_type, subtuple, compute_plan_id),
+        (channel_name, tuple_type, subtuple, compute_plan_id),
         queue=worker_queue)
 
 
@@ -531,16 +550,16 @@ class ComputeTask(Task):
         from django.db import close_old_connections
         close_old_connections()
 
-        tuple_type, subtuple, compute_plan_id = self.split_args(args)
+        channel_name, tuple_type, subtuple, compute_plan_id = self.split_args(args)
         try:
-            log_success_tuple(tuple_type, subtuple['key'], retval['result'])
+            log_success_tuple(channel_name, tuple_type, subtuple['key'], retval['result'])
         except LedgerError as e:
             logger.exception(e)
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
         close_old_connections()
-        tuple_type, subtuple, compute_plan_id = self.split_args(args)
+        channel_name, tuple_type, subtuple, compute_plan_id = self.split_args(args)
 
         try:
             error_code = compute_error_code(exc)
@@ -550,22 +569,23 @@ class ComputeTask(Task):
             type_value = str(type_exc).split("'")[1]
             logger.error(f'{tuple_type} {subtuple["key"]} {error_code} - {type_value}',
                          exc_info=True)
-            log_fail_tuple(tuple_type, subtuple['key'], error_code)
+            log_fail_tuple(channel_name, tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
             logger.exception(e)
 
     def split_args(self, celery_args):
-        tuple_type = celery_args[0]
-        subtuple = celery_args[1]
-        compute_plan_id = celery_args[2]
-        return tuple_type, subtuple, compute_plan_id
+        channel_name = celery_args[0]
+        tuple_type = celery_args[1]
+        subtuple = celery_args[2]
+        compute_plan_id = celery_args[3]
+        return channel_name, tuple_type, subtuple, compute_plan_id
 
 
 @app.task(bind=True, acks_late=True, reject_on_worker_lost=True, ignore_result=False, base=ComputeTask)
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self, tuple_type, subtuple, compute_plan_id):
+def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
 
     try:
         worker = self.request.hostname.split('@')[1]
@@ -577,8 +597,8 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
     result = {'worker': worker, 'queue': queue, 'computePlanID': compute_plan_id}
 
     try:
-        prepare_materials(subtuple, tuple_type)
-        res = do_task(subtuple, tuple_type)
+        prepare_materials(channel_name, subtuple, tuple_type)
+        res = do_task(channel_name, subtuple, tuple_type)
         result['result'] = res
     except Exception as e:
         raise self.retry(
@@ -598,7 +618,7 @@ def compute_task(self, tuple_type, subtuple, compute_plan_id):
 
 
 @timeit
-def prepare_materials(subtuple, tuple_type):
+def prepare_materials(channel_name, subtuple, tuple_type):
     logger.info(f'Prepare materials for {tuple_type} task')
 
     # clean directory if exists (on retry)
@@ -611,12 +631,12 @@ def prepare_materials(subtuple, tuple_type):
 
     # metrics
     if tuple_type == TESTTUPLE_TYPE:
-        prepare_objective(directory, subtuple)
+        prepare_objective(channel_name, directory, subtuple)
 
     # algo
     traintuple_type = (subtuple['traintupleType'] if tuple_type == TESTTUPLE_TYPE else
                        tuple_type)
-    prepare_algo(directory, traintuple_type, subtuple)
+    prepare_algo(channel_name, directory, traintuple_type, subtuple)
 
     # opener
     if tuple_type in (TESTTUPLE_TYPE, TRAINTUPLE_TYPE, COMPOSITE_TRAINTUPLE_TYPE):
@@ -624,14 +644,14 @@ def prepare_materials(subtuple, tuple_type):
         prepare_data_sample(directory, subtuple)
 
     # input models
-    prepare_models(directory, tuple_type, subtuple)
+    prepare_models(channel_name, directory, tuple_type, subtuple)
 
     logger.info(f'Prepare materials for {tuple_type} task: success')
     list_files(directory)
 
 
 @timeit
-def do_task(subtuple, tuple_type):
+def do_task(channel_name, subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple['key'])
     org_name = getattr(settings, 'ORG_NAME')
 
@@ -643,7 +663,7 @@ def do_task(subtuple, tuple_type):
     if 'computePlanID' in subtuple and subtuple['computePlanID']:
         compute_plan_id = subtuple['computePlanID']
         rank = int(subtuple['rank'])
-        compute_plan = get_object_from_ledger(compute_plan_id, 'queryComputePlan')
+        compute_plan = get_object_from_ledger(channel_name, compute_plan_id, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
 
     return _do_task(
@@ -1024,7 +1044,7 @@ def remove_intermediary_models(model_hashes):
 
 
 @app.task(ignore_result=False)
-def on_compute_plan(compute_plan):
+def on_compute_plan(channel_name, compute_plan):
 
     compute_plan_id = compute_plan['computePlanID']
     algo_hashes = compute_plan['algoKeys']
