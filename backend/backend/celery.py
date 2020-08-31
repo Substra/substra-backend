@@ -3,12 +3,13 @@ import os
 from celery import Celery
 from celery import current_app
 from celery.signals import after_task_publish
-from django.conf import settings
-
-LEDGER = getattr(settings, 'LEDGER', None)
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
+
+from django.conf import settings
+
+LEDGER = getattr(settings, 'LEDGER', None)
 
 app = Celery('backend')
 
