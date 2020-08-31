@@ -34,6 +34,9 @@ logger = logging.getLogger(__name__)
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
 
+HASH_KEY_SUFFIX_HEAD = 'HEAD'
+HASH_KEY_SUFFIX_TRUNK = 'TRUNK'
+
 TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
@@ -142,7 +145,7 @@ def find_training_step_tuple_from_key(tuple_key):
         f'Key {tuple_key}: no tuple found for training step: model: {metadata}')
 
 
-def get_and_put_model_content(tuple_type, tuple_key, tuple_, out_model, model_dst_path):
+def get_and_put_model_content(tuple_type, hash_key, tuple_, out_model, model_dst_path):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
     return get_and_put_asset_content(
@@ -150,26 +153,25 @@ def get_and_put_model_content(tuple_type, tuple_key, tuple_, out_model, model_ds
         owner,
         out_model['hash'],
         content_dst_path=model_dst_path,
-        salt=tuple_key
+        hash_key=hash_key
     )
 
 
-def get_and_put_local_model_content(tuple_key, out_model, model_dst_path):
+def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     """Get local model content."""
     from substrapp.models import Model
 
     model = Model.objects.get(pk=out_model['hash'])
 
     # verify that local db model file is not corrupted
-    if get_hash(model.file.path, tuple_key) != out_model['hash']:
+    if get_hash(model.file.path, hash_key) != out_model['hash']:
         raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
         os.symlink(model.file.path, model_dst_path)
     else:
-        # verify that local subtuple model file is not corrupted
-        if get_hash(model_dst_path, tuple_key) != out_model['hash']:
-            raise Exception('Local Model Hash in Subtuple is not the same as in local medias')
+        if get_hash(model_dst_path, hash_key) != out_model['hash']:
+            raise Exception('Local Model Hash in Subtuple is not the same as in local db')
 
 
 @timeit
@@ -193,7 +195,8 @@ def fetch_model(parent_tuple_type, authorized_types, input_model, directory):
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            tuple_type, input_model['traintupleKey'], metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            tuple_type, input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK, metadata,
+            metadata['outTrunkModel']['outModel'], model_dst_path,
         )
     else:
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
@@ -262,7 +265,7 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
     raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
     get_and_put_local_model_content(
-        head_model_key, metadata['outHeadModel']['outModel'], head_model_dst_path
+        head_model_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'], head_model_dst_path
     )
 
     # get trunk model
@@ -273,7 +276,8 @@ def prepare_composite_traintuple_input_models(directory, tuple_):
     # trunk model must refer to a composite traintuple or an aggregatetuple
     if tuple_type == COMPOSITE_TRAINTUPLE_TYPE:  # get output trunk model
         get_and_put_model_content(
-            tuple_type, trunk_model_key, metadata, metadata['outTrunkModel']['outModel'], trunk_model_dst_path
+            tuple_type, trunk_model_key + HASH_KEY_SUFFIX_TRUNK, metadata,
+            metadata['outTrunkModel']['outModel'], trunk_model_dst_path,
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
@@ -302,13 +306,14 @@ def prepare_testtuple_input_models(directory, tuple_):
         metadata = get_object_from_ledger(traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
         raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
-        get_and_put_local_model_content(traintuple_key, metadata['outHeadModel']['outModel'],
+        get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'],
                                         head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            traintuple_type, traintuple_key, metadata, metadata['outTrunkModel']['outModel'], model_dst_path
+            traintuple_type, traintuple_key + HASH_KEY_SUFFIX_TRUNK, metadata,
+            metadata['outTrunkModel']['outModel'], model_dst_path,
         )
 
     else:
@@ -939,16 +944,15 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
         }
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-
-        for type_model, filename in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME),
-                                     ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME)]:
+        for m_type, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
+                                            ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
             file, file_hash = save_model(
                 subtuple_directory,
-                subtuple_key,
+                subtuple_key + hash_salt,
                 filename=filename,
             )
 
-            models[type_model] = {
+            models[m_type] = {
                 'file': file,
                 'hash': file_hash
             }
@@ -975,11 +979,11 @@ def extract_result_from_models(tuple_type, models):
 
 
 @timeit
-def save_model(subtuple_directory, subtuple_key, filename='model'):
+def save_model(subtuple_directory, hash_key, filename='model'):
     from substrapp.models import Model
 
     end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
-    end_model_file_hash = get_hash(end_model_path, subtuple_key)
+    end_model_file_hash = get_hash(end_model_path, hash_key)
     instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
 
     with open(end_model_path, 'rb') as f:

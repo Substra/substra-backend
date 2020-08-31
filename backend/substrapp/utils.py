@@ -254,7 +254,7 @@ def get_remote_file_content(url, auth, content_hash, salt=None):
     return response.content
 
 
-def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, salt=None):
+def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, hash_key):
 
     response = get_remote_file(url, auth, content_dst_path, stream=True)
 
@@ -262,7 +262,7 @@ def get_and_put_remote_file_content(url, auth, content_hash, content_dst_path, s
         logger.error(response.text)
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    computed_hash = get_hash(content_dst_path, key=salt)
+    computed_hash = get_hash(content_dst_path, key=hash_key)
     if computed_hash != content_hash:
         raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
 
