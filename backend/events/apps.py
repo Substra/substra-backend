@@ -197,7 +197,6 @@ def wait(channel_name):
                                                              'chaincode-updates',
                                                              onEvent=on_channel_event)
 
-                    logger.info('Connect to Channel Event Hub')
                     logger.info(f'Connect to Channel Event Hub ({channel_name})')
                     loop.run_until_complete(stream)
 

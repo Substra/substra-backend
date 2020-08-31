@@ -26,7 +26,7 @@ class NodeRegisterConfig(AppConfig):
                 time.sleep(5)
                 logger.info(f'({channel_name}) Retry to register the node to the ledger')
             else:
-                logger.error(f'({channel_name}) Node registered in the ledger')
+                logger.info(f'({channel_name}) Node registered in the ledger')
                 return
 
     def ready(self):
