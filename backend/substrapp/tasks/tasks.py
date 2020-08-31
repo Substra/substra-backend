@@ -682,7 +682,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
-        remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
+        remove_image=compute_plan_id is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
         capture_logs=settings.TASK['CAPTURE_LOGS'],
         environment=environment
@@ -708,7 +708,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
             job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
-            remove_image=not(compute_plan_id is not None or settings.TASK['CACHE_DOCKER_IMAGES']),
+            remove_image=compute_plan_id is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
             environment=environment
