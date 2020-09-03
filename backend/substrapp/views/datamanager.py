@@ -177,7 +177,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                     instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, pk)
 
                 # do not give access to local files address
-                serializer = self.get_serializer(instance, fields=('owner', 'pkhash', 'creation_date', 'last_modified'))
+                serializer = self.get_serializer(instance, fields=('owner'))
                 data.update(serializer.data)
 
         replace_storage_addresses(request, data)
