@@ -147,6 +147,19 @@ def find_training_step_tuple_from_key(channel_name, tuple_key):
         f'Key {tuple_key}: no tuple found for training step: model: {metadata}')
 
 
+def get_testtuple(channel_name, key):
+    return get_object_from_ledger(channel_name, key, 'queryTesttuple')
+
+
+def get_tuple_status(channel_name, tuple_type, key):
+    if tuple_type == TESTTUPLE_TYPE:
+        testtuple = get_testtuple(channel_name, key)
+        return testtuple['status']
+
+    _, metadata = find_training_step_tuple_from_key(channel_name, key)
+    return metadata['status']
+
+
 def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_model, model_dst_path):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
@@ -505,16 +518,16 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
 
     compute_plan_id = None
     worker_queue = f"{settings.LEDGER['name']}.worker"
+    key = subtuple['key']
 
     # Early return if subtuple status is not todo
     # Can happen if we re-process all events (backend-server restart)
     # We need to fetch the subtuple again to get the last
     # version of it in case of processing old events
     try:
-        _, subtuple_check = find_training_step_tuple_from_key(channel_name, subtuple['key'])
-        if subtuple_check['status'] != 'todo':
-            logger.error(f'Tuple task ({tuple_type}) not in "todo" state ({subtuple_check["status"]}).'
-                         f'\n{subtuple_check}')
+        status = get_tuple_status(channel_name, tuple_type, key)
+        if status != 'todo':
+            logger.error(f'Skipping tuple task ({key}): Not in "todo" state ({status}).')
             return
     except TasksError:
         # use the provided subtuple if the previous call fail
@@ -532,7 +545,7 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
 
     try:
-        log_start_tuple(channel_name, tuple_type, subtuple['key'])
+        log_start_tuple(channel_name, tuple_type, key)
     except LedgerStatusError as e:
         # Do not log_fail_tuple in this case, because prepare_tuple task are not unique
         # in case of multiple instances of substra backend running for the same organisation
