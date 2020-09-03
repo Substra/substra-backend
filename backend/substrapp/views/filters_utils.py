@@ -163,9 +163,11 @@ def filter_list(channel_name, object_type, data, query_params):
                                     _get_model_tuple(x)['outModel'][attribute] in val
                                 ) or (
                                     _get_model_tuple(x).get('outTrunkModel') and
+                                    _get_model_tuple(x)['outTrunkModel'].get('outModel') and
                                     _get_model_tuple(x)['outTrunkModel']['outModel'][attribute] in val
                                 ) or (
                                     _get_model_tuple(x).get('outHeadModel') and
+                                    _get_model_tuple(x)['outHeadModel'].get('outModel') and
                                     _get_model_tuple(x)['outHeadModel']['outModel'][attribute] in val
                                 )
                             )

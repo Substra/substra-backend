@@ -17,7 +17,7 @@ from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
-    get_success_create_code, get_channel_name
+    get_success_create_code, get_channel_name, data_to_data_response
 from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
 
 logger = logging.getLogger(__name__)
@@ -101,7 +101,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 except KeyError:
                     pkhash_map[pkhash] = file
                 else:
-                    raise Exception(f'Your data sample archives contain same files leading to same pkhash, '
+                    raise Exception(f'Your data sample archives contain same files leading to same key, '
                                     f'please review the content of your achives. '
                                     f'Archives {file} and {pkhash_map[pkhash]} are the same')
                 data[pkhash] = {
@@ -144,7 +144,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                     pass
                 else:
                     # existing can be a dict with a field path or file
-                    raise Exception(f'Your data sample directory contain same files leading to same pkhash. '
+                    raise Exception(f'Your data sample directory contain same files leading to same key. '
                                     f'Invalid path: {path}.')
 
                 data[pkhash] = {
@@ -202,14 +202,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             data, st = self._create(request, data_manager_keys, test_only)
         except ValidationException as e:
-            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            return Response(data, status=st, headers=headers)
+            # Transform data to a data_response with only key
+            data_response = data_to_data_response(data)
+            return Response(data_response, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:

@@ -7,12 +7,11 @@ dir_path = os.path.dirname(__file__)
 assets_path = os.path.join(dir_path, 'assets.py')
 
 
-def main(network):
+def main():
 
-    client = substra.Client()
-    client.add_profile('default', 'http://substra-backend.node-1.com', '0.0')
+    client = substra.Client(url='http://substra-backend.node-1.com',
+                            insecure=False)
     client.login('node-1', 'p@$swr0d44')
-    client.set_profile('default')
 
     assets = {}
     assets['objective'] = json.dumps(client.list_objective(), indent=4)
@@ -24,9 +23,10 @@ def main(network):
     assets['compositetraintuple'] = json.dumps(client.list_composite_traintuple(), indent=4)
     assets['compositealgo'] = json.dumps(client.list_composite_algo(), indent=4)
 
-    assets['model'] = json.dumps([res for res in client.client.list('model')
-                                  if (('traintuple' in res or 'compositeTraintuple' in res) and 'testtuple' in res)],
-                                 indent=4)
+    models = client._backend.list(substra.sdk.schemas.Type.Model)
+    models = [(model, list(model.keys()).pop()) for model in models]
+    assets['model'] = json.dumps([client._backend.get(substra.sdk.schemas.Type.Model, model[mtype]['key'])
+                                  for model, mtype in models], indent=4)
 
     with open(assets_path, 'w') as f:
         f.write('"""\nWARNING\n=======\n\nDO NOT MANUALLY EDIT THIS FILE!\n\n'

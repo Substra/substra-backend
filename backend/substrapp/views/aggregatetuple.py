@@ -5,7 +5,8 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.serializers import LedgerAggregateTupleSerializer
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import validate_pk, get_success_create_code, LedgerException, get_channel_name
+from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
+                                   data_to_data_response)
 
 
 class AggregateTupleViewSet(mixins.CreateModelMixin,
@@ -50,7 +51,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         try:
             data = query_ledger(get_channel_name(request), fcn='createAggregatetuple', args=args)
         except LedgerConflict as e:
-            raise LedgerException({'message': str(e.msg), 'pkhash': e.pkhash}, e.status)
+            raise LedgerException({'message': str(e.msg), 'key': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
@@ -65,7 +66,9 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            return Response(data, status=st, headers=headers)
+            # Transform data to a data_response with only key
+            data_response = data_to_data_response(data)
+            return Response(data_response, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:

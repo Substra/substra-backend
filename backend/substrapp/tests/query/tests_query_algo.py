@@ -89,7 +89,7 @@ class AlgoQueryTests(APITestCase):
 
     def test_add_algo_sync_ok(self):
         self.add_default_objective()
-        pkhash, data = self.get_default_algo_data_zip()
+        key, data = self.get_default_algo_data_zip()
 
         url = reverse('substrapp:algo-list')
         extra = {
@@ -98,17 +98,12 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': pkhash}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], pkhash)
-            self.assertEqual(r['validated'], True)
-            self.assertEqual(r['description'],
-                             f'http://testserver/media/algos/{r["pkhash"]}/{self.data_description_filename}')
-            self.assertEqual(r['file'],
-                             f'http://testserver/media/algos/{r["pkhash"]}/{self.algo_filename_zip}')
+            self.assertEqual(r['key'], key)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -120,7 +115,7 @@ class AlgoQueryTests(APITestCase):
     )
     def test_add_algo_no_sync_ok(self):
         self.add_default_objective()
-        pkhash, data = self.get_default_algo_data()
+        key, data = self.get_default_algo_data()
 
         url = reverse('substrapp:algo-list')
         extra = {
@@ -135,12 +130,7 @@ class AlgoQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], pkhash)
-            self.assertEqual(r['validated'], False)
-            self.assertEqual(r['description'],
-                             f'http://testserver/media/algos/{r["pkhash"]}/{self.data_description_filename}')
-            self.assertEqual(r['file'],
-                             f'http://testserver/media/algos/{r["pkhash"]}/{self.algo_filename}')
+            self.assertEqual(r['key'], key)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_algo_ko(self):

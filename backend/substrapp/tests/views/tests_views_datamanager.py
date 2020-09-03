@@ -15,7 +15,7 @@ from substrapp.ledger_utils import LedgerError
 from substrapp.utils import get_hash
 
 
-from ..common import get_sample_datamanager, AuthenticatedClient
+from ..common import get_sample_datamanager, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -80,10 +80,12 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_name(self):
         url = reverse('substrapp:data_manager-list')
+        name_to_filter = encode_filter(datamanager[0]['name'])
+
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = datamanager
 
-            search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
+            search_params = f'?search=dataset%253Aname%253A{name_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -91,16 +93,21 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
+
+        objective_key = datamanager[0]['objectiveKey']
+        objective_to_filter = encode_filter([o for o in objective
+                                             if o['key'] == objective_key].pop()['name'])
+
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = datamanager
             mquery_ledger2.return_value = objective
 
-            search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
+            search_params = f'?search=objective%253Aname%253A{objective_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 2)
+            self.assertEqual(len(r[0]), 1)
 
     def test_datamanager_list_filter_model(self):
         url = reverse('substrapp:data_manager-list')
@@ -122,8 +129,8 @@ class DataManagerViewTests(APITestCase):
 
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
-        datamanager_response = [d for d in datamanager
-                                if d['key'] == '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'][0]
+        datamanager_response = copy.deepcopy(datamanager[0])
+        datamanager_response['key'] = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'
         with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
             mget_object_from_ledger.return_value = datamanager_response

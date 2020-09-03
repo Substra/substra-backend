@@ -74,7 +74,7 @@ class ObjectiveQueryTests(APITestCase):
 
     def test_add_objective_sync_ok(self):
         self.add_default_data_manager()
-        pkhash, data = self.get_default_objective_data()
+        key, data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
         extra = {
@@ -83,17 +83,12 @@ class ObjectiveQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': pkhash}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], pkhash)
-            self.assertEqual(r['validated'], True)
-            self.assertEqual(r['description'],
-                             f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_description_filename}')
-            self.assertEqual(r['metrics'],
-                             f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_metrics_filename}')
+            self.assertEqual(r['key'], key)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -105,7 +100,7 @@ class ObjectiveQueryTests(APITestCase):
     )
     def test_add_objective_no_sync_ok(self):
         self.add_default_data_manager()
-        pkhash, data = self.get_default_objective_data()
+        key, data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
         extra = {
@@ -121,18 +116,13 @@ class ObjectiveQueryTests(APITestCase):
 
             r = response.json()
 
-            self.assertEqual(r['pkhash'], pkhash)
-            self.assertEqual(r['validated'], False)
-            self.assertEqual(r['description'],
-                             f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_description_filename}')
-            self.assertEqual(r['metrics'],
-                             f'http://testserver/media/objectives/{r["pkhash"]}/{self.objective_metrics_filename}')
+            self.assertEqual(r['key'], key)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_objective_conflict(self):
         self.add_default_data_manager()
 
-        pkhash, data = self.get_default_objective_data()
+        key, data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
 
@@ -142,12 +132,12 @@ class ObjectiveQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': pkhash}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['pkhash'], pkhash)
+            self.assertEqual(r['key'], key)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
             # XXX reload data as the previous call to post change it
@@ -156,7 +146,7 @@ class ObjectiveQueryTests(APITestCase):
             r = response.json()
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertEqual(r['pkhash'], pkhash)
+            self.assertEqual(r['key'], key)
 
     def test_add_objective_ko(self):
         url = reverse('substrapp:objective-list')

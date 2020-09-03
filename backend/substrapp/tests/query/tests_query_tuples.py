@@ -61,9 +61,9 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
-            minvoke_ledger.return_value = {'pkhash': raw_pkhash}
+            raw_key = 'traintuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
+            minvoke_ledger.return_value = {'pkhash': raw_key}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -100,8 +100,8 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'traintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
+            raw_key = 'traintuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)
@@ -172,9 +172,9 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
-            minvoke_ledger.return_value = {'pkhash': raw_pkhash}
+            raw_key = 'testtuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
+            minvoke_ledger.return_value = {'pkhash': raw_key}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -208,8 +208,8 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'testtuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
+            raw_key = 'testtuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)

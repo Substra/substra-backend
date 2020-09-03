@@ -14,7 +14,8 @@ from substrapp.utils import get_hash
 from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
-                                   get_remote_asset, node_has_process_permission, get_channel_name)
+                                   get_remote_asset, node_has_process_permission, get_channel_name,
+                                   data_to_data_response)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -116,7 +117,9 @@ class AlgoViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            return Response(data, status=st, headers=headers)
+            # Transform data to a data_response with only key
+            data_response = data_to_data_response(data)
+            return Response(data_response, status=st, headers=headers)
 
     def create_or_update_algo(self, channel_name, algo, pk):
         # get algo description from remote node

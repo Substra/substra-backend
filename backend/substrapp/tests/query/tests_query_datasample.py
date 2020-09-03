@@ -78,7 +78,7 @@ class DataSampleQueryTests(APITestCase):
     def test_add_data_sample_sync_ok(self):
 
         self.add_default_data_manager()
-        pkhash, data = self.get_default_datasample_data()
+        key, data = self.get_default_datasample_data()
 
         url = reverse('substrapp:data_sample-list')
         extra = {
@@ -88,15 +88,14 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch('substrapp.ledger.create_datasamples') as mcreate_ledger_assets:
             mcreate_ledger_assets.return_value = {
-                'pkhash': pkhash,
+                'pkhash': key,
                 'validated': True
             }
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r[0]['pkhash'], pkhash)
-            self.assertEqual(r[0]['validated'], True)
+            self.assertEqual(r[0]['key'], key)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_bulk_add_data_sample_sync_ok(self):
@@ -135,8 +134,7 @@ class DataSampleQueryTests(APITestCase):
             r = response.json()
 
             self.assertEqual(len(r), 2)
-            self.assertEqual(r[0]['pkhash'], get_archive_hash(file_mock))
-            self.assertTrue(r[0]['path'].endswith(f'/datasamples/{get_archive_hash(file_mock)}'))
+            self.assertEqual(r[0]['key'], get_archive_hash(file_mock))
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -148,7 +146,7 @@ class DataSampleQueryTests(APITestCase):
     )
     def test_add_data_sample_no_sync_ok(self):
         self.add_default_data_manager()
-        pkhash, data = self.get_default_datasample_data()
+        key, data = self.get_default_datasample_data()
 
         url = reverse('substrapp:data_sample-list')
         extra = {
@@ -160,7 +158,7 @@ class DataSampleQueryTests(APITestCase):
             mcreate_ledger_assets.return_value = ''
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r[0]['pkhash'], pkhash)
+            self.assertEqual(r[0]['key'], key)
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_data_sample_ko(self):
@@ -227,6 +225,7 @@ class DataSampleQueryTests(APITestCase):
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
+            # TO DO : convert pkhash to key in backend
             self.assertEqual(r['message'],
                              [[{'pkhash': ['data sample with this pkhash already exists.']}]])
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
@@ -368,7 +367,7 @@ class DataSampleQueryTests(APITestCase):
             self.assertEqual(DataSample.objects.count(), 0)
             self.assertEqual(
                 r['message'],
-                f'Your data sample archives contain same files leading to same pkhash, '
+                f'Your data sample archives contain same files leading to same key, '
                 f'please review the content of your achives. '
                 f'Archives {file_mock2.name} and {file_mock.name} are the same')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

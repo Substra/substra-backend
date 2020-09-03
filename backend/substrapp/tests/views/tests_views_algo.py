@@ -5,7 +5,6 @@ import logging
 import json
 
 import mock
-import urllib.parse
 
 from django.urls import reverse
 from django.test import override_settings
@@ -20,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import get_hash
 
-from ..common import get_sample_algo, AuthenticatedClient
+from ..common import get_sample_algo, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, algo, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -83,10 +82,12 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_filter_name(self):
         url = reverse('substrapp:algo-list')
+
+        name_to_filter = encode_filter(algo[0]['name'])
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = algo
 
-            search_params = '?search=algo%253Aname%253ALogistic%2520regression'
+            search_params = f'?search=algo%253Aname%253A{name_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -97,8 +98,8 @@ class AlgoViewTests(APITestCase):
         with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = algo
 
-            search_params = f'?search=algo%253Aname%253A{urllib.parse.quote(algo[2]["name"])}'
-            search_params += f'%2Calgo%253Aowner%253A{algo[2]["owner"]}'
+            search_params = f'?search=algo%253Aname%253A{encode_filter(algo[2]["name"])}'
+            search_params += f'%2Calgo%253Aowner%253A{encode_filter(algo[2]["owner"])}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -150,7 +151,8 @@ class AlgoViewTests(APITestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
         url = reverse('substrapp:algo-list')
-        algo_response = [a for a in algo if a['key'] == algo_hash][0]
+        algo_response = copy.deepcopy(algo[0])
+        algo_response['key'] = algo_hash  # Overwrite key value
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.algo.get_remote_asset') as get_remote_asset:
 
@@ -198,7 +200,7 @@ class AlgoViewTests(APITestCase):
         algo_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
         description_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/description.md')
 
-        pkhash = get_hash(algo_path)
+        key = get_hash(algo_path)
 
         data = {
             'json': json.dumps({
@@ -219,7 +221,7 @@ class AlgoViewTests(APITestCase):
             mcreate.return_value = {}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.data['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()
