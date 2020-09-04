@@ -527,7 +527,7 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
     try:
         status = get_tuple_status(channel_name, tuple_type, key)
         if status != 'todo':
-            logger.error(f'Skipping tuple task ({key}): Not in "todo" state ({status}).')
+            logger.info(f'Skipping task ({tuple_type} {key}): Not in "todo" state ({status}).')
             return
     except TasksError:
         # use the provided subtuple if the previous call fail
