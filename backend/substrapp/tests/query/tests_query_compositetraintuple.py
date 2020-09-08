@@ -71,9 +71,9 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'compositetraintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
-            minvoke_ledger.return_value = {'pkhash': raw_pkhash}
+            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
+            minvoke_ledger.return_value = {'pkhash': raw_key}
 
             response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -116,8 +116,8 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_pkhash = 'compositetraintuple_pkhash'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_pkhash}
+            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
+            mquery_ledger.return_value = {'key': raw_key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)

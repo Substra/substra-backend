@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import compute_hash, get_hash
 
-from ..common import get_sample_objective, AuthenticatedClient
+from ..common import get_sample_objective, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -101,21 +101,23 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_name(self):
         url = reverse('substrapp:objective-list')
+        name_to_filter = encode_filter(objective[0]['name'])
+
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = objective
 
-            search_params = '?search=objective%253Aname%253ASkin%2520Lesion%2520Classification%2520Objective'
+            search_params = f'?search=objective%253Aname%253A{name_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 2)
+            self.assertEqual(len(r[0]), 1)
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = objective
 
-            search_params = '?search=objective%253Ametrics%253Amacro-average%2520recall'
+            search_params = '?search=objective%253Ametrics%253Atest%2520metrics'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -123,12 +125,16 @@ class ObjectiveViewTests(APITestCase):
 
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
+
+        datamanager_key = objective[0]['testDataset']['dataManagerKey']
+        datamanager_to_filter = encode_filter([dm for dm in datamanager
+                                               if dm['key'] == datamanager_key].pop()['name'])
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = objective
             mquery_ledger2.return_value = datamanager
 
-            search_params = '?search=dataset%253Aname%253ASimplified%2520ISIC%25202018'
+            search_params = f'?search=dataset%253Aname%253A{datamanager_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -211,7 +217,7 @@ class ObjectiveViewTests(APITestCase):
 
         zip_folder(objective_path, metrics_path)
 
-        pkhash = get_hash(description_path)
+        key = get_hash(description_path)
 
         test_data_manager_key = get_hash(os.path.join(
             dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
@@ -237,7 +243,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.data['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()

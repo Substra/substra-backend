@@ -62,8 +62,8 @@ class DataSampleViewTests(APITestCase):
         data_path2 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
 
         # dir hash
-        pkhash1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
-        pkhash2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
+        key1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        key2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         data_manager_keys = [
             get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
@@ -82,9 +82,9 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [pkhash1, pkhash2]}
+            mcreate.return_value = {'keys': [key1, key2]}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
-        self.assertEqual([r['pkhash'] for r in response.data], [pkhash1, pkhash2])
+        self.assertEqual([r['key'] for r in response.data], [key1, key2])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         for x in data['files']:
@@ -98,7 +98,7 @@ class DataSampleViewTests(APITestCase):
         data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
 
         # dir hash
-        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data_manager_keys = [
             get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
@@ -115,10 +115,10 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [pkhash]}
+            mcreate.return_value = {'keys': [key]}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data[0]['pkhash'], pkhash)
+        self.assertEqual(response.data[0]['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['file'].close()
@@ -136,7 +136,7 @@ class DataSampleViewTests(APITestCase):
             uncompress_content(data_zip.read(), data_path)
 
         # dir hash
-        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data_manager_keys = [
             get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
@@ -152,10 +152,10 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [pkhash]}
+            mcreate.return_value = {'keys': [key]}
             response = self.client.post(url, data=data, format='json', **self.extra)
 
-        self.assertEqual(response.data[0]['pkhash'], pkhash)
+        self.assertEqual(response.data[0]['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_data_create_path(self):
@@ -170,7 +170,7 @@ class DataSampleViewTests(APITestCase):
             uncompress_content(data_zip.read(), data_path)
 
         # dir hash
-        pkhash = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data_manager_keys = [
             get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
@@ -185,10 +185,10 @@ class DataSampleViewTests(APITestCase):
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [pkhash]}
+            mcreate.return_value = {'keys': [key]}
             response = self.client.post(url, data=data, format='json', **self.extra)
 
-        self.assertEqual(response.data[0]['pkhash'], pkhash)
+        self.assertEqual(response.data[0]['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_datasamples_list(self):

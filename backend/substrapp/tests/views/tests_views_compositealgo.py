@@ -19,7 +19,7 @@ from substrapp.ledger_utils import LedgerError
 
 from substrapp.utils import get_hash
 
-from ..common import get_sample_composite_algo, AuthenticatedClient
+from ..common import get_sample_composite_algo, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, compositealgo, algo, model
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -82,10 +82,12 @@ class CompositeAlgoViewTests(APITestCase):
 
     def test_composite_algo_list_filter_name(self):
         url = reverse('substrapp:composite_algo-list')
+        name_to_filter = encode_filter(compositealgo[0]['name'])
+
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=composite_algo%253Aname%253ALogistic%2520regression%2520(composite)'
+            search_params = f'?search=composite_algo%253Aname%253A{name_to_filter}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -93,11 +95,12 @@ class CompositeAlgoViewTests(APITestCase):
 
     def test_composite_algo_list_filter_dual(self):
         url = reverse('substrapp:composite_algo-list')
+        name_to_filter = encode_filter(compositealgo[0]['name'])
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = compositealgo
 
-            search_params = '?search=composite_algo%253Aname%253ALogistic%2520regression%2520(composite)'
-            search_params += f'%2Ccomposite_algo%253Aowner%253A{compositealgo[0]["owner"]}'
+            search_params = f'?search=composite_algo%253Aname%253A{name_to_filter}'
+            search_params += f'%2Ccomposite_algo%253Aowner%253A{encode_filter(compositealgo[0]["owner"])}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -164,7 +167,8 @@ class CompositeAlgoViewTests(APITestCase):
             os.path.join(dir_path, '../../../../fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz')
         )
         url = reverse('substrapp:composite_algo-list')
-        composite_algo_response = [a for a in compositealgo if a['key'] == composite_algo_hash][0]
+        composite_algo_response = copy.deepcopy(compositealgo[0])
+        composite_algo_response['key'] = composite_algo_hash
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.compositealgo.get_remote_asset') as get_remote_asset:
 
@@ -212,7 +216,7 @@ class CompositeAlgoViewTests(APITestCase):
         composite_algo_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
         description_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/description.md')
 
-        pkhash = get_hash(composite_algo_path)
+        key = get_hash(composite_algo_path)
 
         data = {
             'json': json.dumps({
@@ -234,7 +238,7 @@ class CompositeAlgoViewTests(APITestCase):
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['pkhash'], pkhash)
+        self.assertEqual(response.data['key'], key)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()

@@ -107,12 +107,12 @@ class TraintupleViewTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = traintuple
-            target_tag = '(should fail) My super tag'
+            target_tag = 'foo'
             search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
     def test_traintuple_list_filter_compute_plan_id(self):
         url = reverse('substrapp:traintuple-list')
@@ -123,7 +123,7 @@ class TraintupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r[0]), 2)
 
 
 # APITestCase
@@ -203,7 +203,7 @@ class TesttupleViewTests(APITestCase):
         with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = testtuple
 
-            search_params = '?search=testtuple%253Atag%253Asubstra'
+            search_params = '?search=testtuple%253Atag%253Abar'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

@@ -12,6 +12,8 @@ from rest_framework.test import APIClient
 # Given username and password it returns "Basic GENERATED_TOKEN"
 from users.serializers import CustomTokenObtainPairSerializer
 
+import urllib
+
 
 def generate_basic_auth_header(username, password):
     return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
@@ -297,3 +299,9 @@ class FakeRequest(object):
 class FakeTask(object):
     def __init__(self, task_id):
         self.id = task_id
+
+
+def encode_filter(params):
+    # We need to quote the params string because the filter function
+    # in the backend use the same  ':' url separator for key:value filtering object
+    return urllib.parse.quote(params)
