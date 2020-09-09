@@ -25,11 +25,11 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     # permission_classes = (permissions.IsAuthenticated,)
 
     def create_or_update_model(self, channel_name, traintuple, pk):
-        if traintuple['outModel'] is None:
-            raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
+        if traintuple['out_model'] is None:
+            raise Exception(f'This traintuple related to this model key {pk} does not have a out_model')
 
         # get model from remote node
-        url = traintuple['outModel']['storageAddress']
+        url = traintuple['out_model']['storage_address']
 
         content = get_remote_asset(channel_name, url, traintuple['creator'], traintuple['key'])
 

@@ -21,9 +21,9 @@ from substrapp.views.filters_utils import filter_list
 
 
 def replace_storage_addresses(request, data_manager):
-    data_manager['description']['storageAddress'] = request.build_absolute_uri(
+    data_manager['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:data_manager-description', args=[data_manager['key']]))
-    data_manager['opener']['storageAddress'] = request.build_absolute_uri(
+    data_manager['opener']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:data_manager-opener', args=[data_manager['key']])
     )
 
@@ -135,7 +135,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 pkhash=pk, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
-            url = datamanager['opener']['storageAddress']
+            url = datamanager['opener']['storage_address']
 
             content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['opener']['hash'])
 
@@ -147,7 +147,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         # do the same for description
         if not instance.description:
-            url = datamanager['description']['storageAddress']
+            url = datamanager['description']['storage_address']
 
             content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['description']['hash'])
 

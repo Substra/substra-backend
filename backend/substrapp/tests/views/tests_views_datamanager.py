@@ -94,7 +94,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
 
-        objective_key = datamanager[0]['objectiveKey']
+        objective_key = datamanager[0]['objective_key']
         objective_to_filter = encode_filter([o for o in objective
                                              if o['key'] == objective_key].pop()['name'])
 
@@ -113,14 +113,14 @@ class DataManagerViewTests(APITestCase):
         url = reverse('substrapp:data_manager-list')
         done_model = [
             m for m in model
-            if 'traintuple' in m and m['traintuple']['status'] == 'done' and m['testtuple']['traintupleKey']
+            if 'traintuple' in m and m['traintuple']['status'] == 'done' and m['testtuple']['traintuple_key']
         ][0]
 
         with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger, \
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = datamanager
             mquery_ledger2.return_value = model
-            pkhash = done_model['traintuple']['outModel']['hash']
+            pkhash = done_model['traintuple']['out_model']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -186,8 +186,8 @@ class DataManagerViewTests(APITestCase):
             ledger_datamanagers = copy.deepcopy(datamanager)
             for ledger_datamanager in ledger_datamanagers:
                 for field in ('description', 'opener'):
-                    ledger_datamanager[field]['storageAddress'] = \
-                        ledger_datamanager[field]['storageAddress'] \
+                    ledger_datamanager[field]['storage_address'] = \
+                        ledger_datamanager[field]['storage_address'] \
                         .replace('http://testserver', 'http://remotetestserver')
             mquery_ledger.return_value = ledger_datamanagers
 
@@ -197,8 +197,8 @@ class DataManagerViewTests(APITestCase):
             self.assertEqual(len(res_datamanagers), len(datamanager))
             for i, res_datamanager in enumerate(res_datamanagers):
                 for field in ('description', 'opener'):
-                    self.assertEqual(res_datamanager[field]['storageAddress'],
-                                     datamanager[i][field]['storageAddress'])
+                    self.assertEqual(res_datamanager[field]['storage_address'],
+                                     datamanager[i][field]['storage_address'])
 
     def test_datamanager_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:data_manager-detail', args=[datamanager[0]['key']])
@@ -211,16 +211,16 @@ class DataManagerViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_datamanager = copy.deepcopy(datamanager[0])
             for field in ('description', 'opener'):
-                ledger_datamanager[field]['storageAddress'] = \
-                    ledger_datamanager[field]['storageAddress'].replace('http://testserver',
-                                                                        'http://remotetestserver')
+                ledger_datamanager[field]['storage_address'] = \
+                    ledger_datamanager[field]['storage_address'].replace('http://testserver',
+                                                                         'http://remotetestserver')
             mquery_ledger.return_value = ledger_datamanager
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'opener'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 datamanager[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 datamanager[0][field]['storage_address'])
 
     def test_datamanager_retrieve_storage_addresses_update_without_cache(self):
         url = reverse('substrapp:data_manager-detail', args=[datamanager[0]['key']])
@@ -233,13 +233,13 @@ class DataManagerViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_datamanager = copy.deepcopy(datamanager[0])
             for field in ('description', 'opener'):
-                ledger_datamanager[field]['storageAddress'] = \
-                    ledger_datamanager[field]['storageAddress'].replace('http://testserver',
-                                                                        'http://remotetestserver')
+                ledger_datamanager[field]['storage_address'] = \
+                    ledger_datamanager[field]['storage_address'].replace('http://testserver',
+                                                                         'http://remotetestserver')
             mquery_ledger.return_value = ledger_datamanager
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'opener'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 datamanager[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 datamanager[0][field]['storage_address'])

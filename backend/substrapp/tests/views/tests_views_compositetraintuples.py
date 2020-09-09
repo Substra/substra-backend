@@ -24,7 +24,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 def get_compute_plan_id(assets):
     for asset in assets:
-        compute_plan_id = asset.get('computePlanID')
+        compute_plan_id = asset.get('compute_plan_id')
         if compute_plan_id:
             return compute_plan_id
     raise Exception('Could not find a compute plan ID')

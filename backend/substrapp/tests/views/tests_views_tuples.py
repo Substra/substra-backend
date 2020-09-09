@@ -25,7 +25,7 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 def get_compute_plan_id(assets):
     for asset in assets:
-        compute_plan_id = asset.get('computePlanID')
+        compute_plan_id = asset.get('compute_plan_id')
         if compute_plan_id:
             return compute_plan_id
     raise Exception('Could not find a compute plan ID')
@@ -119,7 +119,7 @@ class TraintupleViewTests(APITestCase):
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = traintuple
             compute_plan_id = get_compute_plan_id(traintuple)
-            search_params = f'?search=traintuple%253AcomputePlanID%253A{compute_plan_id}'
+            search_params = f'?search=traintuple%253Acompute_plan_id%253A{compute_plan_id}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

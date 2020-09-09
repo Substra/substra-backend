@@ -140,7 +140,7 @@ class AlgoViewTests(APITestCase):
             mquery_ledger.return_value = algo
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['traintuple']['outModel']['hash']
+            pkhash = done_model['traintuple']['out_model']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -237,9 +237,9 @@ class AlgoViewTests(APITestCase):
             ledger_algos = copy.deepcopy(algo)
             for ledger_algo in ledger_algos:
                 for field in ('description', 'content'):
-                    ledger_algo[field]['storageAddress'] = \
-                        ledger_algo[field]['storageAddress'].replace('http://testserver',
-                                                                     'http://remotetestserver')
+                    ledger_algo[field]['storage_address'] = \
+                        ledger_algo[field]['storage_address'].replace('http://testserver',
+                                                                      'http://remotetestserver')
             mquery_ledger.return_value = ledger_algos
 
             # actual test
@@ -248,8 +248,8 @@ class AlgoViewTests(APITestCase):
             self.assertEqual(len(res_algos), len(algo))
             for i, res_algo in enumerate(res_algos):
                 for field in ('description', 'content'):
-                    self.assertEqual(res_algo[field]['storageAddress'],
-                                     algo[i][field]['storageAddress'])
+                    self.assertEqual(res_algo[field]['storage_address'],
+                                     algo[i][field]['storage_address'])
 
     def test_algo_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:algo-detail', args=[algo[0]['key']])
@@ -262,16 +262,16 @@ class AlgoViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_algo = copy.deepcopy(algo[0])
             for field in ('description', 'content'):
-                ledger_algo[field]['storageAddress'] = \
-                    ledger_algo[field]['storageAddress'].replace('http://testserver',
-                                                                 'http://remotetestserver')
+                ledger_algo[field]['storage_address'] = \
+                    ledger_algo[field]['storage_address'].replace('http://testserver',
+                                                                  'http://remotetestserver')
             mquery_ledger.return_value = ledger_algo
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'content'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 algo[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 algo[0][field]['storage_address'])
 
     def test_algo_retrieve_storage_addresses_update_without_cache(self):
         url = reverse('substrapp:algo-detail', args=[algo[0]['key']])
@@ -284,13 +284,13 @@ class AlgoViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_algo = copy.deepcopy(algo[0])
             for field in ('description', 'content'):
-                ledger_algo[field]['storageAddress'] = \
-                    ledger_algo[field]['storageAddress'].replace('http://testserver',
-                                                                 'http://remotetestserver')
+                ledger_algo[field]['storage_address'] = \
+                    ledger_algo[field]['storage_address'].replace('http://testserver',
+                                                                  'http://remotetestserver')
             mquery_ledger.return_value = ledger_algo
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'content'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 algo[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 algo[0][field]['storage_address'])

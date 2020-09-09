@@ -126,7 +126,7 @@ class ObjectiveViewTests(APITestCase):
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
 
-        datamanager_key = objective[0]['testDataset']['dataManagerKey']
+        datamanager_key = objective[0]['test_dataset']['data_manager_key']
         datamanager_to_filter = encode_filter([dm for dm in datamanager
                                                if dm['key'] == datamanager_key].pop()['name'])
         with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger, \
@@ -151,7 +151,7 @@ class ObjectiveViewTests(APITestCase):
             mquery_ledger.return_value = objective
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['traintuple']['outModel']['hash']
+            pkhash = done_model['traintuple']['out_model']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -285,8 +285,8 @@ class ObjectiveViewTests(APITestCase):
             ledger_objectives = copy.deepcopy(objective)
             for ledger_objective in ledger_objectives:
                 for field in ('description', 'metrics'):
-                    ledger_objective[field]['storageAddress'] = \
-                        ledger_objective[field]['storageAddress'] \
+                    ledger_objective[field]['storage_address'] = \
+                        ledger_objective[field]['storage_address'] \
                         .replace('http://testserver', 'http://remotetestserver')
             mquery_ledger.return_value = ledger_objectives
 
@@ -296,8 +296,8 @@ class ObjectiveViewTests(APITestCase):
             self.assertEqual(len(res_objectives), len(objective))
             for i, res_objective in enumerate(res_objectives):
                 for field in ('description', 'metrics'):
-                    self.assertEqual(res_objective[field]['storageAddress'],
-                                     objective[i][field]['storageAddress'])
+                    self.assertEqual(res_objective[field]['storage_address'],
+                                     objective[i][field]['storage_address'])
 
     def test_objective_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
@@ -310,16 +310,16 @@ class ObjectiveViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_objective = copy.deepcopy(objective[0])
             for field in ('description', 'metrics'):
-                ledger_objective[field]['storageAddress'] = \
-                    ledger_objective[field]['storageAddress'].replace('http://testserver',
-                                                                      'http://remotetestserver')
+                ledger_objective[field]['storage_address'] = \
+                    ledger_objective[field]['storage_address'].replace('http://testserver',
+                                                                       'http://remotetestserver')
             mquery_ledger.return_value = ledger_objective
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'metrics'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 objective[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 objective[0][field]['storage_address'])
 
     def test_objective_retrieve_storage_addresses_update_without_cache(self):
         url = reverse('substrapp:objective-detail', args=[objective[0]['key']])
@@ -332,13 +332,13 @@ class ObjectiveViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_objective = copy.deepcopy(objective[0])
             for field in ('description', 'metrics'):
-                ledger_objective[field]['storageAddress'] = \
-                    ledger_objective[field]['storageAddress'].replace('http://testserver',
-                                                                      'http://remotetestserver')
+                ledger_objective[field]['storage_address'] = \
+                    ledger_objective[field]['storage_address'].replace('http://testserver',
+                                                                       'http://remotetestserver')
             mquery_ledger.return_value = ledger_objective
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'metrics'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 objective[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 objective[0][field]['storage_address'])

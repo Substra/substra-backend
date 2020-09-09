@@ -20,9 +20,9 @@ from substrapp.views.filters_utils import filter_list
 
 
 def replace_storage_addresses(request, aggregate_algo):
-    aggregate_algo['description']['storageAddress'] = request.build_absolute_uri(
+    aggregate_algo['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:aggregate_algo-description', args=[aggregate_algo['key']]))
-    aggregate_algo['content']['storageAddress'] = request.build_absolute_uri(
+    aggregate_algo['content']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:aggregate_algo-file', args=[aggregate_algo['key']])
     )
 
@@ -119,7 +119,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def create_or_update_aggregate_algo(self, channel_name, aggregate_algo, pk):
         # get Aggregatealgo description from remote node
-        url = aggregate_algo['description']['storageAddress']
+        url = aggregate_algo['description']['storage_address']
 
         content = get_remote_asset(channel_name, url, aggregate_algo['owner'], aggregate_algo['description']['hash'])
 

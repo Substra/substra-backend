@@ -19,7 +19,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 
 from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
 from substrapp.utils import get_owner
-from substrapp.ledger_utils import get_hfc
+from substrapp.ledger_utils import get_hfc, to_snake_case, _replace_dict_keys
 
 from celery.result import AsyncResult
 
@@ -90,7 +90,7 @@ def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
 
     worker_queue = f"{LEDGER['name']}.worker"
 
-    key = asset['computePlanID']
+    key = asset['compute_plan_id']
 
     # Currently, we received this event on done, failed and canceled status
     # We apply the same behavior for those three status.
@@ -127,7 +127,7 @@ def on_event(channel_name, cc_event, block_number, tx_id, tx_status):
             continue
 
         for asset in assets:
-
+            asset = _replace_dict_keys(asset, to_snake_case)
             if event_type == 'computePlan':
                 on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset)
             else:
