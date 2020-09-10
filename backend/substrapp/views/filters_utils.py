@@ -174,7 +174,7 @@ def filter_list(channel_name, object_type, data, query_params):
                             )
                         ]
 
-                        if object_type in ['algo', 'composite_algo', 'aggregatealgo']:
+                        if object_type in ['algo', 'composite_algo', 'aggregate_algo']:
                             hashes = [_get_model_tuple(x)['algo']['hash'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
