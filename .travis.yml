@@ -17,10 +17,8 @@ addons:
   snaps:
     - name: helm
       confinement: classic
-      channel: 2.16/stable
+      channel: 3.2/stable
 
-before_script:
-  - helm init --client-only
 
 install: pip install -r backend/requirements.txt
 

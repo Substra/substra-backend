@@ -268,6 +268,8 @@ deploy:
           channels:
             - mychannel
             - yourchannel
+    flags:
+      install: ["--create-namespace"]
 
 profiles:
   - name: prod
