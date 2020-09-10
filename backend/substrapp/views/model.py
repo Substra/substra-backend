@@ -46,12 +46,12 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
-        compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
+        compatible_tuple_types = ['traintuple', 'composite_traintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
 
         if not any_data:
             raise Exception(
-                'Invalid model: missing traintuple, compositeTraintuple or aggregatetuple field'
+                'Invalid model: missing traintuple, composite_traintuple or aggregatetuple field'
             )
 
         return data
