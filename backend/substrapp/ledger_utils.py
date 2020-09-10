@@ -176,11 +176,14 @@ def _replace_dict_keys(d, converter):
 
     new_d = {}
     for key, value in d.items():
-        if isinstance(value, dict):
-            value = _replace_dict_keys(value, converter)
-        elif isinstance(value, list):
-            if all([isinstance(v, dict) for v in value]):
-                value = [_replace_dict_keys(v, converter) for v in value]
+        # If key is 'metadata' we should not convert value to snake case
+        if key != 'metadata':
+            if isinstance(value, dict):
+                value = _replace_dict_keys(value, converter)
+
+            elif isinstance(value, list):
+                if all([isinstance(v, dict) for v in value]):
+                    value = [_replace_dict_keys(v, converter) for v in value]
 
         new_d[converter(key)] = value
     return new_d
@@ -194,7 +197,10 @@ def replace_dict_keys(d, converter):
     if isinstance(d, dict):
         return _replace_dict_keys(d, converter)
     elif isinstance(d, list):
-        return [_replace_dict_keys(sub_d, converter) for sub_d in d]
+        if all([isinstance(sub_d, dict) for sub_d in d]):
+            return [_replace_dict_keys(sub_d, converter) for sub_d in d]
+        else:
+            return d
     else:
         raise TypeError(f'd ({type(d)} is not a instance of dict or list')
 
