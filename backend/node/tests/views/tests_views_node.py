@@ -44,6 +44,6 @@ class ModelViewTests(APITestCase):
                 response = self.client.get(url, **self.extra)
                 r = response.json()
                 self.assertEqual(r, [
-                    {'id': 'foo', 'isCurrent': True},
-                    {'id': 'bar', 'isCurrent': False}
+                    {'id': 'foo', 'is_current': True},
+                    {'id': 'bar', 'is_current': False}
                 ])
