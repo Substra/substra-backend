@@ -124,7 +124,7 @@ class ModelPermissionViewSet(PermissionMixin,
         permissions = asset['process']
         node_id = user.username
 
-        return permissions['public'] or node_id in permissions['authorizedIDs']
+        return permissions['public'] or node_id in permissions['authorized_ids']
 
     @gzip_action
     @action(detail=True)
