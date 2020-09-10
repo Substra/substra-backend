@@ -175,13 +175,11 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        composite_algos_list = [data]
-
         # parse filters
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                composite_algos_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='composite_algo',
                     data=data,
@@ -189,11 +187,10 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        for group in composite_algos_list:
-            for composite_algo in group:
-                replace_storage_addresses(request, composite_algo)
+        for composite_algo in data:
+            replace_storage_addresses(request, composite_algo)
 
-        return Response(composite_algos_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class CompositeAlgoPermissionViewSet(PermissionMixin,

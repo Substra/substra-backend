@@ -1,4 +1,6 @@
 import logging
+import itertools
+
 from urllib.parse import unquote
 
 from substrapp.ledger_utils import query_ledger
@@ -98,6 +100,14 @@ def _get_model_tuple(model):
         return model['traintuple']
     else:
         raise NotImplementedError
+
+
+def flatten_without_duplicates(list_of_list):
+    res = []
+    for item in itertools.chain.from_iterable(list_of_list):
+        if item not in res:
+            res.append(item)
+    return res
 
 
 def filter_list(channel_name, object_type, data, query_params):
@@ -237,4 +247,4 @@ def filter_list(channel_name, object_type, data, query_params):
 
             object_list.append(filtered_list)
 
-    return object_list
+    return flatten_without_duplicates(object_list)

@@ -219,7 +219,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data = data if data else []
+        data = data or []
 
         return Response(data, status=status.HTTP_200_OK)
 

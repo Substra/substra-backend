@@ -58,7 +58,7 @@ class AlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [[]])
+            self.assertEqual(r, [])
 
     def test_algo_list_success(self):
         url = reverse('substrapp:algo-list')
@@ -67,7 +67,7 @@ class AlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [algo])
+            self.assertEqual(r, algo)
 
     def test_algo_list_filter_fail(self):
         url = reverse('substrapp:algo-list')
@@ -91,7 +91,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_algo_list_filter_dual(self):
         url = reverse('substrapp:algo-list')
@@ -103,7 +103,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:algo-list')
@@ -145,7 +145,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -244,7 +244,7 @@ class AlgoViewTests(APITestCase):
 
             # actual test
             res = self.client.get(url, **self.extra)
-            res_algos = res.data[0]
+            res_algos = res.data
             self.assertEqual(len(res_algos), len(algo))
             for i, res_algo in enumerate(res_algos):
                 for field in ('description', 'content'):

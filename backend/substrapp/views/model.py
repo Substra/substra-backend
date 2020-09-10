@@ -77,12 +77,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        models_list = [data]
-
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                models_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='model',
                     data=data,
@@ -90,7 +88,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(models_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 def gzip_action(func):

@@ -79,12 +79,10 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        compositetraintuple_list = [data]
-
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                compositetraintuple_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='composite_traintuple',
                     data=data,
@@ -92,7 +90,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(compositetraintuple_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, channel_name, pk):
         validate_pk(pk)

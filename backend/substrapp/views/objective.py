@@ -197,12 +197,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        objectives_list = [data]
-
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                objectives_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='objective',
                     data=data,
@@ -210,11 +208,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        for group in objectives_list:
-            for objective in group:
-                replace_storage_addresses(request, objective)
+        for objective in data:
+            replace_storage_addresses(request, objective)
 
-        return Response(objectives_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):

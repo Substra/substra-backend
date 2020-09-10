@@ -65,7 +65,7 @@ class CompositeTraintupleViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [[]])
+            self.assertEqual(r, [])
 
     def test_compositetraintuple_retrieve(self):
 
@@ -111,4 +111,4 @@ class CompositeTraintupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
