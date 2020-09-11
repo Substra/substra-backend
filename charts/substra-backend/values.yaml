@@ -315,3 +315,7 @@ securityContext:
   fsGroup: 1001
   runAsUser: 1001
   runAsGroup: 1001
+
+grpc:
+  keepalive:
+    timeMs: 120000

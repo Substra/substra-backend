@@ -28,15 +28,18 @@ data:
         "docker_core_dir": "/var/hyperledger/fabric_cfg",
         "tlsCACerts": "/var/hyperledger/ca/cacert.pem",
         "clientKey": "/var/hyperledger/tls/client/pair/tls.key",
-        "clientCert": "/var/hyperledger/tls/client/pair/tls.crt",
-        "grpcOptions": {
-          "grpc.ssl_target_name_override": "{{ .Values.peer.host }}",
-          "grpc.max_send_message_length": -1,
-          "grpc.max_receive_message_length": -1
-        }
+        "clientCert": "/var/hyperledger/tls/client/pair/tls.crt"
+      },
+      "grpcOptions": {
+        "grpc.max_send_message_length": -1,
+        "grpc.max_receive_message_length": -1,
+        "grpc.keepalive_time_ms": {{ .Values.grpc.keepalive.timeMs }},
+        "grpc.http2.min_time_between_pings_ms": {{ .Values.grpc.keepalive.timeMs }},
+        "grpc.keepalive_timeout_ms": 20000,
+        "grpc.http2.max_pings_without_data": 0,
+        "grpc.keepalive_permit_without_calls": 1
       }
     }
-
 ---
 
 apiVersion: v1
