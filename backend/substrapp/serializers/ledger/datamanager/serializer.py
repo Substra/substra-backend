@@ -29,16 +29,16 @@ class LedgerDataManagerSerializer(serializers.Serializer):
 
         args = {
             'name': name,
-            'openerHash': get_hash(instance.data_opener),
-            'openerStorageAddress': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'opener_hash': get_hash(instance.data_opener),
+            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
             'type': data_type,
-            'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': current_site + reverse('substrapp:data_manager-description',
-                                                                args=[instance.pk]),
-            'objectiveKey': objective_key,
+            'description_hash': get_hash(instance.description),
+            'description_storage_address': current_site + reverse('substrapp:data_manager-description',
+                                                                  args=[instance.pk]),
+            'objective_key': objective_key,
             'permissions': {'process': {
                 'public': permissions.get('public'),
-                'authorizedIDs': permissions.get('authorized_ids'),
+                'authorized_ids': permissions.get('authorized_ids'),
             }},
             'metadata': metadata
         }

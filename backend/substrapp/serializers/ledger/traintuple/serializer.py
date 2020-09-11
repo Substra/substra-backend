@@ -30,11 +30,11 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         metadata = validated_data.get('metadata')
 
         args = {
-            'algoKey': algo_key,
-            'inModels': in_models_keys,
-            'dataManagerKey': data_manager_key,
-            'dataSampleKeys': train_data_sample_keys,
-            'computePlanID': compute_plan_id,
+            'algo_key': algo_key,
+            'in_models': in_models_keys,
+            'data_manager_key': data_manager_key,
+            'data_sample_keys': train_data_sample_keys,
+            'compute_plan_id': compute_plan_id,
             'rank': rank,
             'tag': tag,
             'metadata': metadata

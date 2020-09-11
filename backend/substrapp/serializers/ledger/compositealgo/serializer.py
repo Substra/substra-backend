@@ -26,13 +26,13 @@ class LedgerCompositeAlgoSerializer(serializers.Serializer):
         args = {
             'name': name,
             'hash': get_hash(instance.file),
-            'storageAddress': current_site + reverse('substrapp:composite_algo-file', args=[instance.pk]),
-            'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': current_site + reverse(
+            'storage_address': current_site + reverse('substrapp:composite_algo-file', args=[instance.pk]),
+            'description_hash': get_hash(instance.description),
+            'description_storage_address': current_site + reverse(
                 'substrapp:composite_algo-description', args=[instance.pk]),
             'permissions': {'process': {
                 'public': permissions.get('public'),
-                'authorizedIDs': permissions.get('authorized_ids'),
+                'authorized_ids': permissions.get('authorized_ids'),
             }},
             'metadata': metadata
         }

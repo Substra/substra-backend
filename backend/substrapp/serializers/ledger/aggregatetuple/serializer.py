@@ -27,9 +27,9 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
         metadata = validated_data.get('metadata')
 
         args = {
-            'algoKey': algo_key,
-            'inModels': in_models_keys,
-            'computePlanID': compute_plan_id,
+            'algo_key': algo_key,
+            'in_models': in_models_keys,
+            'compute_plan_id': compute_plan_id,
             'rank': rank,
             'worker': worker,
             'tag': tag,

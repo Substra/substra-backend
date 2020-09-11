@@ -19,7 +19,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 
 from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
 from substrapp.utils import get_owner
-from substrapp.ledger_utils import get_hfc, to_snake_case, _replace_dict_keys
+from substrapp.ledger_utils import get_hfc
 
 from celery.result import AsyncResult
 
@@ -127,8 +127,7 @@ def on_event(channel_name, cc_event, block_number, tx_id, tx_status):
             continue
 
         for asset in assets:
-            asset = _replace_dict_keys(asset, to_snake_case)
-            if event_type == 'computePlan':
+            if event_type == 'compute_plan':
                 on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset)
             else:
                 on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset)

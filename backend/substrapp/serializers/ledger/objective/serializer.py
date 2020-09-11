@@ -33,18 +33,18 @@ class LedgerObjectiveSerializer(serializers.Serializer):
 
         args = {
             'name': name,
-            'descriptionHash': get_hash(instance.description),
-            'descriptionStorageAddress': current_site + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
-            'metricsName': metrics_name,
-            'metricsHash': get_hash(instance.metrics),
-            'metricsStorageAddress': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
-            'testDataset': {
-                'dataManagerKey': test_data_manager_key,
-                'dataSampleKeys': test_data_sample_keys,
+            'description_hash': get_hash(instance.description),
+            'description_storage_address': current_site + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
+            'metrics_name': metrics_name,
+            'metrics_hash': get_hash(instance.metrics),
+            'metrics_storage_address': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
+            'test_dataset': {
+                'data_manager_key': test_data_manager_key,
+                'data_sample_keys': test_data_sample_keys,
             },
             'permissions': {'process': {
                 'public': permissions.get('public'),
-                'authorizedIDs': permissions.get('authorized_ids'),
+                'authorized_ids': permissions.get('authorized_ids'),
             }},
             'metadata': metadata
         }

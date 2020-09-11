@@ -39,7 +39,7 @@ HASH_KEY_SUFFIX_TRUNK = 'TRUNK'
 
 TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
-COMPOSITE_TRAINTUPLE_TYPE = 'compositeTraintuple'
+COMPOSITE_TRAINTUPLE_TYPE = 'composite_traintuple'
 TESTTUPLE_TYPE = 'testtuple'
 
 TUPLE_COMMANDS = {

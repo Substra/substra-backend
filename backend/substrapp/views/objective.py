@@ -239,7 +239,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             leaderboard = query_ledger(get_channel_name(request), fcn='queryObjectiveLeaderboard', args={
-                'objectiveKey': pk,
+                'objective_key': pk,
                 'ascendingOrder': sort == 'asc',
             })
         except LedgerError as e:
