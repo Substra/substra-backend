@@ -331,6 +331,8 @@ def update_ledger(channel_name, *args, **kwargs):
 
 
 def query_tuples(channel_name, tuple_type, data_owner):
+    # Convert to chaincode index for compositeTraintuple
+    tuple_type = 'compositeTraintuple' if tuple_type == 'composite_traintuple' else tuple_type
     data = query_ledger(
         channel_name,
         fcn="queryFilter",
@@ -353,19 +355,19 @@ LOG_TUPLE_INVOKE_FCNS = {
     'doing': {
         'traintuple': 'logStartTrain',
         'testtuple': 'logStartTest',
-        'compositeTraintuple': 'logStartCompositeTrain',
+        'composite_traintuple': 'logStartCompositeTrain',
         'aggregatetuple': 'logStartAggregate',
     },
     'done': {
         'traintuple': 'logSuccessTrain',
         'testtuple': 'logSuccessTest',
-        'compositeTraintuple': 'logSuccessCompositeTrain',
+        'composite_traintuple': 'logSuccessCompositeTrain',
         'aggregatetuple': 'logSuccessAggregate',
     },
     'failed': {
         'traintuple': 'logFailTrain',
         'testtuple': 'logFailTest',
-        'compositeTraintuple': 'logFailCompositeTrain',
+        'composite_traintuple': 'logFailCompositeTrain',
         'aggregatetuple': 'logFailAggregate',
     },
 }
@@ -415,7 +417,7 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
             },
         })
 
-    elif tuple_type == 'compositeTraintuple':
+    elif tuple_type == 'composite_traintuple':
         extra_kwargs.update({
             'out_head_model': {
                 'hash': res["end_head_model_file_hash"],

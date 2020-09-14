@@ -593,7 +593,7 @@ testtuple = [
         "status": "done",
         "tag": "bar",
         "traintuple_key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
-        "traintuple_type": "compositeTraintuple"
+        "traintuple_type": "composite_traintuple"
     },
     {
         "algo": {
@@ -626,7 +626,7 @@ testtuple = [
         "status": "done",
         "tag": "",
         "traintuple_key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
-        "traintuple_type": "compositeTraintuple"
+        "traintuple_type": "composite_traintuple"
     },
     {
         "algo": {
@@ -659,7 +659,7 @@ testtuple = [
         "status": "done",
         "tag": "",
         "traintuple_key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
-        "traintuple_type": "compositeTraintuple"
+        "traintuple_type": "composite_traintuple"
     },
     {
         "algo": {
@@ -1971,7 +1971,7 @@ model = [
             "status": "done",
             "tag": "",
             "traintuple_key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
-            "traintuple_type": "compositeTraintuple"
+            "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },
@@ -2425,7 +2425,7 @@ model = [
             "status": "done",
             "tag": "",
             "traintuple_key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
-            "traintuple_type": "compositeTraintuple"
+            "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },
@@ -2522,7 +2522,7 @@ model = [
             "status": "done",
             "tag": "",
             "traintuple_key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
-            "traintuple_type": "compositeTraintuple"
+            "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },

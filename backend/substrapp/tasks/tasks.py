@@ -708,7 +708,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
             environment['TESTTUPLE_TAG'] = TAG_VALUE_FOR_TRANSFER_BUCKET
 
-    job_name = f'{tuple_type}-{subtuple["key"][0:8]}-{TUPLE_COMMANDS[tuple_type]}'.lower()
+    job_name = f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-{TUPLE_COMMANDS[tuple_type]}'.lower()
     command = generate_command(tuple_type, subtuple, rank)
 
     # train or predict
@@ -743,7 +743,7 @@ def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, or
             compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["objective"]["hash"][0:8]}'.lower(),
-            job_name=f'{tuple_type}-{subtuple["key"][0:8]}-eval'.lower(),
+            job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
             remove_image=compute_plan_id is None and not settings.TASK['CACHE_DOCKER_IMAGES'],

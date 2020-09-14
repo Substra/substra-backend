@@ -116,11 +116,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             if 'tag' in data_composite_traintuple:
                 composite_traintuple['tag'] = data_composite_traintuple['tag']
             if 'in_head_model_id' in data_composite_traintuple:
-                composite_traintuple['inHeadModelID'] = data_composite_traintuple['in_head_model_id']
+                composite_traintuple['in_head_model_id'] = data_composite_traintuple['in_head_model_id']
             if 'in_trunk_model_id' in data_composite_traintuple:
-                composite_traintuple['inTrunkModelID'] = data_composite_traintuple['in_trunk_model_id']
+                composite_traintuple['in_trunk_model_id'] = data_composite_traintuple['in_trunk_model_id']
             if 'out_trunk_model_permissions' in data_composite_traintuple:
-                composite_traintuple['outTrunkModelPermissions'] = {
+                composite_traintuple['out_trunk_model_permissions'] = {
                     'process': {
                         'authorized_ids': data_composite_traintuple['out_trunk_model_permissions']['authorized_ids']
                     }
