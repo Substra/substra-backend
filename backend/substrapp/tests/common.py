@@ -215,7 +215,7 @@ def get_sample_model():
 DEFAULT_PERMISSIONS = {
     'process': {
         'public': True,
-        'authorizedIDs': [],
+        'authorized_ids': [],
     }
 }
 

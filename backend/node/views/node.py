@@ -23,6 +23,6 @@ class NodeViewSet(mixins.ListModelMixin,
         current_node_id = get_owner()
         for node in nodes:
             node.update({
-                'isCurrent': node['id'] == current_node_id,
+                'is_current': node['id'] == current_node_id,
             })
         return Response(nodes, status=status.HTTP_200_OK)

@@ -34,11 +34,11 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             return Response(error, status=e.status)
 
         # create compute plan in ledger
-        compute_plan_id = ledger_response.get('computePlanID')
+        compute_plan_id = ledger_response.get('compute_plan_id')
         try:
             data = serializer.create(get_channel_name(request), serializer.validated_data)
         except LedgerError as e:
-            error = {'message': str(e.msg), 'computePlanID': compute_plan_id}
+            error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
             return Response(error, status=e.status)
 
         # send successful response
@@ -106,7 +106,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         try:
             data = serializer.update(get_channel_name(request), compute_plan_id, serializer.validated_data)
         except LedgerError as e:
-            error = {'message': str(e.msg), 'computePlanID': compute_plan_id}
+            error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
             return Response(error, status=e.status)
 
         # send successful response

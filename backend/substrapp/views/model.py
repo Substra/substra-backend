@@ -25,11 +25,11 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     # permission_classes = (permissions.IsAuthenticated,)
 
     def create_or_update_model(self, channel_name, traintuple, pk):
-        if traintuple['outModel'] is None:
-            raise Exception(f'This traintuple related to this model key {pk} does not have a outModel')
+        if traintuple['out_model'] is None:
+            raise Exception(f'This traintuple related to this model key {pk} does not have a out_model')
 
         # get model from remote node
-        url = traintuple['outModel']['storageAddress']
+        url = traintuple['out_model']['storage_address']
 
         content = get_remote_asset(channel_name, url, traintuple['creator'], traintuple['key'])
 
@@ -46,12 +46,12 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
         data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
-        compatible_tuple_types = ['traintuple', 'compositeTraintuple', 'aggregatetuple']
+        compatible_tuple_types = ['traintuple', 'composite_traintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
 
         if not any_data:
             raise Exception(
-                'Invalid model: missing traintuple, compositeTraintuple or aggregatetuple field'
+                'Invalid model: missing traintuple, composite_traintuple or aggregatetuple field'
             )
 
         return data
@@ -124,7 +124,7 @@ class ModelPermissionViewSet(PermissionMixin,
         permissions = asset['process']
         node_id = user.username
 
-        return permissions['public'] or node_id in permissions['authorizedIDs']
+        return permissions['public'] or node_id in permissions['authorized_ids']
 
     @gzip_action
     @action(detail=True)

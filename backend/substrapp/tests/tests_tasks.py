@@ -74,7 +74,7 @@ class TasksTests(APITestCase):
     def test_get_remote_file_content(self):
         content = str(self.script.read())
         pkhash = compute_hash(content)
-        remote_file = {'storageAddress': 'localhost',
+        remote_file = {'storage_address': 'localhost',
                        'hash': pkhash,
                        'owner': 'external_node_id',
                        }
@@ -150,10 +150,10 @@ class TasksTests(APITestCase):
 
             # test fail
             with self.assertRaises(Exception):
-                prepare_opener(self.subtuple_path, {'dataset': {'openerHash': 'HASH'}})
+                prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': 'HASH'}})
 
             # test work
-            prepare_opener(self.subtuple_path, {'dataset': {'openerHash': opener_hash}})
+            prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
 
             opener_path = os.path.join(opener_directory, '__init__.py')
             self.assertTrue(os.path.exists(opener_path))
@@ -168,7 +168,7 @@ class TasksTests(APITestCase):
                 f.write('corrupted')
 
             with self.assertRaises(Exception):
-                prepare_opener(self.subtuple_path, {'dataset': {'openerHash': opener_hash}})
+                prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
 
     def test_prepare_data_sample_zip(self):
 
@@ -270,7 +270,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'algo': {
-                'storageAddress': assets.algo[0]['content']['storageAddress'],
+                'storage_address': assets.algo[0]['content']['storage_address'],
                 'owner': assets.algo[0]['owner'],
                 'hash': algo_hash
             }
@@ -333,7 +333,7 @@ class TasksTests(APITestCase):
 
                 self.MEDIA_ROOT = MEDIA_ROOT
 
-        subtuple = [{'key': 'subtuple_test', 'computePlanID': 'flkey', 'status': 'todo'}]
+        subtuple = [{'key': 'subtuple_test', 'compute_plan_id': 'flkey', 'status': 'todo'}]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
                 mock.patch.object(TaskResult.objects, 'filter') as mtaskresult, \
@@ -391,7 +391,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key, 'inModels': None, 'algo': {'hash': 'myhash'}}
+        subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'hash': 'myhash'}}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
@@ -417,7 +417,7 @@ class TasksTests(APITestCase):
     def test_compute_task(self):
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key, 'inModels': None}
+        subtuple = {'key': subtuple_key, 'in_models': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
@@ -468,9 +468,9 @@ class TasksTests(APITestCase):
 
         subtuple = [{
             'key': 'subtuple_test',
-            'computePlanID': 'flkey',
-            'traintupleKey': 'subtuple_test',
-            'traintupleType': 'traintuple'
+            'compute_plan_id': 'flkey',
+            'traintuple_key': 'subtuple_test',
+            'traintuple_type': 'traintuple'
         }]
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \

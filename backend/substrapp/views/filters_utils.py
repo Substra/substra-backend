@@ -86,11 +86,12 @@ def _get_model_tuple(model):
 
         model:attribute:value
 
-    Where "attribute" is actually an attribute of the model's traintuple or compositeTraintuple (depending on its type).
+    Where "attribute" is actually an attribute of the model's traintuple or
+    composite_traintuple (depending on its type).
     """
 
-    if 'compositeTraintuple' in model:
-        return model['compositeTraintuple']
+    if 'composite_traintuple' in model:
+        return model['composite_traintuple']
     elif 'aggregatetuple' in model:
         return model['aggregatetuple']
     elif 'traintuple' in model:
@@ -159,21 +160,21 @@ def filter_list(channel_name, object_type, data, query_params):
                             x for x in filtering_data
                             if (
                                 (
-                                    _get_model_tuple(x).get('outModel') and
-                                    _get_model_tuple(x)['outModel'][attribute] in val
+                                    _get_model_tuple(x).get('out_model') and
+                                    _get_model_tuple(x)['out_model'][attribute] in val
                                 ) or (
-                                    _get_model_tuple(x).get('outTrunkModel') and
-                                    _get_model_tuple(x)['outTrunkModel'].get('outModel') and
-                                    _get_model_tuple(x)['outTrunkModel']['outModel'][attribute] in val
+                                    _get_model_tuple(x).get('out_trunk_model') and
+                                    _get_model_tuple(x)['out_trunk_model'].get('out_model') and
+                                    _get_model_tuple(x)['out_trunk_model']['out_model'][attribute] in val
                                 ) or (
-                                    _get_model_tuple(x).get('outHeadModel') and
-                                    _get_model_tuple(x)['outHeadModel'].get('outModel') and
-                                    _get_model_tuple(x)['outHeadModel']['outModel'][attribute] in val
+                                    _get_model_tuple(x).get('out_head_model') and
+                                    _get_model_tuple(x)['out_head_model'].get('out_model') and
+                                    _get_model_tuple(x)['out_head_model']['out_model'][attribute] in val
                                 )
                             )
                         ]
 
-                        if object_type in ['algo', 'composite_algo', 'aggregatealgo']:
+                        if object_type in ['algo', 'composite_algo', 'aggregate_algo']:
                             hashes = [_get_model_tuple(x)['algo']['hash'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
@@ -181,11 +182,11 @@ def filter_list(channel_name, object_type, data, query_params):
                             hashes = []
                             for x in filtering_data:
                                 try:
-                                    hashes.append(x['testtuple']['dataset']['openerHash'])
+                                    hashes.append(x['testtuple']['dataset']['opener_hash'])
                                 except KeyError:
                                     pass
                                 try:
-                                    hashes.append(_get_model_tuple(x)['dataset']['openerHash'])
+                                    hashes.append(_get_model_tuple(x)['dataset']['opener_hash'])
                                 except KeyError:
                                     pass
 
@@ -208,12 +209,12 @@ def filter_list(channel_name, object_type, data, query_params):
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x).get('dataset', {}).get('openerHash') in hashes]
+                                             if _get_model_tuple(x).get('dataset', {}).get('opener_hash') in hashes]
                         elif object_type == 'objective':
-                            objective_keys = [x['objectiveKey'] for x in filtering_data]
+                            objective_keys = [x['objective_key'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
                                              if x['key'] in objective_keys or
-                                             (x['testDataset'] and x['testDataset']['dataManagerKey'] in hashes)]
+                                             (x['test_dataset'] and x['test_dataset']['data_manager_key'] in hashes)]
 
                 elif filter_key == 'objective':
                     for attribute, val in subfilters.items():
@@ -232,7 +233,7 @@ def filter_list(channel_name, object_type, data, query_params):
                             ]
                         elif object_type == 'dataset':
                             filtered_list = [x for x in filtered_list
-                                             if x['objectiveKey'] in hashes]
+                                             if x['objective_key'] in hashes]
 
             object_list.append(filtered_list)
 

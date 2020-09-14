@@ -88,7 +88,7 @@ class MiscTests(TestCase):
             mupdate_ledger.return_value = None
             res = {
                 'end_model_file_hash': 'hash',
-                'end_model_file': 'storageAddress',
+                'end_model_file': 'storage_address',
                 'job_task_log': 'log',
             }
             log_success_tuple(CHANNEL, 'traintuple', 'pk', res)

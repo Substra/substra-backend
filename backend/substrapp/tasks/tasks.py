@@ -74,7 +74,7 @@ def get_objective(channel_name, tuple_):
 
     objective_content = get_asset_content(
         channel_name,
-        objective_metadata['metrics']['storageAddress'],
+        objective_metadata['metrics']['storage_address'],
         objective_metadata['owner'],
         objective_metadata['metrics']['hash'],
     )
@@ -107,7 +107,7 @@ def get_algo(channel_name, tuple_type, tuple_):
 
     content = get_asset_content(
         channel_name,
-        metadata['content']['storageAddress'],
+        metadata['content']['storage_address'],
         metadata['owner'],
         metadata['content']['hash'],
     )
@@ -139,8 +139,8 @@ def find_training_step_tuple_from_key(channel_name, tuple_key):
     metadata = get_object_from_ledger(channel_name, tuple_key, 'queryModelDetails')
     if metadata.get('aggregatetuple'):
         return AGGREGATETUPLE_TYPE, metadata['aggregatetuple']
-    if metadata.get('compositeTraintuple'):
-        return COMPOSITE_TRAINTUPLE_TYPE, metadata['compositeTraintuple']
+    if metadata.get('composite_traintuple'):
+        return COMPOSITE_TRAINTUPLE_TYPE, metadata['composite_traintuple']
     if metadata.get('traintuple'):
         return TRAINTUPLE_TYPE, metadata['traintuple']
     raise TasksError(
@@ -165,7 +165,7 @@ def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_mo
     owner = tuple_get_owner(tuple_type, tuple_)
     return get_and_put_asset_content(
         channel_name,
-        out_model['storageAddress'],
+        out_model['storage_address'],
         owner,
         out_model['hash'],
         content_dst_path=model_dst_path,
@@ -193,29 +193,29 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
 @timeit
 def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, directory):
 
-    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, input_model['traintupleKey'])
+    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, input_model['traintuple_key'])
 
     if tuple_type not in authorized_types:
         raise TasksError(f'{parent_tuple_type.capitalize()}: invalid input model: type={tuple_type}')
 
-    model_dst_path = path.join(directory, f'model/{input_model["traintupleKey"]}')
+    model_dst_path = path.join(directory, f'model/{input_model["traintuple_key"]}')
     raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, input_model['traintupleKey'], metadata, metadata['outModel'], model_dst_path
+            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
             channel_name,
             tuple_type,
-            input_model['traintupleKey'] + HASH_KEY_SUFFIX_TRUNK,
+            input_model['traintuple_key'] + HASH_KEY_SUFFIX_TRUNK,
             metadata,
-            metadata['outTrunkModel']['outModel'],
+            metadata['out_trunk_model']['out_model'],
             model_dst_path
         )
     else:
@@ -248,7 +248,7 @@ def fetch_models(channel_name, tuple_type, authorized_types, input_models, direc
 
 def prepare_traintuple_input_models(channel_name, directory, tuple_):
     """Get traintuple input models content."""
-    input_models = tuple_.get('inModels')
+    input_models = tuple_.get('in_models')
     if not input_models:
         return
 
@@ -259,7 +259,7 @@ def prepare_traintuple_input_models(channel_name, directory, tuple_):
 
 def prepare_aggregatetuple_input_models(channel_name, directory, tuple_):
     """Get aggregatetuple input models content."""
-    input_models = tuple_.get('inModels')
+    input_models = tuple_.get('in_models')
     if not input_models:
         return
 
@@ -270,13 +270,13 @@ def prepare_aggregatetuple_input_models(channel_name, directory, tuple_):
 
 def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
     """Get composite traintuple input models content."""
-    head_model = tuple_.get('inHeadModel')
-    trunk_model = tuple_.get('inTrunkModel')
+    head_model = tuple_.get('in_head_model')
+    trunk_model = tuple_.get('in_trunk_model')
     if not head_model or not trunk_model:  # head and trunk models are optional
         return []
 
     # get head model
-    head_model_key = head_model['traintupleKey']
+    head_model_key = head_model['traintuple_key']
     tuple_type, metadata = find_training_step_tuple_from_key(channel_name, head_model_key)
     # head model must refer to a composite traintuple
     if tuple_type != COMPOSITE_TRAINTUPLE_TYPE:
@@ -285,11 +285,11 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
     raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
     get_and_put_local_model_content(
-        head_model_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'], head_model_dst_path
+        head_model_key + HASH_KEY_SUFFIX_HEAD, metadata['out_head_model']['out_model'], head_model_dst_path
     )
 
     # get trunk model
-    trunk_model_key = trunk_model['traintupleKey']
+    trunk_model_key = trunk_model['traintuple_key']
     tuple_type, metadata = find_training_step_tuple_from_key(channel_name, trunk_model_key)
     trunk_model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{trunk_model_key}')
     raise_if_path_traversal([trunk_model_dst_path], path.join(directory, 'model/'))
@@ -300,12 +300,12 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
             tuple_type,
             trunk_model_key + HASH_KEY_SUFFIX_TRUNK,
             metadata,
-            metadata['outTrunkModel']['outModel'],
+            metadata['out_trunk_model']['out_model'],
             trunk_model_dst_path
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, trunk_model_key, metadata, metadata['outModel'], trunk_model_dst_path
+            channel_name, tuple_type, trunk_model_key, metadata, metadata['out_model'], trunk_model_dst_path
         )
     else:
         raise TasksError(f'CompositeTraintuple: invalid trunk input model: type={tuple_type}')
@@ -313,8 +313,8 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
 
 def prepare_testtuple_input_models(channel_name, directory, tuple_):
     """Get testtuple input models content."""
-    traintuple_type = tuple_['traintupleType']
-    traintuple_key = tuple_['traintupleKey']
+    traintuple_type = tuple_['traintuple_type']
+    traintuple_key = tuple_['traintuple_key']
 
     # TODO we should use the find method to be consistent with the traintuple
 
@@ -323,14 +323,14 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
         model_dst_path = path.join(directory, f'model/{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
-            channel_name, traintuple_type, traintuple_key, metadata, metadata['outModel'], model_dst_path
+            channel_name, traintuple_type, traintuple_key, metadata, metadata['out_model'], model_dst_path
         )
 
     elif traintuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         metadata = get_object_from_ledger(channel_name, traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
         raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
-        get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['outHeadModel']['outModel'],
+        get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['out_head_model']['out_model'],
                                         head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
@@ -340,7 +340,7 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
             traintuple_type,
             traintuple_key + HASH_KEY_SUFFIX_TRUNK,
             metadata,
-            metadata['outTrunkModel']['outModel'],
+            metadata['out_trunk_model']['out_model'],
             model_dst_path
         )
 
@@ -373,7 +373,7 @@ def prepare_models(channel_name, directory, tuple_type, tuple_):
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
-    data_opener_hash = tuple_['dataset']['openerHash']
+    data_opener_hash = tuple_['dataset']['opener_hash']
 
     datamanager = DataManager.objects.get(pk=data_opener_hash)
 
@@ -535,11 +535,11 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
         # in the ledger local db
         pass
 
-    if 'computePlanID' in subtuple and subtuple['computePlanID']:
-        compute_plan_id = subtuple['computePlanID']
+    if 'compute_plan_id' in subtuple and subtuple['compute_plan_id']:
+        compute_plan_id = subtuple['compute_plan_id']
         flresults = TaskResult.objects.filter(
             task_name='substrapp.tasks.tasks.compute_task',
-            result__icontains=f'"computePlanID": "{compute_plan_id}"')
+            result__icontains=f'"compute_plan_id": "{compute_plan_id}"')
 
         if flresults and flresults.count() > 0:
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -607,7 +607,7 @@ def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
         worker = f"{settings.LEDGER['name']}.worker"
         queue = f"{settings.LEDGER['name']}"
 
-    result = {'worker': worker, 'queue': queue, 'computePlanID': compute_plan_id}
+    result = {'worker': worker, 'queue': queue, 'compute_plan_id': compute_plan_id}
 
     try:
         prepare_materials(channel_name, subtuple, tuple_type)
@@ -647,7 +647,7 @@ def prepare_materials(channel_name, subtuple, tuple_type):
         prepare_objective(channel_name, directory, subtuple)
 
     # algo
-    traintuple_type = (subtuple['traintupleType'] if tuple_type == TESTTUPLE_TYPE else
+    traintuple_type = (subtuple['traintuple_type'] if tuple_type == TESTTUPLE_TYPE else
                        tuple_type)
     prepare_algo(channel_name, directory, traintuple_type, subtuple)
 
@@ -673,8 +673,8 @@ def do_task(channel_name, subtuple, tuple_type):
     rank = None
     compute_plan_tag = None
 
-    if 'computePlanID' in subtuple and subtuple['computePlanID']:
-        compute_plan_id = subtuple['computePlanID']
+    if 'compute_plan_id' in subtuple and subtuple['compute_plan_id']:
+        compute_plan_id = subtuple['compute_plan_id']
         rank = int(subtuple['rank'])
         compute_plan = get_object_from_ledger(channel_name, compute_plan_id, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
@@ -890,8 +890,8 @@ def generate_command(tuple_type, subtuple, rank):
 
     if tuple_type == TRAINTUPLE_TYPE:
 
-        if subtuple['inModels'] is not None:
-            in_traintuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+        if subtuple['in_models'] is not None:
+            in_traintuple_keys = [subtuple_model["traintuple_key"] for subtuple_model in subtuple['in_models']]
             command = f"{command} {' '.join(in_traintuple_keys)}"
 
         command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
@@ -901,13 +901,13 @@ def generate_command(tuple_type, subtuple, rank):
 
     elif tuple_type == TESTTUPLE_TYPE:
 
-        if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintupleType']:
-            composite_traintuple_key = subtuple['traintupleKey']
+        if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintuple_type']:
+            composite_traintuple_key = subtuple['traintuple_key']
             command = f"{command} --input-models-path {MODEL_FOLDER}"
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{composite_traintuple_key}"
             command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{composite_traintuple_key}"
         else:
-            in_model = subtuple["traintupleKey"]
+            in_model = subtuple["traintuple_key"]
             command = f'{command} {in_model}'
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
@@ -916,15 +916,15 @@ def generate_command(tuple_type, subtuple, rank):
         command = f"{command} --output-head-model-filename {OUTPUT_HEAD_MODEL_FILENAME}"
         command = f"{command} --output-trunk-model-filename {OUTPUT_TRUNK_MODEL_FILENAME}"
 
-        if subtuple['inHeadModel'] and subtuple['inTrunkModel']:
+        if subtuple['in_head_model'] and subtuple['in_trunk_model']:
             command = f"{command} --input-models-path {MODEL_FOLDER}"
 
-            in_head_model = subtuple['inHeadModel']
-            in_head_model_key = in_head_model.get('traintupleKey')
+            in_head_model = subtuple['in_head_model']
+            in_head_model_key = in_head_model.get('traintuple_key')
             command = f"{command} --input-head-model-filename {PREFIX_HEAD_FILENAME}{in_head_model_key}"
 
-            in_trunk_model = subtuple['inTrunkModel']
-            in_trunk_model_key = in_trunk_model.get('traintupleKey')
+            in_trunk_model = subtuple['in_trunk_model']
+            in_trunk_model_key = in_trunk_model.get('traintuple_key')
             command = f"{command} --input-trunk-model-filename {PREFIX_TRUNK_FILENAME}{in_trunk_model_key}"
 
         if rank is not None:
@@ -932,8 +932,8 @@ def generate_command(tuple_type, subtuple, rank):
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
 
-        if subtuple['inModels'] is not None:
-            in_aggregatetuple_keys = [subtuple_model["traintupleKey"] for subtuple_model in subtuple['inModels']]
+        if subtuple['in_models'] is not None:
+            in_aggregatetuple_keys = [subtuple_model["traintuple_key"] for subtuple_model in subtuple['in_models']]
             command = f"{command} {' '.join(in_aggregatetuple_keys)}"
 
         command = f"{command} --output-model-path {OUTPUT_MODEL_FOLDER}/model"
@@ -1059,9 +1059,9 @@ def remove_intermediary_models(model_hashes):
 @app.task(ignore_result=False)
 def on_compute_plan(channel_name, compute_plan):
 
-    compute_plan_id = compute_plan['computePlanID']
-    algo_hashes = compute_plan['algoKeys']
-    model_hashes = compute_plan['modelsToDelete']
+    compute_plan_id = compute_plan['compute_plan_id']
+    algo_hashes = compute_plan['algo_keys']
+    model_hashes = compute_plan['models_to_delete']
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished

@@ -23,7 +23,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
             ledger_value = {
                 'owner': 'owner-foo',
                 'file_property' if same_file_property else 'ledger_file_property': {
-                    'storageAddress': 'foo'
+                    'storage_address': 'foo'
                 }
             }
             with mock.patch('substrapp.views.utils.get_object_from_ledger',

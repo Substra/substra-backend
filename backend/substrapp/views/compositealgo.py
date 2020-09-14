@@ -20,9 +20,9 @@ from substrapp.views.filters_utils import filter_list
 
 
 def replace_storage_addresses(request, composite_algo):
-    composite_algo['description']['storageAddress'] = request.build_absolute_uri(
+    composite_algo['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:composite_algo-description', args=[composite_algo['key']]))
-    composite_algo['content']['storageAddress'] = request.build_absolute_uri(
+    composite_algo['content']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:composite_algo-file', args=[composite_algo['key']])
     )
 
@@ -119,7 +119,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
     def create_or_update_composite_algo(self, channel_name, composite_algo, pk):
         # get Compositealgo description from remote node
-        url = composite_algo['description']['storageAddress']
+        url = composite_algo['description']['storage_address']
 
         content = get_remote_asset(channel_name, url, composite_algo['owner'], composite_algo['description']['hash'])
 

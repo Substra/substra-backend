@@ -146,7 +146,7 @@ class CompositeAlgoViewTests(APITestCase):
     def test_composite_algo_list_filter_model(self):
         url = reverse('substrapp:composite_algo-list')
         done_model = [
-            m for m in model if 'compositeTraintuple' in m and m['compositeTraintuple']['status'] == 'done'
+            m for m in model if 'composite_traintuple' in m and m['composite_traintuple']['status'] == 'done'
         ][0]
 
         with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger, \
@@ -154,7 +154,7 @@ class CompositeAlgoViewTests(APITestCase):
             mquery_ledger.return_value = compositealgo
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['compositeTraintuple']['outTrunkModel']['outModel']['hash']
+            pkhash = done_model['composite_traintuple']['out_trunk_model']['out_model']['hash']
             search_params = f'?search=model%253Ahash%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -254,9 +254,9 @@ class CompositeAlgoViewTests(APITestCase):
             ledger_composite_algos = copy.deepcopy(compositealgo)
             for ledger_composite_algo in ledger_composite_algos:
                 for field in ('description', 'content'):
-                    ledger_composite_algo[field]['storageAddress'] = \
-                        ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                               'http://remotetestserver')
+                    ledger_composite_algo[field]['storage_address'] = \
+                        ledger_composite_algo[field]['storage_address'].replace('http://testserver',
+                                                                                'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algos
 
             # actual test
@@ -265,8 +265,8 @@ class CompositeAlgoViewTests(APITestCase):
             self.assertEqual(len(res_composite_algos), len(compositealgo))
             for i, res_composite_algo in enumerate(res_composite_algos):
                 for field in ('description', 'content'):
-                    self.assertEqual(res_composite_algo[field]['storageAddress'],
-                                     compositealgo[i][field]['storageAddress'])
+                    self.assertEqual(res_composite_algo[field]['storage_address'],
+                                     compositealgo[i][field]['storage_address'])
 
     def test_composite_algo_retrieve_storage_addresses_update_with_cache(self):
         url = reverse('substrapp:composite_algo-detail', args=[compositealgo[0]['key']])
@@ -279,16 +279,16 @@ class CompositeAlgoViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_composite_algo = copy.deepcopy(compositealgo[0])
             for field in ('description', 'content'):
-                ledger_composite_algo[field]['storageAddress'] = \
-                    ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                           'http://remotetestserver')
+                ledger_composite_algo[field]['storage_address'] = \
+                    ledger_composite_algo[field]['storage_address'].replace('http://testserver',
+                                                                            'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algo
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'content'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 compositealgo[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 compositealgo[0][field]['storage_address'])
 
     def test_composite_algo_retrieve_storage_addresses_update_without_cache(self):
         url = reverse('substrapp:composite_algo-detail', args=[compositealgo[0]['key']])
@@ -301,13 +301,13 @@ class CompositeAlgoViewTests(APITestCase):
             mget_remote_asset.return_value = b'dummy binary content'
             ledger_composite_algo = copy.deepcopy(compositealgo[0])
             for field in ('description', 'content'):
-                ledger_composite_algo[field]['storageAddress'] = \
-                    ledger_composite_algo[field]['storageAddress'].replace('http://testserver',
-                                                                           'http://remotetestserver')
+                ledger_composite_algo[field]['storage_address'] = \
+                    ledger_composite_algo[field]['storage_address'].replace('http://testserver',
+                                                                            'http://remotetestserver')
             mquery_ledger.return_value = ledger_composite_algo
 
             # actual test
             res = self.client.get(url, **self.extra)
             for field in ('description', 'content'):
-                self.assertEqual(res.data[field]['storageAddress'],
-                                 compositealgo[0][field]['storageAddress'])
+                self.assertEqual(res.data[field]['storage_address'],
+                                 compositealgo[0][field]['storage_address'])

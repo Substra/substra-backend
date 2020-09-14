@@ -20,9 +20,9 @@ from substrapp.views.filters_utils import filter_list
 
 
 def replace_storage_addresses(request, algo):
-    algo['description']['storageAddress'] = request.build_absolute_uri(
+    algo['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:algo-description', args=[algo['key']]))
-    algo['content']['storageAddress'] = request.build_absolute_uri(
+    algo['content']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:algo-file', args=[algo['key']])
     )
 
@@ -123,7 +123,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def create_or_update_algo(self, channel_name, algo, pk):
         # get algo description from remote node
-        url = algo['description']['storageAddress']
+        url = algo['description']['storage_address']
 
         content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['hash'])
 

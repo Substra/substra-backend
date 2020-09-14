@@ -25,9 +25,9 @@ from substrapp.views.filters_utils import filter_list
 
 
 def replace_storage_addresses(request, objective):
-    objective['description']['storageAddress'] = request.build_absolute_uri(
+    objective['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:objective-description', args=[objective['key']]))
-    objective['metrics']['storageAddress'] = request.build_absolute_uri(
+    objective['metrics']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:objective-metrics', args=[objective['key']])
     )
 
@@ -143,7 +143,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def create_or_update_objective(self, channel_name, objective, pk):
         # get description from remote node
-        url = objective['description']['storageAddress']
+        url = objective['description']['storage_address']
 
         content = get_remote_asset(channel_name, url, objective['owner'], pk)
 

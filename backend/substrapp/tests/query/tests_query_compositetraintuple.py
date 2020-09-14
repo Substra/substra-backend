@@ -154,7 +154,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         permissions = {
             "process": {
                 "public": False,
-                "authorizedIDs": ['substra']
+                "authorized_ids": ['substra']
             }
         }
         with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
@@ -177,7 +177,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         permissions = {
             "process": {
                 "public": False,
-                "authorizedIDs": ['substra']
+                "authorized_ids": ['substra']
             }
         }
         with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
@@ -197,7 +197,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         permissions = {
             "process": {
                 "public": False,
-                "authorizedIDs": ['owkin']
+                "authorized_ids": ['owkin']
             }
         }
         with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \

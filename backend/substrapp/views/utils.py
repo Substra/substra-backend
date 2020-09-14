@@ -48,7 +48,7 @@ class CustomFileResponse(FileResponse):
 def node_has_process_permission(asset):
     """Check if current node can process input asset."""
     permission = asset['permissions']['process']
-    return permission['public'] or get_owner() in permission['authorizedIDs']
+    return permission['public'] or get_owner() in permission['authorized_ids']
 
 
 class PermissionMixin(object):
@@ -67,7 +67,7 @@ class PermissionMixin(object):
         else:  # for classic user, test on current msp id
             node_id = get_owner()
 
-        return permission['public'] or node_id in permission['authorizedIDs']
+        return permission['public'] or node_id in permission['authorized_ids']
 
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -123,7 +123,7 @@ class PermissionMixin(object):
     def _download_remote_file(self, channel_name, ledger_field, asset):
         node_id = asset['owner']
         auth = authenticate_outgoing_request(node_id)
-        r = get_remote_file(channel_name, asset[ledger_field]['storageAddress'], auth, stream=True)
+        r = get_remote_file(channel_name, asset[ledger_field]['storage_address'], auth, stream=True)
         if not r.ok:
             return Response({
                 'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
