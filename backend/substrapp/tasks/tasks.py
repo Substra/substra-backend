@@ -62,6 +62,8 @@ BUCKET_NAME = os.getenv('BUCKET_TRANSFER_NAME')
 S3_PREFIX = os.getenv('BUCKET_TRANSFER_PREFIX')
 S3_REGION_NAME = os.getenv('BUCKET_TRANSFER_REGION', 'eu-west-1')
 
+CELERY_TASK_MAX_RETRIES = int(getattr(settings, 'CELERY_TASK_MAX_RETRIES'))
+
 
 class TasksError(Exception):
     pass
@@ -437,26 +439,25 @@ def build_subtuple_folders(subtuple):
 
 
 def remove_subtuple_materials(subtuple_directory):
-    logger.info('Remove subtuple materials')
-    list_files(subtuple_directory)
     try:
         shutil.rmtree(subtuple_directory)
+        logger.info(f'Deleted subtuple materials {subtuple_directory}')
     except FileNotFoundError:
         pass
     except Exception as e:
         logger.exception(e)
     finally:
         if os.path.exists(subtuple_directory):
-            list_files(subtuple_directory)
+            logger.info(f'Failed to delete subtuple materials {subtuple_directory}: {list_files(subtuple_directory)}')
 
 
 @timeit
 def remove_local_folders(compute_plan_id):
     if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
-        logger.info(f'Skipping remove local volume of compute plan {compute_plan_id}')
+        logger.info(f'Skipping deletion of local volume for compute plan {compute_plan_id}')
         return
 
-    logger.info(f'Remove local volume of compute plan {compute_plan_id}')
+    logger.info(f'Deleting local volume for compute plan {compute_plan_id}')
 
     volume_id = get_volume_id(compute_plan_id)
 
@@ -467,7 +468,7 @@ def remove_local_folders(compute_plan_id):
         try:
             shutil.rmtree(chainkeys_directory)
         except Exception:
-            logger.error(f'Cannot remove volume {chainkeys_directory}', exc_info=True)
+            logger.error(f'Cannot delete volume {chainkeys_directory}', exc_info=True)
 
 
 @app.task(ignore_result=True)
@@ -569,6 +570,9 @@ class ComputeTask(Task):
         except LedgerError as e:
             logger.exception(e)
 
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        logger.info(f'Retrying task {task_id} (attempt {self.request.retries + 2}/{CELERY_TASK_MAX_RETRIES + 1})')
+
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
         close_old_connections()
@@ -580,8 +584,7 @@ class ComputeTask(Task):
             # container log
             type_exc = type(exc)
             type_value = str(type_exc).split("'")[1]
-            logger.error(f'{tuple_type} {subtuple["key"]} {error_code} - {type_value}',
-                         exc_info=True)
+            logger.error(f'Failed compute task: {tuple_type} {subtuple["key"]} {error_code} - {type_value}')
             log_fail_tuple(channel_name, tuple_type, subtuple['key'], error_code)
         except LedgerError as e:
             logger.exception(e)
@@ -632,7 +635,7 @@ def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
 
 @timeit
 def prepare_materials(channel_name, subtuple, tuple_type):
-    logger.info(f'Prepare materials for {tuple_type} task')
+    logger.info(f'Prepare materials for task [{tuple_type}:{subtuple["key"]}]: Started.')
 
     # clean directory if exists (on retry)
     subtuple_directory = get_subtuple_directory(subtuple['key'])
@@ -659,14 +662,12 @@ def prepare_materials(channel_name, subtuple, tuple_type):
     # input models
     prepare_models(channel_name, directory, tuple_type, subtuple)
 
-    logger.info(f'Prepare materials for {tuple_type} task: success')
-    list_files(directory)
+    logger.info(f'Prepare materials for task [{tuple_type}:{subtuple["key"]}]: Success. {list_files(directory)}')
 
 
 @timeit
 def do_task(channel_name, subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple['key'])
-    org_name = getattr(settings, 'ORG_NAME')
 
     # compute plan / federated learning variables
     compute_plan_id = None
@@ -678,19 +679,6 @@ def do_task(channel_name, subtuple, tuple_type):
         rank = int(subtuple['rank'])
         compute_plan = get_object_from_ledger(channel_name, compute_plan_id, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
-
-    return _do_task(
-        subtuple_directory,
-        tuple_type,
-        subtuple,
-        compute_plan_id,
-        rank,
-        org_name,
-        compute_plan_tag,
-    )
-
-
-def _do_task(subtuple_directory, tuple_type, subtuple, compute_plan_id, rank, org_name, compute_plan_tag):
 
     common_volumes, compute_volumes = prepare_volumes(
         subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
@@ -879,7 +867,7 @@ def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
         else:
             logger.info(f'{len(secrets)} secrets have been removed')
 
-    list_files(chainkeys_directory)
+    logger.info(f'Prepared chainkeys: {list_files(chainkeys_directory)}')
 
     return chainkeys_volume
 
@@ -964,7 +952,6 @@ def transfer_to_bucket(tuple_key, paths):
         s3.upload_file(tar_path, BUCKET_NAME, f'{S3_PREFIX}/{tar_name}' if S3_PREFIX else tar_name)
 
 
-@timeit
 def save_models(subtuple_directory, tuple_type, subtuple_key):
 
     models = {}
@@ -1052,8 +1039,8 @@ def remove_intermediary_models(model_hashes):
     models.delete()
 
     if filtered_model_hashes:
-        log_model_hashes = '\n\t- '.join(filtered_model_hashes)
-        logger.info(f'Remove intermediary models : \n\t- {log_model_hashes}')
+        log_model_hashes = ', '.join(filtered_model_hashes)
+        logger.info(f'Delete intermediary models: {log_model_hashes}')
 
 
 @app.task(ignore_result=False)

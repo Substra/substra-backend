@@ -338,7 +338,10 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
         # add a log even if the function raises an exception
         te = time.time()
         elaps = (te - ts) * 1000
-        logger.info(f'smartcontract {call_type}:{fcn}; elaps={elaps:.2f}ms; error={error}')
+        if error is None:
+            logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms")
+        else:
+            logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms. Error: {error}")
 
 
 def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):

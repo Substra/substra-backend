@@ -1,5 +1,5 @@
 import os
-import time
+import json
 import logging
 import functools
 import threading
@@ -45,22 +45,36 @@ def get_and_put_asset_content(channel_name, url, node_id, content_hash, content_
                                            content_dst_path=content_dst_path, hash_key=hash_key)
 
 
-def list_files(startpath):
-    if not settings.TASK['LIST_WORKSPACE']:
-        return
-    if os.path.exists(startpath):
-
-        for root, dirs, files in os.walk(startpath, followlinks=True):
-            level = root.replace(startpath, '').count(os.sep)
-            indent = ' ' * 4 * (level)
-            logger.info(f'{indent}{os.path.basename(root)}/')
-            subindent = ' ' * 4 * (level + 1)
-            for f in files:
-                logger.info(f'{subindent}{f}')
-
-        logger.info('\n')
+def path_to_dict(path):
+    d = {'name': os.path.basename(path)}
+    if os.path.isdir(path):
+        d['type'] = "directory"
+        d['children'] = [path_to_dict(os.path.join(path, x)) for x in os.listdir(path)]
     else:
-        logger.info(f'{startpath} does not exist.')
+        d['type'] = "file"
+    return d
+
+
+def list_files(startpath, as_json=True):
+    if not settings.TASK['LIST_WORKSPACE']:
+        return 'Error: listing files is disabled.'
+
+    if not os.path.exists(startpath):
+        return f'Error: {startpath} does not exist.'
+
+    if as_json:
+        return json.dumps(path_to_dict(startpath))
+
+    res = ''
+    for root, dirs, files in os.walk(startpath, followlinks=True):
+        level = root.replace(startpath, '').count(os.sep)
+        indent = ' ' * 4 * (level)
+        res += f'{indent}{os.path.basename(root)}/' + "\n"
+        subindent = ' ' * 4 * (level + 1)
+        for f in files:
+            res += f'{subindent}{f}' + "\n"
+
+    return res
 
 
 def get_or_create_local_volume(volume_id):
@@ -97,35 +111,26 @@ def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_
 
     # Check if image already exist
     try:
-        ts = time.time()
         k8s_get_image(image_name)
     except ImageNotFound:
         if build_image:
-            logger.info(f'ImageNotFound: {image_name}. Building it')
+            logger.info(f'Image not found: {image_name}. Building it.')
         else:
-            logger.info(f'ImageNotFound: {image_name}')
+            logger.info(f'Image not found: {image_name}')
     else:
-        logger.info(f'ImageFound: {image_name}. Use it')
+        logger.info(f'Image found: {image_name}. Using it.')
         build_image = False
-    finally:
-        elaps = (time.time() - ts) * 1000
-        logger.info(f'Get image  - elaps={elaps:.2f}ms')
 
     if build_image:
         try:
-            ts = time.time()
             k8s_build_image(
                 path=dockerfile_path,
                 tag=image_name,
                 rm=remove_image)
         except BuildError as e:
             error = '\n' + str(e)
-            logger.error(f'BuildError: {error}')
+            logger.error(f'Build error: {error}')
             raise
-        else:
-            logger.info(f'BuildSuccess - {image_name} - keep cache : {not remove_image}')
-            elaps = (time.time() - ts) * 1000
-            logger.info(f'Build image - elaps={elaps:.2f}ms')
 
     k8s_compute(
         image_name,

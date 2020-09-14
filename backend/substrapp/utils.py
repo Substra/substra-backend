@@ -247,7 +247,7 @@ def get_remote_file_content(channel_name, url, auth, content_hash, salt=None):
     response = get_remote_file(channel_name, url, auth)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error(response.text)
+        logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     computed_hash = compute_hash(response.content, key=salt)
@@ -261,7 +261,7 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_hash, conte
     response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error(response.text)
+        logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     computed_hash = get_hash(content_dst_path, key=hash_key)
@@ -281,8 +281,24 @@ def get_chainkeys_directory(compute_plan_id):
 def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
-        result = function(*args, **kw)
+        exception = None
+
+        try:
+            result = function(*args, **kw)
+        except Exception as ex:
+            exception = ex
+
         elaps = (time.time() - ts) * 1000
-        logger.info(f'{function.__name__} - elaps={elaps:.2f}ms')
+
+        if exception is None:
+            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms')
+        else:
+            # Intentionally use logger.info (and not logger.error)
+            # Leave the responsibility of logging errors to the function caller.
+            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms (with error)')
+
+        if exception is not None:
+            raise exception
         return result
+
     return timed

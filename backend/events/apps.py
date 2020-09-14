@@ -209,8 +209,8 @@ class EventsConfig(AppConfig):
     name = 'events'
 
     def listen_to_channel(self, channel_name):
-        # We try to connect a client first, if it fails the backend will not start
-        # It avoid potential issue when we launch the channel event hub in a subprocess
+        # We try to connect a client first, if it fails the backend will not start.
+        # It prevents potential issues when we launch the channel event hub in a subprocess.
         while True:
             try:
                 with get_hfc(channel_name) as (loop, client):

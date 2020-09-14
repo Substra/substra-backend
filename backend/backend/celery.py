@@ -2,7 +2,7 @@ from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
 from celery import current_app
-from celery.signals import after_task_publish
+from celery.signals import after_task_publish, celeryd_init
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
@@ -21,6 +21,17 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
+
+
+@celeryd_init.connect
+def setup_log_format(sender, conf, **kwargs):
+    conf.worker_log_format = """
+        %(asctime)s: %(levelname)s/%(processName)s {0} %(message)s
+    """.strip().format(sender)
+    conf.worker_task_log_format = (
+        '%(asctime)s: %(levelname)s/%(processName)s {0} '
+        '[%(task_name)s(%(task_id)s)] %(message)s'
+    ).format(sender)
 
 
 @app.on_after_configure.connect

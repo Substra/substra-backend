@@ -37,3 +37,11 @@ class _ApiError(Exception):
 class BadRequestError(_ApiError):
     status = drf.status.HTTP_400_BAD_REQUEST
     message = "Bad request."
+
+
+class PodErrorException(Exception):
+    pass
+
+
+class PodTimeoutException(Exception):
+    pass
