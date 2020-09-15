@@ -2,8 +2,8 @@
 
 Backend of the Substra platform
 
-|  substra-backend | celeryworker | celerybeat | flower |
-| ------------- | ------------- | ------------- | ------------- |
+|  substra-backend | celery | flower |
+| ------------- | ------------- | ------------- |
 | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/celery)](https://hub.docker.com/r/substrafoundation/celery/builds) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/flower)](https://hub.docker.com/r/substrafoundation/flower/builds) |
 
 ## Version
