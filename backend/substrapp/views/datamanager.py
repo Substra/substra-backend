@@ -250,7 +250,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(data, status=st)
+        # Transform data to a data_response with only key
+        data_response = data_to_data_response(data)
+        return Response(data_response, status=st)
 
 
 class DataManagerPermissionViewSet(PermissionMixin,
