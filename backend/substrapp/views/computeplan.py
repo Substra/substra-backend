@@ -64,12 +64,12 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        compute_plan_list = [data] if data else [[]]
+        data = data or []
 
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                compute_plan_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='compute_plan',
                     data=data,
@@ -77,7 +77,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(compute_plan_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
     def cancel(self, request, pk):

@@ -77,7 +77,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [[]])
+            self.assertEqual(r, [])
 
     def test_objective_list_success(self):
         url = reverse('substrapp:objective-list')
@@ -86,7 +86,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [objective])
+            self.assertEqual(r, objective)
 
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
@@ -110,7 +110,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
@@ -121,7 +121,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), len(objective))
+            self.assertEqual(len(r), len(objective))
 
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
@@ -138,7 +138,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
@@ -156,7 +156,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_objective_retrieve(self):
         url = reverse('substrapp:objective-list')
@@ -292,7 +292,7 @@ class ObjectiveViewTests(APITestCase):
 
             # actual test
             res = self.client.get(url, **self.extra)
-            res_objectives = res.data[0]
+            res_objectives = res.data
             self.assertEqual(len(res_objectives), len(objective))
             for i, res_objective in enumerate(res_objectives):
                 for field in ('description', 'metrics'):

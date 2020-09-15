@@ -179,14 +179,12 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        algos_list = [data]
-
         # parse filters
         query_params = request.query_params.get('search', None)
 
         if query_params is not None:
             try:
-                algos_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='algo',
                     data=data,
@@ -194,11 +192,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        for group in algos_list:
-            for algo in group:
-                replace_storage_addresses(request, algo)
+        for algo in data:
+            replace_storage_addresses(request, algo)
 
-        return Response(algos_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 class AlgoPermissionViewSet(PermissionMixin,

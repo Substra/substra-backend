@@ -75,12 +75,10 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        testtuple_list = [data]
-
         query_params = request.query_params.get('search', None)
         if query_params is not None:
             try:
-                testtuple_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='testtuple',
                     data=data,
@@ -88,7 +86,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(testtuple_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, channel_name, pk):
         validate_pk(pk)

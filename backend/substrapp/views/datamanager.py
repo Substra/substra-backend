@@ -202,14 +202,12 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        data_managers_list = [data]
-
         # parse filters
         query_params = request.query_params.get('search', None)
 
         if query_params is not None:
             try:
-                data_managers_list = filter_list(
+                data = filter_list(
                     channel_name=get_channel_name(request),
                     object_type='dataset',
                     data=data,
@@ -217,11 +215,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        for group in data_managers_list:
-            for data_manager in group:
-                replace_storage_addresses(request, data_manager)
+        for data_manager in data:
+            replace_storage_addresses(request, data_manager)
 
-        return Response(data_managers_list, status=status.HTTP_200_OK)
+        return Response(data, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):

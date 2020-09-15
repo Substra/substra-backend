@@ -53,11 +53,11 @@ class ModelViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [[]])
+            self.assertEqual(r, [])
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [['ISIC']])
+            self.assertEqual(r, ['ISIC'])
 
     def test_model_list_filter_fail(self):
 
@@ -80,7 +80,7 @@ class ModelViewTests(APITestCase):
             search_params = f'?search=model%253Akey%253A{pkhash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(len(r[0]), 1)
+            self.assertEqual(len(r), 1)
 
     def test_model_list_filter_datamanager(self):
 
@@ -94,7 +94,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 14)
+            self.assertEqual(len(r), 14)
 
     def test_model_list_filter_objective(self):
         url = reverse('substrapp:model-list')
@@ -107,7 +107,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 4)
+            self.assertEqual(len(r), 4)
 
     def test_model_list_filter_algo(self):
         url = reverse('substrapp:model-list')
@@ -120,7 +120,7 @@ class ModelViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r[0]), 3)
+            self.assertEqual(len(r), 3)
 
     def test_model_retrieve(self):
         done_model = [m for m in model if 'traintuple' in m and m['traintuple']['status'] == 'done'][0]
