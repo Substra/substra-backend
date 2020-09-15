@@ -92,12 +92,6 @@ def watch_pod(name, watch_init_container=False):
 
     logger.info(f'Waiting for pod {name}...')
 
-    def get_error(state):
-        error = state.reason
-        if state.message is not None:
-            error += f' ({state.message})'
-        return error
-
     while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
@@ -114,12 +108,12 @@ def watch_pod(name, watch_init_container=False):
                             # TODO: support multiple init containers
                             if state.terminated.exit_code != 0:
                                 finished = True
-                                error = 'InitContainer: ' + get_error(state.terminated)
+                                error = 'InitContainer: ' + get_pod_error(state.terminated)
                             else:
                                 watch_container = True  # Init container is ready
                         else:
                             if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = 'InitContainer: ' + get_error(state.waiting)
+                                error = 'InitContainer: ' + get_pod_error(state.waiting)
                                 attempt += 1
                                 logger.error(f'InitContainer for pod "{name}" waiting status '
                                              f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
@@ -132,13 +126,13 @@ def watch_pod(name, watch_init_container=False):
                             finished = True
                             error = None
                             if state.terminated.exit_code != 0:
-                                error = get_error(state.terminated)
+                                error = get_pod_error(state.terminated)
 
                         else:
                             # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
                             #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
                             if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = get_error(state.waiting)
+                                error = get_pod_error(state.waiting)
                                 attempt += 1
                                 logger.error(f'Container for pod "{name}" waiting status '
                                              f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
@@ -155,6 +149,13 @@ def watch_pod(name, watch_init_container=False):
 
     if not finished:
         raise PodTimeoutException(f'Pod {name} didn\'t complete after {max_attempts} attempts')
+
+
+def get_pod_error(state):
+    error = state.reason
+    if state.message is not None:
+        error += f' ({state.message})'
+    return error
 
 
 def get_pod_name(name):
