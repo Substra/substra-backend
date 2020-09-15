@@ -2,7 +2,7 @@
 
 ## 1.1.1
 
-- added `grpc.keepalive.timeMs`
+- added `backend.grpc.keepalive.timeMs`
 
 ## 1.1.0
 
