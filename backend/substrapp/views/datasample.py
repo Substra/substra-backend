@@ -237,7 +237,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             st = status.HTTP_200_OK
         else:
             st = status.HTTP_202_ACCEPTED
-        return Response(data, status=st)
+
+        # Transform data to a data_response with only key
+        data_response = data_to_data_response(data)
+        return Response(data_response, status=st)
 
 
 def path_leaf(path):
