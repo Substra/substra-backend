@@ -33,32 +33,10 @@ build:
           dest: /usr/src/app/users
           strip: backend/users/
 
-    - image: substrafoundation/celerybeat
+    - image: substrafoundation/celery
       context: .
       docker:
-        dockerfile: docker/celerybeat/Dockerfile
-      sync:
-        manual:
-        - src: backend/libs/**/*
-          dest: /usr/src/app/libs
-          strip: backend/libs/
-        - src: backend/substrapp/**/*
-          dest: /usr/src/app/substrapp
-          strip: backend/substrapp/
-        - src: backend/backend/**/*
-          dest: /usr/src/app/backend
-          strip: backend/backend/
-        - src: backend/node/**/*
-          dest: /usr/src/app/node
-          strip: backend/node/
-        - src: backend/users/**/*
-          dest: /usr/src/app/users
-          strip: backend/users/
-
-    - image: substrafoundation/celeryworker
-      context: .
-      docker:
-        dockerfile: docker/celeryworker/Dockerfile
+        dockerfile: docker/celery/Dockerfile
       sync:
         manual:
         - src: backend/libs/**/*
@@ -110,8 +88,8 @@ deploy:
           helm: {}
         values:
           backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/celerybeat
-          celeryworker.image: substrafoundation/celeryworker
+          celerybeat.image: substrafoundation/celery
+          celeryworker.image: substrafoundation/celery
           flower.image: substrafoundation/flower
         overrides:
           rabbitmq:
@@ -200,8 +178,8 @@ deploy:
           helm: {}
         values:
           backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/celerybeat
-          celeryworker.image: substrafoundation/celeryworker
+          celerybeat.image: substrafoundation/celery
+          celeryworker.image: substrafoundation/celery
           flower.image: substrafoundation/flower
         overrides:
           rabbitmq:
