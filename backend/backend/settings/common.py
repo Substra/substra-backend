@@ -220,3 +220,56 @@ EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFET
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
 ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))
+
+LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'simple': {
+            'class': 'libs.formatters.TaskFormatter',
+            'format': '%(asctime)s - %(task_id)s - %(levelname)s - %(message)s'
+        }
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        # root logger
+        '': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': True,
+        },
+        # django and its applications
+        'django': {
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'substrapp': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        'events': {
+            'level': 'DEBUG',
+            'handlers': ['console'],
+            'propagate': False,
+        },
+        # third-party libraries
+        'hfc': {
+            'level': 'WARNING',
+            'handlers': ['console'],
+            'propagate': True,
+        },
+        'celery': {
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': True,
+        },
+    }
+}

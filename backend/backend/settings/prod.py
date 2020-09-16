@@ -42,61 +42,6 @@ DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_POR
 
 CELERY_RESULT_BACKEND = 'django-db'
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'root': {
-        'level': 'WARNING',
-        'handlers': [],
-    },
-    'formatters': {
-        'verbose': {
-            'format': '%(levelname)s %(asctime)s %(name)s %(process)d %(thread)d %(message)s'
-        },
-    },
-    'handlers': {
-        'console': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose'
-        },
-    },
-    'loggers': {
-        # root logger
-        '': {
-            'level': 'WARNING',
-            'handlers': ['console'],
-            'propagate': True,
-        },
-        # django and its applications
-        'django': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'substrapp': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'events': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'hfc': {
-            'level': 'WARNING',
-            'handlers': ['console'],
-            'propagate': False,
-        },
-        'celery': {
-            'level': 'INFO',
-            'handlers': ['console'],
-            'propagate': True,  # without this, celery logs aren't displayed at all
-        },
-    },
-}
-
 # Password validation
 # https://docs.djangoproject.com/en/2.0/ref/settings/#auth-password-validators
 

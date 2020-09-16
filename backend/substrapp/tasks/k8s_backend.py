@@ -4,6 +4,7 @@ import os
 import logging
 from django.conf import settings
 from substrapp.utils import timeit
+from substrapp.exceptions import PodErrorException, PodTimeoutException
 import time
 
 logger = logging.getLogger(__name__)
@@ -58,7 +59,6 @@ def k8s_acquire_cache_index():
 
     max_attempts = 12
     attempt = 0
-    logger.info('Get cache_index for cache sharing')
 
     while attempt < max_attempts:
         for cache_index in range(1, celery_worker_concurrency + 1):
@@ -90,7 +90,8 @@ def watch_pod(name, watch_init_container=False):
     error = None
     watch_container = not watch_init_container
 
-    logger.error(f'Checking for pod {name} init: {watch_init_container} main: {watch_container}')
+    logger.info(f'Waiting for pod {name}...')
+
     while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
@@ -107,12 +108,12 @@ def watch_pod(name, watch_init_container=False):
                             # TODO: support multiple init containers
                             if state.terminated.exit_code != 0:
                                 finished = True
-                                error = f'InitContainer: {state.terminated.reason} - {state.terminated.message}'
+                                error = 'InitContainer: ' + get_pod_error(state.terminated)
                             else:
                                 watch_container = True  # Init container is ready
                         else:
                             if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = f'{state.waiting.reason} - {state.waiting.message}'
+                                error = 'InitContainer: ' + get_pod_error(state.waiting)
                                 attempt += 1
                                 logger.error(f'InitContainer for pod "{name}" waiting status '
                                              f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
@@ -125,13 +126,13 @@ def watch_pod(name, watch_init_container=False):
                             finished = True
                             error = None
                             if state.terminated.exit_code != 0:
-                                error = f'{state.terminated.reason} - {state.terminated.message}'
+                                error = get_pod_error(state.terminated)
 
                         else:
                             # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
                             #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
                             if state.waiting and state.waiting.reason not in ['PodInitializing', 'ContainerCreating']:
-                                error = f'Container: {state.waiting.reason} - {state.waiting.message}'
+                                error = get_pod_error(state.waiting)
                                 attempt += 1
                                 logger.error(f'Container for pod "{name}" waiting status '
                                              f'(attempt {attempt}/{max_attempts}): {state.waiting.message}')
@@ -143,8 +144,18 @@ def watch_pod(name, watch_init_container=False):
             attempt += 1
             logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
 
-    if not finished or error is not None:
-        raise Exception(f'Pod {name} could not have a completed state : {error}')
+    if error is not None:
+        raise PodErrorException(f'Pod {name} terminated with error: {error}')
+
+    if not finished:
+        raise PodTimeoutException(f'Pod {name} didn\'t complete after {max_attempts} attempts')
+
+
+def get_pod_error(state):
+    error = state.reason
+    if state.message is not None:
+        error += f' ({state.message})'
+    return error
 
 
 def get_pod_name(name):
@@ -215,6 +226,7 @@ def container_format_log(container_name, container_logs):
         logger.info(log)
 
 
+@timeit
 def k8s_build_image(path, tag, rm):
     try:
         cache_index = k8s_acquire_cache_index()
@@ -231,8 +243,6 @@ def _k8s_build_image(path, tag, rm, cache_index):
     k8s_client = kubernetes.client.CoreV1Api()
 
     job_name = f'kaniko-{tag.split("/")[-1].replace("_", "-")}'
-
-    logger.info(f'The pod {NAMESPACE}/{job_name} started')
 
     dockerfile_fullpath = os.path.join(path, 'Dockerfile')
 
@@ -338,7 +348,12 @@ def _k8s_build_image(path, tag, rm, cache_index):
 
     create_pod = not pod_exists(job_name)
     if create_pod:
-        k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+        try:
+            logger.info(f'Creating pod {NAMESPACE}/{job_name}')
+            k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+        except kubernetes.client.rest.ApiException as e:
+            raise Exception(f'Error creating pod {NAMESPACE}/{job_name}. Reason: {e.reason}, status: {e.status}, '
+                            f'body: {e.body}') from None
 
     try:
         watch_pod(job_name)
@@ -365,6 +380,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
             )
 
 
+@timeit
 def k8s_get_image(image_name):
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
@@ -386,7 +402,7 @@ def k8s_image_exists(image_name):
 
 
 def k8s_remove_image(image_name):
-
+    logger.info(f'Deleting image {image_name}')
     try:
         response = requests.get(
             f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
@@ -429,6 +445,9 @@ def k8s_compute(image_name, job_name, command, volumes, task_label,
 
     try:
         _k8s_compute(job_name, task_args, subtuple_key)
+    except (PodErrorException, PodTimeoutException) as e:
+        logger.error(e)
+        raise
     except Exception as e:
         logger.exception(e)
         raise
@@ -558,7 +577,12 @@ def _k8s_compute(name, task_args, subtuple_key):
         spec=spec
     )
 
-    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+    try:
+        logger.info(f'Creating pod {NAMESPACE}/{name}')
+        k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+    except kubernetes.client.rest.ApiException as e:
+        raise Exception(f'Error creating pod {NAMESPACE}/{name}. Reason: {e.reason}, status: {e.status}, '
+                        f'body: {e.body}') from None
 
     watch_pod(name)
 
@@ -580,7 +604,7 @@ def delete_compute_pod(name):
         )
 
     wait_for_pod_deletion(name)
-    logger.info(f'Compute Pod {name} deleted.')
+    logger.info(f'Deleted pod {NAMESPACE}/{name}')
 
 
 def k8s_get_or_create_local_volume(volume_id):
@@ -651,7 +675,16 @@ def k8s_remove_local_volume(volume_id):
         spec=spec
     )
 
-    k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+    try:
+        logger.info(f'Creating pod {NAMESPACE}/{job_name}')
+        k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+    except kubernetes.client.rest.ApiException as e:
+        if e.status == 409 and '"reason":"AlreadyExists"' in e.body:
+            logger.info(f'Cannot create pod {NAMESPACE}/{job_name}: Already exists. Skipping local volume deletion.')
+            return
+        else:
+            raise Exception(f'Error creating pod {NAMESPACE}/{job_name}. Reason: {e.reason}, status: {e.status}, '
+                            f'body: {e.body}') from None
 
     try:
         watch_pod(job_name)
