@@ -100,7 +100,7 @@ build:
           strip: backend/users/
 
 deploy:
-  statusCheckDeadlineSeconds: 300
+  statusCheckDeadlineSeconds: 600
   helm:
     releases:
       - name: backend-org-1
