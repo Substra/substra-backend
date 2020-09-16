@@ -384,7 +384,8 @@ def _k8s_build_image(path, tag, rm, cache_index):
 def k8s_get_image(image_name):
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
-        headers={'Accept': 'application/json'}
+        headers={'Accept': 'application/json'},
+        timeout=30
     )
     if response.status_code != requests.status_codes.codes.ok:
         raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
@@ -406,7 +407,8 @@ def k8s_remove_image(image_name):
     try:
         response = requests.get(
             f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
-            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
+            timeout=30
         )
 
         if response.status_code != requests.status_codes.codes.ok:
@@ -417,7 +419,8 @@ def k8s_remove_image(image_name):
 
         response = requests.delete(
             f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/{digest}',
-            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'}
+            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
+            timeout=30
         )
         if response.status_code != requests.status_codes.codes.accepted:
             # raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')

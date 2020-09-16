@@ -219,7 +219,8 @@ def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
         'headers': {
             'Accept': 'application/json;version=0.0',
             'Substra-Channel-Name': channel_name},
-        'auth': auth
+        'auth': auth,
+        'timeout': 30  # seconds
     })
 
     if settings.DEBUG:
