@@ -23,7 +23,7 @@ FS_GROUP = os.getenv('FS_GROUP')
 KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
 KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
 COMPUTE_REGISTRY = settings.TASK['COMPUTE_REGISTRY']
-
+HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -385,7 +385,7 @@ def k8s_get_image(image_name):
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
         headers={'Accept': 'application/json'},
-        timeout=30
+        timeout=HTTP_CLIENT_TIMEOUT_SECONDS
     )
     if response.status_code != requests.status_codes.codes.ok:
         raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')
@@ -408,7 +408,7 @@ def k8s_remove_image(image_name):
         response = requests.get(
             f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
-            timeout=30
+            timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
 
         if response.status_code != requests.status_codes.codes.ok:
@@ -420,7 +420,7 @@ def k8s_remove_image(image_name):
         response = requests.delete(
             f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/{digest}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
-            timeout=30
+            timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
         if response.status_code != requests.status_codes.codes.accepted:
             # raise ImageNotFound(f'Error when querying docker-registry, status code: {response.status_code}')

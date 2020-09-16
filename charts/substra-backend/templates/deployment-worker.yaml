@@ -152,6 +152,8 @@ spec:
               value: {{ .Values.backend.kaniko.mirror | quote }}
             - name: COMPUTE_REGISTRY
               value: {{ .Values.backend.compute.registry | quote }}
+            - name: HTTP_CLIENT_TIMEOUT_SECONDS
+              value: {{ .Values.httpClient.timeoutSeconds | quote  }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}

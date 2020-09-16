@@ -221,6 +221,8 @@ GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
 ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))
 
+HTTP_CLIENT_TIMEOUT_SECONDS = int(os.environ.get('HTTP_CLIENT_TIMEOUT_SECONDS', 30))
+
 LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
 LOGGING = {
     'version': 1,

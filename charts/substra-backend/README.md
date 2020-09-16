@@ -24,6 +24,8 @@ The following table lists the configurable parameters of the substra-backend cha
 | `users[].name` | The user login | (undefined) |
 | `users[].password` | The user password | (undefined) |
 | `users[].channel` | The user channel. This is the name of a Hyperledger Fabric channel (see [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s)). All operations by the user will be executed against this channel. | (undefined) |
+| `backend.grpc.keepalive.timeMs` | The number of ms between each client keepalive ping | `120000` |
+| `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
 
 
 ## Usage

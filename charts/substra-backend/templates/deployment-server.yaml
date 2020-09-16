@@ -78,6 +78,8 @@ spec:
             value: {{ .Values.backend.gzipModels | quote }}
           - name: TOKEN_STRATEGY
             value: {{ .Values.backend.tokenStrategy }}
+          - name: HTTP_CLIENT_TIMEOUT_SECONDS
+            value: {{ .Values.httpClient.timeoutSeconds | quote }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
