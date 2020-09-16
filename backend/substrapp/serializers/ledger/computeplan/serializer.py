@@ -74,14 +74,14 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         traintuples = []
         for data_traintuple in data.get('traintuples', []):
             traintuple = {
-                'dataManagerKey': data_traintuple['data_manager_key'],
-                'dataSampleKeys': data_traintuple['train_data_sample_keys'],
-                'algoKey': data_traintuple['algo_key'],
+                'data_manager_key': data_traintuple['data_manager_key'],
+                'data_sample_keys': data_traintuple['train_data_sample_keys'],
+                'algo_key': data_traintuple['algo_key'],
                 'id': data_traintuple['traintuple_id'],
                 'metadata': data_traintuple.get('metadata'),
             }
             if 'in_models_ids' in data_traintuple:
-                traintuple['inModelsIDs'] = data_traintuple['in_models_ids']
+                traintuple['in_models_ids'] = data_traintuple['in_models_ids']
             if 'tag' in data_traintuple:
                 traintuple['tag'] = data_traintuple['tag']
 
@@ -90,25 +90,25 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         testtuples = []
         for data_testtuple in data.get('testtuples', []):
             testtuple = {
-                'traintupleID': data_testtuple['traintuple_id'],
-                'objectiveKey': data_testtuple['objective_key'],
+                'traintuple_id': data_testtuple['traintuple_id'],
+                'objective_key': data_testtuple['objective_key'],
                 'metadata': data_testtuple.get('metadata'),
             }
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
-                testtuple['dataManagerKey'] = data_testtuple['data_manager_key']
+                testtuple['data_manager_key'] = data_testtuple['data_manager_key']
             if 'test_data_sample_keys' in data_testtuple:
-                testtuple['dataSampleKeys'] = data_testtuple['test_data_sample_keys']
+                testtuple['data_sample_keys'] = data_testtuple['test_data_sample_keys']
 
             testtuples.append(testtuple)
 
         composite_traintuples = []
         for data_composite_traintuple in data.get('composite_traintuples', []):
             composite_traintuple = {
-                'algoKey': data_composite_traintuple['algo_key'],
-                'dataManagerKey': data_composite_traintuple['data_manager_key'],
-                'dataSampleKeys': data_composite_traintuple['train_data_sample_keys'],
+                'algo_key': data_composite_traintuple['algo_key'],
+                'data_manager_key': data_composite_traintuple['data_manager_key'],
+                'data_sample_keys': data_composite_traintuple['train_data_sample_keys'],
                 'id': data_composite_traintuple['composite_traintuple_id'],
                 'metadata': data_composite_traintuple.get('metadata'),
             }
@@ -116,13 +116,13 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             if 'tag' in data_composite_traintuple:
                 composite_traintuple['tag'] = data_composite_traintuple['tag']
             if 'in_head_model_id' in data_composite_traintuple:
-                composite_traintuple['inHeadModelID'] = data_composite_traintuple['in_head_model_id']
+                composite_traintuple['in_head_model_id'] = data_composite_traintuple['in_head_model_id']
             if 'in_trunk_model_id' in data_composite_traintuple:
-                composite_traintuple['inTrunkModelID'] = data_composite_traintuple['in_trunk_model_id']
+                composite_traintuple['in_trunk_model_id'] = data_composite_traintuple['in_trunk_model_id']
             if 'out_trunk_model_permissions' in data_composite_traintuple:
-                composite_traintuple['outTrunkModelPermissions'] = {
+                composite_traintuple['out_trunk_model_permissions'] = {
                     'process': {
-                        'authorizedIDs': data_composite_traintuple['out_trunk_model_permissions']['authorized_ids']
+                        'authorized_ids': data_composite_traintuple['out_trunk_model_permissions']['authorized_ids']
                     }
                 }
 
@@ -131,14 +131,14 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         aggregatetuples = []
         for data_aggregatetuple in data.get('aggregatetuples', []):
             aggregatetuple = {
-                'algoKey': data_aggregatetuple['algo_key'],
+                'algo_key': data_aggregatetuple['algo_key'],
                 'worker': data_aggregatetuple['worker'],
                 'id': data_aggregatetuple['aggregatetuple_id'],
                 'metadata': data_aggregatetuple.get('metadata'),
             }
 
             if 'in_models_ids' in data_aggregatetuple:
-                aggregatetuple['inModelsIDs'] = data_aggregatetuple['in_models_ids']
+                aggregatetuple['in_models_ids'] = data_aggregatetuple['in_models_ids']
             if 'tag' in data_aggregatetuple:
                 aggregatetuple['tag'] = data_aggregatetuple['tag']
 
@@ -147,11 +147,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         return {
             'traintuples': traintuples,
             'testtuples': testtuples,
-            'compositeTraintuples': composite_traintuples,
+            'composite_traintuples': composite_traintuples,
             'aggregatetuples': aggregatetuples,
             'metadata': data.get('metadata'),
             'tag': data.get('tag'),
-            'cleanModels': data.get('clean_models', False),
+            'clean_models': data.get('clean_models', False),
         }
 
     def create(self, channel_name, validated_data):
@@ -161,5 +161,5 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     def update(self, channel_name, compute_plan_id, validated_data):
         args = self.get_args(validated_data)
         del args['tag']
-        args['computePlanID'] = compute_plan_id
+        args['compute_plan_id'] = compute_plan_id
         return ledger.update_computeplan(channel_name, args)

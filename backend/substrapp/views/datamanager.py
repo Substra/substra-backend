@@ -233,8 +233,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         objective_key = request.data.get('objective_key')
         args = {
-            'dataManagerKey': pk,
-            'objectiveKey': objective_key,
+            'data_manager_key': pk,
+            'objective_key': objective_key,
         }
 
         if getattr(settings, 'LEDGER_SYNC_ENABLED'):

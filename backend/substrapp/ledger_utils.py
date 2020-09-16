@@ -3,7 +3,6 @@ import functools
 import json
 import logging
 import time
-import re
 
 from django.conf import settings
 from rest_framework import status
@@ -102,9 +101,6 @@ _STATUS_TO_EXCEPTION = {
     status.HTTP_409_CONFLICT: LedgerConflict,
 }
 
-CAMEL_TO_SNAKE_PATTERN = re.compile(r'(.)([A-Z][a-z]+)')
-CAMEL_TO_SNAKE_PATTERN_2 = re.compile(r'([a-z0-9])([A-Z])')
-
 
 def _raise_for_status(response):
     """Parse ledger response and raise exceptions in case of errors."""
@@ -159,50 +155,6 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
 
         return _wrapper
     return _retry
-
-
-def to_snake_case(camel_str):
-    name = CAMEL_TO_SNAKE_PATTERN.sub(r'\1_\2', camel_str)
-    name = CAMEL_TO_SNAKE_PATTERN_2.sub(r'\1_\2', name).lower()
-    return name.replace('_i_d', '_id')
-
-
-def _replace_dict_keys(d, converter):
-    """Replace fields in a dict and return updated dict (recursive).
-
-    Apply converter to each dict field.
-    """
-    assert isinstance(d, dict)
-
-    new_d = {}
-    for key, value in d.items():
-        # If key is 'metadata' we should not convert value to snake case
-        if key != 'metadata':
-            if isinstance(value, dict):
-                value = _replace_dict_keys(value, converter)
-
-            elif isinstance(value, list):
-                if all([isinstance(v, dict) for v in value]):
-                    value = [_replace_dict_keys(v, converter) for v in value]
-
-        new_d[converter(key)] = value
-    return new_d
-
-
-def replace_dict_keys(d, converter):
-    """Replace fields in a dict or list of dict and return updated dict or list of dict (recursive).
-
-    Apply converter to each dict field.
-    """
-    if isinstance(d, dict):
-        return _replace_dict_keys(d, converter)
-    elif isinstance(d, list):
-        if all([isinstance(sub_d, dict) for sub_d in d]):
-            return [_replace_dict_keys(sub_d, converter) for sub_d in d]
-        else:
-            return d
-    else:
-        raise TypeError(f'd ({type(d)} is not a instance of dict or list')
 
 
 @contextlib.contextmanager
@@ -321,8 +273,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
         # Raise errors if status is not ok
         _raise_for_status(response)
 
-        # Convert from Camel case to snake case
-        return replace_dict_keys(response, to_snake_case)
+        return response
 
 
 def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
@@ -380,6 +331,8 @@ def update_ledger(channel_name, *args, **kwargs):
 
 
 def query_tuples(channel_name, tuple_type, data_owner):
+    # Convert to chaincode index for compositeTraintuple
+    tuple_type = 'compositeTraintuple' if tuple_type == 'composite_traintuple' else tuple_type
     data = query_ledger(
         channel_name,
         fcn="queryFilter",
@@ -402,19 +355,19 @@ LOG_TUPLE_INVOKE_FCNS = {
     'doing': {
         'traintuple': 'logStartTrain',
         'testtuple': 'logStartTest',
-        'compositeTraintuple': 'logStartCompositeTrain',
+        'composite_traintuple': 'logStartCompositeTrain',
         'aggregatetuple': 'logStartAggregate',
     },
     'done': {
         'traintuple': 'logSuccessTrain',
         'testtuple': 'logSuccessTest',
-        'compositeTraintuple': 'logSuccessCompositeTrain',
+        'composite_traintuple': 'logSuccessCompositeTrain',
         'aggregatetuple': 'logSuccessAggregate',
     },
     'failed': {
         'traintuple': 'logFailTrain',
         'testtuple': 'logFailTest',
-        'compositeTraintuple': 'logFailCompositeTrain',
+        'composite_traintuple': 'logFailCompositeTrain',
         'aggregatetuple': 'logFailAggregate',
     },
 }
@@ -458,20 +411,20 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
 
     if tuple_type in ('traintuple', 'aggregatetuple'):
         extra_kwargs.update({
-            'outModel': {
+            'out_model': {
                 'hash': res["end_model_file_hash"],
-                'storageAddress': res["end_model_file"],
+                'storage_address': res["end_model_file"],
             },
         })
 
-    elif tuple_type == 'compositeTraintuple':
+    elif tuple_type == 'composite_traintuple':
         extra_kwargs.update({
-            'outHeadModel': {
+            'out_head_model': {
                 'hash': res["end_head_model_file_hash"],
             },
-            'outTrunkModel': {
+            'out_trunk_model': {
                 'hash': res["end_trunk_model_file_hash"],
-                'storageAddress': res["end_trunk_model_file"],
+                'storage_address': res["end_trunk_model_file"],
             },
         })
 

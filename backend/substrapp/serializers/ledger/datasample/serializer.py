@@ -17,7 +17,7 @@ class LedgerDataSampleSerializer(serializers.Serializer):
 
         args = {
             'hashes': [x.pk for x in instances],
-            'dataManagerKeys': [x for x in data_manager_keys],
+            'data_manager_keys': [x for x in data_manager_keys],
             'testOnly': json.dumps(test_only),
         }
         return ledger.create_datasamples(channel_name, args, [x.pk for x in instances])
@@ -34,6 +34,6 @@ class LedgerDataSampleUpdateSerializer(serializers.Serializer):
     def create(self, channel_name, validated_data):
         args = {
             'hashes': validated_data.get('data_sample_keys'),
-            'dataManagerKeys': validated_data.get('data_manager_keys'),
+            'data_manager_keys': validated_data.get('data_manager_keys'),
         }
         return ledger.update_datasample(channel_name, args)

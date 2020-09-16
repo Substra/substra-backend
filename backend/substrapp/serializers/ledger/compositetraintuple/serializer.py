@@ -35,15 +35,15 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
         metadata = validated_data.get('metadata')
 
         args = {
-            'algoKey': algo_key,
-            'inHeadModelKey': in_head_model_key,
-            'inTrunkModelKey': in_trunk_model_key,
-            'outTrunkModelPermissions': {'process': {
-                'authorizedIDs': out_trunk_model_permissions.get('authorized_ids'),
+            'algo_key': algo_key,
+            'in_head_model_key': in_head_model_key,
+            'in_trunk_model_key': in_trunk_model_key,
+            'out_trunk_model_permissions': {'process': {
+                'authorized_ids': out_trunk_model_permissions.get('authorized_ids'),
             }},
-            'dataManagerKey': data_manager_key,
-            'dataSampleKeys': train_data_sample_keys,
-            'computePlanID': compute_plan_id,
+            'data_manager_key': data_manager_key,
+            'data_sample_keys': train_data_sample_keys,
+            'compute_plan_id': compute_plan_id,
             'rank': rank,
             'tag': tag,
             'metadata': metadata

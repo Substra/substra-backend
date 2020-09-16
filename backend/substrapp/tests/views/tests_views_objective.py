@@ -259,7 +259,7 @@ class ObjectiveViewTests(APITestCase):
                 CHANNEL,
                 fcn='queryObjectiveLeaderboard',
                 args={
-                    'objectiveKey': objective[0]['key'],
+                    'objective_key': objective[0]['key'],
                     'ascendingOrder': False,
                 })
 
@@ -268,7 +268,7 @@ class ObjectiveViewTests(APITestCase):
                 CHANNEL,
                 fcn='queryObjectiveLeaderboard',
                 args={
-                    'objectiveKey': objective[0]['key'],
+                    'objective_key': objective[0]['key'],
                     'ascendingOrder': True,
                 })
 
