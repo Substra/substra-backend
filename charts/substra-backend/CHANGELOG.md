@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.2
+
+- added `httpClient.timeoutSeconds`
+
 ## 1.1.1
 
 - added `backend.grpc.keepalive.timeMs`
