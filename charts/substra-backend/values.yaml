@@ -295,6 +295,10 @@ privateCa:
     fileName: private-ca.crt
 
 
+httpClient:
+  timeoutSeconds: 30
+
+
 registry:
   local: true    # false if you use external docker-registry (host and port will be taken into account)
   host: 127.0.0.1

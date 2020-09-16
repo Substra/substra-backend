@@ -20,6 +20,8 @@ from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
+HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
+
 
 class JsonException(Exception):
     def __init__(self, msg):
@@ -219,7 +221,8 @@ def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
         'headers': {
             'Accept': 'application/json;version=0.0',
             'Substra-Channel-Name': channel_name},
-        'auth': auth
+        'auth': auth,
+        'timeout': HTTP_CLIENT_TIMEOUT_SECONDS
     })
 
     if settings.DEBUG:
