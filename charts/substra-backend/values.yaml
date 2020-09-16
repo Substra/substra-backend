@@ -58,6 +58,11 @@ backend:
     #   cpu: 100m
     #   memory: 128Mi
 
+  grpc:
+    keepalive:
+      timeMs: 120000
+
+
 outgoingNodes: []
   # - name: nodeId
   #   secret: nodeSecret

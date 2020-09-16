@@ -1,5 +1,6 @@
 import os
 import base64
+import copy
 import asyncio
 import glob
 import json
@@ -31,7 +32,14 @@ LEDGER['requestor'] = create_user(
     key_path=glob.glob(LEDGER['client']['key_path'])[0],
     cert_path=LEDGER['client']['cert_path']
 )
+PEER_HOST = LEDGER['peer']['host']
 PEER_PORT = LEDGER['peer']['port'][os.environ.get('BACKEND_PEER_PORT', 'external')]
+GRPC_OPTIONS = LEDGER['grpcOptions']
+
+def grpc_options(hostname):
+    res = copy.deepcopy(GRPC_OPTIONS)
+    res['grpc.ssl_target_name_override'] = hostname
+    return res
 
 
 def get_hfc_client(channel_name):
@@ -45,7 +53,7 @@ def get_hfc_client(channel_name):
     peer = Peer(name=LEDGER['peer']['name'])
     peer.init_with_bundle({
         'url': f'{LEDGER["peer"]["host"]}:{PEER_PORT}',
-        'grpcOptions': LEDGER['peer']['grpcOptions'],
+        'grpcOptions': grpc_options(PEER_HOST),
         'tlsCACerts': {'path': LEDGER['peer']['tlsCACerts']},
         'clientKey': {'path': LEDGER['peer']['clientKey']},
         'clientCert': {'path': LEDGER['peer']['clientCert']},
@@ -107,6 +115,7 @@ def get_hfc_client(channel_name):
 
 
 LEDGER['hfc'] = get_hfc_client
+LEDGER['grpc_options'] = grpc_options
 
 
 def update_client_with_discovery(client, discovery_results):
@@ -140,11 +149,7 @@ def update_client_with_discovery(client, discovery_results):
                     url = f"{peer_info['endpoint'].split(':')[0]}:{external_port}"
                 peer.init_with_bundle({
                     'url': url,
-                    'grpcOptions': {
-                        'grpc.ssl_target_name_override': peer_info['endpoint'].split(':')[0],
-                        'grpc.max_send_message_length': -1,
-                        'grpc.max_receive_message_length': -1
-                    },
+                    'grpcOptions': grpc_options(peer_info['endpoint'].split(':')[0]),
                     'tlsCACerts': {'path': tls_root_cert.name},
                     'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
                     'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
@@ -164,11 +169,7 @@ def update_client_with_discovery(client, discovery_results):
         # Need loop
         orderer.init_with_bundle({
             'url': f"{orderer_info[0]['host']}:{orderer_info[0]['port']}",
-            'grpcOptions': {
-                'grpc.ssl_target_name_override': orderer_info[0]['host'],
-                'grpc.max_send_message_length': -1,
-                'grpc.max_receive_message_length': -1
-            },
+            'grpcOptions': grpc_options(orderer_info[0]['host']),
             'tlsCACerts': {'path': tls_root_cert.name},
             'clientKey': {'path': LEDGER['peer']['clientKey']},  # use peer creds (mutual tls)
             'clientCert': {'path': LEDGER['peer']['clientCert']},  # use peer creds (mutual tls)
