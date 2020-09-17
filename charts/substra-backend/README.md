@@ -29,7 +29,8 @@ The following table lists the configurable parameters of the substra-backend cha
 | `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
 | `registry.prepopulate` | A list of docker images to prepopulate the local docker registry with | `[]` |
 | `registry.prepopulate[].image` | A docker image | (undefined) |
-| `registry.prepopulate[].dockerConfigSecretName` | The name of a kubernetes secret containing the docker config used to pull the docker image | (undefined) |
+| `registry.prepopulate[].sourceRegistry` | The URL of a docker registry to pull the image from (leave blank for Docker Hub) | (undefined) |
+| `registry.prepopulate[].dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | (undefined) |
 | `users` | A list of users who can log into the backend | `[]` |
 | `users[].name` | The user login | (undefined) |
 | `users[].password` | The user password | (undefined) |

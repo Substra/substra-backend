@@ -8,7 +8,6 @@
 - Added `backend.kaniko.cache.warmer.images` (replaces `prePulledImages`)
 - By default, don't warm up kaniko cache
 - By default, don't prepopulate local docker registry
-- Deleted `registry.prepopulate.sourceRegistry`
 
 ## 1.1.2
 
