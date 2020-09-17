@@ -20,8 +20,16 @@ The following table lists the configurable parameters of the substra-backend cha
 | Parameter                          | Description                                     | Default                                                    |
 | ---------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
 | `backend.grpc.keepalive.timeMs` | The number of ms between each client keepalive ping | `120000` |
+| `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |
+| `backend.kaniko.cache.warmer.images` | A list of docker images to warm up the kaniko local cache with | `[]` |
+| `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
+| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.0.0` |
+| `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
 | `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `[mychannel]` |
 | `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
+| `registry.prepopulate` | A list of docker images to prepopulate the local docker registry with | `[]` |
+| `registry.prepopulate[].image` | A docker image | (undefined) |
+| `registry.prepopulate[].dockerConfigSecretName` | The name of a kubernetes secret containing the docker config used to pull the docker image | (undefined) |
 | `users` | A list of users who can log into the backend | `[]` |
 | `users[].name` | The user login | (undefined) |
 | `users[].password` | The user password | (undefined) |

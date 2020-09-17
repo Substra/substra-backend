@@ -28,7 +28,8 @@ spec:
         image: {{ $.Values.backend.kaniko.image }}
         args: ["--context=/docker-context",
                 "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
-                "--insecure"]
+                "--insecure",
+                "--verbosity=debug"]
         volumeMounts:
           - name: dockerfile
             mountPath: /docker-context
@@ -58,10 +59,6 @@ metadata:
     name: {{ template "substra.fullname" $ }}-registry-prepopulate-dockerfile-{{ $index }}
 data:
     Dockerfile: |
-      {{- if .sourceRegistry }}
-      FROM {{ .sourceRegistry }}/{{ .image }}
-      {{- else }}
       FROM {{ .image }}
-      {{ end }}
 {{- end }}
 {{- end }}

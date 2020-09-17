@@ -1,4 +1,4 @@
-{{- if .Values.prePulledImages }}
+{{- if .Values.backend.kaniko.cache.warmer.images }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -29,11 +29,11 @@ spec:
             topologyKey: kubernetes.io/hostname
       containers:
       - name: kaniko-cache-warmer
-        image: gcr.io/kaniko-project/warmer:latest
+        image: {{ .Values.backend.kaniko.cache.warmer.image }}
         args:
         - "--cache-dir=/cache"
-        {{- range .Values.prePulledImages }}
-        - "--image={{ . }}"
+        {{- range .Values.backend.kaniko.cache.warmer.images }}
+        - "--image={{ .image }}"
         {{- end }}
         - "--verbosity=debug"
         volumeMounts:
