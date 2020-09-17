@@ -125,6 +125,8 @@ deploy:
             local: true
             scheme: http
             pullDomain: 127.0.0.1:32001
+            prepopulate:
+              - image: substrafoundation/substra-tools:0.6.1-minimal
           secrets:
             fabricConfigmap: network-org-1-hlf-k8s-fabric
           celeryworker:
@@ -135,6 +137,11 @@ deploy:
             settings: dev
             tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
+            kaniko:
+              cache:
+                warmer:
+                  images:
+                    - image: substrafoundation/substra-tools:0.6.1-minimal
             ingress:
               enabled: true
               hosts:
@@ -208,6 +215,8 @@ deploy:
             local: true
             scheme: http
             pullDomain: 127.0.0.1:32002
+            prepopulate:
+              - image: substrafoundation/substra-tools:0.6.1-minimal
           secrets:
             fabricConfigmap: network-org-2-hlf-k8s-fabric
           celeryworker:
@@ -218,6 +227,11 @@ deploy:
             settings: dev
             tokenStrategy: 'reuse'
             defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
+            kaniko:
+              cache:
+                warmer:
+                  images:
+                    - image: substrafoundation/substra-tools:0.6.1-minimal
             ingress:
               enabled: true
               hosts:
