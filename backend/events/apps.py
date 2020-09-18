@@ -23,8 +23,6 @@ from substrapp.ledger_utils import get_hfc
 
 from celery.result import AsyncResult
 
-from grpc import RpcError
-
 
 logger = logging.getLogger(__name__)
 LEDGER = getattr(settings, 'LEDGER', None)
