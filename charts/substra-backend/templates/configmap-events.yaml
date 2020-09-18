@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-events-uwsgi
+data:
+  uwsgi.ini: |
+    [uwsgi]
+    module                        = backend.wsgi
+    log-master                    = true
+    http-socket                   = :{{ .Values.backend.service.port }}

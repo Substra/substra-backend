@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.2.0
+
+- Added a new deployment: `substra-backend-events`
 
 ## 1.1.3
 

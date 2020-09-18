@@ -180,7 +180,6 @@ def wait(channel_name):
             #   It makes it difficult to reconnect automatically because we need to kill the server
             #   to trigger the connexion.
             #   So we catch this exception (RPC error) and retry to connect to the event loop.
-            #   Ideally, we'd extract the event app from the backend project into a separate service/process.
 
             while True:
                 # use chaincode event
@@ -199,7 +198,7 @@ def wait(channel_name):
                     logger.info(f'Connect to Channel Event Hub ({channel_name})')
                     loop.run_until_complete(stream)
 
-                except RpcError as e:
+                except Exception as e:
                     logger.error(f'Channel Event Hub failed for {channel_name} ({type(e)}): {e} re-connecting in 5s')
                     time.sleep(5)
 
