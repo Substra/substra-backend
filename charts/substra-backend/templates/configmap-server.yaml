@@ -50,7 +50,6 @@ data:
   uwsgi.ini: |
     [uwsgi]
     module                        = backend.wsgi
-    log-master                    = true
     env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
     static-map                    = /static=/usr/src/app/backend/statics
 
