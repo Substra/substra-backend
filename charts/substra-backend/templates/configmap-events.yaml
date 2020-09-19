@@ -6,5 +6,4 @@ data:
   uwsgi.ini: |
     [uwsgi]
     module                        = backend.wsgi
-    log-master                    = true
     http-socket                   = :{{ .Values.backend.service.port }}
