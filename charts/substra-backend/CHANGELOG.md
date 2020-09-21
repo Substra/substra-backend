@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 1.1.4
+
+- `celerybeat` and `celeryworker` docker images are replaced by a unique `celery` image
+
+
 ## 1.1.3
 
 - Bumped kaniko to `v1.0.0`
