@@ -20,6 +20,7 @@ from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
+ORG_NAME = getattr(settings, 'ORG_NAME')
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
 
@@ -270,6 +271,15 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_hash, conte
     computed_hash = get_hash(content_dst_path, key=hash_key)
     if computed_hash != content_hash:
         raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+
+
+def get_local_folder_name(compute_plan_id):
+    return f'local-{compute_plan_id}-{ORG_NAME}'
+
+
+def get_local_folder(compute_plan_id):
+    volume_id = get_local_folder_name(compute_plan_id)
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'local', volume_id)
 
 
 def get_subtuple_directory(subtuple_key):

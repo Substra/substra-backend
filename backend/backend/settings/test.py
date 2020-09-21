@@ -6,3 +6,4 @@ import logging
 logging.disable(logging.CRITICAL)
 
 LEDGER_CALL_RETRY = False
+ORG_NAME = 'OrgTestSuite'

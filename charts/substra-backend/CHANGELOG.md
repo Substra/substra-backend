@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.1
+
+- Mount `/var/substra/local` in Read-Write mode in the worker pod
+
 ## 1.2.0
 
 - Added a new deployment: `substra-backend-events`
@@ -7,7 +11,6 @@
 ## 1.1.4
 
 - `celerybeat` and `celeryworker` docker images are replaced by a unique `celery` image
-
 
 ## 1.1.3
 
