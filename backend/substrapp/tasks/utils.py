@@ -13,7 +13,7 @@ from substrapp.tasks.k8s_backend import (
     k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
 
 
-CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
+CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celery:latest')
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
 TASK_LABEL = 'substra_task'
 BUILD_IMAGE = settings.TASK['BUILD_IMAGE']
