@@ -48,8 +48,6 @@ spec:
         args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
         {{- end }}
         env:
-          - name: DJANGO_SETTINGS_MODULE
-            value: backend.settings.{{ .Values.backend.settings }}
           - name: BACKEND_ORG
             value: {{ .Values.organization.name }}
           - name: BACKEND_DB_NAME
@@ -126,9 +124,6 @@ spec:
           httpGet:
             path: /liveness
             port: http
-            httpHeaders:
-              - name: Accept
-                value: "text/html;version=0.0, */*;version=0.0"
           initialDelaySeconds: 60
           timeoutSeconds: 5
           periodSeconds: 45
@@ -137,9 +132,6 @@ spec:
           httpGet:
             path: /readiness
             port: http
-            httpHeaders:
-              - name: Accept
-                value: "text/html;version=0.0, */*;version=0.0"
           initialDelaySeconds: 5
           timeoutSeconds: 2
           periodSeconds: 30

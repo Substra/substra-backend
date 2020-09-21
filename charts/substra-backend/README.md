@@ -26,6 +26,9 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.0.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
 | `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `[mychannel]` |
+| `events.nodeSelector` | Node labels for pod assignment | `{}` |
+| `events.tolerations` | Toleration labels for pod assignment | `[]` |
+| `events.affinity` | Affinity settings for pod assignment | `{}` |
 | `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
 | `registry.prepopulate` | A list of docker images to prepopulate the local docker registry with | `[]` |
 | `registry.prepopulate[].image` | A docker image | (undefined) |

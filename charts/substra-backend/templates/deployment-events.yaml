@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-events
+  labels:
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-events
+    app.kubernetes.io/part-of: {{ template "substra.name" . }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      {{- if .Values.securityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      {{- end }}
+      {{- with $.Values.backend.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      containers:
+      - name: {{ template "substra.name" . }}
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        {{- if .Values.backend.image.pullPolicy }}
+        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+        {{- end }}
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        {{- end }}
+        command: ["/bin/bash"]
+        {{- if eq .Values.backend.settings "prod" }}
+        args: ["-c", "uwsgi --ini uwsgi.ini"]
+        {{- else }}
+        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
+        {{- end }}
+        env:
+          - name: DJANGO_SETTINGS_MODULE
+            value: backend.settings.events.{{ .Values.backend.settings }}
+          - name: BACKEND_ORG
+            value: {{ .Values.organization.name }}
+          - name: BACKEND_DB_NAME
+            value: {{ .Values.postgresql.postgresqlDatabase }}
+          - name: BACKEND_DB_USER
+            value: {{ .Values.postgresql.postgresqlUsername }}
+          - name: BACKEND_DB_PWD
+            value: {{ .Values.postgresql.postgresqlPassword }}
+          - name: DATABASE_HOST
+            value: {{ .Release.Name }}-postgresql
+          - name: DEFAULT_DOMAIN
+            value: "{{ .Values.backend.defaultDomain }}"
+          - name: CELERY_BROKER_URL
+            value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+          - name: BACKEND_DEFAULT_PORT
+            value: {{ .Values.backend.service.port | quote}}
+          - name: BACKEND_PEER_PORT
+            value: "internal"
+          - name: LEDGER_CONFIG_FILE
+            value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
+          - name: PYTHONUNBUFFERED
+            value: "1"
+        {{- with .Values.extraEnv }}
+{{ toYaml . | indent 10 }}
+        {{- end }}
+        volumeMounts:
+          - name: config
+            mountPath: /conf/{{ .Values.organization.name }}/substra-backend
+            readOnly: true
+          - name: uwsgi
+            mountPath: /usr/src/app/uwsgi.ini
+            subPath: uwsgi.ini
+            readOnly: true
+          - name: user-cert
+            mountPath: /var/hyperledger/msp/signcerts
+          - name: user-key
+            mountPath: /var/hyperledger/msp/keystore
+          - name: peer-tls-server
+            mountPath: /var/hyperledger/tls/server/pair
+          - name: peer-tls-client
+            mountPath: /var/hyperledger/tls/client/pair
+          - name: cacert
+            mountPath: /var/hyperledger/ca
+      initContainers:
+      - name: wait-postgresql
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
+      volumes:
+      - name: config
+        configMap:
+          name: {{ include "substra.fullname" . }}-server
+      - name: uwsgi
+        configMap:
+          name: {{ include "substra.fullname" . }}-events-uwsgi
+      - name: user-cert
+        secret:
+          secretName: {{ $.Values.secrets.user.cert }}
+      - name: user-key
+        secret:
+          secretName: {{ $.Values.secrets.user.key }}
+      - name: peer-tls-server
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.server }}
+      - name: peer-tls-client
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.client }}
+      - name: cacert
+        secret:
+          secretName: {{ $.Values.secrets.caCert }}
+    {{- with .Values.events.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.events.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.events.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
