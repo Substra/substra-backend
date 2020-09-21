@@ -4,8 +4,6 @@ from django.apps import AppConfig
 from django.conf import settings
 from substrapp.ledger_utils import invoke_ledger
 
-from aiogrpc import RpcError
-
 logger = logging.getLogger(__name__)
 LEDGER = getattr(settings, 'LEDGER', None)
 
@@ -19,14 +17,12 @@ class NodeRegisterConfig(AppConfig):
             try:
                 # args is set to empty because fabric-sdk-py doesn't allow None args for invoke operations
                 invoke_ledger(channel_name, fcn='registerNode', args=[''], sync=True)
-            except RpcError as e:
-                if not settings.DEBUG:
-                    raise
+            except Exception as e:
                 logger.exception(e)
-                time.sleep(5)
-                logger.info(f'({channel_name}) Retry to register the node to the ledger')
+                time.sleep(1)
+                logger.info(f'({channel_name}) Retry registring the node on the ledger')
             else:
-                logger.info(f'({channel_name}) Node registered in the ledger')
+                logger.info(f'({channel_name}) Node registered on the ledger')
                 return
 
     def ready(self):
