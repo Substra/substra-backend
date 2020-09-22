@@ -20,12 +20,13 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory, timeit)
+                             get_dir_hash, get_local_folder_name, get_subtuple_directory, get_chainkeys_directory,
+                             get_local_folder, timeit)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, ExceptionThread,
-                                   remove_local_volume, get_or_create_local_volume, remove_image)
+                                   get_or_create_local_volume, remove_image)
 
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -457,11 +458,15 @@ def remove_local_folders(compute_plan_id):
         logger.info(f'Skipping deletion of local volume for compute plan {compute_plan_id}')
         return
 
-    logger.info(f'Deleting local volume for compute plan {compute_plan_id}')
-
-    volume_id = get_volume_id(compute_plan_id)
-
-    remove_local_volume(volume_id)
+    try:
+        local_folder = get_local_folder(compute_plan_id)
+        logger.info(f'Deleting local folder {local_folder}')
+        shutil.rmtree(local_folder)
+    except FileNotFoundError:
+        logger.info(f'No local folder with path {local_folder}')
+        pass
+    except Exception:
+        logger.error(f'Cannot delete volume {local_folder}', exc_info=True)
 
     if settings.TASK['CHAINKEYS_ENABLED']:
         chainkeys_directory = get_chainkeys_directory(compute_plan_id)
@@ -795,7 +800,7 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
 
     # local volume for train like tuples in compute plan
     if compute_plan_id is not None:
-        volume_id = get_volume_id(compute_plan_id)
+        volume_id = get_local_folder_name(compute_plan_id)
         get_or_create_local_volume(volume_id)
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
@@ -1012,11 +1017,6 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
 
     return end_model_file, end_model_file_hash
-
-
-def get_volume_id(compute_plan_id, prefix='local'):
-    org_name = getattr(settings, 'ORG_NAME')
-    return f'{prefix}-{compute_plan_id}-{org_name}'
 
 
 def get_algo_image_name(algo_hash):

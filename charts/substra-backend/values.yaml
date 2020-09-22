@@ -131,12 +131,11 @@ persistence:
       readOnly:
         server: true
         worker: false
-    # Writable by jobs only
     - name: local
       size: "10Gi"
       readOnly:
         server: true
-        worker: true
+        worker: false
 
 # Secrets names
 secrets:
