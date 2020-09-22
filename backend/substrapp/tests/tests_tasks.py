@@ -58,6 +58,20 @@ class TasksTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
+    def test_celery_retry(self):
+        subtuple_key = 'test_owkin'
+        subtuple = {'key': subtuple_key, 'in_models': None}
+
+        with mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
+                mock.patch('substrapp.tasks.tasks.ComputeTask.retry') as mretry:
+
+            mdo_task.side_effect = Exception('An exeption that should trigger retry mechanism')
+
+            with self.assertRaises(Exception):
+                compute_task(CHANNEL, 'traintuple', subtuple, None)
+
+            self.assertEqual(mretry.call_count, 1)
+
     def test_create_directory(self):
         directory = './test/'
         create_directory(directory)
