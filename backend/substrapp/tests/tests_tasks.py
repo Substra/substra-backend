@@ -65,7 +65,7 @@ class TasksTests(APITestCase):
         with mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
                 mock.patch('substrapp.tasks.tasks.ComputeTask.retry') as mretry:
 
-            mdo_task.side_effect = Exception('Test')
+            mdo_task.side_effect = Exception('An exeption that should trigger retry mechanism')
 
             with self.assertRaises(Exception):
                 compute_task(CHANNEL, 'traintuple', subtuple, None)
