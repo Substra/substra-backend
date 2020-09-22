@@ -463,6 +463,7 @@ def remove_local_folders(compute_plan_id):
         logger.info(f'Deleting local folder {local_folder}')
         shutil.rmtree(local_folder)
     except FileNotFoundError:
+        logger.info(f'No local folder with path {local_folder}')
         pass
     except Exception:
         logger.error(f'Cannot delete volume {local_folder}', exc_info=True)
