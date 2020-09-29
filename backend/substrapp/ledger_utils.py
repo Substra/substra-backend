@@ -287,6 +287,7 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
 
         return response
 
+
 def extract_metrics_duration(response):
     metrics = response.get('__metrics__')
     if not metrics:
@@ -412,9 +413,11 @@ def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
     update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
+
 @metrics_client.timer('log_start_tuple')
 def log_start_tuple(tuple_type, tuple_key):
     _update_tuple_status(tuple_type, tuple_key, 'doing')
+
 
 
 @metrics_client.timer('log_fail_tuple')
@@ -424,6 +427,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
         'log': err_msg,
     }
     _update_tuple_status(tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
+
 
 
 @metrics_client.timer('log_success_tuple')

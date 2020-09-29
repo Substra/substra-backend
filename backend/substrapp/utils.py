@@ -11,7 +11,6 @@ import requests
 import tarfile
 import zipfile
 import uuid
-import time
 
 from checksumdir import dirhash
 
