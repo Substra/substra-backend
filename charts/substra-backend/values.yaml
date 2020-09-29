@@ -194,29 +194,6 @@ docker-registry:
     size: 10Gi
     deleteEnabled: true
 
-flower:
-  enabled: true
-  host: flower
-  port: 5555
-  persistence:
-    enabled: false
-
-  image:
-    repository: substrafoundation/flower
-    tag: latest
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-
-  service:
-    type: NodePort
-    port: 5555
-    annotations: {}
-    labels: {}
-    clusterIP: ""
-    externalIPs: []
-    loadBalancerIP: ""
-    loadBalancerSourceRanges: []
-
 celerybeat:
   replicaCount: 1
   taskPeriod: 10800
