@@ -6,7 +6,7 @@ import threading
 
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
-from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
+from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError
 
 from substrapp.tasks.docker_backend import (
     docker_get_image, docker_build_image, docker_remove_local_volume, docker_get_or_create_local_volume,
@@ -15,6 +15,7 @@ from substrapp.tasks.k8s_backend import (
     k8s_get_image, k8s_build_image, k8s_remove_local_volume, k8s_get_or_create_local_volume,
     k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
 
+from substrapp.metrics import get_metrics_client
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celeryworker:latest')
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, 'CELERY_WORKER_CONCURRENCY'))
@@ -23,6 +24,7 @@ COMPUTE_BACKEND = settings.TASK['COMPUTE_BACKEND']
 BUILD_IMAGE = settings.TASK['BUILD_IMAGE']
 
 logger = logging.getLogger(__name__)
+metrics_client = get_metrics_client()
 
 import time
 
@@ -114,7 +116,7 @@ def container_format_log(container_name, container_logs):
         logger.info(log)
 
 
-@timeit
+@metrics_client.timer('compute_job')
 def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_name, volumes, command,
                 environment, remove_image=True, remove_container=True, capture_logs=True):
 

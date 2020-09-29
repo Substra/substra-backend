@@ -1,0 +1,99 @@
+rabbitmq:
+  rabbitmq:
+    erlangCookie: rabbitmqErlangCookie
+
+docker-registry:
+  service:
+    type: NodePort
+    nodePort: 32002
+
+registry:
+  local: true
+  scheme: http
+  pullDomain: 127.0.0.1:32002
+  prepopulate:
+    - image: substrafoundation/substra-tools:0.6.1-minimal
+
+secrets:
+  fabricConfigmap: network-org-2-hlf-k8s-fabric
+
+celeryworker:
+  concurrency: 3
+  rbac:
+    enable: true
+
+backend:
+  settings: dev
+  tokenStrategy: 'reuse'
+  defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
+  kaniko:
+    cache:
+      warmer:
+        images:
+          - image: substrafoundation/substra-tools:0.6.1-minimal
+  ingress:
+    enabled: true
+    hosts:
+      - { host: substra-backend.node-2.com, paths: ["/"] }
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/client-body-buffer-size: 100m
+      nginx.ingress.kubernetes.io/proxy-body-size: 100m
+      nginx.ingress.kubernetes.io/proxy-send-timeout: '120'
+      nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
+      nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
+      nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
+
+organization:
+  name: MyOrg2
+
+peer:
+  host: network-org-2-peer-1-hlf-peer.org-2
+  port: 7051
+  mspID: MyOrg2MSP
+
+incomingNodes:
+  - { name: MyOrg1MSP, secret: nodeSecret2w1 }
+  - { name: MyOrg2MSP, secret: selfSecret2 }
+
+outgoingNodes:
+  - { name: MyOrg1MSP, secret: nodeSecret1w2 }
+  - { name: MyOrg2MSP, secret: selfSecret2 }
+
+users:
+  - name: "node-2"
+    secret: "p@$swr0d45"
+    channel: "mychannel"
+  - name: "node-2-yourchannel"
+    secret: "p@$swr0d45"
+    channel: "yourchannel"
+
+persistence:
+  hostPathServerMedias: "/tmp/org-2/"
+
+extraEnv:
+  # Should be a json list
+  - name: CORS_ORIGIN_WHITELIST
+    value: '["http://substra-frontend.node-2.com/", "http://substra-frontend.node-2.com:3000/", "http://substra-frontend.node-2.com:3001/"]'
+  - name: CORS_ALLOW_CREDENTIALS
+    value: "true"
+  - name: DEFAULT_THROTTLE_RATES
+    value: '120'
+  - name: TASK_CACHE_DOCKER_IMAGES
+    value: 'False'
+  - name: BUILD_IMAGE
+    value: 'True'
+  - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
+    value: '120'
+  - name: STATSD_ENABLED
+    value: "false"
+  - name: STATSD_HOST
+    value: "graphite-0.graphite.monitoring.svc.cluster.local"
+  - name: STATSD_PORT
+    value: "8125"
+  - name: STATSD_PREFIX
+    value: substra-backend-org-1
+
+channels:
+  - mychannel
+  - yourchannel

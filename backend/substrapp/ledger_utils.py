@@ -9,9 +9,12 @@ from django.conf import settings
 from rest_framework import status
 from grpc import RpcError
 
+from substrapp.metrics import get_metrics_client
+
 
 LEDGER = getattr(settings, 'LEDGER', None)
 logger = logging.getLogger(__name__)
+metrics_client = get_metrics_client()
 
 
 class LedgerError(Exception):
@@ -272,12 +275,26 @@ def _call_ledger(call_type, fcn, args=None, kwargs=None):
         except json.decoder.JSONDecodeError:
             raise LedgerInvalidResponse(response)
 
+        # Set the ledger inside timer as a metric
+        if '__metrics__' in response:
+            duration = extract_metrics_duration(response)
+            if duration:
+                logger.debug(f'smartcontract {fcn} duration: {duration}ms')
+                metrics_client.timing(f'smartcontract_{fcn}', duration)
+
         # Raise errors if status is not ok
         _raise_for_status(response)
 
         return response
 
+def extract_metrics_duration(response):
+    metrics = response.get('__metrics__')
+    if not metrics:
+        return None
+    return metrics.get('duration')
 
+
+@metrics_client.timer('call_ledger')
 def call_ledger(call_type, fcn, *args, **kwargs):
     """Call ledger and log each request."""
     ts = time.time()
@@ -291,7 +308,11 @@ def call_ledger(call_type, fcn, *args, **kwargs):
         # add a log even if the function raises an exception
         te = time.time()
         elaps = (te - ts) * 1000
-        logger.info(f'smartcontract {call_type}:{fcn}; elaps={elaps:.2f}ms; error={error}')
+        metrics_client.timing(f'call_ledger_{fcn}', elaps)
+        if error is None:
+            logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms")
+        else:
+            logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms. Error: {error}")
 
 
 def _invoke_ledger(fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
@@ -391,10 +412,12 @@ def _update_tuple_status(tuple_type, tuple_key, status, extra_kwargs=None):
     update_ledger(fcn=invoke_fcn, args=invoke_args, sync=True)
 
 
+@metrics_client.timer('log_start_tuple')
 def log_start_tuple(tuple_type, tuple_key):
     _update_tuple_status(tuple_type, tuple_key, 'doing')
 
 
+@metrics_client.timer('log_fail_tuple')
 def log_fail_tuple(tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     extra_kwargs = {
@@ -403,6 +426,7 @@ def log_fail_tuple(tuple_type, tuple_key, err_msg):
     _update_tuple_status(tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
 
 
+@metrics_client.timer('log_success_tuple')
 def log_success_tuple(tuple_type, tuple_key, res):
     extra_kwargs = {
         'log': '',
