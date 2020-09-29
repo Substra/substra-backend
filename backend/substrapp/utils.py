@@ -11,7 +11,6 @@ import requests
 import tarfile
 import zipfile
 import uuid
-import time
 
 from checksumdir import dirhash
 
@@ -289,4 +288,3 @@ def get_subtuple_directory(subtuple_key):
 def get_chainkeys_directory(compute_plan_id):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
                      compute_plan_id, 'chainkeys')
-

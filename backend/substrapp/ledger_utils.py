@@ -285,11 +285,13 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
         return response
 
+
 def extract_metrics_duration(response):
     metrics = response.get('__metrics__')
     if not metrics:
         return None
     return metrics.get('duration')
+
 
 @metrics_client.timer('call_ledger')
 def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
@@ -411,9 +413,11 @@ def _update_tuple_status(channel_name, tuple_type, tuple_key, status, extra_kwar
 
     update_ledger(channel_name, fcn=invoke_fcn, args=invoke_args, sync=True)
 
+
 @metrics_client.timer('log_start_tuple')
 def log_start_tuple(channel_name, tuple_type, tuple_key):
     _update_tuple_status(channel_name, tuple_type, tuple_key, 'doing')
+
 
 @metrics_client.timer('log_fail_tuple')
 def log_fail_tuple(channel_name, tuple_type, tuple_key, err_msg):
@@ -422,6 +426,7 @@ def log_fail_tuple(channel_name, tuple_type, tuple_key, err_msg):
         'log': err_msg,
     }
     _update_tuple_status(channel_name, tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
+
 
 @metrics_client.timer('log_success_tuple')
 def log_success_tuple(channel_name, tuple_type, tuple_key, res):
