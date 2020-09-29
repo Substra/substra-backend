@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.2
+
+- Remove flower as it is not used.
+
 ## 1.2.1
 
 - Mount `/var/substra/local` in Read-Write mode in the worker pod

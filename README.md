@@ -2,9 +2,10 @@
 
 Backend of the Substra platform
 
-|  substra-backend | celery | 
-| ------------- | ------------- |
-| [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds) | [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/celery)](https://hub.docker.com/r/substrafoundation/celery/builds) |
+
+|  substra-backend |
+| ------------- |
+| [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds) |
 
 ## Version
 

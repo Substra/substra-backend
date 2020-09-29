@@ -6,7 +6,7 @@ from django.conf.urls import url, include
 from rest_framework.routers import DefaultRouter
 
 from substrapp.views import ObjectiveViewSet, DataSampleViewSet, DataManagerViewSet, \
-    AlgoViewSet, TrainTupleViewSet, TestTupleViewSet, ModelViewSet, TaskViewSet, \
+    AlgoViewSet, TrainTupleViewSet, TestTupleViewSet, ModelViewSet, \
     ComputePlanViewSet, ObjectivePermissionViewSet, AlgoPermissionViewSet, DataManagerPermissionViewSet, \
     ModelPermissionViewSet, CompositeTraintupleViewSet, CompositeAlgoViewSet, CompositeAlgoPermissionViewSet, \
     AggregateAlgoViewSet, AggregateAlgoPermissionViewSet, AggregateTupleViewSet
@@ -27,7 +27,6 @@ router.register(r'algo', AlgoPermissionViewSet, basename='algo')
 router.register(r'traintuple', TrainTupleViewSet, basename='traintuple')
 router.register(r'testtuple', TestTupleViewSet, basename='testtuple')
 router.register(r'aggregatetuple', AggregateTupleViewSet, basename='aggregatetuple')
-router.register(r'task', TaskViewSet, basename='task')
 router.register(r'compute_plan', ComputePlanViewSet, basename='compute_plan')
 router.register(r'composite_traintuple', CompositeTraintupleViewSet, basename='composite_traintuple')
 router.register(r'composite_algo', CompositeAlgoViewSet, basename='composite_algo')

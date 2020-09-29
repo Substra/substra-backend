@@ -198,7 +198,7 @@ celerybeat:
   replicaCount: 1
   taskPeriod: 10800
   image:
-    repository: substrafoundation/celery
+    repository: substrafoundation/substra-backend
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []
@@ -229,7 +229,7 @@ celeryworker:
   concurrency: 1  # Max number of tasks to process in parallel
   updateStrategy: RollingUpdate
   image:
-    repository: substrafoundation/celery
+    repository: substrafoundation/substra-backend
     tag: latest
     pullPolicy: IfNotPresent
     pullSecrets: []

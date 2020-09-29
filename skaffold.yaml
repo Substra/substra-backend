@@ -33,10 +33,10 @@ build:
           dest: /usr/src/app/users
           strip: backend/users/
 
-    - image: substrafoundation/celery
+    - image: substrafoundation/substra-backend-celery
       context: .
       docker:
-        dockerfile: docker/celery/Dockerfile
+        dockerfile: docker/substra-backend/Dockerfile
       sync:
         manual:
         - src: backend/libs/**/*
@@ -67,8 +67,8 @@ deploy:
           helm: {}
         values:
           backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/celery
-          celeryworker.image: substrafoundation/celery
+          celerybeat.image: substrafoundation/substra-backend-celery
+          celeryworker.image: substrafoundation/substra-backend-celery
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -78,8 +78,8 @@ deploy:
           helm: {}
         values:
           backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/celery
-          celeryworker.image: substrafoundation/celery
+          celerybeat.image: substrafoundation/substra-backend-celery
+          celeryworker.image: substrafoundation/substra-backend-celery
 
     flags:
       install: ["--create-namespace"]
