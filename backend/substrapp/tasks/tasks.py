@@ -21,8 +21,7 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory,
-                             get_local_folder)
+                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory)
 from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                     query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
