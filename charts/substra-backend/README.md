@@ -30,6 +30,12 @@ The following table lists the configurable parameters of the substra-backend cha
 | `events.tolerations` | Toleration labels for pod assignment | `[]` |
 | `events.affinity` | Affinity settings for pod assignment | `{}` |
 | `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
+| `peer.host` | The Hyperledger Fabric peer hostname | `healthchain-peer.owkin.com` |
+| `peer.port` | The Hyperledger Fabric peer port | `443` |
+| `peer.mspID` | The Hyperledger Fabric peer MSP ID | `OwkinPeerMSP` |
+| `peer.waitForEventTimeoutSeconds` | Time to wait for confirmation from the peers that the transaction has been committed successfully | `45` |
+| `peer.strategy.invoke` | Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `ALL` |
+| `peer.strategy.query` | Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `SELF` |
 | `registry.prepopulate` | A list of docker images to prepopulate the local docker registry with | `[]` |
 | `registry.prepopulate[].image` | A docker image | (undefined) |
 | `registry.prepopulate[].sourceRegistry` | The URL of a docker registry to pull the image from (leave blank for Docker Hub) | (undefined) |

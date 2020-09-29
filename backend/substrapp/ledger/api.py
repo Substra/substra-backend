@@ -1,119 +1,16 @@
-import contextlib
 import functools
 import json
 import logging
 import time
 
 from django.conf import settings
-from rest_framework import status
 from grpc import RpcError
+from substrapp.ledger.connection import get_hfc
+from substrapp.ledger.exceptions import (raise_for_status, LedgerForbidden, LedgerTimeout, LedgerMVCCError,
+                                         LedgerInvalidResponse, LedgerUnavailable, LedgerPhantomReadConflictError,
+                                         LedgerEndorsementPolicyFailure, LedgerStatusError, LedgerError)
 
-
-LEDGER = getattr(settings, 'LEDGER', None)
 logger = logging.getLogger(__name__)
-
-
-class LedgerError(Exception):
-    """Base error from ledger."""
-    # FIXME the base error status code should be 500, the chaincode is currently
-    #       responding with 500 status code for some 400 errors
-    status = status.HTTP_400_BAD_REQUEST  # status.HTTP_500_INTERNAL_SERVER_ERROR
-
-    def __init__(self, msg):
-        super().__init__(msg)
-        self.msg = msg
-
-    def __repr__(self):
-        return self.msg
-
-    @classmethod
-    def from_response_dict(cls, response):
-        return cls(response['error'])
-
-
-class LedgerStatusError(LedgerError):
-    """Could not update tuple status error."""
-    pass
-
-
-class LedgerInvalidResponse(LedgerError):
-    """Could not parse ledger response."""
-    pass
-
-
-class LedgerTimeout(LedgerError):
-    """Ledger does not respond in time."""
-    status = status.HTTP_408_REQUEST_TIMEOUT
-
-
-class LedgerMVCCError(LedgerError):
-    status = status.HTTP_412_PRECONDITION_FAILED
-
-
-class LedgerPhantomReadConflictError(LedgerError):
-    status = status.HTTP_412_PRECONDITION_FAILED
-
-
-class LedgerEndorsementPolicyFailure(LedgerError):
-    status = status.HTTP_412_PRECONDITION_FAILED
-
-
-class LedgerUnavailable(LedgerError):
-    """Ledger is not available."""
-    status = status.HTTP_503_SERVICE_UNAVAILABLE
-
-
-class LedgerBadRequest(LedgerError):
-    """Invalid request."""
-    status = status.HTTP_400_BAD_REQUEST
-
-
-class LedgerConflict(LedgerError):
-    """Asset already exists."""
-    status = status.HTTP_409_CONFLICT
-
-    def __init__(self, msg, pkhash):
-        super().__init__(msg)
-        self.pkhash = pkhash
-
-    @classmethod
-    def from_response_dict(cls, response):
-        pkhash = response.get('key')
-        if not pkhash:
-            return LedgerError(response['error'])
-        return cls(response['error'], pkhash=pkhash)
-
-
-class LedgerNotFound(LedgerError):
-    """Asset not found."""
-    status = status.HTTP_404_NOT_FOUND
-
-
-class LedgerForbidden(LedgerError):
-    """Organisation is not allowed to perform the operation."""
-    status = status.HTTP_403_FORBIDDEN
-
-
-_STATUS_TO_EXCEPTION = {
-    status.HTTP_400_BAD_REQUEST: LedgerBadRequest,
-    status.HTTP_403_FORBIDDEN: LedgerForbidden,
-    status.HTTP_404_NOT_FOUND: LedgerNotFound,
-    status.HTTP_409_CONFLICT: LedgerConflict,
-}
-
-
-def _raise_for_status(response):
-    """Parse ledger response and raise exceptions in case of errors."""
-    if not response or 'error' not in response:
-        return
-
-    if 'cannot change status' in response['error']:
-        raise LedgerStatusError.from_response_dict(response)
-
-    status_code = response['status']
-    exception_class = _STATUS_TO_EXCEPTION.get(status_code, LedgerError)
-
-    raise exception_class.from_response_dict(response)
 
 
 def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
@@ -135,7 +32,7 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
     def _retry(fn):
         @functools.wraps(fn)
         def _wrapper(*args, **kwargs):
-            if not getattr(settings, 'LEDGER_CALL_RETRY', True):
+            if not settings.LEDGER_CALL_RETRY:
                 return fn(*args, **kwargs)
 
             _delay = delay
@@ -155,19 +52,6 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
 
         return _wrapper
     return _retry
-
-
-@contextlib.contextmanager
-def get_hfc(channel_name):
-    loop, client = LEDGER['hfc'](channel_name)
-    try:
-        yield (loop, client)
-    finally:
-        loop.run_until_complete(
-            client.close_grpc_channels()
-        )
-        del client
-        loop.close()
 
 
 def _get_endorsing_peers(strategy, current_peer, all_peers):
@@ -197,36 +81,30 @@ def get_query_endorsing_peers(current_peer, all_peers):
 
 def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
-    with get_hfc(channel_name) as (loop, client):
+    with get_hfc(channel_name) as (loop, client, user):
         if not args:
             args = []
         else:
             args = [json.dumps(args)]
-
-        peer = LEDGER['peer']
-        requestor = LEDGER['requestor']
 
         chaincode_calls = {
             'invoke': client.chaincode_invoke,
             'query': client.chaincode_query,
         }
 
-        chaincode_name = LEDGER['chaincode_name']
-
         all_peers = client._peers.keys()
-        current_peer = peer['name']
 
         peers = {
-            'invoke': get_invoke_endorsing_peers(current_peer=current_peer, all_peers=all_peers),
-            'query': get_query_endorsing_peers(current_peer=current_peer, all_peers=all_peers),
+            'invoke': get_invoke_endorsing_peers(current_peer=settings.LEDGER_PEER_NAME, all_peers=all_peers),
+            'query': get_query_endorsing_peers(current_peer=settings.LEDGER_PEER_NAME, all_peers=all_peers),
         }
 
         params = {
-            'requestor': requestor,
+            'requestor': user,
             'channel_name': channel_name,
             'peers': peers[call_type],
             'args': args,
-            'cc_name': chaincode_name,
+            'cc_name': settings.LEDGER_CHAINCODE_NAME,
             'fcn': fcn
         }
 
@@ -243,7 +121,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
                 raise LedgerForbidden(f'Access denied for {(fcn, args)}')
 
             if hasattr(e, 'details') and 'failed to connect to all addresses' in e.details():
-                logger.error(f'failed to reach all peers {all_peers}, current_peer is {current_peer}')
+                logger.error(f'failed to reach all peers {all_peers}, current_peer is {settings.LEDGER_PEER_NAME}')
                 raise LedgerUnavailable(f'Failed to connect to all addresses for {(fcn, args)}')
 
             for arg in e.args:
@@ -271,7 +149,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
             raise LedgerInvalidResponse(response)
 
         # Raise errors if status is not ok
-        _raise_for_status(response)
+        raise_for_status(response)
 
         return response
 
@@ -304,7 +182,7 @@ def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, on
     }
 
     if sync:
-        params['wait_for_event_timeout'] = settings.LEDGER_WAIT_FOR_EVENT_TIMEOUT
+        params['wait_for_event_timeout'] = settings.LEDGER_WAIT_FOR_EVENT_TIMEOUT_SECONDS
 
     if cc_pattern:
         params['cc_pattern'] = cc_pattern

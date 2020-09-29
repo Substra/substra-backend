@@ -2,10 +2,9 @@ import time
 import logging
 from django.apps import AppConfig
 from django.conf import settings
-from substrapp.ledger_utils import invoke_ledger
+from substrapp.ledger.api import invoke_ledger
 
 logger = logging.getLogger(__name__)
-LEDGER = getattr(settings, 'LEDGER', None)
 
 
 class NodeRegisterConfig(AppConfig):
@@ -26,5 +25,5 @@ class NodeRegisterConfig(AppConfig):
                 return
 
     def ready(self):
-        for channel_name in LEDGER['channels']:
+        for channel_name in settings.LEDGER_CHANNELS:
             self.register_node(channel_name)

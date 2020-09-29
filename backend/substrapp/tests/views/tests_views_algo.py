@@ -15,7 +15,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerAlgoSerializer
 
-from substrapp.ledger_utils import LedgerError
+from substrapp.ledger.exceptions import LedgerError
 
 from substrapp.utils import get_hash
 
@@ -27,8 +27,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class AlgoViewTests(APITestCase):
     client_class = AuthenticatedClient
 

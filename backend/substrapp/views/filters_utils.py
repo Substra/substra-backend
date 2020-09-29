@@ -3,7 +3,7 @@ import itertools
 
 from urllib.parse import unquote
 
-from substrapp.ledger_utils import query_ledger
+from substrapp.ledger.api import query_ledger
 from substrapp import exceptions
 
 logger = logging.getLogger(__name__)

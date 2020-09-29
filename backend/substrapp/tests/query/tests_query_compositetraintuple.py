@@ -20,8 +20,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class CompositeTraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -68,7 +66,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
             raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
@@ -113,7 +111,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
             raw_key = 'compositetraintuple_key'.encode('utf-8').hex()

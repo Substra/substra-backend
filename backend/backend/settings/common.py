@@ -224,6 +224,18 @@ ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_
 HTTP_CLIENT_TIMEOUT_SECONDS = int(os.environ.get('HTTP_CLIENT_TIMEOUT_SECONDS', 30))
 
 LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
+
+
+# Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
+# Importing the module early ensures these steps happen in order:
+# 1. hfc.fabric is imported and all the associated loggers are configured  (log level, handler, etc...)
+# 2. Loggers are re-configured with the `LOGGING` statement, overriding the configuration from step 1
+try:
+    import hfc.fabric
+except:
+    pass
+
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,

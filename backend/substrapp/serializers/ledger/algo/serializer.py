@@ -35,4 +35,4 @@ class LedgerAlgoSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.create_algo(channel_name, args, instance.pkhash)
+        return ledger.assets.create_algo(channel_name, args, instance.pkhash)

@@ -5,7 +5,8 @@ from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp import models
-from substrapp.ledger_utils import invoke_ledger, LedgerError, LedgerTimeout
+from substrapp.ledger.api import invoke_ledger
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
 
 
 _MESSAGE = (
@@ -42,7 +43,7 @@ def __create_db_asset(channel_name, model, fcn, args, key, sync=False):
 
 
 def _create_db_asset(channel_name, fcn, model, args, key):
-    if getattr(settings, 'LEDGER_SYNC_ENABLED', True):
+    if settings.LEDGER_SYNC_ENABLED:
         return __create_db_asset(channel_name, model, fcn, args, key, sync=True)
     else:
         shared_task(__create_db_asset)(channel_name, model, fcn, args, key, sync=False)
@@ -75,7 +76,7 @@ def __create_db_assets(channel_name, model, fcn, args, keys, sync=False):
 
 
 def _create_db_assets(channel_name, fcn, model, args, keys):
-    if getattr(settings, 'LEDGER_SYNC_ENABLED', True):
+    if settings.LEDGER_SYNC_ENABLED:
         return __create_db_assets(channel_name, model, fcn, args, keys, sync=True)
     else:
         shared_task(__create_db_asset)(channel_name, model, fcn, args, keys, sync=False)
@@ -89,7 +90,7 @@ def __create_asset(channel_name, fcn, args, sync=False, **extra_kwargs):
 
 
 def _create_asset(channel_name, fcn, args, **extra_kwargs):
-    if getattr(settings, 'LEDGER_SYNC_ENABLED', True):
+    if settings.LEDGER_SYNC_ENABLED:
         return __create_asset(channel_name, fcn, args=args, sync=True, **extra_kwargs)
     else:
         shared_task(__create_asset)(channel_name, fcn, args=args, sync=False, **extra_kwargs)

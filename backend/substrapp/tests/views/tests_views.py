@@ -3,7 +3,7 @@ import mock
 from rest_framework.test import APITestCase
 
 from substrapp.views.datasample import path_leaf
-from substrapp.ledger_utils import get_object_from_ledger
+from substrapp.ledger.api import get_object_from_ledger
 
 
 from ..assets import objective
@@ -21,7 +21,7 @@ class ViewTests(APITestCase):
 
     def test_utils_get_object_from_ledger(self):
 
-        with mock.patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with mock.patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = objective
             data = get_object_from_ledger('mychannel', '', 'queryObjective')
 

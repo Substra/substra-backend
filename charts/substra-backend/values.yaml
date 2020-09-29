@@ -160,6 +160,10 @@ peer:
   host: healthchain-peer.owkin.com
   port: 443
   mspID: OwkinPeerMSP
+  waitForEventTimeoutSeconds: 45
+  strategy:
+    invoke: ALL
+    query: SELF
 
 channels:
 - mychannel

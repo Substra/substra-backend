@@ -22,8 +22,9 @@ from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
                              get_dir_hash, get_local_folder_name, get_subtuple_directory, get_chainkeys_directory,
                              get_local_folder, timeit)
-from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
-                                    query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
+from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_tuple,
+                                  query_tuples, get_object_from_ledger)
+from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, ExceptionThread,
                                    get_or_create_local_volume, remove_image)
@@ -502,7 +503,7 @@ def prepare_task(channel_name, tuple_type):
 
 def prepare_channel_task(channel_name, tuple_type):
     data_owner = get_owner()
-    worker_queue = f"{settings.LEDGER['name']}.worker"
+    worker_queue = f"{settings.ORG_NAME}.worker"
     tuples = query_tuples(channel_name, tuple_type, data_owner)
 
     for subtuple in tuples:
@@ -523,7 +524,7 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
     from django_celery_results.models import TaskResult
 
     compute_plan_id = None
-    worker_queue = f"{settings.LEDGER['name']}.worker"
+    worker_queue = f"{settings.ORG_NAME}.worker"
     key = subtuple['key']
 
     # Early return if subtuple status is not todo
@@ -612,8 +613,8 @@ def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
         worker = self.request.hostname.split('@')[1]
         queue = self.request.delivery_info['routing_key']
     except Exception:
-        worker = f"{settings.LEDGER['name']}.worker"
-        queue = f"{settings.LEDGER['name']}"
+        worker = f"{settings.ORG_NAME}.worker"
+        queue = f"{settings.ORG_NAME}"
 
     result = {'worker': worker, 'queue': queue, 'compute_plan_id': compute_plan_id}
 

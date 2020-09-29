@@ -14,7 +14,7 @@ from substrapp.views import CompositeTraintupleViewSet
 
 from substrapp.utils import get_hash
 
-from substrapp.ledger_utils import LedgerError
+from substrapp.ledger.exceptions import LedgerError
 
 from ..assets import compositetraintuple
 from ..common import AuthenticatedClient
@@ -32,7 +32,6 @@ def get_compute_plan_id(assets):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class CompositeTraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
 

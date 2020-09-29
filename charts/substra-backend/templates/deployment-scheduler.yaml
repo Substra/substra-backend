@@ -62,10 +62,13 @@ spec:
           {{- end }}
           command: ["/bin/bash"]
           args: ["-c", "celery -A backend worker -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},scheduler,celery --hostname {{ .Values.organization.name }}.scheduler"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-ledger
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
-            - name: BACKEND_ORG
+            - name: ORG_NAME
               value: {{ .Values.organization.name }}
             - name: BACKEND_DB_NAME
               value: {{ .Values.postgresql.postgresqlDatabase }}
@@ -77,14 +80,9 @@ spec:
               value: {{ .Release.Name }}-postgresql
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-            - name: LEDGER_CONFIG_FILE
-              value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
             - name: PYTHONUNBUFFERED
               value: "1"
           volumeMounts:
-            - name: config
-              mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-              readOnly: true
             - name: user-cert
               mountPath: /var/hyperledger/msp/signcerts
             - name: user-key
@@ -102,9 +100,6 @@ spec:
           resources:
             {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
       volumes:
-      - name: config
-        configMap:
-          name: {{ include "substra.fullname" . }}-server
       - name: user-cert
         secret:
           secretName: {{ $.Values.secrets.user.cert }}

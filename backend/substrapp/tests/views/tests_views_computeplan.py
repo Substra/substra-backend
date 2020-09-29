@@ -8,7 +8,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.ledger_utils import LedgerError
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.serializers import LedgerComputePlanSerializer
 
 from ..common import AuthenticatedClient
@@ -19,8 +19,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class ComputePlanViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -129,7 +127,7 @@ class ComputePlanViewTests(APITestCase):
         compute_plan_id = cp['compute_plan_id']
         url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_id])
 
-        with mock.patch('substrapp.ledger.update_computeplan', return_value=cp):
+        with mock.patch('substrapp.ledger.assets.update_computeplan', return_value=cp):
             response = self.client.post(url, **self.extra)
             r = response.json()
             self.assertEqual(r, cp)

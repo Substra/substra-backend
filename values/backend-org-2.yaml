@@ -51,6 +51,7 @@ peer:
   host: network-org-2-peer-1-hlf-peer.org-2
   port: 7051
   mspID: MyOrg2MSP
+  waitForEventTimeoutSeconds: 120
 
 incomingNodes:
   - { name: MyOrg1MSP, secret: nodeSecret2w1 }
@@ -83,8 +84,6 @@ extraEnv:
     value: 'False'
   - name: BUILD_IMAGE
     value: 'True'
-  - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
-    value: '120'
 
 channels:
   - mychannel

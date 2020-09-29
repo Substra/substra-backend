@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-server-uwsgi
+data:
+  uwsgi.ini: |
+    [uwsgi]
+    module                        = backend.wsgi
+    env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
+    static-map                    = /static=/usr/src/app/backend/statics
+
+    master                        = 1
+    processes                     = {{ .Values.backend.uwsgiProcesses }}
+    threads                       = {{ .Values.backend.uwsgiThreads }}
+
+    http-socket                   = :{{ .Values.backend.service.port }}
+
+    need-app                      = true
+    socket-timeout                = 300
+    http-timeout                  = 300
+    http-keepalive                = 300
+    harakiri                      = 300
+    harakiri-verbose              = true
+    die-on-term                   = 1
+    vacuum                        = true
+    buffer-size                   = 65535
+
+    add-header                    = Connection: Keep-Alive
+    ignore-sigpipe                = true
+    ignore-write-errors           = true
+    disable-write-exception       = true

@@ -2,7 +2,6 @@ import asyncio
 import json
 import logging
 import multiprocessing
-import os
 import time
 import contextlib
 
@@ -19,13 +18,12 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 
 from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
 from substrapp.utils import get_owner
-from substrapp.ledger_utils import get_hfc
+from substrapp.ledger.connection import get_hfc, ledger_grpc_options
 
 from celery.result import AsyncResult
 
 
 logger = logging.getLogger(__name__)
-LEDGER = getattr(settings, 'LEDGER', None)
 
 
 @contextlib.contextmanager
@@ -47,7 +45,7 @@ def tuple_get_worker(event_type, asset):
 def on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset):
 
     owner = get_owner()
-    worker_queue = f"{LEDGER['name']}.worker"
+    worker_queue = f"{settings.ORG_NAME}.worker"
 
     key = asset['key']
     status = asset['status']
@@ -86,7 +84,7 @@ def on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, as
 
 def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
 
-    worker_queue = f"{LEDGER['name']}.worker"
+    worker_queue = f"{settings.ORG_NAME}.worker"
 
     key = asset['compute_plan_id']
 
@@ -137,35 +135,30 @@ def wait(channel_name):
         on_event(channel_name, cc_event, block_number, tx_id, tx_status)
 
     with get_event_loop() as loop:
-        chaincode_name = LEDGER['chaincode_name']
-        peer = LEDGER['peer']
-
-        peer_port = peer["port"][os.environ.get('BACKEND_PEER_PORT', 'external')]
 
         client = Client()
 
         channel = client.new_channel(channel_name)
 
-        target_peer = Peer(name=peer['name'])
-        requestor_config = LEDGER['client']
+        target_peer = Peer(name=settings.LEDGER_PEER_NAME)
 
         target_peer.init_with_bundle({
-            'url': f'{peer["host"]}:{peer_port}',
-            'grpcOptions': LEDGER['grpc_options'](peer["host"]),
-            'tlsCACerts': {'path': peer['tlsCACerts']},
-            'clientKey': {'path': peer['clientKey']},
-            'clientCert': {'path': peer['clientCert']},
+            'url': f'{settings.LEDGER_PEER_HOST}:{settings.LEDGER_PEER_PORT}',
+            'grpcOptions': ledger_grpc_options(settings.LEDGER_PEER_HOST),
+            'tlsCACerts': {'path': settings.LEDGER_PEER_TLS_CA_CERTS},
+            'clientKey': {'path': settings.LEDGER_PEER_TLS_CLIENT_KEY},
+            'clientCert': {'path': settings.LEDGER_PEER_TLS_CLIENT_CERT},
         })
 
         try:
             # can fail
             requestor = create_user(
-                name=requestor_config['name'] + '_events',
-                org=requestor_config['org'],
-                state_store=FileKeyValueStore(requestor_config['state_store']),
-                msp_id=requestor_config['msp_id'],
-                key_path=glob.glob(requestor_config['key_path'])[0],
-                cert_path=requestor_config['cert_path']
+                name=f'{settings.LEDGER_USER_NAME}_events',
+                org=settings.ORG_NAME,
+                state_store=FileKeyValueStore(settings.LEDGER_CLIENT_STATE_STORE),
+                msp_id=settings.LEDGER_MSP_ID,
+                key_path=glob.glob(settings.LEDGER_CLIENT_KEY_PATH)[0],
+                cert_path=settings.LEDGER_CLIENT_CERT_PATH
             )
         except BaseException:
             pass
@@ -189,7 +182,7 @@ def wait(channel_name):
                     stream = channel_event_hub.connect(start=0,
                                                        filtered=False)
 
-                    channel_event_hub.registerChaincodeEvent(chaincode_name,
+                    channel_event_hub.registerChaincodeEvent(settings.LEDGER_CHAINCODE_NAME,
                                                              'chaincode-updates',
                                                              onEvent=on_channel_event)
 
@@ -209,7 +202,7 @@ class EventsConfig(AppConfig):
         # It prevents potential issues when we launch the channel event hub in a subprocess.
         while True:
             try:
-                with get_hfc(channel_name) as (loop, client):
+                with get_hfc(channel_name) as (loop, client, user):
                     logger.info(f'Events: Connected to channel {channel_name}.')
             except Exception as e:
                 logger.exception(e)
@@ -222,5 +215,5 @@ class EventsConfig(AppConfig):
         p1.start()
 
     def ready(self):
-        for channel_name in LEDGER['channels']:
+        for channel_name in settings.LEDGER_CHANNELS:
             self.listen_to_channel(channel_name)
