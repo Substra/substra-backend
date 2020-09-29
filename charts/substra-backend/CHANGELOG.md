@@ -1,8 +1,12 @@
 # Changelog
 
-## 1.2.2
+## 1.4.0
 
-- Remove flower as it is not used.
+- Consolidate docker images into a unique `substrafoundation/substra-backend` image 
+
+## 1.3.1
+
+- Remove unused `flower` deployment/service
 
 ## 1.2.1
 
