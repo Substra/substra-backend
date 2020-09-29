@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.4.0
+
+- Consolidate docker images into a unique `substrafoundation/substra-backend` image 
+
+## 1.3.1
+
+- Remove unused `flower` deployment/service
+
 ## 1.2.1
 
 - Mount `/var/substra/local` in Read-Write mode in the worker pod
