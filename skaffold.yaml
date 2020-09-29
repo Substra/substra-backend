@@ -55,28 +55,6 @@ build:
           dest: /usr/src/app/users
           strip: backend/users/
 
-    - image: substrafoundation/flower
-      context: .
-      docker:
-        dockerfile: docker/flower/Dockerfile
-      sync:
-        manual:
-        - src: backend/libs/**/*
-          dest: /usr/src/app/libs
-          strip: backend/libs/
-        - src: backend/substrapp/**/*
-          dest: /usr/src/app/substrapp
-          strip: backend/substrapp/
-        - src: backend/backend/**/*
-          dest: /usr/src/app/backend
-          strip: backend/backend/
-        - src: backend/node/**/*
-          dest: /usr/src/app/node
-          strip: backend/node/
-        - src: backend/users/**/*
-          dest: /usr/src/app/users
-          strip: backend/users/
-
 deploy:
   statusCheckDeadlineSeconds: 600
   helm:
@@ -91,7 +69,6 @@ deploy:
           backend.image: substrafoundation/substra-backend
           celerybeat.image: substrafoundation/celery
           celeryworker.image: substrafoundation/celery
-          flower.image: substrafoundation/flower
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -103,7 +80,6 @@ deploy:
           backend.image: substrafoundation/substra-backend
           celerybeat.image: substrafoundation/celery
           celeryworker.image: substrafoundation/celery
-          flower.image: substrafoundation/flower
 
     flags:
       install: ["--create-namespace"]
