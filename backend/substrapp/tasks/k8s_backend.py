@@ -2,13 +2,14 @@ import kubernetes
 import requests
 import os
 import logging
-from django.conf import settings
-from substrapp.utils import timeit
-from substrapp.exceptions import PodErrorException, PodTimeoutException
 import time
+from django.conf import settings
+from substrapp.exceptions import PodErrorException, PodTimeoutException
+from substrapp.metrics import get_metrics_client
+
 
 logger = logging.getLogger(__name__)
-
+metrics_client = get_metrics_client()
 
 MEDIA_ROOT = os.getenv('MEDIA_ROOT')
 REGISTRY = os.getenv('REGISTRY')
@@ -194,7 +195,7 @@ def wait_for_pod_deletion(name):
         pass
 
 
-@timeit
+@metrics_client.timer('get_pod_logs')
 def get_pod_logs(name, container):
 
     kubernetes.config.load_incluster_config()
@@ -226,7 +227,7 @@ def container_format_log(container_name, container_logs):
         logger.info(log)
 
 
-@timeit
+@metrics_client.timer('k8s_build_image')
 def k8s_build_image(path, tag, rm):
     try:
         cache_index = k8s_acquire_cache_index()
@@ -380,7 +381,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
             )
 
 
-@timeit
+@metrics_client.timer('k8s_get_image')
 def k8s_get_image(image_name):
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
@@ -429,7 +430,7 @@ def k8s_remove_image(image_name):
         logger.exception(e)
 
 
-@timeit
+@metrics_client.timer('k8s_compute')
 def k8s_compute(image_name, job_name, command, volumes, task_label,
                 capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
 
@@ -523,7 +524,6 @@ def generate_volumes(volume_binds, name, subtuple_key):
     return volume_mounts, volumes
 
 
-@timeit
 def _k8s_compute(name, task_args, subtuple_key):
 
     kubernetes.config.load_incluster_config()
@@ -590,7 +590,7 @@ def _k8s_compute(name, task_args, subtuple_key):
     watch_pod(name)
 
 
-@timeit
+@metrics_client.timer('delete_compute_pod')
 def delete_compute_pod(name):
 
     if pod_exists(name):
