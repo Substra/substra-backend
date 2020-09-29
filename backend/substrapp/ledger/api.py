@@ -10,7 +10,10 @@ from substrapp.ledger.exceptions import (raise_for_status, LedgerForbidden, Ledg
                                          LedgerInvalidResponse, LedgerUnavailable, LedgerPhantomReadConflictError,
                                          LedgerEndorsementPolicyFailure, LedgerStatusError, LedgerError)
 
+from substrapp.metrics import get_metrics_client
+
 logger = logging.getLogger(__name__)
+metrics_client = get_metrics_client()
 
 
 def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
@@ -148,12 +151,25 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
         except json.decoder.JSONDecodeError:
             raise LedgerInvalidResponse(response)
 
+        # Set the ledger inside timer as a metric
+        if '__metrics__' in response:
+            duration = extract_metrics_duration(response)
+            if duration:
+                logger.debug(f'smartcontract {fcn} duration: {duration}ms')
+                metrics_client.timing(f'smartcontract_{fcn}', duration)
+
         # Raise errors if status is not ok
         raise_for_status(response)
 
         return response
 
+def extract_metrics_duration(response):
+    metrics = response.get('__metrics__')
+    if not metrics:
+        return None
+    return metrics.get('duration')
 
+@metrics_client.timer('call_ledger')
 def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
     """Call ledger and log each request."""
     ts = time.time()
@@ -167,6 +183,7 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
         # add a log even if the function raises an exception
         te = time.time()
         elaps = (te - ts) * 1000
+        metrics_client.timing(f'call_ledger_{fcn}', elaps)
         if error is None:
             logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms")
         else:
@@ -272,11 +289,11 @@ def _update_tuple_status(channel_name, tuple_type, tuple_key, status, extra_kwar
 
     update_ledger(channel_name, fcn=invoke_fcn, args=invoke_args, sync=True)
 
-
+@metrics_client.timer('log_start_tuple')
 def log_start_tuple(channel_name, tuple_type, tuple_key):
     _update_tuple_status(channel_name, tuple_type, tuple_key, 'doing')
 
-
+@metrics_client.timer('log_fail_tuple')
 def log_fail_tuple(channel_name, tuple_type, tuple_key, err_msg):
     err_msg = str(err_msg).replace('"', "'").replace('\\', "").replace('\\n', "")[:200]
     extra_kwargs = {
@@ -284,7 +301,7 @@ def log_fail_tuple(channel_name, tuple_type, tuple_key, err_msg):
     }
     _update_tuple_status(channel_name, tuple_type, tuple_key, 'failed', extra_kwargs=extra_kwargs)
 
-
+@metrics_client.timer('log_success_tuple')
 def log_success_tuple(channel_name, tuple_type, tuple_key, res):
     extra_kwargs = {
         'log': '',

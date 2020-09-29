@@ -17,6 +17,7 @@ uwsgi==2.0.18
 zxcvbn==4.4.28
 boto3==1.11.9
 fabric-sdk-py==1.0.0
+statsd==3.3.0
 # dev-mode
 watchdog==0.10.2
 argh==0.26.2
