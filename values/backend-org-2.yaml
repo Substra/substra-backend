@@ -85,6 +85,14 @@ extraEnv:
     value: 'True'
   - name: 'LEDGER_WAIT_FOR_EVENT_TIMEOUT'
     value: '120'
+  - name: STATSD_ENABLED
+    value: "false"
+  - name: STATSD_HOST
+    value: "graphite-0.graphite.monitoring.svc.cluster.local"
+  - name: STATSD_PORT
+    value: "8125"
+  - name: STATSD_PREFIX
+    value: substra-backend-org-1
 
 channels:
   - mychannel

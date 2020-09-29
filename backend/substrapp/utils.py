@@ -290,28 +290,3 @@ def get_chainkeys_directory(compute_plan_id):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
                      compute_plan_id, 'chainkeys')
 
-
-def timeit(function):
-    def timed(*args, **kw):
-        ts = time.time()
-        exception = None
-
-        try:
-            result = function(*args, **kw)
-        except Exception as ex:
-            exception = ex
-
-        elaps = (time.time() - ts) * 1000
-
-        if exception is None:
-            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms')
-        else:
-            # Intentionally use logger.info (and not logger.error)
-            # Leave the responsibility of logging errors to the function caller.
-            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms (with error)')
-
-        if exception is not None:
-            raise exception
-        return result
-
-    return timed

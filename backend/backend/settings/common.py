@@ -275,3 +275,10 @@ LOGGING = {
         },
     }
 }
+
+STATSD_ENABLED = to_bool(os.environ.get('STATSD_ENABLED', False))
+STATSD_HOST = os.environ.get('STATSD_HOST', 'localhost')
+STATSD_PORT = int(os.environ.get('STATSD_PORT', 8125))
+STATSD_PREFIX = os.environ.get('STATSD_PREFIX', 'substra-backend')
+STATSD_MAXUDPSIZE = 512
+STATSD_IPV6 = 0
