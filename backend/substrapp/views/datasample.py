@@ -18,7 +18,8 @@ from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializ
 from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
     get_success_create_code, get_channel_name, data_to_data_response
-from substrapp.ledger_utils import query_ledger, LedgerError, LedgerTimeout, LedgerConflict
+from substrapp.ledger.api import query_ledger
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 
 logger = logging.getLogger(__name__)
 
@@ -233,7 +234,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+        if settings.LEDGER_SYNC_ENABLED:
             st = status.HTTP_200_OK
         else:
             st = status.HTTP_202_ACCEPTED

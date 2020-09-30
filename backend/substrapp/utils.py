@@ -20,7 +20,6 @@ from rest_framework import status
 
 logger = logging.getLogger(__name__)
 
-ORG_NAME = getattr(settings, 'ORG_NAME')
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
 
@@ -95,8 +94,7 @@ def get_hash(file, key=None):
 
 
 def get_owner():
-    ledger_settings = getattr(settings, 'LEDGER')
-    return ledger_settings['client']['msp_id']
+    return settings.LEDGER_MSP_ID
 
 
 def compute_hash(bytes, key=None):
@@ -274,7 +272,7 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_hash, conte
 
 
 def get_local_folder_name(compute_plan_id):
-    return f'local-{compute_plan_id}-{ORG_NAME}'
+    return f'local-{compute_plan_id}-{settings.ORG_NAME}'
 
 
 def get_local_folder(compute_plan_id):

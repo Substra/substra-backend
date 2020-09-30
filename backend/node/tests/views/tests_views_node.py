@@ -14,7 +14,6 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class ModelViewTests(APITestCase):
     client_class = AuthenticatedClient
 

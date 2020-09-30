@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework.fields import CharField, DictField
 
-from substrapp import ledger
+from substrapp.ledger import assets
 
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
@@ -44,4 +44,4 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
 
     def create(self, channel_name, validated_data):
         args = self.get_args(validated_data)
-        return ledger.create_traintuple(channel_name, args)
+        return assets.create_traintuple(channel_name, args)

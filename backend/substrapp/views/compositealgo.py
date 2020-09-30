@@ -11,7 +11,8 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import CompositeAlgo
 from substrapp.serializers import LedgerCompositeAlgoSerializer, CompositeAlgoSerializer
 from substrapp.utils import get_hash
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
+from substrapp.ledger.api import query_ledger, get_object_from_ledger
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset, node_has_process_permission, get_channel_name,

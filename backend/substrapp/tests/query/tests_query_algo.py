@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import Objective, Algo
 from substrapp.serializers import LedgerAlgoSerializer
 from substrapp.utils import get_hash, compute_hash
-from substrapp.ledger_utils import LedgerError
+from substrapp.ledger.exceptions import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
     get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
@@ -25,8 +25,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-@override_settings(LEDGER_SYNC_ENABLED=True)
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -97,7 +95,7 @@ class AlgoQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='multipart', **extra)
@@ -122,7 +120,7 @@ class AlgoQueryTests(APITestCase):
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger:
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = {
                 'message': 'Algo added in local db waiting for validation.'
                            'The substra network has been notified for adding this Algo'

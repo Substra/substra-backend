@@ -19,8 +19,6 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class TraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -58,7 +56,7 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_key = 'traintuple_key'.encode('utf-8').hex()
@@ -97,7 +95,7 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
             raw_key = 'traintuple_key'.encode('utf-8').hex()
@@ -134,7 +132,6 @@ class TraintupleQueryTests(APITestCase):
 
 
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class TesttupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -169,7 +166,7 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_key = 'testtuple_key'.encode('utf-8').hex()
@@ -205,7 +202,7 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.invoke_ledger') as minvoke_ledger, \
+        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
             raw_key = 'testtuple_key'.encode('utf-8').hex()

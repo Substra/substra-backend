@@ -6,7 +6,6 @@ from .deps.org import *
 from .deps.restframework import *
 
 DEBUG = True
-# LEDGER_CALL_RETRY = False  # uncomment to overwrite the ledger setting value
 
 # Enable Browsable API
 REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] += (

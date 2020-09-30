@@ -9,8 +9,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
 
 from django.conf import settings
 
-LEDGER = getattr(settings, 'LEDGER', None)
-
 app = Celery('backend')
 
 # Using a string here means the worker doesn't have to serialize
@@ -43,7 +41,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
 
-    for channel_name in LEDGER['channels']:
+    for channel_name in settings.LEDGER_CHANNELS:
         sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler', args=[channel_name],
                                  name='query Traintuples to prepare train task on todo traintuples')
         sender.add_periodic_task(period, prepare_testing_task.s(), queue='scheduler', args=[channel_name],

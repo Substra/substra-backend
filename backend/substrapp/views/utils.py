@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
 from node.authentication import NodeUser
-from substrapp.ledger_utils import get_object_from_ledger, LedgerError
+from substrapp.ledger.api import get_object_from_ledger
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
 
@@ -202,7 +203,7 @@ class ValidationException(Exception):
 
 
 def get_success_create_code():
-    if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+    if settings.LEDGER_SYNC_ENABLED:
         return status.HTTP_201_CREATED
     else:
         return status.HTTP_202_ACCEPTED

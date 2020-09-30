@@ -1,8 +1,12 @@
 # Changelog
 
+## 1.5.0
+
+- Refactor Hyperledger Fabric settings. Introduce `substra-backend-ledger` ConfigMap.
+
 ## 1.4.0
 
-- Consolidate docker images into a unique `substrafoundation/substra-backend` image 
+- Consolidate docker images into a unique `substrafoundation/substra-backend` image
 
 ## 1.3.1
 

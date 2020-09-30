@@ -36,4 +36,4 @@ class LedgerTestTupleSerializer(serializers.Serializer):
 
     def create(self, channel_name, validated_data):
         args = self.get_args(validated_data)
-        return ledger.create_testtuple(channel_name, args)
+        return ledger.assets.create_testtuple(channel_name, args)

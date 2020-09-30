@@ -10,7 +10,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from node.authentication import NodeUser
 from substrapp.models import Model
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError
+from substrapp.ledger.api import query_ledger, get_object_from_ledger
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin, get_channel_name
 from substrapp.views.filters_utils import filter_list
 

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-ledger
+data:
+  LEDGER_CHANNELS: {{ .Values.channels | toJson | quote }}
+  LEDGER_MSP_ID: {{ .Values.peer.mspID }}
+  LEDGER_USER_NAME: {{ .Values.user.name }}
+  LEDGER_CHAINCODE_NAME: {{ .Values.chaincode.name }}
+  LEDGER_PEER_HOST: {{ .Values.peer.host }}
+  LEDGER_PEER_PORT: {{ .Values.peer.port | quote }}
+  LEDGER_WAIT_FOR_EVENT_TIMEOUT_SECONDS: {{ .Values.peer.waitForEventTimeoutSeconds | quote }}
+  LEDGER_INVOKE_STRATEGY: {{ .Values.peer.strategy.invoke }}
+  LEDGER_QUERY_STRATEGY: {{ .Values.peer.strategy.query }}
+  LEDGER_GRPC_KEEPALIVE_TIME_MS: {{ .Values.backend.grpc.keepalive.timeMs | quote }}
+  LEDGER_GRPC_HTTP2_MIN_TIME_BETWEEN_PINGS_MS: {{ .Values.backend.grpc.keepalive.timeMs | quote }}

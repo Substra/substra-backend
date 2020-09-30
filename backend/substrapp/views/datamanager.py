@@ -12,7 +12,8 @@ from substrapp import ledger
 from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
-from substrapp.ledger_utils import query_ledger, get_object_from_ledger, LedgerError, LedgerTimeout, LedgerConflict
+from substrapp.ledger.api import query_ledger, get_object_from_ledger
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException,
                                    get_remote_asset, node_has_process_permission, get_channel_name,
@@ -237,13 +238,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'objective_key': objective_key,
         }
 
-        if getattr(settings, 'LEDGER_SYNC_ENABLED'):
+        if settings.LEDGER_SYNC_ENABLED:
             st = status.HTTP_200_OK
         else:
             st = status.HTTP_202_ACCEPTED
 
         try:
-            data = ledger.update_datamanager(get_channel_name(request), args)
+            data = ledger.assets.update_datamanager(get_channel_name(request), args)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 

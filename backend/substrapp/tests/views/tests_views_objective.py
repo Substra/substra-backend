@@ -15,7 +15,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerObjectiveSerializer
 
-from substrapp.ledger_utils import LedgerError
+from substrapp.ledger.exceptions import LedgerError
 
 from substrapp.utils import compute_hash, get_hash
 
@@ -38,9 +38,7 @@ def zip_folder(path, destination):
 
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 @override_settings(DEFAULT_DOMAIN='https://localhost')
-@override_settings(LEDGER_SYNC_ENABLED=True)
 class ObjectiveViewTests(APITestCase):
     client_class = AuthenticatedClient
 

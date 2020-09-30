@@ -48,4 +48,4 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.create_objective(channel_name, args, instance.pkhash)
+        return ledger.assets.create_objective(channel_name, args, instance.pkhash)

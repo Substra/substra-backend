@@ -2,7 +2,8 @@ from rest_framework import status, mixins
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.ledger_utils import query_ledger, LedgerError
+from substrapp.ledger.api import query_ledger
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.utils import get_owner
 from substrapp.views.utils import get_channel_name
 

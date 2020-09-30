@@ -47,8 +47,11 @@ spec:
         {{- else }}
         args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
         {{- end }}
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-ledger
         env:
-          - name: BACKEND_ORG
+          - name: ORG_NAME
             value: {{ .Values.organization.name }}
           - name: BACKEND_DB_NAME
             value: {{ .Values.postgresql.postgresqlDatabase }}
@@ -64,10 +67,6 @@ spec:
             value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
           - name: BACKEND_DEFAULT_PORT
             value: {{ .Values.backend.service.port | quote}}
-          - name: BACKEND_PEER_PORT
-            value: "internal"
-          - name: LEDGER_CONFIG_FILE
-            value: /conf/{{ .Values.organization.name }}/substra-backend/conf.json
           - name: MEDIA_ROOT
             value: /var/substra/medias/
           - name: PYTHONUNBUFFERED
@@ -99,9 +98,6 @@ spec:
             mountPath: /var/substra/servermedias
           - name: statics
             mountPath: /usr/src/app/backend/statics
-          - name: config
-            mountPath: /conf/{{ .Values.organization.name }}/substra-backend
-            readOnly: true
           - name: uwsgi
             mountPath: /usr/src/app/uwsgi.ini
             subPath: uwsgi.ini
@@ -183,10 +179,13 @@ spec:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           runAsGroup: {{ .Values.securityContext.runAsGroup }}
         {{- end }}
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-ledger
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.backend.settings }}
-        - name: BACKEND_ORG
+        - name: ORG_NAME
           value: {{ .Values.organization.name }}
         - name: BACKEND_DB_NAME
           value: {{ .Values.postgresql.postgresqlDatabase }}
@@ -207,7 +206,7 @@ spec:
         env:
           - name: DJANGO_SETTINGS_MODULE
             value: backend.settings.prod
-          - name: BACKEND_ORG
+          - name: ORG_NAME
             value: {{ .Values.organization.name }}
         volumeMounts:
           - name: statics
@@ -223,9 +222,6 @@ spec:
           claimName: {{ include "substra.fullname" $ }}-servermedias
       - name: statics
         emptyDir: {}
-      - name: config
-        configMap:
-          name: {{ include "substra.fullname" . }}-server
       - name: uwsgi
         configMap:
           name: {{ include "substra.fullname" . }}-server-uwsgi

@@ -9,7 +9,7 @@ from rest_framework.test import APITestCase
 from django_celery_results.models import TaskResult
 
 from substrapp.models import DataSample
-from substrapp.ledger_utils import LedgerStatusError
+from substrapp.ledger.api import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
@@ -31,7 +31,6 @@ CHANNEL = 'mychannel'
 # APITestCase
 @override_settings(MEDIA_ROOT=MEDIA_ROOT)
 @override_settings(CELERY_WORKER_CONCURRENCY=1)
-@override_settings(LEDGER={'name': 'test-org', 'peer': 'test-peer'})
 class TasksTests(APITestCase):
 
     def setUp(self):
@@ -341,10 +340,6 @@ class TasksTests(APITestCase):
 
         class FakeSettings(object):
             def __init__(self):
-                self.LEDGER = {'signcert': 'signcert',
-                               'org': 'owkin',
-                               'peer': 'peer'}
-
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple = [{'key': 'subtuple_test', 'compute_plan_id': 'flkey', 'status': 'todo'}]
@@ -398,10 +393,6 @@ class TasksTests(APITestCase):
 
         class FakeSettings(object):
             def __init__(self):
-                self.LEDGER = {'signcert': 'signcert',
-                               'org': 'owkin',
-                               'peer': 'peer'}
-
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
@@ -474,10 +465,6 @@ class TasksTests(APITestCase):
 
         class FakeSettings(object):
             def __init__(self):
-                self.LEDGER = {'signcert': 'signcert',
-                               'org': 'owkin',
-                               'peer': 'peer'}
-
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple = [{

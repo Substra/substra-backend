@@ -4,9 +4,9 @@ from mock import patch
 
 from substrapp.utils import raise_if_path_traversal, uncompress_path
 
-from substrapp.ledger_utils import LedgerNotFound, LedgerInvalidResponse
+from substrapp.ledger.exceptions import LedgerNotFound, LedgerInvalidResponse
 
-from substrapp.ledger_utils import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
+from substrapp.ledger.api import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
     log_success_tuple, query_tuples
 
 import os
@@ -52,39 +52,39 @@ class MiscTests(TestCase):
     """Misc tests"""
 
     def test_get_object_from_ledger(self):
-        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.side_effect = LedgerNotFound('Not Found')
             self.assertRaises(LedgerNotFound, get_object_from_ledger, CHANNEL, 'pk', 'fake_query')
 
-        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.side_effect = LedgerInvalidResponse('Bad Response')
             self.assertRaises(LedgerInvalidResponse, get_object_from_ledger, CHANNEL, 'pk', 'fake_query')
 
-        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = {'key': 'pk'}
             data = get_object_from_ledger(CHANNEL, 'pk', 'good_query')
             self.assertEqual(data['key'], 'pk')
 
     def test_log_fail_tuple(self):
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             log_fail_tuple(CHANNEL, 'traintuple', 'pk', 'error_msg')
 
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             log_fail_tuple(CHANNEL, 'testtuple', 'pk', 'error_msg')
 
     def test_log_start_tuple(self):
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             log_start_tuple(CHANNEL, 'traintuple', 'pk')
 
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             log_start_tuple(CHANNEL, 'testtuple', 'pk')
 
     def test_log_success_tuple(self):
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             res = {
                 'end_model_file_hash': 'hash',
@@ -93,7 +93,7 @@ class MiscTests(TestCase):
             }
             log_success_tuple(CHANNEL, 'traintuple', 'pk', res)
 
-        with patch('substrapp.ledger_utils.update_ledger') as mupdate_ledger:
+        with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             res = {
                 'global_perf': '0.99',
@@ -102,11 +102,11 @@ class MiscTests(TestCase):
             log_success_tuple(CHANNEL, 'testtuple', 'pk', res)
 
     def test_query_tuples(self):
-        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = None
             query_tuples(CHANNEL, 'traintuple', 'data_owner')
 
-        with patch('substrapp.ledger_utils.query_ledger') as mquery_ledger:
+        with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = None
             query_tuples(CHANNEL, 'testtuple', 'data_owner')
 
