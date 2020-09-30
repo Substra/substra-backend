@@ -230,11 +230,7 @@ LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
 # Importing the module early ensures these steps happen in order:
 # 1. hfc.fabric is imported and all the associated loggers are configured  (log level, handler, etc...)
 # 2. Loggers are re-configured with the `LOGGING` statement, overriding the configuration from step 1
-try:
-    import hfc.fabric
-except:
-    pass
-
+import hfc.fabric
 
 LOGGING = {
     'version': 1,
