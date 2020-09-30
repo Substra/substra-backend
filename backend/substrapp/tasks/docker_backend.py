@@ -1,6 +1,5 @@
 import docker
 import GPUtil
-from substrapp.utils import timeit
 
 import logging
 logger = logging.getLogger(__name__)
@@ -58,7 +57,6 @@ def docker_remove_image(image_name):
         logger.exception(e)
 
 
-@timeit
 def docker_compute(image_name, job_name, command, volumes, task_label,
                    capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
 
