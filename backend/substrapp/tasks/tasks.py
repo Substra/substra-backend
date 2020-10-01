@@ -353,6 +353,7 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
     else:
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
 
+
 @metrics_client.timer('prepare_models')
 def prepare_models(channel_name, directory, tuple_type, tuple_):
     """Prepare models for tuple execution.
