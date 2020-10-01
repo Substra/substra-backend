@@ -22,8 +22,9 @@ from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
                              get_dir_hash, get_local_folder_name, get_subtuple_directory, get_chainkeys_directory,
                              get_local_folder)
-from substrapp.ledger_utils import (log_start_tuple, log_success_tuple, log_fail_tuple,
-                                    query_tuples, LedgerError, LedgerStatusError, get_object_from_ledger)
+from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_tuple,
+                                  query_tuples, get_object_from_ledger)
+from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, ExceptionThread,
                                    get_or_create_local_volume, remove_image)
@@ -351,7 +352,6 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
 
     else:
         raise TasksError(f"Testtuple from type '{traintuple_type}' not supported")
-
 
 @metrics_client.timer('prepare_models')
 def prepare_models(channel_name, directory, tuple_type, tuple_):
