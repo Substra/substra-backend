@@ -31,8 +31,8 @@ spec:
               ./manage.py migrate
 
               ## Users
-              while read user_password; do
-                ./manage.py add_user $user_password
+              while read user_password_channel; do
+                ./manage.py add_user $user_password_channel
               done < /accounts/users
 
               ## IncomingNode
