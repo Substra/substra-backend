@@ -25,11 +25,11 @@ from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_c
 from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                   query_tuples, get_object_from_ledger)
 from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
-from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
+from worker.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, ExceptionThread,
                                    get_or_create_local_volume, remove_image)
 
-from substrapp.tasks.exception_handler import compute_error_code
+from worker.exception_handler import compute_error_code
 
 logger = logging.getLogger(__name__)
 
@@ -545,7 +545,7 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
     if 'compute_plan_id' in subtuple and subtuple['compute_plan_id']:
         compute_plan_id = subtuple['compute_plan_id']
         flresults = TaskResult.objects.filter(
-            task_name='substrapp.tasks.tasks.compute_task',
+            task_name='worker.tasks.compute_task',
             result__icontains=f'"compute_plan_id": "{compute_plan_id}"')
 
         if flresults and flresults.count() > 0:

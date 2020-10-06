@@ -11,6 +11,7 @@ RUN pip3 install --upgrade pip && pip3 install --prefix /usr/local -r requiremen
 COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
 COPY ./backend/substrapp /usr/src/app/substrapp
+COPY ./backend/worker /usr/src/app/worker
 COPY ./backend/events /usr/src/app/events
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/node /usr/src/app/node

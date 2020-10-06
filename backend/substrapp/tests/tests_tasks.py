@@ -12,7 +12,7 @@ from substrapp.models import DataSample
 from substrapp.ledger.api import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
 from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
-from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
+from worker.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
 
@@ -61,8 +61,8 @@ class TasksTests(APITestCase):
         subtuple_key = 'test_owkin'
         subtuple = {'key': subtuple_key, 'in_models': None}
 
-        with mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
-                mock.patch('substrapp.tasks.tasks.ComputeTask.retry') as mretry:
+        with mock.patch('worker.tasks.do_task') as mdo_task,\
+                mock.patch('worker.tasks.ComputeTask.retry') as mretry:
 
             mdo_task.side_effect = Exception('An exeption that should trigger retry mechanism')
 
@@ -116,7 +116,7 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key,
                     'algo': 'testalgo'}
 
-        with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
+        with mock.patch('worker.tasks.get_hash') as mget_hash:
             mget_hash.return_value = subtuple_key
             uncompress_content(algo_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
@@ -139,7 +139,7 @@ class TasksTests(APITestCase):
         subtuple_key = 'testkey'
         subtuple = {'key': subtuple_key, 'algo': 'testalgo'}
 
-        with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
+        with mock.patch('worker.tasks.get_hash') as mget_hash:
             with open(zippath, 'rb') as content:
                 mget_hash.return_value = get_hash(zippath)
                 uncompress_content(content.read(), os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
@@ -289,9 +289,9 @@ class TasksTests(APITestCase):
             }
         }
 
-        with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file,\
-                mock.patch('substrapp.tasks.utils.get_owner') as get_owner,\
-                mock.patch('substrapp.tasks.tasks.get_object_from_ledger') as get_object_from_ledger:
+        with mock.patch('worker.utils.get_remote_file_content') as mget_remote_file,\
+                mock.patch('worker.utils.get_owner') as get_owner,\
+                mock.patch('worker.tasks.get_object_from_ledger') as get_object_from_ledger:
             mget_remote_file.return_value = algo_content
             get_owner.return_value = 'external_node_id'
             get_object_from_ledger.return_value = assets.algo[0]
@@ -303,9 +303,9 @@ class TasksTests(APITestCase):
         metrics_content = self.script.read().encode('utf-8')
         objective_hash = get_hash(self.script)
 
-        with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
-                mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \
-                mock.patch('substrapp.tasks.utils.authenticate_worker'):
+        with mock.patch('worker.utils.get_remote_file_content') as mget_remote_file, \
+                mock.patch('worker.tasks.get_object_from_ledger'), \
+                mock.patch('worker.utils.authenticate_worker'):
 
             mget_remote_file.return_value = metrics_content
 
@@ -315,7 +315,7 @@ class TasksTests(APITestCase):
             self.assertEqual(objective, metrics_content)
 
     def test_build_subtuple_folders(self):
-        with mock.patch('substrapp.tasks.tasks.getattr') as getattr:
+        with mock.patch('worker.tasks.getattr') as getattr:
             getattr.return_value = self.subtuple_path
 
             subtuple_key = 'test1234'
@@ -344,21 +344,21 @@ class TasksTests(APITestCase):
 
         subtuple = [{'key': 'subtuple_test', 'compute_plan_id': 'flkey', 'status': 'todo'}]
 
-        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
+        with mock.patch('worker.tasks.settings') as msettings, \
                 mock.patch.object(TaskResult.objects, 'filter') as mtaskresult, \
-                mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
-                mock.patch('substrapp.tasks.tasks.query_tuples') as mquery_tuples, \
-                mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
-                mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
-                mock.patch('substrapp.tasks.tasks.prepare_models'), \
-                mock.patch('substrapp.tasks.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
-                mock.patch('substrapp.tasks.tasks.prepare_opener') as mprepare_opener, \
-                mock.patch('substrapp.tasks.tasks.prepare_data_sample') as mprepare_data_sample, \
-                mock.patch('substrapp.tasks.tasks.uncompress_content'), \
-                mock.patch('substrapp.tasks.tasks.json.loads') as mjson_loads, \
-                mock.patch('substrapp.tasks.tasks.AsyncResult') as masyncres, \
-                mock.patch('substrapp.tasks.tasks.get_owner') as get_owner,\
-                mock.patch('substrapp.tasks.tasks.find_training_step_tuple_from_key') as gettuple:
+                mock.patch('worker.tasks.get_hash') as mget_hash, \
+                mock.patch('worker.tasks.query_tuples') as mquery_tuples, \
+                mock.patch('worker.tasks.get_objective') as mget_objective, \
+                mock.patch('worker.tasks.get_algo') as mget_algo, \
+                mock.patch('worker.tasks.prepare_models'), \
+                mock.patch('worker.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
+                mock.patch('worker.tasks.prepare_opener') as mprepare_opener, \
+                mock.patch('worker.tasks.prepare_data_sample') as mprepare_data_sample, \
+                mock.patch('worker.tasks.uncompress_content'), \
+                mock.patch('worker.tasks.json.loads') as mjson_loads, \
+                mock.patch('worker.tasks.AsyncResult') as masyncres, \
+                mock.patch('worker.tasks.get_owner') as get_owner,\
+                mock.patch('worker.tasks.find_training_step_tuple_from_key') as gettuple:
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'
@@ -379,12 +379,12 @@ class TasksTests(APITestCase):
 
             mjson_loads.return_value = {'worker': 'worker'}
 
-            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
+            with mock.patch('worker.tasks.log_start_tuple') as mlog_start_tuple:
                 mlog_start_tuple.side_effect = LedgerStatusError('Bad Response')
                 prepare_task(CHANNEL, 'traintuple')
 
-            with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple, \
-                    mock.patch('substrapp.tasks.tasks.compute_task.apply_async') as mapply_async:
+            with mock.patch('worker.tasks.log_start_tuple') as mlog_start_tuple, \
+                    mock.patch('worker.tasks.compute_task.apply_async') as mapply_async:
                 mlog_start_tuple.return_value = 'data', 201
                 mapply_async.return_value = 'do_task'
                 prepare_task(CHANNEL, 'traintuple')
@@ -399,8 +399,8 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'hash': 'myhash'}}
         subtuple_directory = build_subtuple_folders(subtuple)
 
-        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.tasks.getattr') as mgetattr:
+        with mock.patch('worker.tasks.settings') as msettings, \
+                mock.patch('worker.tasks.getattr') as mgetattr:
             msettings.return_value = FakeSettings()
             mgetattr.return_value = self.subtuple_path
 
@@ -415,7 +415,7 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'output_model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job:
+            with mock.patch('worker.tasks.compute_job') as mcompute_job:
                 mcompute_job.return_value = 'DONE'
                 do_task(CHANNEL, subtuple, 'traintuple')
 
@@ -425,7 +425,7 @@ class TasksTests(APITestCase):
         subtuple = {'key': subtuple_key, 'in_models': None}
         subtuple_directory = build_subtuple_folders(subtuple)
 
-        with mock.patch('substrapp.tasks.tasks.log_start_tuple') as mlog_start_tuple:
+        with mock.patch('worker.tasks.log_start_tuple') as mlog_start_tuple:
             mlog_start_tuple.return_value = 'data', 200
 
             for name in ['opener', 'metrics']:
@@ -439,10 +439,10 @@ class TasksTests(APITestCase):
             with open(os.path.join(subtuple_directory, 'model/model'), 'w') as f:
                 f.write("MODEL")
 
-            with mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job, \
-                    mock.patch('substrapp.tasks.tasks.do_task') as mdo_task,\
-                    mock.patch('substrapp.tasks.tasks.prepare_materials') as mprepare_materials, \
-                    mock.patch('substrapp.tasks.tasks.log_success_tuple') as mlog_success_tuple:
+            with mock.patch('worker.tasks.compute_job') as mcompute_job, \
+                    mock.patch('worker.tasks.do_task') as mdo_task,\
+                    mock.patch('worker.tasks.prepare_materials') as mprepare_materials, \
+                    mock.patch('worker.tasks.log_success_tuple') as mlog_success_tuple:
 
                 mcompute_job.return_value = 'DONE'
                 mprepare_materials.return_value = 'DONE'
@@ -454,7 +454,7 @@ class TasksTests(APITestCase):
                 mlog_success_tuple.return_value = 'data', 404
                 compute_task(CHANNEL, 'traintuple', subtuple, None)
 
-                with mock.patch('substrapp.tasks.tasks.log_fail_tuple') as mlog_fail_tuple:
+                with mock.patch('worker.tasks.log_fail_tuple') as mlog_fail_tuple:
                     mdo_task.side_effect = Exception("Test")
                     mlog_fail_tuple.return_value = 'data', 404
                     with self.assertRaises(Exception) as exc:
@@ -474,16 +474,16 @@ class TasksTests(APITestCase):
             'traintuple_type': 'traintuple'
         }]
 
-        with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
-                mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash, \
-                mock.patch('substrapp.tasks.tasks.query_tuples') as mquery_tuples, \
-                mock.patch('substrapp.tasks.tasks.get_objective') as mget_objective, \
-                mock.patch('substrapp.tasks.tasks.get_algo') as mget_algo, \
-                mock.patch('substrapp.tasks.tasks.prepare_models'), \
-                mock.patch('substrapp.tasks.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
-                mock.patch('substrapp.tasks.tasks.prepare_opener'), \
-                mock.patch('substrapp.tasks.tasks.prepare_data_sample'), \
-                mock.patch('substrapp.tasks.tasks.uncompress_content'):
+        with mock.patch('worker.tasks.settings') as msettings, \
+                mock.patch('worker.tasks.get_hash') as mget_hash, \
+                mock.patch('worker.tasks.query_tuples') as mquery_tuples, \
+                mock.patch('worker.tasks.get_objective') as mget_objective, \
+                mock.patch('worker.tasks.get_algo') as mget_algo, \
+                mock.patch('worker.tasks.prepare_models'), \
+                mock.patch('worker.tasks.build_subtuple_folders') as mbuild_subtuple_folders, \
+                mock.patch('worker.tasks.prepare_opener'), \
+                mock.patch('worker.tasks.prepare_data_sample'), \
+                mock.patch('worker.tasks.uncompress_content'):
 
             msettings.return_value = FakeSettings()
             mget_hash.return_value = 'owkinhash'

@@ -16,7 +16,7 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
+from worker.tasks import prepare_tuple, on_compute_plan
 from substrapp.utils import get_owner
 from substrapp.ledger.connection import get_hfc, ledger_grpc_options
 
