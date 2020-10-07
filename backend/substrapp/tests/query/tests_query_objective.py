@@ -13,7 +13,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, DataManager
-from substrapp.utils import compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
     AuthenticatedClient, get_sample_objective_metadata

@@ -17,8 +17,6 @@ from substrapp.serializers import LedgerObjectiveSerializer
 
 from substrapp.ledger.exceptions import LedgerError
 
-from substrapp.utils import compute_hash
-
 from ..common import get_sample_objective, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, model
 
