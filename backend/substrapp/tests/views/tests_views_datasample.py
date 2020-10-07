@@ -15,11 +15,12 @@ from rest_framework.test import APITestCase
 from substrapp.serializers import LedgerDataSampleSerializer
 
 from substrapp.views.datasample import path_leaf
-from substrapp.utils import get_hash, uncompress_content
+from substrapp.utils import uncompress_content
 
 from substrapp.models import DataManager
 
 from ..common import get_sample_datamanager, FakeFilterDataManager, AuthenticatedClient
+from ..assets import objective
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -63,15 +64,12 @@ class DataSampleViewTests(APITestCase):
         key1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
         key2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
-
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
             'json': json.dumps({
-                'data_manager_keys': data_manager_keys,
+                'data_manager_keys': [objective[0]['key']],
                 'test_only': False
             })
         }
@@ -98,13 +96,10 @@ class DataSampleViewTests(APITestCase):
         # dir hash
         key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
-
         data = {
             'file': open(data_path, 'rb'),
             'json': json.dumps({
-                'data_manager_keys': data_manager_keys,
+                'data_manager_keys': [objective[0]['key']],
                 'test_only': False
             })
         }
@@ -136,12 +131,9 @@ class DataSampleViewTests(APITestCase):
         # dir hash
         key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
-
         data = {
             'path': data_parent_path,
-            'data_manager_keys': data_manager_keys,
+            'data_manager_keys': [objective[0]['key']],
             'test_only': False,
             'multiple': True,
         }
@@ -170,12 +162,9 @@ class DataSampleViewTests(APITestCase):
         # dir hash
         key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
-        data_manager_keys = [
-            get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'))]
-
         data = {
             'path': data_path,
-            'data_manager_keys': data_manager_keys,
+            'data_manager_keys': [objective[0]['key']],
             'test_only': False
         }
 

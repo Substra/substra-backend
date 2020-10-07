@@ -89,7 +89,8 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def _create(self, request, data_opener):
 
         try:
-            pkhash = get_hash(data_opener)
+            checksum = get_hash(data_opener)
+            pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
             raise ValidationException(e.args, '(not computed)', st)
@@ -99,6 +100,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'data_opener': data_opener,
             'description': request.data.get('description'),
             'name': request.data.get('name'),
+            'checksum': checksum
         })
 
         try:

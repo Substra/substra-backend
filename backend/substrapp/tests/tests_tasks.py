@@ -86,7 +86,8 @@ class TasksTests(APITestCase):
 
     def test_get_remote_file_content(self):
         content = str(self.script.read())
-        pkhash = compute_hash(content)
+        checksum = compute_hash(content)
+        pkhash = checksum
         remote_file = {'storage_address': 'localhost',
                        'hash': pkhash,
                        'owner': 'external_node_id',
@@ -97,7 +98,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote = get_remote_file_content('mychannel', remote_file, 'external_node_id', pkhash)
+            content_remote = get_remote_file_content('mychannel', remote_file, 'external_node_id', checksum)
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
@@ -111,13 +112,13 @@ class TasksTests(APITestCase):
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
-        subtuple_key = get_hash(self.algo)
+        checksum = get_hash(self.algo)
 
-        subtuple = {'key': subtuple_key,
+        subtuple = {'key': checksum,
                     'algo': 'testalgo'}
 
         with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
-            mget_hash.return_value = subtuple_key
+            mget_hash.return_value = checksum
             uncompress_content(algo_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/algo.py')))
@@ -185,9 +186,9 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip(self):
 
-        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
+        checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
 
-        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
+        data_sample = DataSample(pkhash=checksum, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
@@ -206,7 +207,7 @@ class TasksTests(APITestCase):
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             self.assertTrue(
-                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
+                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', checksum)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
@@ -246,9 +247,9 @@ class TasksTests(APITestCase):
 
     def test_put_data_tar(self):
 
-        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
+        checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
-        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
+        data_sample = DataSample(pkhash=checksum, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
@@ -265,7 +266,7 @@ class TasksTests(APITestCase):
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', checksum)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(

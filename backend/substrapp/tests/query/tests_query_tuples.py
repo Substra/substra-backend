@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective
-from substrapp.utils import get_hash
 
 from ..common import get_sample_objective, AuthenticatedClient
 
@@ -124,9 +123,9 @@ class TraintupleQueryTests(APITestCase):
         self.assertIn('This field may not be null.', r['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Objective.objects.create(description=self.objective_description,
-                                 metrics=self.objective_metrics)
-        data = {'objective': get_hash(self.objective_description)}
+        o = Objective.objects.create(description=self.objective_description,
+                                     metrics=self.objective_metrics)
+        data = {'objective': o.pkhash}
         response = self.client.post(url, data, format='json', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

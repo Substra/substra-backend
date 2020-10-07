@@ -13,11 +13,9 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import TrainTupleViewSet, TestTupleViewSet
 
-from substrapp.utils import get_hash
-
 from substrapp.ledger.exceptions import LedgerError
 
-from ..assets import traintuple, testtuple
+from ..assets import traintuple, testtuple, objective
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -79,7 +77,6 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:traintuple-list')
 
         # PK hash < 64 chars
@@ -95,10 +92,7 @@ class TraintupleViewTests(APITestCase):
         with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('Test')
 
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -173,7 +167,6 @@ class TesttupleViewTests(APITestCase):
 
     def test_testtuple_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:testtuple-list')
 
         # PK hash < 64 chars
@@ -188,11 +181,7 @@ class TesttupleViewTests(APITestCase):
 
         with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('Test')
-
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

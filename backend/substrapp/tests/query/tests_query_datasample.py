@@ -18,7 +18,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
-from substrapp.utils import get_hash, get_archive_hash, store_datasamples_archive
+from substrapp.utils import store_datasamples_archive
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
@@ -32,6 +32,9 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class DataSampleQueryTests(APITestCase):
     client_class = AuthenticatedClient
+
+    data_manager_pkhash1 = None
+    data_manager_pkhash2 = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -52,31 +55,32 @@ class DataSampleQueryTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def add_default_data_manager(self):
-        DataManager.objects.create(name='slide opener',
-                                   description=self.data_description,
-                                   data_opener=self.data_data_opener)
+        dm = DataManager.objects.create(name='slide opener',
+                                        description=self.data_description,
+                                        data_opener=self.data_data_opener)
+        self.data_manager_pkhash1 = dm.pkhash
 
-        DataManager.objects.create(name='slide opener',
-                                   description=self.data_description2,
-                                   data_opener=self.data_data_opener2)
+        dm = DataManager.objects.create(name='slide opener',
+                                        description=self.data_description2,
+                                        data_opener=self.data_data_opener2)
+        self.data_manager_pkhash2 = dm.pkhash
 
     def get_default_datasample_data(self):
-        expected_hash = get_archive_hash(self.data_file.file)
         self.data_file.file.seek(0)
         data = {
             'file': self.data_file,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             }),
         }
 
-        return expected_hash, data
+        return data
 
     def test_add_data_sample_sync_ok(self):
 
         self.add_default_data_manager()
-        key, data = self.get_default_datasample_data()
+        data = self.get_default_datasample_data()
 
         url = reverse('substrapp:data_sample-list')
         extra = {
@@ -86,14 +90,14 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch('substrapp.ledger.assets.create_datasamples') as mcreate_ledger_assets:
             mcreate_ledger_assets.return_value = {
-                'pkhash': key,
+                'pkhash': 'some key',
                 'validated': True
             }
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r[0]['key'], key)
+            self.assertIsNotNone(r[0]['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_bulk_add_data_sample_sync_ok(self):
@@ -113,7 +117,7 @@ class DataSampleQueryTests(APITestCase):
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener), get_hash(self.data_data_opener2)],
+                'data_manager_keys': [self.data_manager_pkhash1, self.data_manager_pkhash2],
                 'test_only': True,
             }),
         }
@@ -125,14 +129,15 @@ class DataSampleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.create_datasamples') as mcreate_ledger_assets:
             self.data_file.seek(0)
             self.data_file_2.seek(0)
-            ledger_data = {'pkhash': [get_archive_hash(file_mock), get_archive_hash(file_mock2)], 'validated': True}
+            ledger_data = {'pkhash': ['some key', 'some other key'], 'validated': True}
             mcreate_ledger_assets.return_value = ledger_data
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(len(r), 2)
-            self.assertEqual(r[0]['key'], get_archive_hash(file_mock))
+            self.assertIsNotNone(r[0]['key'])
+            self.assertIsNotNone(r[1]['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -144,7 +149,7 @@ class DataSampleQueryTests(APITestCase):
     )
     def test_add_data_sample_no_sync_ok(self):
         self.add_default_data_manager()
-        key, data = self.get_default_datasample_data()
+        data = self.get_default_datasample_data()
 
         url = reverse('substrapp:data_sample-list')
         extra = {
@@ -156,7 +161,7 @@ class DataSampleQueryTests(APITestCase):
             mcreate_ledger_assets.return_value = ''
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(r[0]['key'], key)
+            self.assertIsNotNone(r[0]['key'])
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_data_sample_ko(self):
@@ -180,13 +185,13 @@ class DataSampleQueryTests(APITestCase):
         self.add_default_data_manager()
 
         # missing local storage field
-        data = {'data_manager_keys': [get_hash(self.data_description)],
+        data = {'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True, }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # missing ledger field
-        data = {'data_manager_keys': [get_hash(self.data_description)],
+        data = {'data_manager_keys': [self.data_manager_pkhash1],
                 'file': self.script, }
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -210,7 +215,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }
@@ -240,7 +245,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }
@@ -267,7 +272,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }
@@ -282,9 +287,8 @@ class DataSampleQueryTests(APITestCase):
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-            self.assertEqual(
-                r['message'],
-                {'pkhash': [get_archive_hash(file_mock)], 'validated': False})
+            self.assertIsNotNone(r['message']['pkhash'])
+            self.assertEqual(r['message']['validated'], False)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
@@ -304,7 +308,7 @@ class DataSampleQueryTests(APITestCase):
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }
@@ -343,7 +347,7 @@ class DataSampleQueryTests(APITestCase):
             file_mock.name: file_mock,
             file_mock2.name: file_mock2,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             }),
         }
@@ -357,7 +361,7 @@ class DataSampleQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            ledger_data = {'pkhash': [get_archive_hash(file_mock), get_archive_hash(file_mock2)], 'validated': False}
+            ledger_data = {'pkhash': ['some key', 'some other key'], 'validated': False}
             mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
 
             response = self.client.post(url, data, format='multipart', **extra)
@@ -382,7 +386,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }
@@ -412,7 +416,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             }),
         }
@@ -447,7 +451,7 @@ class DataSampleQueryTests(APITestCase):
         data = {
             'file': file_mock,
             'json': json.dumps({
-                'data_manager_keys': [get_hash(self.data_data_opener)],
+                'data_manager_keys': [self.data_manager_pkhash1],
                 'test_only': True,
             })
         }

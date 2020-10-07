@@ -12,11 +12,9 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import CompositeTraintupleViewSet
 
-from substrapp.utils import get_hash
-
 from substrapp.ledger.exceptions import LedgerError
 
-from ..assets import compositetraintuple
+from ..assets import compositetraintuple, objective
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -78,7 +76,6 @@ class CompositeTraintupleViewTests(APITestCase):
 
     def test_compositetraintuple_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:composite_traintuple-list')
 
         # PK hash < 64 chars
@@ -93,11 +90,7 @@ class CompositeTraintupleViewTests(APITestCase):
 
         with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('Test')
-
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

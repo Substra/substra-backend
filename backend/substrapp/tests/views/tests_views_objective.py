@@ -17,7 +17,7 @@ from substrapp.serializers import LedgerObjectiveSerializer
 
 from substrapp.ledger.exceptions import LedgerError
 
-from substrapp.utils import compute_hash, get_hash
+from substrapp.utils import compute_hash
 
 from ..common import get_sample_objective, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, model
@@ -169,17 +169,13 @@ class ObjectiveViewTests(APITestCase):
 
             get_remote_asset.return_value = content
 
-            pkhash = compute_hash(content)
-            search_params = f'{pkhash}/'
-
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
             r = response.json()
 
             self.assertEqual(r, objective[0])
 
     def test_objective_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:objective-list')
 
         # PK hash < 64 chars
@@ -195,10 +191,7 @@ class ObjectiveViewTests(APITestCase):
         with mock.patch('substrapp.views.objective.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
 
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -215,11 +208,6 @@ class ObjectiveViewTests(APITestCase):
 
         zip_folder(objective_path, metrics_path)
 
-        key = get_hash(description_path)
-
-        test_data_manager_key = get_hash(os.path.join(
-            dir_path, '../../../../fixtures/owkin/datamanagers/datamanager0/opener.py'))
-
         data = {
             'json': json.dumps({
                 'name': 'Simplified skin lesion classification',
@@ -229,7 +217,7 @@ class ObjectiveViewTests(APITestCase):
                     'authorized_ids': [],
                 },
                 'test_data_sample_keys': self.test_data_sample_keys,
-                'test_data_manager_key': test_data_manager_key,
+                'test_data_manager_key': datamanager[0]['key'],
             }),
             'description': open(description_path, 'rb'),
             'metrics': open(metrics_path, 'rb'),
@@ -241,7 +229,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['key'], key)
+        self.assertIsNotNone(response.data['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()

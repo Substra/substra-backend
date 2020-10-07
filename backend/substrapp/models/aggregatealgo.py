@@ -13,11 +13,13 @@ class AggregateAlgo(models.Model):
     file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False)
+    checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
         """Use hash of file as primary key"""
         if not self.pkhash:
-            self.pkhash = get_hash(self.file)
+            self.checksum = get_hash(self.file)
+            self.pkhash = self.checksum
         super(AggregateAlgo, self).save(*args, **kwargs)
 
     def __str__(self):

@@ -84,7 +84,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, file):
         try:
-            pkhash = get_hash(file)
+            checksum = get_hash(file)
+            pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
             raise ValidationException(e.args, '(not computed)', st)
@@ -92,7 +93,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'file': file,
-            'description': request.data.get('description')
+            'description': request.data.get('description'),
+            'checksum': checksum
         })
 
         try:

@@ -84,11 +84,13 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
 
     def _create(self, request, file):
 
-        pkhash = get_hash(file)
+        checksum = get_hash(file)
+        pkhash = checksum
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
             'file': file,
-            'description': request.data.get('description')
+            'description': request.data.get('description'),
+            'checksum': checksum
         })
 
         try:

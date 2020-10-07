@@ -25,7 +25,7 @@ class ModelTests(TestCase):
         objective = Objective.objects.create(description=description,
                                              metrics=metrics)
 
-        self.assertEqual(objective.pkhash, get_hash(description))
+        self.assertEqual(objective.checksum, get_hash(description))
         self.assertFalse(objective.validated)
         self.assertIn(f'pkhash {objective.pkhash}', str(objective))
         self.assertIn(f'validated {objective.validated}', str(objective))
@@ -33,7 +33,7 @@ class ModelTests(TestCase):
     def test_create_datamanager(self):
         description, _, data_opener, _ = get_sample_datamanager()
         datamanager = DataManager.objects.create(description=description, data_opener=data_opener, name="slides_opener")
-        self.assertEqual(datamanager.pkhash, get_hash(data_opener))
+        self.assertEqual(datamanager.checksum, get_hash(data_opener))
         self.assertFalse(datamanager.validated)
         self.assertIn(f'pkhash {datamanager.pkhash}', str(datamanager))
         self.assertIn(f'name {datamanager.name}', str(datamanager))
@@ -42,7 +42,7 @@ class ModelTests(TestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
         path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308')
         data_sample = DataSample.objects.create(path=path)
-        self.assertEqual(data_sample.pkhash, get_dir_hash(path))
+        self.assertEqual(data_sample.checksum, get_dir_hash(path))
         self.assertFalse(data_sample.validated)
         self.assertIn(f'pkhash {data_sample.pkhash}', str(data_sample))
         self.assertIn(f'validated {data_sample.validated}', str(data_sample))
@@ -50,7 +50,7 @@ class ModelTests(TestCase):
     def test_create_algo(self):
         script, _ = get_sample_script()
         algo = Algo.objects.create(file=script)
-        self.assertEqual(algo.pkhash, get_hash(script))
+        self.assertEqual(algo.checksum, get_hash(script))
         self.assertFalse(algo.validated)
         self.assertIn(f'pkhash {algo.pkhash}', str(algo))
         self.assertIn(f'validated {algo.validated}', str(algo))
@@ -58,7 +58,7 @@ class ModelTests(TestCase):
     def test_create_model(self):
         modelfile, _ = get_sample_model()
         model = Model.objects.create(file=modelfile)
-        self.assertEqual(model.pkhash, get_hash(modelfile))
+        self.assertEqual(model.checksum, get_hash(modelfile))
         self.assertFalse(model.validated)
         self.assertIn(f'pkhash {model.pkhash}', str(model))
         self.assertIn(f'validated {model.validated}', str(model))

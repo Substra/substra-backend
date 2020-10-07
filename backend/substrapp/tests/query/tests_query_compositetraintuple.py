@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, Model
-from substrapp.utils import get_hash, compute_hash
+from substrapp.utils import compute_hash
 from node.authentication import NodeUser
 
 from ..common import get_sample_objective, AuthenticatedClient, get_sample_model
@@ -140,15 +140,16 @@ class CompositeTraintupleQueryTests(APITestCase):
         self.assertIn('This field may not be null.', r['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Objective.objects.create(description=self.objective_description,
-                                 metrics=self.objective_metrics)
-        data = {'objective': get_hash(self.objective_description)}
+        o = Objective.objects.create(description=self.objective_description,
+                                     metrics=self.objective_metrics)
+        data = {'objective': o.pkhash}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_head_model_ok(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        pkhash = checksum
+        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -167,11 +168,12 @@ class CompositeTraintupleQueryTests(APITestCase):
             }
             response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(head_model.pkhash, compute_hash(response.getvalue(), key='key_traintuple'))
+            self.assertEqual(head_model.checksum, compute_hash(response.getvalue(), key='key_traintuple'))
 
     def test_get_head_model_ko_user(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        pkhash = checksum
+        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -190,8 +192,9 @@ class CompositeTraintupleQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_head_model_ko_wrong_node(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        pkhash = checksum
+        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,

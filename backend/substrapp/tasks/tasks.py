@@ -412,7 +412,7 @@ def prepare_data_sample(directory, tuple_):
             raise Exception(f'Data Sample ({data_sample.path}) is empty in local storage')
 
         data_sample_hash = get_dir_hash(data_sample.path)
-        if data_sample_hash != data_sample_key:
+        if data_sample_hash != data_sample.checksum:
             raise Exception('Data Sample Hash in tuple is not the same as in local db')
 
         # create a symlink on the folder containing data
@@ -1009,15 +1009,16 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     from substrapp.models import Model
 
     end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
-    end_model_file_hash = get_hash(end_model_path, hash_key)
-    instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+    checksum = get_hash(end_model_path, hash_key)
+    pkhash = checksum
+    instance = Model.objects.create(pkhash=checksum, checksum=checksum, validated=True)
 
     with open(end_model_path, 'rb') as f:
         instance.file.save('model', f)
     current_site = getattr(settings, "DEFAULT_DOMAIN")
-    end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+    end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[pkhash])}'
 
-    return end_model_file, end_model_file_hash
+    return end_model_file, checksum
 
 
 def get_algo_image_name(algo_hash):

@@ -94,7 +94,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
             for k, file in request.FILES.items():
                 # Get dir hash uncompress the file into a directory
-                pkhash, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
+                checksum, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
+                pkhash = checksum
                 paths_to_remove.append(datasamples_path_from_file)
                 # check pkhash does not belong to the list
                 try:
@@ -138,7 +139,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                pkhash = get_dir_hash(path)
+                checksum = get_dir_hash(path)
+                pkhash = checksum
                 try:
                     data[pkhash]
                 except KeyError:
@@ -150,7 +152,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
                 data[pkhash] = {
                     'pkhash': pkhash,
-                    'path': normpath(path)
+                    'path': normpath(path),
+                    'checksum': checksum
                 }
 
         if not data:

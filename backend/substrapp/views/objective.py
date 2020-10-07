@@ -105,7 +105,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         description = request.data.get('description')
 
         try:
-            pkhash = get_hash(description)
+            checksum = get_hash(description)
+            pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
             raise ValidationException(e.args, '(not computed)', st)
@@ -114,6 +115,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             'pkhash': pkhash,
             'metrics': metrics,
             'description': description,
+            'checksum': checksum
         })
 
         try:

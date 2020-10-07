@@ -14,11 +14,13 @@ class DataManager(models.Model):
     data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False, blank=True)
+    checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = get_hash(self.data_opener)
+            self.checksum = get_hash(self.data_opener)
+            self.pkhash = self.checksum
         super(DataManager, self).save(*args, **kwargs)
 
     def __str__(self):

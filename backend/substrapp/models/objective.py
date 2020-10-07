@@ -14,11 +14,13 @@ class Objective(TimeStamped):
     validated = models.BooleanField(default=False, blank=True)
     description = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
     metrics = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
+    checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
         """Use hash of description file as primary key"""
         if not self.pkhash:
-            self.pkhash = get_hash(self.description)
+            self.checksum = get_hash(self.description)
+            self.pkhash = self.checksum
         super(Objective, self).save(*args, **kwargs)
 
     def __str__(self):

@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, DataManager
-from substrapp.utils import get_hash, compute_hash
+from substrapp.utils import compute_hash
 
 from ..common import get_sample_objective, get_sample_datamanager, \
     AuthenticatedClient, get_sample_objective_metadata
@@ -25,6 +25,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class ObjectiveQueryTests(APITestCase):
     client_class = AuthenticatedClient
+    data_manager_pkhash = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -44,22 +45,22 @@ class ObjectiveQueryTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def add_default_data_manager(self):
-        DataManager.objects.create(name='slide opener',
-                                   description=self.data_description,
-                                   data_opener=self.data_data_opener)
+        dm = DataManager.objects.create(name='slide opener',
+                                        description=self.data_description,
+                                        data_opener=self.data_data_opener)
+        self.data_manager_pkhash = dm.pkhash
 
     def get_default_objective_data(self):
 
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
-        expected_hash = get_hash(self.objective_description)
-        data = {
+        return {
             'description': self.objective_description,
             'metrics': self.objective_metrics,
             'json': json.dumps({
                 'name': 'tough objective',
-                'test_data_manager_key': get_hash(self.data_data_opener),
+                'test_data_manager_key': self.data_manager_pkhash,
                 'test_data_sample_keys': self.test_data_sample_keys,
                 'permissions': {
                     'public': True,
@@ -68,11 +69,10 @@ class ObjectiveQueryTests(APITestCase):
                 'metrics_name': 'accuracy'
             }),
         }
-        return expected_hash, data
 
     def test_add_objective_sync_ok(self):
         self.add_default_data_manager()
-        key, data = self.get_default_objective_data()
+        data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
         extra = {
@@ -81,12 +81,12 @@ class ObjectiveQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'pkhash': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -98,7 +98,7 @@ class ObjectiveQueryTests(APITestCase):
     )
     def test_add_objective_no_sync_ok(self):
         self.add_default_data_manager()
-        key, data = self.get_default_objective_data()
+        data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
         extra = {
@@ -114,13 +114,13 @@ class ObjectiveQueryTests(APITestCase):
 
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_objective_conflict(self):
         self.add_default_data_manager()
 
-        key, data = self.get_default_objective_data()
+        data = self.get_default_objective_data()
 
         url = reverse('substrapp:objective-list')
 
@@ -130,21 +130,21 @@ class ObjectiveQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'pkhash': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
             # XXX reload data as the previous call to post change it
-            _, data = self.get_default_objective_data()
+            data = self.get_default_objective_data()
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
 
     def test_add_objective_ko(self):
         url = reverse('substrapp:objective-list')
@@ -179,7 +179,5 @@ class ObjectiveQueryTests(APITestCase):
                 f'/objective/{objective.pkhash}/metrics/', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertNotEqual(objective.pkhash,
-                                compute_hash(response.getvalue()))
             self.assertEqual(self.objective_metrics_filename,
                              response.filename)

@@ -17,8 +17,6 @@ from substrapp.serializers import LedgerCompositeAlgoSerializer
 
 from substrapp.ledger.exceptions import LedgerError
 
-from substrapp.utils import get_hash
-
 from ..common import get_sample_composite_algo, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, compositealgo, algo, model
 
@@ -161,12 +159,8 @@ class CompositeAlgoViewTests(APITestCase):
 
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        composite_algo_hash = get_hash(
-            os.path.join(dir_path, '../../../../fixtures/owkin/compositealgos/compositealgo0/algo.tar.gz')
-        )
         url = reverse('substrapp:composite_algo-list')
         composite_algo_response = copy.deepcopy(compositealgo[0])
-        composite_algo_response['key'] = composite_algo_hash
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.compositealgo.get_remote_asset') as get_remote_asset:
 
@@ -176,15 +170,13 @@ class CompositeAlgoViewTests(APITestCase):
             mget_object_from_ledger.return_value = composite_algo_response
             get_remote_asset.return_value = content
 
-            search_params = f'{composite_algo_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{compositealgo[0]["key"]}/', **self.extra)
             r = response.json()
 
             self.assertEqual(r, composite_algo_response)
 
     def test_composite_algo_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:composite_algo-list')
 
         # PK hash < 64 chars
@@ -199,11 +191,7 @@ class CompositeAlgoViewTests(APITestCase):
 
         with mock.patch('substrapp.views.compositealgo.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
-
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_composite_algo_create(self):
@@ -214,13 +202,10 @@ class CompositeAlgoViewTests(APITestCase):
         composite_algo_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
         description_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/description.md')
 
-        key = get_hash(composite_algo_path)
-
         data = {
             'json': json.dumps({
                 'name': 'Composite Algo',
-                'objective_key': get_hash(os.path.join(
-                    dir_path, '../../../../fixtures/chunantes/objectives/objective0/description.md')),
+                'objective_key': objective[0]['key'],
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -236,7 +221,7 @@ class CompositeAlgoViewTests(APITestCase):
 
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['key'], key)
+        self.assertIsNotNone(response.data['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()
