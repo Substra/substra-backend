@@ -86,25 +86,27 @@ def _get_hfc(channel_name):
         raise Exception(f'Peer has not joined channel: {channel_name}')
 
     channel = client.new_channel(channel_name)
+    chaincode_name = settings.LEDGER_CHANNELS[channel_name]['chaincode']['name']
+
+    # /!\ Does not work with new chaincodes lifecycle.
 
     # Check chaincode is instantiated in the channel
 
-    responses = loop.run_until_complete(
-        client.query_instantiated_chaincodes(
-            requestor=user,
-            channel_name=channel_name,
-            peers=[peer],
-            decode=True
-        )
-    )
+    # responses = loop.run_until_complete(
+    #     client.query_instantiated_chaincodes(
+    #         requestor=user,
+    #         channel_name=channel_name,
+    #         peers=[peer],
+    #         decode=True
+    #     )
+    # )
+    # chaincodes = [cc.name
+    #               for resp in responses
+    #               for cc in resp.chaincodes]
 
-    chaincodes = [cc.name
-                  for resp in responses
-                  for cc in resp.chaincodes]
-
-    if settings.LEDGER_CHAINCODE_NAME not in chaincodes:
-        raise Exception(f'Chaincode : {settings.LEDGER_CHAINCODE_NAME}'
-                        f' is not instantiated in the channel :  {channel_name}')
+    # if chaincode_name not in chaincodes:
+    #     raise Exception(f'Chaincode : {chaincode_name}'
+    #                     f' is not instantiated in the channel :  {channel_name}')
 
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
@@ -113,7 +115,7 @@ def _get_hfc(channel_name):
             peer,
             config=True,
             local=False,
-            interests=[{'chaincodes': [{'name': settings.LEDGER_CHAINCODE_NAME}]}]
+            interests=[{'chaincodes': [{'name': chaincode_name}]}]
         )
     )
 

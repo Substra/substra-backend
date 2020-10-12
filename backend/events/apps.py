@@ -182,9 +182,10 @@ def wait(channel_name):
                     stream = channel_event_hub.connect(start=0,
                                                        filtered=False)
 
-                    channel_event_hub.registerChaincodeEvent(settings.LEDGER_CHAINCODE_NAME,
-                                                             'chaincode-updates',
-                                                             onEvent=on_channel_event)
+                    channel_event_hub.registerChaincodeEvent(
+                        settings.LEDGER_CHANNELS[channel_name]['chaincode']['name'],
+                        'chaincode-updates',
+                        onEvent=on_channel_event)
 
                     logger.info(f'Connect to Channel Event Hub ({channel_name})')
                     loop.run_until_complete(stream)
@@ -215,5 +216,5 @@ class EventsConfig(AppConfig):
         p1.start()
 
     def ready(self):
-        for channel_name in settings.LEDGER_CHANNELS:
+        for channel_name in settings.LEDGER_CHANNELS.keys():
             self.listen_to_channel(channel_name)
