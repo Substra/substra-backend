@@ -1,7 +1,12 @@
 import os
 import json
 
-LEDGER_CHANNELS = json.loads(os.getenv('LEDGER_CHANNELS'))
+LEDGER_CHANNELS = {
+    channel: chaincode
+    for channels in json.loads(os.getenv('LEDGER_CHANNELS'))
+    for channel, chaincode in channels.items()
+}
+
 LEDGER_MSP_ID = os.getenv('LEDGER_MSP_ID')
 LEDGER_USER_NAME = os.getenv('LEDGER_USER_NAME')
 
