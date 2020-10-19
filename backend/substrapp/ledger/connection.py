@@ -90,23 +90,24 @@ def _get_hfc(channel_name):
 
     # /!\ Does not work with new chaincodes lifecycle.
 
-    # Check chaincode is instantiated in the channel
+    # Check chaincode is committed in the channel
 
-    # responses = loop.run_until_complete(
-    #     client.query_instantiated_chaincodes(
-    #         requestor=user,
-    #         channel_name=channel_name,
-    #         peers=[peer],
-    #         decode=True
-    #     )
-    # )
-    # chaincodes = [cc.name
-    #               for resp in responses
-    #               for cc in resp.chaincodes]
+    responses = loop.run_until_complete(
+        client.query_committed_chaincodes(
+            requestor=user,
+            channel_name=channel_name,
+            peers=[peer],
+            decode=True
+        )
+    )
 
-    # if chaincode_name not in chaincodes:
-    #     raise Exception(f'Chaincode : {chaincode_name}'
-    #                     f' is not instantiated in the channel :  {channel_name}')
+    chaincodes = [cc.name
+                  for resp in responses
+                  for cc in resp.chaincode_definitions]
+
+    if chaincode_name not in chaincodes:
+        raise Exception(f'Chaincode : {chaincode_name}'
+                        f' is not committed in the channel :  {channel_name}')
 
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
