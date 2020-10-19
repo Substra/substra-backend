@@ -15,7 +15,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code, ValidationExceptionOld, LedgerException,
+                                   validate_pk_old, get_success_create_code, ValidationExceptionOld, LedgerException,
                                    get_remote_asset, node_has_process_permission, get_channel_name,
                                    data_to_data_response)
 from substrapp.views.filters_utils import filter_list
@@ -163,7 +163,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, pk):
-        validate_pk(pk)
+        validate_pk_old(pk)
         # get instance from remote node
         data = get_object_from_ledger(get_channel_name(request), pk, 'queryDataset')
 
@@ -230,7 +230,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            validate_pk(pk)
+            validate_pk_old(pk)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 

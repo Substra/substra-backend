@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerConflict
-from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
+from substrapp.views.utils import get_success_create_code, validate_pk_old, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
 
@@ -52,7 +52,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         pk = self.kwargs[lookup_url_kwarg]
 
         try:
-            validate_pk(pk)
+            validate_pk_old(pk)
             data = get_object_from_ledger(get_channel_name(request), pk, 'queryComputePlan')
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
@@ -82,7 +82,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['POST'])
     def cancel(self, request, pk):
-        validate_pk(pk)
+        validate_pk_old(pk)
 
         try:
             compute_plan = invoke_ledger(
@@ -96,7 +96,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['POST'])
     def update_ledger(self, request, pk):
-        validate_pk(pk)
+        validate_pk_old(pk)
 
         compute_plan_id = pk
 

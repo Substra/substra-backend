@@ -6,7 +6,7 @@ from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
+from substrapp.views.utils import (validate_pk_old, get_success_create_code, LedgerException, get_channel_name,
                                    data_to_data_response)
 
 
@@ -90,7 +90,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, channel_name, pk):
-        validate_pk(pk)
+        validate_pk_old(pk)
         return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
