@@ -33,7 +33,7 @@ def get_migration(model_name):
     if model_name in ['Objective']:
         res.append(migrations.AlterField(model_name, 'pkhash', models.CharField(blank=True, max_length=32, primary_key=True, serialize=False)))
         res.append(migrations.AlterField(model_name, 'pkhash', models.UUIDField(primary_key=True, editable=False)))
-        migrations.RunPython(fix_URIs),
+        res.append(migrations.RunPython(fix_URIs))
     return res
 
 
