@@ -108,7 +108,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                                     f'Archives {file} and {pkhash_map[pkhash]} are the same')
                 data[pkhash] = {
                     'pkhash': pkhash,
-                    'path': datasamples_path_from_file
+                    'path': datasamples_path_from_file,
+                    'checksum': checksum
                 }
 
         else:  # files must be available on local filesystem
