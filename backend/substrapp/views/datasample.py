@@ -16,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
-from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
+from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationExceptionOld, \
     get_success_create_code, get_channel_name, data_to_data_response
 from substrapp.ledger.api import query_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
@@ -63,7 +63,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             data = {'pkhash': pkhash, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationExceptionOld(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
@@ -188,7 +188,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 st = status.HTTP_400_BAD_REQUEST
                 if find_primary_key_error(e):
                     st = status.HTTP_409_CONFLICT
-                raise ValidationException(e.args, pkhashes, st)
+                raise ValidationExceptionOld(e.args, pkhashes, st)
             else:
 
                 # create on ledger + db
@@ -206,7 +206,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         try:
             data, st = self._create(request, data_manager_keys, test_only)
-        except ValidationException as e:
+        except ValidationExceptionOld as e:
             return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)

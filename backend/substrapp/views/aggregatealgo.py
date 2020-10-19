@@ -14,7 +14,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code, LedgerException, ValidationException,
+                                   validate_pk, get_success_create_code, LedgerException, ValidationExceptionOld,
                                    get_remote_asset, node_has_process_permission, get_channel_name,
                                    data_to_data_response)
 from substrapp.views.filters_utils import filter_list
@@ -69,7 +69,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             data = {'pkhash': pkhash, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationExceptionOld(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -99,7 +99,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             st = status.HTTP_400_BAD_REQUEST
             if find_primary_key_error(e):
                 st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhash, st)
+            raise ValidationExceptionOld(e.args, pkhash, st)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -109,7 +109,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._create(request, file)
-        except ValidationException as e:
+        except ValidationExceptionOld as e:
             return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)

@@ -1,5 +1,5 @@
 import os
-
+import uuid
 
 from django.http import FileResponse, HttpResponse
 from rest_framework.authentication import BasicAuthentication
@@ -143,6 +143,7 @@ class PermissionMixin(object):
         return response
 
 
+# TODO: delete
 def find_primary_key_error(validation_error, key_name='pkhash'):
     detail = validation_error.detail
 
@@ -194,12 +195,19 @@ class LedgerException(Exception):
         super(LedgerException).__init__()
 
 
-class ValidationException(Exception):
+class ValidationExceptionOld(Exception):
     def __init__(self, data, pkhash, st):
         self.data = data
         self.pkhash = pkhash
         self.st = st
-        super(ValidationException).__init__()
+        super(ValidationExceptionOld).__init__()
+
+
+class ValidationException(Exception):
+    def __init__(self, data, st):
+        self.data = data
+        self.st = st
+        super(ValidationExceptionOld).__init__()
 
 
 def get_success_create_code():
@@ -230,3 +238,7 @@ def data_to_data_response(data):
         return {'key': data['pkhash']}
 
     return data
+
+# TODO: deleteme
+def create_uuid():
+    return uuid.uuid4().hex

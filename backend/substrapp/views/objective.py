@@ -18,7 +18,7 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
-                                   get_success_create_code, ValidationException,
+                                   get_success_create_code, ValidationExceptionOld, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
                                    node_has_process_permission, get_channel_name,
                                    data_to_data_response)
@@ -87,7 +87,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             data = {'pkhash': pkhash, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationExceptionOld(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -109,7 +109,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
-            raise ValidationException(e.args, '(not computed)', st)
+            raise ValidationExceptionOld(e.args, '(not computed)', st)
 
         serializer = self.get_serializer(data={
             'pkhash': pkhash,
@@ -133,7 +133,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._create(request)
-        except ValidationException as e:
+        except ValidationExceptionOld as e:
             return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
