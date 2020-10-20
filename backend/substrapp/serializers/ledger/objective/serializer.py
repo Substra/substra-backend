@@ -32,6 +32,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': str(instance.pk),
             'name': name,
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa

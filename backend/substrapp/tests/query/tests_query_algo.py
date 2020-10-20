@@ -20,6 +20,7 @@ from ..common import get_sample_objective, get_sample_datamanager, \
     get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
     get_sample_algo_metadata
 
+from ..assets import objective
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -49,7 +50,7 @@ class AlgoQueryTests(APITestCase):
     def add_default_objective(self):
         o = Objective.objects.create(description=self.objective_description,
                                      metrics=self.objective_metrics)
-        self.objective_pkhash = o.pkhash
+        self.objective_pkhash = str(o.pkhash)
 
     def get_default_algo_data(self):
         return {
@@ -134,7 +135,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                'objective_key': objective[0]['key'].replace('1', '2'),
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],

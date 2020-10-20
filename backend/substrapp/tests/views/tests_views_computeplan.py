@@ -1,6 +1,7 @@
 import os
 import shutil
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -37,19 +38,20 @@ class ComputePlanViewTests(APITestCase):
     def test_create(self):
         url = reverse('substrapp:compute_plan-list')
 
-        dummy_key = 'x' * 64
+        dummy_key_old = 'x' * 64
+        dummy_key = str(uuid.uuid4())
 
         data = {
             'traintuples': [{
-                'algo_key': dummy_key,
-                'data_manager_key': dummy_key,
-                'train_data_sample_keys': [dummy_key],
-                'traintuple_id': dummy_key,
+                'algo_key': dummy_key_old,
+                'data_manager_key': dummy_key_old,
+                'train_data_sample_keys': [dummy_key_old],
+                'traintuple_id': dummy_key_old,
             }],
             'testtuples': [{
-                'traintuple_id': dummy_key,
+                'traintuple_id': dummy_key_old,
                 'objective_key': dummy_key,
-                'data_manager_key': dummy_key,
+                'data_manager_key': dummy_key_old,
             }]
         }
 

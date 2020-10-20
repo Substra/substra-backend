@@ -22,7 +22,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
 
 class ComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
-    objective_key = serializers.CharField(min_length=64, max_length=64)
+    objective_key = serializers.UUIDField()
     data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
     test_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
@@ -91,7 +91,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_testtuple in data.get('testtuples', []):
             testtuple = {
                 'traintuple_id': data_testtuple['traintuple_id'],
-                'objective_key': data_testtuple['objective_key'],
+                'objective_key': str(data_testtuple['objective_key']),
                 'metadata': data_testtuple.get('metadata'),
             }
             if 'tag' in data_testtuple:

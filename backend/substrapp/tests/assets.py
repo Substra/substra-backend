@@ -14,16 +14,16 @@ In order to update this file:
 
 objective = [
     {
-        "key": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+        "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_global - Objective 0",
         "description": {
             "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
-            "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/description/"
+            "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/description/"
         },
         "metrics": {
             "name": "test metrics",
             "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-            "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+            "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
         },
         "owner": "MyOrg1MSP",
         "test_dataset": {
@@ -75,7 +75,7 @@ objective = [
 
 datamanager = [
     {
-        "objective_key": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+        "objective_key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
         "description": {
             "hash": "8acac2e3b700de1e27ee00b8cc0b49a883476d4234015658cbff7a701332a498",
             "storage_address": "http://testserver/data_manager/e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204/description/"
@@ -583,10 +583,10 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
             }
         },
         "rank": 0,
@@ -616,7 +616,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
+            "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
             "metrics": {
                 "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/metrics/"
@@ -649,10 +649,10 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
             }
         },
         "rank": 0,
@@ -682,10 +682,10 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
             }
         },
         "rank": 0,
@@ -715,10 +715,10 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
             }
         },
         "rank": 0,
@@ -1672,10 +1672,10 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                    "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                    "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
                 }
             },
             "rank": 0,
@@ -1747,10 +1747,10 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                    "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                    "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
                 }
             },
             "rank": 0,
@@ -1961,10 +1961,10 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                    "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                    "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
                 }
             },
             "rank": 0,
@@ -2415,7 +2415,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
+                "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
                 "metrics": {
                     "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/metrics/"
@@ -2512,10 +2512,10 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8",
+                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
-                    "storage_address": "http://testserver/objective/48cc5ce4d352b859e202adb0d639ee092c78cae7a2a1df0fccd88c63b3466ad8/metrics/"
+                    "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
                 }
             },
             "rank": 0,

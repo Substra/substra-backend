@@ -40,7 +40,7 @@ class DataManagerQueryTests(APITestCase):
                     'public': True,
                     'authorized_ids': [],
                 },
-                'objective_key': '',
+                'objective_key': None,
             }),
             'description': self.data_description,
             'data_opener': self.data_data_opener
@@ -61,7 +61,6 @@ class DataManagerQueryTests(APITestCase):
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-
             self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

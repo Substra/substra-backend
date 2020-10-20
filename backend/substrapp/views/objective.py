@@ -18,10 +18,10 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
-                                   get_success_create_code, ValidationExceptionOld, ValidationException,
+                                   get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
                                    node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+                                   data_to_data_response, create_uuid)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -48,13 +48,6 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # create on local db
         try:
             instance = self.perform_create(serializer)
-        except IntegrityError as e:
-            try:
-                pkhash = re.search(r'\(pkhash\)=\((\w+)\)', e.args[0]).group(1)
-            except IndexError:
-                pkhash = ''
-            err_msg = 'A objective with this description file already exists.'
-            return {'message': err_msg, 'pkhash': pkhash}, status.HTTP_409_CONFLICT
         except Exception as e:
             raise Exception(e.args)
 
@@ -87,7 +80,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             data = {'pkhash': pkhash, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
-            raise ValidationExceptionOld(e.msg, e.pkhash, e.status)
+            raise ValidationException(e.msg, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -106,13 +99,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             checksum = get_hash(description)
-            pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
-            raise ValidationExceptionOld(e.args, '(not computed)', st)
+            raise ValidationException(e.args, st)
 
         serializer = self.get_serializer(data={
-            'pkhash': pkhash,
             'metrics': metrics,
             'description': description,
             'checksum': checksum
@@ -121,10 +112,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhash, st)
+            raise ValidationException(e.args, status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -133,8 +121,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._create(request)
-        except ValidationExceptionOld as e:
-            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
+        except ValidationException as e:
+            return Response({'message': e.data}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:

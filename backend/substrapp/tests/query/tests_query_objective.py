@@ -116,35 +116,6 @@ class ObjectiveQueryTests(APITestCase):
             self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
-    def test_add_objective_conflict(self):
-        self.add_default_data_manager()
-
-        data = self.get_default_objective_data()
-
-        url = reverse('substrapp:objective-list')
-
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': 'some key'}
-
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-
-            self.assertIsNotNone(r['key'])
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-            # XXX reload data as the previous call to post change it
-            data = self.get_default_objective_data()
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-
-            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
-            self.assertIsNotNone(r['key'])
-
     def test_add_objective_ko(self):
         url = reverse('substrapp:objective-list')
 
