@@ -7,7 +7,7 @@ from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 
 class ComputePlanTraintupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
-    data_manager_key = serializers.CharField(min_length=64, max_length=64)
+    data_manager_key = serializers.UUIDField()
     train_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
         min_length=1)
@@ -23,7 +23,7 @@ class ComputePlanTraintupleSerializer(serializers.Serializer):
 class ComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
     objective_key = serializers.UUIDField()
-    data_manager_key = serializers.CharField(min_length=64, max_length=64, required=False)
+    data_manager_key = serializers.UUIDField(required=False, allow_null=True)
     test_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
         min_length=0,
@@ -34,7 +34,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
 
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
-    data_manager_key = serializers.CharField(min_length=64, max_length=64)
+    data_manager_key = serializers.UUIDField()
     train_data_sample_keys = serializers.ListField(
         child=serializers.CharField(min_length=64, max_length=64),
         min_length=1)
@@ -74,7 +74,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         traintuples = []
         for data_traintuple in data.get('traintuples', []):
             traintuple = {
-                'data_manager_key': data_traintuple['data_manager_key'],
+                'data_manager_key': str(data_traintuple['data_manager_key']),
                 'data_sample_keys': data_traintuple['train_data_sample_keys'],
                 'algo_key': data_traintuple['algo_key'],
                 'id': data_traintuple['traintuple_id'],
@@ -97,7 +97,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
-                testtuple['data_manager_key'] = data_testtuple['data_manager_key']
+                testtuple['data_manager_key'] = str(data_testtuple['data_manager_key'])
             if 'test_data_sample_keys' in data_testtuple:
                 testtuple['data_sample_keys'] = data_testtuple['test_data_sample_keys']
 
@@ -107,7 +107,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_composite_traintuple in data.get('composite_traintuples', []):
             composite_traintuple = {
                 'algo_key': data_composite_traintuple['algo_key'],
-                'data_manager_key': data_composite_traintuple['data_manager_key'],
+                'data_manager_key': str(data_composite_traintuple['data_manager_key']),
                 'data_sample_keys': data_composite_traintuple['train_data_sample_keys'],
                 'id': data_composite_traintuple['composite_traintuple_id'],
                 'metadata': data_composite_traintuple.get('metadata'),

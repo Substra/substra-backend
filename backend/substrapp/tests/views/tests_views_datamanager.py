@@ -117,8 +117,8 @@ class DataManagerViewTests(APITestCase):
                 mock.patch('substrapp.views.filters_utils.query_ledger') as mquery_ledger2:
             mquery_ledger.return_value = datamanager
             mquery_ledger2.return_value = model
-            pkhash = done_model['traintuple']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            outModelHash = done_model['traintuple']['out_model']['hash']
+            search_params = f'?search=model%253Ahash%253A{outModelHash}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -127,7 +127,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
         datamanager_response = copy.deepcopy(datamanager[0])
-        datamanager_response['key'] = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca'
+        datamanager_response['key'] = '8dd01465-003a-9b1e-01c9-9c904d86aa51'
         with mock.patch('substrapp.views.datamanager.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.datamanager.get_remote_asset') as mget_remote_asset:
             mget_object_from_ledger.return_value = datamanager_response
@@ -143,7 +143,7 @@ class DataManagerViewTests(APITestCase):
 
             mget_remote_asset.side_effect = [opener_content, description_content]
 
-            search_params = '8dd01465003a9b1e01c99c904d86aa518b3a5dd9dc8d40fe7d075c726ac073ca/'
+            search_params = '8dd01465-003a-9b1e-01c9-9c904d86aa51/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

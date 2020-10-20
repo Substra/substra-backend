@@ -377,9 +377,10 @@ def prepare_models(channel_name, directory, tuple_type, tuple_):
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
+    dataset_key = tuple_['dataset']['key']
     data_opener_hash = tuple_['dataset']['opener_hash']
 
-    datamanager = DataManager.objects.get(pk=data_opener_hash)
+    datamanager = DataManager.objects.get(pk=dataset_key)
 
     # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):

@@ -6,7 +6,7 @@ from substrapp.ledger import assets
 
 class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
-    data_manager_key = serializers.CharField(min_length=64, max_length=64)
+    data_manager_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
                                             allow_null=True)
@@ -32,7 +32,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         args = {
             'algo_key': algo_key,
             'in_models': in_models_keys,
-            'data_manager_key': data_manager_key,
+            'data_manager_key': str(data_manager_key),
             'data_sample_keys': train_data_sample_keys,
             'compute_plan_id': compute_plan_id,
             'rank': rank,

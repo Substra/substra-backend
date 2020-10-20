@@ -167,7 +167,7 @@ class TasksTests(APITestCase):
                 prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': 'HASH'}})
 
             # test work
-            prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
+            prepare_opener(self.subtuple_path, {'dataset': {'key': 'some_key', 'opener_hash': opener_hash}})
 
             opener_path = os.path.join(opener_directory, '__init__.py')
             self.assertTrue(os.path.exists(opener_path))
@@ -182,7 +182,7 @@ class TasksTests(APITestCase):
                 f.write('corrupted')
 
             with self.assertRaises(Exception):
-                prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
+                prepare_opener(self.subtuple_path, {'dataset': {'key': 'some_key', 'opener_hash': opener_hash}})
 
     def test_prepare_data_sample_zip(self):
 

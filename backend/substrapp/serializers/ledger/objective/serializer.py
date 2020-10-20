@@ -14,7 +14,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
                                                   min_length=0,
                                                   required=False)
     name = serializers.CharField(min_length=1, max_length=100)
-    test_data_manager_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
+    test_data_manager_key = serializers.UUIDField(required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metrics_name = serializers.CharField(min_length=1, max_length=100)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
@@ -24,7 +24,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         name = validated_data.get('name')
         metrics_name = validated_data.get('metrics_name')
         permissions = validated_data.get('permissions')
-        test_data_manager_key = validated_data.get('test_data_manager_key', '')
+        test_data_manager_key = validated_data.get('test_data_manager_key', None)
         test_data_sample_keys = validated_data.get('test_data_sample_keys', [])
         metadata = validated_data.get('metadata')
 
@@ -40,7 +40,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'metrics_hash': get_hash(instance.metrics),
             'metrics_storage_address': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
             'test_dataset': {
-                'data_manager_key': test_data_manager_key,
+                'data_manager_key': str(test_data_manager_key) if test_data_manager_key else None,
                 'data_sample_keys': test_data_sample_keys,
             },
             'permissions': {'process': {

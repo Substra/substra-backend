@@ -135,8 +135,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def create_or_update_objective(self, channel_name, objective, pk):
         # get description from remote node
         url = objective['description']['storage_address']
+        hash = objective['description']['hash']
 
-        content = get_remote_asset(channel_name, url, objective['owner'], pk)
+        content = get_remote_asset(channel_name, url, objective['owner'], hash)
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()

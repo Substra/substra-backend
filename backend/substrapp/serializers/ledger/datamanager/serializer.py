@@ -28,13 +28,14 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': str(instance.pk),
             'name': name,
             'opener_hash': get_hash(instance.data_opener),
-            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[str(instance.pk)]),
             'type': data_type,
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:data_manager-description',
-                                                                  args=[instance.pk]),
+                                                                  args=[str(instance.pk)]),
             'objective_key': str(objective_key) if objective_key else None,
             'permissions': {'process': {
                 'public': permissions.get('public'),

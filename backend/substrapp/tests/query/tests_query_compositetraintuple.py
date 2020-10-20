@@ -50,7 +50,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
             'algo_key': self.fake_key_old,
-            'data_manager_key': self.fake_key_old,
+            'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
             'compute_plan_id': self.fake_key_old,
@@ -95,7 +95,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
             'algo_key': self.fake_key_old,
-            'data_manager_key': self.fake_key_old,
+            'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
             'compute_plan_id': self.fake_key_old,

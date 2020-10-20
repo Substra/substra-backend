@@ -47,7 +47,7 @@ class ObjectiveQueryTests(APITestCase):
         dm = DataManager.objects.create(name='slide opener',
                                         description=self.data_description,
                                         data_opener=self.data_data_opener)
-        self.data_manager_pkhash = dm.pkhash
+        self.data_manager_pkhash = str(dm.pkhash)
 
     def get_default_objective_data(self):
 

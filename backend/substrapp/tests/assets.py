@@ -27,7 +27,7 @@ objective = [
         },
         "owner": "MyOrg1MSP",
         "test_dataset": {
-            "data_manager_key": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
+            "data_manager_key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "data_sample_keys": [
                 "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
             ],
@@ -47,16 +47,16 @@ objective = [
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_global - Objective 1",
         "description": {
             "hash": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
-            "storage_address": "http://testserver/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/description/"
+            "storage_address": "http://testserver/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/description/"
         },
         "metrics": {
             "name": "test metrics",
             "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
-            "storage_address": "http://testserver/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/metrics/"
+            "storage_address": "http://testserver/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/metrics/"
         },
         "owner": "MyOrg2MSP",
         "test_dataset": {
-            "data_manager_key": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
+            "data_manager_key": "aa572a96-4b02-4435-d48a-73aacb86e3d1",
             "data_sample_keys": [
                 "edaa4ccdfc9bcadda859498fbb550a6e1fc6baf176389c3eb18afc8a382b4145"
             ],
@@ -78,14 +78,14 @@ datamanager = [
         "objective_key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
         "description": {
             "hash": "8acac2e3b700de1e27ee00b8cc0b49a883476d4234015658cbff7a701332a498",
-            "storage_address": "http://testserver/data_manager/e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204/description/"
+            "storage_address": "http://testserver/data_manager/e25a6ac0-b496-6c72-a339-45bdeb1f9f6f/description/"
         },
-        "key": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
+        "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
         "metadata": {},
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_global - Dataset 0",
         "opener": {
             "hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
-            "storage_address": "http://testserver/data_manager/e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204/opener/"
+            "storage_address": "http://testserver/data_manager/e25a6ac0-b496-6c72-a339-45bdeb1f9f6f/opener/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -100,14 +100,14 @@ datamanager = [
         "objective_key": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
         "description": {
             "hash": "0b32ac306997ff74a6b24e79264133de33d841e546f3f88b26a18d46e18223d9",
-            "storage_address": "http://testserver/data_manager/aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02/description/"
+            "storage_address": "http://testserver/data_manager/aa572a96-4b02-4435-d48a-73aacb86e3d1/description/"
         },
-        "key": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
+        "key": "aa572a96-4b02-4435-d48a-73aacb86e3d1",
         "metadata": {},
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_global - Dataset 1",
         "opener": {
             "hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
-            "storage_address": "http://testserver/data_manager/aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02/opener/"
+            "storage_address": "http://testserver/data_manager/aa572a96-4b02-4435-d48a-73aacb86e3d1/opener/"
         },
         "owner": "MyOrg2MSP",
         "permissions": {
@@ -233,6 +233,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
@@ -267,6 +268,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3"
@@ -301,6 +303,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
@@ -378,6 +381,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -452,6 +456,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -491,6 +496,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -534,6 +540,7 @@ traintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -572,6 +579,7 @@ testtuple = [
         "compute_plan_id": "",
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
@@ -619,7 +627,7 @@ testtuple = [
             "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
             "metrics": {
                 "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
-                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/metrics/"
+                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/metrics/"
             }
         },
         "rank": 0,
@@ -638,6 +646,7 @@ testtuple = [
         "compute_plan_id": "",
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
@@ -671,6 +680,7 @@ testtuple = [
         "compute_plan_id": "",
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
@@ -704,6 +714,7 @@ testtuple = [
         "compute_plan_id": "",
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
@@ -759,6 +770,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -822,6 +834,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -877,6 +890,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
@@ -927,6 +941,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
@@ -979,6 +994,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
@@ -1031,6 +1047,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
@@ -1145,6 +1162,7 @@ compositetraintuple = [
         },
         "creator": "MyOrg1MSP",
         "dataset": {
+            "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
                 "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
@@ -1345,10 +1363,11 @@ model = [
                 "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1398,10 +1417,11 @@ model = [
                 "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3"
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1451,10 +1471,11 @@ model = [
                 "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1507,10 +1528,10 @@ model = [
             "dataset": {
                 "worker": "MyOrg2MSP",
                 "keys": [
-                    "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea",
-                    "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f",
-                    "88608067e903a7b5cbfed480e7c4ee9eaf7eb37994cb2fec045497f324508a33",
-                    "e453da42246d9be33204fa30fb91755b989bbdeee2559dd93e14f57b57d1847f"
+                    "26e52856-b272-61fc-12e9-615d5914027d",
+                    "70474091-7e35-b366-48b8-0d9826e1f24d",
+                    "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
+                    "e453da42-246d-9be3-3204-fa30fb91755b"
                 ],
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "metadata": {}
@@ -1566,13 +1587,14 @@ model = [
                 "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1625,10 +1647,10 @@ model = [
             "dataset": {
                 "worker": "MyOrg2MSP",
                 "keys": [
-                    "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea",
-                    "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f",
-                    "88608067e903a7b5cbfed480e7c4ee9eaf7eb37994cb2fec045497f324508a33",
-                    "e453da42246d9be33204fa30fb91755b989bbdeee2559dd93e14f57b57d1847f"
+                    "26e52856-b272-61fc-12e9-615d5914027d",
+                    "70474091-7e35-b366-48b8-0d9826e1f24d",
+                    "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
+                    "e453da42-246d-9be3-3204-fa30fb91755b"
                 ],
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "metadata": {}
@@ -1660,10 +1682,11 @@ model = [
             "certified": True,
             "compute_plan_id": "",
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                    "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 2
@@ -1695,13 +1718,14 @@ model = [
                 "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1735,10 +1759,11 @@ model = [
             "certified": True,
             "compute_plan_id": "",
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                    "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 2
@@ -1770,13 +1795,14 @@ model = [
                 "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1832,13 +1858,14 @@ model = [
                 "storage_address": "http://testserver/algo/ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1885,13 +1912,14 @@ model = [
                 "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -1949,10 +1977,11 @@ model = [
             "certified": True,
             "compute_plan_id": "",
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                    "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 32
@@ -1984,13 +2013,14 @@ model = [
                 "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2058,13 +2088,14 @@ model = [
                 "storage_address": "http://testserver/composite_algo/0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                    "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                    "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                    "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                    "8524b404-cc1b-2531-4fce-92b8c31da7b1"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2127,10 +2158,11 @@ model = [
                 "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2198,10 +2230,11 @@ model = [
                 "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2269,10 +2302,11 @@ model = [
                 "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                    "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2344,7 +2378,7 @@ model = [
             "dataset": {
                 "worker": "MyOrg2MSP",
                 "keys": [
-                    "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f"
+                    "70474091-7e35-b366-48b8-0d9826e1f24d"
                 ],
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "metadata": {}
@@ -2406,7 +2440,7 @@ model = [
             "dataset": {
                 "worker": "MyOrg2MSP",
                 "keys": [
-                    "edaa4ccdfc9bcadda859498fbb550a6e1fc6baf176389c3eb18afc8a382b4145"
+                    "edaa4ccd-fc9b-cadd-a859-498fbb550a6e"
                 ],
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "perf": 32
@@ -2418,7 +2452,7 @@ model = [
                 "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
                 "metrics": {
                     "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
-                    "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3/metrics/"
+                    "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/metrics/"
                 }
             },
             "rank": 0,
@@ -2438,10 +2472,11 @@ model = [
                 "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
             },
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                    "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "metadata": {}
@@ -2500,10 +2535,11 @@ model = [
             "certified": True,
             "compute_plan_id": "",
             "creator": "MyOrg1MSP",
-            "dataset": {
+        "dataset": {
+                "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
                 "keys": [
-                    "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                    "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 32
@@ -2538,7 +2574,7 @@ model = [
             "dataset": {
                 "worker": "MyOrg2MSP",
                 "keys": [
-                    "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea"
+                    "26e52856-b272-61fc-12e9-615d5914027d"
                 ],
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "metadata": {}
