@@ -106,7 +106,7 @@ def get_algo(channel_name, tuple_type, tuple_):
         raise TasksError(f'Cannot find algo from tuple type {tuple_type}: {tuple_}')
     method_name = query_method_names_mapper[tuple_type]
 
-    key = tuple_['algo']['hash']
+    key = tuple_['algo']['key']
     metadata = get_object_from_ledger(channel_name, key, method_name)
 
     content = get_asset_content(

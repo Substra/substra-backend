@@ -24,6 +24,7 @@ class LedgerCompositeAlgoSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': str(instance.pk),
             'name': name,
             'hash': get_hash(instance.file),
             'storage_address': current_site + reverse('substrapp:composite_algo-file', args=[instance.pk]),

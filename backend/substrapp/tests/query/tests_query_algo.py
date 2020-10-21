@@ -2,6 +2,7 @@ import os
 import shutil
 import tempfile
 import json
+import uuid
 
 import mock
 
@@ -135,7 +136,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': objective[0]['key'].replace('1', '2'),
+                'objective_key': str(uuid.uuid4()),
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],

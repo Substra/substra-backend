@@ -5,7 +5,7 @@ from substrapp import ledger
 
 
 class LedgerAggregateTupleSerializer(serializers.Serializer):
-    algo_key = serializers.CharField(min_length=64, max_length=64)
+    algo_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     worker = serializers.CharField()
     compute_plan_id = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
@@ -27,7 +27,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
         metadata = validated_data.get('metadata')
 
         args = {
-            'algo_key': algo_key,
+            'algo_key': str(algo_key),
             'in_models': in_models_keys,
             'compute_plan_id': compute_plan_id,
             'rank': rank,

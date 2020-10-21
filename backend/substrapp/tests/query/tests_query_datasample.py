@@ -4,6 +4,7 @@ import tempfile
 import zipfile
 from unittest.mock import MagicMock
 import json
+import uuid
 
 import mock
 from django.core.files import File
@@ -168,7 +169,7 @@ class DataSampleQueryTests(APITestCase):
         url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
-        dataManagerKey = self.data_manager_pkhash1.replace('1', '5')
+        dataManagerKey = str(uuid.uuid4())
 
         # missing datamanager
         data = {'data_manager_keys': [dataManagerKey]}

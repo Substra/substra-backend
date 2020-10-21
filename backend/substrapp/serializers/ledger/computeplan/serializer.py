@@ -6,7 +6,7 @@ from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 
 
 class ComputePlanTraintupleSerializer(serializers.Serializer):
-    algo_key = serializers.CharField(min_length=64, max_length=64)
+    algo_key = serializers.UUIDField()
     data_manager_key = serializers.UUIDField()
     train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
@@ -28,7 +28,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
 
 
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
-    algo_key = serializers.CharField(min_length=64, max_length=64)
+    algo_key = serializers.UUIDField()
     data_manager_key = serializers.UUIDField()
     train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     composite_traintuple_id = serializers.CharField(min_length=1, max_length=64)
@@ -43,7 +43,7 @@ class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
 
 class ComputePlanAggregatetupleSerializer(serializers.Serializer):
     aggregatetuple_id = serializers.CharField(min_length=1, max_length=64)
-    algo_key = serializers.CharField(min_length=64, max_length=64)
+    algo_key = serializers.UUIDField()
     worker = serializers.CharField()
     in_models_ids = serializers.ListField(
         child=serializers.CharField(min_length=1, max_length=64),

@@ -17,7 +17,7 @@ class DataManager(models.Model):
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
-        """Use hash of description file as primary key"""
+        """Use hash of description file as checksum"""
         if not self.checksum and self.data_opener:
             self.checksum = get_hash(self.data_opener)
         super(DataManager, self).save(*args, **kwargs)

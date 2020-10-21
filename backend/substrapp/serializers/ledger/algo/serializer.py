@@ -24,6 +24,7 @@ class LedgerAlgoSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': str(instance.pk),
             'name': name,
             'hash': get_hash(instance.file),
             'storage_address': current_site + reverse('substrapp:algo-file', args=[str(instance.pk)]),
