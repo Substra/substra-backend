@@ -199,7 +199,7 @@ class DataSampleQueryTests(APITestCase):
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_sample_ko_already_exists(self):
+    def test_add_data_sample_ok_already_exists(self):
         url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
@@ -227,14 +227,16 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile:
+        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+
+            ledger_data = {'pkhash': ['some key'], 'validated': False}
+            mcreate.return_value = ledger_data, status.HTTP_200_OK
+
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            # TO DO : convert pkhash to key in backend
-            self.assertEqual(r['message'],
-                             [[{'pkhash': ['data sample with this pkhash already exists.']}]])
-            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+            # it's ok to save duplicate datasamples
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_sample_ko_not_a_zip(self):
         url = reverse('substrapp:data_sample-list')
@@ -289,9 +291,6 @@ class DataSampleQueryTests(APITestCase):
             mcreate.side_effect = LedgerTimeout('Timeout')
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertIsNotNone(r['message']['pkhash'])
-            self.assertEqual(r['message']['validated'], False)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
@@ -328,12 +327,10 @@ class DataSampleQueryTests(APITestCase):
             mcreate.side_effect = LedgerTimeout('Timeout')
 
             response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertEqual(r['message']['validated'], False)
             self.assertEqual(DataSample.objects.count(), 2)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
-    def test_bulk_add_data_sample_ko_same_pkhash(self):
+    def test_bulk_add_data_sample_ok_same_pkhash(self):
 
         self.add_default_data_manager()
 
@@ -365,17 +362,12 @@ class DataSampleQueryTests(APITestCase):
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
             ledger_data = {'pkhash': ['some key', 'some other key'], 'validated': False}
-            mcreate.return_value = ledger_data, status.HTTP_408_REQUEST_TIMEOUT
+            mcreate.return_value = ledger_data, status.HTTP_200_OK
 
             response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertEqual(DataSample.objects.count(), 0)
-            self.assertEqual(
-                r['message'],
-                f'Your data sample archives contain same files leading to same key, '
-                f'please review the content of your achives. '
-                f'Archives {file_mock2.name} and {file_mock.name} are the same')
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            # It's ok to add the same data sample multiple times
+            self.assertEqual(DataSample.objects.count(), 2)
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_sample_ko_400(self):
         url = reverse('substrapp:data_sample-list')
@@ -490,7 +482,7 @@ class DataSampleQueryTests(APITestCase):
         d = DataSample(path=self.data_file_filename)
         # trigger pre save
         d.save()
-        d.pkhash = 'fake' * 16  # set pkhash manually otherwise it's empty
+        d.pkhash = 'ae' * 16  # set pkhash manually otherwise it's empty
 
         url = reverse('substrapp:data_sample-bulk-update')
 

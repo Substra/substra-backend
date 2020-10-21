@@ -8,9 +8,8 @@ class LedgerTestTupleSerializer(serializers.Serializer):
     traintuple_key = serializers.CharField(min_length=64, max_length=64)
     objective_key = serializers.UUIDField(required=False)
     data_manager_key = serializers.UUIDField(required=False, allow_null=True)
-    test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                  min_length=0,
-                                                  required=False, allow_null=True)
+    test_data_sample_keys = serializers.ListField(child=serializers.UUIDField(),
+                                                  min_length=0, required=False, allow_null=True)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -26,7 +25,7 @@ class LedgerTestTupleSerializer(serializers.Serializer):
             'traintuple_key': traintuple_key,
             'objective_key': str(objective_key),
             'data_manager_key': str(data_manager_key) if data_manager_key else None,
-            'data_sample_keys': test_data_sample_keys,
+            'data_sample_keys': [str(key) for key in test_data_sample_keys],
             'tag': tag,
             'metadata': metadata
         }

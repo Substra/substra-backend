@@ -29,7 +29,7 @@ objective = [
         "test_dataset": {
             "data_manager_key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "data_sample_keys": [
-                "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "metadata": {},
             "worker": ""
@@ -58,7 +58,7 @@ objective = [
         "test_dataset": {
             "data_manager_key": "aa572a96-4b02-4435-d48a-73aacb86e3d1",
             "data_sample_keys": [
-                "edaa4ccdfc9bcadda859498fbb550a6e1fc6baf176389c3eb18afc8a382b4145"
+                "edaa4ccd-fc9b-cadd-a859-498fbb550a6e"
             ],
             "metadata": {},
             "worker": ""
@@ -236,7 +236,7 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -271,7 +271,7 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3"
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -306,7 +306,7 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -340,10 +340,10 @@ traintuple = [
         "dataset": {
             "worker": "MyOrg2MSP",
             "keys": [
-                "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea",
-                "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f",
-                "88608067e903a7b5cbfed480e7c4ee9eaf7eb37994cb2fec045497f324508a33",
-                "e453da42246d9be33204fa30fb91755b989bbdeee2559dd93e14f57b57d1847f"
+                "26e52856-b272-61fc-12e9-615d5914027d",
+                "70474091-7e35-b366-48b8-0d9826e1f24d",
+                "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
+                "e453da42-246d-9be3-3204-fa30fb91755b"
             ],
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "metadata": {}
@@ -384,10 +384,10 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -421,10 +421,10 @@ traintuple = [
         "dataset": {
             "worker": "MyOrg2MSP",
             "keys": [
-                "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea",
-                "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f",
-                "88608067e903a7b5cbfed480e7c4ee9eaf7eb37994cb2fec045497f324508a33",
-                "e453da42246d9be33204fa30fb91755b989bbdeee2559dd93e14f57b57d1847f"
+                "26e52856-b272-61fc-12e9-615d5914027d",
+                "70474091-7e35-b366-48b8-0d9826e1f24d",
+                "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
+                "e453da42-246d-9be3-3204-fa30fb91755b"
             ],
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "metadata": {}
@@ -459,10 +459,10 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -499,10 +499,10 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -543,10 +543,10 @@ traintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -582,7 +582,7 @@ testtuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 32
@@ -615,7 +615,7 @@ testtuple = [
         "dataset": {
             "worker": "MyOrg2MSP",
             "keys": [
-                "edaa4ccdfc9bcadda859498fbb550a6e1fc6baf176389c3eb18afc8a382b4145"
+                "edaa4ccd-fc9b-cadd-a859-498fbb550a6e"
             ],
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "perf": 32
@@ -649,7 +649,7 @@ testtuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 32
@@ -683,7 +683,7 @@ testtuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 2
@@ -717,7 +717,7 @@ testtuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "ffed4147fffff2f18130b7332c1460ecccd8e1378765c415b82b948c19e98a68"
+                "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 2
@@ -773,10 +773,10 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -837,10 +837,10 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -893,10 +893,10 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f",
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135",
-                "5702a4f561da782735e2e5d7b03605ee7bdb27d6bfc3187965e64cc0603bc0e3",
-                "8524b404cc1b25314fce92b8c31da7b1c9f1bab2ffd48e2c28382730bf8fe49f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
+                "51d906cc-10b2-9eb8-1c93-5550b7508119",
+                "5702a4f5-61da-7827-35e2-e5d7b03605ee",
+                "8524b404-cc1b-2531-4fce-92b8c31da7b1"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -944,7 +944,7 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -997,7 +997,7 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -1050,7 +1050,7 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "265f1e2639598c42bbf9aba8d223c6a5d6cc1ad5066254b908eb49ac1e43577f"
+                "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -1103,7 +1103,7 @@ compositetraintuple = [
         "dataset": {
             "worker": "MyOrg2MSP",
             "keys": [
-                "704740917e35b36648b80d9826e1f24d2082bf113f1693ba08975c7c405cb01f"
+                "70474091-7e35-b366-48b8-0d9826e1f24d"
             ],
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "metadata": {}
@@ -1165,7 +1165,7 @@ compositetraintuple = [
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
             "keys": [
-                "51d906cc10b29eb81c935550b750811933bec25cb28ff88ea2549de2765db135"
+                "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "metadata": {}
@@ -1226,7 +1226,7 @@ compositetraintuple = [
         "dataset": {
             "worker": "MyOrg2MSP",
             "keys": [
-                "26e52856b27261fc12e9615d5914027dc5986cd8bb37ccf1da4c7aa47b74a8ea"
+                "26e52856-b272-61fc-12e9-615d5914027d"
             ],
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "metadata": {}

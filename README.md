@@ -148,7 +148,7 @@ BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --setti
 
 You can test your environment by creating a traintuple:
 ```shell
-curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"da58a7a29b549f2fe5f009fb51cce6b28ca184ec641a0c1db075729bb266549b","model_key":"","train_data_sample_keys":["62fb3263208d62c7235a046ee1d80e25512fe782254b730a9e566276b8c0ef3a","42303efa663015e729159833a12ffb510ff92a6e386b8152f90f6fb14ddc94c9"]}' -X POST http://localhost:8001/traintuple/?format=json
+curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"da58a7a2-9b54-9f2f-e5f0-09fb51cce6b2","model_key":"","train_data_sample_keys":["62fb3263-208d-62c7-235a-046ee1d80e25","42303efa-6630-15e7-2915-9833a12ffb51"]}' -X POST http://localhost:8001/traintuple/?format=json
 ```
 It will try to create a traintuple with creator: chu-nantes (localhost:8001).
 The chu-nantes celery worker will try to add the traintuple to the ledger.

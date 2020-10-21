@@ -45,7 +45,7 @@ class ComputePlanViewTests(APITestCase):
             'traintuples': [{
                 'algo_key': dummy_key_old,
                 'data_manager_key': dummy_key,
-                'train_data_sample_keys': [dummy_key_old],
+                'train_data_sample_keys': [dummy_key],
                 'traintuple_id': dummy_key_old,
             }],
             'testtuples': [{

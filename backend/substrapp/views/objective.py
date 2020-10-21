@@ -17,11 +17,11 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
-from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
+from substrapp.views.utils import (PermissionMixin, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
                                    node_has_process_permission, get_channel_name,
-                                   data_to_data_response, create_uuid)
+                                   data_to_data_response)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -73,12 +73,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
-            else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
-            raise LedgerException(data, e.status)
+            raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
             raise ValidationException(e.msg, e.status)
         except LedgerError as e:

@@ -214,7 +214,7 @@ class ValidationException(Exception):
     def __init__(self, data, st):
         self.data = data
         self.st = st
-        super(ValidationExceptionOld).__init__()
+        super(ValidationException).__init__()
 
 
 def get_success_create_code():
@@ -245,7 +245,3 @@ def data_to_data_response(data):
         return {'key': data['pkhash']}
 
     return data
-
-# TODO: deleteme
-def create_uuid():
-    return uuid.uuid4().hex

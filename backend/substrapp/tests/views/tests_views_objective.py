@@ -48,8 +48,8 @@ class ObjectiveViewTests(APITestCase):
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
         self.test_data_sample_keys = [
-            "2d0f943aa81a9cb3fe84b162559ce6aff068ccb04e0cb284733b8f9d7e06517e",
-            "533ee6e7b9d8b247e7e853b24547f57e6ef351852bac0418f13a0666173448f1"
+            "2d0f943a-a81a-9cb3-fe84-b162559ce6af",
+            "533ee6e7-b9d8-b247-e7e8-53b24547f57e"
         ]
 
         self.extra = {

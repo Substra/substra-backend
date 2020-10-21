@@ -37,8 +37,8 @@ class ObjectiveQueryTests(APITestCase):
             self.data_opener_filename = get_sample_datamanager()
 
         self.test_data_sample_keys = [
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b379',
-            '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b389']
+            '5c1d9cd1-c2c1-082d-de09-21b56d11030c',
+            '5c1d9cd1-c2c1-082d-de09-21b56d11030c']
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

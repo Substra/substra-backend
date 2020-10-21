@@ -30,7 +30,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
-        self.train_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
+        self.train_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
         self.fake_key_old = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
         self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
 

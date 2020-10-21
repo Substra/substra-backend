@@ -1,19 +1,18 @@
 from django.db import models
-
 from substrapp.utils import get_hash
+import uuid
 
 
 class DataSample(models.Model):
     """Storage Data table"""
-    pkhash = models.CharField(primary_key=True, max_length=64, blank=True)
+    pkhash = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False)
     path = models.FilePathField(max_length=500, blank=True, null=True)  # path max length to 500 instead of default 100
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
-        if not self.pkhash:
+        if not self.checksum and self.path:
             self.checksum = get_hash(self.path)
-            self.pkhash = self.checksum  # will be overridden
         super(DataSample, self).save(*args, **kwargs)
 
     def __str__(self):

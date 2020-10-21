@@ -8,9 +8,7 @@ from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
 class ComputePlanTraintupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.UUIDField()
-    train_data_sample_keys = serializers.ListField(
-        child=serializers.CharField(min_length=64, max_length=64),
-        min_length=1)
+    train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
     in_models_ids = serializers.ListField(
         child=serializers.CharField(min_length=1, max_length=64),
@@ -24,10 +22,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
     traintuple_id = serializers.CharField(min_length=1, max_length=64)
     objective_key = serializers.UUIDField()
     data_manager_key = serializers.UUIDField(required=False, allow_null=True)
-    test_data_sample_keys = serializers.ListField(
-        child=serializers.CharField(min_length=64, max_length=64),
-        min_length=0,
-        required=False)
+    test_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=0, required=False)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -35,9 +30,7 @@ class ComputePlanTesttupleSerializer(serializers.Serializer):
 class ComputePlanCompositeTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.CharField(min_length=64, max_length=64)
     data_manager_key = serializers.UUIDField()
-    train_data_sample_keys = serializers.ListField(
-        child=serializers.CharField(min_length=64, max_length=64),
-        min_length=1)
+    train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     composite_traintuple_id = serializers.CharField(min_length=1, max_length=64)
     in_head_model_id = serializers.CharField(min_length=1, max_length=64, allow_blank=True, required=False,
                                              allow_null=True)
@@ -75,7 +68,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_traintuple in data.get('traintuples', []):
             traintuple = {
                 'data_manager_key': str(data_traintuple['data_manager_key']),
-                'data_sample_keys': data_traintuple['train_data_sample_keys'],
+                'data_sample_keys': [str(key) for key in data_traintuple['train_data_sample_keys']],
                 'algo_key': data_traintuple['algo_key'],
                 'id': data_traintuple['traintuple_id'],
                 'metadata': data_traintuple.get('metadata'),
@@ -99,7 +92,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             if 'data_manager_key' in data_testtuple:
                 testtuple['data_manager_key'] = str(data_testtuple['data_manager_key'])
             if 'test_data_sample_keys' in data_testtuple:
-                testtuple['data_sample_keys'] = data_testtuple['test_data_sample_keys']
+                testtuple['data_sample_keys'] = [str(key) for key in data_testtuple['test_data_sample_keys']]
 
             testtuples.append(testtuple)
 
@@ -108,7 +101,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             composite_traintuple = {
                 'algo_key': data_composite_traintuple['algo_key'],
                 'data_manager_key': str(data_composite_traintuple['data_manager_key']),
-                'data_sample_keys': data_composite_traintuple['train_data_sample_keys'],
+                'data_sample_keys': [str(key) for key in data_composite_traintuple['train_data_sample_keys']],
                 'id': data_composite_traintuple['composite_traintuple_id'],
                 'metadata': data_composite_traintuple.get('metadata'),
             }

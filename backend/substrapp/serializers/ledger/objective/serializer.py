@@ -10,9 +10,7 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 
 
 class LedgerObjectiveSerializer(serializers.Serializer):
-    test_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                  min_length=0,
-                                                  required=False)
+    test_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=0, required=False)
     name = serializers.CharField(min_length=1, max_length=100)
     test_data_manager_key = serializers.UUIDField(required=False, allow_null=True)
     permissions = PermissionsSerializer()
@@ -41,7 +39,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'metrics_storage_address': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
             'test_dataset': {
                 'data_manager_key': str(test_data_manager_key) if test_data_manager_key else None,
-                'data_sample_keys': test_data_sample_keys,
+                'data_sample_keys': [str(key) for key in test_data_sample_keys],
             },
             'permissions': {'process': {
                 'public': permissions.get('public'),

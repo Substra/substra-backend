@@ -13,8 +13,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     in_models_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
                                            min_length=0,
                                            required=False, allow_null=True)
-    train_data_sample_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                                   min_length=1)
+    train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -33,7 +32,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
             'algo_key': algo_key,
             'in_models': in_models_keys,
             'data_manager_key': str(data_manager_key),
-            'data_sample_keys': train_data_sample_keys,
+            'data_sample_keys': [str(key) for key in train_data_sample_keys],
             'compute_plan_id': compute_plan_id,
             'rank': rank,
             'tag': tag,

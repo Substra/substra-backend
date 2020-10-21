@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 
-from substrapp.serializers import LedgerDataSampleSerializer
+from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
 from substrapp.views.datasample import path_leaf
 from substrapp.utils import uncompress_content
@@ -59,10 +59,8 @@ class DataSampleViewTests(APITestCase):
 
         data_path1 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
-
-        # dir hash
-        key1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
-        key2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
+        checksum1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        checksum2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -75,12 +73,17 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [key1, key2]}
+            mcreate_ledger.return_value = {'keys': ['some_key', 'some_other_key']}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
-        self.assertEqual([r['key'] for r in response.data], [key1, key2])
+
+        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum1)
+        self.assertEqual(mcreate.call_args_list[1][0][0]['checksum'], checksum2)
+        self.assertIsNotNone(response.data[0]['key'])
+        self.assertIsNotNone(response.data[1]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         for x in data['files']:
@@ -92,9 +95,7 @@ class DataSampleViewTests(APITestCase):
         dir_path = os.path.dirname(os.path.realpath(__file__))
 
         data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-
-        # dir hash
-        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data = {
             'file': open(data_path, 'rb'),
@@ -105,13 +106,15 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [key]}
+            mcreate_ledger.return_value = {'keys': ['some_key']}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data[0]['key'], key)
+        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['file'].close()
@@ -128,8 +131,7 @@ class DataSampleViewTests(APITestCase):
         with open(data_zip_path, 'rb') as data_zip:
             uncompress_content(data_zip.read(), data_path)
 
-        # dir hash
-        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data = {
             'path': data_parent_path,
@@ -139,13 +141,15 @@ class DataSampleViewTests(APITestCase):
         }
 
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [key]}
+            mcreate_ledger.return_value = {'keys': ['some_key']}
             response = self.client.post(url, data=data, format='json', **self.extra)
 
-        self.assertEqual(response.data[0]['key'], key)
+        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_data_create_path(self):
@@ -159,23 +163,23 @@ class DataSampleViewTests(APITestCase):
         with open(data_zip_path, 'rb') as data_zip:
             uncompress_content(data_zip.read(), data_path)
 
-        # dir hash
-        key = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
 
         data = {
             'path': data_path,
             'data_manager_keys': [datamanager[0]['key']],
             'test_only': False
         }
-
         with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
             mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate.return_value = {'keys': [key]}
+            mcreate_ledger.return_value = {'keys': ['some_key']}
             response = self.client.post(url, data=data, format='json', **self.extra)
 
-        self.assertEqual(response.data[0]['key'], key)
+        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_datasamples_list(self):

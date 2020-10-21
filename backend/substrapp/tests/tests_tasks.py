@@ -11,7 +11,7 @@ from django_celery_results.models import TaskResult
 from substrapp.models import DataSample
 from substrapp.ledger.api import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
-from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
+from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory, new_uuid
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
@@ -187,8 +187,8 @@ class TasksTests(APITestCase):
     def test_prepare_data_sample_zip(self):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
-
-        data_sample = DataSample(pkhash=checksum, path=datasamples_path_from_file, checksum=checksum)
+        key = new_uuid()
+        data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
@@ -207,7 +207,7 @@ class TasksTests(APITestCase):
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             self.assertTrue(
-                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', checksum)))
+                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', key)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
@@ -221,7 +221,7 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample_filename)
+        data_sample = DataSample(pkhash=new_uuid(), path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
@@ -249,7 +249,8 @@ class TasksTests(APITestCase):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
-        data_sample = DataSample(pkhash=checksum, path=datasamples_path_from_file, checksum=checksum)
+        key = new_uuid()
+        data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
@@ -266,7 +267,7 @@ class TasksTests(APITestCase):
 
             # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', checksum)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', key)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
