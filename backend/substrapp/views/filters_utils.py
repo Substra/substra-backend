@@ -126,7 +126,6 @@ def filter_list(channel_name, object_type, data, query_params):
             if filter_key not in AUTHORIZED_FILTERS[object_type]:
                 raise exceptions.BadRequestError(
                     f'Malformed search filters: not authorized filter key {filter_key} for asset {object_type}')
-
             # Will be appended in object_list after been filtered
             filtered_list = data
 
@@ -156,10 +155,9 @@ def filter_list(channel_name, object_type, data, query_params):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         keys = [x['key'] for x in filtering_data]
-
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x)['algo']['hash'] in keys]
+                                             if _get_model_tuple(x)['algo']['key'] in keys]
 
                 elif filter_key == 'model':
                     for attribute, val in subfilters.items():
@@ -182,7 +180,7 @@ def filter_list(channel_name, object_type, data, query_params):
                         ]
 
                         if object_type in ['algo', 'composite_algo', 'aggregate_algo']:
-                            hashes = [_get_model_tuple(x)['algo']['hash'] for x in filtering_data]
+                            hashes = [_get_model_tuple(x)['algo']['key'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list if x['key'] in hashes]
 
                         elif object_type == 'dataset':

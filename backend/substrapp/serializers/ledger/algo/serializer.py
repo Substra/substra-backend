@@ -26,9 +26,9 @@ class LedgerAlgoSerializer(serializers.Serializer):
         args = {
             'name': name,
             'hash': get_hash(instance.file),
-            'storage_address': current_site + reverse('substrapp:algo-file', args=[instance.pk]),
+            'storage_address': current_site + reverse('substrapp:algo-file', args=[str(instance.pk)]),
             'description_hash': get_hash(instance.description),
-            'description_storage_address': current_site + reverse('substrapp:algo-description', args=[instance.pk]),
+            'description_storage_address': current_site + reverse('substrapp:algo-description', args=[str(instance.pk)]),
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorized_ids': permissions.get('authorized_ids'),

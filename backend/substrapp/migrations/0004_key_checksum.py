@@ -7,7 +7,7 @@ def get_migration(model_name):
     res =  [
         migrations.AddField(model_name, 'checksum', models.CharField(blank=True, max_length=64))
     ]
-    if model_name in ['Objective', 'DataManager', 'DataSample']:
+    if model_name != 'Model':
         res.append(migrations.AlterField(model_name, 'pkhash', models.UUIDField(primary_key=True, editable=False)))
     return res
 

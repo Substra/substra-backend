@@ -122,15 +122,15 @@ datamanager = [
 
 algo = [
     {
-        "key": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
+        "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
         "content": {
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-            "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+            "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
         },
         "description": {
             "hash": "22b9af671a660afd001b15c5a85edaa81dc42fbda7aef03f2fd76aa10d2e5151",
-            "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/description/"
+            "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -142,15 +142,15 @@ algo = [
         "metadata": {}
     },
     {
-        "key": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
+        "key": "59eb3834-97c3-37e2-80f2-d7c6805cb80b",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
         "content": {
             "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
-            "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
+            "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/file/"
         },
         "description": {
             "hash": "df548aab4b1a66e08021774e0b70e6f59b858ba41afa550396d213357326f891",
-            "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/description/"
+            "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -162,15 +162,15 @@ algo = [
         "metadata": {}
     },
     {
-        "key": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
+        "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
         "content": {
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-            "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+            "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
         },
         "description": {
             "hash": "851fc503e6136c86f4a0f4035aa6d59c44f017694757769b9b2d7d39a7f5dc3c",
-            "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/description/"
+            "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -182,15 +182,15 @@ algo = [
         "metadata": {}
     },
     {
-        "key": "ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d",
+        "key": "ebbd8c65-dfe0-7d82-6d69-2f806deceffd",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_traintuple_execution_failure - Algo 0",
         "content": {
             "hash": "ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d",
-            "storage_address": "http://testserver/algo/ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d/file/"
+            "storage_address": "http://testserver/algo/ebbd8c65-dfe0-7d82-6d69-2f806deceffd/file/"
         },
         "description": {
             "hash": "d0289ce5f4ec35ea5eff7dc76b36cdc93c90bc3d76f55a8707a701f699742292",
-            "storage_address": "http://testserver/algo/ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d/description/"
+            "storage_address": "http://testserver/algo/ebbd8c65-dfe0-7d82-6d69-2f806deceffd/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -202,15 +202,15 @@ algo = [
         "metadata": {}
     },
     {
-        "key": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
+        "key": "c8efb021-f79c-5adc-96e9-ba8407c368a5",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
         "content": {
             "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
-            "storage_address": "http://testserver/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/file/"
+            "storage_address": "http://testserver/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/file/"
         },
         "description": {
             "hash": "9a56aa11bdb75a1b5c2641493d546d4a28ec4d9d60aa0df18f5c2a019f8518b7",
-            "storage_address": "http://testserver/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/description/"
+            "storage_address": "http://testserver/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/description/"
         },
         "owner": "MyOrg2MSP",
         "permissions": {
@@ -229,7 +229,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-            "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+            "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -264,7 +264,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-            "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+            "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -299,7 +299,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-            "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+            "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -334,7 +334,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
             "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
-            "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
+            "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -377,7 +377,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
             "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
-            "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
+            "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -415,7 +415,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
             "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
-            "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/file/"
+            "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -452,7 +452,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-            "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+            "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -492,7 +492,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-            "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+            "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -536,7 +536,7 @@ traintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_traintuple_execution_failure - Algo 0",
             "hash": "ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d",
-            "storage_address": "http://testserver/algo/ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d/file/"
+            "storage_address": "http://testserver/algo/ebbd8c65-dfe0-7d82-6d69-2f806deceffd/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -573,7 +573,7 @@ testtuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-            "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+            "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
         },
         "certified": True,
         "compute_plan_id": "",
@@ -607,7 +607,7 @@ testtuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "certified": True,
         "compute_plan_id": "",
@@ -640,7 +640,7 @@ testtuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "certified": True,
         "compute_plan_id": "",
@@ -674,7 +674,7 @@ testtuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-            "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+            "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
         },
         "certified": True,
         "compute_plan_id": "",
@@ -708,7 +708,7 @@ testtuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
             "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
-            "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/file/"
+            "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/file/"
         },
         "certified": True,
         "compute_plan_id": "",
@@ -766,7 +766,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-            "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+            "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -830,7 +830,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-            "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+            "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -886,7 +886,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuple_execution_failure - Algo 0",
             "hash": "0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593",
-            "storage_address": "http://testserver/composite_algo/0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593/file/"
+            "storage_address": "http://testserver/composite_algo/0fbb505a-32ae-8785-c08d-37fe7bf7476d/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -937,7 +937,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
             "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
-            "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
+            "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -990,7 +990,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
             "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
-            "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
+            "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -1043,7 +1043,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -1097,7 +1097,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -1158,7 +1158,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -1220,7 +1220,7 @@ compositetraintuple = [
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "creator": "MyOrg1MSP",
         "dataset": {
@@ -1272,15 +1272,15 @@ compositetraintuple = [
 
 compositealgo = [
     {
-        "key": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
+        "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
         "content": {
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-            "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+            "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
         },
         "description": {
             "hash": "aa444b9dc8cac0c80263b3970ddc403757abc6bcb546eb322a1711f1b8ec294d",
-            "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/description/"
+            "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -1292,15 +1292,15 @@ compositealgo = [
         "metadata": {}
     },
     {
-        "key": "0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593",
+        "key": "0fbb505a-32ae-8785-c08d-37fe7bf7476d",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuple_execution_failure - Algo 0",
         "content": {
             "hash": "0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593",
-            "storage_address": "http://testserver/composite_algo/0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593/file/"
+            "storage_address": "http://testserver/composite_algo/0fbb505a-32ae-8785-c08d-37fe7bf7476d/file/"
         },
         "description": {
             "hash": "6d184a2e6d8097cc55e4b435bbd5b9c6d7211274472585448411cd435149e941",
-            "storage_address": "http://testserver/composite_algo/0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593/description/"
+            "storage_address": "http://testserver/composite_algo/0fbb505a-32ae-8785-c08d-37fe7bf7476d/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -1312,15 +1312,15 @@ compositealgo = [
         "metadata": {}
     },
     {
-        "key": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
+        "key": "5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
         "content": {
             "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
-            "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
+            "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/file/"
         },
         "description": {
             "hash": "61cc1c0f3962bc4d60151041e02b55ca9788ea7a8a848dfc67f3fc3194b5a202",
-            "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/description/"
+            "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -1332,15 +1332,15 @@ compositealgo = [
         "metadata": {}
     },
     {
-        "key": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
+        "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
         "content": {
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
         },
         "description": {
             "hash": "066d354d20dfa689cd5ca22f99445dc47589971c6d958bd6841beeae585f1054",
-            "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/description/"
+            "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/description/"
         },
         "owner": "MyOrg1MSP",
         "permissions": {
@@ -1358,9 +1358,10 @@ model = [
         "traintuple": {
             "key": "3169bb172502f67556a6f12b856a5d653441227842aded24ade6b7866d3b624d",
             "algo": {
+                "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
                 "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-                "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+                "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1412,9 +1413,10 @@ model = [
         "traintuple": {
             "key": "a9c586b72c9c11412b0c9f81d599651a964d04934bca9f1886dd2d084f438a70",
             "algo": {
+                "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
                 "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-                "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+                "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1466,9 +1468,10 @@ model = [
         "traintuple": {
             "key": "ea7180ccc125dcceff10400fd2943f1e02fc915262c67f19986b3a9edbd765fb",
             "algo": {
+                "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
                 "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
-                "storage_address": "http://testserver/algo/4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be/file/"
+                "storage_address": "http://testserver/algo/4942edc4-47b4-1439-1d00-47fb6379c2df/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1520,9 +1523,10 @@ model = [
         "traintuple": {
             "key": "137804ca8660878062e419e340efd2826ce0d528c47a40879e30cdc1e77da1b0",
             "algo": {
+                "key": "59eb3834-97c3-37e2-80f2-d7c6805cb80b",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
                 "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
-                "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
+                "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/file/"
             },
             "creator": "MyOrg1MSP",
             "dataset": {
@@ -1582,9 +1586,10 @@ model = [
         "traintuple": {
             "key": "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
             "algo": {
+                "key": "59eb3834-97c3-37e2-80f2-d7c6805cb80b",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
                 "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
-                "storage_address": "http://testserver/algo/59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30/file/"
+                "storage_address": "http://testserver/algo/59eb3834-97c3-37e2-80f2-d7c6805cb80b/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1639,9 +1644,10 @@ model = [
         "traintuple": {
             "key": "e623fe67c0dc4ed78d4e34f9f0fad0ac3a5fa7aafb819a3e1961f978d7540b2a",
             "algo": {
+                "key": "c8efb021-f79c-5adc-96e9-ba8407c368a5",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
                 "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
-                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/file/"
+                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/file/"
             },
             "creator": "MyOrg1MSP",
             "dataset": {
@@ -1675,9 +1681,10 @@ model = [
         },
         "testtuple": {
             "algo": {
+                "key": "c8efb021-f79c-5adc-96e9-ba8407c368a5",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
                 "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
-                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593/file/"
+                "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/algo/c8efb021-f79c-5adc-96e9-ba8407c368a5/file/"
             },
             "certified": True,
             "compute_plan_id": "",
@@ -1713,9 +1720,10 @@ model = [
         "traintuple": {
             "key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
             "algo": {
+                "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
                 "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-                "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+                "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1752,9 +1760,10 @@ model = [
         },
         "testtuple": {
             "algo": {
+                "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
                 "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-                "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+                "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
             },
             "certified": True,
             "compute_plan_id": "",
@@ -1790,9 +1799,10 @@ model = [
         "traintuple": {
             "key": "fcdbcf06d54b634edfe2dd2d46cfe8d63076570394b7335fab6e6aac99b51909",
             "algo": {
+                "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
                 "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
-                "storage_address": "http://testserver/algo/e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8/file/"
+                "storage_address": "http://testserver/algo/e9481a81-278d-988f-3d7c-c8ba095b88f3/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1853,9 +1863,10 @@ model = [
         "traintuple": {
             "key": "5e18aef8a6748b220c82532c39b297159704f0b2b602ab8e5c4e6e59f2ec6cba",
             "algo": {
+                "key": "ebbd8c65-dfe0-7d82-6d69-2f806deceffd",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_traintuple_execution_failure - Algo 0",
                 "hash": "ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d",
-                "storage_address": "http://testserver/algo/ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d/file/"
+                "storage_address": "http://testserver/algo/ebbd8c65-dfe0-7d82-6d69-2f806deceffd/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1907,9 +1918,10 @@ model = [
         "composite_traintuple": {
             "key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
             "algo": {
+                "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
                 "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-                "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+                "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -1970,9 +1982,10 @@ model = [
         },
         "testtuple": {
             "algo": {
+                "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
                 "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-                "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+                "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
             },
             "certified": True,
             "compute_plan_id": "",
@@ -2008,9 +2021,10 @@ model = [
         "composite_traintuple": {
             "key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
             "algo": {
+                "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
                 "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
-                "storage_address": "http://testserver/composite_algo/09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf/file/"
+                "storage_address": "http://testserver/composite_algo/09abcf99-a672-c0b9-5b3d-2431169e34ec/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2083,9 +2097,10 @@ model = [
         "composite_traintuple": {
             "key": "2d3e98fbeafebf1995db3ab205b9f803b18a1be8b4af72e242faceee3dd7d224",
             "algo": {
+                "key": "0fbb505a-32ae-8785-c08d-37fe7bf7476d",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuple_execution_failure - Algo 0",
                 "hash": "0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593",
-                "storage_address": "http://testserver/composite_algo/0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593/file/"
+                "storage_address": "http://testserver/composite_algo/0fbb505a-32ae-8785-c08d-37fe7bf7476d/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2153,9 +2168,10 @@ model = [
         "composite_traintuple": {
             "key": "7dbd4b2ac9e81b6dedd775809e0903d8fa55ce2cb8094bd6c4c20c2b0448b716",
             "algo": {
+                "key": "5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
                 "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
-                "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
+                "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2225,9 +2241,10 @@ model = [
         "composite_traintuple": {
             "key": "df3e19426496a5b8a79d8f1b96e52de9fe3a07b6a81a9b5d9a34a824d52c1841",
             "algo": {
+                "key": "5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
                 "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
-                "storage_address": "http://testserver/composite_algo/5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c/file/"
+                "storage_address": "http://testserver/composite_algo/5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2297,9 +2314,10 @@ model = [
         "composite_traintuple": {
             "key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2370,9 +2388,10 @@ model = [
         "composite_traintuple": {
             "key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "creator": "MyOrg1MSP",
             "dataset": {
@@ -2430,9 +2449,10 @@ model = [
         },
         "testtuple": {
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "certified": True,
             "compute_plan_id": "",
@@ -2467,9 +2487,10 @@ model = [
         "composite_traintuple": {
             "key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "creator": "MyOrg1MSP",
         "dataset": {
@@ -2528,9 +2549,10 @@ model = [
         },
         "testtuple": {
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "certified": True,
             "compute_plan_id": "",
@@ -2566,9 +2588,10 @@ model = [
         "composite_traintuple": {
             "key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
             "algo": {
+                "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
                 "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
-                "storage_address": "http://testserver/composite_algo/fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87/file/"
+                "storage_address": "http://testserver/composite_algo/fe2eba45-66fa-c967-ef84-7cbb3a8eba75/file/"
             },
             "creator": "MyOrg1MSP",
             "dataset": {
@@ -2638,9 +2661,10 @@ model = [
         "aggregatetuple": {
             "key": "9936e27a5738298e39e4308c0d4d612ada6ef1463bdbfe2b446b8e62230237a5",
             "algo": {
+                "key": "16acae7a-5d70-2a97-c4cc-e626bbe5c44d",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 1",
                 "hash": "16acae7a5d702a97c4cce626bbe5c44d367d73617ee42e81660bce7494379986",
-                "storage_address": "http://testserver/aggregate_algo/16acae7a5d702a97c4cce626bbe5c44d367d73617ee42e81660bce7494379986/file/"
+                "storage_address": "http://testserver/aggregate_algo/16acae7a-5d70-2a97-c4cc-e626bbe5c44d/file/"
             },
             "creator": "MyOrg1MSP",
             "compute_plan_id": "",
@@ -2694,9 +2718,10 @@ model = [
         "aggregatetuple": {
             "key": "0c6d79470e536e7390623b37622228b507620e5878fe196112e23111168dcb38",
             "algo": {
+                "key": "25081cda-2aab-5915-fe1d-732c6483e24e",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 1",
                 "hash": "25081cda2aab5915fe1d732c6483e24ef8fb2484a6e856c8ed912b36577d3d9a",
-                "storage_address": "http://testserver/aggregate_algo/25081cda2aab5915fe1d732c6483e24ef8fb2484a6e856c8ed912b36577d3d9a/file/"
+                "storage_address": "http://testserver/aggregate_algo/25081cda-2aab-5915-fe1d-732c6483e24e/file/"
             },
             "creator": "MyOrg1MSP",
             "compute_plan_id": "",
@@ -2756,9 +2781,10 @@ model = [
         "aggregatetuple": {
             "key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
             "algo": {
+                "key": "57648509-5a2f-9bc7-8ed6-238b847c9c67",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 1",
                 "hash": "576485095a2f9bc78ed6238b847c9c679fb755b822c0cc6e08e60ea227ec0648",
-                "storage_address": "http://testserver/aggregate_algo/576485095a2f9bc78ed6238b847c9c679fb755b822c0cc6e08e60ea227ec0648/file/"
+                "storage_address": "http://testserver/aggregate_algo/57648509-5a2f-9bc7-8ed6-238b847c9c67/file/"
             },
             "creator": "MyOrg1MSP",
             "compute_plan_id": "",
@@ -2816,9 +2842,10 @@ model = [
         "aggregatetuple": {
             "key": "d57e8f3597a9c065d02c65c5a6def14b83a585a43223c227dad729b8e807e147",
             "algo": {
+                "key": "57648509-5a2f-9bc7-8ed6-238b847c9c67",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 1",
                 "hash": "576485095a2f9bc78ed6238b847c9c679fb755b822c0cc6e08e60ea227ec0648",
-                "storage_address": "http://testserver/aggregate_algo/576485095a2f9bc78ed6238b847c9c679fb755b822c0cc6e08e60ea227ec0648/file/"
+                "storage_address": "http://testserver/aggregate_algo/57648509-5a2f-9bc7-8ed6-238b847c9c67/file/"
             },
             "creator": "MyOrg1MSP",
             "compute_plan_id": "",

@@ -12,9 +12,9 @@ from substrapp.models import Algo
 from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
-                                   validate_pk_old, get_success_create_code, LedgerException, ValidationExceptionOld,
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.views.utils import (PermissionMixin,
+                                   validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset, node_has_process_permission, get_channel_name,
                                    data_to_data_response)
 from substrapp.views.filters_utils import filter_list
@@ -62,14 +62,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
-            else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
-            raise LedgerException(data, e.status)
-        except LedgerConflict as e:
-            raise ValidationExceptionOld(e.msg, e.pkhash, e.status)
+            raise LedgerException('timeout', e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -85,13 +78,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
     def _create(self, request, file):
         try:
             checksum = get_hash(file)
-            pkhash = checksum
         except Exception as e:
             st = status.HTTP_400_BAD_REQUEST
-            raise ValidationExceptionOld(e.args, '(not computed)', st)
+            raise ValidationException(e.args, st)
 
         serializer = self.get_serializer(data={
-            'pkhash': pkhash,
             'file': file,
             'description': request.data.get('description'),
             'checksum': checksum
@@ -100,10 +91,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationExceptionOld(e.args, pkhash, st)
+            raise ValidationException(e.args, status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -113,8 +101,8 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._create(request, file)
-        except ValidationExceptionOld as e:
-            return Response({'message': e.data, 'pkhash': e.pkhash}, status=e.st)
+        except ValidationException as e:
+            return Response({'message': e.data}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:
@@ -140,7 +128,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, pk):
-        validate_pk_old(pk)
+        validate_pk(pk)
         data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
         # do not cache if node has not process permission

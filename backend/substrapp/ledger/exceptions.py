@@ -70,22 +70,6 @@ class LedgerBadRequest(LedgerError):
     status = status.HTTP_400_BAD_REQUEST
 
 
-class LedgerConflict(LedgerError):
-    """Asset already exists."""
-    status = status.HTTP_409_CONFLICT
-
-    def __init__(self, msg, pkhash):
-        super().__init__(msg)
-        self.pkhash = pkhash
-
-    @classmethod
-    def from_response_dict(cls, response):
-        pkhash = response.get('key')
-        if not pkhash:
-            return LedgerError(response['error'])
-        return cls(response['error'], pkhash=pkhash)
-
-
 class LedgerNotFound(LedgerError):
     """Asset not found."""
     status = status.HTTP_404_NOT_FOUND
@@ -100,5 +84,4 @@ _STATUS_TO_EXCEPTION = {
     status.HTTP_400_BAD_REQUEST: LedgerBadRequest,
     status.HTTP_403_FORBIDDEN: LedgerForbidden,
     status.HTTP_404_NOT_FOUND: LedgerNotFound,
-    status.HTTP_409_CONFLICT: LedgerConflict,
 }
