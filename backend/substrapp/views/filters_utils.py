@@ -155,11 +155,11 @@ def filter_list(channel_name, object_type, data, query_params):
                 if filter_key in ('algo', 'composite_algo', 'aggregate_algo'):
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
-                        hashes = [x['key'] for x in filtering_data]
+                        keys = [x['key'] for x in filtering_data]
 
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x)['algo']['hash'] in hashes]
+                                             if _get_model_tuple(x)['algo']['hash'] in keys]
 
                 elif filter_key == 'model':
                     for attribute, val in subfilters.items():
@@ -212,15 +212,15 @@ def filter_list(channel_name, object_type, data, query_params):
                 elif filter_key == 'dataset':
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
-                        hashes = [x['key'] for x in filtering_data]
+                        keys = [x['key'] for x in filtering_data]
                         if object_type == 'model':
                             filtered_list = [x for x in filtered_list
-                                             if _get_model_tuple(x).get('dataset', {}).get('key', '') in hashes]
+                                             if _get_model_tuple(x).get('dataset', {}).get('key', '') in keys]
                         elif object_type == 'objective':
                             objective_keys = [x['objective_key'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
                                              if x['key'] in objective_keys or
-                                             (x['test_dataset'] and x['test_dataset']['data_manager_key'] in hashes)]
+                                             (x['test_dataset'] and x['test_dataset']['data_manager_key'] in keys)]
 
                 elif filter_key == 'objective':
                     for attribute, val in subfilters.items():
@@ -229,17 +229,17 @@ def filter_list(channel_name, object_type, data, query_params):
                         else:
                             filtering_data = [x for x in filtering_data if x[attribute] in val]
 
-                        hashes = [x['key'] for x in filtering_data]
+                        keys = [x['key'] for x in filtering_data]
 
                         if object_type == 'model':
                             filtered_list = [
                                 x for x in filtered_list
                                 if (x['testtuple'] and x['testtuple']['objective'] and
-                                    x['testtuple']['objective']['hash'] in hashes)
+                                    x['testtuple']['objective']['hash'] in keys)
                             ]
                         elif object_type == 'dataset':
                             filtered_list = [x for x in filtered_list
-                                             if x['objective_key'] in hashes]
+                                             if x['objective_key'] in keys]
 
             object_list.append(filtered_list)
 
