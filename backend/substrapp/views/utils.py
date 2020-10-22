@@ -192,14 +192,6 @@ class LedgerException(Exception):
         super(LedgerException).__init__()
 
 
-class ValidationExceptionOld(Exception):
-    def __init__(self, data, pkhash, st):
-        self.data = data
-        self.pkhash = pkhash
-        self.st = st
-        super(ValidationExceptionOld).__init__()
-
-
 class ValidationException(Exception):
     def __init__(self, data, st):
         self.data = data
