@@ -43,7 +43,7 @@ objective = [
         "metadata": {}
     },
     {
-        "key": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
+        "key": "b61067ad-c59f-b1aa-be21-eab767d986cc",
         "name": "9224cad96c964b7b8ed2f7eb5872c27a_global - Objective 1",
         "description": {
             "hash": "b61067adc59fb1aabe21eab767d986cccccdcfd8c64ea90a0bef59999051cea3",
@@ -225,7 +225,7 @@ algo = [
 
 traintuple = [
     {
-        "key": "3169bb172502f67556a6f12b856a5d653441227842aded24ade6b7866d3b624d",
+        "key": "3169bb17-2502-f675-56a6-f12b856a5d65",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
@@ -260,7 +260,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "a9c586b72c9c11412b0c9f81d599651a964d04934bca9f1886dd2d084f438a70",
+        "key": "a9c586b7-2c9c-1141-2b0c-9f81d599651a",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
@@ -295,7 +295,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "ea7180ccc125dcceff10400fd2943f1e02fc915262c67f19986b3a9edbd765fb",
+        "key": "ea7180cc-c125-dcce-ff10-400fd2943f1e",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
             "hash": "4942edc447b414391d0047fb6379c2dfbcd96a68bbe3071c756dc4c2b2c951be",
@@ -330,7 +330,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "137804ca8660878062e419e340efd2826ce0d528c47a40879e30cdc1e77da1b0",
+        "key": "137804ca-8660-8780-62e4-19e340efd282",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
             "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
@@ -351,7 +351,7 @@ traintuple = [
         "compute_plan_id": "4a7f743fd9a5ccaa6f8366a10f92955486ab15116a1e43f6c1ba1b9504f6b157",
         "in_models": [
             {
-                "traintuple_key": "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
+                "traintuple_key": "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
                 "hash": "714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888",
                 "storage_address": "http://testserver/model/714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888/file/"
             }
@@ -373,7 +373,7 @@ traintuple = [
         "tag": "foo"
     },
     {
-        "key": "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
+        "key": "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
             "hash": "59eb383497c337e280f2d7c6805cb80bb623dfe581b6289eeee4fc62aefd9c30",
@@ -411,7 +411,7 @@ traintuple = [
         "tag": "foo"
     },
     {
-        "key": "e623fe67c0dc4ed78d4e34f9f0fad0ac3a5fa7aafb819a3e1961f978d7540b2a",
+        "key": "e623fe67-c0dc-4ed7-8d4e-34f9f0fad0ac",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
             "hash": "c8efb021f79c5adc96e9ba8407c368a5a3e76f2b37164176059855cc9daae593",
@@ -448,7 +448,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+        "key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
@@ -488,7 +488,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "fcdbcf06d54b634edfe2dd2d46cfe8d63076570394b7335fab6e6aac99b51909",
+        "key": "fcdbcf06-d54b-634e-dfe2-dd2d46cfe8d6",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
             "hash": "e9481a81278d988f3d7cc8ba095b88f33d7cc0da3f0c0a30ca942ba34f235ff8",
@@ -510,7 +510,7 @@ traintuple = [
         "compute_plan_id": "",
         "in_models": [
             {
-                "traintuple_key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+                "traintuple_key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
                 "hash": "420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7",
                 "storage_address": "http://testserver/model/420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7/file/"
             }
@@ -532,7 +532,7 @@ traintuple = [
         "tag": ""
     },
     {
-        "key": "5e18aef8a6748b220c82532c39b297159704f0b2b602ab8e5c4e6e59f2ec6cba",
+        "key": "5e18aef8-a674-8b22-0c82-532c39b29715",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_traintuple_execution_failure - Algo 0",
             "hash": "ebbd8c65dfe07d826d692f806deceffd296e715fa4db9e652304180dd7ee293d",
@@ -587,7 +587,7 @@ testtuple = [
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 32
         },
-        "key": "8cd0eb9ae2349fc33b36ebb689963840bdfd3ffe4f24392d77dba85c4c087d02",
+        "key": "8cd0eb9a-e234-9fc3-3b36-ebb689963840",
         "log": "",
         "metadata": {},
         "objective": {
@@ -600,7 +600,7 @@ testtuple = [
         "rank": 0,
         "status": "done",
         "tag": "bar",
-        "traintuple_key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
+        "traintuple_key": "2978ca1f-7d55-20ef-42a8-2c86a2e24d5b",
         "traintuple_type": "composite_traintuple"
     },
     {
@@ -620,7 +620,7 @@ testtuple = [
             "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
             "perf": 32
         },
-        "key": "87e835650d84ca0cf26ac332bad4f4d732a30606505f57f1817fb6580f16adc5",
+        "key": "87e83565-0d84-ca0c-f26a-c332bad4f4d7",
         "log": "",
         "metadata": {},
         "objective": {
@@ -633,7 +633,7 @@ testtuple = [
         "rank": 0,
         "status": "done",
         "tag": "",
-        "traintuple_key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
+        "traintuple_key": "3be92d96-d1ab-dabf-be6a-4ff612d70f7f",
         "traintuple_type": "composite_traintuple"
     },
     {
@@ -654,7 +654,7 @@ testtuple = [
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 32
         },
-        "key": "6075c796cc470f1e1de7b98d8a4d28b19e48c1d662ee9bdb982c0354088d2f2a",
+        "key": "6075c796-cc47-0f1e-1de7-b98d8a4d28b1",
         "log": "",
         "metadata": {},
         "objective": {
@@ -667,7 +667,7 @@ testtuple = [
         "rank": 0,
         "status": "done",
         "tag": "",
-        "traintuple_key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
+        "traintuple_key": "5adbd24e-a21c-b23b-1ffc-65151038a62c",
         "traintuple_type": "composite_traintuple"
     },
     {
@@ -688,7 +688,7 @@ testtuple = [
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 2
         },
-        "key": "e2f386a88a1702cecf0270742a31cdf0be4a9d9b083467679058d00aaff55ac4",
+        "key": "e2f386a8-8a17-02ce-cf02-70742a31cdf0",
         "log": "",
         "metadata": {},
         "objective": {
@@ -701,7 +701,7 @@ testtuple = [
         "rank": 0,
         "status": "done",
         "tag": "",
-        "traintuple_key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+        "traintuple_key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
         "traintuple_type": "traintuple"
     },
     {
@@ -722,7 +722,7 @@ testtuple = [
             "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
             "perf": 2
         },
-        "key": "0599697085f343a8298ee3a87bd0000285e944fa4a05f541aa985d3eab50c04d",
+        "key": "05996970-85f3-43a8-298e-e3a87bd00002",
         "log": "",
         "metadata": {},
         "objective": {
@@ -735,17 +735,17 @@ testtuple = [
         "rank": 0,
         "status": "done",
         "tag": "",
-        "traintuple_key": "e623fe67c0dc4ed78d4e34f9f0fad0ac3a5fa7aafb819a3e1961f978d7540b2a",
+        "traintuple_key": "e623fe67-c0dc-4ed7-8d4e-34f9f0fad0ac",
         "traintuple_type": "traintuple"
     }
 ]
 
 computeplan = [
     {
-        "compute_plan_id": "4a7f743fd9a5ccaa6f8366a10f92955486ab15116a1e43f6c1ba1b9504f6b157",
+        "compute_plan_id": "4a7f743f-d9a5-ccaa-6f83-66a10f929554",
         "traintuple_keys": [
-            "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
-            "137804ca8660878062e419e340efd2826ce0d528c47a40879e30cdc1e77da1b0"
+            "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
+            "137804ca-8660-8780-62e4-19e340efd282"
         ],
         "aggregatetuple_keys": None,
         "composite_traintuple_keys": None,
@@ -762,7 +762,7 @@ computeplan = [
 
 compositetraintuple = [
     {
-        "key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
+        "key": "2978ca1f-7d55-20ef-42a8-2c86a2e24d5b",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
@@ -783,12 +783,12 @@ compositetraintuple = [
         },
         "compute_plan_id": "",
         "in_head_model": {
-            "traintuple_key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+            "traintuple_key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
             "hash": "64c72dc39772e122ef552d10ff101ef6cee94935a84678a0125f7c3fd044dff8",
             "storage_address": ""
         },
         "in_trunk_model": {
-            "traintuple_key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+            "traintuple_key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
             "hash": "00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f",
             "storage_address": "http://testserver/model/00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f/file/"
         },
@@ -826,7 +826,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+        "key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
             "hash": "09abcf99a672c0b95b3d2431169e34ec6bcc5154629db86c5d6aebb94377cbbf",
@@ -882,7 +882,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "2d3e98fbeafebf1995db3ab205b9f803b18a1be8b4af72e242faceee3dd7d224",
+        "key": "2d3e98fb-eafe-bf19-95db-3ab205b9f803",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuple_execution_failure - Algo 0",
             "hash": "0fbb505a32ae8785c08d37fe7bf7476d7365c3a0cef7c6e05c61c06db3267593",
@@ -933,7 +933,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "7dbd4b2ac9e81b6dedd775809e0903d8fa55ce2cb8094bd6c4c20c2b0448b716",
+        "key": "7dbd4b2a-c9e8-1b6d-edd7-75809e0903d8",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
             "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
@@ -986,7 +986,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "df3e19426496a5b8a79d8f1b96e52de9fe3a07b6a81a9b5d9a34a824d52c1841",
+        "key": "df3e1942-6496-a5b8-a79d-8f1b96e52de9",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
             "hash": "5a9fc1032bd97c9ebaafeaf7d2e5d81f375f1ff8e13ad3000e43f135eb47810c",
@@ -1039,7 +1039,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
+        "key": "3197bd6c-56bc-4708-9864-c76b47b6115e",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
@@ -1093,7 +1093,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
+        "key": "3be92d96-d1ab-dabf-be6a-4ff612d70f7f",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
@@ -1110,12 +1110,12 @@ compositetraintuple = [
         },
         "compute_plan_id": "",
         "in_head_model": {
-            "traintuple_key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
+            "traintuple_key": "e7b96818-eadc-dce6-940c-16b388bbd264",
             "hash": "3af8f86ed9fe07237497e52d1ced195d7e4752f7d130327929f96ea688d60a41",
             "storage_address": ""
         },
         "in_trunk_model": {
-            "traintuple_key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
+            "traintuple_key": "9cb5582f-c3e8-22b9-ddab-bf7479097df0",
             "hash": "4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688",
             "storage_address": "http://testserver/model/4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688/file/"
         },
@@ -1154,7 +1154,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
+        "key": "5adbd24e-a21c-b23b-1ffc-65151038a62c",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
@@ -1172,12 +1172,12 @@ compositetraintuple = [
         },
         "compute_plan_id": "",
         "in_head_model": {
-            "traintuple_key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
+            "traintuple_key": "3197bd6c-56bc-4708-9864-c76b47b6115e",
             "hash": "7d7ed2eac5e822ea90058387dd35d1270639ecc4982a6d72b619b8659813163a",
             "storage_address": ""
         },
         "in_trunk_model": {
-            "traintuple_key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
+            "traintuple_key": "9cb5582f-c3e8-22b9-ddab-bf7479097df0",
             "hash": "4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688",
             "storage_address": "http://testserver/model/4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688/file/"
         },
@@ -1216,7 +1216,7 @@ compositetraintuple = [
         "tag": ""
     },
     {
-        "key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
+        "key": "e7b96818-eadc-dce6-940c-16b388bbd264",
         "algo": {
             "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
             "hash": "fe2eba4566fac967ef847cbb3a8eba75fa7c03291e4db621bf3bc27b54b7ed87",
@@ -1356,7 +1356,7 @@ compositealgo = [
 model = [
     {
         "traintuple": {
-            "key": "3169bb172502f67556a6f12b856a5d653441227842aded24ade6b7866d3b624d",
+            "key": "3169bb17-2502-f675-56a6-f12b856a5d65",
             "algo": {
                 "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
@@ -1411,7 +1411,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "a9c586b72c9c11412b0c9f81d599651a964d04934bca9f1886dd2d084f438a70",
+            "key": "a9c586b7-2c9c-1141-2b0c-9f81d599651a",
             "algo": {
                 "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
@@ -1466,7 +1466,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "ea7180ccc125dcceff10400fd2943f1e02fc915262c67f19986b3a9edbd765fb",
+            "key": "ea7180cc-c125-dcce-ff10-400fd2943f1e",
             "algo": {
                 "key": "4942edc4-47b4-1439-1d00-47fb6379c2df",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 0",
@@ -1521,7 +1521,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "137804ca8660878062e419e340efd2826ce0d528c47a40879e30cdc1e77da1b0",
+            "key": "137804ca-8660-8780-62e4-19e340efd282",
             "algo": {
                 "key": "59eb3834-97c3-37e2-80f2-d7c6805cb80b",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
@@ -1543,7 +1543,7 @@ model = [
             "compute_plan_id": "4a7f743fd9a5ccaa6f8366a10f92955486ab15116a1e43f6c1ba1b9504f6b157",
             "in_models": [
                 {
-                    "traintuple_key": "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
+                    "traintuple_key": "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
                     "hash": "714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888",
                     "storage_address": "http://testserver/model/714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888/file/"
                 }
@@ -1584,7 +1584,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "49dedc3b4e763a2d09e39f4e5eee3d4910beee8b4e3ba666f9c6ef00f1632ec3",
+            "key": "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
             "algo": {
                 "key": "59eb3834-97c3-37e2-80f2-d7c6805cb80b",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_federated_learning_workflow - Algo 0",
@@ -1642,7 +1642,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "e623fe67c0dc4ed78d4e34f9f0fad0ac3a5fa7aafb819a3e1961f978d7540b2a",
+            "key": "e623fe67-c0dc-4ed7-8d4e-34f9f0fad0ac",
             "algo": {
                 "key": "c8efb021-f79c-5adc-96e9-ba8407c368a5",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_different_nodes - Algo 0",
@@ -1698,7 +1698,7 @@ model = [
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 2
             },
-            "key": "0599697085f343a8298ee3a87bd0000285e944fa4a05f541aa985d3eab50c04d",
+            "key": "05996970-85f3-43a8-298e-e3a87bd00002",
             "log": "",
             "metadata": {},
             "objective": {
@@ -1711,14 +1711,14 @@ model = [
             "rank": 0,
             "status": "done",
             "tag": "",
-            "traintuple_key": "e623fe67c0dc4ed78d4e34f9f0fad0ac3a5fa7aafb819a3e1961f978d7540b2a",
+            "traintuple_key": "e623fe67-c0dc-4ed7-8d4e-34f9f0fad0ac",
             "traintuple_type": "traintuple"
         },
         "non_certified_testtuples": None
     },
     {
         "traintuple": {
-            "key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+            "key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
             "algo": {
                 "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
@@ -1777,7 +1777,7 @@ model = [
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 2
             },
-            "key": "e2f386a88a1702cecf0270742a31cdf0be4a9d9b083467679058d00aaff55ac4",
+            "key": "e2f386a8-8a17-02ce-cf02-70742a31cdf0",
             "log": "",
             "metadata": {},
             "objective": {
@@ -1790,14 +1790,14 @@ model = [
             "rank": 0,
             "status": "done",
             "tag": "",
-            "traintuple_key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+            "traintuple_key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
             "traintuple_type": "traintuple"
         },
         "non_certified_testtuples": None
     },
     {
         "traintuple": {
-            "key": "fcdbcf06d54b634edfe2dd2d46cfe8d63076570394b7335fab6e6aac99b51909",
+            "key": "fcdbcf06-d54b-634e-dfe2-dd2d46cfe8d6",
             "algo": {
                 "key": "e9481a81-278d-988f-3d7c-c8ba095b88f3",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_tuples_execution_on_same_node - Algo 0",
@@ -1820,7 +1820,7 @@ model = [
             "compute_plan_id": "",
             "in_models": [
                 {
-                    "traintuple_key": "e3aab7fe0c51e970edecdfa1f780fd529e437d92603e66e57f230d926c7808b6",
+                    "traintuple_key": "e3aab7fe-0c51-e970-edec-dfa1f780fd52",
                     "hash": "420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7",
                     "storage_address": "http://testserver/model/420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7/file/"
                 }
@@ -1861,7 +1861,7 @@ model = [
     },
     {
         "traintuple": {
-            "key": "5e18aef8a6748b220c82532c39b297159704f0b2b602ab8e5c4e6e59f2ec6cba",
+            "key": "5e18aef8-a674-8b22-0c82-532c39b29715",
             "algo": {
                 "key": "ebbd8c65-dfe0-7d82-6d69-2f806deceffd",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_traintuple_execution_failure - Algo 0",
@@ -1916,7 +1916,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
+            "key": "2978ca1f-7d55-20ef-42a8-2c86a2e24d5b",
             "algo": {
                 "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
@@ -1938,12 +1938,12 @@ model = [
             },
             "compute_plan_id": "",
             "in_head_model": {
-                "traintuple_key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+                "traintuple_key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
                 "hash": "64c72dc39772e122ef552d10ff101ef6cee94935a84678a0125f7c3fd044dff8",
                 "storage_address": ""
             },
             "in_trunk_model": {
-                "traintuple_key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+                "traintuple_key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
                 "hash": "00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f",
                 "storage_address": "http://testserver/model/00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f/file/"
             },
@@ -1999,7 +1999,7 @@ model = [
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 32
             },
-            "key": "8cd0eb9ae2349fc33b36ebb689963840bdfd3ffe4f24392d77dba85c4c087d02",
+            "key": "8cd0eb9a-e234-9fc3-3b36-ebb689963840",
             "log": "",
             "metadata": {},
             "objective": {
@@ -2012,14 +2012,14 @@ model = [
             "rank": 0,
             "status": "done",
             "tag": "",
-            "traintuple_key": "2978ca1f7d5520ef42a82c86a2e24d5b00f04c73013febdb5ed35d32dc606e92",
+            "traintuple_key": "2978ca1f-7d55-20ef-42a8-2c86a2e24d5b",
             "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },
     {
         "composite_traintuple": {
-            "key": "aa9be143edc6ef051ea255fd77bb54ba40c71bb39afa3ece502dd36782d02a71",
+            "key": "aa9be143-edc6-ef05-1ea2-55fd77bb54ba",
             "algo": {
                 "key": "09abcf99-a672-c0b9-5b3d-2431169e34ec",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuples_execution - Algo 0",
@@ -2095,7 +2095,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "2d3e98fbeafebf1995db3ab205b9f803b18a1be8b4af72e242faceee3dd7d224",
+            "key": "2d3e98fb-eafe-bf19-95db-3ab205b9f803",
             "algo": {
                 "key": "0fbb505a-32ae-8785-c08d-37fe7bf7476d",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_composite_traintuple_execution_failure - Algo 0",
@@ -2166,7 +2166,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "7dbd4b2ac9e81b6dedd775809e0903d8fa55ce2cb8094bd6c4c20c2b0448b716",
+            "key": "7dbd4b2a-c9e8-1b6d-edd7-75809e0903d8",
             "algo": {
                 "key": "5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
@@ -2239,7 +2239,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "df3e19426496a5b8a79d8f1b96e52de9fe3a07b6a81a9b5d9a34a824d52c1841",
+            "key": "df3e1942-6496-a5b8-a79d-8f1b96e52de9",
             "algo": {
                 "key": "5a9fc103-2bd9-7c9e-baaf-eaf7d2e5d81f",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 0",
@@ -2312,7 +2312,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
+            "key": "3197bd6c-56bc-4708-9864-c76b47b6115e",
             "algo": {
                 "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
@@ -2386,7 +2386,7 @@ model = [
     },
     {
         "composite_traintuple": {
-            "key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
+            "key": "3be92d96-d1ab-dabf-be6a-4ff612d70f7f",
             "algo": {
                 "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
@@ -2404,12 +2404,12 @@ model = [
             },
             "compute_plan_id": "",
             "in_head_model": {
-                "traintuple_key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
+                "traintuple_key": "e7b96818-eadc-dce6-940c-16b388bbd264",
                 "hash": "3af8f86ed9fe07237497e52d1ced195d7e4752f7d130327929f96ea688d60a41",
                 "storage_address": ""
             },
             "in_trunk_model": {
-                "traintuple_key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
+                "traintuple_key": "9cb5582f-c3e8-22b9-ddab-bf7479097df0",
                 "hash": "4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688",
                 "storage_address": "http://testserver/model/4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688/file/"
             },
@@ -2465,7 +2465,7 @@ model = [
                 "opener_hash": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
                 "perf": 32
             },
-            "key": "87e835650d84ca0cf26ac332bad4f4d732a30606505f57f1817fb6580f16adc5",
+            "key": "87e83565-0d84-ca0c-f26a-c332bad4f4d7",
             "log": "",
             "metadata": {},
             "objective": {
@@ -2478,14 +2478,14 @@ model = [
             "rank": 0,
             "status": "done",
             "tag": "",
-            "traintuple_key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
+            "traintuple_key": "3be92d96-d1ab-dabf-be6a-4ff612d70f7f",
             "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },
     {
         "composite_traintuple": {
-            "key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
+            "key": "5adbd24e-a21c-b23b-1ffc-65151038a62c",
             "algo": {
                 "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
@@ -2504,12 +2504,12 @@ model = [
             },
             "compute_plan_id": "",
             "in_head_model": {
-                "traintuple_key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
+                "traintuple_key": "3197bd6c-56bc-4708-9864-c76b47b6115e",
                 "hash": "7d7ed2eac5e822ea90058387dd35d1270639ecc4982a6d72b619b8659813163a",
                 "storage_address": ""
             },
             "in_trunk_model": {
-                "traintuple_key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
+                "traintuple_key": "9cb5582f-c3e8-22b9-ddab-bf7479097df0",
                 "hash": "4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688",
                 "storage_address": "http://testserver/model/4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688/file/"
             },
@@ -2566,7 +2566,7 @@ model = [
                 "opener_hash": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
                 "perf": 32
             },
-            "key": "6075c796cc470f1e1de7b98d8a4d28b19e48c1d662ee9bdb982c0354088d2f2a",
+            "key": "6075c796-cc47-0f1e-1de7-b98d8a4d28b1",
             "log": "",
             "metadata": {},
             "objective": {
@@ -2579,14 +2579,14 @@ model = [
             "rank": 0,
             "status": "done",
             "tag": "",
-            "traintuple_key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
+            "traintuple_key": "5adbd24e-a21c-b23b-1ffc-65151038a62c",
             "traintuple_type": "composite_traintuple"
         },
         "non_certified_testtuples": None
     },
     {
         "composite_traintuple": {
-            "key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
+            "key": "e7b96818-eadc-dce6-940c-16b388bbd264",
             "algo": {
                 "key": "fe2eba45-66fa-c967-ef84-7cbb3a8eba75",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 0",
@@ -2659,7 +2659,7 @@ model = [
     },
     {
         "aggregatetuple": {
-            "key": "9936e27a5738298e39e4308c0d4d612ada6ef1463bdbfe2b446b8e62230237a5",
+            "key": "9936e27a-5738-298e-39e4-308c0d4d612a",
             "algo": {
                 "key": "16acae7a-5d70-2a97-c4cc-e626bbe5c44d",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple_execution_failure - Algo 1",
@@ -2672,12 +2672,12 @@ model = [
             "metadata": {},
             "in_models": [
                 {
-                    "traintuple_key": "7dbd4b2ac9e81b6dedd775809e0903d8fa55ce2cb8094bd6c4c20c2b0448b716",
+                    "traintuple_key": "7dbd4b2a-c9e8-1b6d-edd7-75809e0903d8",
                     "hash": "fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d",
                     "storage_address": "http://testserver/model/fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d/file/"
                 },
                 {
-                    "traintuple_key": "df3e19426496a5b8a79d8f1b96e52de9fe3a07b6a81a9b5d9a34a824d52c1841",
+                    "traintuple_key": "df3e1942-6496-a5b8-a79d-8f1b96e52de9",
                     "hash": "682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d",
                     "storage_address": "http://testserver/model/682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d/file/"
                 }
@@ -2716,7 +2716,7 @@ model = [
     },
     {
         "aggregatetuple": {
-            "key": "0c6d79470e536e7390623b37622228b507620e5878fe196112e23111168dcb38",
+            "key": "0c6d7947-0e53-6e73-9062-3b37622228b5",
             "algo": {
                 "key": "25081cda-2aab-5915-fe1d-732c6483e24e",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregatetuple - Algo 1",
@@ -2729,17 +2729,17 @@ model = [
             "metadata": {},
             "in_models": [
                 {
-                    "traintuple_key": "3169bb172502f67556a6f12b856a5d653441227842aded24ade6b7866d3b624d",
+                    "traintuple_key": "3169bb17-2502-f675-56a6-f12b856a5d65",
                     "hash": "940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760",
                     "storage_address": "http://testserver/model/940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760/file/"
                 },
                 {
-                    "traintuple_key": "ea7180ccc125dcceff10400fd2943f1e02fc915262c67f19986b3a9edbd765fb",
+                    "traintuple_key": "ea7180cc-c125-dcce-ff10-400fd2943f1e",
                     "hash": "02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c",
                     "storage_address": "http://testserver/model/02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c/file/"
                 },
                 {
-                    "traintuple_key": "a9c586b72c9c11412b0c9f81d599651a964d04934bca9f1886dd2d084f438a70",
+                    "traintuple_key": "a9c586b7-2c9c-1141-2b0c-9f81d599651a",
                     "hash": "f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2",
                     "storage_address": "http://testserver/model/f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2/file/"
                 }
@@ -2779,7 +2779,7 @@ model = [
     },
     {
         "aggregatetuple": {
-            "key": "9cb5582fc3e822b9ddabbf7479097df05381294e3559f31a35c20f2e46e4885c",
+            "key": "9cb5582f-c3e8-22b9-ddab-bf7479097df0",
             "algo": {
                 "key": "57648509-5a2f-9bc7-8ed6-238b847c9c67",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 1",
@@ -2792,12 +2792,12 @@ model = [
             "metadata": {},
             "in_models": [
                 {
-                    "traintuple_key": "3197bd6c56bc47089864c76b47b6115eb3551901ba304722ce581561c37b0c7b",
+                    "traintuple_key": "3197bd6c-56bc-4708-9864-c76b47b6115e",
                     "hash": "b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2",
                     "storage_address": "http://testserver/model/b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2/file/"
                 },
                 {
-                    "traintuple_key": "e7b96818eadcdce6940c16b388bbd264549646a45bb8ea75e8f218d224c18162",
+                    "traintuple_key": "e7b96818-eadc-dce6-940c-16b388bbd264",
                     "hash": "cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d/file/"
                 }
@@ -2840,7 +2840,7 @@ model = [
     },
     {
         "aggregatetuple": {
-            "key": "d57e8f3597a9c065d02c65c5a6def14b83a585a43223c227dad729b8e807e147",
+            "key": "d57e8f35-97a9-c065-d02c-65c5a6def14b",
             "algo": {
                 "key": "57648509-5a2f-9bc7-8ed6-238b847c9c67",
                 "name": "9224cad96c964b7b8ed2f7eb5872c27a_test_aggregate_composite_traintuples - Algo 1",
@@ -2853,12 +2853,12 @@ model = [
             "metadata": {},
             "in_models": [
                 {
-                    "traintuple_key": "5adbd24ea21cb23b1ffc65151038a62c97f2d745d7df0928e683707f15a09556",
+                    "traintuple_key": "5adbd24e-a21c-b23b-1ffc-65151038a62c",
                     "hash": "14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044",
                     "storage_address": "http://testserver/model/14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044/file/"
                 },
                 {
-                    "traintuple_key": "3be92d96d1abdabfbe6a4ff612d70f7f867f450c38ea344bd98d0775bec826fd",
+                    "traintuple_key": "3be92d96-d1ab-dabf-be6a-4ff612d70f7f",
                     "hash": "66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74/file/"
                 }

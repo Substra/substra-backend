@@ -69,7 +69,7 @@ class CompositeTraintupleViewTests(APITestCase):
         with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.return_value = compositetraintuple[0]
             url = reverse('substrapp:composite_traintuple-list')
-            search_params = 'c164f4c714a78c7e2ba2016de231cdd41e3eac61289e08c1f711e74915a0868f/'
+            search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, compositetraintuple[0])

@@ -173,16 +173,6 @@ def find_primary_key_error(validation_error, key_name='pkhash'):
     return None
 
 
-def validate_pk_old(pk):
-    if len(pk) != 64:
-        raise exceptions.BadRequestError(f'Wrong pk {pk}')
-
-    try:
-        int(pk, 16)  # test if pk is correct (hexadecimal)
-    except ValueError:
-        raise exceptions.BadRequestError(f'Wrong pk {pk}')
-
-
 def validate_pk(pk):
     try:
         uuid.UUID(pk)

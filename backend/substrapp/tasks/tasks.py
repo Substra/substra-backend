@@ -1012,7 +1012,7 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
     checksum = get_hash(end_model_path, hash_key)
     pkhash = checksum
-    instance = Model.objects.create(pkhash=checksum, checksum=checksum, validated=True)
+    instance = Model.objects.create(checksum=checksum, validated=True)
 
     with open(end_model_path, 'rb') as f:
         instance.file.save('model', f)

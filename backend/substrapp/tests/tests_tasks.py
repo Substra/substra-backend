@@ -285,6 +285,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'algo': {
+                'key': assets.algo[0]['key'],
                 'storage_address': assets.algo[0]['content']['storage_address'],
                 'owner': assets.algo[0]['owner'],
                 'hash': algo_hash

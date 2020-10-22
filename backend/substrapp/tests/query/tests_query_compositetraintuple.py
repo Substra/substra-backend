@@ -31,7 +31,6 @@ class CompositeTraintupleQueryTests(APITestCase):
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
         self.train_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
-        self.fake_key_old = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
         self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
 
         self.model, _ = get_sample_model()
@@ -53,9 +52,9 @@ class CompositeTraintupleQueryTests(APITestCase):
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
-            'compute_plan_id': self.fake_key_old,
-            'in_head_model_key': self.fake_key_old,
-            'in_trunk_model_key': self.fake_key_old,
+            'compute_plan_id': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
             'out_trunk_model_permissions': {
                 'public': False,
                 'authorized_ids': ["Node-1", "Node-2"],
@@ -98,9 +97,9 @@ class CompositeTraintupleQueryTests(APITestCase):
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
             'rank': -1,
-            'compute_plan_id': self.fake_key_old,
-            'in_head_model_key': self.fake_key_old,
-            'in_trunk_model_key': self.fake_key_old,
+            'compute_plan_id': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
             'out_trunk_model_permissions': {
                 'public': False,
                 'authorized_ids': ["Node-1", "Node-2"],
@@ -128,7 +127,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
         data = {
             'train_data_sample_keys': self.train_data_sample_keys,
-            'model_key': self.fake_key_old
+            'model_key': self.fake_key
         }
 
         extra = {
@@ -149,8 +148,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ok(self):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
-        pkhash = checksum
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -173,8 +171,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ko_user(self):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
-        pkhash = checksum
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -194,8 +191,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ko_wrong_node(self):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
-        pkhash = checksum
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,

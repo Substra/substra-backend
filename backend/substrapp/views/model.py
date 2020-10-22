@@ -12,7 +12,7 @@ from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
-from substrapp.views.utils import validate_pk_old, get_remote_asset, PermissionMixin, get_channel_name
+from substrapp.views.utils import validate_pk, get_remote_asset, PermissionMixin, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
 logger = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         return instance
 
     def _retrieve(self, channel_name, pk):
-        validate_pk_old(pk)
+        validate_pk(pk)
 
         data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
 

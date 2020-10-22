@@ -4,12 +4,10 @@ from django.db.models import F
 import uuid
 
 def get_migration(model_name):
-    res =  [
-        migrations.AddField(model_name, 'checksum', models.CharField(blank=True, max_length=64))
+    return [
+        migrations.AddField(model_name, 'checksum', models.CharField(blank=True, max_length=64)),
+        migrations.AlterField(model_name, 'pkhash', models.UUIDField(primary_key=True, editable=False))
     ]
-    if model_name != 'Model':
-        res.append(migrations.AlterField(model_name, 'pkhash', models.UUIDField(primary_key=True, editable=False)))
-    return res
 
 
 class Migration(migrations.Migration):
