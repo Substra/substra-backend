@@ -11,10 +11,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     data_manager_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     serializers.UUIDField(required=False, allow_null=True)
-    in_head_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
-                                              allow_null=True)
-    in_trunk_model_key = serializers.CharField(min_length=64, max_length=64, allow_blank=True, required=False,
-                                               allow_null=True)
+    in_head_model_key = serializers.UUIDField(required=False, allow_null=True)
+    in_trunk_model_key = serializers.UUIDField(required=False, allow_null=True)
     out_trunk_model_permissions = PrivatePermissionsSerializer()
     train_data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
     tag = serializers.CharField(min_length=0, max_length=64, allow_blank=True, required=False, allow_null=True)
@@ -37,8 +35,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
         args = {
             'key': str(key),
             'algo_key': str(algo_key),
-            'in_head_model_key': in_head_model_key,
-            'in_trunk_model_key': in_trunk_model_key,
+            'in_head_model_key': str(in_head_model_key),
+            'in_trunk_model_key': str(in_trunk_model_key),
             'out_trunk_model_permissions': {'process': {
                 'authorized_ids': out_trunk_model_permissions.get('authorized_ids'),
             }},
