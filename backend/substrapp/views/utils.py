@@ -143,36 +143,6 @@ class PermissionMixin(object):
         return response
 
 
-# TODO: delete
-def find_primary_key_error(validation_error, key_name='pkhash'):
-    detail = validation_error.detail
-
-    def find_unique_error(detail_dict):
-        for key, errors in detail_dict.items():
-            if key != key_name:
-                continue
-            for error in errors:
-                if error.code == 'unique':
-                    return error
-
-        return None
-
-    # according to the rest_framework documentation,
-    # validation_error.detail could be either a dict, a list or a nested
-    # data structure
-
-    if isinstance(detail, dict):
-        return find_unique_error(detail)
-    elif isinstance(detail, list):
-        for sub_detail in detail:
-            if isinstance(sub_detail, dict):
-                unique_error = find_unique_error(sub_detail)
-                if unique_error is not None:
-                    return unique_error
-
-    return None
-
-
 def validate_pk(pk):
     try:
         uuid.UUID(pk)
