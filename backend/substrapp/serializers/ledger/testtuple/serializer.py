@@ -24,11 +24,11 @@ class LedgerTestTupleSerializer(serializers.Serializer):
         metadata = validated_data.get('metadata')
 
         args = {
-            'key': str(key),
-            'traintuple_key': str(traintuple_key),
-            'objective_key': str(objective_key),
-            'data_manager_key': str(data_manager_key) if data_manager_key else None,
-            'data_sample_keys': [str(key) for key in test_data_sample_keys],
+            'key': key,
+            'traintuple_key': traintuple_key,
+            'objective_key': objective_key,
+            'data_manager_key': data_manager_key,
+            'data_sample_keys': test_data_sample_keys,
             'tag': tag,
             'metadata': metadata
         }

@@ -966,7 +966,7 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
     if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
         model, storage_address = save_model(subtuple_directory, subtuple_key)
         models['end_model'] = {
-            'key': str(model.pk),
+            'key': model.pk,
             'checksum': model.checksum,
             'storage_address': storage_address
         }
@@ -981,7 +981,7 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
             )
 
             models[m_type] = {
-                'key': str(model.pk),
+                'key': model.pk,
                 'checksum': model.checksum,
                 'storage_address': storage_address
             }

@@ -69,9 +69,9 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_traintuple in data.get('traintuples', []):
             traintuple = {
                 'key': new_uuid(),
-                'data_manager_key': str(data_traintuple['data_manager_key']),
-                'data_sample_keys': [str(key) for key in data_traintuple['train_data_sample_keys']],
-                'algo_key': str(data_traintuple['algo_key']),
+                'data_manager_key': data_traintuple['data_manager_key'],
+                'data_sample_keys': data_traintuple['train_data_sample_keys'],
+                'algo_key': data_traintuple['algo_key'],
                 'id': data_traintuple['traintuple_id'],
                 'metadata': data_traintuple.get('metadata'),
             }
@@ -87,15 +87,15 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             testtuple = {
                 'key': new_uuid(),
                 'traintuple_id': data_testtuple['traintuple_id'],
-                'objective_key': str(data_testtuple['objective_key']),
+                'objective_key': data_testtuple['objective_key'],
                 'metadata': data_testtuple.get('metadata'),
             }
             if 'tag' in data_testtuple:
                 testtuple['tag'] = data_testtuple['tag']
             if 'data_manager_key' in data_testtuple:
-                testtuple['data_manager_key'] = str(data_testtuple['data_manager_key'])
+                testtuple['data_manager_key'] = data_testtuple['data_manager_key']
             if 'test_data_sample_keys' in data_testtuple:
-                testtuple['data_sample_keys'] = [str(key) for key in data_testtuple['test_data_sample_keys']]
+                testtuple['data_sample_keys'] = data_testtuple['test_data_sample_keys']
 
             testtuples.append(testtuple)
 
@@ -103,9 +103,9 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_composite_traintuple in data.get('composite_traintuples', []):
             composite_traintuple = {
                 'key': new_uuid(),
-                'algo_key': str(data_composite_traintuple['algo_key']),
-                'data_manager_key': str(data_composite_traintuple['data_manager_key']),
-                'data_sample_keys': [str(key) for key in data_composite_traintuple['train_data_sample_keys']],
+                'algo_key': data_composite_traintuple['algo_key'],
+                'data_manager_key': data_composite_traintuple['data_manager_key'],
+                'data_sample_keys': data_composite_traintuple['train_data_sample_keys'],
                 'id': data_composite_traintuple['composite_traintuple_id'],
                 'metadata': data_composite_traintuple.get('metadata'),
             }
@@ -129,7 +129,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_aggregatetuple in data.get('aggregatetuples', []):
             aggregatetuple = {
                 'key': new_uuid(),
-                'algo_key': str(data_aggregatetuple['algo_key']),
+                'algo_key': data_aggregatetuple['algo_key'],
                 'worker': data_aggregatetuple['worker'],
                 'id': data_aggregatetuple['aggregatetuple_id'],
                 'metadata': data_aggregatetuple.get('metadata'),

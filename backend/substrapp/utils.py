@@ -316,4 +316,4 @@ def timeit(function):
 
 
 def new_uuid():
-    return str(uuid.uuid4())
+    return uuid.uuid4()

@@ -25,17 +25,17 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
         rank = '' if rank is None else str(rank)
         compute_plan_id = validated_data.get('compute_plan_id', None)
         train_data_sample_keys = validated_data.get('train_data_sample_keys', [])
-        in_models_keys = [str(key) for key in validated_data.get('in_models_keys', [])]
+        in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
         metadata = validated_data.get('metadata')
 
         args = {
-            'key': str(key),
-            'algo_key': str(algo_key),
+            'key': key,
+            'algo_key': algo_key,
             'in_models': in_models_keys,
-            'data_manager_key': str(data_manager_key),
-            'data_sample_keys': [str(key) for key in train_data_sample_keys],
-            'compute_plan_id': str(compute_plan_id) if compute_plan_id else None,
+            'data_manager_key': data_manager_key,
+            'data_sample_keys': train_data_sample_keys,
+            'compute_plan_id': compute_plan_id,
             'rank': rank,
             'tag': tag,
             'metadata': metadata

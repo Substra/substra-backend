@@ -187,13 +187,13 @@ class TasksTests(APITestCase):
     def test_prepare_data_sample_zip(self):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
-        key = new_uuid()
+        key = str(new_uuid())
         data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [str(data_sample.pk)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -249,13 +249,13 @@ class TasksTests(APITestCase):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
-        key = new_uuid()
+        key = str(new_uuid())
         data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [str(data_sample.pk)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:

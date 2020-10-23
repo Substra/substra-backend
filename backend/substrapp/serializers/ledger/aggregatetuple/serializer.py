@@ -23,15 +23,15 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
         rank = '' if rank is None else str(rank)
         worker = validated_data.get('worker')
         compute_plan_id = validated_data.get('compute_plan_id', None)
-        in_models_keys = [str(key) for key in validated_data.get('in_models_keys', [])]
+        in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
         metadata = validated_data.get('metadata')
 
         args = {
-            'key': str(key),
-            'algo_key': str(algo_key),
+            'key': key,
+            'algo_key': algo_key,
             'in_models': in_models_keys,
-            'compute_plan_id': str(compute_plan_id) if compute_plan_id else None,
+            'compute_plan_id': compute_plan_id,
             'rank': rank,
             'worker': worker,
             'tag': tag,

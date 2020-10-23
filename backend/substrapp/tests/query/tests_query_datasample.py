@@ -4,7 +4,6 @@ import tempfile
 import zipfile
 from unittest.mock import MagicMock
 import json
-import uuid
 
 import mock
 from django.core.files import File
@@ -19,7 +18,7 @@ from rest_framework.test import APITestCase
 from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
-from substrapp.utils import store_datasamples_archive
+from substrapp.utils import store_datasamples_archive, new_uuid
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
 from substrapp.views import DataSampleViewSet
 
@@ -169,7 +168,7 @@ class DataSampleQueryTests(APITestCase):
         url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
-        dataManagerKey = str(uuid.uuid4())
+        dataManagerKey = str(new_uuid())
 
         # missing datamanager
         data = {'data_manager_keys': [dataManagerKey]}

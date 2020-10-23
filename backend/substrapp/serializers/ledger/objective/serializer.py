@@ -30,7 +30,7 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
-            'key': str(instance.pk),
+            'key': instance.pk,
             'name': name,
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:objective-description', args=[instance.pk]),  # noqa
@@ -38,8 +38,8 @@ class LedgerObjectiveSerializer(serializers.Serializer):
             'metrics_hash': get_hash(instance.metrics),
             'metrics_storage_address': current_site + reverse('substrapp:objective-metrics', args=[instance.pk]),
             'test_dataset': {
-                'data_manager_key': str(test_data_manager_key) if test_data_manager_key else None,
-                'data_sample_keys': [str(key) for key in test_data_sample_keys],
+                'data_manager_key': test_data_manager_key,
+                'data_sample_keys': test_data_sample_keys,
             },
             'permissions': {'process': {
                 'public': permissions.get('public'),

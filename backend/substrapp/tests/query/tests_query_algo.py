@@ -2,7 +2,6 @@ import os
 import shutil
 import tempfile
 import json
-import uuid
 
 import mock
 
@@ -14,7 +13,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, Algo
 from substrapp.serializers import LedgerAlgoSerializer
-from substrapp.utils import compute_hash
+from substrapp.utils import compute_hash, new_uuid
 from substrapp.ledger.exceptions import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
@@ -136,7 +135,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': str(uuid.uuid4()),
+                'objective_key': str(new_uuid()),
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
