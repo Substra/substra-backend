@@ -304,7 +304,7 @@ class TasksTests(APITestCase):
 
     def test_get_objective(self):
         metrics_content = self.script.read().encode('utf-8')
-        objective_hash = get_hash(self.script)
+        objective_key = new_uuid()
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \
@@ -312,7 +312,7 @@ class TasksTests(APITestCase):
 
             mget_remote_file.return_value = metrics_content
 
-            objective = get_objective(CHANNEL, {'objective': {'hash': objective_hash,
+            objective = get_objective(CHANNEL, {'objective': {'key': objective_key,
                                                 'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)

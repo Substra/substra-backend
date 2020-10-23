@@ -73,8 +73,8 @@ class TasksError(Exception):
 
 def get_objective(channel_name, tuple_):
 
-    objective_hash = tuple_['objective']['hash']
-    objective_metadata = get_object_from_ledger(channel_name, objective_hash, 'queryObjective')
+    objective_key = tuple_['objective']['key']
+    objective_metadata = get_object_from_ledger(channel_name, objective_key, 'queryObjective')
 
     objective_content = get_asset_content(
         channel_name,
@@ -737,7 +737,7 @@ def do_task(channel_name, subtuple, tuple_type):
             subtuple_key=subtuple["key"],
             compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
-            image_name=f'substra/metrics_{subtuple["objective"]["hash"][0:8]}'.lower(),
+            image_name=f'substra/metrics_{subtuple["objective"]["key"][0:8]}'.lower(),
             job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',

@@ -591,7 +591,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+            "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                 "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -624,7 +624,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
+            "key": "b61067ad-c59f-b1aa-be21-eab767d986cc",
             "metrics": {
                 "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/metrics/"
@@ -658,7 +658,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+            "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                 "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -692,7 +692,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+            "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                 "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -726,7 +726,7 @@ testtuple = [
         "log": "",
         "metadata": {},
         "objective": {
-            "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+            "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
             "metrics": {
                 "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                 "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -1702,7 +1702,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+                "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                     "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -1781,7 +1781,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+                "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                     "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -2003,7 +2003,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+                "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                     "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
@@ -2469,7 +2469,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "b61067ad-c59f-b1aa-be21-eab767d986cc",
+                "key": "b61067ad-c59f-b1aa-be21-eab767d986cc",
                 "metrics": {
                     "hash": "1a61bea02e3e75f8197d682cbaa6110c9709fbfbd4f16964acc390c70e7a22fe",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/objective/b61067ad-c59f-b1aa-be21-eab767d986cc/metrics/"
@@ -2570,7 +2570,7 @@ model = [
             "log": "",
             "metadata": {},
             "objective": {
-                "hash": "48cc5ce4-d352-b859-e202-adb0d639ee09",
+                "key": "48cc5ce4-d352-b859-e202-adb0d639ee09",
                 "metrics": {
                     "hash": "0d64f855e07524da60203067713ab08fd6e479a02ebcb70364b2c6a2a29367e1",
                     "storage_address": "http://testserver/objective/48cc5ce4-d352-b859-e202-adb0d639ee09/metrics/"
