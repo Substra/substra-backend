@@ -163,8 +163,9 @@ class LedgerException(Exception):
 
 
 class ValidationException(Exception):
-    def __init__(self, data, st):
+    def __init__(self, data, pkhash, st):
         self.data = data
+        self.pkhash = pkhash
         self.st = st
         super(ValidationException).__init__()
 

@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError
+from substrapp.ledger.exceptions import LedgerError, LedgerConflict
 from substrapp.utils import new_uuid
 from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
 from substrapp.views.filters_utils import filter_list
@@ -29,6 +29,9 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         args = serializer.get_args(compute_plan_id, serializer.validated_data)
         try:
             query_ledger(get_channel_name(request), fcn='createComputePlan', args=args)
+        except LedgerConflict as e:
+            error = {'message': str(e.msg), 'pkhash': e.pkhash}
+            return Response(error, status=e.status)
         except LedgerError as e:
             error = {'message': str(e.msg)}
             return Response(error, status=e.status)

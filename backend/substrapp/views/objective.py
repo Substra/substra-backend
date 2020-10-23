@@ -15,7 +15,7 @@ from substrapp.models import Objective
 from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, validate_pk,
                                    get_success_create_code, ValidationException,
@@ -74,6 +74,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
             raise LedgerException('timeout', e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -93,8 +95,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             checksum = get_hash(description)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            raise ValidationException(e.args, st)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
             'metrics': metrics,
@@ -105,7 +106,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            raise ValidationException(e.args, status.HTTP_400_BAD_REQUEST)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)

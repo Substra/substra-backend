@@ -4,8 +4,8 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError
 from substrapp.utils import new_uuid
+from substrapp.ledger.exceptions import LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
                                    data_to_data_response)
@@ -56,6 +56,8 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         try:
             data = query_ledger(get_channel_name(request), fcn='createTraintuple', args=args)
+        except LedgerConflict as e:
+            raise LedgerException({'message': str(e.msg), 'key': e.pkhash}, e.status)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:

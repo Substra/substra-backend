@@ -12,7 +12,7 @@ from substrapp.models import AggregateAlgo
 from substrapp.serializers import LedgerAggregateAlgoSerializer, AggregateAlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset, node_has_process_permission, get_channel_name,
@@ -62,7 +62,14 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            raise LedgerException('timeout', e.status)
+            if isinstance(serializer.data, list):
+                pkhash = [x['pkhash'] for x in serializer.data]
+            else:
+                pkhash = [serializer.data['pkhash']]
+            data = {'pkhash': pkhash, 'validated': False}
+            raise LedgerException(data, e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.pkhash, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -87,7 +94,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            raise ValidationException(e.args, status.HTTP_400_BAD_REQUEST)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -98,7 +105,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         try:
             data = self._create(request, file)
         except ValidationException as e:
-            return Response({'message': e.data}, status=e.st)
+            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:

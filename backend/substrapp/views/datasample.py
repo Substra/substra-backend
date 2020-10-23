@@ -20,7 +20,7 @@ from substrapp.utils import store_datasamples_archive, get_dir_hash, new_uuid
 from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name, \
     data_to_data_response
 from substrapp.ledger.api import query_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +58,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             data = ledger_serializer.create(channel_name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
             raise LedgerException('timeout', e.status)
+        except LedgerConflict as e:
+            raise ValidationException(e.msg, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
@@ -159,7 +161,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             try:
                 serializer.is_valid(raise_exception=True)
             except Exception as e:
-                raise ValidationException(e.args, status.HTTP_400_BAD_REQUEST)
+                raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
             else:
 
                 # create on ledger + db
