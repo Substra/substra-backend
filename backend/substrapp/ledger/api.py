@@ -3,6 +3,7 @@ import json
 import logging
 import time
 
+from uuid import UUID
 from django.conf import settings
 from grpc import RpcError
 from substrapp.ledger.connection import get_hfc
@@ -78,6 +79,12 @@ def get_query_endorsing_peers(current_peer, all_peers):
         all_peers=all_peers
     )
 
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
+
 
 def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
@@ -85,7 +92,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
         if not args:
             args = []
         else:
-            args = [json.dumps(args)]
+            args = [json.dumps(args, cls=UUIDEncoder)]
 
         chaincode_calls = {
             'invoke': client.chaincode_invoke,
