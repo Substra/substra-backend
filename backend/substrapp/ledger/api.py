@@ -293,19 +293,22 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
     if tuple_type in ('traintuple', 'aggregatetuple'):
         extra_kwargs.update({
             'out_model': {
-                'hash': res["end_model_file_hash"],
-                'storage_address': res["end_model_file"],
+                'key': res["end_model_key"],
+                'hash': res["end_model_checksum"],
+                'storage_address': res["end_model_storage_address"],
             },
         })
 
     elif tuple_type == 'composite_traintuple':
         extra_kwargs.update({
             'out_head_model': {
-                'hash': res["end_head_model_file_hash"],
+                'key': res["end_head_model_key"],
+                'hash': res["end_head_model_checksum"],
             },
             'out_trunk_model': {
-                'hash': res["end_trunk_model_file_hash"],
-                'storage_address': res["end_trunk_model_file"],
+                'key': res["end_trunk_model_key"],
+                'hash': res["end_trunk_model_checksum"],
+                'storage_address': res["end_trunk_model_storage_address"],
             },
         })
 

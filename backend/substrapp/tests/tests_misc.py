@@ -87,8 +87,9 @@ class MiscTests(TestCase):
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
             res = {
-                'end_model_file_hash': 'hash',
-                'end_model_file': 'storage_address',
+                'end_model_key': '<some_key>',
+                'end_model_checksum': 'hash',
+                'end_model_storage_address': 'storage_address',
                 'job_task_log': 'log',
             }
             log_success_tuple(CHANNEL, 'traintuple', 'pk', res)

@@ -35,8 +35,8 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
         args = {
             'key': str(key),
             'algo_key': str(algo_key),
-            'in_head_model_key': str(in_head_model_key),
-            'in_trunk_model_key': str(in_trunk_model_key),
+            'in_head_model_key': str(in_head_model_key) if in_head_model_key else None,
+            'in_trunk_model_key': str(in_trunk_model_key) if in_trunk_model_key else None,
             'out_trunk_model_permissions': {'process': {
                 'authorized_ids': out_trunk_model_permissions.get('authorized_ids'),
             }},

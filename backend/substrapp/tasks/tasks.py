@@ -181,7 +181,7 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     """Get local model content."""
     from substrapp.models import Model
 
-    model = Model.objects.get(pk=out_model['hash'])
+    model = Model.objects.get(pk=out_model['key'])
 
     # verify that local db model file is not corrupted
     if get_hash(model.file.path, hash_key) != out_model['hash']:
@@ -964,24 +964,26 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
     models = {}
 
     if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
-        file, file_hash = save_model(subtuple_directory, subtuple_key)
+        model, storage_address = save_model(subtuple_directory, subtuple_key)
         models['end_model'] = {
-            'file': file,
-            'hash': file_hash
+            'key': str(model.pk),
+            'checksum': model.checksum,
+            'storage_address': storage_address
         }
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         for m_type, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
                                             ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
-            file, file_hash = save_model(
+            model, storage_address = save_model(
                 subtuple_directory,
                 subtuple_key + hash_salt,
                 filename=filename,
             )
 
             models[m_type] = {
-                'file': file,
-                'hash': file_hash
+                'key': str(model.pk),
+                'checksum': model.checksum,
+                'storage_address': storage_address
             }
 
     return models
@@ -992,15 +994,18 @@ def extract_result_from_models(tuple_type, models):
     result = {}
 
     if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-        result['end_model_file'] = models['end_model']['file']
-        result['end_model_file_hash'] = models['end_model']['hash']
+        result['end_model_key'] = models['end_model']['key']
+        result['end_model_checksum'] = models['end_model']['checksum']
+        result['end_model_storage_address'] = models['end_model']['storage_address']
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         # Head model does not expose storage address
-        result['end_head_model_file_hash'] = models['end_head_model']['hash']
+        result['end_head_model_key'] = models['end_head_model']['key']
+        result['end_head_model_checksum'] = models['end_head_model']['checksum']
 
-        result['end_trunk_model_file'] = models['end_trunk_model']['file']
-        result['end_trunk_model_file_hash'] = models['end_trunk_model']['hash']
+        result['end_trunk_model_key'] = models['end_trunk_model']['key']
+        result['end_trunk_model_checksum'] = models['end_trunk_model']['checksum']
+        result['end_trunk_model_storage_address'] = models['end_trunk_model']['storage_address']
 
     return result
 
@@ -1011,15 +1016,14 @@ def save_model(subtuple_directory, hash_key, filename='model'):
 
     end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
     checksum = get_hash(end_model_path, hash_key)
-    pkhash = checksum
     instance = Model.objects.create(checksum=checksum, validated=True)
 
     with open(end_model_path, 'rb') as f:
         instance.file.save('model', f)
     current_site = getattr(settings, "DEFAULT_DOMAIN")
-    end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[pkhash])}'
+    storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.pk])}'
 
-    return end_model_file, checksum
+    return instance, storage_address
 
 
 def get_algo_image_name(algo_hash):
