@@ -9,7 +9,7 @@ class LedgerTrainTupleSerializer(serializers.Serializer):
     algo_key = serializers.UUIDField()
     data_manager_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
-    serializers.UUIDField(required=False, allow_null=True)
+    compute_plan_id = serializers.UUIDField(required=False, allow_null=True)
     in_models_keys = serializers.ListField(child=serializers.UUIDField(),
                                            min_length=0,
                                            required=False, allow_null=True)
