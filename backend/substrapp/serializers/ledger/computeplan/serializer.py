@@ -63,7 +63,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     metadata = DictField(child=CharField(), required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
 
-    def get_args(self, data):
+    def get_args(self, compute_plan_id, data):
         # convert snake case fields to camel case fields to match chaincode expected inputs
         traintuples = []
         for data_traintuple in data.get('traintuples', []):
@@ -71,7 +71,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
                 'key': new_uuid(),
                 'data_manager_key': str(data_traintuple['data_manager_key']),
                 'data_sample_keys': [str(key) for key in data_traintuple['train_data_sample_keys']],
-                'algo_key': data_traintuple['algo_key'],
+                'algo_key': str(data_traintuple['algo_key']),
                 'id': data_traintuple['traintuple_id'],
                 'metadata': data_traintuple.get('metadata'),
             }
@@ -103,7 +103,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_composite_traintuple in data.get('composite_traintuples', []):
             composite_traintuple = {
                 'key': new_uuid(),
-                'algo_key': data_composite_traintuple['algo_key'],
+                'algo_key': str(data_composite_traintuple['algo_key']),
                 'data_manager_key': str(data_composite_traintuple['data_manager_key']),
                 'data_sample_keys': [str(key) for key in data_composite_traintuple['train_data_sample_keys']],
                 'id': data_composite_traintuple['composite_traintuple_id'],
@@ -129,7 +129,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         for data_aggregatetuple in data.get('aggregatetuples', []):
             aggregatetuple = {
                 'key': new_uuid(),
-                'algo_key': data_aggregatetuple['algo_key'],
+                'algo_key': str(data_aggregatetuple['algo_key']),
                 'worker': data_aggregatetuple['worker'],
                 'id': data_aggregatetuple['aggregatetuple_id'],
                 'metadata': data_aggregatetuple.get('metadata'),
@@ -143,7 +143,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             aggregatetuples.append(aggregatetuple)
 
         return {
-            'compute_plan_id': new_uuid(),
+            'compute_plan_id': compute_plan_id,
             'traintuples': traintuples,
             'testtuples': testtuples,
             'composite_traintuples': composite_traintuples,
@@ -153,12 +153,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             'clean_models': data.get('clean_models', False),
         }
 
-    def create(self, channel_name, validated_data):
-        args = self.get_args(validated_data)
+    def create(self, channel_name, compute_plan_id, validated_data):
+        args = self.get_args(compute_plan_id, validated_data)
         return ledger.assets.create_computeplan(channel_name, args)
 
     def update(self, channel_name, compute_plan_id, validated_data):
-        args = self.get_args(validated_data)
+        args = self.get_args(compute_plan_id, validated_data)
         del args['tag']
-        args['compute_plan_id'] = compute_plan_id
         return ledger.assets.update_computeplan(channel_name, args)

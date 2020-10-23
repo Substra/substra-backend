@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
+from substrapp.utils import new_uuid
 from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
@@ -24,17 +25,17 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         serializer.is_valid(raise_exception=True)
 
         # get compute_plan_id to handle 408 timeout in next invoke ledger request
-        args = serializer.get_args(serializer.validated_data)
+        compute_plan_id = new_uuid()
+        args = serializer.get_args(compute_plan_id, serializer.validated_data)
         try:
-            ledger_response = query_ledger(get_channel_name(request), fcn='createComputePlan', args=args)
+            query_ledger(get_channel_name(request), fcn='createComputePlan', args=args)
         except LedgerError as e:
             error = {'message': str(e.msg)}
             return Response(error, status=e.status)
 
         # create compute plan in ledger
-        compute_plan_id = ledger_response.get('compute_plan_id')
         try:
-            data = serializer.create(get_channel_name(request), serializer.validated_data)
+            data = serializer.create(get_channel_name(request), compute_plan_id, serializer.validated_data)
         except LedgerError as e:
             error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
             return Response(error, status=e.status)
@@ -93,6 +94,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['POST'])
     def update_ledger(self, request, pk):
+
         validate_pk(pk)
 
         compute_plan_id = pk
