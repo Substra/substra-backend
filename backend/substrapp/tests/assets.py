@@ -246,6 +246,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "940262c3-5a6b-33c2-b7c8-811fa785899b",
             "hash": "940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760",
             "storage_address": "http://testserver/model/940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760/file/"
         },
@@ -281,6 +282,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "f33d3c7a-21e9-7f5f-0edd-636f3b313c6a",
             "hash": "f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2",
             "storage_address": "http://testserver/model/f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2/file/"
         },
@@ -316,6 +318,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "02ccc4ee-b426-f7bb-fe74-6a06a4c63a20",
             "hash": "02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c",
             "storage_address": "http://testserver/model/02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c/file/"
         },
@@ -359,6 +362,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "4672cd5a-9e13-4a6f-6c54-144c3a8e8330",
             "hash": "4672cd5a9e134a6f6c54144c3a8e8330b2147fa10264ca8e9fbac9b9075cacd0",
             "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/4672cd5a9e134a6f6c54144c3a8e8330b2147fa10264ca8e9fbac9b9075cacd0/file/"
         },
@@ -397,6 +401,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "714ee814-6557-6b09-f1e4-c6e0f28e8218",
             "hash": "714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888",
             "storage_address": "http://testserver/model/714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888/file/"
         },
@@ -434,6 +439,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "d771446f-0be1-5eba-a66d-b902f5a98a50",
             "hash": "d771446f0be15ebaa66db902f5a98a5005611de4ea44d3a5fe77c50ee34ff114",
             "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/d771446f0be15ebaa66db902f5a98a5005611de4ea44d3a5fe77c50ee34ff114/file/"
         },
@@ -474,6 +480,7 @@ traintuple = [
             "foo": "bar"
         },
         "out_model": {
+            "key": "420ce592-a42e-0c78-e644-447173b54046",
             "hash": "420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7",
             "storage_address": "http://testserver/model/420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7/file/"
         },
@@ -518,6 +525,7 @@ traintuple = [
         "log": "",
         "metadata": {},
         "out_model": {
+            "key": "7b3183a9-9222-df2b-18de-11c8f767fdca",
             "hash": "7b3183a99222df2b18de11c8f767fdca2c7ebb0d4fa8bfe03c4f169cfea2aba2",
             "storage_address": "http://testserver/model/7b3183a99222df2b18de11c8f767fdca2c7ebb0d4fa8bfe03c4f169cfea2aba2/file/"
         },
@@ -809,6 +817,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "692e3f70-b9eb-fca3-c2e5-1e2a92c18092",
                 "hash": "692e3f70b9ebfca3c2e51e2a92c18092cc24dda547debefd6eb4bdd38ca6d803",
                 "storage_address": "http://testserver/model/692e3f70b9ebfca3c2e51e2a92c18092cc24dda547debefd6eb4bdd38ca6d803/file/"
             },
@@ -865,6 +874,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "00009a12-56f8-ce55-ed90-7221000035da",
                 "hash": "00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f",
                 "storage_address": "http://testserver/model/00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f/file/"
             },
@@ -969,6 +979,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "fcfcaa4f-3be7-3940-006f-c54566b2946f",
                 "hash": "fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d",
                 "storage_address": "http://testserver/model/fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d/file/"
             },
@@ -1022,6 +1033,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "682d31d9-e956-54ed-0aaf-81184136d87c",
                 "hash": "682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d",
                 "storage_address": "http://testserver/model/682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d/file/"
             },
@@ -1075,6 +1087,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "b312a262-592a-a7ed-56a0-7d0eb02bec05",
                 "hash": "b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2",
                 "storage_address": "http://testserver/model/b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2/file/"
             },
@@ -1136,6 +1149,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "66392ca3-e6a5-935f-b8e2-2a5ee5b8af31",
                 "hash": "66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74/file/"
             },
@@ -1198,6 +1212,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "14b7e325-4896-db4f-43c5-82695c39d096",
                 "hash": "14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044",
                 "storage_address": "http://testserver/model/14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044/file/"
             },
@@ -1251,6 +1266,7 @@ compositetraintuple = [
         },
         "out_trunk_model": {
             "out_model": {
+                "key": "cd8a895a-9b60-4ccb-b2e2-bf9f081d0560",
                 "hash": "cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d/file/"
             },
@@ -1378,6 +1394,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "940262c3-5a6b-33c2-b7c8-811fa785899b",
                 "hash": "940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760",
                 "storage_address": "http://testserver/model/940262c35a6b33c2b7c8811fa785899b00e287ffa05e3cb5a23c857e9c89c760/file/"
             },
@@ -1433,6 +1450,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "f33d3c7a-21e9-7f5f-0edd-636f3b313c6a",
                 "hash": "f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2",
                 "storage_address": "http://testserver/model/f33d3c7a21e97f5f0edd636f3b313c6a7757cc458614e49da74d58af7fc0c4c2/file/"
             },
@@ -1488,6 +1506,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "02ccc4ee-b426-f7bb-fe74-6a06a4c63a20",
                 "hash": "02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c",
                 "storage_address": "http://testserver/model/02ccc4eeb426f7bbfe746a06a4c63a2023a8f2ea2c72f92242cc5f7f1164383c/file/"
             },
@@ -1551,6 +1570,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "4672cd5a-9e13-4a6f-6c54-144c3a8e8330",
                 "hash": "4672cd5a9e134a6f6c54144c3a8e8330b2147fa10264ca8e9fbac9b9075cacd0",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/4672cd5a9e134a6f6c54144c3a8e8330b2147fa10264ca8e9fbac9b9075cacd0/file/"
             },
@@ -1609,6 +1629,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "714ee814-6557-6b09-f1e4-c6e0f28e8218",
                 "hash": "714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888",
                 "storage_address": "http://testserver/model/714ee81465576b09f1e4c6e0f28e82189501c46ed36569c9867eff851a285888/file/"
             },
@@ -1666,6 +1687,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "d771446f-0be1-5eba-a66d-b902f5a98a50",
                 "hash": "d771446f0be15ebaa66db902f5a98a5005611de4ea44d3a5fe77c50ee34ff114",
                 "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/d771446f0be15ebaa66db902f5a98a5005611de4ea44d3a5fe77c50ee34ff114/file/"
             },
@@ -1745,6 +1767,7 @@ model = [
                 "foo": "bar"
             },
             "out_model": {
+                "key": "420ce592-a42e-0c78-e644-447173b54046",
                 "hash": "420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7",
                 "storage_address": "http://testserver/model/420ce592a42e0c78e644447173b54046163a2afeadd37227cef6866fc7d4c4f7/file/"
             },
@@ -1828,6 +1851,7 @@ model = [
             "log": "",
             "metadata": {},
             "out_model": {
+                "key": "7b3183a9-9222-df2b-18de-11c8f767fdca",
                 "hash": "7b3183a99222df2b18de11c8f767fdca2c7ebb0d4fa8bfe03c4f169cfea2aba2",
                 "storage_address": "http://testserver/model/7b3183a99222df2b18de11c8f767fdca2c7ebb0d4fa8bfe03c4f169cfea2aba2/file/"
             },
@@ -1964,6 +1988,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "692e3f70-b9eb-fca3-c2e5-1e2a92c18092",
                     "hash": "692e3f70b9ebfca3c2e51e2a92c18092cc24dda547debefd6eb4bdd38ca6d803",
                     "storage_address": "http://testserver/model/692e3f70b9ebfca3c2e51e2a92c18092cc24dda547debefd6eb4bdd38ca6d803/file/"
                 },
@@ -2059,6 +2084,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "00009a12-56f8-ce55-ed90-7221000035da",
                     "hash": "00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f",
                     "storage_address": "http://testserver/model/00009a1256f8ce55ed907221000035daf1ac28111b5a3a03289da2f0601edf8f/file/"
                 },
@@ -2203,6 +2229,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "fcfcaa4f-3be7-3940-006f-c54566b2946f",
                     "hash": "fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d",
                     "storage_address": "http://testserver/model/fcfcaa4f3be73940006fc54566b2946fabd5ee677496a5dd43e4b8c0c3c3d54d/file/"
                 },
@@ -2276,6 +2303,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "682d31d9-e956-54ed-0aaf-81184136d87c",
                     "hash": "682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d",
                     "storage_address": "http://testserver/model/682d31d9e95654ed0aaf81184136d87c7ff2a0046c3d24181508f112d58b330d/file/"
                 },
@@ -2349,6 +2377,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "b312a262-592a-a7ed-56a0-7d0eb02bec05",
                     "hash": "b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2",
                     "storage_address": "http://testserver/model/b312a262592aa7ed56a07d0eb02bec0548745eb7316d4ea86b3719b2497d8cb2/file/"
                 },
@@ -2430,6 +2459,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "66392ca3-e6a5-935f-b8e2-2a5ee5b8af31",
                     "hash": "66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/66392ca3e6a5935fb8e22a5ee5b8af31dbec5655ff087b98f071abf7e4f3ce74/file/"
                 },
@@ -2530,6 +2560,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "14b7e325-4896-db4f-43c5-82695c39d096",
                     "hash": "14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044",
                     "storage_address": "http://testserver/model/14b7e3254896db4f43c582695c39d096f33e1390e3ecaa8b0e6e7619bf827044/file/"
                 },
@@ -2622,6 +2653,7 @@ model = [
             },
             "out_trunk_model": {
                 "out_model": {
+                    "key": "cd8a895a-9b60-4ccb-b2e2-bf9f081d0560",
                     "hash": "cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d",
                     "storage_address": "http://backend-org-2-substra-backend-server.org-2:8000/model/cd8a895a9b604ccbb2e2bf9f081d0560bfd86f4a98beabd833d4c7c36f35cd9d/file/"
                 },
@@ -2745,6 +2777,7 @@ model = [
                 }
             ],
             "out_model": {
+                "key": "bd2e6a51-0edc-1197-4e3d-8b5459f0d4bd",
                 "hash": "bd2e6a510edc11974e3d8b5459f0d4bd9b3169afe1fa47643147351f51fb18ac",
                 "storage_address": "http://testserver/model/bd2e6a510edc11974e3d8b5459f0d4bd9b3169afe1fa47643147351f51fb18ac/file/"
             },
@@ -2803,6 +2836,7 @@ model = [
                 }
             ],
             "out_model": {
+                "key": "4e9f3d4b-8575-c5cd-a471-88043bd8e0f4",
                 "hash": "4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688",
                 "storage_address": "http://testserver/model/4e9f3d4b8575c5cda47188043bd8e0f43fef42e2cf92f2476ac78bda096f2688/file/"
             },
@@ -2864,6 +2898,7 @@ model = [
                 }
             ],
             "out_model": {
+                "key": "d62bd637-d422-3726-e96c-46337539da3b",
                 "hash": "d62bd637d4223726e96c46337539da3bbd94dc3a3b4f233f1c7152dd3b02364d",
                 "storage_address": "http://testserver/model/d62bd637d4223726e96c46337539da3bbd94dc3a3b4f233f1c7152dd3b02364d/file/"
             },

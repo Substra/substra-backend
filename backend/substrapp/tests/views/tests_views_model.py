@@ -128,24 +128,23 @@ class ModelViewTests(APITestCase):
 
             get_remote_asset.return_value = self.model.read().encode()
 
-            # url = reverse('substrapp:model-list')
-            # TODO Aurelien: fix
-            # search_params = done_model['traintuple']['out_model']['hash'] + '/'
-            # response = self.client.get(url + search_params, **self.extra)
-            # r = response.json()
-            # self.assertEqual(r, done_model)
+            url = reverse('substrapp:model-list')
+            search_params = done_model['traintuple']['out_model']['key'] + '/'
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+            self.assertEqual(r, done_model)
 
     def test_model_retrieve_fail(self):
 
         url = reverse('substrapp:model-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PK hash not enough chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # PK hash not hexa
-        search_params = 'X' * 64 + '/'
+        search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
