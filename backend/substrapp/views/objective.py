@@ -72,7 +72,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)

@@ -57,7 +57,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         except LedgerTimeout as e:
             raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
