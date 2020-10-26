@@ -1035,7 +1035,7 @@ def remove_intermediary_models(model_keys):
     from substrapp.models import Model
 
     models = Model.objects.filter(pkhash__in=model_keys, validated=True)
-    filtered_model_keys = [model.pk for model in models]
+    filtered_model_keys = [str(model.pk) for model in models]
 
     models.delete()
 
