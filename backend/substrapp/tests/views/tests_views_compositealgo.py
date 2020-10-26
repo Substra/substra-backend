@@ -179,12 +179,12 @@ class CompositeAlgoViewTests(APITestCase):
 
         url = reverse('substrapp:composite_algo-list')
 
-        # PKhash < 32 chars
+        # Key < 32 chars
         search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PKhash not hexa
+        # Key not hexa
         search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

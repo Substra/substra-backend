@@ -38,4 +38,4 @@ class LedgerAggregateAlgoSerializer(serializers.Serializer):
             'metadata': metadata
         }
 
-        return ledger.assets.create_aggregatealgo(channel_name, args, instance.pkhash)
+        return ledger.assets.create_aggregatealgo(channel_name, args, instance.key)

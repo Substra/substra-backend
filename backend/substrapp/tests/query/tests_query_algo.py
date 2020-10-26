@@ -27,7 +27,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
-    objective_pkhash = None
+    objective_key = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -48,7 +48,7 @@ class AlgoQueryTests(APITestCase):
     def add_default_objective(self):
         o = Objective.objects.create(description=self.objective_description,
                                      metrics=self.objective_metrics)
-        self.objective_pkhash = str(o.pkhash)
+        self.objective_key = str(o.key)
 
     def get_default_algo_data(self):
         return {
@@ -56,7 +56,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': self.objective_pkhash,
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -70,7 +70,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,  # fake it
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': self.objective_pkhash,
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -89,7 +89,7 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': 'some key'}
+            minvoke_ledger.return_value = {'key': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -159,7 +159,7 @@ class AlgoQueryTests(APITestCase):
             # missing local storage field
             data = {
                 'name': 'super top algo',
-                'objective_key': self.objective_pkhash,
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -173,7 +173,7 @@ class AlgoQueryTests(APITestCase):
                 'file': self.algo,
                 'description': self.data_description,
                 'json': json.dumps({
-                    'objective_key': self.objective_pkhash,
+                    'objective_key': self.objective_key,
                 })
             }
             response = self.client.post(url, data, format='multipart', **extra)
@@ -190,6 +190,6 @@ class AlgoQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
+            response = self.client.get(f'/algo/{algo.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(algo.checksum, compute_hash(response.getvalue()))

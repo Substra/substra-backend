@@ -9,7 +9,7 @@ def upload_to(instance, filename):
 
 class AggregateAlgo(models.Model):
     """Storage Data table"""
-    pkhash = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False)
@@ -22,4 +22,4 @@ class AggregateAlgo(models.Model):
         super(AggregateAlgo, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"AggregateAlgo with pkhash {self.pkhash} with validated {self.validated}"
+        return f"AggregateAlgo with key {self.key} with validated {self.validated}"

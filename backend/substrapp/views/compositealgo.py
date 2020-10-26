@@ -15,8 +15,7 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin,
                                    validate_pk, get_success_create_code, LedgerException, ValidationException,
-                                   get_remote_asset, node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+                                   get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -63,13 +62,13 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
             if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
+                key = [x['key'] for x in serializer.data]
             else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
+                key = [serializer.data['key']]
+            data = {'key': key, 'validated': False}
             raise LedgerException(data, e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -105,15 +104,13 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         try:
             data = self._create(request, file)
         except ValidationException as e:
-            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
+            return Response({'message': e.data, 'key': e.key}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_composite_algo(self, channel_name, composite_algo, pk):
         # get Compositealgo description from remote node
@@ -125,7 +122,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         f.write(content)
 
         # save/update objective in local db for later use
-        instance, created = CompositeAlgo.objects.update_or_create(pkhash=pk, validated=True)
+        instance, created = CompositeAlgo.objects.update_or_create(key=pk, validated=True)
         instance.description.save('description.md', f)
 
         return instance

@@ -187,7 +187,7 @@ class TasksTests(APITestCase):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
         key = str(new_uuid())
-        data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
+        data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
@@ -220,7 +220,7 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(pkhash=new_uuid(), path=self.data_sample_filename)
+        data_sample = DataSample(key=new_uuid(), path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
@@ -249,7 +249,7 @@ class TasksTests(APITestCase):
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
         key = str(new_uuid())
-        data_sample = DataSample(pkhash=key, path=datasamples_path_from_file, checksum=checksum)
+        data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {

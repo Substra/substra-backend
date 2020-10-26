@@ -9,7 +9,7 @@ def upload_to(instance, filename):
 
 class DataManager(models.Model):
     """Storage DataManager table"""
-    pkhash = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=True, max_length=100)
     data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
@@ -23,4 +23,4 @@ class DataManager(models.Model):
         super(DataManager, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"DataManager with pkhash {self.pkhash} with name {self.name}"
+        return f"DataManager with key {self.key} with name {self.name}"

@@ -11,7 +11,7 @@ def upload_to(instance, filename):
 
 class Objective(TimeStamped):
     """Storage Objective table"""
-    pkhash = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False, blank=True)
     description = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
     metrics = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
@@ -24,4 +24,4 @@ class Objective(TimeStamped):
         super(Objective, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f"Objective with pkhash {self.pkhash} with validated {self.validated}"
+        return f"Objective with key {self.key} with validated {self.validated}"

@@ -181,7 +181,7 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
             logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms. Error: {error}")
 
 
-def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
+def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, only_key=True):
     params = {
         'wait_for_event': sync,
         'grpc_broker_unavailable_retry': 5,
@@ -197,8 +197,8 @@ def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, on
 
     response = call_ledger(channel_name, 'invoke', fcn=fcn, args=args, kwargs=params)
 
-    if only_pkhash:
-        return {'pkhash': response.get('key', response.get('keys'))}
+    if only_key:
+        return {'key': response.get('key', response.get('keys'))}
     else:
         return response
 

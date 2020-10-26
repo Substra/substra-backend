@@ -83,7 +83,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                 get_channel_name(request),
                 fcn='cancelComputePlan',
                 args={'key': pk},
-                only_pkhash=False)
+                only_key=False)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)

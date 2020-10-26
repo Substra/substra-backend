@@ -8,8 +8,7 @@ from substrapp.utils import new_uuid
 from substrapp.ledger.exceptions import LedgerError, LedgerConflict
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
-                                   data_to_data_response)
+from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name)
 
 
 class AggregateTupleViewSet(mixins.CreateModelMixin,
@@ -40,9 +39,9 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
             return data
 
     def _create(self, request):
-        pkhash = new_uuid()
+        key = new_uuid()
         data = {
-            'key': pkhash,
+            'key': key,
             'algo_key': request.data.get('algo_key'),
             'rank': request.data.get('rank'),
             'compute_plan_id': request.data.get('compute_plan_id', ''),
@@ -65,9 +64,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:

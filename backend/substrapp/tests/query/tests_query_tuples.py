@@ -60,7 +60,7 @@ class TraintupleQueryTests(APITestCase):
 
             key = new_uuid()
             mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'key': key}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -159,7 +159,7 @@ class TraintupleQueryTests(APITestCase):
 
         o = Objective.objects.create(description=self.objective_description,
                                      metrics=self.objective_metrics)
-        data = {'objective': o.pkhash}
+        data = {'objective': o.key}
         response = self.client.post(url, data, format='json', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -204,7 +204,7 @@ class TesttupleQueryTests(APITestCase):
 
             key = new_uuid()
             mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'key': key}
 
             response = self.client.post(url, data, format='json', **extra)
 

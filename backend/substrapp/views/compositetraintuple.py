@@ -8,8 +8,7 @@ from substrapp.utils import new_uuid
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.ledger.exceptions import LedgerError, LedgerConflict
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
-                                   data_to_data_response)
+from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name)
 
 
 class CompositeTraintupleViewSet(mixins.CreateModelMixin,
@@ -40,9 +39,9 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             return data
 
     def _create(self, request):
-        pkhash = new_uuid()
+        key = new_uuid()
         data = {
-            'key': pkhash,
+            'key': key,
             'algo_key': request.data.get('algo_key'),
             'data_manager_key': request.data.get('data_manager_key'),
             'rank': request.data.get('rank'),
@@ -68,9 +67,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:

@@ -37,7 +37,7 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
         tmp_model.write(content)
-        instance, created = Model.objects.update_or_create(pkhash=pk, validated=True)
+        instance, created = Model.objects.update_or_create(key=pk, validated=True)
         instance.file.save('model', tmp_model)
 
         return instance

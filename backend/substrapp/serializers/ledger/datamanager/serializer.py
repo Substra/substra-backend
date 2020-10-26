@@ -43,4 +43,4 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.assets.create_datamanager(channel_name, args, instance.pkhash)
+        return ledger.assets.create_datamanager(channel_name, args, instance.key)

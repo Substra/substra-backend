@@ -70,7 +70,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
             key = new_uuid()
             mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'key': key}
 
             response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -180,7 +180,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
         o = Objective.objects.create(description=self.objective_description,
                                      metrics=self.objective_metrics)
-        data = {'objective': o.pkhash}
+        data = {'objective': o.key}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -203,7 +203,7 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(head_model.checksum, compute_hash(response.getvalue(), key='key_traintuple'))
 
@@ -224,7 +224,7 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_head_model_ko_wrong_node(self):
@@ -247,5 +247,5 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

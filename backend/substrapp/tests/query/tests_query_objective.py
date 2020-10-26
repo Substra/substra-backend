@@ -24,7 +24,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class ObjectiveQueryTests(APITestCase):
     client_class = AuthenticatedClient
-    data_manager_pkhash = None
+    data_manager_key = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -47,7 +47,7 @@ class ObjectiveQueryTests(APITestCase):
         dm = DataManager.objects.create(name='slide opener',
                                         description=self.data_description,
                                         data_opener=self.data_data_opener)
-        self.data_manager_pkhash = str(dm.pkhash)
+        self.data_manager_key = str(dm.key)
 
     def get_default_objective_data(self):
 
@@ -59,7 +59,7 @@ class ObjectiveQueryTests(APITestCase):
             'metrics': self.objective_metrics,
             'json': json.dumps({
                 'name': 'tough objective',
-                'test_data_manager_key': self.data_manager_pkhash,
+                'test_data_manager_key': self.data_manager_key,
                 'test_data_sample_keys': self.test_data_sample_keys,
                 'permissions': {
                     'public': True,
@@ -80,7 +80,7 @@ class ObjectiveQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': 'some key'}
+            minvoke_ledger.return_value = {'key': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
@@ -146,7 +146,7 @@ class ObjectiveQueryTests(APITestCase):
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
             response = self.client.get(
-                f'/objective/{objective.pkhash}/metrics/', **extra)
+                f'/objective/{objective.key}/metrics/', **extra)
 
             self.assertEqual(response.status_code, status.HTTP_200_OK)
             self.assertEqual(self.objective_metrics_filename,

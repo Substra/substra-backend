@@ -27,7 +27,7 @@ class ModelTests(TestCase):
 
         self.assertEqual(objective.checksum, get_hash(description))
         self.assertFalse(objective.validated)
-        self.assertIn(f'pkhash {objective.pkhash}', str(objective))
+        self.assertIn(f'key {objective.key}', str(objective))
         self.assertIn(f'validated {objective.validated}', str(objective))
 
     def test_create_datamanager(self):
@@ -35,7 +35,7 @@ class ModelTests(TestCase):
         datamanager = DataManager.objects.create(description=description, data_opener=data_opener, name="slides_opener")
         self.assertEqual(datamanager.checksum, get_hash(data_opener))
         self.assertFalse(datamanager.validated)
-        self.assertIn(f'pkhash {datamanager.pkhash}', str(datamanager))
+        self.assertIn(f'key {datamanager.key}', str(datamanager))
         self.assertIn(f'name {datamanager.name}', str(datamanager))
 
     def test_create_data(self):
@@ -44,7 +44,7 @@ class ModelTests(TestCase):
         data_sample = DataSample.objects.create(path=path)
         self.assertEqual(data_sample.checksum, get_dir_hash(path))
         self.assertFalse(data_sample.validated)
-        self.assertIn(f'pkhash {data_sample.pkhash}', str(data_sample))
+        self.assertIn(f'key {data_sample.key}', str(data_sample))
         self.assertIn(f'validated {data_sample.validated}', str(data_sample))
 
     def test_create_algo(self):
@@ -52,7 +52,7 @@ class ModelTests(TestCase):
         algo = Algo.objects.create(file=script)
         self.assertEqual(algo.checksum, get_hash(script))
         self.assertFalse(algo.validated)
-        self.assertIn(f'pkhash {algo.pkhash}', str(algo))
+        self.assertIn(f'key {algo.key}', str(algo))
         self.assertIn(f'validated {algo.validated}', str(algo))
 
     def test_create_model(self):
@@ -60,5 +60,5 @@ class ModelTests(TestCase):
         model = Model.objects.create(file=modelfile)
         self.assertEqual(model.checksum, get_hash(modelfile))
         self.assertFalse(model.validated)
-        self.assertIn(f'pkhash {model.pkhash}', str(model))
+        self.assertIn(f'key {model.key}', str(model))
         self.assertIn(f'validated {model.validated}', str(model))

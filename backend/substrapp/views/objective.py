@@ -18,8 +18,7 @@ from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, validate_pk,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
-                                   node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+                                   node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -120,9 +119,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_objective(self, channel_name, objective, pk):
         # get description from remote node
@@ -134,7 +131,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
         tmp_description.write(content)
-        instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
+        instance, created = Objective.objects.update_or_create(key=pk, validated=True)
         instance.description.save('description.md', tmp_description)
         return instance
 

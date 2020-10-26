@@ -57,7 +57,7 @@ class DataManagerQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': 'some key'}
+            minvoke_ledger.return_value = {'key': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()

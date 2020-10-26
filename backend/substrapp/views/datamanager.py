@@ -16,8 +16,7 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin,
                                    validate_pk, get_success_create_code, ValidationException, LedgerException,
-                                   get_remote_asset, node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+                                   get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -85,12 +84,12 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         try:
             checksum = get_hash(data_opener)
-            pkhash = checksum
+            key = checksum
         except Exception as e:
             raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
-            'pkhash': pkhash,
+            'key': key,
             'data_opener': data_opener,
             'description': request.data.get('description'),
             'name': request.data.get('name'),
@@ -117,16 +116,14 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def create_or_update_datamanager(self, channel_name, instance, datamanager, pk):
 
         # create instance if does not exist
         if not instance:
             instance, created = DataManager.objects.update_or_create(
-                pkhash=pk, name=datamanager['name'], validated=True)
+                key=pk, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
             url = datamanager['opener']['storage_address']
@@ -241,9 +238,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        # Transform data to a data_response with only key
-        data_response = data_to_data_response(data)
-        return Response(data_response, status=st)
+        return Response(data, status=st)
 
 
 class DataManagerPermissionViewSet(PermissionMixin,

@@ -72,9 +72,9 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model
 
-            pkhash = model[1]['traintuple']['key']
+            key = model[1]['traintuple']['key']
             url = reverse('substrapp:model-list')
-            search_params = f'?search=model%253Akey%253A{pkhash}'
+            search_params = f'?search=model%253Akey%253A{key}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r), 1)
@@ -138,12 +138,12 @@ class ModelViewTests(APITestCase):
 
         url = reverse('substrapp:model-list')
 
-        # PKhash not enough chars
+        # Key not enough chars
         search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PKhash not hexa
+        # Key not hexa
         search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

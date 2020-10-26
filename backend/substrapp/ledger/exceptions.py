@@ -74,16 +74,16 @@ class LedgerConflict(LedgerError):
     """Asset already exists."""
     status = status.HTTP_409_CONFLICT
 
-    def __init__(self, msg, pkhash):
+    def __init__(self, msg, key):
         super().__init__(msg)
-        self.pkhash = pkhash
+        self.key = key
 
     @classmethod
     def from_response_dict(cls, response):
-        pkhash = response.get('key')
-        if not pkhash:
+        key = response.get('key')
+        if not key:
             return LedgerError(response['error'])
-        return cls(response['error'], pkhash=pkhash)
+        return cls(response['error'], key=key)
 
 
 class LedgerNotFound(LedgerError):

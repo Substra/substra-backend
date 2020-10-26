@@ -16,8 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash, new_uuid
-from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name, \
-    data_to_data_response
+from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name
 from substrapp.ledger.api import query_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 
@@ -33,7 +32,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     @staticmethod
     def check_datamanagers(data_manager_keys):
-        datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
+        datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
 
         if datamanager_count != len(data_manager_keys):
             raise Exception(f'One or more datamanager keys provided do not exist in local database. '
@@ -71,9 +70,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         st = get_success_create_code()
 
         # update validated to True in response
-        if 'pkhash' in data and data['validated']:
+        if 'key' in data and data['validated']:
             for d in serializer.data:
-                if d['pkhash'] in data['pkhash']:
+                if d['key'] in data['key']:
                     d.update({'validated': data['validated']})
 
         return serializer.data, st
@@ -88,11 +87,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             for k, file in request.FILES.items():
 
                 # Get dir hash uncompress the file into a directory
-                pkhash = new_uuid()
+                key = new_uuid()
                 checksum, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
                 paths_to_remove.append(datasamples_path_from_file)
-                data[pkhash] = {
-                    'pkhash': pkhash,
+                data[key] = {
+                    'key': key,
                     'path': datasamples_path_from_file,
                     'checksum': checksum
                 }
@@ -125,10 +124,10 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                pkhash = new_uuid()
+                key = new_uuid()
                 checksum = get_dir_hash(path)
-                data[pkhash] = {
-                    'pkhash': pkhash,
+                data[key] = {
+                    'key': key,
                     'path': normpath(path),
                     'checksum': checksum
                 }
@@ -186,10 +185,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -216,9 +212,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         else:
             st = status.HTTP_202_ACCEPTED
 
-        # Transform data to a data_response with only key
-        data_response = data_to_data_response(data)
-        return Response(data_response, status=st)
+        return Response(data, status=st)
 
 
 def path_leaf(path):

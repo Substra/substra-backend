@@ -163,9 +163,9 @@ class LedgerException(Exception):
 
 
 class ValidationException(Exception):
-    def __init__(self, data, pkhash, st):
+    def __init__(self, data, key, st):
         self.data = data
-        self.pkhash = pkhash
+        self.key = key
         self.st = st
         super(ValidationException).__init__()
 
@@ -186,15 +186,3 @@ def get_channel_name(request):
         return request.headers['Substra-Channel-Name']
 
     raise exceptions.BadRequestError('Could not determine channel name')
-
-
-def data_to_data_response(data):
-    # Transform data to a data_response with only key
-
-    if data and isinstance(data, list) and 'pkhash' in data[0]:
-        return [{'key': d['pkhash']} for d in data]
-
-    if 'pkhash' in data:
-        return {'key': data['pkhash']}
-
-    return data
