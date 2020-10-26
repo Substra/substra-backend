@@ -168,10 +168,10 @@ class DataSampleQueryTests(APITestCase):
         url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
-        dataManagerKey = str(new_uuid())
+        data_manager_key = str(new_uuid())
 
         # missing datamanager
-        data = {'data_manager_keys': [dataManagerKey]}
+        data = {'data_manager_keys': [data_manager_key]}
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -182,7 +182,7 @@ class DataSampleQueryTests(APITestCase):
         self.assertEqual(
             r['message'],
             "One or more datamanager keys provided do not exist in local database. "
-            f"Please create them before. DataManager keys: ['{dataManagerKey}']")
+            f"Please create them before. DataManager keys: ['{data_manager_key}']")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.add_default_data_manager()
