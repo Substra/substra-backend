@@ -66,6 +66,41 @@ class TraintupleQueryTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    def test_add_traintuple_with_implicit_compute_plan(self):
+        # Add associated objective
+        description, _, metrics, _ = get_sample_objective()
+        Objective.objects.create(description=description,
+                                 metrics=metrics)
+        # post data
+        url = reverse('substrapp:traintuple-list')
+
+        data = {
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
+            'in_models_keys': [self.fake_key],
+            # implicit compute plan
+            'rank': 0,
+            'compute_plan_id': None
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
+                mock.patch('substrapp.ledger.assets.create_traintuple') as mcreate_traintuple:
+
+            mcreate_computeplan.return_value = {'compute_plan_id': str(new_uuid())}
+            mcreate_traintuple.return_value = {'key': str(new_uuid())}
+
+            response = self.client.post(url, data, format='json', **extra)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(mcreate_computeplan.call_count, 1)
+            self.assertEqual(mcreate_traintuple.call_count, 1)
+
     @override_settings(LEDGER_SYNC_ENABLED=False)
     @override_settings(
         task_eager_propagates=True,
@@ -167,9 +202,9 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'testtuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
-            minvoke_ledger.return_value = {'pkhash': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -203,8 +238,8 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'testtuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)

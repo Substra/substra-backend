@@ -11,6 +11,16 @@ from substrapp.views.utils import get_success_create_code, validate_pk, get_chan
 from substrapp.views.filters_utils import filter_list
 
 
+def create_compute_plan(channel_name, data):
+    # rely on serializer to parse and validate request data
+    serializer = LedgerComputePlanSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+
+    # create compute plan in ledger
+    compute_plan_id = new_uuid()
+    return serializer.create(channel_name, compute_plan_id, serializer.validated_data)
+
+
 class ComputePlanViewSet(mixins.CreateModelMixin,
                          GenericViewSet):
 
@@ -20,16 +30,10 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         return []
 
     def create(self, request, *args, **kwargs):
-        # rely on serializer to parse and validate request data
-        serializer = self.get_serializer(data=dict(request.data))
-        serializer.is_valid(raise_exception=True)
-
-        # create compute plan in ledger
-        compute_plan_id = new_uuid()
         try:
-            data = serializer.create(get_channel_name(request), compute_plan_id, serializer.validated_data)
+            data = create_compute_plan(get_channel_name(request), dict(request.data))
         except LedgerError as e:
-            error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
+            error = {'message': str(e.msg), 'compute_plan_id': data['compute_plan_id']}
             return Response(error, status=e.status)
 
         # send successful response

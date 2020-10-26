@@ -11,7 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, Model
-from substrapp.utils import compute_hash
+from substrapp.utils import compute_hash, new_uuid
 from node.authentication import NodeUser
 
 from ..common import get_sample_objective, AuthenticatedClient, get_sample_model
@@ -68,12 +68,52 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
-            minvoke_ledger.return_value = {'pkhash': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_traintuple_with_implicit_compute_plan(self):
+        # Add associated objective
+        description, _, metrics, _ = get_sample_objective()
+        Objective.objects.create(description=description,
+                                 metrics=metrics)
+        # post data
+        url = reverse('substrapp:composite_traintuple-list')
+
+        data = {
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
+            'out_trunk_model_permissions': {
+                'public': False,
+                'authorized_ids': ["Node-1", "Node-2"],
+            },
+            # implicit compute plan
+            'rank': 0,
+            'compute_plan_id': None
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
+                mock.patch('substrapp.ledger.assets.create_compositetraintuple') as mcreate_compositetraintuple:
+
+            mcreate_computeplan.return_value = {'compute_plan_id': str(new_uuid())}
+            mcreate_compositetraintuple.return_value = {'key': str(new_uuid())}
+
+            response = self.client.post(url, data, format='json', **extra)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(mcreate_computeplan.call_count, 1)
+            self.assertEqual(mcreate_compositetraintuple.call_count, 1)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
     @override_settings(
@@ -112,8 +152,8 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)

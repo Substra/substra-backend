@@ -10,6 +10,7 @@ class LedgerCompositeTraintupleSerializer(serializers.Serializer):
     algo_key = serializers.UUIDField()
     data_manager_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
+    compute_plan_id = serializers.UUIDField(required=False, allow_null=True)
     serializers.UUIDField(required=False, allow_null=True)
     in_head_model_key = serializers.UUIDField(required=False, allow_null=True)
     in_trunk_model_key = serializers.UUIDField(required=False, allow_null=True)

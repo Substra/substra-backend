@@ -6,6 +6,7 @@ from substrapp.serializers import LedgerAggregateTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.utils import new_uuid
 from substrapp.ledger.exceptions import LedgerError, LedgerConflict
+from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
                                    data_to_data_response)
@@ -27,7 +28,12 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
     def commit(self, serializer, channel_name):
         # create on ledger
         try:
-            data = serializer.create(channel_name, serializer.validated_data)
+            data = serializer.validated_data
+            if data['rank'] == 0 and not data['compute_plan_id']:
+                # Auto-create compute plan
+                res = create_compute_plan(channel_name, data={})
+                data['compute_plan_id'] = res['compute_plan_id']
+            data = serializer.create(channel_name, data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
         else:
