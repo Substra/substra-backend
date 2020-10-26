@@ -11,6 +11,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective
+from substrapp.utils import new_uuid
 
 from ..common import get_sample_objective, AuthenticatedClient
 
@@ -47,7 +48,6 @@ class TraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'rank': -1,
             'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
@@ -58,9 +58,9 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'traintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
-            minvoke_ledger.return_value = {'pkhash': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
+            minvoke_ledger.return_value = {'pkhash': key}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -86,7 +86,6 @@ class TraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'rank': -1,
             'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
@@ -97,8 +96,8 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'traintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
+            key = new_uuid()
+            mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)
