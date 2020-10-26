@@ -2,7 +2,6 @@ import logging
 from os.path import normpath
 
 import os
-import uuid
 import ntpath
 import shutil
 

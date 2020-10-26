@@ -1,7 +1,6 @@
 from django.apps import apps
 from django.db import migrations, models
 from django.db.models import F
-import uuid
 
 def get_migration(model_name):
     return [
