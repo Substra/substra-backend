@@ -52,17 +52,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get compositetraintuple pkhash to handle 408 timeout in invoke_ledger
-        args = serializer.get_args(serializer.validated_data)
-
-        try:
-            data = query_ledger(get_channel_name(request), fcn='createCompositeTraintuple', args=args)
-        except LedgerConflict as e:
-            raise LedgerException({'message': str(e.msg), 'key': e.pkhash}, e.status)
-        except LedgerError as e:
-            raise LedgerException({'message': str(e.msg)}, e.status)
-        else:
-            return self.commit(serializer, get_channel_name(request))
+        return self.commit(serializer, get_channel_name(request))
 
     def create(self, request, *args, **kwargs):
         try:
