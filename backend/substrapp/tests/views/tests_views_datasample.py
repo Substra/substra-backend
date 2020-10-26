@@ -20,7 +20,7 @@ from substrapp.utils import uncompress_content
 from substrapp.models import DataManager
 
 from ..common import get_sample_datamanager, FakeFilterDataManager, AuthenticatedClient
-from ..assets import objective, datamanager
+from ..assets import datamanager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 

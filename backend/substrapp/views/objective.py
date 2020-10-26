@@ -1,7 +1,5 @@
-import re
 import tempfile
 
-from django.db import IntegrityError
 from django.http import Http404
 from django.urls import reverse
 from rest_framework import status, mixins

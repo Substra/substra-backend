@@ -20,8 +20,6 @@ from ..common import get_sample_objective, get_sample_datamanager, \
     get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
     get_sample_algo_metadata
 
-from ..assets import objective
-
 MEDIA_ROOT = tempfile.mkdtemp()
 
 

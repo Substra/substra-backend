@@ -79,6 +79,7 @@ def get_query_endorsing_peers(current_peer, all_peers):
         all_peers=all_peers
     )
 
+
 class UUIDEncoder(json.JSONEncoder):
     def default(self, obj):
         if isinstance(obj, UUID):
