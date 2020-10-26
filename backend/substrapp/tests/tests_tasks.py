@@ -87,9 +87,8 @@ class TasksTests(APITestCase):
     def test_get_remote_file_content(self):
         content = str(self.script.read())
         checksum = compute_hash(content)
-        pkhash = checksum
         remote_file = {'storage_address': 'localhost',
-                       'hash': pkhash,
+                       'hash': checksum,
                        'owner': 'external_node_id',
                        }
 
@@ -107,7 +106,7 @@ class TasksTests(APITestCase):
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             with self.assertRaises(Exception):
-                # contents (by pkhash) are different
+                # contents (by hash) are different
                 get_remote_file_content('mychannel', remote_file, 'external_node_id', 'fake_hash')
 
     def test_uncompress_content_tar(self):

@@ -138,12 +138,12 @@ class ModelViewTests(APITestCase):
 
         url = reverse('substrapp:model-list')
 
-        # PK hash not enough chars
+        # PKhash not enough chars
         search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
+        # PKhash not hexa
         search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
