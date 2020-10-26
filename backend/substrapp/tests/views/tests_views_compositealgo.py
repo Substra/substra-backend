@@ -150,8 +150,8 @@ class CompositeAlgoViewTests(APITestCase):
             mquery_ledger.return_value = compositealgo
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['composite_traintuple']['out_trunk_model']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            checksum = done_model['composite_traintuple']['out_trunk_model']['out_model']['hash']
+            search_params = f'?search=model%253Ahash%253A{checksum}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -179,13 +179,13 @@ class CompositeAlgoViewTests(APITestCase):
 
         url = reverse('substrapp:composite_algo-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PKhash < 32 chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
-        search_params = 'X' * 64 + '/'
+        # PKhash not hexa
+        search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

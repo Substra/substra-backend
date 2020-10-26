@@ -15,7 +15,7 @@ class Model(models.Model):
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
-        """Use hash of file as primary key"""
+        """Use hash of file as checksum"""
         if not self.checksum and self.file:
             self.checksum = get_hash(self.file)
         super(Model, self).save(*args, **kwargs)

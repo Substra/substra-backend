@@ -711,7 +711,7 @@ def do_task(channel_name, subtuple, tuple_type):
         subtuple_key=subtuple["key"],
         compute_plan_id=compute_plan_id,
         dockerfile_path=subtuple_directory,
-        image_name=get_algo_image_name(subtuple['algo']['hash']),
+        image_name=get_algo_image_name(subtuple['algo']['key']),
         job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
@@ -1026,43 +1026,43 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     return instance, storage_address
 
 
-def get_algo_image_name(algo_hash):
+def get_algo_image_name(algo_key):
     # tag must be lowercase for docker
-    return f'substra/algo_{algo_hash[0:8]}'.lower()
+    return f'substra/algo_{algo_key[0:8]}'.lower()
 
 
-def remove_algo_images(algo_hashes):
-    for algo_hash in algo_hashes:
-        algo_image_name = get_algo_image_name(algo_hash)
+def remove_algo_images(algo_keys):
+    for algo_key in algo_keys:
+        algo_image_name = get_algo_image_name(algo_key)
         remove_image(algo_image_name)
 
 
-def remove_intermediary_models(model_hashes):
+def remove_intermediary_models(model_keys):
     from substrapp.models import Model
 
-    models = Model.objects.filter(pkhash__in=model_hashes, validated=True)
-    filtered_model_hashes = [model.pk for model in models]
+    models = Model.objects.filter(pkhash__in=model_keys, validated=True)
+    filtered_model_keys = [model.pk for model in models]
 
     models.delete()
 
-    if filtered_model_hashes:
-        log_model_hashes = ', '.join(filtered_model_hashes)
-        logger.info(f'Delete intermediary models: {log_model_hashes}')
+    if filtered_model_keys:
+        log_model_keys = ', '.join(filtered_model_keys)
+        logger.info(f'Delete intermediary models: {log_model_keys}')
 
 
 @app.task(ignore_result=False)
 def on_compute_plan(channel_name, compute_plan):
 
     compute_plan_id = compute_plan['compute_plan_id']
-    algo_hashes = compute_plan['algo_keys']
-    model_hashes = compute_plan['models_to_delete']
+    algo_keys = compute_plan['algo_keys']
+    model_keys = compute_plan['models_to_delete']
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished
     if status in ['done', 'failed', 'canceled']:
         remove_local_folders(compute_plan_id)
-        remove_algo_images(algo_hashes)
+        remove_algo_images(algo_keys)
 
     # Remove intermediary models
-    if model_hashes:
-        remove_intermediary_models(model_hashes)
+    if model_keys:
+        remove_intermediary_models(model_keys)

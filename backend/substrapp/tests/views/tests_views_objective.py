@@ -147,8 +147,8 @@ class ObjectiveViewTests(APITestCase):
             mquery_ledger.return_value = objective
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['traintuple']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            checksum = done_model['traintuple']['out_model']['hash']
+            search_params = f'?search=model%253Ahash%253A{checksum}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -176,12 +176,12 @@ class ObjectiveViewTests(APITestCase):
 
         url = reverse('substrapp:objective-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PKhash < 32 chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
+        # PKhash not hexa
         search_params = 'X' * 64 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

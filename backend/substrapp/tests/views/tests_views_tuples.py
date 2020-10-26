@@ -79,12 +79,12 @@ class TraintupleViewTests(APITestCase):
 
         url = reverse('substrapp:traintuple-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PKhash < 32 chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
+        # PKhash not hexa
         search_params = 'X' * 64 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
@@ -169,12 +169,12 @@ class TesttupleViewTests(APITestCase):
 
         url = reverse('substrapp:testtuple-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PKhash < 32 chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
+        # PKhash not hexa
         search_params = 'X' * 64 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -180,8 +180,8 @@ def filter_list(channel_name, object_type, data, query_params):
                         ]
 
                         if object_type in ['algo', 'composite_algo', 'aggregate_algo']:
-                            hashes = [_get_model_tuple(x)['algo']['key'] for x in filtering_data]
-                            filtered_list = [x for x in filtered_list if x['key'] in hashes]
+                            keys = [_get_model_tuple(x)['algo']['key'] for x in filtering_data]
+                            filtered_list = [x for x in filtered_list if x['key'] in keys]
 
                         elif object_type == 'dataset':
                             hashes = []
@@ -201,11 +201,11 @@ def filter_list(channel_name, object_type, data, query_params):
                             ]
 
                         elif object_type == 'objective':
-                            hashes = [
+                            keys = [
                                 x['testtuple']['objective']['key'] for x in filtering_data
                                 if x['testtuple'] and x['testtuple']['objective']
                             ]
-                            filtered_list = [x for x in filtered_list if x['key'] in hashes]
+                            filtered_list = [x for x in filtered_list if x['key'] in keys]
 
                 elif filter_key == 'dataset':
                     for attribute, val in subfilters.items():

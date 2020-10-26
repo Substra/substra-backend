@@ -108,7 +108,7 @@ class TasksTests(APITestCase):
 
             with self.assertRaises(Exception):
                 # contents (by pkhash) are different
-                get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
+                get_remote_file_content('mychannel', remote_file, 'external_node_id', 'fake_hash')
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
@@ -367,7 +367,7 @@ class TasksTests(APITestCase):
             mget_hash.return_value = 'owkinhash'
             mquery_tuples.return_value = subtuple
             mget_objective.return_value = 'objective'
-            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_algo.return_value = 'algo', 'algo_key'
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
             mprepare_opener.return_value = 'opener'
             mprepare_data_sample.return_value = 'data'
@@ -399,7 +399,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'hash': 'myhash'}}
+        subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'key': 'mykey', 'hash': 'myhash'}}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
@@ -492,7 +492,7 @@ class TasksTests(APITestCase):
             mget_hash.return_value = 'owkinhash'
             mquery_tuples.return_value = subtuple, 200
             mget_objective.return_value = 'objective'
-            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_algo.return_value = 'algo', 'algo_key'
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
 
             prepare_materials(CHANNEL, subtuple[0], 'traintuple')

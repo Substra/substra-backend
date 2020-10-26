@@ -136,8 +136,8 @@ class AlgoViewTests(APITestCase):
             mquery_ledger.return_value = algo
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['traintuple']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            checksum = done_model['traintuple']['out_model']['hash']
+            search_params = f'?search=model%253Ahash%253A{checksum}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -165,8 +165,8 @@ class AlgoViewTests(APITestCase):
 
         url = reverse('substrapp:algo-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # PK hash not enough chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -191,7 +191,7 @@ class AlgoViewTests(APITestCase):
         data = {
             'json': json.dumps({
                 'name': 'Logistic regression',
-                'objective_key': 'some hash',
+                'objective_key': 'some key',
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
