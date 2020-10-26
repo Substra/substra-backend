@@ -38,7 +38,6 @@ class ComputePlanViewTests(APITestCase):
     def test_create(self):
         url = reverse('substrapp:compute_plan-list')
 
-        dummy_key_old = 'x' * 64
         dummy_key = str(new_uuid())
 
         data = {
@@ -46,10 +45,10 @@ class ComputePlanViewTests(APITestCase):
                 'algo_key': dummy_key,
                 'data_manager_key': dummy_key,
                 'train_data_sample_keys': [dummy_key],
-                'traintuple_id': dummy_key_old,
+                'traintuple_id': dummy_key,
             }],
             'testtuples': [{
-                'traintuple_id': dummy_key_old,
+                'traintuple_id': dummy_key,
                 'objective_key': dummy_key,
                 'data_manager_key': dummy_key,
             }]
