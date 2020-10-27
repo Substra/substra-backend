@@ -18,7 +18,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Algo',
             fields=[
-                ('key', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
                 ('file', models.FileField(max_length=500, upload_to=substrapp.models.algo.upload_to)),
                 ('description', models.FileField(max_length=500, upload_to=substrapp.models.algo.upload_to)),
                 ('validated', models.BooleanField(default=False)),
@@ -27,7 +27,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DataManager',
             fields=[
-                ('key', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
                 ('name', models.CharField(blank=True, max_length=100)),
                 ('data_opener', models.FileField(max_length=500, upload_to=substrapp.models.datamanager.upload_to)),
                 ('description', models.FileField(max_length=500, upload_to=substrapp.models.datamanager.upload_to)),
@@ -37,7 +37,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DataSample',
             fields=[
-                ('key', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
                 ('validated', models.BooleanField(default=False)),
                 ('path', models.FilePathField(blank=True, max_length=500, null=True)),
             ],
@@ -45,7 +45,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Model',
             fields=[
-                ('key', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
                 ('validated', models.BooleanField(default=False)),
                 ('file', models.FileField(max_length=500, upload_to=substrapp.models.model.upload_to)),
             ],
@@ -55,7 +55,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('creation_date', models.DateTimeField(editable=False)),
                 ('last_modified', models.DateTimeField(editable=False)),
-                ('key', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
+                ('pkhash', models.CharField(blank=True, max_length=64, primary_key=True, serialize=False)),
                 ('validated', models.BooleanField(blank=True, default=False)),
                 ('description', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.objective.upload_to)),
                 ('metrics', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.objective.upload_to)),
