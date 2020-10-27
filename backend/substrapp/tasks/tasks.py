@@ -888,6 +888,9 @@ def generate_command(tuple_type, subtuple, rank):
         if rank is not None:
             command = f"{command} --rank {rank}"
 
+        data_sample_keys = ' '.join([k for k in subtuple['dataset']['keys']])
+        command = f"{command} --data-samples-order {data_sample_keys}"
+
     elif tuple_type == TESTTUPLE_TYPE:
 
         if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintuple_type']:
@@ -918,6 +921,9 @@ def generate_command(tuple_type, subtuple, rank):
 
         if rank is not None:
             command = f"{command} --rank {rank}"
+
+        data_sample_keys = ' '.join([k for k in subtuple['dataset']['keys']])
+        command = f"{command} --data-samples-order {data_sample_keys}"
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
 

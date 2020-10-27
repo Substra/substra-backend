@@ -15,7 +15,7 @@ backend:
       warmer:
         image: gcr.io/kaniko-project/warmer:v1.0.0
         images: []
-          # - image: substrafoundation/substra-tools:0.6.1
+          # - image: substrafoundation/substra-tools:0.7.0
 
   compute:
     registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
@@ -310,7 +310,7 @@ registry:
 
   ## Local registry pre-populate
   prepopulate: []
-    # - image: substrafoundation/substra-tools:0.6.1
+    # - image: substrafoundation/substra-tools:0.7.0
     #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
     #   dockerConfigSecretName: docker-config
 
