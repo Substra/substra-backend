@@ -120,12 +120,15 @@ def filter_list(channel_name, object_type, data, query_params):
         raise exceptions.BadRequestError(message)
 
     object_list = []
+
     for user_filter in filters:
 
         for filter_key, subfilters in user_filter.items():
+
             if filter_key not in AUTHORIZED_FILTERS[object_type]:
                 raise exceptions.BadRequestError(
                     f'Malformed search filters: not authorized filter key {filter_key} for asset {object_type}')
+
             # Will be appended in object_list after been filtered
             filtered_list = data
 
@@ -146,6 +149,7 @@ def filter_list(channel_name, object_type, data, query_params):
                         filtered_list = [x for x in filtered_list if x.get(attribute) in val]
             else:
                 # Filter by other asset
+
                 # Get other asset list
                 filtering_data = query_ledger(channel_name, fcn=FILTER_QUERIES[filter_key], args=[])
 
