@@ -6,7 +6,7 @@ from substrapp.serializers import LedgerCompositeTraintupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.utils import new_uuid
 from substrapp.views.computeplan import create_compute_plan
-from substrapp.ledger.exceptions import LedgerError, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name)
 

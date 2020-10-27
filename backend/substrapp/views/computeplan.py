@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.utils import new_uuid
 from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
 from substrapp.views.filters_utils import filter_list
