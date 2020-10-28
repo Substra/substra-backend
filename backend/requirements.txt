@@ -16,8 +16,7 @@ tldextract==2.2.2
 uwsgi==2.0.18
 zxcvbn==4.4.28
 boto3==1.11.9
-#fabric-sdk-py==1.0.0
-git+git://github.com/Kelvin-M/fabric-sdk-py@b93bf0371aac59c8af60b2b7a6a16d795e3a8217
+fabric-sdk-py==1.0.0
 watchdog==0.10.2
 argh==0.26.2
 # tests
