@@ -15,11 +15,11 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         test_only = validated_data.get('test_only')
 
         args = {
-            'keys': [x.pk for x in instances],
+            'keys': [x.key for x in instances],
             'data_manager_keys': data_manager_keys,
             'testOnly': json.dumps(test_only),
         }
-        return ledger.assets.create_datasamples(channel_name, args, [x.pk for x in instances])
+        return ledger.assets.create_datasamples(channel_name, args, [x.key for x in instances])
 
 
 class LedgerDataSampleUpdateSerializer(serializers.Serializer):

@@ -45,7 +45,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'type': request.data.get('type'),
-            'objective_key': request.data.get('objective_key', None),
+            'objective_key': request.data.get('objective_key'),
             'metadata': request.data.get('metadata')
         }
 
@@ -194,7 +194,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e.msg)}, status=e.status)
 
         # parse filters
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
 
         if query_params is not None:
             try:

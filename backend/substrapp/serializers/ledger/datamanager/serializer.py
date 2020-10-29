@@ -21,21 +21,21 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         name = validated_data.get('name')
         data_type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        objective_key = validated_data.get('objective_key', None)
+        objective_key = validated_data.get('objective_key')
         metadata = validated_data.get('metadata')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
-            'key': instance.pk,
+            'key': instance.key,
             'name': name,
             'opener_hash': get_hash(instance.data_opener),
-            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.key]),
             'type': data_type,
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:data_manager-description',
-                                                                  args=[instance.pk]),
+                                                                  args=[instance.key]),
             'objective_key': objective_key,
             'permissions': {'process': {
                 'public': permissions.get('public'),

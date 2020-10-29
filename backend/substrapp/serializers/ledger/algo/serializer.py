@@ -24,12 +24,12 @@ class LedgerAlgoSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
-            'key': instance.pk,
+            'key': instance.key,
             'name': name,
             'hash': get_hash(instance.file),
-            'storage_address': current_site + reverse('substrapp:algo-file', args=[instance.pk]),
+            'storage_address': current_site + reverse('substrapp:algo-file', args=[instance.key]),
             'description_hash': get_hash(instance.description),
-            'description_storage_address': current_site + reverse('substrapp:algo-description', args=[instance.pk]),
+            'description_storage_address': current_site + reverse('substrapp:algo-description', args=[instance.key]),
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorized_ids': permissions.get('authorized_ids'),

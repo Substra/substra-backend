@@ -193,7 +193,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [str(data_sample.pk)]}
+            'dataset': {'keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -211,13 +211,13 @@ class TasksTests(APITestCase):
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.islink(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'LABEL_0024900.csv')))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'IMG_0024900.jpg')))
 
     def test_prepare_data_sample_zip_fail(self):
 
@@ -231,7 +231,7 @@ class TasksTests(APITestCase):
 
         subtuple2 = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [data_sample.key]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -255,7 +255,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [str(data_sample.pk)]}
+            'dataset': {'keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -271,13 +271,13 @@ class TasksTests(APITestCase):
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.islink(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'LABEL_0024900.csv')))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'IMG_0024900.jpg')))
 
     def test_get_algo(self):
         algo_content = self.algo.read()

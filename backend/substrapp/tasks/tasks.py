@@ -960,7 +960,7 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
     if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
         model, storage_address = save_model(subtuple_directory, subtuple_key)
         models['end_model'] = {
-            'key': model.pk,
+            'key': model.key,
             'checksum': model.checksum,
             'storage_address': storage_address
         }
@@ -975,7 +975,7 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
             )
 
             models[m_type] = {
-                'key': model.pk,
+                'key': model.key,
                 'checksum': model.checksum,
                 'storage_address': storage_address
             }
@@ -1015,7 +1015,7 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     with open(end_model_path, 'rb') as f:
         instance.file.save('model', f)
     current_site = getattr(settings, "DEFAULT_DOMAIN")
-    storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.pk])}'
+    storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
 
     return instance, storage_address
 
@@ -1035,7 +1035,7 @@ def remove_intermediary_models(model_keys):
     from substrapp.models import Model
 
     models = Model.objects.filter(key__in=model_keys, validated=True)
-    filtered_model_keys = [str(model.pk) for model in models]
+    filtered_model_keys = [str(model.key) for model in models]
 
     models.delete()
 

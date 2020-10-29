@@ -30,7 +30,7 @@ class AuthenticationTests(APITestCase):
         self.algo_file, self.algo_filename = get_sample_algo()
         self.algo_description_file, self.algo_description_filename = get_description_algo()
         self.algo = Algo.objects.create(file=self.algo_file, description=self.algo_description_file)
-        self.algo_url = reverse('substrapp:algo-file', kwargs={'pk': self.algo.pk})
+        self.algo_url = reverse('substrapp:algo-file', kwargs={'pk': self.algo.key})
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

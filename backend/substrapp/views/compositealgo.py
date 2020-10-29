@@ -171,7 +171,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e.msg)}, status=e.status)
 
         # parse filters
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
         if query_params is not None:
             try:
                 data = filter_list(

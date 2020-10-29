@@ -77,7 +77,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
         if query_params is not None:
             try:
                 data = filter_list(

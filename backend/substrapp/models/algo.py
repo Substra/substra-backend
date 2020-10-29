@@ -4,7 +4,7 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return 'algos/{0}/{1}'.format(instance.pk, filename)
+    return 'algos/{0}/{1}'.format(instance.key, filename)
 
 
 class Algo(models.Model):
