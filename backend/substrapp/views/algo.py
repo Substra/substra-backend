@@ -14,7 +14,7 @@ from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.views.utils import (PermissionMixin,
-                                   validate_pk, get_success_create_code, LedgerException, ValidationException,
+                                   validate_key, get_success_create_code, LedgerException, ValidationException,
                                    get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
@@ -131,7 +131,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, pk):
-        validate_pk(pk)
+        validate_key(pk)
         data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
         # do not cache if node has not process permission

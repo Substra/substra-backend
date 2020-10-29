@@ -143,11 +143,11 @@ class PermissionMixin(object):
         return response
 
 
-def validate_pk(pk):
+def validate_key(key):
     try:
-        uuid.UUID(pk)
+        uuid.UUID(key)
     except ValueError:
-        raise exceptions.BadRequestError(f'pk is not a valid UUID: "{pk}"')
+        raise exceptions.BadRequestError(f'pk is not a valid UUID: "{key}"')
 
 
 def validate_sort(sort):

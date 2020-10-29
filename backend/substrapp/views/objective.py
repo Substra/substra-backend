@@ -15,7 +15,7 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
-from substrapp.views.utils import (PermissionMixin, validate_pk,
+from substrapp.views.utils import (PermissionMixin, validate_key,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
                                    node_has_process_permission, get_channel_name)
@@ -136,7 +136,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, pk):
-        validate_pk(pk)
+        validate_key(pk)
         # get instance from remote node
         data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
 
@@ -206,12 +206,8 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     @action(detail=True, methods=['GET'])
     def leaderboard(self, request, pk):
+        validate_key(pk)
         sort = request.query_params.get('sort', 'desc')
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             validate_sort(sort)
