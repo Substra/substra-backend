@@ -112,7 +112,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_aggregate_algo(self, channel_name, aggregate_algo, pk):
+    def create_or_update_aggregate_algo(self, channel_name, aggregate_algo, key):
         # get Aggregatealgo description from remote node
         url = aggregate_algo['description']['storage_address']
 
@@ -122,14 +122,14 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         f.write(content)
 
         # save/update objective in local db for later use
-        instance, created = AggregateAlgo.objects.update_or_create(key=pk, validated=True)
+        instance, created = AggregateAlgo.objects.update_or_create(key=key, validated=True)
         instance.description.save('description.md', f)
 
         return instance
 
-    def _retrieve(self, request, pk):
-        validate_key(pk)
-        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+    def _retrieve(self, request, key):
+        validate_key(key)
+        data = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -141,7 +141,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_aggregate_algo(get_channel_name(request), data, pk)
+                    instance = self.create_or_update_aggregate_algo(get_channel_name(request), data, key)
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields
@@ -155,10 +155,10 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request, pk)
+            data = self._retrieve(request, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:

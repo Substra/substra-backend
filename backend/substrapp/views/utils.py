@@ -72,10 +72,10 @@ class PermissionMixin(object):
 
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -95,10 +95,10 @@ class PermissionMixin(object):
 
     def download_local_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
         except LedgerError as e:
             return HttpResponse({'message': str(e.msg)}, status=e.status)
 
@@ -147,7 +147,7 @@ def validate_key(key):
     try:
         uuid.UUID(key)
     except ValueError:
-        raise exceptions.BadRequestError(f'pk is not a valid UUID: "{key}"')
+        raise exceptions.BadRequestError(f'key is not a valid UUID: "{key}"')
 
 
 def validate_sort(sort):

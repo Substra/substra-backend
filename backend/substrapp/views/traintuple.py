@@ -90,16 +90,16 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
 
         return Response(data, status=status.HTTP_200_OK)
 
-    def _retrieve(self, channel_name, pk):
-        validate_key(pk)
-        return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
+    def _retrieve(self, channel_name, key):
+        validate_key(key)
+        return get_object_from_ledger(channel_name, key, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(get_channel_name(request), pk)
+            data = self._retrieve(get_channel_name(request), key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:

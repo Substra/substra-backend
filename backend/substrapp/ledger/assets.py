@@ -18,7 +18,7 @@ _MESSAGE = (
 
 def __create_db_asset(channel_name, model, fcn, args, key, sync=False):
     try:
-        instance = model.objects.get(pk=key)
+        instance = model.objects.get(key=key)
     except ObjectDoesNotExist:
         instance = None
 

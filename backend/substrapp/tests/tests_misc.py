@@ -54,34 +54,34 @@ class MiscTests(TestCase):
     def test_get_object_from_ledger(self):
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.side_effect = LedgerNotFound('Not Found')
-            self.assertRaises(LedgerNotFound, get_object_from_ledger, CHANNEL, 'pk', 'fake_query')
+            self.assertRaises(LedgerNotFound, get_object_from_ledger, CHANNEL, 'key', 'fake_query')
 
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.side_effect = LedgerInvalidResponse('Bad Response')
-            self.assertRaises(LedgerInvalidResponse, get_object_from_ledger, CHANNEL, 'pk', 'fake_query')
+            self.assertRaises(LedgerInvalidResponse, get_object_from_ledger, CHANNEL, 'key', 'fake_query')
 
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = {'key': 'pk'}
-            data = get_object_from_ledger(CHANNEL, 'pk', 'good_query')
-            self.assertEqual(data['key'], 'pk')
+            mquery_ledger.return_value = {'key': 'key'}
+            data = get_object_from_ledger(CHANNEL, 'key', 'good_query')
+            self.assertEqual(data['key'], 'key')
 
     def test_log_fail_tuple(self):
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
-            log_fail_tuple(CHANNEL, 'traintuple', 'pk', 'error_msg')
+            log_fail_tuple(CHANNEL, 'traintuple', 'key', 'error_msg')
 
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
-            log_fail_tuple(CHANNEL, 'testtuple', 'pk', 'error_msg')
+            log_fail_tuple(CHANNEL, 'testtuple', 'key', 'error_msg')
 
     def test_log_start_tuple(self):
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
-            log_start_tuple(CHANNEL, 'traintuple', 'pk')
+            log_start_tuple(CHANNEL, 'traintuple', 'key')
 
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
-            log_start_tuple(CHANNEL, 'testtuple', 'pk')
+            log_start_tuple(CHANNEL, 'testtuple', 'key')
 
     def test_log_success_tuple(self):
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
@@ -92,7 +92,7 @@ class MiscTests(TestCase):
                 'end_model_storage_address': 'storage_address',
                 'job_task_log': 'log',
             }
-            log_success_tuple(CHANNEL, 'traintuple', 'pk', res)
+            log_success_tuple(CHANNEL, 'traintuple', 'key', res)
 
         with patch('substrapp.ledger.api.update_ledger') as mupdate_ledger:
             mupdate_ledger.return_value = None
@@ -100,7 +100,7 @@ class MiscTests(TestCase):
                 'global_perf': '0.99',
                 'job_task_log': 'log',
             }
-            log_success_tuple(CHANNEL, 'testtuple', 'pk', res)
+            log_success_tuple(CHANNEL, 'testtuple', 'key', res)
 
     def test_query_tuples(self):
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:

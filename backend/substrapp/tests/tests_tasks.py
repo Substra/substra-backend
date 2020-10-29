@@ -203,7 +203,7 @@ class TasksTests(APITestCase):
 
             prepare_data_sample(subtuple_directory, subtuple)
 
-            # check folder has been correctly renamed with pk of directory containing uncompressed data sample
+            # check folder has been correctly renamed with key of directory containing uncompressed data sample
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             self.assertTrue(
@@ -265,7 +265,7 @@ class TasksTests(APITestCase):
 
             prepare_data_sample(subtuple_directory, subtuple)
 
-            # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
+            # check folder has been correctly renamed with key of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', key)))
 

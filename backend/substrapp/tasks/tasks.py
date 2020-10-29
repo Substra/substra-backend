@@ -178,7 +178,7 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     """Get local model content."""
     from substrapp.models import Model
 
-    model = Model.objects.get(pk=out_model['key'])
+    model = Model.objects.get(key=out_model['key'])
 
     # verify that local db model file is not corrupted
     if get_hash(model.file.path, hash_key) != out_model['hash']:
@@ -374,7 +374,7 @@ def prepare_opener(directory, tuple_):
     dataset_key = tuple_['dataset']['key']
     data_opener_hash = tuple_['dataset']['opener_hash']
 
-    datamanager = DataManager.objects.get(pk=dataset_key)
+    datamanager = DataManager.objects.get(key=dataset_key)
 
     # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
@@ -398,7 +398,7 @@ def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
     for data_sample_key in tuple_['dataset']['keys']:
-        data_sample = DataSample.objects.get(pk=data_sample_key)
+        data_sample = DataSample.objects.get(key=data_sample_key)
 
         if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
             raise Exception(f'Data Sample ({data_sample.path}) is missing in local storage')

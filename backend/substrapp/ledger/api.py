@@ -236,8 +236,8 @@ def query_tuples(channel_name, tuple_type, data_owner):
     return data
 
 
-def get_object_from_ledger(channel_name, pk, query):
-    return query_ledger(channel_name, fcn=query, args={'key': pk})
+def get_object_from_ledger(channel_name, key, query):
+    return query_ledger(channel_name, fcn=query, args={'key': key})
 
 
 LOG_TUPLE_INVOKE_FCNS = {

@@ -121,7 +121,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_objective(self, channel_name, objective, pk):
+    def create_or_update_objective(self, channel_name, objective, key):
         # get description from remote node
         url = objective['description']['storage_address']
         hash = objective['description']['hash']
@@ -131,14 +131,14 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
         tmp_description.write(content)
-        instance, created = Objective.objects.update_or_create(key=pk, validated=True)
+        instance, created = Objective.objects.update_or_create(key=key, validated=True)
         instance.description.save('description.md', tmp_description)
         return instance
 
-    def _retrieve(self, request, pk):
-        validate_key(pk)
+    def _retrieve(self, request, key):
+        validate_key(key)
         # get instance from remote node
-        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+        data = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -149,7 +149,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 instance = None
 
             if not instance or not instance.description:
-                instance = self.create_or_update_objective(get_channel_name(request), data, pk)
+                instance = self.create_or_update_objective(get_channel_name(request), data, key)
 
             # For security reason, do not give access to local file address
             # Restrain data to some fields
@@ -163,10 +163,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request, pk)
+            data = self._retrieve(request, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -205,8 +205,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return Response(serializer.data)
 
     @action(detail=True, methods=['GET'])
-    def leaderboard(self, request, pk):
-        validate_key(pk)
+    def leaderboard(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
         sort = request.query_params.get('sort', 'desc')
 
         try:
@@ -216,7 +218,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             leaderboard = query_ledger(get_channel_name(request), fcn='queryObjectiveLeaderboard', args={
-                'objective_key': pk,
+                'objective_key': key,
                 'ascendingOrder': sort == 'asc',
             })
         except LedgerError as e:

@@ -44,11 +44,11 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
-        validate_key(pk)
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
 
         try:
-            data = get_object_from_ledger(get_channel_name(request), pk, 'queryComputePlan')
+            data = get_object_from_ledger(get_channel_name(request), key, 'queryComputePlan')
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -76,25 +76,29 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
-    def cancel(self, request, pk):
-        validate_key(pk)
+    def cancel(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
 
         try:
             compute_plan = invoke_ledger(
                 get_channel_name(request),
                 fcn='cancelComputePlan',
-                args={'key': pk},
+                args={'key': key},
                 only_key=False)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
-    def update_ledger(self, request, pk):
+    def update_ledger(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
 
-        validate_key(pk)
+        validate_key(key)
 
-        compute_plan_id = pk
+        compute_plan_id = key
 
         serializer = self.get_serializer(data=dict(request.data))
         serializer.is_valid(raise_exception=True)

@@ -25,9 +25,9 @@ class ModelViewSet(mixins.RetrieveModelMixin,
     ledger_query_call = 'queryModelDetails'
     # permission_classes = (permissions.IsAuthenticated,)
 
-    def create_or_update_model(self, channel_name, traintuple, pk):
+    def create_or_update_model(self, channel_name, traintuple, key):
         if traintuple['out_model'] is None:
-            raise Exception(f'This traintuple related to this model key {pk} does not have a out_model')
+            raise Exception(f'This traintuple related to this model key {key} does not have a out_model')
 
         # get model from remote node
         url = traintuple['out_model']['storage_address']
@@ -37,15 +37,15 @@ class ModelViewSet(mixins.RetrieveModelMixin,
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
         tmp_model.write(content)
-        instance, created = Model.objects.update_or_create(key=pk, validated=True)
+        instance, created = Model.objects.update_or_create(key=key, validated=True)
         instance.file.save('model', tmp_model)
 
         return instance
 
-    def _retrieve(self, channel_name, pk):
-        validate_key(pk)
+    def _retrieve(self, channel_name, key):
+        validate_key(key)
 
-        data = get_object_from_ledger(channel_name, pk, self.ledger_query_call)
+        data = get_object_from_ledger(channel_name, key, self.ledger_query_call)
 
         compatible_tuple_types = ['traintuple', 'composite_traintuple', 'aggregatetuple']
         any_data = any(list(map(lambda x: x in data, compatible_tuple_types)))
@@ -59,10 +59,10 @@ class ModelViewSet(mixins.RetrieveModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(get_channel_name(request), pk)
+            data = self._retrieve(get_channel_name(request), key)
         except LedgerError as e:
             logger.exception(e)
             return Response({'message': str(e.msg)}, status=e.status)

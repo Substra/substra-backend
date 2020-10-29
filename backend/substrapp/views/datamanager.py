@@ -118,12 +118,12 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             st = get_success_create_code()
             return Response(data, status=st, headers=headers)
 
-    def create_or_update_datamanager(self, channel_name, instance, datamanager, pk):
+    def create_or_update_datamanager(self, channel_name, instance, datamanager, key):
 
         # create instance if does not exist
         if not instance:
             instance, created = DataManager.objects.update_or_create(
-                key=pk, name=datamanager['name'], validated=True)
+                key=key, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
             url = datamanager['opener']['storage_address']
@@ -150,10 +150,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, request, pk):
-        validate_key(pk)
+    def _retrieve(self, request, key):
+        validate_key(key)
         # get instance from remote node
-        data = get_object_from_ledger(get_channel_name(request), pk, 'queryDataset')
+        data = get_object_from_ledger(get_channel_name(request), key, 'queryDataset')
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -165,7 +165,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description or data_opener
                 if not instance or not instance.description or not instance.data_opener:
-                    instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, pk)
+                    instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, key)
 
                 # do not give access to local files address
                 serializer = self.get_serializer(instance, fields=('owner'))
@@ -177,10 +177,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request, pk)
+            data = self._retrieve(request, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -215,13 +215,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def update_ledger(self, request, *args, **kwargs):
 
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
-        validate_key(pk)
+        validate_key(key)
 
         objective_key = request.data.get('objective_key')
         args = {
-            'data_manager_key': pk,
+            'data_manager_key': key,
             'objective_key': objective_key,
         }
 
