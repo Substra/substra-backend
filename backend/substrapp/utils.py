@@ -313,7 +313,3 @@ def timeit(function):
         return result
 
     return timed
-
-
-def new_uuid():
-    return uuid.uuid4()

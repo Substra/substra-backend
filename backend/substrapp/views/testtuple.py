@@ -1,10 +1,11 @@
+import uuid
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.utils import new_uuid
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name)
@@ -33,7 +34,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             return data
 
     def _create(self, request):
-        key = new_uuid()
+        key = uuid.uuid4()
         data = {
             'key': key,
             'objective_key': request.data.get('objective_key'),

@@ -1,8 +1,8 @@
 import os
 import shutil
 import tempfile
-
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -11,7 +11,6 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective
-from substrapp.utils import new_uuid
 
 from ..common import get_sample_objective, AuthenticatedClient
 
@@ -58,7 +57,7 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            key = new_uuid()
+            key = uuid.uuid4()
             mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = {'key': key}
 
@@ -92,8 +91,8 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
                 mock.patch('substrapp.ledger.assets.create_traintuple') as mcreate_traintuple:
 
-            mcreate_computeplan.return_value = {'compute_plan_id': str(new_uuid())}
-            mcreate_traintuple.return_value = {'key': str(new_uuid())}
+            mcreate_computeplan.return_value = {'compute_plan_id': str(uuid.uuid4())}
+            mcreate_traintuple.return_value = {'key': str(uuid.uuid4())}
 
             response = self.client.post(url, data, format='json', **extra)
 
@@ -131,7 +130,7 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
 
-            key = new_uuid()
+            key = uuid.uuid4()
             mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 
@@ -202,7 +201,7 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            key = new_uuid()
+            key = uuid.uuid4()
             mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = {'key': key}
 
@@ -238,7 +237,7 @@ class TesttupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
 
-            key = new_uuid()
+            key = uuid.uuid4()
             mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 

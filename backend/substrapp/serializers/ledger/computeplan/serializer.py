@@ -1,9 +1,8 @@
+import uuid
 from rest_framework import serializers
 from rest_framework.fields import DictField, CharField
-
 from substrapp import ledger
 from substrapp.serializers.ledger.utils import PrivatePermissionsSerializer
-from substrapp.utils import new_uuid
 
 
 class ComputePlanTraintupleSerializer(serializers.Serializer):
@@ -68,7 +67,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         traintuples = []
         for data_traintuple in data.get('traintuples', []):
             traintuple = {
-                'key': new_uuid(),
+                'key': uuid.uuid4(),
                 'data_manager_key': data_traintuple['data_manager_key'],
                 'data_sample_keys': data_traintuple['train_data_sample_keys'],
                 'algo_key': data_traintuple['algo_key'],
@@ -85,7 +84,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         testtuples = []
         for data_testtuple in data.get('testtuples', []):
             testtuple = {
-                'key': new_uuid(),
+                'key': uuid.uuid4(),
                 'traintuple_id': data_testtuple['traintuple_id'],
                 'objective_key': data_testtuple['objective_key'],
                 'metadata': data_testtuple.get('metadata'),
@@ -102,7 +101,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         composite_traintuples = []
         for data_composite_traintuple in data.get('composite_traintuples', []):
             composite_traintuple = {
-                'key': new_uuid(),
+                'key': uuid.uuid4(),
                 'algo_key': data_composite_traintuple['algo_key'],
                 'data_manager_key': data_composite_traintuple['data_manager_key'],
                 'data_sample_keys': data_composite_traintuple['train_data_sample_keys'],
@@ -128,7 +127,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
         aggregatetuples = []
         for data_aggregatetuple in data.get('aggregatetuples', []):
             aggregatetuple = {
-                'key': new_uuid(),
+                'key': uuid.uuid4(),
                 'algo_key': data_aggregatetuple['algo_key'],
                 'worker': data_aggregatetuple['worker'],
                 'id': data_aggregatetuple['aggregatetuple_id'],

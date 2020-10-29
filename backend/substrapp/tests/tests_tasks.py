@@ -1,6 +1,7 @@
 import os
 import shutil
 import mock
+import uuid
 from unittest.mock import MagicMock
 
 from django.test import override_settings
@@ -11,7 +12,7 @@ from django_celery_results.models import TaskResult
 from substrapp.models import DataSample
 from substrapp.ledger.api import LedgerStatusError
 from substrapp.utils import store_datasamples_archive
-from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory, new_uuid
+from substrapp.utils import compute_hash, get_remote_file_content, get_hash, create_directory
 from substrapp.tasks.tasks import (build_subtuple_folders, get_algo, get_objective, prepare_opener,
                                    uncompress_content, prepare_data_sample, prepare_task, do_task,
                                    compute_task, remove_subtuple_materials, prepare_materials)
@@ -186,7 +187,7 @@ class TasksTests(APITestCase):
     def test_prepare_data_sample_zip(self):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
-        key = str(new_uuid())
+        key = str(uuid.uuid4())
         data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
@@ -220,7 +221,7 @@ class TasksTests(APITestCase):
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(key=new_uuid(), path=self.data_sample_filename)
+        data_sample = DataSample(key=uuid.uuid4(), path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
@@ -248,7 +249,7 @@ class TasksTests(APITestCase):
 
         checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
-        key = str(new_uuid())
+        key = str(uuid.uuid4())
         data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
@@ -303,7 +304,7 @@ class TasksTests(APITestCase):
 
     def test_get_objective(self):
         metrics_content = self.script.read().encode('utf-8')
-        objective_key = new_uuid()
+        objective_key = uuid.uuid4()
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \

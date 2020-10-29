@@ -1,10 +1,11 @@
+import uuid
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerCompositeTraintupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.utils import new_uuid
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
@@ -39,7 +40,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             return data
 
     def _create(self, request):
-        key = new_uuid()
+        key = uuid.uuid4()
         data = {
             'key': key,
             'algo_key': request.data.get('algo_key'),

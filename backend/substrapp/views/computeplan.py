@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -6,7 +8,6 @@ from rest_framework.decorators import action
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
-from substrapp.utils import new_uuid
 from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
 from substrapp.views.filters_utils import filter_list
 
@@ -17,7 +18,7 @@ def create_compute_plan(channel_name, data):
     serializer.is_valid(raise_exception=True)
 
     # create compute plan in ledger
-    compute_plan_id = new_uuid()
+    compute_plan_id = uuid.uuid4()
     return serializer.create(channel_name, compute_plan_id, serializer.validated_data)
 
 

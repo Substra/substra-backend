@@ -4,6 +4,7 @@ from os.path import normpath
 import os
 import ntpath
 import shutil
+import uuid
 
 from django.conf import settings
 from rest_framework import status, mixins
@@ -15,7 +16,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
-from substrapp.utils import store_datasamples_archive, get_dir_hash, new_uuid
+from substrapp.utils import store_datasamples_archive, get_dir_hash
 from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name
 from substrapp.ledger.api import query_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
@@ -87,7 +88,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             for k, file in request.FILES.items():
 
                 # Get dir hash uncompress the file into a directory
-                key = new_uuid()
+                key = uuid.uuid4()
                 checksum, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
                 paths_to_remove.append(datasamples_path_from_file)
                 data[key] = {
@@ -124,7 +125,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                key = new_uuid()
+                key = uuid.uuid4()
                 checksum = get_dir_hash(path)
                 data[key] = {
                     'key': key,

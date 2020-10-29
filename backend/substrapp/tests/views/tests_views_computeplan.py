@@ -1,6 +1,7 @@
 import os
 import shutil
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -10,7 +11,6 @@ from rest_framework.test import APITestCase
 
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.serializers import LedgerComputePlanSerializer
-from substrapp.utils import new_uuid
 
 from ..common import AuthenticatedClient
 from ..assets import computeplan
@@ -38,7 +38,7 @@ class ComputePlanViewTests(APITestCase):
     def test_create(self):
         url = reverse('substrapp:compute_plan-list')
 
-        dummy_key = str(new_uuid())
+        dummy_key = str(uuid.uuid4())
 
         data = {
             'traintuples': [{
