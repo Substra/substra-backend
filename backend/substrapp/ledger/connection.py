@@ -86,6 +86,10 @@ def _get_hfc(channel_name):
         raise Exception(f'Peer has not joined channel: {channel_name}')
 
     channel = client.new_channel(channel_name)
+
+    # This part is commented because `query_committed_chaincodes` is not implemented in
+    # the last version of fabric-sdk-py
+
     # chaincode_name = settings.LEDGER_CHANNELS[channel_name]['chaincode']['name']
 
     # /!\ New chaincode lifecycle.

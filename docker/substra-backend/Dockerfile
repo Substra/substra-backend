@@ -1,6 +1,6 @@
 FROM python:3.6-slim AS build
 
-RUN apt-get update && apt-get install gcc git -y && apt-get clean
+RUN apt-get update && apt-get install gcc -y && apt-get clean
 
 RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app

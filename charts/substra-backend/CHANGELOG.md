@@ -3,7 +3,7 @@
 
 ## 1.6.0
 
-- Refactor channels / chaincodes values
+- Refactor `channels` and `chaincodes` values
 
 ## 1.5.0
 
