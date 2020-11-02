@@ -7,6 +7,8 @@ import uuid
 from django.urls import reverse
 from django.test import override_settings
 
+from parameterized import parameterized
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -38,7 +40,11 @@ class CompositeTraintupleQueryTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_add_compositetraintuple_sync_ok(self):
+    @parameterized.expand([
+        ("with_in_models_and_cp", True, True),
+        ("without_in_models", False, False)
+    ])
+    def test_add_compositetraintuple_sync_ok(self, _, with_in_models, with_compute_plan):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -51,14 +57,18 @@ class CompositeTraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'compute_plan_id': self.fake_key,
-            'in_head_model_key': self.fake_key,
-            'in_trunk_model_key': self.fake_key,
             'out_trunk_model_permissions': {
                 'public': False,
                 'authorized_ids': ["Node-1", "Node-2"],
             },
         }
+
+        if with_in_models:
+            data['in_head_model_key'] = self.fake_key
+            data['in_trunk_model_key'] = self.fake_key
+
+        if with_compute_plan:
+            data['compute_plan_id'] = self.fake_key
 
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',

@@ -7,6 +7,8 @@ import uuid
 from django.urls import reverse
 from django.test import override_settings
 
+from parameterized import parameterized
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -34,7 +36,11 @@ class TraintupleQueryTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_add_traintuple_sync_ok(self):
+    @parameterized.expand([
+        ("with_compute_plan", True),
+        ("without_compute_plan", False)
+    ])
+    def test_add_traintuple_sync_ok(self, _, with_compute_plan):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -47,8 +53,11 @@ class TraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'compute_plan_id': self.fake_key,
             'in_models_keys': [self.fake_key]}
+
+        if with_compute_plan:
+            data['compute_plan_id'] = self.fake_key
+
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
@@ -180,7 +189,11 @@ class TesttupleQueryTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_add_testtuple_sync_ok(self):
+    @parameterized.expand([
+        ("with_data_manager", True),
+        ("without_data_manager", False)
+    ])
+    def test_add_testtuple_sync_ok(self, _, with_data_manager):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -191,8 +204,11 @@ class TesttupleQueryTests(APITestCase):
         data = {
             'objective_key': self.objective_key,
             'test_data_sample_keys': self.test_data_sample_keys,
-            'traintuple_key': self.fake_key,
-            'data_manager_key': self.fake_key}
+            'traintuple_key': self.fake_key}
+
+        if with_data_manager:
+            data['data_manager_key'] = self.fake_key
+
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',

@@ -9,6 +9,8 @@ import mock
 from django.urls import reverse
 from django.test import override_settings
 
+from parameterized import parameterized
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -49,29 +51,36 @@ class ObjectiveQueryTests(APITestCase):
                                         data_opener=self.data_data_opener)
         self.data_manager_key = str(dm.key)
 
-    def get_default_objective_data(self):
+    def get_default_objective_data(self, with_test_data_manager=True):
 
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
+        json_ = {
+            'name': 'tough objective',
+            'test_data_sample_keys': self.test_data_sample_keys,
+            'permissions': {
+                'public': True,
+                'authorized_ids': [],
+            },
+            'metrics_name': 'accuracy'
+        }
+        if with_test_data_manager:
+            json_['test_data_manager_key'] = self.data_manager_key
+
         return {
             'description': self.objective_description,
             'metrics': self.objective_metrics,
-            'json': json.dumps({
-                'name': 'tough objective',
-                'test_data_manager_key': self.data_manager_key,
-                'test_data_sample_keys': self.test_data_sample_keys,
-                'permissions': {
-                    'public': True,
-                    'authorized_ids': [],
-                },
-                'metrics_name': 'accuracy'
-            }),
+            'json': json.dumps(json_),
         }
 
-    def test_add_objective_sync_ok(self):
+    @parameterized.expand([
+        ("with_test_data_manager", True),
+        ("without_test_data_manager", False)
+    ])
+    def test_add_objective_sync_ok(self, _, with_test_data_manager):
         self.add_default_data_manager()
-        data = self.get_default_objective_data()
+        data = self.get_default_objective_data(with_test_data_manager)
 
         url = reverse('substrapp:objective-list')
         extra = {
@@ -85,8 +94,8 @@ class ObjectiveQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertIsNotNone(r['key'])
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
     @override_settings(

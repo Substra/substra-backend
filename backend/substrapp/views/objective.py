@@ -51,7 +51,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # init ledger serializer
         ledger_data = {
             'test_data_sample_keys': request.data.get('test_data_sample_keys') or [],
-            'test_data_manager_key': request.data.get('test_data_manager_key', ''),
+            'test_data_manager_key': request.data.get('test_data_manager_key'),
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
