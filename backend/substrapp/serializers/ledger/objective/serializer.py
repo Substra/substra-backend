@@ -32,10 +32,10 @@ class LedgerObjectiveSerializer(serializers.Serializer):
         args = {
             'key': instance.key,
             'name': name,
-            'description_hash': get_hash(instance.description),
+            'description_checksum': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:objective-description', args=[instance.key]),  # noqa
             'metrics_name': metrics_name,
-            'metrics_hash': get_hash(instance.metrics),
+            'metrics_checksum': get_hash(instance.metrics),
             'metrics_storage_address': current_site + reverse('substrapp:objective-metrics', args=[instance.key]),
             'test_dataset': {
                 'data_manager_key': test_data_manager_key,

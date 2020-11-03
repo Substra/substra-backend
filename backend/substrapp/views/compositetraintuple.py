@@ -29,10 +29,10 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
         # create on ledger
         try:
             data = serializer.validated_data
-            if data['rank'] == 0 and not data['compute_plan_id']:
+            if data['rank'] == 0 and not data['compute_plan_key']:
                 # Auto-create compute plan
                 res = create_compute_plan(channel_name, data={})
-                data['compute_plan_id'] = res['compute_plan_id']
+                data['compute_plan_key'] = res['compute_plan_key']
             data = serializer.create(channel_name, data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
@@ -46,7 +46,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             'algo_key': request.data.get('algo_key'),
             'data_manager_key': request.data.get('data_manager_key'),
             'rank': request.data.get('rank'),
-            'compute_plan_id': request.data.get('compute_plan_id'),
+            'compute_plan_key': request.data.get('compute_plan_key'),
             'in_head_model_key': request.data.get('in_head_model_key'),
             'in_trunk_model_key': request.data.get('in_trunk_model_key'),
             'out_trunk_model_permissions': request.data.get('out_trunk_model_permissions'),

@@ -9,7 +9,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
     algo_key = serializers.UUIDField()
     rank = serializers.IntegerField(allow_null=True, required=False, default=0)
     worker = serializers.CharField()
-    compute_plan_id = serializers.UUIDField(required=False, allow_null=True)
+    compute_plan_key = serializers.UUIDField(required=False, allow_null=True)
     in_models_keys = serializers.ListField(child=serializers.UUIDField(),
                                            min_length=0,
                                            required=False, allow_null=True)
@@ -22,7 +22,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
         rank = validated_data.get('rank', '')
         rank = '' if rank is None else str(rank)
         worker = validated_data.get('worker')
-        compute_plan_id = validated_data.get('compute_plan_id')
+        compute_plan_key = validated_data.get('compute_plan_key')
         in_models_keys = validated_data.get('in_models_keys', [])
         tag = validated_data.get('tag', '')
         metadata = validated_data.get('metadata')
@@ -31,7 +31,7 @@ class LedgerAggregateTupleSerializer(serializers.Serializer):
             'key': key,
             'algo_key': algo_key,
             'in_models': in_models_keys,
-            'compute_plan_id': compute_plan_id,
+            'compute_plan_key': compute_plan_key,
             'rank': rank,
             'worker': worker,
             'tag': tag,

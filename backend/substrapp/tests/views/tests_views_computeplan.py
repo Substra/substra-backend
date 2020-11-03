@@ -86,7 +86,7 @@ class ComputePlanViewTests(APITestCase):
         with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.return_value = computeplan[0]
 
-            url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['compute_plan_id']])
+            url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['compute_plan_key']])
             response = self.client.get(url, **self.extra)
             r = response.json()
 
@@ -108,13 +108,13 @@ class ComputePlanViewTests(APITestCase):
         with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
 
-            search_params = computeplan[0]['compute_plan_id']
+            search_params = computeplan[0]['compute_plan_key']
             response = self.client.get(url + search_params + '/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_computeplan_cancel(self):
         cp = computeplan[0]
-        key = cp['compute_plan_id']
+        key = cp['compute_plan_key']
         with mock.patch('substrapp.views.computeplan.invoke_ledger') as minvoke_ledger:
             minvoke_ledger.return_value = cp
 
@@ -125,8 +125,8 @@ class ComputePlanViewTests(APITestCase):
 
     def test_computeplan_update(self):
         cp = computeplan[0]
-        compute_plan_id = cp['compute_plan_id']
-        url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_id])
+        compute_plan_key = cp['compute_plan_key']
+        url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_key])
 
         with mock.patch('substrapp.ledger.assets.update_computeplan', return_value=cp):
             response = self.client.post(url, **self.extra)

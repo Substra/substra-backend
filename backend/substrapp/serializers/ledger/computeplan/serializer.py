@@ -62,7 +62,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
     metadata = DictField(child=CharField(), required=False, allow_null=True)
     clean_models = serializers.BooleanField(required=False)
 
-    def get_args(self, compute_plan_id, data):
+    def get_args(self, key, data):
         # convert snake case fields to camel case fields to match chaincode expected inputs
         traintuples = []
         for data_traintuple in data.get('traintuples', []):
@@ -142,7 +142,7 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             aggregatetuples.append(aggregatetuple)
 
         return {
-            'compute_plan_id': compute_plan_id,
+            'key': key,
             'traintuples': traintuples,
             'testtuples': testtuples,
             'composite_traintuples': composite_traintuples,
@@ -152,11 +152,11 @@ class LedgerComputePlanSerializer(serializers.Serializer):
             'clean_models': data.get('clean_models', False),
         }
 
-    def create(self, channel_name, compute_plan_id, validated_data):
-        args = self.get_args(compute_plan_id, validated_data)
+    def create(self, channel_name, key, validated_data):
+        args = self.get_args(key, validated_data)
         return ledger.assets.create_computeplan(channel_name, args)
 
-    def update(self, channel_name, compute_plan_id, validated_data):
-        args = self.get_args(compute_plan_id, validated_data)
+    def update(self, channel_name, key, validated_data):
+        args = self.get_args(key, validated_data)
         del args['tag']
         return ledger.assets.update_computeplan(channel_name, args)

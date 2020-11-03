@@ -34,9 +34,9 @@ def authenticate_outgoing_request(outgoing_node_id):
     return HTTPBasicAuth(current_node_id, outgoing.secret)
 
 
-def get_remote_asset(channel_name, url, node_id, content_hash, salt=None):
+def get_remote_asset(channel_name, url, node_id, content_checksum, salt=None):
     auth = authenticate_outgoing_request(node_id)
-    return get_remote_file_content(channel_name, url, auth, content_hash, salt=salt)
+    return get_remote_file_content(channel_name, url, auth, content_checksum, salt=salt)
 
 
 class CustomFileResponse(FileResponse):

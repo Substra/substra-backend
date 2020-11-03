@@ -302,7 +302,7 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
         extra_kwargs.update({
             'out_model': {
                 'key': res["end_model_key"],
-                'hash': res["end_model_checksum"],
+                'checksum': res["end_model_checksum"],
                 'storage_address': res["end_model_storage_address"],
             },
         })
@@ -311,11 +311,11 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
         extra_kwargs.update({
             'out_head_model': {
                 'key': res["end_head_model_key"],
-                'hash': res["end_head_model_checksum"],
+                'checksum': res["end_head_model_checksum"],
             },
             'out_trunk_model': {
                 'key': res["end_trunk_model_key"],
-                'hash': res["end_trunk_model_checksum"],
+                'checksum': res["end_trunk_model_checksum"],
                 'storage_address': res["end_trunk_model_storage_address"],
             },
         })

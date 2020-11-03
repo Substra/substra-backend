@@ -86,7 +86,7 @@ def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
 
     worker_queue = f"{settings.ORG_NAME}.worker"
 
-    key = asset['compute_plan_id']
+    key = asset['compute_plan_key']
 
     # Currently, we received this event on done, failed and canceled status
     # We apply the same behavior for those three status.

@@ -29,10 +29,10 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
         # create on ledger
         try:
             data = serializer.validated_data
-            if data['rank'] == 0 and not data['compute_plan_id']:
+            if data['rank'] == 0 and not data['compute_plan_key']:
                 # Auto-create compute plan
                 res = create_compute_plan(channel_name, data={})
-                data['compute_plan_id'] = res['compute_plan_id']
+                data['compute_plan_key'] = res['compute_plan_key']
             data = serializer.create(channel_name, data)
         except LedgerError as e:
             raise LedgerException({'message': str(e.msg)}, e.status)
@@ -45,7 +45,7 @@ class AggregateTupleViewSet(mixins.CreateModelMixin,
             'key': key,
             'algo_key': request.data.get('algo_key'),
             'rank': request.data.get('rank'),
-            'compute_plan_id': request.data.get('compute_plan_id'),
+            'compute_plan_key': request.data.get('compute_plan_key'),
             'in_models_keys': request.data.get('in_models_keys'),
             'worker': request.data.get('worker'),
             'tag': request.data.get('tag', ''),

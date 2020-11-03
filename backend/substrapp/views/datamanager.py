@@ -128,7 +128,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.data_opener:
             url = datamanager['opener']['storage_address']
 
-            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['opener']['hash'])
+            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['opener']['checksum'])
 
             f = tempfile.TemporaryFile()
             f.write(content)
@@ -140,7 +140,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         if not instance.description:
             url = datamanager['description']['storage_address']
 
-            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['description']['hash'])
+            content = get_remote_asset(channel_name, url, datamanager['owner'], datamanager['description']['checksum'])
 
             f = tempfile.TemporaryFile()
             f.write(content)

@@ -147,8 +147,8 @@ class ObjectiveViewTests(APITestCase):
             mquery_ledger.return_value = objective
             mquery_ledger2.return_value = model
 
-            checksum = done_model['traintuple']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{checksum}'
+            checksum = done_model['traintuple']['out_model']['checksum']
+            search_params = f'?search=model%253Achecksum%253A{checksum}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

@@ -36,12 +36,12 @@ def authenticate_worker(node_id):
     return auth
 
 
-def get_asset_content(channel_name, url, node_id, content_hash, salt=None):
-    return get_remote_file_content(channel_name, url, authenticate_worker(node_id), content_hash, salt=salt)
+def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
+    return get_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum, salt=salt)
 
 
-def get_and_put_asset_content(channel_name, url, node_id, content_hash, content_dst_path, hash_key):
-    return get_and_put_remote_file_content(channel_name, url, authenticate_worker(node_id), content_hash,
+def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
+    return get_and_put_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum,
                                            content_dst_path=content_dst_path, hash_key=hash_key)
 
 
@@ -98,7 +98,7 @@ def container_format_log(container_name, container_logs):
 
 
 @timeit
-def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_name, volumes, command,
+def compute_job(subtuple_key, compute_plan_key, dockerfile_path, image_name, job_name, volumes, command,
                 environment, remove_image=True, remove_container=True, capture_logs=True):
 
     raise_if_no_dockerfile(dockerfile_path)
@@ -138,7 +138,7 @@ def compute_job(subtuple_key, compute_plan_id, dockerfile_path, image_name, job_
         environment,
         remove_image,
         subtuple_key=subtuple_key,
-        compute_plan_id=compute_plan_id
+        compute_plan_key=compute_plan_key
     )
 
 
