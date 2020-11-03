@@ -397,7 +397,7 @@ def prepare_opener(directory, tuple_):
 def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
-    for data_sample_key in tuple_['dataset']['keys']:
+    for data_sample_key in tuple_['dataset']['data_sample_keys']:
         data_sample = DataSample.objects.get(key=data_sample_key)
 
         if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
