@@ -4,6 +4,7 @@ from os.path import normpath
 import os
 import ntpath
 import shutil
+import uuid
 
 from django.conf import settings
 from rest_framework import status, mixins
@@ -16,8 +17,7 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
-from substrapp.views.utils import find_primary_key_error, LedgerException, ValidationException, \
-    get_success_create_code, get_channel_name, data_to_data_response
+from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name
 from substrapp.ledger.api import query_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 
@@ -33,7 +33,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
     @staticmethod
     def check_datamanagers(data_manager_keys):
-        datamanager_count = DataManager.objects.filter(pkhash__in=data_manager_keys).count()
+        datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
 
         if datamanager_count != len(data_manager_keys):
             raise Exception(f'One or more datamanager keys provided do not exist in local database. '
@@ -56,14 +56,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(channel_name, ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
-            else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
-            raise LedgerException(data, e.status)
+            raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
@@ -76,9 +71,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         st = get_success_create_code()
 
         # update validated to True in response
-        if 'pkhash' in data and data['validated']:
+        if 'key' in data and data['validated']:
             for d in serializer.data:
-                if d['pkhash'] in data['pkhash']:
+                if d['key'] in data['key']:
                     d.update({'validated': data['validated']})
 
         return serializer.data, st
@@ -90,24 +85,16 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # files can be uploaded inside the HTTP request or can already be
         # available on local disk
         if len(request.FILES) > 0:
-            pkhash_map = {}
-
             for k, file in request.FILES.items():
+
                 # Get dir hash uncompress the file into a directory
-                pkhash, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
+                key = uuid.uuid4()
+                checksum, datasamples_path_from_file = store_datasamples_archive(file)  # can raise
                 paths_to_remove.append(datasamples_path_from_file)
-                # check pkhash does not belong to the list
-                try:
-                    data[pkhash]
-                except KeyError:
-                    pkhash_map[pkhash] = file
-                else:
-                    raise Exception(f'Your data sample archives contain same files leading to same key, '
-                                    f'please review the content of your achives. '
-                                    f'Archives {file} and {pkhash_map[pkhash]} are the same')
-                data[pkhash] = {
-                    'pkhash': pkhash,
-                    'path': datasamples_path_from_file
+                data[key] = {
+                    'key': key,
+                    'path': datasamples_path_from_file,
+                    'checksum': checksum
                 }
 
         else:  # files must be available on local filesystem
@@ -138,19 +125,12 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                 if not os.path.isdir(path):
                     raise Exception(f'One of your paths does not exist, '
                                     f'is not a directory or is not an absolute path: {path}')
-                pkhash = get_dir_hash(path)
-                try:
-                    data[pkhash]
-                except KeyError:
-                    pass
-                else:
-                    # existing can be a dict with a field path or file
-                    raise Exception(f'Your data sample directory contain same files leading to same key. '
-                                    f'Invalid path: {path}.')
-
-                data[pkhash] = {
-                    'pkhash': pkhash,
-                    'path': normpath(path)
+                key = uuid.uuid4()
+                checksum = get_dir_hash(path)
+                data[key] = {
+                    'key': key,
+                    'path': normpath(path),
+                    'checksum': checksum
                 }
 
         if not data:
@@ -180,11 +160,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             try:
                 serializer.is_valid(raise_exception=True)
             except Exception as e:
-                pkhashes = [x['pkhash'] for x in computed_data]
-                st = status.HTTP_400_BAD_REQUEST
-                if find_primary_key_error(e):
-                    st = status.HTTP_409_CONFLICT
-                raise ValidationException(e.args, pkhashes, st)
+                raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
             else:
 
                 # create on ledger + db
@@ -203,16 +179,14 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         try:
             data, st = self._create(request, data_manager_keys, test_only)
         except ValidationException as e:
-            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
+            return Response({'message': e.data}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -239,9 +213,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         else:
             st = status.HTTP_202_ACCEPTED
 
-        # Transform data to a data_response with only key
-        data_response = data_to_data_response(data)
-        return Response(data_response, status=st)
+        return Response(data, status=st)
 
 
 def path_leaf(path):

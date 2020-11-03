@@ -12,7 +12,7 @@ from substrapp.serializers.ledger.utils import PermissionsSerializer
 class LedgerDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
-    objective_key = serializers.CharField(max_length=256, allow_blank=True, required=False, allow_null=True)
+    objective_key = serializers.UUIDField(required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -21,20 +21,21 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         name = validated_data.get('name')
         data_type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        objective_key = validated_data.get('objective_key', '')
+        objective_key = validated_data.get('objective_key')
         metadata = validated_data.get('metadata')
 
         # TODO, create a datamigration with new Site domain name when we will know the name of the final website
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': instance.key,
             'name': name,
             'opener_hash': get_hash(instance.data_opener),
-            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.pk]),
+            'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.key]),
             'type': data_type,
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:data_manager-description',
-                                                                  args=[instance.pk]),
+                                                                  args=[instance.key]),
             'objective_key': objective_key,
             'permissions': {'process': {
                 'public': permissions.get('public'),
@@ -42,4 +43,4 @@ class LedgerDataManagerSerializer(serializers.Serializer):
             }},
             'metadata': metadata
         }
-        return ledger.assets.create_datamanager(channel_name, args, instance.pkhash)
+        return ledger.assets.create_datamanager(channel_name, args, instance.key)

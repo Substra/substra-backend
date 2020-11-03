@@ -14,10 +14,9 @@ from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerial
 from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
-from substrapp.views.utils import (PermissionMixin, find_primary_key_error,
-                                   validate_pk, get_success_create_code, ValidationException, LedgerException,
-                                   get_remote_asset, node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+from substrapp.views.utils import (PermissionMixin,
+                                   validate_key, get_success_create_code, ValidationException, LedgerException,
+                                   get_remote_asset, node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -46,7 +45,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'type': request.data.get('type'),
-            'objective_key': request.data.get('objective_key', ''),
+            'objective_key': request.data.get('objective_key'),
             'metadata': request.data.get('metadata')
         }
 
@@ -66,14 +65,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
-            else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
-            raise LedgerException(data, e.status)
+            raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -89,25 +83,23 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def _create(self, request, data_opener):
 
         try:
-            pkhash = get_hash(data_opener)
+            checksum = get_hash(data_opener)
+            key = checksum
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            raise ValidationException(e.args, '(not computed)', st)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
-            'pkhash': pkhash,
+            'key': key,
             'data_opener': data_opener,
             'description': request.data.get('description'),
             'name': request.data.get('name'),
+            'checksum': checksum
         })
 
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhash, st)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -118,22 +110,20 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             data = self._create(request, data_opener)
         except ValidationException as e:
-            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
+            return Response({'message': e.data}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
-    def create_or_update_datamanager(self, channel_name, instance, datamanager, pk):
+    def create_or_update_datamanager(self, channel_name, instance, datamanager, key):
 
         # create instance if does not exist
         if not instance:
             instance, created = DataManager.objects.update_or_create(
-                pkhash=pk, name=datamanager['name'], validated=True)
+                key=key, name=datamanager['name'], validated=True)
 
         if not instance.data_opener:
             url = datamanager['opener']['storage_address']
@@ -160,10 +150,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         return instance
 
-    def _retrieve(self, request, pk):
-        validate_pk(pk)
+    def _retrieve(self, request, key):
+        validate_key(key)
         # get instance from remote node
-        data = get_object_from_ledger(get_channel_name(request), pk, 'queryDataset')
+        data = get_object_from_ledger(get_channel_name(request), key, 'queryDataset')
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -175,7 +165,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             finally:
                 # check if instance has description or data_opener
                 if not instance or not instance.description or not instance.data_opener:
-                    instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, pk)
+                    instance = self.create_or_update_datamanager(get_channel_name(request), instance, data, key)
 
                 # do not give access to local files address
                 serializer = self.get_serializer(instance, fields=('owner'))
@@ -187,10 +177,10 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request, pk)
+            data = self._retrieve(request, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -204,7 +194,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             return Response({'message': str(e.msg)}, status=e.status)
 
         # parse filters
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
 
         if query_params is not None:
             try:
@@ -225,16 +215,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
     def update_ledger(self, request, *args, **kwargs):
 
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        validate_key(key)
 
         objective_key = request.data.get('objective_key')
         args = {
-            'data_manager_key': pk,
+            'data_manager_key': key,
             'objective_key': objective_key,
         }
 
@@ -248,9 +235,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        # Transform data to a data_response with only key
-        data_response = data_to_data_response(data)
-        return Response(data_response, status=st)
+        return Response(data, status=st)
 
 
 class DataManagerPermissionViewSet(PermissionMixin,

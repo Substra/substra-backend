@@ -36,9 +36,6 @@ logger = logging.getLogger(__name__)
 PREFIX_HEAD_FILENAME = 'head_'
 PREFIX_TRUNK_FILENAME = 'trunk_'
 
-HASH_KEY_SUFFIX_HEAD = 'HEAD'
-HASH_KEY_SUFFIX_TRUNK = 'TRUNK'
-
 TRAINTUPLE_TYPE = 'traintuple'
 AGGREGATETUPLE_TYPE = 'aggregatetuple'
 COMPOSITE_TRAINTUPLE_TYPE = 'composite_traintuple'
@@ -73,8 +70,8 @@ class TasksError(Exception):
 
 def get_objective(channel_name, tuple_):
 
-    objective_hash = tuple_['objective']['hash']
-    objective_metadata = get_object_from_ledger(channel_name, objective_hash, 'queryObjective')
+    objective_key = tuple_['objective']['key']
+    objective_metadata = get_object_from_ledger(channel_name, objective_key, 'queryObjective')
 
     objective_content = get_asset_content(
         channel_name,
@@ -106,7 +103,7 @@ def get_algo(channel_name, tuple_type, tuple_):
         raise TasksError(f'Cannot find algo from tuple type {tuple_type}: {tuple_}')
     method_name = query_method_names_mapper[tuple_type]
 
-    key = tuple_['algo']['hash']
+    key = tuple_['algo']['key']
     metadata = get_object_from_ledger(channel_name, key, method_name)
 
     content = get_asset_content(
@@ -181,7 +178,7 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     """Get local model content."""
     from substrapp.models import Model
 
-    model = Model.objects.get(pk=out_model['hash'])
+    model = Model.objects.get(key=out_model['key'])
 
     # verify that local db model file is not corrupted
     if get_hash(model.file.path, hash_key) != out_model['hash']:
@@ -217,7 +214,7 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
         get_and_put_model_content(
             channel_name,
             tuple_type,
-            input_model['traintuple_key'] + HASH_KEY_SUFFIX_TRUNK,
+            input_model['traintuple_key'],
             metadata,
             metadata['out_trunk_model']['out_model'],
             model_dst_path
@@ -288,9 +285,7 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
     # get the output head model
     head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{head_model_key}')
     raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
-    get_and_put_local_model_content(
-        head_model_key + HASH_KEY_SUFFIX_HEAD, metadata['out_head_model']['out_model'], head_model_dst_path
-    )
+    get_and_put_local_model_content(head_model_key, metadata['out_head_model']['out_model'], head_model_dst_path)
 
     # get trunk model
     trunk_model_key = trunk_model['traintuple_key']
@@ -302,7 +297,7 @@ def prepare_composite_traintuple_input_models(channel_name, directory, tuple_):
         get_and_put_model_content(
             channel_name,
             tuple_type,
-            trunk_model_key + HASH_KEY_SUFFIX_TRUNK,
+            trunk_model_key,
             metadata,
             metadata['out_trunk_model']['out_model'],
             trunk_model_dst_path
@@ -334,15 +329,14 @@ def prepare_testtuple_input_models(channel_name, directory, tuple_):
         metadata = get_object_from_ledger(channel_name, traintuple_key, 'queryCompositeTraintuple')
         head_model_dst_path = path.join(directory, f'model/{PREFIX_HEAD_FILENAME}{traintuple_key}')
         raise_if_path_traversal([head_model_dst_path], path.join(directory, 'model/'))
-        get_and_put_local_model_content(traintuple_key + HASH_KEY_SUFFIX_HEAD, metadata['out_head_model']['out_model'],
-                                        head_model_dst_path)
+        get_and_put_local_model_content(traintuple_key, metadata['out_head_model']['out_model'], head_model_dst_path)
 
         model_dst_path = path.join(directory, f'model/{PREFIX_TRUNK_FILENAME}{traintuple_key}')
         raise_if_path_traversal([model_dst_path], path.join(directory, 'model/'))
         get_and_put_model_content(
             channel_name,
             traintuple_type,
-            traintuple_key + HASH_KEY_SUFFIX_TRUNK,
+            traintuple_key,
             metadata,
             metadata['out_trunk_model']['out_model'],
             model_dst_path
@@ -377,9 +371,10 @@ def prepare_models(channel_name, directory, tuple_type, tuple_):
 def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
+    dataset_key = tuple_['dataset']['key']
     data_opener_hash = tuple_['dataset']['opener_hash']
 
-    datamanager = DataManager.objects.get(pk=data_opener_hash)
+    datamanager = DataManager.objects.get(key=dataset_key)
 
     # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
@@ -403,7 +398,7 @@ def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
     for data_sample_key in tuple_['dataset']['keys']:
-        data_sample = DataSample.objects.get(pk=data_sample_key)
+        data_sample = DataSample.objects.get(key=data_sample_key)
 
         if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
             raise Exception(f'Data Sample ({data_sample.path}) is missing in local storage')
@@ -412,7 +407,7 @@ def prepare_data_sample(directory, tuple_):
             raise Exception(f'Data Sample ({data_sample.path}) is empty in local storage')
 
         data_sample_hash = get_dir_hash(data_sample.path)
-        if data_sample_hash != data_sample_key:
+        if data_sample_hash != data_sample.checksum:
             raise Exception('Data Sample Hash in tuple is not the same as in local db')
 
         # create a symlink on the folder containing data
@@ -710,7 +705,7 @@ def do_task(channel_name, subtuple, tuple_type):
         subtuple_key=subtuple["key"],
         compute_plan_id=compute_plan_id,
         dockerfile_path=subtuple_directory,
-        image_name=get_algo_image_name(subtuple['algo']['hash']),
+        image_name=get_algo_image_name(subtuple['algo']['key']),
         job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
@@ -736,7 +731,7 @@ def do_task(channel_name, subtuple, tuple_type):
             subtuple_key=subtuple["key"],
             compute_plan_id=compute_plan_id,
             dockerfile_path=f'{subtuple_directory}/metrics',
-            image_name=f'substra/metrics_{subtuple["objective"]["hash"][0:8]}'.lower(),
+            image_name=f'substra/metrics_{subtuple["objective"]["key"][0:8]}'.lower(),
             job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
@@ -963,24 +958,26 @@ def save_models(subtuple_directory, tuple_type, subtuple_key):
     models = {}
 
     if tuple_type in [TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE]:
-        file, file_hash = save_model(subtuple_directory, subtuple_key)
+        model, storage_address = save_model(subtuple_directory, subtuple_key)
         models['end_model'] = {
-            'file': file,
-            'hash': file_hash
+            'key': model.key,
+            'checksum': model.checksum,
+            'storage_address': storage_address
         }
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
-        for m_type, filename, hash_salt in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME, HASH_KEY_SUFFIX_HEAD),
-                                            ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME, HASH_KEY_SUFFIX_TRUNK)]:
-            file, file_hash = save_model(
+        for m_type, filename in [('end_head_model', OUTPUT_HEAD_MODEL_FILENAME),
+                                 ('end_trunk_model', OUTPUT_TRUNK_MODEL_FILENAME)]:
+            model, storage_address = save_model(
                 subtuple_directory,
-                subtuple_key + hash_salt,
+                subtuple_key,
                 filename=filename,
             )
 
             models[m_type] = {
-                'file': file,
-                'hash': file_hash
+                'key': model.key,
+                'checksum': model.checksum,
+                'storage_address': storage_address
             }
 
     return models
@@ -991,15 +988,18 @@ def extract_result_from_models(tuple_type, models):
     result = {}
 
     if tuple_type in (TRAINTUPLE_TYPE, AGGREGATETUPLE_TYPE):
-        result['end_model_file'] = models['end_model']['file']
-        result['end_model_file_hash'] = models['end_model']['hash']
+        result['end_model_key'] = models['end_model']['key']
+        result['end_model_checksum'] = models['end_model']['checksum']
+        result['end_model_storage_address'] = models['end_model']['storage_address']
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         # Head model does not expose storage address
-        result['end_head_model_file_hash'] = models['end_head_model']['hash']
+        result['end_head_model_key'] = models['end_head_model']['key']
+        result['end_head_model_checksum'] = models['end_head_model']['checksum']
 
-        result['end_trunk_model_file'] = models['end_trunk_model']['file']
-        result['end_trunk_model_file_hash'] = models['end_trunk_model']['hash']
+        result['end_trunk_model_key'] = models['end_trunk_model']['key']
+        result['end_trunk_model_checksum'] = models['end_trunk_model']['checksum']
+        result['end_trunk_model_storage_address'] = models['end_trunk_model']['storage_address']
 
     return result
 
@@ -1009,54 +1009,54 @@ def save_model(subtuple_directory, hash_key, filename='model'):
     from substrapp.models import Model
 
     end_model_path = path.join(subtuple_directory, f'output_model/{filename}')
-    end_model_file_hash = get_hash(end_model_path, hash_key)
-    instance = Model.objects.create(pkhash=end_model_file_hash, validated=True)
+    checksum = get_hash(end_model_path, hash_key)
+    instance = Model.objects.create(checksum=checksum, validated=True)
 
     with open(end_model_path, 'rb') as f:
         instance.file.save('model', f)
     current_site = getattr(settings, "DEFAULT_DOMAIN")
-    end_model_file = f'{current_site}{reverse("substrapp:model-file", args=[end_model_file_hash])}'
+    storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
 
-    return end_model_file, end_model_file_hash
+    return instance, storage_address
 
 
-def get_algo_image_name(algo_hash):
+def get_algo_image_name(algo_key):
     # tag must be lowercase for docker
-    return f'substra/algo_{algo_hash[0:8]}'.lower()
+    return f'substra/algo_{algo_key[0:8]}'.lower()
 
 
-def remove_algo_images(algo_hashes):
-    for algo_hash in algo_hashes:
-        algo_image_name = get_algo_image_name(algo_hash)
+def remove_algo_images(algo_keys):
+    for algo_key in algo_keys:
+        algo_image_name = get_algo_image_name(algo_key)
         remove_image(algo_image_name)
 
 
-def remove_intermediary_models(model_hashes):
+def remove_intermediary_models(model_keys):
     from substrapp.models import Model
 
-    models = Model.objects.filter(pkhash__in=model_hashes, validated=True)
-    filtered_model_hashes = [model.pk for model in models]
+    models = Model.objects.filter(key__in=model_keys, validated=True)
+    filtered_model_keys = [str(model.key) for model in models]
 
     models.delete()
 
-    if filtered_model_hashes:
-        log_model_hashes = ', '.join(filtered_model_hashes)
-        logger.info(f'Delete intermediary models: {log_model_hashes}')
+    if filtered_model_keys:
+        log_model_keys = ', '.join(filtered_model_keys)
+        logger.info(f'Delete intermediary models: {log_model_keys}')
 
 
 @app.task(ignore_result=False)
 def on_compute_plan(channel_name, compute_plan):
 
     compute_plan_id = compute_plan['compute_plan_id']
-    algo_hashes = compute_plan['algo_keys']
-    model_hashes = compute_plan['models_to_delete']
+    algo_keys = compute_plan['algo_keys']
+    model_keys = compute_plan['models_to_delete']
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished
     if status in ['done', 'failed', 'canceled']:
         remove_local_folders(compute_plan_id)
-        remove_algo_images(algo_hashes)
+        remove_algo_images(algo_keys)
 
     # Remove intermediary models
-    if model_hashes:
-        remove_intermediary_models(model_hashes)
+    if model_keys:
+        remove_intermediary_models(model_keys)

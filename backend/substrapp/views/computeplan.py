@@ -1,3 +1,5 @@
+import uuid
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -5,9 +7,19 @@ from rest_framework.decorators import action
 
 from substrapp.serializers import LedgerComputePlanSerializer
 from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerConflict
-from substrapp.views.utils import get_success_create_code, validate_pk, get_channel_name
+from substrapp.ledger.exceptions import LedgerError
+from substrapp.views.utils import get_success_create_code, validate_key, get_channel_name
 from substrapp.views.filters_utils import filter_list
+
+
+def create_compute_plan(channel_name, data):
+    # rely on serializer to parse and validate request data
+    serializer = LedgerComputePlanSerializer(data=data)
+    serializer.is_valid(raise_exception=True)
+
+    # create compute plan in ledger
+    compute_plan_id = uuid.uuid4()
+    return serializer.create(channel_name, compute_plan_id, serializer.validated_data)
 
 
 class ComputePlanViewSet(mixins.CreateModelMixin,
@@ -19,27 +31,10 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         return []
 
     def create(self, request, *args, **kwargs):
-        # rely on serializer to parse and validate request data
-        serializer = self.get_serializer(data=dict(request.data))
-        serializer.is_valid(raise_exception=True)
-
-        # get compute_plan_id to handle 408 timeout in next invoke ledger request
-        args = serializer.get_args(serializer.validated_data)
         try:
-            ledger_response = query_ledger(get_channel_name(request), fcn='createComputePlan', args=args)
-        except LedgerConflict as e:
-            error = {'message': str(e.msg), 'pkhash': e.pkhash}
-            return Response(error, status=e.status)
+            data = create_compute_plan(get_channel_name(request), dict(request.data))
         except LedgerError as e:
-            error = {'message': str(e.msg)}
-            return Response(error, status=e.status)
-
-        # create compute plan in ledger
-        compute_plan_id = ledger_response.get('compute_plan_id')
-        try:
-            data = serializer.create(get_channel_name(request), serializer.validated_data)
-        except LedgerError as e:
-            error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
+            error = {'message': str(e.msg), 'compute_plan_id': data['compute_plan_id']}
             return Response(error, status=e.status)
 
         # send successful response
@@ -49,11 +44,11 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
 
         try:
-            validate_pk(pk)
-            data = get_object_from_ledger(get_channel_name(request), pk, 'queryComputePlan')
+            data = get_object_from_ledger(get_channel_name(request), key, 'queryComputePlan')
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -67,7 +62,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
         data = data or []
 
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
         if query_params is not None:
             try:
                 data = filter_list(
@@ -81,24 +76,29 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         return Response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
-    def cancel(self, request, pk):
-        validate_pk(pk)
+    def cancel(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
 
         try:
             compute_plan = invoke_ledger(
                 get_channel_name(request),
                 fcn='cancelComputePlan',
-                args={'key': pk},
-                only_pkhash=False)
+                args={'key': key},
+                only_key=False)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         return Response(compute_plan, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
-    def update_ledger(self, request, pk):
-        validate_pk(pk)
+    def update_ledger(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
 
-        compute_plan_id = pk
+        validate_key(key)
+
+        compute_plan_id = key
 
         serializer = self.get_serializer(data=dict(request.data))
         serializer.is_valid(raise_exception=True)

@@ -2,8 +2,8 @@ import os
 import shutil
 import tempfile
 import json
-
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -13,13 +13,12 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, Algo
 from substrapp.serializers import LedgerAlgoSerializer
-from substrapp.utils import get_hash, compute_hash
+from substrapp.utils import compute_hash
 from substrapp.ledger.exceptions import LedgerError
 
 from ..common import get_sample_objective, get_sample_datamanager, \
     get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
     get_sample_algo_metadata
-
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -28,6 +27,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
+    objective_key = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
@@ -46,18 +46,17 @@ class AlgoQueryTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def add_default_objective(self):
-        Objective.objects.create(description=self.objective_description,
-                                 metrics=self.objective_metrics)
+        o = Objective.objects.create(description=self.objective_description,
+                                     metrics=self.objective_metrics)
+        self.objective_key = str(o.key)
 
     def get_default_algo_data(self):
-        expected_hash = get_hash(self.algo)
-
-        data = {
+        return {
             'file': self.algo,
             'description': self.data_description,  # fake it
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': get_hash(self.objective_description),
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -65,17 +64,13 @@ class AlgoQueryTests(APITestCase):
             }),
         }
 
-        return expected_hash, data
-
     def get_default_algo_data_zip(self):
-        expected_hash = get_hash(self.algo_zip)
-
-        data = {
+        return {
             'file': self.algo_zip,
             'description': self.data_description,  # fake it
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': get_hash(self.objective_description),
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -83,11 +78,9 @@ class AlgoQueryTests(APITestCase):
             })
         }
 
-        return expected_hash, data
-
     def test_add_algo_sync_ok(self):
         self.add_default_objective()
-        key, data = self.get_default_algo_data_zip()
+        data = self.get_default_algo_data_zip()
 
         url = reverse('substrapp:algo-list')
         extra = {
@@ -96,12 +89,12 @@ class AlgoQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'key': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -113,7 +106,7 @@ class AlgoQueryTests(APITestCase):
     )
     def test_add_algo_no_sync_ok(self):
         self.add_default_objective()
-        key, data = self.get_default_algo_data()
+        data = self.get_default_algo_data()
 
         url = reverse('substrapp:algo-list')
         extra = {
@@ -128,7 +121,7 @@ class AlgoQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_algo_ko(self):
@@ -140,7 +133,7 @@ class AlgoQueryTests(APITestCase):
             'description': self.data_description,
             'json': json.dumps({
                 'name': 'super top algo',
-                'objective_key': 'non existing objectivexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+                'objective_key': str(uuid.uuid4()),
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -166,7 +159,7 @@ class AlgoQueryTests(APITestCase):
             # missing local storage field
             data = {
                 'name': 'super top algo',
-                'objective_key': get_hash(self.objective_description),
+                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -180,7 +173,7 @@ class AlgoQueryTests(APITestCase):
                 'file': self.algo,
                 'description': self.data_description,
                 'json': json.dumps({
-                    'objective_key': get_hash(self.objective_description),
+                    'objective_key': self.objective_key,
                 })
             }
             response = self.client.post(url, data, format='multipart', **extra)
@@ -197,6 +190,6 @@ class AlgoQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/algo/{algo.pkhash}/file/', **extra)
+            response = self.client.get(f'/algo/{algo.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(algo.pkhash, compute_hash(response.getvalue()))
+            self.assertEqual(algo.checksum, compute_hash(response.getvalue()))

@@ -1,5 +1,5 @@
 import os
-
+import uuid
 
 from django.http import FileResponse, HttpResponse
 from rest_framework.authentication import BasicAuthentication
@@ -72,10 +72,10 @@ class PermissionMixin(object):
 
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -95,10 +95,10 @@ class PermissionMixin(object):
 
     def download_local_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
         except LedgerError as e:
             return HttpResponse({'message': str(e.msg)}, status=e.status)
 
@@ -143,43 +143,11 @@ class PermissionMixin(object):
         return response
 
 
-def find_primary_key_error(validation_error, key_name='pkhash'):
-    detail = validation_error.detail
-
-    def find_unique_error(detail_dict):
-        for key, errors in detail_dict.items():
-            if key != key_name:
-                continue
-            for error in errors:
-                if error.code == 'unique':
-                    return error
-
-        return None
-
-    # according to the rest_framework documentation,
-    # validation_error.detail could be either a dict, a list or a nested
-    # data structure
-
-    if isinstance(detail, dict):
-        return find_unique_error(detail)
-    elif isinstance(detail, list):
-        for sub_detail in detail:
-            if isinstance(sub_detail, dict):
-                unique_error = find_unique_error(sub_detail)
-                if unique_error is not None:
-                    return unique_error
-
-    return None
-
-
-def validate_pk(pk):
-    if len(pk) != 64:
-        raise exceptions.BadRequestError(f'Wrong pk {pk}')
-
+def validate_key(key):
     try:
-        int(pk, 16)  # test if pk is correct (hexadecimal)
+        uuid.UUID(key)
     except ValueError:
-        raise exceptions.BadRequestError(f'Wrong pk {pk}')
+        raise exceptions.BadRequestError(f'key is not a valid UUID: "{key}"')
 
 
 def validate_sort(sort):
@@ -195,9 +163,9 @@ class LedgerException(Exception):
 
 
 class ValidationException(Exception):
-    def __init__(self, data, pkhash, st):
+    def __init__(self, data, key, st):
         self.data = data
-        self.pkhash = pkhash
+        self.key = key
         self.st = st
         super(ValidationException).__init__()
 
@@ -218,15 +186,3 @@ def get_channel_name(request):
         return request.headers['Substra-Channel-Name']
 
     raise exceptions.BadRequestError('Could not determine channel name')
-
-
-def data_to_data_response(data):
-    # Transform data to a data_response with only key
-
-    if data and isinstance(data, list) and 'pkhash' in data[0]:
-        return [{'key': d['pkhash']} for d in data]
-
-    if 'pkhash' in data:
-        return {'key': data['pkhash']}
-
-    return data

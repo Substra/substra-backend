@@ -3,6 +3,7 @@ import json
 import logging
 import time
 
+from uuid import UUID
 from django.conf import settings
 from grpc import RpcError
 from substrapp.ledger.connection import get_hfc
@@ -79,13 +80,20 @@ def get_query_endorsing_peers(current_peer, all_peers):
     )
 
 
+class UUIDEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, UUID):
+            return str(obj)
+        return json.JSONEncoder.default(self, obj)
+
+
 def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
     with get_hfc(channel_name) as (loop, client, user):
         if not args:
             args = []
         else:
-            args = [json.dumps(args)]
+            args = [json.dumps(args, cls=UUIDEncoder)]
 
         chaincode_calls = {
             'invoke': client.chaincode_invoke,
@@ -173,7 +181,7 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
             logger.info(f"(smartcontract) {call_type}:{fcn} took {elaps:.2f} ms. Error: {error}")
 
 
-def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, only_pkhash=True):
+def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, only_key=True):
     params = {
         'wait_for_event': sync,
         'grpc_broker_unavailable_retry': 5,
@@ -189,8 +197,8 @@ def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, on
 
     response = call_ledger(channel_name, 'invoke', fcn=fcn, args=args, kwargs=params)
 
-    if only_pkhash:
-        return {'pkhash': response.get('key', response.get('keys'))}
+    if only_key:
+        return {'key': response.get('key', response.get('keys'))}
     else:
         return response
 
@@ -228,8 +236,8 @@ def query_tuples(channel_name, tuple_type, data_owner):
     return data
 
 
-def get_object_from_ledger(channel_name, pk, query):
-    return query_ledger(channel_name, fcn=query, args={'key': pk})
+def get_object_from_ledger(channel_name, key, query):
+    return query_ledger(channel_name, fcn=query, args={'key': key})
 
 
 LOG_TUPLE_INVOKE_FCNS = {
@@ -293,19 +301,22 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
     if tuple_type in ('traintuple', 'aggregatetuple'):
         extra_kwargs.update({
             'out_model': {
-                'hash': res["end_model_file_hash"],
-                'storage_address': res["end_model_file"],
+                'key': res["end_model_key"],
+                'hash': res["end_model_checksum"],
+                'storage_address': res["end_model_storage_address"],
             },
         })
 
     elif tuple_type == 'composite_traintuple':
         extra_kwargs.update({
             'out_head_model': {
-                'hash': res["end_head_model_file_hash"],
+                'key': res["end_head_model_key"],
+                'hash': res["end_head_model_checksum"],
             },
             'out_trunk_model': {
-                'hash': res["end_trunk_model_file_hash"],
-                'storage_address': res["end_trunk_model_file"],
+                'key': res["end_trunk_model_key"],
+                'hash': res["end_trunk_model_checksum"],
+                'storage_address': res["end_trunk_model_storage_address"],
             },
         })
 

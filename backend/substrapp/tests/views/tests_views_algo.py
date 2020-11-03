@@ -17,8 +17,6 @@ from substrapp.serializers import LedgerAlgoSerializer
 
 from substrapp.ledger.exceptions import LedgerError
 
-from substrapp.utils import get_hash
-
 from ..common import get_sample_algo, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, algo, model
 
@@ -138,8 +136,8 @@ class AlgoViewTests(APITestCase):
             mquery_ledger.return_value = algo
             mquery_ledger2.return_value = model
 
-            pkhash = done_model['traintuple']['out_model']['hash']
-            search_params = f'?search=model%253Ahash%253A{pkhash}'
+            checksum = done_model['traintuple']['out_model']['hash']
+            search_params = f'?search=model%253Ahash%253A{checksum}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -147,10 +145,8 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        algo_hash = get_hash(os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo4/algo.tar.gz'))
         url = reverse('substrapp:algo-list')
         algo_response = copy.deepcopy(algo[0])
-        algo_response['key'] = algo_hash  # Overwrite key value
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger, \
                 mock.patch('substrapp.views.algo.get_remote_asset') as get_remote_asset:
 
@@ -160,34 +156,28 @@ class AlgoViewTests(APITestCase):
             mget_object_from_ledger.return_value = algo_response
             get_remote_asset.return_value = content
 
-            search_params = f'{algo_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{algo[0]["key"]}/', **self.extra)
             r = response.json()
 
             self.assertEqual(r, algo_response)
 
     def test_algo_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
         url = reverse('substrapp:algo-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # Key not enough chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
-        search_params = 'X' * 64 + '/'
+        # Key not hexa
+        search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.algo.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
-
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{algo[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_algo_create(self):
@@ -198,13 +188,10 @@ class AlgoViewTests(APITestCase):
         algo_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
         description_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/description.md')
 
-        key = get_hash(algo_path)
-
         data = {
             'json': json.dumps({
                 'name': 'Logistic regression',
-                'objective_key': get_hash(os.path.join(
-                    dir_path, '../../../../fixtures/chunantes/objectives/objective0/description.md')),
+                'objective_key': 'some key',
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],
@@ -219,7 +206,7 @@ class AlgoViewTests(APITestCase):
             mcreate.return_value = {}
             response = self.client.post(url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(response.data['key'], key)
+        self.assertIsNotNone(response.data['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['description'].close()

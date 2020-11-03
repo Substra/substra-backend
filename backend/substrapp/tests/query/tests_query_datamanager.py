@@ -11,9 +11,6 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-
-from substrapp.utils import get_hash
-
 from ..common import get_sample_datamanager, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -35,8 +32,7 @@ class DataManagerQueryTests(APITestCase):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def get_default_datamanager_data(self):
-        expected_hash = get_hash(self.data_data_opener)
-        data = {
+        return {
             'json': json.dumps({
                 'name': 'slide opener',
                 'type': 'images',
@@ -44,16 +40,15 @@ class DataManagerQueryTests(APITestCase):
                     'public': True,
                     'authorized_ids': [],
                 },
-                'objective_key': '',
+                'objective_key': None,
             }),
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }
-        return expected_hash, data
 
     def test_add_datamanager_sync_ok(self):
 
-        key, data = self.get_default_datamanager_data()
+        data = self.get_default_datamanager_data()
 
         url = reverse('substrapp:data_manager-list')
         extra = {
@@ -62,12 +57,11 @@ class DataManagerQueryTests(APITestCase):
         }
 
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'pkhash': key}
+            minvoke_ledger.return_value = {'key': 'some key'}
 
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
-
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
@@ -79,7 +73,7 @@ class DataManagerQueryTests(APITestCase):
     )
     def test_add_datamanager_no_sync_ok(self):
 
-        key, data = self.get_default_datamanager_data()
+        data = self.get_default_datamanager_data()
 
         url = reverse('substrapp:data_manager-list')
         extra = {
@@ -95,7 +89,7 @@ class DataManagerQueryTests(APITestCase):
             response = self.client.post(url, data, format='multipart', **extra)
             r = response.json()
 
-            self.assertEqual(r['key'], key)
+            self.assertIsNotNone(r['key'])
             self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_datamanager_ko(self):

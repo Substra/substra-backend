@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def data_sample_pre_save(sender, instance, **kwargs):
-    destination_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.pk))
+    destination_path = path.join(getattr(settings, 'MEDIA_ROOT'), 'datasamples/{0}'.format(instance.key))
     src_path = normpath(instance.path)
 
     if path.exists(destination_path):

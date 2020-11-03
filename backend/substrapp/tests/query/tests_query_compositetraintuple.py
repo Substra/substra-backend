@@ -1,17 +1,19 @@
 import os
 import shutil
 import tempfile
-
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
+
+from parameterized import parameterized
 
 from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, Model
-from substrapp.utils import get_hash, compute_hash
+from substrapp.utils import compute_hash
 from node.authentication import NodeUser
 
 from ..common import get_sample_objective, AuthenticatedClient, get_sample_model
@@ -30,15 +32,19 @@ class CompositeTraintupleQueryTests(APITestCase):
         self.objective_description, self.objective_description_filename, \
             self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
 
-        self.train_data_sample_keys = ['5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0b422']
-        self.fake_key = '5c1d9cd1c2c1082dde0921b56d11030c81f62fbb51932758b58ac2569dd0a088'
+        self.train_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
+        self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
 
         self.model, _ = get_sample_model()
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_add_compositetraintuple_sync_ok(self):
+    @parameterized.expand([
+        ("with_in_models_and_cp", True, True),
+        ("without_in_models", False, False)
+    ])
+    def test_add_compositetraintuple_sync_ok(self, _, with_in_models, with_compute_plan):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -51,15 +57,18 @@ class CompositeTraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'rank': -1,
-            'compute_plan_id': self.fake_key,
-            'in_head_model_key': self.fake_key,
-            'in_trunk_model_key': self.fake_key,
             'out_trunk_model_permissions': {
                 'public': False,
                 'authorized_ids': ["Node-1", "Node-2"],
             },
         }
+
+        if with_in_models:
+            data['in_head_model_key'] = self.fake_key
+            data['in_trunk_model_key'] = self.fake_key
+
+        if with_compute_plan:
+            data['compute_plan_id'] = self.fake_key
 
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
@@ -69,12 +78,52 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
-            minvoke_ledger.return_value = {'pkhash': raw_key}
+            key = uuid.uuid4()
+            mquery_ledger.return_value = {'key': key}
+            minvoke_ledger.return_value = {'key': key}
 
             response = self.client.post(url, data, format='json', **extra)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_add_traintuple_with_implicit_compute_plan(self):
+        # Add associated objective
+        description, _, metrics, _ = get_sample_objective()
+        Objective.objects.create(description=description,
+                                 metrics=metrics)
+        # post data
+        url = reverse('substrapp:composite_traintuple-list')
+
+        data = {
+            'train_data_sample_keys': self.train_data_sample_keys,
+            'algo_key': self.fake_key,
+            'data_manager_key': self.fake_key,
+            'objective_key': self.fake_key,
+            'in_head_model_key': self.fake_key,
+            'in_trunk_model_key': self.fake_key,
+            'out_trunk_model_permissions': {
+                'public': False,
+                'authorized_ids': ["Node-1", "Node-2"],
+            },
+            # implicit compute plan
+            'rank': 0,
+            'compute_plan_id': None
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
+                mock.patch('substrapp.ledger.assets.create_compositetraintuple') as mcreate_compositetraintuple:
+
+            mcreate_computeplan.return_value = {'compute_plan_id': str(uuid.uuid4())}
+            mcreate_compositetraintuple.return_value = {'key': str(uuid.uuid4())}
+
+            response = self.client.post(url, data, format='json', **extra)
+
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+            self.assertEqual(mcreate_computeplan.call_count, 1)
+            self.assertEqual(mcreate_compositetraintuple.call_count, 1)
 
     @override_settings(LEDGER_SYNC_ENABLED=False)
     @override_settings(
@@ -96,7 +145,6 @@ class CompositeTraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'rank': -1,
             'compute_plan_id': self.fake_key,
             'in_head_model_key': self.fake_key,
             'in_trunk_model_key': self.fake_key,
@@ -114,8 +162,8 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
                 mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
 
-            raw_key = 'compositetraintuple_key'.encode('utf-8').hex()
-            mquery_ledger.return_value = {'key': raw_key}
+            key = uuid.uuid4()
+            mquery_ledger.return_value = {'key': key}
             minvoke_ledger.return_value = None
 
             response = self.client.post(url, data, format='json', **extra)
@@ -140,15 +188,15 @@ class CompositeTraintupleQueryTests(APITestCase):
         self.assertIn('This field may not be null.', r['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        Objective.objects.create(description=self.objective_description,
-                                 metrics=self.objective_metrics)
-        data = {'objective': get_hash(self.objective_description)}
+        o = Objective.objects.create(description=self.objective_description,
+                                     metrics=self.objective_metrics)
+        data = {'objective': o.key}
         response = self.client.post(url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_head_model_ok(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -165,13 +213,13 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
-            self.assertEqual(head_model.pkhash, compute_hash(response.getvalue(), key='key_traintuple'))
+            self.assertEqual(head_model.checksum, compute_hash(response.getvalue(), key='key_traintuple'))
 
     def test_get_head_model_ko_user(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -186,12 +234,12 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
     def test_get_head_model_ko_wrong_node(self):
-        pkhash = compute_hash(self.model.read(), key='key_traintuple')
-        head_model = Model.objects.create(file=self.model, pkhash=pkhash, validated=True)
+        checksum = compute_hash(self.model.read(), key='key_traintuple')
+        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
             "process": {
                 "public": False,
@@ -209,5 +257,5 @@ class CompositeTraintupleQueryTests(APITestCase):
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
                 'HTTP_ACCEPT': 'application/json;version=0.0',
             }
-            response = self.client.get(f'/model/{head_model.pkhash}/file/', **extra)
+            response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)

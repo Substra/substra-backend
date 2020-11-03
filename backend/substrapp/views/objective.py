@@ -1,7 +1,5 @@
-import re
 import tempfile
 
-from django.db import IntegrityError
 from django.http import Http404
 from django.urls import reverse
 from rest_framework import status, mixins
@@ -17,11 +15,10 @@ from substrapp.serializers import ObjectiveSerializer, LedgerObjectiveSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
 from substrapp.utils import get_hash
-from substrapp.views.utils import (PermissionMixin, find_primary_key_error, validate_pk,
+from substrapp.views.utils import (PermissionMixin, validate_key,
                                    get_success_create_code, ValidationException,
                                    LedgerException, get_remote_asset, validate_sort,
-                                   node_has_process_permission, get_channel_name,
-                                   data_to_data_response)
+                                   node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -48,20 +45,13 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         # create on local db
         try:
             instance = self.perform_create(serializer)
-        except IntegrityError as e:
-            try:
-                pkhash = re.search(r'\(pkhash\)=\((\w+)\)', e.args[0]).group(1)
-            except IndexError:
-                pkhash = ''
-            err_msg = 'A objective with this description file already exists.'
-            return {'message': err_msg, 'pkhash': pkhash}, status.HTTP_409_CONFLICT
         except Exception as e:
             raise Exception(e.args)
 
         # init ledger serializer
         ledger_data = {
             'test_data_sample_keys': request.data.get('test_data_sample_keys') or [],
-            'test_data_manager_key': request.data.get('test_data_manager_key', ''),
+            'test_data_manager_key': request.data.get('test_data_manager_key'),
             'name': request.data.get('name'),
             'permissions': request.data.get('permissions'),
             'metrics_name': request.data.get('metrics_name'),
@@ -80,14 +70,9 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
         except LedgerTimeout as e:
-            if isinstance(serializer.data, list):
-                pkhash = [x['pkhash'] for x in serializer.data]
-            else:
-                pkhash = [serializer.data['pkhash']]
-            data = {'pkhash': pkhash, 'validated': False}
-            raise LedgerException(data, e.status)
+            raise LedgerException('timeout', e.status)
         except LedgerConflict as e:
-            raise ValidationException(e.msg, e.pkhash, e.status)
+            raise ValidationException(e.msg, e.key, e.status)
         except LedgerError as e:
             instance.delete()
             raise LedgerException(str(e.msg), e.status)
@@ -105,24 +90,20 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         description = request.data.get('description')
 
         try:
-            pkhash = get_hash(description)
+            checksum = get_hash(description)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            raise ValidationException(e.args, '(not computed)', st)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
-            'pkhash': pkhash,
             'metrics': metrics,
             'description': description,
+            'checksum': checksum
         })
 
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            st = status.HTTP_400_BAD_REQUEST
-            if find_primary_key_error(e):
-                st = status.HTTP_409_CONFLICT
-            raise ValidationException(e.args, pkhash, st)
+            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -132,33 +113,32 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         try:
             data = self._create(request)
         except ValidationException as e:
-            return Response({'message': e.data, 'key': e.pkhash}, status=e.st)
+            return Response({'message': e.data}, status=e.st)
         except LedgerException as e:
             return Response({'message': e.data}, status=e.st)
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
-    def create_or_update_objective(self, channel_name, objective, pk):
+    def create_or_update_objective(self, channel_name, objective, key):
         # get description from remote node
         url = objective['description']['storage_address']
+        hash = objective['description']['hash']
 
-        content = get_remote_asset(channel_name, url, objective['owner'], pk)
+        content = get_remote_asset(channel_name, url, objective['owner'], hash)
 
         # write objective with description in local db for later use
         tmp_description = tempfile.TemporaryFile()
         tmp_description.write(content)
-        instance, created = Objective.objects.update_or_create(pkhash=pk, validated=True)
+        instance, created = Objective.objects.update_or_create(key=key, validated=True)
         instance.description.save('description.md', tmp_description)
         return instance
 
-    def _retrieve(self, request, pk):
-        validate_pk(pk)
+    def _retrieve(self, request, key):
+        validate_key(key)
         # get instance from remote node
-        data = get_object_from_ledger(get_channel_name(request), pk, self.ledger_query_call)
+        data = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -169,7 +149,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 instance = None
 
             if not instance or not instance.description:
-                instance = self.create_or_update_objective(get_channel_name(request), data, pk)
+                instance = self.create_or_update_objective(get_channel_name(request), data, key)
 
             # For security reason, do not give access to local file address
             # Restrain data to some fields
@@ -183,10 +163,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(request, pk)
+            data = self._retrieve(request, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
@@ -198,7 +178,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
         if query_params is not None:
             try:
                 data = filter_list(
@@ -225,13 +205,11 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         return Response(serializer.data)
 
     @action(detail=True, methods=['GET'])
-    def leaderboard(self, request, pk):
+    def leaderboard(self, request, *args, **kwargs):
+        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
+        key = self.kwargs[lookup_url_kwarg]
+        validate_key(key)
         sort = request.query_params.get('sort', 'desc')
-
-        try:
-            validate_pk(pk)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             validate_sort(sort)
@@ -240,7 +218,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
 
         try:
             leaderboard = query_ledger(get_channel_name(request), fcn='queryObjectiveLeaderboard', args={
-                'objective_key': pk,
+                'objective_key': key,
                 'ascendingOrder': sort == 'asc',
             })
         except LedgerError as e:

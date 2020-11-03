@@ -6,8 +6,7 @@ from substrapp import ledger
 
 
 class LedgerDataSampleSerializer(serializers.Serializer):
-    data_manager_keys = serializers.ListField(child=serializers.CharField(min_length=64, max_length=64),
-                                              min_length=1)
+    data_manager_keys = serializers.ListField(child=serializers.UUIDField())
     test_only = serializers.BooleanField()
 
     def create(self, channel_name, validated_data):
@@ -16,24 +15,20 @@ class LedgerDataSampleSerializer(serializers.Serializer):
         test_only = validated_data.get('test_only')
 
         args = {
-            'hashes': [x.pk for x in instances],
-            'data_manager_keys': [x for x in data_manager_keys],
+            'keys': [x.key for x in instances],
+            'data_manager_keys': data_manager_keys,
             'testOnly': json.dumps(test_only),
         }
-        return ledger.assets.create_datasamples(channel_name, args, [x.pk for x in instances])
+        return ledger.assets.create_datasamples(channel_name, args, [x.key for x in instances])
 
 
 class LedgerDataSampleUpdateSerializer(serializers.Serializer):
-    data_manager_keys = serializers.ListField(
-        child=serializers.CharField(min_length=64, max_length=64),
-        min_length=1)
-    data_sample_keys = serializers.ListField(
-        child=serializers.CharField(min_length=64, max_length=64),
-        min_length=1)
+    data_manager_keys = serializers.ListField(child=serializers.UUIDField())
+    data_sample_keys = serializers.ListField(child=serializers.UUIDField(), min_length=1)
 
     def create(self, channel_name, validated_data):
         args = {
-            'hashes': validated_data.get('data_sample_keys'),
+            'keys': validated_data.get('data_sample_keys'),
             'data_manager_keys': validated_data.get('data_manager_keys'),
         }
         return ledger.assets.update_datasample(channel_name, args)

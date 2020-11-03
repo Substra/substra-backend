@@ -1,6 +1,7 @@
 import os
 import shutil
 import mock
+import uuid
 from unittest.mock import MagicMock
 
 from django.test import override_settings
@@ -86,9 +87,9 @@ class TasksTests(APITestCase):
 
     def test_get_remote_file_content(self):
         content = str(self.script.read())
-        pkhash = compute_hash(content)
+        checksum = compute_hash(content)
         remote_file = {'storage_address': 'localhost',
-                       'hash': pkhash,
+                       'hash': checksum,
                        'owner': 'external_node_id',
                        }
 
@@ -97,7 +98,7 @@ class TasksTests(APITestCase):
             get_owner.return_value = 'external_node_id'
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
-            content_remote = get_remote_file_content('mychannel', remote_file, 'external_node_id', pkhash)
+            content_remote = get_remote_file_content('mychannel', remote_file, 'external_node_id', checksum)
             self.assertEqual(content_remote, content)
 
         with mock.patch('substrapp.utils.get_owner') as get_owner,\
@@ -106,18 +107,18 @@ class TasksTests(APITestCase):
             request_get.return_value = FakeRequest(content=content, status=status.HTTP_200_OK)
 
             with self.assertRaises(Exception):
-                # contents (by pkhash) are different
-                get_remote_file_content(remote_file, 'external_node_id', 'fake_pkhash')
+                # contents (by hash) are different
+                get_remote_file_content('mychannel', remote_file, 'external_node_id', 'fake_hash')
 
     def test_uncompress_content_tar(self):
         algo_content = self.algo.read()
-        subtuple_key = get_hash(self.algo)
+        checksum = get_hash(self.algo)
 
-        subtuple = {'key': subtuple_key,
+        subtuple = {'key': checksum,
                     'algo': 'testalgo'}
 
         with mock.patch('substrapp.tasks.tasks.get_hash') as mget_hash:
-            mget_hash.return_value = subtuple_key
+            mget_hash.return_value = checksum
             uncompress_content(algo_content, os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/'))
 
         self.assertTrue(os.path.exists(os.path.join(self.subtuple_path, f'subtuple/{subtuple["key"]}/algo.py')))
@@ -166,7 +167,7 @@ class TasksTests(APITestCase):
                 prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': 'HASH'}})
 
             # test work
-            prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
+            prepare_opener(self.subtuple_path, {'dataset': {'key': 'some_key', 'opener_hash': opener_hash}})
 
             opener_path = os.path.join(opener_directory, '__init__.py')
             self.assertTrue(os.path.exists(opener_path))
@@ -181,18 +182,18 @@ class TasksTests(APITestCase):
                 f.write('corrupted')
 
             with self.assertRaises(Exception):
-                prepare_opener(self.subtuple_path, {'dataset': {'opener_hash': opener_hash}})
+                prepare_opener(self.subtuple_path, {'dataset': {'key': 'some_key', 'opener_hash': opener_hash}})
 
     def test_prepare_data_sample_zip(self):
 
-        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
-
-        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
+        checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample)
+        key = str(uuid.uuid4())
+        data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -202,25 +203,25 @@ class TasksTests(APITestCase):
 
             prepare_data_sample(subtuple_directory, subtuple)
 
-            # check folder has been correctly renamed with pk of directory containing uncompressed data sample
+            # check folder has been correctly renamed with key of directory containing uncompressed data sample
             self.assertFalse(
                 os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
             self.assertTrue(
-                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
+                os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', key)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.islink(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'LABEL_0024900.csv')))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'IMG_0024900.jpg')))
 
     def test_prepare_data_sample_zip_fail(self):
 
-        data_sample = DataSample(pkhash='foo', path=self.data_sample_filename)
+        data_sample = DataSample(key=uuid.uuid4(), path=self.data_sample_filename)
         data_sample.save()
 
         subtuple = {
@@ -230,7 +231,7 @@ class TasksTests(APITestCase):
 
         subtuple2 = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [data_sample.key]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -246,14 +247,15 @@ class TasksTests(APITestCase):
 
     def test_put_data_tar(self):
 
-        dir_pkhash, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
+        checksum, datasamples_path_from_file = store_datasamples_archive(self.data_sample_tar)
 
-        data_sample = DataSample(pkhash=dir_pkhash, path=datasamples_path_from_file)
+        key = str(uuid.uuid4())
+        data_sample = DataSample(key=key, path=datasamples_path_from_file, checksum=checksum)
         data_sample.save()
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.pk]}
+            'dataset': {'keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -263,19 +265,19 @@ class TasksTests(APITestCase):
 
             prepare_data_sample(subtuple_directory, subtuple)
 
-            # check folder has been correctly renamed with pk of directory containing uncompressed data_sample
+            # check folder has been correctly renamed with key of directory containing uncompressed data_sample
             self.assertFalse(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', 'foo')))
-            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', dir_pkhash)))
+            self.assertTrue(os.path.exists(os.path.join(MEDIA_ROOT, 'datasamples', key)))
 
             # check subtuple folder has been created and sym links exists
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.islink(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk)))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key)))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'LABEL_0024900.csv')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'LABEL_0024900.csv')))
             self.assertTrue(os.path.exists(os.path.join(
-                MEDIA_ROOT, 'subtuple/bar/data', data_sample.pk, 'IMG_0024900.jpg')))
+                MEDIA_ROOT, 'subtuple/bar/data', data_sample.key, 'IMG_0024900.jpg')))
 
     def test_get_algo(self):
         algo_content = self.algo.read()
@@ -283,6 +285,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'algo': {
+                'key': assets.algo[0]['key'],
                 'storage_address': assets.algo[0]['content']['storage_address'],
                 'owner': assets.algo[0]['owner'],
                 'hash': algo_hash
@@ -301,7 +304,7 @@ class TasksTests(APITestCase):
 
     def test_get_objective(self):
         metrics_content = self.script.read().encode('utf-8')
-        objective_hash = get_hash(self.script)
+        objective_key = uuid.uuid4()
 
         with mock.patch('substrapp.tasks.utils.get_remote_file_content') as mget_remote_file, \
                 mock.patch('substrapp.tasks.tasks.get_object_from_ledger'), \
@@ -309,7 +312,7 @@ class TasksTests(APITestCase):
 
             mget_remote_file.return_value = metrics_content
 
-            objective = get_objective(CHANNEL, {'objective': {'hash': objective_hash,
+            objective = get_objective(CHANNEL, {'objective': {'key': objective_key,
                                                 'metrics': ''}})
             self.assertTrue(isinstance(objective, bytes))
             self.assertEqual(objective, metrics_content)
@@ -364,7 +367,7 @@ class TasksTests(APITestCase):
             mget_hash.return_value = 'owkinhash'
             mquery_tuples.return_value = subtuple
             mget_objective.return_value = 'objective'
-            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_algo.return_value = 'algo', 'algo_key'
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
             mprepare_opener.return_value = 'opener'
             mprepare_data_sample.return_value = 'data'
@@ -396,7 +399,7 @@ class TasksTests(APITestCase):
                 self.MEDIA_ROOT = MEDIA_ROOT
 
         subtuple_key = 'test_owkin'
-        subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'hash': 'myhash'}}
+        subtuple = {'key': subtuple_key, 'in_models': None, 'algo': {'key': 'mykey', 'hash': 'myhash'}}
         subtuple_directory = build_subtuple_folders(subtuple)
 
         with mock.patch('substrapp.tasks.tasks.settings') as msettings, \
@@ -489,7 +492,7 @@ class TasksTests(APITestCase):
             mget_hash.return_value = 'owkinhash'
             mquery_tuples.return_value = subtuple, 200
             mget_objective.return_value = 'objective'
-            mget_algo.return_value = 'algo', 'algo_hash'
+            mget_algo.return_value = 'algo', 'algo_key'
             mbuild_subtuple_folders.return_value = MEDIA_ROOT
 
             prepare_materials(CHANNEL, subtuple[0], 'traintuple')

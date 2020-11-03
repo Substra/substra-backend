@@ -12,8 +12,6 @@ from rest_framework.test import APITestCase
 
 from substrapp.ledger.exceptions import LedgerError
 
-from substrapp.utils import get_hash
-
 from ..common import get_sample_model, AuthenticatedClient, encode_filter
 from ..assets import objective, datamanager, algo, model
 
@@ -74,9 +72,9 @@ class ModelViewTests(APITestCase):
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model
 
-            pkhash = model[1]['traintuple']['key']
+            key = model[1]['traintuple']['key']
             url = reverse('substrapp:model-list')
-            search_params = f'?search=model%253Akey%253A{pkhash}'
+            search_params = f'?search=model%253Akey%253A{key}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r), 1)
@@ -131,33 +129,27 @@ class ModelViewTests(APITestCase):
             get_remote_asset.return_value = self.model.read().encode()
 
             url = reverse('substrapp:model-list')
-            search_params = done_model['traintuple']['out_model']['hash'] + '/'
+            search_params = done_model['traintuple']['out_model']['key'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, done_model)
 
     def test_model_retrieve_fail(self):
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
         url = reverse('substrapp:model-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # Key not enough chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
-        search_params = 'X' * 64 + '/'
+        # Key not hexa
+        search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         with mock.patch('substrapp.views.model.get_object_from_ledger') as mget_object_from_ledger:
             mget_object_from_ledger.side_effect = LedgerError('TEST')
-
-            file_hash = get_hash(os.path.join(dir_path,
-                                              "../../../../fixtures/owkin/objectives/objective0/description.md"))
-            search_params = f'{file_hash}/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

@@ -24,16 +24,17 @@ class LedgerCompositeAlgoSerializer(serializers.Serializer):
         current_site = getattr(settings, "DEFAULT_DOMAIN")
 
         args = {
+            'key': instance.key,
             'name': name,
             'hash': get_hash(instance.file),
-            'storage_address': current_site + reverse('substrapp:composite_algo-file', args=[instance.pk]),
+            'storage_address': current_site + reverse('substrapp:composite_algo-file', args=[instance.key]),
             'description_hash': get_hash(instance.description),
             'description_storage_address': current_site + reverse(
-                'substrapp:composite_algo-description', args=[instance.pk]),
+                'substrapp:composite_algo-description', args=[instance.key]),
             'permissions': {'process': {
                 'public': permissions.get('public'),
                 'authorized_ids': permissions.get('authorized_ids'),
             }},
             'metadata': metadata
         }
-        return ledger.assets.create_compositealgo(channel_name, args, instance.pkhash)
+        return ledger.assets.create_compositealgo(channel_name, args, instance.key)

@@ -18,7 +18,7 @@ _MESSAGE = (
 
 def __create_db_asset(channel_name, model, fcn, args, key, sync=False):
     try:
-        instance = model.objects.get(pk=key)
+        instance = model.objects.get(key=key)
     except ObjectDoesNotExist:
         instance = None
 
@@ -114,7 +114,7 @@ def create_compositetraintuple(channel_name, args):
 
 
 def create_computeplan(channel_name, args):
-    return _create_asset(channel_name, 'createComputePlan', args, only_pkhash=False)
+    return _create_asset(channel_name, 'createComputePlan', args, only_key=False)
 
 
 def create_algo(channel_name, args, key):
@@ -150,4 +150,4 @@ def update_datasample(channel_name, args):
 
 
 def update_computeplan(channel_name, args):
-    return _create_asset(channel_name, 'updateComputePlan', args, only_pkhash=False)
+    return _create_asset(channel_name, 'updateComputePlan', args, only_key=False)

@@ -1,6 +1,7 @@
 import os
 import shutil
 import mock
+import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -37,7 +38,7 @@ class ComputePlanViewTests(APITestCase):
     def test_create(self):
         url = reverse('substrapp:compute_plan-list')
 
-        dummy_key = 'x' * 64
+        dummy_key = str(uuid.uuid4())
 
         data = {
             'traintuples': [{
@@ -94,13 +95,13 @@ class ComputePlanViewTests(APITestCase):
     def test_computeplan_retrieve_fail(self):
         url = reverse('substrapp:compute_plan-list')
 
-        # PK hash < 64 chars
-        search_params = '42303efa663015e729159833a12ffb510ff/'
+        # Key < 32 chars
+        search_params = '12312323/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # PK hash not hexa
-        search_params = 'X' * 64 + '/'
+        # Key not hexa
+        search_params = 'X' * 32 + '/'
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

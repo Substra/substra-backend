@@ -1,13 +1,14 @@
+import uuid
+
 from rest_framework import mixins, status
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_pk, get_success_create_code, LedgerException, get_channel_name,
-                                   data_to_data_response)
+from substrapp.views.utils import (validate_key, get_success_create_code, LedgerException, get_channel_name)
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
@@ -23,20 +24,22 @@ class TestTupleViewSet(mixins.CreateModelMixin,
     def perform_create(self, serializer):
         return serializer.save()
 
-    def commit(self, serializer, channel_name, pkhash):
+    def commit(self, serializer, channel_name):
         # create on ledger
         try:
             data = serializer.create(channel_name, serializer.validated_data)
         except LedgerError as e:
-            raise LedgerException({'message': str(e.msg), 'pkhash': pkhash}, e.status)
+            raise LedgerException({'message': str(e.msg)}, e.status)
         else:
             return data
 
     def _create(self, request):
+        key = uuid.uuid4()
         data = {
+            'key': key,
             'objective_key': request.data.get('objective_key'),
             'traintuple_key': request.data.get('traintuple_key'),
-            'data_manager_key': request.data.get('data_manager_key', ''),
+            'data_manager_key': request.data.get('data_manager_key'),
             'test_data_sample_keys': request.data.get('test_data_sample_keys'),
             'tag': request.data.get('tag', ''),
             'metadata': request.data.get('metadata')
@@ -45,18 +48,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
 
-        # Get traintuple pkhash to handle 408 timeout in invoke_ledger
-        args = serializer.get_args(serializer.validated_data)
-
-        try:
-            data = query_ledger(get_channel_name(request), fcn='createTesttuple', args=args)
-        except LedgerConflict as e:
-            raise LedgerException({'message': str(e.msg), 'key': e.pkhash}, e.status)
-        except LedgerError as e:
-            raise LedgerException({'message': str(e.msg)}, e.status)
-        else:
-            pkhash = data.get('key')
-            return self.commit(serializer, get_channel_name(request), pkhash)
+        return self.commit(serializer, get_channel_name(request))
 
     def create(self, request, *args, **kwargs):
         try:
@@ -66,9 +58,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         else:
             headers = self.get_success_headers(data)
             st = get_success_create_code()
-            # Transform data to a data_response with only key
-            data_response = data_to_data_response(data)
-            return Response(data_response, status=st, headers=headers)
+            return Response(data, status=st, headers=headers)
 
     def list(self, request, *args, **kwargs):
         try:
@@ -76,7 +66,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        query_params = request.query_params.get('search', None)
+        query_params = request.query_params.get('search')
         if query_params is not None:
             try:
                 data = filter_list(
@@ -89,16 +79,16 @@ class TestTupleViewSet(mixins.CreateModelMixin,
 
         return Response(data, status=status.HTTP_200_OK)
 
-    def _retrieve(self, channel_name, pk):
-        validate_pk(pk)
-        return get_object_from_ledger(channel_name, pk, self.ledger_query_call)
+    def _retrieve(self, channel_name, key):
+        validate_key(key)
+        return get_object_from_ledger(channel_name, key, self.ledger_query_call)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        pk = self.kwargs[lookup_url_kwarg]
+        key = self.kwargs[lookup_url_kwarg]
 
         try:
-            data = self._retrieve(get_channel_name(request), pk)
+            data = self._retrieve(get_channel_name(request), key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
         else:
