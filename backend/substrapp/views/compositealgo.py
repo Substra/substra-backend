@@ -116,7 +116,11 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         # get Compositealgo description from remote node
         url = composite_algo['description']['storage_address']
 
-        content = get_remote_asset(channel_name, url, composite_algo['owner'], composite_algo['description']['checksum'])
+        content = get_remote_asset(
+            channel_name,
+            url,
+            composite_algo['owner'],
+            composite_algo['description']['checksum'])
 
         f = tempfile.TemporaryFile()
         f.write(content)
