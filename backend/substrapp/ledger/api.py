@@ -9,7 +9,8 @@ from grpc import RpcError
 from substrapp.ledger.connection import get_hfc
 from substrapp.ledger.exceptions import (raise_for_status, LedgerForbidden, LedgerTimeout, LedgerMVCCError,
                                          LedgerInvalidResponse, LedgerUnavailable, LedgerPhantomReadConflictError,
-                                         LedgerEndorsementPolicyFailure, LedgerStatusError, LedgerError)
+                                         LedgerEndorsementPolicyFailure, LedgerStatusError, LedgerError,
+                                         LedgerAssetNotFound)
 
 logger = logging.getLogger(__name__)
 
@@ -214,7 +215,7 @@ def invoke_ledger(channel_name, *args, **kwargs):
     return _invoke_ledger(channel_name, *args, **kwargs)
 
 
-@retry_on_error(exceptions=[LedgerTimeout])
+@retry_on_error(exceptions=[LedgerTimeout, LedgerAssetNotFound])
 def update_ledger(channel_name, *args, **kwargs):
     return _invoke_ledger(channel_name, *args, **kwargs)
 

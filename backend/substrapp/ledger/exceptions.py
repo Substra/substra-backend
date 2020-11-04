@@ -86,7 +86,7 @@ class LedgerConflict(LedgerError):
         return cls(response['error'], key=key)
 
 
-class LedgerNotFound(LedgerError):
+class LedgerAssetNotFound(LedgerError):
     """Asset not found."""
     status = status.HTTP_404_NOT_FOUND
 
@@ -99,6 +99,6 @@ class LedgerForbidden(LedgerError):
 _STATUS_TO_EXCEPTION = {
     status.HTTP_400_BAD_REQUEST: LedgerBadRequest,
     status.HTTP_403_FORBIDDEN: LedgerForbidden,
-    status.HTTP_404_NOT_FOUND: LedgerNotFound,
+    status.HTTP_404_NOT_FOUND: LedgerAssetNotFound,
     status.HTTP_409_CONFLICT: LedgerConflict,
 }
