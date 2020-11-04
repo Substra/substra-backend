@@ -804,6 +804,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "349b475e-bd94-5873-9af8-685b8b75d7ae",
                 "checksum": "349b475ebd9458739af8685b8b75d7aeb1290209eabadad1b9b8afaa2b05c8d5"
             },
             "permissions": {
@@ -861,6 +862,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "64c72dc3-9772-e122-ef55-2d10ff101ef6",
                 "checksum": "64c72dc39772e122ef552d10ff101ef6cee94935a84678a0125f7c3fd044dff8"
             },
             "permissions": {
@@ -966,6 +968,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "8b872229-0702-7a47-0d6d-99409b0de9a9",
                 "checksum": "8b87222907027a470d6d99409b0de9a9ced07142d026ab875d6ddfdecf9db96d"
             },
             "permissions": {
@@ -1020,6 +1023,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "bffb8974-9a25-3de1-d451-a836748dc813",
                 "checksum": "bffb89749a253de1d451a836748dc813035dbcacb01fb85911b97c577c10ea6d"
             },
             "permissions": {
@@ -1074,6 +1078,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "7d7ed2ea-c5e8-22ea-9005-8387dd35d127",
                 "checksum": "7d7ed2eac5e822ea90058387dd35d1270639ecc4982a6d72b619b8659813163a"
             },
             "permissions": {
@@ -1136,6 +1141,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "8b6a7f3b-7fee-f0a2-c157-bf2acfd2596f",
                 "checksum": "8b6a7f3b7feef0a2c157bf2acfd2596fd7815a0a69b0a41b7451bab47d022eaa"
             },
             "permissions": {
@@ -1199,6 +1205,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "28a705e0-8e76-5569-bd89-262f821e1c72",
                 "checksum": "28a705e08e765569bd89262f821e1c7285e43fa1e82df2f833464b8ff890c7bd"
             },
             "permissions": {
@@ -1253,6 +1260,7 @@ compositetraintuple = [
         "metadata": {},
         "out_head_model": {
             "out_model": {
+                "key": "3af8f86e-d9fe-0723-7497-e52d1ced195d",
                 "checksum": "3af8f86ed9fe07237497e52d1ced195d7e4752f7d130327929f96ea688d60a41"
             },
             "permissions": {
@@ -1975,6 +1983,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "349b475e-bd94-5873-9af8-685b8b75d7ae",
                     "checksum": "349b475ebd9458739af8685b8b75d7aeb1290209eabadad1b9b8afaa2b05c8d5"
                 },
                 "permissions": {
@@ -2071,6 +2080,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "64c72dc3-9772-e122-ef55-2d10ff101ef6",
                     "checksum": "64c72dc39772e122ef552d10ff101ef6cee94935a84678a0125f7c3fd044dff8"
                 },
                 "permissions": {
@@ -2216,6 +2226,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "8b872229-0702-7a47-0d6d-99409b0de9a9",
                     "checksum": "8b87222907027a470d6d99409b0de9a9ced07142d026ab875d6ddfdecf9db96d"
                 },
                 "permissions": {
@@ -2290,6 +2301,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "bffb8974-9a25-3de1-d451-a836748dc813",
                     "checksum": "bffb89749a253de1d451a836748dc813035dbcacb01fb85911b97c577c10ea6d"
                 },
                 "permissions": {
@@ -2364,6 +2376,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "7d7ed2ea-c5e8-22ea-9005-8387dd35d127",
                     "checksum": "7d7ed2eac5e822ea90058387dd35d1270639ecc4982a6d72b619b8659813163a"
                 },
                 "permissions": {
@@ -2446,6 +2459,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "8b6a7f3b-7fee-f0a2-c157-bf2acfd2596f",
                     "checksum": "8b6a7f3b7feef0a2c157bf2acfd2596fd7815a0a69b0a41b7451bab47d022eaa"
                 },
                 "permissions": {
@@ -2547,6 +2561,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "28a705e0-8e76-5569-bd89-262f821e1c72",
                     "checksum": "28a705e08e765569bd89262f821e1c7285e43fa1e82df2f833464b8ff890c7bd"
                 },
                 "permissions": {
@@ -2640,6 +2655,7 @@ model = [
             "metadata": {},
             "out_head_model": {
                 "out_model": {
+                    "key": "3af8f86e-d9fe-0723-7497-e52d1ced195d",
                     "checksum": "3af8f86ed9fe07237497e52d1ced195d7e4752f7d130327929f96ea688d60a41"
                 },
                 "permissions": {

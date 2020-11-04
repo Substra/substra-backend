@@ -150,8 +150,8 @@ class CompositeAlgoViewTests(APITestCase):
             mquery_ledger.return_value = compositealgo
             mquery_ledger2.return_value = model
 
-            checksum = done_model['composite_traintuple']['out_trunk_model']['out_model']['checksum']
-            search_params = f'?search=model%253Achecksum%253A{checksum}'
+            key = done_model['composite_traintuple']['out_trunk_model']['out_model']['key']
+            search_params = f'?search=model%253Akey%253A{key}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
