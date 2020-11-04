@@ -116,7 +116,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
                 mock.patch('substrapp.ledger.assets.create_compositetraintuple') as mcreate_compositetraintuple:
 
-            mcreate_computeplan.return_value = {'compute_plan_key': str(uuid.uuid4())}
+            mcreate_computeplan.return_value = {'key': str(uuid.uuid4())}
             mcreate_compositetraintuple.return_value = {'key': str(uuid.uuid4())}
 
             response = self.client.post(url, data, format='json', **extra)

@@ -193,7 +193,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [str(data_sample.key)]}
+            'dataset': {'data_sample_keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -226,12 +226,12 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': ['fake_pk']}
+            'dataset': {'data_sample_keys': ['fake_pk']}
         }
 
         subtuple2 = {
             'key': 'bar',
-            'dataset': {'keys': [data_sample.key]}
+            'dataset': {'data_sample_keys': [data_sample.key]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:
@@ -255,7 +255,7 @@ class TasksTests(APITestCase):
 
         subtuple = {
             'key': 'bar',
-            'dataset': {'keys': [str(data_sample.key)]}
+            'dataset': {'data_sample_keys': [str(data_sample.key)]}
         }
 
         with mock.patch('substrapp.models.DataSample.objects.get') as mget:

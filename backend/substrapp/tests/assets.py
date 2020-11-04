@@ -235,7 +235,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -271,7 +271,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -307,7 +307,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -342,7 +342,7 @@ traintuple = [
         "creator": "MyOrg1MSP",
         "dataset": {
             "worker": "MyOrg2MSP",
-            "keys": [
+            "data_sample_keys": [
                 "26e52856-b272-61fc-12e9-615d5914027d",
                 "70474091-7e35-b366-48b8-0d9826e1f24d",
                 "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
@@ -387,7 +387,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -425,7 +425,7 @@ traintuple = [
         "creator": "MyOrg1MSP",
         "dataset": {
             "worker": "MyOrg2MSP",
-            "keys": [
+            "data_sample_keys": [
                 "26e52856-b272-61fc-12e9-615d5914027d",
                 "70474091-7e35-b366-48b8-0d9826e1f24d",
                 "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
@@ -464,7 +464,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -505,7 +505,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -550,7 +550,7 @@ traintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -589,7 +589,7 @@ testtuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -622,7 +622,7 @@ testtuple = [
         "creator": "MyOrg1MSP",
         "dataset": {
             "worker": "MyOrg2MSP",
-            "keys": [
+            "data_sample_keys": [
                 "edaa4ccd-fc9b-cadd-a859-498fbb550a6e"
             ],
             "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
@@ -656,7 +656,7 @@ testtuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -690,7 +690,7 @@ testtuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -724,7 +724,7 @@ testtuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "ffed4147-ffff-f2f1-8130-b7332c1460ec"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -750,7 +750,7 @@ testtuple = [
 
 computeplan = [
     {
-        "compute_plan_key": "4a7f743f-d9a5-ccaa-6f83-66a10f929554",
+        "key": "4a7f743f-d9a5-ccaa-6f83-66a10f929554",
         "traintuple_keys": [
             "49dedc3b-4e76-3a2d-09e3-9f4e5eee3d49",
             "137804ca-8660-8780-62e4-19e340efd282"
@@ -780,7 +780,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -845,7 +845,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -902,7 +902,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                 "51d906cc-10b2-9eb8-1c93-5550b7508119",
                 "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -953,7 +953,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1007,7 +1007,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1061,7 +1061,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1115,7 +1115,7 @@ compositetraintuple = [
         "creator": "MyOrg1MSP",
         "dataset": {
             "worker": "MyOrg2MSP",
-            "keys": [
+            "data_sample_keys": [
                 "70474091-7e35-b366-48b8-0d9826e1f24d"
             ],
             "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
@@ -1178,7 +1178,7 @@ compositetraintuple = [
         "dataset": {
             "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
             "worker": "MyOrg1MSP",
-            "keys": [
+            "data_sample_keys": [
                 "51d906cc-10b2-9eb8-1c93-5550b7508119"
             ],
             "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1240,7 +1240,7 @@ compositetraintuple = [
         "creator": "MyOrg1MSP",
         "dataset": {
             "worker": "MyOrg2MSP",
-            "keys": [
+            "data_sample_keys": [
                 "26e52856-b272-61fc-12e9-615d5914027d"
             ],
             "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
@@ -1383,7 +1383,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1439,7 +1439,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1495,7 +1495,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1550,7 +1550,7 @@ model = [
             "creator": "MyOrg1MSP",
             "dataset": {
                 "worker": "MyOrg2MSP",
-                "keys": [
+                "data_sample_keys": [
                     "26e52856-b272-61fc-12e9-615d5914027d",
                     "70474091-7e35-b366-48b8-0d9826e1f24d",
                     "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
@@ -1615,7 +1615,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -1673,7 +1673,7 @@ model = [
             "creator": "MyOrg1MSP",
             "dataset": {
                 "worker": "MyOrg2MSP",
-                "keys": [
+                "data_sample_keys": [
                     "26e52856-b272-61fc-12e9-615d5914027d",
                     "70474091-7e35-b366-48b8-0d9826e1f24d",
                     "88608067-e903-a7b5-cbfe-d480e7c4ee9e",
@@ -1714,7 +1714,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1751,7 +1751,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -1794,7 +1794,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -1831,7 +1831,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -1896,7 +1896,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -1951,7 +1951,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -2018,7 +2018,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2055,7 +2055,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -2132,7 +2132,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5",
                     "51d906cc-10b2-9eb8-1c93-5550b7508119",
                     "5702a4f5-61da-7827-35e2-e5d7b03605ee",
@@ -2203,7 +2203,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2277,7 +2277,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2351,7 +2351,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "265f1e26-3959-8c42-bbf9-aba8d223c6a5"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2425,7 +2425,7 @@ model = [
             "creator": "MyOrg1MSP",
             "dataset": {
                 "worker": "MyOrg2MSP",
-                "keys": [
+                "data_sample_keys": [
                     "70474091-7e35-b366-48b8-0d9826e1f24d"
                 ],
                 "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
@@ -2489,7 +2489,7 @@ model = [
             "creator": "MyOrg1MSP",
             "dataset": {
                 "worker": "MyOrg2MSP",
-                "keys": [
+                "data_sample_keys": [
                     "edaa4ccd-fc9b-cadd-a859-498fbb550a6e"
                 ],
                 "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
@@ -2526,7 +2526,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "51d906cc-10b2-9eb8-1c93-5550b7508119"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2591,7 +2591,7 @@ model = [
         "dataset": {
                 "key": "e25a6ac0-b496-6c72-a339-45bdeb1f9f6f",
                 "worker": "MyOrg1MSP",
-                "keys": [
+                "data_sample_keys": [
                     "ffed4147-ffff-f2f1-8130-b7332c1460ec"
                 ],
                 "opener_checksum": "e25a6ac0b4966c72a33945bdeb1f9f6f870df595ebf9273fe61c7e5c2bc77204",
@@ -2627,7 +2627,7 @@ model = [
             "creator": "MyOrg1MSP",
             "dataset": {
                 "worker": "MyOrg2MSP",
-                "keys": [
+                "data_sample_keys": [
                     "26e52856-b272-61fc-12e9-615d5914027d"
                 ],
                 "opener_checksum": "aa572a964b024435d48a73aacb86e3d195614a4f335e739116bad2c427a1fb02",
