@@ -116,7 +116,11 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         # get Aggregatealgo description from remote node
         url = aggregate_algo['description']['storage_address']
 
-        content = get_remote_asset(channel_name, url, aggregate_algo['owner'], aggregate_algo['description']['hash'])
+        content = get_remote_asset(
+            channel_name,
+            url,
+            aggregate_algo['owner'],
+            aggregate_algo['description']['checksum'])
 
         f = tempfile.TemporaryFile()
         f.write(content)

@@ -30,10 +30,10 @@ class LedgerDataManagerSerializer(serializers.Serializer):
         args = {
             'key': instance.key,
             'name': name,
-            'opener_hash': get_hash(instance.data_opener),
+            'opener_checksum': get_hash(instance.data_opener),
             'opener_storage_address': current_site + reverse('substrapp:data_manager-opener', args=[instance.key]),
             'type': data_type,
-            'description_hash': get_hash(instance.description),
+            'description_checksum': get_hash(instance.description),
             'description_storage_address': current_site + reverse('substrapp:data_manager-description',
                                                                   args=[instance.key]),
             'objective_key': objective_key,

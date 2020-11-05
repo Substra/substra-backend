@@ -26,9 +26,9 @@ class LedgerCompositeAlgoSerializer(serializers.Serializer):
         args = {
             'key': instance.key,
             'name': name,
-            'hash': get_hash(instance.file),
+            'checksum': get_hash(instance.file),
             'storage_address': current_site + reverse('substrapp:composite_algo-file', args=[instance.key]),
-            'description_hash': get_hash(instance.description),
+            'description_checksum': get_hash(instance.description),
             'description_storage_address': current_site + reverse(
                 'substrapp:composite_algo-description', args=[instance.key]),
             'permissions': {'process': {

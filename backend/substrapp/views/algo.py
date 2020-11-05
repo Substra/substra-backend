@@ -119,7 +119,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # get algo description from remote node
         url = algo['description']['storage_address']
 
-        content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['hash'])
+        content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['checksum'])
 
         f = tempfile.TemporaryFile()
         f.write(content)

@@ -18,8 +18,8 @@ def create_compute_plan(channel_name, data):
     serializer.is_valid(raise_exception=True)
 
     # create compute plan in ledger
-    compute_plan_id = uuid.uuid4()
-    return serializer.create(channel_name, compute_plan_id, serializer.validated_data)
+    key = uuid.uuid4()
+    return serializer.create(channel_name, key, serializer.validated_data)
 
 
 class ComputePlanViewSet(mixins.CreateModelMixin,
@@ -34,7 +34,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         try:
             data = create_compute_plan(get_channel_name(request), dict(request.data))
         except LedgerError as e:
-            error = {'message': str(e.msg), 'compute_plan_id': data['compute_plan_id']}
+            error = {'message': str(e.msg), 'key': data['key']}
             return Response(error, status=e.status)
 
         # send successful response
@@ -98,16 +98,14 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
 
         validate_key(key)
 
-        compute_plan_id = key
-
         serializer = self.get_serializer(data=dict(request.data))
         serializer.is_valid(raise_exception=True)
 
         # update compute plan in ledger
         try:
-            data = serializer.update(get_channel_name(request), compute_plan_id, serializer.validated_data)
+            data = serializer.update(get_channel_name(request), key, serializer.validated_data)
         except LedgerError as e:
-            error = {'message': str(e.msg), 'compute_plan_id': compute_plan_id}
+            error = {'message': str(e.msg), 'key': key}
             return Response(error, status=e.status)
 
         # send successful response

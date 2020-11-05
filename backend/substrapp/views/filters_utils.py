@@ -188,20 +188,20 @@ def filter_list(channel_name, object_type, data, query_params):
                             filtered_list = [x for x in filtered_list if x['key'] in keys]
 
                         elif object_type == 'dataset':
-                            hashes = []
+                            checksums = []
                             for x in filtering_data:
                                 try:
-                                    hashes.append(x['testtuple']['dataset']['opener_hash'])
+                                    checksums.append(x['testtuple']['dataset']['opener_checksum'])
                                 except KeyError:
                                     pass
                                 try:
-                                    hashes.append(_get_model_tuple(x)['dataset']['opener_hash'])
+                                    checksums.append(_get_model_tuple(x)['dataset']['opener_checksum'])
                                 except KeyError:
                                     pass
 
                             filtered_list = [
                                 x for x in filtered_list
-                                if x['opener']['hash'] in hashes
+                                if x['opener']['checksum'] in checksums
                             ]
 
                         elif object_type == 'objective':

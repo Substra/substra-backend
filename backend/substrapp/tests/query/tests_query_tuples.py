@@ -56,7 +56,7 @@ class TraintupleQueryTests(APITestCase):
             'in_models_keys': [self.fake_key]}
 
         if with_compute_plan:
-            data['compute_plan_id'] = self.fake_key
+            data['compute_plan_key'] = self.fake_key
 
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
@@ -90,7 +90,7 @@ class TraintupleQueryTests(APITestCase):
             'in_models_keys': [self.fake_key],
             # implicit compute plan
             'rank': 0,
-            'compute_plan_id': None
+            'compute_plan_key': None
         }
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
@@ -100,7 +100,7 @@ class TraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
                 mock.patch('substrapp.ledger.assets.create_traintuple') as mcreate_traintuple:
 
-            mcreate_computeplan.return_value = {'compute_plan_id': str(uuid.uuid4())}
+            mcreate_computeplan.return_value = {'key': str(uuid.uuid4())}
             mcreate_traintuple.return_value = {'key': str(uuid.uuid4())}
 
             response = self.client.post(url, data, format='json', **extra)
@@ -129,7 +129,7 @@ class TraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'compute_plan_id': self.fake_key,
+            'compute_plan_key': self.fake_key,
             'in_models_keys': [self.fake_key]}
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',

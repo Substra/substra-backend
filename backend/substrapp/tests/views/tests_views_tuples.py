@@ -21,12 +21,12 @@ from ..common import AuthenticatedClient
 MEDIA_ROOT = "/tmp/unittests_views/"
 
 
-def get_compute_plan_id(assets):
+def get_compute_plan_key(assets):
     for asset in assets:
-        compute_plan_id = asset.get('compute_plan_id')
-        if compute_plan_id:
-            return compute_plan_id
-    raise Exception('Could not find a compute plan ID')
+        compute_plan_key = asset.get('compute_plan_key')
+        if compute_plan_key:
+            return compute_plan_key
+    raise Exception('Could not find a compute plan key')
 
 
 # APITestCase
@@ -107,12 +107,12 @@ class TraintupleViewTests(APITestCase):
 
             self.assertEqual(len(r), 2)
 
-    def test_traintuple_list_filter_compute_plan_id(self):
+    def test_traintuple_list_filter_compute_plan_key(self):
         url = reverse('substrapp:traintuple-list')
         with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = traintuple
-            compute_plan_id = get_compute_plan_id(traintuple)
-            search_params = f'?search=traintuple%253Acompute_plan_id%253A{compute_plan_id}'
+            compute_plan_key = get_compute_plan_key(traintuple)
+            search_params = f'?search=traintuple%253Acompute_plan_key%253A{compute_plan_key}'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

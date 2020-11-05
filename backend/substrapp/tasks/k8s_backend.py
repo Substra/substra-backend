@@ -431,7 +431,7 @@ def k8s_remove_image(image_name):
 
 @timeit
 def k8s_compute(image_name, job_name, command, volumes, task_label,
-                capture_logs, environment, remove_image, subtuple_key, compute_plan_id):
+                capture_logs, environment, remove_image, subtuple_key, compute_plan_key):
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files

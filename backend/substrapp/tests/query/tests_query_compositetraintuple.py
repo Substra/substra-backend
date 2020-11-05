@@ -68,7 +68,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             data['in_trunk_model_key'] = self.fake_key
 
         if with_compute_plan:
-            data['compute_plan_id'] = self.fake_key
+            data['compute_plan_key'] = self.fake_key
 
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
@@ -106,7 +106,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             },
             # implicit compute plan
             'rank': 0,
-            'compute_plan_id': None
+            'compute_plan_key': None
         }
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
@@ -116,7 +116,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
                 mock.patch('substrapp.ledger.assets.create_compositetraintuple') as mcreate_compositetraintuple:
 
-            mcreate_computeplan.return_value = {'compute_plan_id': str(uuid.uuid4())}
+            mcreate_computeplan.return_value = {'key': str(uuid.uuid4())}
             mcreate_compositetraintuple.return_value = {'key': str(uuid.uuid4())}
 
             response = self.client.post(url, data, format='json', **extra)
@@ -145,7 +145,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'compute_plan_id': self.fake_key,
+            'compute_plan_key': self.fake_key,
             'in_head_model_key': self.fake_key,
             'in_trunk_model_key': self.fake_key,
             'out_trunk_model_permissions': {

@@ -20,12 +20,12 @@ from ..common import AuthenticatedClient
 MEDIA_ROOT = "/tmp/unittests_views/"
 
 
-def get_compute_plan_id(assets):
+def get_compute_plan_key(assets):
     for asset in assets:
-        compute_plan_id = asset.get('compute_plan_id')
-        if compute_plan_id:
-            return compute_plan_id
-    raise Exception('Could not find a compute plan ID')
+        compute_plan_key = asset.get('compute_plan_key')
+        if compute_plan_key:
+            return compute_plan_key
+    raise Exception('Could not find a compute plan key')
 
 
 # APITestCase

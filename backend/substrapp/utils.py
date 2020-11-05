@@ -244,7 +244,7 @@ def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
     return response
 
 
-def get_remote_file_content(channel_name, url, auth, content_hash, salt=None):
+def get_remote_file_content(channel_name, url, auth, content_checksum, salt=None):
 
     response = get_remote_file(channel_name, url, auth)
 
@@ -252,13 +252,13 @@ def get_remote_file_content(channel_name, url, auth, content_hash, salt=None):
         logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    computed_hash = compute_hash(response.content, key=salt)
-    if computed_hash != content_hash:
-        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+    computed_checksum = compute_hash(response.content, key=salt)
+    if computed_checksum != content_checksum:
+        raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
     return response.content
 
 
-def get_and_put_remote_file_content(channel_name, url, auth, content_hash, content_dst_path, hash_key):
+def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, content_dst_path, hash_key):
 
     response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
 
@@ -266,17 +266,17 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_hash, conte
         logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
-    computed_hash = get_hash(content_dst_path, key=hash_key)
-    if computed_hash != content_hash:
-        raise NodeError(f"url {url}: hash doesn't match {content_hash} vs {computed_hash}")
+    computed_checksum = get_hash(content_dst_path, key=hash_key)
+    if computed_checksum != content_checksum:
+        raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
 
 
-def get_local_folder_name(compute_plan_id):
-    return f'local-{compute_plan_id}-{settings.ORG_NAME}'
+def get_local_folder_name(compute_plan_key):
+    return f'local-{compute_plan_key}-{settings.ORG_NAME}'
 
 
-def get_local_folder(compute_plan_id):
-    volume_id = get_local_folder_name(compute_plan_id)
+def get_local_folder(compute_plan_key):
+    volume_id = get_local_folder_name(compute_plan_key)
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'local', volume_id)
 
 
@@ -284,9 +284,9 @@ def get_subtuple_directory(subtuple_key):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple_key)
 
 
-def get_chainkeys_directory(compute_plan_id):
+def get_chainkeys_directory(compute_plan_key):
     return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
-                     compute_plan_id, 'chainkeys')
+                     compute_plan_key, 'chainkeys')
 
 
 def timeit(function):

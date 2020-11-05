@@ -67,7 +67,7 @@ class ModelViewTests(APITestCase):
             r = response.json()
             self.assertIn('Malformed search filters', r['message'])
 
-    def test_model_list_filter_hash(self):
+    def test_model_list_filter_key(self):
 
         with mock.patch('substrapp.views.model.query_ledger') as mquery_ledger:
             mquery_ledger.return_value = model

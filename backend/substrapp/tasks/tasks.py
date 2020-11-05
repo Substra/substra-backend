@@ -77,7 +77,7 @@ def get_objective(channel_name, tuple_):
         channel_name,
         objective_metadata['metrics']['storage_address'],
         objective_metadata['owner'],
-        objective_metadata['metrics']['hash'],
+        objective_metadata['metrics']['checksum'],
     )
 
     return objective_content
@@ -110,7 +110,7 @@ def get_algo(channel_name, tuple_type, tuple_):
         channel_name,
         metadata['content']['storage_address'],
         metadata['owner'],
-        metadata['content']['hash'],
+        metadata['content']['checksum'],
     )
     return content
 
@@ -168,7 +168,7 @@ def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_mo
         channel_name,
         out_model['storage_address'],
         owner,
-        out_model['hash'],
+        out_model['checksum'],
         content_dst_path=model_dst_path,
         hash_key=hash_key
     )
@@ -181,14 +181,14 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
     model = Model.objects.get(key=out_model['key'])
 
     # verify that local db model file is not corrupted
-    if get_hash(model.file.path, hash_key) != out_model['hash']:
-        raise Exception('Local Model Hash in Subtuple is not the same as in local db')
+    if get_hash(model.file.path, hash_key) != out_model['checksum']:
+        raise Exception('Local Model checksum in Subtuple is not the same as in local db')
 
     if not os.path.exists(model_dst_path):
         os.symlink(model.file.path, model_dst_path)
     else:
-        if get_hash(model_dst_path, hash_key) != out_model['hash']:
-            raise Exception('Local Model Hash in Subtuple is not the same as in local db')
+        if get_hash(model_dst_path, hash_key) != out_model['checksum']:
+            raise Exception('Local Model checksum in Subtuple is not the same as in local db')
 
 
 @timeit
@@ -372,7 +372,7 @@ def prepare_opener(directory, tuple_):
     """Prepare opener for tuple execution."""
     from substrapp.models import DataManager
     dataset_key = tuple_['dataset']['key']
-    data_opener_hash = tuple_['dataset']['opener_hash']
+    data_opener_checksum = tuple_['dataset']['opener_checksum']
 
     datamanager = DataManager.objects.get(key=dataset_key)
 
@@ -381,23 +381,23 @@ def prepare_opener(directory, tuple_):
         raise Exception(f'DataOpener file ({datamanager.data_opener.path}) is missing in local storage')
 
     # verify that local db opener file is not corrupted
-    if get_hash(datamanager.data_opener.path) != data_opener_hash:
-        raise Exception('DataOpener Hash in Subtuple is not the same as in local db')
+    if get_hash(datamanager.data_opener.path) != data_opener_checksum:
+        raise Exception('DataOpener checksum in Subtuple is not the same as in local db')
 
     opener_dst_path = path.join(directory, 'opener/__init__.py')
     if not os.path.exists(opener_dst_path):
         os.symlink(datamanager.data_opener.path, opener_dst_path)
     else:
         # verify that local subtuple data opener file is not corrupted
-        if get_hash(opener_dst_path) != data_opener_hash:
-            raise Exception('DataOpener Hash in Subtuple is not the same as in local medias')
+        if get_hash(opener_dst_path) != data_opener_checksum:
+            raise Exception('DataOpener checksum in Subtuple is not the same as in local medias')
 
 
 @timeit
 def prepare_data_sample(directory, tuple_):
     """Prepare data samples for tuple execution."""
     from substrapp.models import DataSample
-    for data_sample_key in tuple_['dataset']['keys']:
+    for data_sample_key in tuple_['dataset']['data_sample_keys']:
         data_sample = DataSample.objects.get(key=data_sample_key)
 
         if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
@@ -406,9 +406,9 @@ def prepare_data_sample(directory, tuple_):
         if not os.listdir(data_sample.path):
             raise Exception(f'Data Sample ({data_sample.path}) is empty in local storage')
 
-        data_sample_hash = get_dir_hash(data_sample.path)
-        if data_sample_hash != data_sample.checksum:
-            raise Exception('Data Sample Hash in tuple is not the same as in local db')
+        data_sample_checksum = get_dir_hash(data_sample.path)
+        if data_sample_checksum != data_sample.checksum:
+            raise Exception('Data Sample checksum in tuple is not the same as in local db')
 
         # create a symlink on the folder containing data
         data_directory = path.join(directory, 'data', data_sample_key)
@@ -449,13 +449,13 @@ def remove_subtuple_materials(subtuple_directory):
 
 
 @timeit
-def remove_local_folders(compute_plan_id):
+def remove_local_folders(compute_plan_key):
     if not settings.ENABLE_REMOVE_LOCAL_CP_FOLDERS:
-        logger.info(f'Skipping deletion of local volume for compute plan {compute_plan_id}')
+        logger.info(f'Skipping deletion of local volume for compute plan {compute_plan_key}')
         return
 
     try:
-        local_folder = get_local_folder(compute_plan_id)
+        local_folder = get_local_folder(compute_plan_key)
         logger.info(f'Deleting local folder {local_folder}')
         shutil.rmtree(local_folder)
     except FileNotFoundError:
@@ -465,7 +465,7 @@ def remove_local_folders(compute_plan_id):
         logger.error(f'Cannot delete volume {local_folder}', exc_info=True)
 
     if settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+        chainkeys_directory = get_chainkeys_directory(compute_plan_key)
         try:
             shutil.rmtree(chainkeys_directory)
         except Exception:
@@ -518,7 +518,7 @@ def prepare_channel_task(channel_name, tuple_type):
 def prepare_tuple(channel_name, subtuple, tuple_type):
     from django_celery_results.models import TaskResult
 
-    compute_plan_id = None
+    compute_plan_key = None
     worker_queue = f"{settings.ORG_NAME}.worker"
     key = subtuple['key']
 
@@ -537,11 +537,11 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
         # in the ledger local db
         pass
 
-    if 'compute_plan_id' in subtuple and subtuple['compute_plan_id']:
-        compute_plan_id = subtuple['compute_plan_id']
+    if 'compute_plan_key' in subtuple and subtuple['compute_plan_key']:
+        compute_plan_key = subtuple['compute_plan_key']
         flresults = TaskResult.objects.filter(
             task_name='substrapp.tasks.tasks.compute_task',
-            result__icontains=f'"compute_plan_id": "{compute_plan_id}"')
+            result__icontains=f'"compute_plan_key": "{compute_plan_key}"')
 
         if flresults and flresults.count() > 0:
             worker_queue = json.loads(flresults.first().as_dict()['result'])['worker']
@@ -556,7 +556,7 @@ def prepare_tuple(channel_name, subtuple, tuple_type):
         raise Ignore()
 
     compute_task.apply_async(
-        (channel_name, tuple_type, subtuple, compute_plan_id),
+        (channel_name, tuple_type, subtuple, compute_plan_key),
         queue=worker_queue)
 
 
@@ -565,7 +565,7 @@ class ComputeTask(Task):
         from django.db import close_old_connections
         close_old_connections()
 
-        channel_name, tuple_type, subtuple, compute_plan_id = self.split_args(args)
+        channel_name, tuple_type, subtuple, compute_plan_key = self.split_args(args)
         try:
             log_success_tuple(channel_name, tuple_type, subtuple['key'], retval['result'])
         except LedgerError as e:
@@ -577,7 +577,7 @@ class ComputeTask(Task):
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
         close_old_connections()
-        channel_name, tuple_type, subtuple, compute_plan_id = self.split_args(args)
+        channel_name, tuple_type, subtuple, compute_plan_key = self.split_args(args)
 
         try:
             error_code = compute_error_code(exc)
@@ -594,15 +594,15 @@ class ComputeTask(Task):
         channel_name = celery_args[0]
         tuple_type = celery_args[1]
         subtuple = celery_args[2]
-        compute_plan_id = celery_args[3]
-        return channel_name, tuple_type, subtuple, compute_plan_id
+        compute_plan_key = celery_args[3]
+        return channel_name, tuple_type, subtuple, compute_plan_key
 
 
 @app.task(bind=True, acks_late=True, reject_on_worker_lost=True, ignore_result=False, base=ComputeTask)
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
+def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_key):
 
     try:
         worker = self.request.hostname.split('@')[1]
@@ -611,7 +611,7 @@ def compute_task(self, channel_name, tuple_type, subtuple, compute_plan_id):
         worker = f"{settings.ORG_NAME}.worker"
         queue = f"{settings.ORG_NAME}"
 
-    result = {'worker': worker, 'queue': queue, 'compute_plan_id': compute_plan_id}
+    result = {'worker': worker, 'queue': queue, 'compute_plan_key': compute_plan_key}
 
     try:
         prepare_materials(channel_name, subtuple, tuple_type)
@@ -671,18 +671,18 @@ def do_task(channel_name, subtuple, tuple_type):
     subtuple_directory = get_subtuple_directory(subtuple['key'])
 
     # compute plan / federated learning variables
-    compute_plan_id = None
+    compute_plan_key = None
     rank = None
     compute_plan_tag = None
 
-    if 'compute_plan_id' in subtuple and subtuple['compute_plan_id']:
-        compute_plan_id = subtuple['compute_plan_id']
+    if 'compute_plan_key' in subtuple and subtuple['compute_plan_key']:
+        compute_plan_key = subtuple['compute_plan_key']
         rank = int(subtuple['rank'])
-        compute_plan = get_object_from_ledger(channel_name, compute_plan_id, 'queryComputePlan')
+        compute_plan = get_object_from_ledger(channel_name, compute_plan_key, 'queryComputePlan')
         compute_plan_tag = compute_plan['tag']
 
     common_volumes, compute_volumes = prepare_volumes(
-        subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag)
+        subtuple_directory, tuple_type, compute_plan_key, compute_plan_tag)
 
     # Add node index to environment variable for the compute
     node_index = os.getenv('NODE_INDEX')
@@ -703,13 +703,13 @@ def do_task(channel_name, subtuple, tuple_type):
     # train or predict
     compute_job(
         subtuple_key=subtuple["key"],
-        compute_plan_id=compute_plan_id,
+        compute_plan_key=compute_plan_key,
         dockerfile_path=subtuple_directory,
         image_name=get_algo_image_name(subtuple['algo']['key']),
         job_name=job_name,
         volumes={**common_volumes, **compute_volumes},
         command=command,
-        remove_image=compute_plan_id is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
+        remove_image=compute_plan_key is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
         remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
         capture_logs=settings.TASK['CAPTURE_LOGS'],
         environment=environment
@@ -729,13 +729,13 @@ def do_task(channel_name, subtuple, tuple_type):
         # eval
         compute_job(
             subtuple_key=subtuple["key"],
-            compute_plan_id=compute_plan_id,
+            compute_plan_key=compute_plan_key,
             dockerfile_path=f'{subtuple_directory}/metrics',
             image_name=f'substra/metrics_{subtuple["objective"]["key"][0:8]}'.lower(),
             job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=f'--output-perf-path {OUTPUT_PERF_PATH}',
-            remove_image=compute_plan_id is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
+            remove_image=compute_plan_key is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
             environment=environment
@@ -758,7 +758,7 @@ def do_task(channel_name, subtuple, tuple_type):
 
 
 @timeit
-def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_plan_tag):
+def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_plan_tag):
 
     model_path = path.join(subtuple_directory, 'model')
     output_model_path = path.join(subtuple_directory, 'output_model')
@@ -795,23 +795,23 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_id, compute_pla
     }
 
     # local volume for train like tuples in compute plan
-    if compute_plan_id is not None:
-        volume_id = get_local_folder_name(compute_plan_id)
+    if compute_plan_key is not None:
+        volume_id = get_local_folder_name(compute_plan_key)
         get_or_create_local_volume(volume_id)
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
         model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
 
     chainkeys_volume = {}
-    if compute_plan_id is not None and settings.TASK['CHAINKEYS_ENABLED']:
-        chainkeys_volume = prepare_chainkeys(compute_plan_id, compute_plan_tag,
+    if compute_plan_key is not None and settings.TASK['CHAINKEYS_ENABLED']:
+        chainkeys_volume = prepare_chainkeys(compute_plan_key, compute_plan_tag,
                                              subtuple_directory)
 
     return {**volumes, **symlinks_volume}, {**model_volume, **chainkeys_volume}
 
 
-def prepare_chainkeys(compute_plan_id, compute_plan_tag, subtuple_directory):
-    chainkeys_directory = get_chainkeys_directory(compute_plan_id)
+def prepare_chainkeys(compute_plan_key, compute_plan_tag, subtuple_directory):
+    chainkeys_directory = get_chainkeys_directory(compute_plan_key)
 
     chainkeys_volume = {
         chainkeys_directory: {'bind': '/sandbox/chainkeys', 'mode': 'rw'}
@@ -1047,14 +1047,14 @@ def remove_intermediary_models(model_keys):
 @app.task(ignore_result=False)
 def on_compute_plan(channel_name, compute_plan):
 
-    compute_plan_id = compute_plan['compute_plan_id']
+    compute_plan_key = compute_plan['compute_plan_key']
     algo_keys = compute_plan['algo_keys']
     model_keys = compute_plan['models_to_delete']
     status = compute_plan['status']
 
     # Remove local folder and algo when compute plan is finished
     if status in ['done', 'failed', 'canceled']:
-        remove_local_folders(compute_plan_id)
+        remove_local_folders(compute_plan_key)
         remove_algo_images(algo_keys)
 
     # Remove intermediary models

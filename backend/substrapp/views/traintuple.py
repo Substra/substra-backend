@@ -29,10 +29,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
         # create on ledger
         try:
             data = serializer.validated_data
-            if data['rank'] == 0 and not data['compute_plan_id']:
+            if data['rank'] == 0 and not data['compute_plan_key']:
                 # Auto-create compute plan
                 res = create_compute_plan(channel_name, data={})
-                data['compute_plan_id'] = res['compute_plan_id']
+                data['compute_plan_key'] = res['key']
             data = serializer.create(channel_name, data)
         except LedgerConflict as e:
             raise LedgerException({'message': str(e.msg), 'key': e.key}, e.status)
@@ -48,7 +48,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             'algo_key': request.data.get('algo_key'),
             'data_manager_key': request.data.get('data_manager_key'),
             'rank': request.data.get('rank'),
-            'compute_plan_id': request.data.get('compute_plan_id'),
+            'compute_plan_key': request.data.get('compute_plan_key'),
             'in_models_keys': request.data.get('in_models_keys'),
             # list of train data keys (which are stored in the train worker node)
             'train_data_sample_keys': request.data.get('train_data_sample_keys'),
