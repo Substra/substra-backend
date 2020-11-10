@@ -48,6 +48,7 @@ TUPLE_COMMANDS = {
     AGGREGATETUPLE_TYPE: 'aggregate',
 }
 
+DATA_FOLDER = '/sandbox/data'
 MODEL_FOLDER = '/sandbox/model'
 OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
 OUTPUT_PERF_PATH = '/sandbox/perf/perf.json'
@@ -780,7 +781,7 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_pl
                 symlinks_volume[real_path] = {'bind': f'{real_path}', 'mode': 'ro'}
 
     volumes = {
-        data_path: {'bind': '/sandbox/data', 'mode': 'ro'},
+        data_path: {'bind': DATA_FOLDER, 'mode': 'ro'},
         opener_path: {'bind': '/sandbox/opener', 'mode': 'ro'}
     }
 
@@ -873,6 +874,15 @@ def prepare_chainkeys(compute_plan_key, compute_plan_tag, subtuple_directory):
     return chainkeys_volume
 
 
+def add_data_sample_paths_arg(command, subtuple):
+    data_sample_paths = [
+        os.path.join(DATA_FOLDER, key)
+        for key in subtuple['dataset']['data_sample_keys']
+    ]
+    data_sample_paths = ' '.join(data_sample_paths)
+    return f"{command} --data-sample-paths {data_sample_paths}"
+
+
 def generate_command(tuple_type, subtuple, rank):
 
     command = TUPLE_COMMANDS[tuple_type]
@@ -888,6 +898,8 @@ def generate_command(tuple_type, subtuple, rank):
         if rank is not None:
             command = f"{command} --rank {rank}"
 
+        command = add_data_sample_paths_arg(command, subtuple)
+
     elif tuple_type == TESTTUPLE_TYPE:
 
         if COMPOSITE_TRAINTUPLE_TYPE == subtuple['traintuple_type']:
@@ -898,6 +910,8 @@ def generate_command(tuple_type, subtuple, rank):
         else:
             in_model = subtuple["traintuple_key"]
             command = f'{command} {in_model}'
+
+        command = add_data_sample_paths_arg(command, subtuple)
 
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
 
@@ -918,6 +932,8 @@ def generate_command(tuple_type, subtuple, rank):
 
         if rank is not None:
             command = f"{command} --rank {rank}"
+
+        command = add_data_sample_paths_arg(command, subtuple)
 
     elif tuple_type == AGGREGATETUPLE_TYPE:
 
