@@ -403,7 +403,7 @@ class TasksTests(APITestCase):
             'key': subtuple_key,
             'in_models': None,
             'algo': {'key': 'mykey', 'checksum': 'myhash'},
-            'dataset': {'keys': []},
+            'dataset': {'data_sample_keys': []},
         }
         subtuple_directory = build_subtuple_folders(subtuple)
 

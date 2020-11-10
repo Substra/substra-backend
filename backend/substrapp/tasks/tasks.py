@@ -877,7 +877,7 @@ def prepare_chainkeys(compute_plan_key, compute_plan_tag, subtuple_directory):
 def add_data_sample_paths_arg(command, subtuple):
     data_sample_paths = [
         os.path.join(DATA_FOLDER, key)
-        for key in subtuple['dataset']['keys']
+        for key in subtuple['dataset']['data_sample_keys']
     ]
     data_sample_paths = ' '.join(data_sample_paths)
     return f"{command} --data-sample-paths {data_sample_paths}"
