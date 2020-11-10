@@ -11,3 +11,7 @@ dependencies:
     repository: https://kubernetes-charts.storage.googleapis.com/
     version: 1.9.2
     condition: docker-registry.enabled
+  - name: minio
+    repository: https://helm.min.io/
+    version: 8.0.2
+    condition: minio.enabled

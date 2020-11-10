@@ -8,5 +8,8 @@ dependencies:
 - name: docker-registry
   repository: https://kubernetes-charts.storage.googleapis.com/
   version: 1.9.2
-digest: sha256:64aac206900eb10b6099efc2fb5d6f0a41975fb211c778f5c61108d5675eaa47
-generated: "2020-06-09T15:23:33.702043+02:00"
+- name: minio
+  repository: https://helm.min.io/
+  version: 8.0.2
+digest: sha256:4be128dbb1edeb24db6013a60b4c652a460c3c5a744bd418e4309cb7d8454ac7
+generated: "2020-11-10T11:58:44.077243184-05:00"

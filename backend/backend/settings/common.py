@@ -225,6 +225,8 @@ HTTP_CLIENT_TIMEOUT_SECONDS = int(os.environ.get('HTTP_CLIENT_TIMEOUT_SECONDS', 
 
 LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
 
+MINIO_ENDPOINT = os.environ.get('MINIO_ENDPOINT')
+
 
 # Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
 # Importing the module early ensures these steps happen in order:
