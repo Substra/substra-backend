@@ -1,4 +1,6 @@
-# Mostly stolen from https://github.com/py-pa/django-minio-storage/blob/master/minio_storage/storage.py
+# Stolen from:
+# - https://github.com/py-pa/django-minio-storage/blob/master/minio_storage/storage.py
+# - https://github.com/maddevsio/django_minio/blob/master/django_minio/storage.py
 
 import datetime
 import mimetypes
