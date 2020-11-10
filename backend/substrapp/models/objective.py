@@ -16,6 +16,9 @@ class Objective(TimeStamped):
     """Storage Objective table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False, blank=True)
+    # This is just a test to check if MinioStorage works (it does!)
+    # Pass a factory instead of a client, otherwise we try to connect to minio
+    # when we do the migrations even though there's no data to migrate -_-
     description = models.FileField(upload_to=upload_to,
                                    storage=MinioStorage(minio_client_factory=get_minio_client, bucket_name='my-test-bucket'),
                                    max_length=500,

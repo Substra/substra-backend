@@ -1,6 +1,9 @@
 # Stolen from:
-# - https://github.com/py-pa/django-minio-storage/blob/master/minio_storage/storage.py
-# - https://github.com/maddevsio/django_minio/blob/master/django_minio/storage.py
+# - 1. https://github.com/py-pa/django-minio-storage/blob/master/minio_storage/storage.py
+# - 2. https://github.com/maddevsio/django_minio/blob/master/django_minio/storage.py
+#
+# 1 has more features but 2 had the connection factory
+
 
 import datetime
 import mimetypes
