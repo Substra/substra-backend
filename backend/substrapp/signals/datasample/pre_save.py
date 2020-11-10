@@ -16,14 +16,14 @@ def data_sample_pre_save(sender, instance, **kwargs):
     if path.exists(destination_path):
         raise FileExistsError(f'File exists: {destination_path}')
 
-    # try to make an hard link to keep a free copy of the data
+    # try to make a hard link to keep a free copy of the data
     # if not possible, keep the real path location
     try:
         shutil.copytree(src_path, destination_path, copy_function=link)
     except Exception:
-        logger.exception(f'error happened while copying data from {src_path} to {destination_path}')
+        logger.exception(f'An error occurred while copying data from {src_path} to {destination_path}')
         shutil.rmtree(destination_path, ignore_errors=True)
         logger.info(f'directory {destination_path} deleted')
     else:
-        # override path for getting our hardlink
+        # override path to use our hardlink
         instance.path = destination_path

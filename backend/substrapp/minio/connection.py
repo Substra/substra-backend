@@ -23,11 +23,10 @@ def minio_test():
         logger.error(f'minio error: {e}')
 
 
-def get_minio_client():
-    host = settings.MINIO_ENDPOINT
-    minio_client = Minio(host,
+def get_minio_client(endpoint_url=settings.MINIO_ENDPOINT, secure=False):
+    minio_client = Minio(endpoint_url,
                          access_key='myaccesskey',
                          secret_key='mysecretkey',
-                         secure=False)
-    logger.info(f'minio: connected to {host}')
+                         secure=secure)
+    logger.info(f'minio: connected to {endpoint_url}')
     return minio_client

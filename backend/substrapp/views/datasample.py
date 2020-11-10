@@ -1,6 +1,5 @@
 import logging
 from os.path import normpath
-
 import os
 import ntpath
 import shutil
@@ -14,6 +13,9 @@ from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp.minio.connection import get_minio_client
+from substrapp.minio.objects import validate_object_exists
+from substrapp.minio.url import is_minio_url
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
@@ -97,7 +99,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
                     'checksum': checksum
                 }
 
-        else:  # files must be available on local filesystem
+        else:  # files must be available on either the local filesystem, or on MinIO
             path = request.data.get('path')
             paths = request.data.get('paths') or []
 
@@ -122,14 +124,11 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
             # paths, should be directories
             for path in paths:
-                if not os.path.isdir(path):
-                    raise Exception(f'One of your paths does not exist, '
-                                    f'is not a directory or is not an absolute path: {path}')
                 key = uuid.uuid4()
-                checksum = get_dir_hash(path)
+                path, checksum = self._get_data_sample_from_path(path)
                 data[key] = {
                     'key': key,
-                    'path': normpath(path),
+                    'path': path,
                     'checksum': checksum
                 }
 
@@ -137,6 +136,30 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             raise Exception('No data sample provided.')
 
         return list(data.values())
+
+    def _get_data_sample_from_path(self, path):
+        if is_minio_url(path):
+            return self._get_datasample_from_minio(path)
+        else:
+            return self._get_data_sample_from_local_filesystem(path)
+
+    def _get_data_sample_from_local_filesystem(self, path):
+        if not os.path.isdir(path):
+            raise Exception(f'One of your paths does not exist, '
+                            f'is not a directory or is not an absolute path: {path}')
+        checksum = get_dir_hash(path)
+        return normpath(path), checksum
+
+    def _get_data_sample_from_minio(self, url):
+        # Will throw on error
+        validate_object_exists(url)
+
+        # The MinIO client takes care of ensuring integrity.
+        # No need to download the whole file to calculate the hash.
+        # TODO: check object version to make sure the object wasn't modified?
+        checksum = '0' * 64
+
+        return url, checksum
 
     def _create(self, request, data_manager_keys, test_only):
 
