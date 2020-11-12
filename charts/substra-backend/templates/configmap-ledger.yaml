@@ -6,7 +6,6 @@ data:
   LEDGER_CHANNELS: {{ .Values.channels | toJson | quote }}
   LEDGER_MSP_ID: {{ .Values.peer.mspID }}
   LEDGER_USER_NAME: {{ .Values.user.name }}
-  LEDGER_CHAINCODE_NAME: {{ .Values.chaincode.name }}
   LEDGER_PEER_HOST: {{ .Values.peer.host }}
   LEDGER_PEER_PORT: {{ .Values.peer.port | quote }}
   LEDGER_WAIT_FOR_EVENT_TIMEOUT_SECONDS: {{ .Values.peer.waitForEventTimeoutSeconds | quote }}

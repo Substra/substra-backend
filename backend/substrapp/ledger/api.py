@@ -112,7 +112,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
             'channel_name': channel_name,
             'peers': peers[call_type],
             'args': args,
-            'cc_name': settings.LEDGER_CHAINCODE_NAME,
+            'cc_name': settings.LEDGER_CHANNELS[channel_name]['chaincode']['name'],
             'fcn': fcn
         }
 

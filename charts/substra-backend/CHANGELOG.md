@@ -1,5 +1,10 @@
 # Changelog
 
+
+## 1.6.0
+
+- Refactor `channels` and `chaincodes` values
+
 ## 1.5.0
 
 - Refactor Hyperledger Fabric settings. Introduce `substra-backend-ledger` ConfigMap.

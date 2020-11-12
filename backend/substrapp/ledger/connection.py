@@ -87,24 +87,28 @@ def _get_hfc(channel_name):
 
     channel = client.new_channel(channel_name)
 
-    # Check chaincode is instantiated in the channel
+    # This part is commented because `query_committed_chaincodes` is not implemented in
+    # the last version of fabric-sdk-py
 
-    responses = loop.run_until_complete(
-        client.query_instantiated_chaincodes(
-            requestor=user,
-            channel_name=channel_name,
-            peers=[peer],
-            decode=True
-        )
-    )
+    # chaincode_name = settings.LEDGER_CHANNELS[channel_name]['chaincode']['name']
 
-    chaincodes = [cc.name
-                  for resp in responses
-                  for cc in resp.chaincodes]
+    # /!\ New chaincode lifecycle.
 
-    if settings.LEDGER_CHAINCODE_NAME not in chaincodes:
-        raise Exception(f'Chaincode : {settings.LEDGER_CHAINCODE_NAME}'
-                        f' is not instantiated in the channel :  {channel_name}')
+    # Check chaincode is committed in the channel
+    # responses = loop.run_until_complete(
+    #     client.query_committed_chaincodes(
+    #         requestor=user,
+    #         channel_name=channel_name,
+    #         peers=[peer],
+    #         decode=True
+    #     )
+    # )
+    # chaincodes = [cc.name
+    #               for resp in responses
+    #               for cc in resp.chaincode_definitions]
+    # if chaincode_name not in chaincodes:
+    #     raise Exception(f'Chaincode : {chaincode_name}'
+    #                     f' is not committed in the channel :  {channel_name}')
 
     # Discover orderers and peers from channel discovery
     results = loop.run_until_complete(
@@ -113,7 +117,7 @@ def _get_hfc(channel_name):
             peer,
             config=True,
             local=False,
-            interests=[{'chaincodes': [{'name': settings.LEDGER_CHAINCODE_NAME}]}]
+            interests=[{'chaincodes': [{'name': "_lifecycle"}]}]
         )
     )
 

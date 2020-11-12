@@ -87,5 +87,11 @@ extraEnv:
     value: 'True'
 
 channels:
-  - mychannel
-  - yourchannel
+  - mychannel:
+      chaincode:
+        name: mycc
+        version: "1.0"
+  - yourchannel:
+      chaincode:
+        name: yourcc
+        version: "1.0"

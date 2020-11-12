@@ -25,5 +25,5 @@ class NodeRegisterConfig(AppConfig):
                 return
 
     def ready(self):
-        for channel_name in settings.LEDGER_CHANNELS:
+        for channel_name in settings.LEDGER_CHANNELS.keys():
             self.register_node(channel_name)

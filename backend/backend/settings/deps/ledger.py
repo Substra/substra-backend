@@ -1,10 +1,14 @@
 import os
 import json
 
-LEDGER_CHANNELS = json.loads(os.getenv('LEDGER_CHANNELS'))
+LEDGER_CHANNELS = {
+    channel: chaincode
+    for channels in json.loads(os.getenv('LEDGER_CHANNELS'))
+    for channel, chaincode in channels.items()
+}
+
 LEDGER_MSP_ID = os.getenv('LEDGER_MSP_ID')
 LEDGER_USER_NAME = os.getenv('LEDGER_USER_NAME')
-LEDGER_CHAINCODE_NAME = os.getenv('LEDGER_CHAINCODE_NAME')
 
 LEDGER_PEER_HOST = os.getenv('LEDGER_PEER_HOST')
 LEDGER_PEER_PORT = int(os.getenv('LEDGER_PEER_PORT'))
@@ -30,4 +34,3 @@ LEDGER_GRPC_HTTP2_MAX_PINGS_WITHOUT_DATA = 0
 LEDGER_GRPC_KEEPALIVE_PERMIT_WITHOUT_CALLS = 1
 LEDGER_GRPC_KEEPALIVE_TIME_MS = int(os.getenv('LEDGER_GRPC_KEEPALIVE_TIME_MS'))
 LEDGER_GRPC_HTTP2_MIN_TIME_BETWEEN_PINGS_MS = int(os.getenv('LEDGER_GRPC_HTTP2_MIN_TIME_BETWEEN_PINGS_MS'))
-

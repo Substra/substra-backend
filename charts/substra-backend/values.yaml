@@ -166,11 +166,10 @@ peer:
     query: SELF
 
 channels:
-- mychannel
-
-chaincode:
-  name: mycc
-  version: "1.0"
+  - mychannel:
+      chaincode:
+        name: mycc
+        version: "1.0"
 
 postgresql:
   enabled: true
