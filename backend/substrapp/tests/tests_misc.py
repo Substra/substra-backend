@@ -4,7 +4,7 @@ from mock import patch
 
 from substrapp.utils import raise_if_path_traversal, uncompress_path
 
-from substrapp.ledger.exceptions import LedgerNotFound, LedgerInvalidResponse
+from substrapp.ledger.exceptions import LedgerAssetNotFound, LedgerInvalidResponse
 
 from substrapp.ledger.api import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
     log_success_tuple, query_tuples
@@ -53,8 +53,8 @@ class MiscTests(TestCase):
 
     def test_get_object_from_ledger(self):
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = LedgerNotFound('Not Found')
-            self.assertRaises(LedgerNotFound, get_object_from_ledger, CHANNEL, 'key', 'fake_query')
+            mquery_ledger.side_effect = LedgerAssetNotFound('Not Found')
+            self.assertRaises(LedgerAssetNotFound, get_object_from_ledger, CHANNEL, 'key', 'fake_query')
 
         with patch('substrapp.ledger.api.query_ledger') as mquery_ledger:
             mquery_ledger.side_effect = LedgerInvalidResponse('Bad Response')
