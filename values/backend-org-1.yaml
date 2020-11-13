@@ -89,9 +89,11 @@ extraEnv:
 channels:
   - mychannel:
       chaincode:
+        restricted: false
         name: mycc
         version: "1.0"
   - yourchannel:
+      restricted: false
       chaincode:
         name: yourcc
         version: "1.0"

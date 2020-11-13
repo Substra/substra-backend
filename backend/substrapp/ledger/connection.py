@@ -123,9 +123,23 @@ def _get_hfc(channel_name):
 
     results = _deserialize_discovery(results)
 
+    _validate_channels(channel_name, results)
     _update_client_with_discovery(client, results)
 
     return loop, client, user
+
+
+def _validate_channels(channel_name, discovery_results):
+
+    channel = settings.LEDGER_CHANNELS[channel_name]
+
+    # Esnure solo channels have 1 member at most
+    if channel_name.startswith('solo-') or channel['restricted']:
+        channel_members = list(discovery_results['config']['msps'].keys())
+        num_members = len(channel_members) - 1  # remove orderer
+        if (num_members > 1):
+            raise Exception(f'Restricted channel {channel_name} should have at most 1 member, but has '
+                            f'{num_members}')
 
 
 def _update_client_with_discovery(client, discovery_results):

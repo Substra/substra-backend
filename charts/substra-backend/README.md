@@ -25,7 +25,10 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
 | `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.0.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
-| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `[mychannel]` |
+| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `{ mychannel: { restricted: false, chaincode: { name: mycc, version: 1.0 } } }` |
+| `channels[].restricted` | If true, the channel must have at most 1 member, else the backend readiness/liveliness probes will fail. | (undefined) |
+| `channels[].chaincode.name` | The name of the chaincode instantiated on this channel. | (undefined) |
+| `channels[].chaincode.version` | The version of the chaincode instantiated on this channel. | (undefined) |
 | `events.nodeSelector` | Node labels for pod assignment | `{}` |
 | `events.tolerations` | Toleration labels for pod assignment | `[]` |
 | `events.affinity` | Affinity settings for pod assignment | `{}` |
