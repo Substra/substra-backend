@@ -6,7 +6,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   version: 8.10.5
 - name: docker-registry
-  repository: https://kubernetes-charts.storage.googleapis.com/
+  repository: https://charts.helm.sh/stable
   version: 1.9.2
-digest: sha256:64aac206900eb10b6099efc2fb5d6f0a41975fb211c778f5c61108d5675eaa47
-generated: "2020-06-09T15:23:33.702043+02:00"
+digest: sha256:530e5d98d135fdd46dbfd5d915112dc8e3ab46062c673684e0dd7e84c807ca65
+generated: "2020-11-16T15:17:48.657761952-05:00"
