@@ -197,8 +197,6 @@ spec:
           value: {{ .Values.postgresql.postgresqlPassword }}
         - name: DATABASE_HOST
           value: {{ .Release.Name }}-postgresql
-        # - name: MINIO_ENDPOINT
-        #   value: {{ .Release.Name }}-minio:9000
       - name: init-collectstatic
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'collectstatic', '--noinput']

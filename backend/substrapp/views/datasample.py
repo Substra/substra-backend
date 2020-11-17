@@ -156,7 +156,8 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         # The MinIO client takes care of ensuring integrity.
         # No need to download the whole file to calculate the hash.
-        # TODO: check object version to make sure the object wasn't modified?
+        # Should we ensure integrity another way, like checking object version to make
+        # sure the object wasn't modified since it was first uploaded?
         checksum = '0' * 64
 
         return url, checksum

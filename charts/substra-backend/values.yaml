@@ -328,7 +328,6 @@ securityContext:
 
 
 minio:
-  enabled: True  # Eventually, I don't think we need to deploy minio as part of the backend at all.
-                 #  But this is convenient for testing for now.
+  enabled: True
   accessKey: myaccesskey
   secretKey: mysecretkey
