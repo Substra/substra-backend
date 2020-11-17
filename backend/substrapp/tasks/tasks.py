@@ -378,7 +378,9 @@ def prepare_opener(directory, tuple_):
 
     datamanager = DataManager.objects.get(key=dataset_key)
 
-    # TODO: load from minio
+    client = get_minio_client()
+    x = client.get_object('my-test-bucket', datamanager.data_opener.name)
+    # TODO use x
 
     # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
@@ -429,7 +431,6 @@ def prepare_data_sample(directory, tuple_):
 
 
 def build_subtuple_folders(subtuple):
-    # create a folder named `subtuple['key']` in /medias/subtuple/ with 5 subfolders opener, data, model, pred, metrics
     subtuple_directory = get_subtuple_directory(subtuple['key'])
     create_directory(subtuple_directory)
 

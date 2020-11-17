@@ -116,12 +116,11 @@ class PermissionMixin(object):
         obj = self.get_object()
         data = getattr(obj, django_field)
         client = get_minio_client()
-        path = str(data)
-        f = client.get_object('my-test-bucket', path)
+        f = client.get_object('my-test-bucket', data.name)
         response = CustomFileResponse(
             f.stream(24 * 1024),
             as_attachment=True,
-            filename=os.path.basename(path)
+            filename=os.path.basename(data.name)
         )
         return response
 

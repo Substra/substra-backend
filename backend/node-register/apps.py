@@ -3,6 +3,7 @@ import logging
 from django.apps import AppConfig
 from django.conf import settings
 from substrapp.ledger.api import invoke_ledger
+from substrapp.minio.connection import minio_create_bucket
 
 logger = logging.getLogger(__name__)
 
@@ -11,6 +12,9 @@ class NodeRegisterConfig(AppConfig):
     name = 'node-register'
 
     def register_node(self, channel_name):
+
+        minio_create_bucket()
+
         # We try until success, if it fails the backend will not start
         while True:
             try:
