@@ -27,7 +27,7 @@ from minio_storage.errors import minio_error
 from minio_storage.files import ReadOnlySpooledTemporaryFile
 from minio_storage.policy import Policy
 
-logger = getLogger("minio_storage")
+logger = getLogger(__name__)
 
 
 @deconstructible
@@ -98,6 +98,7 @@ class MinioStorage(Storage):
                 self._init_check()
             except Exception as e:
                 logger.error(f'Could not connect to minio: {e}')
+                raise
         return self._connection
 
     def _init_check(self):
