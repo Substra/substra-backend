@@ -2,6 +2,9 @@ from django.db import models
 import uuid
 from substrapp.utils import get_hash
 
+from substrapp.minio.connection import get_minio_client
+from substrapp.minio.djangostorage import MinioStorage
+
 
 def upload_to(instance, filename):
     return 'aggregatealgos/{0}/{1}'.format(instance.key, filename)
@@ -10,7 +13,9 @@ def upload_to(instance, filename):
 class AggregateAlgo(models.Model):
     """Storage Data table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    file = models.FileField(upload_to=upload_to,
+                            storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
+                            max_length=500)
     description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False)
     checksum = models.CharField(max_length=64, blank=True)

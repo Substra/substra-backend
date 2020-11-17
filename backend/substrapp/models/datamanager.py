@@ -1,5 +1,7 @@
 from django.db import models
 import uuid
+from substrapp.minio.connection import get_minio_client
+from substrapp.minio.djangostorage import MinioStorage
 from substrapp.utils import get_hash
 
 
@@ -11,8 +13,12 @@ class DataManager(models.Model):
     """Storage DataManager table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=True, max_length=100)
-    data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
-    description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    data_opener = models.FileField(upload_to=upload_to,
+                                   storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
+                                   max_length=500)
+    description = models.FileField(upload_to=upload_to,
+                                   storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
+                                   max_length=500)
     validated = models.BooleanField(default=False, blank=True)
     checksum = models.CharField(max_length=64, blank=True)
 

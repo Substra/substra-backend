@@ -19,6 +19,7 @@ from celery.task import Task
 import boto3
 
 from backend.celery import app
+from substrapp.minio.connection import get_minio_client
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
                              get_dir_hash, get_local_folder_name, get_subtuple_directory, get_chainkeys_directory,
                              get_local_folder, timeit)
@@ -376,6 +377,8 @@ def prepare_opener(directory, tuple_):
     data_opener_checksum = tuple_['dataset']['opener_checksum']
 
     datamanager = DataManager.objects.get(key=dataset_key)
+
+    # TODO: load from minio
 
     # verify that local storage opener file exists
     if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):

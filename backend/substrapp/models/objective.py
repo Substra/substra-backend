@@ -21,7 +21,11 @@ class Objective(TimeStamped):
                                    max_length=500,
                                    blank=True,
                                    null=True)
-    metrics = models.FileField(upload_to=upload_to, max_length=500, blank=True, null=True)
+    metrics = models.FileField(upload_to=upload_to,
+                               storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
+                               max_length=500,
+                               blank=True,
+                               null=True)
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):

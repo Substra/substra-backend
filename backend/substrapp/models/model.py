@@ -1,6 +1,8 @@
 from django.db import models
 import uuid
 from substrapp.utils import get_hash
+from substrapp.minio.connection import get_minio_client
+from substrapp.minio.djangostorage import MinioStorage
 
 
 def upload_to(instance, filename):
@@ -11,7 +13,9 @@ class Model(models.Model):
     """Storage Data table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False)
-    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    file = models.FileField(upload_to=upload_to,
+                            storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
+                            max_length=500)
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):
