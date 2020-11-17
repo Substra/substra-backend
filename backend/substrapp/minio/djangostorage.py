@@ -13,7 +13,6 @@ import urllib
 from logging import getLogger
 from time import mktime
 from urllib.parse import urlsplit, urlunsplit
-from collections.abc import Callable
 
 import minio
 import minio.error as merr
@@ -296,7 +295,7 @@ class MinioStorage(Storage):
             # It's assumed that self.base_url will contain bucket information,
             # which could be different, so remove the bucket_name component (with 1
             # extra character for the leading "/") from the generated URL
-            url_key_path = url_parts.path[len(self.bucket_name) + 1 :]
+            url_key_path = url_parts.path[len(self.bucket_name) + 1:]
 
             # Prefix the URL with any path content from base_url
             new_url_path = base_url_parts.path + url_key_path

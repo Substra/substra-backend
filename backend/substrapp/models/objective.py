@@ -17,7 +17,7 @@ class Objective(TimeStamped):
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False, blank=True)
     description = models.FileField(upload_to=upload_to,
-                                   storage=MinioStorage(minio_client_factory=get_minio_client, bucket_name='my-test-bucket'),
+                                   storage=MinioStorage(get_minio_client, bucket_name='my-test-bucket'),
                                    max_length=500,
                                    blank=True,
                                    null=True)

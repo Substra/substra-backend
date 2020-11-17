@@ -13,7 +13,6 @@ from rest_framework.fields import BooleanField
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp.minio.connection import get_minio_client
 from substrapp.minio.objects import validate_object_exists
 from substrapp.minio.url import is_minio_url
 from substrapp.models import DataSample, DataManager

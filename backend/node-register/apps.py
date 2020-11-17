@@ -3,7 +3,6 @@ import logging
 from django.apps import AppConfig
 from django.conf import settings
 from substrapp.ledger.api import invoke_ledger
-from substrapp.minio.connection import minio_test
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,6 @@ class NodeRegisterConfig(AppConfig):
         # We try until success, if it fails the backend will not start
         while True:
             try:
-                minio_test()
                 # args is set to empty because fabric-sdk-py doesn't allow None args for invoke operations
                 invoke_ledger(channel_name, fcn='registerNode', args=[''], sync=True)
             except Exception as e:

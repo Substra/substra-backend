@@ -13,4 +13,3 @@ def validate_object_exists(url):
 
     minio_client = get_minio_client(endpoint_url, secure)
     minio_client.stat_object(bucket_name, object_name)
-
