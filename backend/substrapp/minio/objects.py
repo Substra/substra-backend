@@ -1,4 +1,4 @@
-from substrapp.minio.connections import get_minio_client
+from substrapp.minio.connection import get_minio_client
 from substrapp.minio.url import parse_minio_url
 
 

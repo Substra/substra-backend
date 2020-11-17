@@ -10,6 +10,7 @@ from rest_framework.settings import api_settings
 from node.authentication import NodeUser
 from substrapp.ledger.api import get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
+from substrapp.minio.connection import get_minio_client
 from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
 
@@ -114,10 +115,13 @@ class PermissionMixin(object):
     def _download_local_file(self, django_field):
         obj = self.get_object()
         data = getattr(obj, django_field)
+        client = get_minio_client()
+        path = str(data)
+        f = client.get_object('my-test-bucket', path)
         response = CustomFileResponse(
-            open(data.path, 'rb'),
+            f.stream(24 * 1024),
             as_attachment=True,
-            filename=os.path.basename(data.path)
+            filename=os.path.basename(path)
         )
         return response
 

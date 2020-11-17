@@ -6,10 +6,10 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   version: 8.10.5
 - name: docker-registry
-  repository: https://kubernetes-charts.storage.googleapis.com/
+  repository: https://charts.helm.sh/stable
   version: 1.9.2
 - name: minio
   repository: https://helm.min.io/
   version: 8.0.2
-digest: sha256:4be128dbb1edeb24db6013a60b4c652a460c3c5a744bd418e4309cb7d8454ac7
-generated: "2020-11-10T11:58:44.077243184-05:00"
+digest: sha256:f89954b42ae6dee017fe9f74e5a551a63fed1ed15951a3076980e13f613c74bb
+generated: "2020-11-16T16:17:47.6732199-05:00"
