@@ -133,7 +133,7 @@ def _validate_channels(channel_name, discovery_results):
 
     channel = settings.LEDGER_CHANNELS[channel_name]
 
-    # Esnure solo channels have 1 member at most
+    # Ensure solo channels have 1 member at most
     if channel_name.startswith('solo-') or channel['restricted']:
         channel_members = list(discovery_results['config']['msps'].keys())
         num_members = len(channel_members) - 1  # remove orderer

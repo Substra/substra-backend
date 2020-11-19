@@ -32,8 +32,7 @@ class HealthCheckMiddleware(object):
 
 
 def validate_solo_channels():
-    for channel_name in settings.LEDGER_CHANNELS.keys():
-        channel = settings.LEDGER_CHANNELS[channel_name]
+    for channel_name, channel in settings.LEDGER_CHANNELS.items():
         if channel_name.startswith('solo-') or channel['restricted']:
             with get_hfc(channel_name) as (loop, client, user):
                 # get_hfc will throw if the solo channel has more than 1 member
