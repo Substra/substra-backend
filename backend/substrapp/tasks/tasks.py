@@ -231,25 +231,21 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
 def fetch_models(channel_name, tuple_type, authorized_types, input_models, directory):
 
     models = []
-
-    for input_model in input_models:
-        proc = ExceptionThread(target=fetch_model,
-                               args=(channel_name, tuple_type, authorized_types, input_model, directory))
-        models.append(proc)
-        proc.start()
-
-    for proc in models:
-        proc.join()
-
     exceptions = []
 
-    for proc in models:
-        if hasattr(proc, "_exception"):
-            exceptions.append(proc._exception)
-            logger.exception(proc._exception)
-    else:
-        if exceptions:
-            raise Exception(exceptions)
+    for input_model in input_models:
+        args = (channel_name, tuple_type, authorized_types, input_model, directory)
+        proc = Process(target=fetch_model, args=args)
+        models.append((proc, args))
+        proc.start()
+
+    for proc, args in models:
+        proc.join()
+        if proc._popen.returncode != 0:
+            exceptions.append(Exception(f'fetch model failed for args {args}'))
+
+    if exceptions:
+        raise Exception(exceptions)
 
 
 def prepare_traintuple_input_models(channel_name, directory, tuple_):
