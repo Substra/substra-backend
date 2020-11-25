@@ -237,7 +237,7 @@ def fetch_models(channel_name, tuple_type, authorized_types, input_models, direc
 
     for proc, args in models:
         proc.join()
-        if proc._popen.returncode != 0:
+        if proc.exitcode != 0:
             exceptions.append(Exception(f'fetch model failed for args {args}'))
 
     if exceptions:
