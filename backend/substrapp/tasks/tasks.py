@@ -10,6 +10,7 @@ import logging
 import tarfile
 
 import kubernetes
+from billard import Process
 
 from django.conf import settings
 from rest_framework.reverse import reverse
