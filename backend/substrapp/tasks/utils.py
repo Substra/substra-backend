@@ -39,8 +39,12 @@ def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
     return get_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum, salt=salt)
 
 
-def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
-    return get_and_put_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum,
+def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key, auth=None):
+
+    if auth is None:
+        auth = authenticate_worker(node_id)
+
+    return get_and_put_remote_file_content(channel_name, url, auth, content_checksum,
                                            content_dst_path=content_dst_path, hash_key=hash_key)
 
 
