@@ -10,6 +10,7 @@ import logging
 import tarfile
 
 import kubernetes
+from billiard import Process
 
 from django.conf import settings
 from rest_framework.reverse import reverse
@@ -26,8 +27,8 @@ from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_t
                                   query_tuples, get_object_from_ledger)
 from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
-                                   list_files, do_not_raise, ExceptionThread,
-                                   get_or_create_local_volume, remove_image)
+                                   list_files, do_not_raise, get_or_create_local_volume, remove_image,
+                                   authenticate_worker)
 
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -162,7 +163,7 @@ def get_tuple_status(channel_name, tuple_type, key):
     return metadata['status']
 
 
-def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_model, model_dst_path):
+def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_model, model_dst_path, auth=None):
     """Get out model content."""
     owner = tuple_get_owner(tuple_type, tuple_)
     return get_and_put_asset_content(
@@ -171,7 +172,8 @@ def get_and_put_model_content(channel_name, tuple_type, hash_key, tuple_, out_mo
         owner,
         out_model['checksum'],
         content_dst_path=model_dst_path,
-        hash_key=hash_key
+        hash_key=hash_key,
+        auth=auth
     )
 
 
@@ -193,7 +195,7 @@ def get_and_put_local_model_content(hash_key, out_model, model_dst_path):
 
 
 @timeit
-def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, directory):
+def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, directory, auth=None):
 
     tuple_type, metadata = find_training_step_tuple_from_key(channel_name, input_model['traintuple_key'])
 
@@ -205,11 +207,13 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
 
     if tuple_type == TRAINTUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path
+            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path,
+            auth
         )
     elif tuple_type == AGGREGATETUPLE_TYPE:
         get_and_put_model_content(
-            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path
+            channel_name, tuple_type, input_model['traintuple_key'], metadata, metadata['out_model'], model_dst_path,
+            auth
         )
     elif tuple_type == COMPOSITE_TRAINTUPLE_TYPE:
         get_and_put_model_content(
@@ -218,7 +222,8 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
             input_model['traintuple_key'],
             metadata,
             metadata['out_trunk_model']['out_model'],
-            model_dst_path
+            model_dst_path,
+            auth
         )
     else:
         raise TasksError(f'Traintuple: invalid input model: type={tuple_type}')
@@ -227,25 +232,30 @@ def fetch_model(channel_name, parent_tuple_type, authorized_types, input_model, 
 def fetch_models(channel_name, tuple_type, authorized_types, input_models, directory):
 
     models = []
-
-    for input_model in input_models:
-        proc = ExceptionThread(target=fetch_model,
-                               args=(channel_name, tuple_type, authorized_types, input_model, directory))
-        models.append(proc)
-        proc.start()
-
-    for proc in models:
-        proc.join()
-
     exceptions = []
 
-    for proc in models:
-        if hasattr(proc, "_exception"):
-            exceptions.append(proc._exception)
-            logger.exception(proc._exception)
-    else:
-        if exceptions:
-            raise Exception(exceptions)
+    for input_model in input_models:
+        # Authentification should be retrieved before sending the function fetch model to a subProcess
+        # as, fetching it from django models give random results
+        # Don't know why
+        auth = get_model_auth(channel_name, input_model)
+        args = (channel_name, tuple_type, authorized_types, input_model, directory, auth)
+        proc = Process(target=fetch_model, args=args)
+        models.append((proc, args))
+        proc.start()
+
+    for proc, args in models:
+        proc.join()
+        if proc.exitcode != 0:
+            exceptions.append(Exception(f'fetch model failed for args {args}'))
+
+    if exceptions:
+        raise Exception(exceptions)
+
+
+def get_model_auth(channel_name, input_model):
+    tuple_type, metadata = find_training_step_tuple_from_key(channel_name, input_model['traintuple_key'])
+    return authenticate_worker(tuple_get_owner(tuple_type, metadata))
 
 
 def prepare_traintuple_input_models(channel_name, directory, tuple_):

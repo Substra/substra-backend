@@ -2,7 +2,6 @@ import os
 import json
 import logging
 import functools
-import threading
 
 from django.conf import settings
 from requests.auth import HTTPBasicAuth
@@ -40,8 +39,12 @@ def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
     return get_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum, salt=salt)
 
 
-def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
-    return get_and_put_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum,
+def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key, auth=None):
+
+    if auth is None:
+        auth = authenticate_worker(node_id)
+
+    return get_and_put_remote_file_content(channel_name, url, auth, content_checksum,
                                            content_dst_path=content_dst_path, hash_key=hash_key)
 
 
@@ -150,18 +153,3 @@ def do_not_raise(fn):
         except Exception as e:
             logging.exception(e)
     return wrapper
-
-
-class ExceptionThread(threading.Thread):
-
-    def run(self):
-        try:
-            if self._target:
-                self._target(*self._args, **self._kwargs)
-        except BaseException as e:
-            self._exception = e
-            raise e
-        finally:
-            # Avoid a refcycle if the thread is running a function with
-            # an argument that has a member that points to the thread.
-            del self._target, self._args, self._kwargs
