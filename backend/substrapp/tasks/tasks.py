@@ -242,7 +242,7 @@ def fetch_models(channel_name, tuple_type, authorized_types, input_models, direc
             exceptions.append(Exception(f'fetch model failed for args {args}'))
 
     # Close django old connections to avoid potential leak
-    db.connections.close_old_connections()
+    db.close_old_connections()
 
     if exceptions:
         raise Exception(exceptions)
