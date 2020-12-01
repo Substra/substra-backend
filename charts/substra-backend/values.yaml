@@ -167,6 +167,7 @@ peer:
 
 channels:
   - mychannel:
+      restricted: false
       chaincode:
         name: mycc
         version: "1.0"
