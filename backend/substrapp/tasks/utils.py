@@ -31,6 +31,8 @@ def authenticate_worker(node_id):
         raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
     if node_id != outgoing.node_id:
+        # Ensure the response is valid. This is a safety net for the case when the DB connection is shared
+        # across processes running in parallel.
         raise NodeError(f'Wrong response: Request {node_id} - Get {outgoing.node_id}')
 
     auth = HTTPBasicAuth(owner, outgoing.secret)
