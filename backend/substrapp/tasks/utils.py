@@ -30,6 +30,11 @@ def authenticate_worker(node_id):
     except OutgoingNode.DoesNotExist:
         raise NodeError(f'Unauthorized to call node_id: {node_id}')
 
+    if node_id != outgoing.node_id:
+        # Ensure the response is valid. This is a safety net for the case when the DB connection is shared
+        # across processes running in parallel.
+        raise NodeError(f'Wrong response: Request {node_id} - Get {outgoing.node_id}')
+
     auth = HTTPBasicAuth(owner, outgoing.secret)
 
     return auth
@@ -39,12 +44,8 @@ def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
     return get_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum, salt=salt)
 
 
-def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key, auth=None):
-
-    if auth is None:
-        auth = authenticate_worker(node_id)
-
-    return get_and_put_remote_file_content(channel_name, url, auth, content_checksum,
+def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
+    return get_and_put_remote_file_content(channel_name, url, authenticate_worker(node_id), content_checksum,
                                            content_dst_path=content_dst_path, hash_key=hash_key)
 
 
