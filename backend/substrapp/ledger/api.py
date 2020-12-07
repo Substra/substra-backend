@@ -170,7 +170,7 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
     try:
         response = _call_ledger(channel_name, call_type, fcn, *args, **kwargs)
 
-        if isinstance(response, dict) and 'bookmarks' in response:
+        if isinstance(response, dict) and 'bookmark' in response:
             results = response['results']  # first results
             while response['results'] and len(response['bookmark']) > 0:
                 kwargs['args'] = {'bookmark': response['bookmark']}
