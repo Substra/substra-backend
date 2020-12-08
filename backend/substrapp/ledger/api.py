@@ -168,7 +168,19 @@ def call_ledger(channel_name, call_type, fcn, *args, **kwargs):
     ts = time.time()
     error = None
     try:
-        return _call_ledger(channel_name, call_type, fcn, *args, **kwargs)
+        response = _call_ledger(channel_name, call_type, fcn, *args, **kwargs)
+
+        if isinstance(response, dict) and 'bookmark' in response:
+            results = response['results']  # first results
+            while response['results'] and len(response['bookmark']) > 0:
+                kwargs['args'] = {'bookmark': response['bookmark']}
+                response = _call_ledger(channel_name, call_type, fcn, *args, **kwargs)
+                results.extend(response['results'])  # following results
+            else:
+                response = results
+
+        return response
+
     except Exception as e:
         error = e.__class__.__name__
         raise

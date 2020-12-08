@@ -7,7 +7,9 @@ from substrapp.utils import raise_if_path_traversal, uncompress_path
 from substrapp.ledger.exceptions import LedgerAssetNotFound, LedgerInvalidResponse
 
 from substrapp.ledger.api import get_object_from_ledger, log_fail_tuple, log_start_tuple, \
-    log_success_tuple, query_tuples
+    log_success_tuple, query_tuples, call_ledger
+
+from .assets import traintuple
 
 import os
 
@@ -136,3 +138,13 @@ class MiscTests(TestCase):
         with self.assertRaises(Exception):
             model_dst_path = os.path.join(DIRECTORY, 'model/../../hackermodel')
             raise_if_path_traversal([model_dst_path], os.path.join(DIRECTORY, 'model/'))
+
+    def test_call_ledger_with_bookmark(self):
+
+        with patch('substrapp.ledger.api._call_ledger') as m_call_ledger:
+            m_call_ledger.side_effect = [
+                {'results': traintuple[i:i + 2], 'bookmark': f'bookmark_{i}'}
+                for i in range(0, len(traintuple), 2)
+            ] + [{'results': "", 'bookmark': 'bookmark_end'}]
+            response = call_ledger(CHANNEL, 'query', 'queryTraintuples')
+            self.assertEqual(response, traintuple)
