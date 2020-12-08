@@ -83,16 +83,16 @@ spec:
             - name: PYTHONUNBUFFERED
               value: "1"
           volumeMounts:
-            - name: user-cert
-              mountPath: /var/hyperledger/msp/signcerts
-            - name: user-key
-              mountPath: /var/hyperledger/msp/keystore
-            - name: peer-tls-server
-              mountPath: /var/hyperledger/tls/server/pair
-            - name: peer-tls-client
-              mountPath: /var/hyperledger/tls/client/pair
-            - name: cacert
-              mountPath: /var/hyperledger/ca
+            # - name: user-cert
+            #   mountPath: /var/hyperledger/msp/signcerts
+            # - name: user-key
+            #   mountPath: /var/hyperledger/msp/keystore
+            # - name: peer-tls-server
+            #   mountPath: /var/hyperledger/tls/server/pair
+            # - name: peer-tls-client
+            #   mountPath: /var/hyperledger/tls/client/pair
+            # - name: cacert
+            #   mountPath: /var/hyperledger/ca
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
               name: ssl-certs
@@ -100,18 +100,18 @@ spec:
           resources:
             {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
       volumes:
-      - name: user-cert
-        secret:
-          secretName: {{ $.Values.secrets.user.cert }}
-      - name: user-key
-        secret:
-          secretName: {{ $.Values.secrets.user.key }}
-      - name: peer-tls-server
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.server }}
-      - name: peer-tls-client
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.client }}
+      # - name: user-cert
+      #   secret:
+      #     secretName: {{ $.Values.secrets.user.cert }}
+      # - name: user-key
+      #   secret:
+      #     secretName: {{ $.Values.secrets.user.key }}
+      # - name: peer-tls-server
+      #   secret:
+      #     secretName: {{ $.Values.secrets.peer.tls.server }}
+      # - name: peer-tls-client
+      #   secret:
+      #     secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}
@@ -119,9 +119,9 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      - name: cacert
-        secret:
-          secretName: {{ $.Values.secrets.caCert }}
+      # - name: cacert
+      #   secret:
+      #     secretName: {{ $.Values.secrets.caCert }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

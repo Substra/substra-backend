@@ -4,7 +4,7 @@ import logging
 import multiprocessing
 import time
 import contextlib
-
+import requests
 from django.apps import AppConfig
 
 from django.conf import settings
@@ -201,19 +201,35 @@ class EventsConfig(AppConfig):
     def listen_to_channel(self, channel_name):
         # We try to connect a client first, if it fails the backend will not start.
         # It prevents potential issues when we launch the channel event hub in a subprocess.
-        while True:
-            try:
-                with get_hfc(channel_name) as (loop, client, user):
-                    logger.info(f'Events: Connected to channel {channel_name}.')
-            except Exception as e:
-                logger.exception(e)
-                time.sleep(5)
-                logger.error(f'Events: Retry connecting to channel {channel_name}.')
-            else:
-                break
+        # while True:
+        #     try:
+        #         with get_hfc(channel_name) as (loop, client, user):
+        #             logger.info(f'Events: Connected to channel {channel_name}.')
+        #     except Exception as e:
+        #         logger.exception(e)
+        #         time.sleep(5)
+        #         logger.error(f'Events: Retry connecting to channel {channel_name}.')
+        #     else:
+        #         break
 
-        p1 = multiprocessing.Process(target=wait, args=[channel_name])
-        p1.start()
+        # p1 = multiprocessing.Process(target=wait, args=[channel_name])
+        # p1.start()
+        next_event_id = 1
+
+        while True:
+            url = 'http://substra-chaincode.default.svc.cluster.local/events'
+            response = requests.post(
+                url,
+                data=json.dumps(next_event_id)
+            )
+
+            if response.status_code == requests.status_codes.codes.ok:
+                x = response.content.decode()
+                logger.info(f'Last event received: {next_event_id}: {x}')
+                res = {'payload': x}
+                on_event(channel_name, res, 1, 2, 'VALID')
+                next_event_id += 1
+            time.sleep(1)
 
     def ready(self):
         for channel_name in settings.LEDGER_CHANNELS.keys():

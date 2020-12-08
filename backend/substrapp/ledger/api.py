@@ -2,6 +2,7 @@ import functools
 import json
 import logging
 import time
+import requests
 
 from uuid import UUID
 from django.conf import settings
@@ -89,6 +90,21 @@ class UUIDEncoder(json.JSONEncoder):
 
 
 def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
+
+    url = 'http://substra-chaincode.default.svc.cluster.local'
+
+    if not args:
+        args = ""
+    else:
+        args = json.dumps(args, cls=UUIDEncoder)
+
+    response = requests.post(
+        url,
+        data=json.dumps([fcn, args])
+    )
+
+    logger.error(response.content)
+    return response.json()
 
     with get_hfc(channel_name) as (loop, client, user):
         if not args:
