@@ -220,14 +220,13 @@ class EventsConfig(AppConfig):
             url = 'http://substra-chaincode.default.svc.cluster.local/events'
             response = requests.post(
                 url,
-                data=json.dumps(next_event_id)
+                data=json.dumps({'identity': settings.LEDGER_MSP_ID, 'event_id': next_event_id})
             )
 
             if response.status_code == requests.status_codes.codes.ok:
                 x = response.content.decode()
                 logger.info(f'Last event received: {next_event_id}: {x}')
-                res = {'payload': x}
-                on_event(channel_name, res, 1, 2, 'VALID')
+                on_event(channel_name, {'payload': x}, 1, 2, 'VALID')
                 next_event_id += 1
             time.sleep(1)
 

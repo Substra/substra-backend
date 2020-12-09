@@ -91,7 +91,7 @@ class UUIDEncoder(json.JSONEncoder):
 
 def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
-    url = 'http://substra-chaincode.default.svc.cluster.local'
+    url = 'http://substra-chaincode.default.svc.cluster.local/invoke'
 
     if not args:
         args = ""
@@ -100,8 +100,15 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
     response = requests.post(
         url,
-        data=json.dumps([fcn, args])
+        data=json.dumps({
+            'identity': settings.LEDGER_MSP_ID,
+            'function': fcn,
+            'args': args
+        })
     )
+
+    if response.status_code != requests.status_codes.codes.ok:
+        raise Exception(f'Error querying standalone chaincode: Status code: {response.status_code}. Body: {response.content}')
 
     logger.error(response.content)
     return response.json()
