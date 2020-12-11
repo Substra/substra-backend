@@ -214,21 +214,48 @@ class EventsConfig(AppConfig):
 
         # p1 = multiprocessing.Process(target=wait, args=[channel_name])
         # p1.start()
-        next_event_id = 1
+        event_id = 1
 
         while True:
-            url = 'http://substra-chaincode.default.svc.cluster.local/events'
-            response = requests.post(
-                url,
-                data=json.dumps({'identity': settings.LEDGER_MSP_ID, 'event_id': next_event_id})
-            )
+            evt = self.standalone_fetch_event(event_id)
+            logger.info(f'Last event received: {event_id}: {evt}')
+            self.standalone_process_event(channel_name, evt)
+            event_id += 1
 
-            if response.status_code == requests.status_codes.codes.ok:
-                x = response.content.decode()
-                logger.info(f'Last event received: {next_event_id}: {x}')
-                on_event(channel_name, {'payload': x}, 1, 2, 'VALID')
-                next_event_id += 1
-            time.sleep(1)
+            # Waiting here shouldn't be necessary.
+            # Wait anyway in case a function called in the main `while True` loop misbehaves.
+            time.sleep(0.1)
+
+    def standalone_fetch_event(self, event_id):
+        while True:
+            try:
+                response = requests.post(
+                    'http://substra-chaincode.default.svc.cluster.local/events',
+                    data=json.dumps({'identity': settings.LEDGER_MSP_ID, 'event_id': event_id})
+                )
+            except Exception as e:
+                logger.error(f'An error occurred while fetching new events: {str(e)}. Retrying in 5 seconds')
+                time.sleep(5)
+            else:
+                if response.status_code == requests.status_codes.codes.ok:
+                    return response.content.decode()
+                elif response.status_code == requests.status_codes.codes.not_found:
+                    time.sleep(1)  # Event not available yet
+                else:
+                    body = response.content.decode() if response.content else ""
+                    fetch_error = f'Status code is {response.status_code}. Body: {body}'
+                    logger.error(f'An error occurred while fetching new events: {fetch_error}. Retrying in 5 seconds')
+                    time.sleep(5)
+
+    def standalone_process_event(self, channel_name, evt):
+        while True:
+            try:
+                on_event(channel_name, {'payload': evt}, 1, 2, 'VALID')
+                return True
+            except Exception as e:
+                logger.exception(e)
+                logger.error('An error occurred while processing the event. Retrying in 5 seconds')
+                time.sleep(5)
 
     def ready(self):
         for channel_name in settings.LEDGER_CHANNELS.keys():

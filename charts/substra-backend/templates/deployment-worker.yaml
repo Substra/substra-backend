@@ -67,6 +67,30 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
+      - name: init-migrate
+        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        command: ['python', 'manage.py', 'migrate']
+        {{- if .Values.securityContext.enabled }}
+        securityContext:
+          runAsUser: {{ .Values.securityContext.runAsUser }}
+          runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        {{- end }}
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-ledger
+        env:
+        - name: DJANGO_SETTINGS_MODULE
+          value: backend.settings.{{ .Values.backend.settings }}
+        - name: ORG_NAME
+          value: {{ .Values.organization.name }}
+        - name: BACKEND_DB_NAME
+          value: {{ .Values.postgresql.postgresqlDatabase }}
+        - name: BACKEND_DB_USER
+          value: {{ .Values.postgresql.postgresqlUsername }}
+        - name: BACKEND_DB_PWD
+          value: {{ .Values.postgresql.postgresqlPassword }}
+        - name: DATABASE_HOST
+          value: {{ .Release.Name }}-postgresql
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
