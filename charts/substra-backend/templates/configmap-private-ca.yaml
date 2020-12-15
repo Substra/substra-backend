@@ -2,12 +2,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Values.privateCa.configMap.name }} 
+  name: {{ .Values.privateCa.configMap.name }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "substra.name" . }}
 data:
   {{ .Values.privateCa.configMap.fileName }}: |
 {{ .Values.privateCa.configMap.data | indent 4}}

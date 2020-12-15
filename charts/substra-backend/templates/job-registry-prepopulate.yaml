@@ -6,20 +6,18 @@ kind: Deployment
 metadata:
   name: {{ template "substra.fullname" $ }}-registry-prepopulate-{{ $index }}
   labels:
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{ include "substra.labels" $ | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
-    app.kubernetes.io/part-of: {{ template "substra.name" $ }}
 spec:
   replicas: 1
   selector:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
-        app.kubernetes.io/instance: {{ $.Release.Name }}
+        {{ include "substra.selectorLabels" $ | nindent 8}}
   template:
     metadata:
       labels:
+        {{ include "substra.labels" $ | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" $ }}-registry-prepopulate-{{ $index }}
         app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:

@@ -4,11 +4,8 @@ kind: PodSecurityPolicy
 metadata:
   name: {{ template "substra.fullname" . }}-psp
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-psp
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
   allowPrivilegeEscalation: false
   volumes:

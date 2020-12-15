@@ -3,6 +3,8 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
+  labels:
+    {{ include "substra.labels" $ | nindent 4 }}
   name: {{ template "substra.fullname" $ }}-{{ .name }}
 spec:
   accessModes:
@@ -13,11 +15,8 @@ spec:
   {{- if $.Values.persistence.hostPath }}
   selector:
     matchLabels:
-      app.kubernetes.io/managed-by: {{ $.Release.Service }}
-      app.kubernetes.io/instance: {{ $.Release.Name }}
-      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      {{ include "substra.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
-      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-{{ .name }}
   {{- else if $.Values.persistence.storageClassName }}
   storageClassName: {{ $.Values.persistence.storageClassName }}
   {{- end }}
@@ -28,11 +27,8 @@ kind: PersistentVolume
 metadata:
   name: {{ template "substra.fullname" $ }}-{{ .name }}
   labels:
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{ include "substra.labels" $ | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
-    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-{{ .name }}
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
@@ -53,6 +49,8 @@ kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   name: {{ template "substra.fullname" $ }}-servermedias
+  labels:
+  {{ include "substra.labels" $ | nindent 4 }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -62,11 +60,8 @@ spec:
   {{- if $.Values.persistence.hostPath }}
   selector:
     matchLabels:
-      app.kubernetes.io/managed-by: {{ $.Release.Service }}
-      app.kubernetes.io/instance: {{ $.Release.Name }}
-      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      {{ include "substra.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
-      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-servermedias
   {{- else if $.Values.persistence.storageClassName }}
   storageClassName: {{ $.Values.persistence.storageClassName }}
   {{- end }}
@@ -77,11 +72,8 @@ kind: PersistentVolume
 metadata:
   name: {{ template "substra.fullname" $ }}-servermedias
   labels:
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{ include "substra.labels" $ | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
-    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-servermedias
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
@@ -102,11 +94,8 @@ kind: PersistentVolumeClaim
 metadata:
   name: {{ template "substra.fullname" $ }}-docker-cache
   labels:
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+    {{ include "substra.labels" $ | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
-    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
 spec:
   accessModes:
   - ReadWriteOnce
@@ -116,11 +105,8 @@ spec:
   {{- if $.Values.persistence.hostPath }}
   selector:
     matchLabels:
-      app.kubernetes.io/managed-by: {{ $.Release.Service }}
-      app.kubernetes.io/instance: {{ $.Release.Name }}
-      helm.sh/chart: {{ $.Chart.Name }}-{{ $.Chart.Version }}
+      {{ include "substra.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
-      app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
   {{- else if $.Values.persistence.storageClassName }}
   storageClassName: {{ $.Values.persistence.storageClassName }}
   {{- end }}
@@ -131,11 +117,8 @@ kind: PersistentVolume
 metadata:
   name: {{ template "substra.fullname" $ }}-docker-cache
   labels:
-    app.kubernetes.io/managed-by: {{ $.Release.Service }}
-    app.kubernetes.io/instance: {{ $.Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ $.Chart.Version }}
+    {{ include "substra.labels" $ | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" $ }}-docker-cache
-    app.kubernetes.io/part-of: {{ template "substra.name" $ }}-docker-cache
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
