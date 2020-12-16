@@ -56,7 +56,6 @@ Always refer to the [compatibility table](https://github.com/SubstraFoundation/s
 
 ## Miscellaneous
 
-- [PyCharm setup](./doc/pycharm-setup.md)
 - [substra-tests](https://github.com/SubstraFoundation/substra-tests) is the Substra end to end test suite
 
 ## License
