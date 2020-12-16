@@ -1,4 +1,4 @@
-# Substra-Backend [![Build Status](https://travis-ci.org/SubstraFoundation/substra-backend.svg?branch=master)](https://travis-ci.org/SubstraFoundation/substra-backend) [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds)
+# Substra-Backend [![Python](https://github.com/SubstraFoundation/substra-backend/workflows/Python/badge.svg)](https://github.com/SubstraFoundation/substra-backend/actions?query=workflow%3APython) [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds)
 
 Backend of the Substra platform
 
