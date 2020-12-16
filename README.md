@@ -54,8 +54,13 @@ You can use them to access the exposed API at http://substra-backend.node-1.com/
 Make sure you deploy this backend with a compatible ecosystem (chaincode, hlf-k8s, etc).
 Always refer to the [compatibility table](https://github.com/SubstraFoundation/substra#compatibility-table).
 
-## Miscellaneous
+## Companion repositories
 
+The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
+
+- [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
+- [substra-chaincode](https://github.com/SubstraFoundation/substra-chaincode) is the chaincode powering the Fabric network
+- [substra-frontend](https://github.com/SubstraFoundation/substra-frontend) is the frontend consuming the API exposed by the backend
 - [substra-tests](https://github.com/SubstraFoundation/substra-tests) is the Substra end to end test suite
 
 ## License
