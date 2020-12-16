@@ -6,7 +6,7 @@ Backend of the Substra platform
 
 For the local installation of substra-backend (and companions), please refer to the [setup documentation](https://doc.substra.ai/setup/local_install_skaffold.html).
 
-With [hlf-k8s]() already running and requirements fulfilled, this should boils down to:
+With [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) already running and requirements fulfilled, this should boils down to:
 ```sh
 skaffold dev
 ```
