@@ -11,14 +11,26 @@ With [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) already running and
 skaffold dev
 ```
 
+This will spawn several pods in two different namespaces to simulate several organizations: 'org-1' and 'org-2'.
+Each organization will have:
+- a postgres database
+- a rabbitmq message broker
+- a docker registry
+- a kaniko cache warmer
+- a [celery beat](./charts/substra-backend/templates/deployment-celerybeat.yaml)
+- 2 celery workers (a [worker](./charts/substra-backend/templates/deployment-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler.yaml) restarting hanging tasks)
+- an [operator pattern to add accounts](./charts/substra-backend/templates/add-account-operator.yaml)
+- the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
+- the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the chaincode into celery tasks
+
 ## Django management
 
-To get access to the Django management tool, spawn a shell in the running container:
+To get access to the [Django management tool](https://docs.djangoproject.com/en/2.2/ref/django-admin), spawn a shell in the running container:
 ```sh
 kubectl -n org-1 exec -i -t $(kubectl -n org-1 get pods -l=app.kubernetes.io/name=substra-backend-server -o name) -c substra-backend -- /bin/bash
 ```
 
-This will also gives you access to the celery CLI.
+This will also gives you access to the [celery CLI](https://docs.celeryproject.org/en/stable/reference/cli.html). You can issue `celery inspect active_queues` to examine consumed queues.
 
 ## Execute unit tests
 
@@ -47,7 +59,7 @@ The sample credentials for org1 are:
 - user: `node-1`
 - pass: `p@$swr0d44`
 
-You can use them to access the exposed API at http://substra-backend.node-1.com/
+Provided you have correctly setup your [network configuration](https://doc.substra.ai/setup/local_install_skaffold.html#network), you can use them to access the exposed API at http://substra-backend.node-1.com/
 
 ## Compatibility
 
