@@ -76,7 +76,7 @@ persistence:
 extraEnv:
   # Should be a json list
   - name: CORS_ORIGIN_WHITELIST
-    value: '["http://substra-frontend.node-1.com/", "http://substra-frontend.node-1.com:3000/", "http://substra-frontend.node-1.com:3001/"]'
+    value: '["http://substra-frontend.node-1.com", "http://substra-frontend.node-1.com:3000", "http://substra-frontend.node-1.com:3001"]'
   - name: CORS_ALLOW_CREDENTIALS
     value: "true"
   - name: DEFAULT_THROTTLE_RATES
