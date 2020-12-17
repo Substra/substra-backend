@@ -12,7 +12,7 @@ ipython-genutils==0.2.0
 kubernetes==11.0.0
 psycopg2-binary==2.8.6
 requests>=2.20.0
-tldextract==2.2.2
+tldextract==2.2.3
 uwsgi==2.0.19.1
 zxcvbn==4.4.28
 boto3==1.11.9
