@@ -4,13 +4,13 @@ kind: Job
 metadata:
   name: {{ template "substra.fullname" . }}-kaniko-cache-warmer
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-kaniko-cache-warmer
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 spec:
   template:
+    metadata:
+      labels:
+        {{ include "substra.labels" . | nindent 8 }}
     spec:
       # Run the cache warmer on the same node as the worker pod, because
       # they both use the "docker-cache" PV.

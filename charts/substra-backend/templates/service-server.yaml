@@ -3,11 +3,8 @@ kind: Service
 metadata:
   name: {{ template "substra.fullname" . }}-server
   labels:
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-server
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
     {{- if .Values.backend.service.labels }}
     {{- toYaml .Values.backend.service.labels | nindent 4 }}
     {{- end }}

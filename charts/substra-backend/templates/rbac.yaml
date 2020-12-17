@@ -6,11 +6,8 @@ metadata:
   name: {{ template "substra.fullname" . }}-worker
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 ---
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
@@ -18,11 +15,8 @@ metadata:
   name: {{ template "substra.fullname" . }}-worker
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 rules:
   - apiGroups: [""]
     resources: ["secrets"]
@@ -50,11 +44,8 @@ metadata:
   name: {{ template "substra.fullname" . }}-worker
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    helm.sh/chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
-    app.kubernetes.io/part-of: {{ template "substra.name" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "substra.fullname" . }}-worker

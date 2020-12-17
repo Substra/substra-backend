@@ -1,7 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "substra.fullname" . }}-events-uwsgi
+  name: {{ include "substra.fullname" . }}-events-uwsgi
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "substra.name" . }}-events
 data:
   uwsgi.ini: |
     [uwsgi]

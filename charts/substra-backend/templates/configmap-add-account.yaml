@@ -1,7 +1,10 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ template "substra.fullname" . }}-add-account
+  name: {{ include "substra.fullname" . }}-add-account
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "substra.name" . }}-add-account
 data:
   users: |
     {{- range .Values.users }}

@@ -26,3 +26,33 @@ Return the appropriate apiVersion for PodSecurityPolicy.
 {{- print "extensions/v1beta1" -}}
 {{- end -}}
 {{- end -}}
+
+
+{{/*
+Create chart name and version as used by the chart label.
+*/}}
+{{- define "substra.chart" -}}
+{{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+
+{{/*
+Common labels
+*/}}
+{{- define "substra.labels" -}}
+helm.sh/chart: {{ include "substra.chart" . }}
+{{ include "substra.selectorLabels" . }}
+{{- if .Chart.AppVersion }}
+app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- end }}
+app.kubernetes.io/managed-by: {{ .Release.Service }}
+app.kubernetes.io/part-of: {{ template "substra.name" . }}
+{{- end }}
+
+
+{{/*
+Selector labels
+*/}}
+{{- define "substra.selectorLabels" -}}
+app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

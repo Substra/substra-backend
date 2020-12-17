@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0
+
+### Changed
+- Refactor of the kubernetes objects labels
 
 ## 1.6.0
 
