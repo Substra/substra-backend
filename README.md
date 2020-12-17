@@ -2,198 +2,78 @@
 
 Backend of the Substra platform
 
-## Version
+## Running a development instance
 
-You will note substra-backend use a versioned REST API with the header protocol.
-Current is `0.0`.
+For the local installation of substra-backend (and companions), please refer to the [setup documentation](https://doc.substra.ai/setup/local_install_skaffold.html).
 
-## Getting started 1: Prepare the django app
-
-1. Clone the repo:
- ```
- git clone https://github.com/SubstraFoundation/substra-backend
- ```
-2. If you are on Linux, follow the [Linux user namespaces instructions](./doc/linux-userns-guide.md)
-3. Install dependencies (might be useful to create a virtual environment before, eg using virtualenv and virtualenvwrapper):
-  - For numpy, scipy, and pandas (for Ubuntu & Debian users): `sudo apt-get install python-numpy python-scipy python-pandas`
-  - `pip install -r requirements.txt`
-4. Setup the database:
-  - Install [PostgreSQL](https://www.postgresql.org/download/) if needed
-  - [Create a database](https://www.postgresql.org/docs/10/static/tutorial-createdb.html).
-5. Create a main postgresql use with password:
-  ```shell
-  $> sudo su postgres
-  $> psql
-  $ CREATE USER backend WITH PASSWORD 'backend' CREATEDB CREATEROLE SUPERUSER;
-  ```
-6. Create two databases for both orgs: owkin and chu-nantes. A shell script is available, do not hesitate to run it.
-It will drop the databases if they are already created, then create them and grant all privileges to your main user backend.
- (If this is the first time you create the databases, you will see some warnings which are pointless):
-
-  ```shell
-  $> ./scripts/recreate_db.sh
-```
-7. We will populate data:
-
-###### Clean environment (recommanded)
-
-- With django migrations
-```shell
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py migrate --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py migrate --settings=backend.settings.dev
+With [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) already running and requirements fulfilled, this should boils down to:
+```sh
+skaffold dev
 ```
 
-###### With fixtures (fixtures container has been run from hlf-k8s, old behavior for testing)
+This will spawn several pods in two different namespaces to simulate several organizations: 'org-1' and 'org-2'.
+Each organization will have:
+- Postgres database
+- RabbitMQ message broker
+- Docker registry
+- Kaniko cache warmer
+- [Celery beat](./charts/substra-backend/templates/deployment-celerybeat.yaml)
+- 2 celery workers (a [worker](./charts/substra-backend/templates/deployment-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler.yaml) restarting hanging tasks)
+- an [operator pattern to add accounts](./charts/substra-backend/templates/add-account-operator.yaml)
+- the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
+- the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the chaincode into celery tasks
 
-data in fixtures are relative to the data already set in the ledger if the fixtures container instance succeeded
+## Django management
 
-Two solutions:
-- With django migrations + load data
-```shell
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py migrate --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py migrate --settings=backend.settings.dev
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 python backend/manage.py loaddata ./fixtures/data_owkin.json --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 python backend/manage.py loaddata ./fixtures/data_chu-nantes.json --settings=backend.settings.dev
-```
-- From dumps:
-```shell
-  $> ./scripts/populate_db.sh
-```
-If you don't want to replicate the data in the ledger, simply run the django migrations.
-
-Populate media files
-```shell
-  $> ./scripts/load_fixtures.sh
-```
-It will clean the `medias` folders and create the `owkin` and `chu-nantes` folders in the `medias` folder.
-
-
-8. Optional: Create a superuser in your databases:
-```shell
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./backend/manage.py createsuperuser --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./backend/manage.py createsuperuser --settings=backend.settings.dev
+To get access to the [Django management tool](https://docs.djangoproject.com/en/2.2/ref/django-admin), spawn a shell in the running container:
+```sh
+kubectl -n org-1 exec -i -t $(kubectl -n org-1 get pods -l=app.kubernetes.io/name=substra-backend-server -o name) -c substra-backend -- /bin/bash
 ```
 
-## Getting started 2: Linking the app with Hyperledger Fabric
+This will also gives you access to the [celery CLI](https://docs.celeryproject.org/en/stable/reference/cli.html). You can issue `celery inspect active_queues` to examine consumed queues.
 
+## Execute unit tests
 
-### Make the hlf-k8s available to the app
-
-[See here](https://github.com/SubstraFoundation/hlf-k8s#network).
-
-### Install rabbitmq
-
-```shell
-sudo apt-get install rabbitmq-server
+Make sure you have the requirements installed:
+```sh
+pip install -r backend/requirements.txt
 ```
 
-### Launch celery workers/scheduler and celery beat
-
-Execute this command in the `backend/backend` folder.
-
-Note the use of the development settings.
-
-```shell
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,scheduler,celery --hostname owkin.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 celery -E -A backend worker -l info -B -n owkin -Q owkin,owkin.worker,celery --hostname owkin.worker
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,scheduler,celery --hostname chu-nantes.scheduler
-DJANGO_SETTINGS_MODULE=backend.settings.dev BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 celery -E -A backend worker -l info -B -n chunantes -Q chu-nantes,chu-nantes.worker,celery --hostname chu-nantes.worker
-DJANGO_SETTINGS_MODULE=backend.settings.common celery -A backend beat -l info
+Then launch unit tests:
+```sh
+make test
 ```
 
-## Launch the servers
-
-Go in the `backend` folder and run the server locally:
-:warning: <p style="color: red">Be very careful, --settings is different here, `server` is needed.</p>
-
-```shell
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 BACKEND_PEER_PORT_EXTERNAL=9051 ./manage.py runserver 8000 --settings=backend.settings.server.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 BACKEND_PEER_PORT_EXTERNAL=7051 ./manage.py runserver 8001 --settings=backend.settings.server.dev
+A coverage report can be obtained with:
+```sh
+make coverage
 ```
 
-## Generate nodes authentication
+Should you prefer an HTML report, you can use `coverage html` from the `backend` directory.
 
-For working with node to node authentication, you need to generate and then load some fixtures
-```shell
-python ./backend/node/generate_nodes.py
-BACKEND_ORG=owkin BACKEND_DEFAULT_PORT=8000 ./manage.py init_nodes ./backend/node/nodes/owkinMSP.json --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes BACKEND_DEFAULT_PORT=8001 ./manage.py init_nodes ./backend/node/nodes/chu-nantesMSP.json --settings=backend.settings.dev
-```
+## Accessing the app
 
-## Create a default user
+On deployment, several user accounts are created (for [./values/backend-org-1.yaml](org1) and [./values/backend-org-2.yaml](org2)).
 
-A django admin command is available for registering a user:
-```shell
-./manage.py add_user $USERNAME $PASSWORD
-```
+The sample credentials for org1 are:
+- user: `node-1`
+- pass: `p@$swr0d44`
 
-Create these users with:
+Provided you have correctly setup your [network configuration](https://doc.substra.ai/setup/local_install_skaffold.html#network), you can use them to access the exposed API at http://substra-backend.node-1.com/
 
-```shell
-BACKEND_ORG=owkin ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
-BACKEND_ORG=chu-nantes ./backend/manage.py add_user substra 'p@$swr0d44' --settings=backend.settings.dev
-```
+## Compatibility
 
-## Test with unit and functional tests
+Make sure you deploy this backend with a compatible ecosystem (chaincode, hlf-k8s, etc).
+Always refer to the [compatibility table](https://github.com/SubstraFoundation/substra#compatibility-table).
 
-```shell
-    make test
-    make coverage  # For shell report
-    coverage html  # For HTML report
-```
+## Companion repositories
 
-## Test by creating a traintuple
+The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
 
-###### With fixtures
-
-You can test your environment by creating a traintuple:
-```shell
-curl -H "Accept: text/html;version=0.0, */*;version=0.0" -H "Content-Type: application/json" -d '{"algo_key":"da58a7a2-9b54-9f2f-e5f0-09fb51cce6b2","model_key":"","train_data_sample_keys":["62fb3263-208d-62c7-235a-046ee1d80e25","42303efa-6630-15e7-2915-9833a12ffb51"]}' -X POST http://localhost:8001/traintuple/?format=json
-```
-It will try to create a traintuple with creator: chu-nantes (localhost:8001).
-The chu-nantes celery worker will try to add the traintuple to the ledger.
-You can check your traintuple has been corectly added by visiting `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/`
-As the trainDataSample passed are also created by chu-nantes, the chu-nantes celery worker will try to update the traintuple status to `training` and save some data if needed.
-You can check `http://localhost:8000/traintuple/` or `http://localhost:8001/traintuple/` to check if the status of your newly created traintuple is set to `training` after 10 sec (celery worker periodic task period).
-You can also check a new objective has been added in `medias/chu-nantes` with a `metrics.py` file but not `description.md` file.
-
-## Launching with docker
-
-As for hlf-k8s, you can launch all the services in docker containers.
-
-First, Make sure you've generated some nodes artifacts:
-```bash
-$> python ./backend/node/generate_nodes.py
-```
-
-Then, build the images:
-```bash
-$> sh build-docker-images.sh
-```
-
-Then, go to the `docker` dir and run `start.py` (`-d` means `dev` settings):
-```bash
-$> python start.py -d --no-backup
-```
-
-Check your services are correctly started with `docker ps -a`.
-
-## Expiry token period
-
-Two global environment variables `ACCESS_TOKEN_LIFETIME` and `EXPIRY_TOKEN_LIFETIME` expressed in minutes can be set for dealing with expiry token period.
-The first one `ACCESS_TOKEN_LIFETIME` deals with JWT Authentication.
-THe second one `EXPIRY_TOKEN_LIFETIME` deals with simple token expiration.
-By default, set to 24*60 min i.e 24h.
-
-## Testing fabric-sdk-py
-
-A directory named `fabric-sdk-py_tests` is available to the root of this project.
-If you launch a hlf-k8s setup, you will be able to play with theses tests.
-For `fabric-sdk-py-query-invoke.py`, be sure to have run the `generateNetworkFile.py` script for producing the network.json file needed.
-
-## Miscellaneous
-
-- [PyCharm setup](./doc/pycharm-setup.md)
+- [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
+- [substra-chaincode](https://github.com/SubstraFoundation/substra-chaincode) is the chaincode powering the Fabric network
+- [substra-frontend](https://github.com/SubstraFoundation/substra-frontend) is the frontend consuming the API exposed by the backend
+- [substra-tests](https://github.com/SubstraFoundation/substra-tests) is the Substra end to end test suite
 
 ## License
 
