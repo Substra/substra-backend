@@ -18,7 +18,7 @@ zxcvbn==4.4.28
 boto3==1.11.9
 fabric-sdk-py==1.0.0
 # dev-mode
-watchdog==0.10.2
+watchdog==1.0.1
 argh==0.26.2
 # tests
 coverage==5.0.3
