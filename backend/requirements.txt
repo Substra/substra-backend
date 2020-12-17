@@ -10,7 +10,7 @@ djangorestframework-simplejwt==4.4.0
 ipython==7.11.1
 ipython-genutils==0.2.0
 kubernetes==11.0.0
-psycopg2-binary==2.8.4
+psycopg2-binary==2.8.6
 requests>=2.20.0
 tldextract==2.2.2
 uwsgi==2.0.19.1
