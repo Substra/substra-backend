@@ -72,7 +72,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.sites',
     'django_celery_results',
-    'rest_framework_swagger',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
