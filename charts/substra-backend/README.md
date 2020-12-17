@@ -54,3 +54,4 @@ The following table lists the configurable parameters of the substra-backend cha
 ### Basic example
 
 For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
+
