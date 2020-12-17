@@ -13,11 +13,11 @@ skaffold dev
 
 This will spawn several pods in two different namespaces to simulate several organizations: 'org-1' and 'org-2'.
 Each organization will have:
-- a postgres database
-- a rabbitmq message broker
-- a docker registry
-- a kaniko cache warmer
-- a [celery beat](./charts/substra-backend/templates/deployment-celerybeat.yaml)
+- Postgres database
+- RabbitMQ message broker
+- Docker registry
+- Kaniko cache warmer
+- [Celery beat](./charts/substra-backend/templates/deployment-celerybeat.yaml)
 - 2 celery workers (a [worker](./charts/substra-backend/templates/deployment-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler.yaml) restarting hanging tasks)
 - an [operator pattern to add accounts](./charts/substra-backend/templates/add-account-operator.yaml)
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
