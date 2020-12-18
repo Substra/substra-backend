@@ -1,11 +1,11 @@
-{{- range .Values.persistence.volumes }}
+{{- range $key, $val := .Values.persistence.volumes }}
 ---
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
   labels:
     {{ include "substra.labels" $ | nindent 4 }}
-  name: {{ template "substra.fullname" $ }}-{{ .name }}
+  name: {{ template "substra.fullname" $ }}-{{ $key }}
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,7 +16,7 @@ spec:
   selector:
     matchLabels:
       {{ include "substra.selectorLabels" $ | nindent 6 }}
-      app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ $key }}
   {{- else if $.Values.persistence.storageClassName }}
   storageClassName: {{ $.Values.persistence.storageClassName }}
   {{- end }}
@@ -25,22 +25,22 @@ spec:
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: {{ template "substra.fullname" $ }}-{{ .name }}
+  name: {{ template "substra.fullname" $ }}-{{ $key }}
   labels:
     {{ include "substra.labels" $ | nindent 4 }}
-    app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ .name }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ $key }}
 spec:
   storageClassName: ""
   persistentVolumeReclaimPolicy: Recycle
   claimRef:
-    name: {{ template "substra.fullname" $ }}-{{ .name }}
+    name: {{ template "substra.fullname" $ }}-{{ $key }}
     namespace: {{ $.Release.Namespace }}
   capacity:
-    storage: {{ .size | quote }}
+    storage: {{ $val.size | quote }}
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: {{ $.Values.persistence.hostPath }}/medias/{{ .name }}
+    path: {{ $.Values.persistence.hostPath }}/medias/{{ $key }}
     type: DirectoryOrCreate
 {{- end }}
 {{- end }}

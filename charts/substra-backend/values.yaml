@@ -86,52 +86,52 @@ persistence:
   # hostPathServerMedias: "/host/servermedias"
   size: "10Gi"
   volumes:
-    - name: algos
+    algos:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: aggregatealgos
+    aggregatealgos:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: compositealgos
+    compositealgos:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: datamanagers
+    datamanagers:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: datasamples
+    datasamples:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: objectives
+    objectives:
       size: "10Gi"
       readOnly:
         server: false
         worker: true
-    - name: models
+    models:
       size: "10Gi"
       readOnly:
         server: true
         worker: false
-    - name: subtuple
+    subtuple:
       size: "10Gi"
       readOnly:
         server: true
         worker: false
-    - name: computeplan
+    computeplan:
       size: "10Gi"
       readOnly:
         server: true
         worker: false
-    - name: local
+    local:
       size: "10Gi"
       readOnly:
         server: true

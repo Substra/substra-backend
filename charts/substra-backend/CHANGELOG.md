@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.8.0
+
+### Changed
+- `persistence.volumes` is now an object instead of an array
+- `persistence.volumes[].name` is now the key of the volume object
+
 ## 1.7.0
 
 ### Changed
