@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - "master"
+    paths:
+    - 'charts/**'
   pull_request:
     branches:
       - "master"
@@ -37,11 +39,16 @@ jobs:
         run: |
           helm dep update charts/substra-backend
           helm package charts/substra-backend
+      - name: Setup key
+        run: |
+          mkdir $HOME/.ssh
+          echo "${{ secrets.CHARTS_ACCESS_KEY }}" > $HOME/.ssh/id_rsa
+          chmod 400 ~/.ssh/id_rsa
       - name: Publish chart
         run: |
-          git config --global user.email "gh-actions@github.com"; fi'
+          git config --global user.email "gh-actions@github.com"
           git config --global user.name "GitHub Action"
-          git clone https://${{ secrets.GITHUB_TOKEN }}@github.com/SubstraFoundation/charts.git substra-charts
+          git clone git@github.com:SubstraFoundation/charts.git substra-charts
           mv substra-backend-* substra-charts/
           cd substra-charts
           helm repo index .
