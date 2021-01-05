@@ -87,10 +87,10 @@ spec:
             containerPort: {{ .Values.backend.service.port }}
             protocol: TCP
         volumeMounts:
-          {{- range .Values.persistence.volumes }}
-          - name: data-{{ .name }}
-            mountPath: /var/substra/medias/{{ .name }}
-            readOnly: {{ .readOnly.server }}
+          {{- range $key, $val := .Values.persistence.volumes }}
+          - name: data-{{ $key }}
+            mountPath: /var/substra/medias/{{ $key }}
+            readOnly: {{ $val.readOnly.server }}
           {{- end }}
           - name: data-servermedias
             mountPath: /var/substra/servermedias
@@ -161,9 +161,9 @@ spec:
             chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
           done
         volumeMounts:
-          {{- range .Values.persistence.volumes }}
-          - name: data-{{ .name }}
-            mountPath: /var/substra/medias/{{ .name }}
+          {{- range $key, $val := .Values.persistence.volumes }}
+          - name: data-{{ $key }}
+            mountPath: /var/substra/medias/{{ $key }}
           {{- end }}
       {{- end }}
       - name: wait-postgresql
@@ -210,10 +210,10 @@ spec:
           - name: statics
             mountPath: /usr/src/app/backend/statics
       volumes:
-      {{- range .Values.persistence.volumes }}
-      - name: data-{{ .name }}
+      {{- range $key, $val := .Values.persistence.volumes }}
+      - name: data-{{ $key }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+          claimName: {{ include "substra.fullname" $ }}-{{ $key }}
       {{- end }}
       - name: data-servermedias
         persistentVolumeClaim:

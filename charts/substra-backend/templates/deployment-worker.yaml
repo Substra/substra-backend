@@ -114,9 +114,9 @@ spec:
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
             {{- end }}
-            {{- range .Values.persistence.volumes }}
-            - name: {{ .name | upper }}_PVC
-              value: {{ include "substra.fullname" $ }}-{{ .name }}
+            {{- range $key, $val := .Values.persistence.volumes }}
+            - name: {{ $key | upper }}_PVC
+              value: {{ include "substra.fullname" $ }}-{{ $key }}
             {{- end }}
             - name: SERVERMEDIAS_PVC
               value: {{ template "substra.fullname" $ }}-servermedias
@@ -157,10 +157,10 @@ spec:
 {{ toYaml . | indent 12 }}
           {{- end }}
           volumeMounts:
-            {{- range .Values.persistence.volumes }}
-            - name: data-{{ .name }}
-              mountPath: /var/substra/medias/{{ .name }}
-              readOnly: {{ .readOnly.worker }}
+            {{- range $key, $val := .Values.persistence.volumes }}
+            - name: data-{{ $key }}
+              mountPath: /var/substra/medias/{{ $key }}
+              readOnly: {{ $val.readOnly.worker }}
             {{- end }}
             - name: data-servermedias
               mountPath: /var/substra/servermedias
@@ -182,10 +182,10 @@ spec:
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
-      {{- range .Values.persistence.volumes }}
-      - name: data-{{ .name }}
+      {{- range $key, $val := .Values.persistence.volumes }}
+      - name: data-{{ $key }}
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-{{ .name }}
+          claimName: {{ include "substra.fullname" $ }}-{{ $key }}
       {{- end }}
       - name: data-servermedias
         persistentVolumeClaim:
