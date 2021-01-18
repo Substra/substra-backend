@@ -66,6 +66,14 @@ Provided you have correctly setup your [network configuration](https://doc.subst
 Make sure you deploy this backend with a compatible ecosystem (chaincode, hlf-k8s, etc).
 Always refer to the [compatibility table](https://github.com/SubstraFoundation/substra#compatibility-table).
 
+The recommended way to run a specific version (0.1.6) of substra-backend is to execute:
+
+```bash
+SUBSTRA_BACKEND_VERSION=0.1.6
+git checkout $SUBSTRA_BACKEND_VERSION
+skaffold deploy --images substrafoundation/substra-backend:$SUBSTRA_BACKEND_VERSION
+```
+
 ## Companion repositories
 
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
