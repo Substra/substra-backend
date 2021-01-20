@@ -16,6 +16,7 @@ tldextract==2.2.3
 uwsgi==2.0.19.1
 zxcvbn==4.4.28
 boto3==1.11.9
+grpcio==1.30.0  # Fix the grpcio version because of stability issues in 1.31.0+ (see https://github.com/grpc/grpc/issues/23796)
 fabric-sdk-py==1.0.0
 # dev-mode
 watchdog==1.0.1
