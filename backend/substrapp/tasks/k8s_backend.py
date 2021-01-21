@@ -476,46 +476,34 @@ def generate_volumes(volume_binds, name, subtuple_key):
 
     for path, bind in volume_binds.items():
 
-        # Handle local volume
-        if 'local-' in path:
-            volume_mounts.append({
-                'name': 'local',
-                'mountPath': bind['bind'],
-                'subPath': path
-            })
-            volumes.append(
-                {'name': 'local',
-                 'persistentVolumeClaim': {'claimName': K8S_PVC['LOCAL_PVC']}}
-            )
+        if '/servermedias/' in path:
+            # /MOUNT/PATH/servermedias/...
+            volume_name = 'servermedias'
         else:
-            if '/servermedias/' in path:
-                # /MOUNT/PATH/servermedias/...
-                volume_name = 'servermedias'
-            else:
-                # /MOUNT/PATH/medias/volume_name/...
-                volume_name = path.split('/medias/')[-1].split('/')[0]
+            # /MOUNT/PATH/medias/volume_name/...
+            volume_name = path.split('/medias/')[-1].split('/')[0]
 
-            subpath = path.split(f'/{volume_name}/')[-1]
+        subpath = path.split(f'/{volume_name}/')[-1]
 
-            pvc_name = [key for key in K8S_PVC.keys()
-                        if volume_name in key.lower()]
-            if pvc_name:
-                pvc_name = pvc_name.pop()
-            else:
-                raise Exception(f'PVC for {volume_name} not found')
+        pvc_name = [key for key in K8S_PVC.keys()
+                    if volume_name in key.lower()]
+        if pvc_name:
+            pvc_name = pvc_name.pop()
+        else:
+            raise Exception(f'PVC for {volume_name} not found')
 
-            volume_mounts.append({
-                'name': volume_name,
-                'mountPath': bind['bind'],
-                'subPath': subpath,
-                'readOnly': bind['mode'] != 'rw'
+        volume_mounts.append({
+            'name': volume_name,
+            'mountPath': bind['bind'],
+            'subPath': subpath,
+            'readOnly': bind['mode'] != 'rw'
 
-            })
+        })
 
-            volumes.append({
-                'name': volume_name,
-                'persistentVolumeClaim': {'claimName': K8S_PVC[pvc_name]}
-            })
+        volumes.append({
+            'name': volume_name,
+            'persistentVolumeClaim': {'claimName': K8S_PVC[pvc_name]}
+        })
 
     # Unique volumes
     volumes = list({v['name']: v for v in volumes}.values())

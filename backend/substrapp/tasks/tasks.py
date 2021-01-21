@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from base64 import b64decode
 import os
 import shutil
+import distutils.dir_util
 import tempfile
 from os import path
 import json
@@ -50,6 +51,7 @@ TUPLE_COMMANDS = {
 
 DATA_FOLDER = '/sandbox/data'
 MODEL_FOLDER = '/sandbox/model'
+LOCAL_FOLDER = '/sandbox/local'
 OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
 OUTPUT_PERF_PATH = '/sandbox/perf/perf.json'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
@@ -720,6 +722,18 @@ def do_task(channel_name, subtuple, tuple_type):
     models = save_models(subtuple_directory, tuple_type, subtuple['key'])  # Can be empty if testtuple
     result = extract_result_from_models(tuple_type, models)  # Can be empty if testtuple
 
+    # Handle local volume
+    if compute_plan_key is not None:
+        local_path = path.join(subtuple_directory, 'local')
+
+        # Get CP local folder from local pvc
+        local_path_in_pvc = get_local_folder(compute_plan_key)
+
+        # Copy content of local folder from subtuple directory to local folder in pvc
+        # to fetch modification of ocal folder content
+        distutils.dir_util.copy_tree(local_path, local_path_in_pvc)
+        logger.info(f'Content from {local_path} has been copied to {local_path_in_pvc}')
+
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
 
@@ -797,11 +811,21 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_pl
 
     # local volume for train like tuples in compute plan
     if compute_plan_key is not None:
-        volume_id = get_local_folder_name(compute_plan_key)
-        get_or_create_local_volume(volume_id)
+        local_path = path.join(subtuple_directory, 'local')
+
+        # Get CP local folder from local pvc
+        local_path_in_pvc = get_local_folder(compute_plan_key)
+        get_or_create_local_volume(get_local_folder_name(compute_plan_key))
+
+        # Copy content of local folder from pvc to local folder in subtuple directory
+        # It allows the cp subtuple to be retried with compromising the
+        # local data.
+        if os.path.exists(local_path_in_pvc):
+            distutils.dir_util.copy_tree(local_path_in_pvc, local_path)
+            logger.info(f'Content from {local_path_in_pvc} has been copied to {local_path}')
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
-        model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
+        model_volume[local_path] = {'bind': LOCAL_FOLDER, 'mode': mode}
 
     chainkeys_volume = {}
     if compute_plan_key is not None and settings.TASK['CHAINKEYS_ENABLED']:
