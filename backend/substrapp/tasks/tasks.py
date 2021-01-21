@@ -732,7 +732,7 @@ def do_task(channel_name, subtuple, tuple_type):
         # Copy content of local folder from subtuple directory to local folder in pvc
         # to fetch modification of local folder content
         distutils.dir_util.copy_tree(local_path, local_path_in_pvc)
-        logger.info(f'Content from {local_path} has been copied to {local_path_in_pvc}')
+        logger.info(f'Content from sandbox {local_path} has been copied to pvc {local_path_in_pvc}')
 
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
@@ -822,7 +822,7 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_pl
         # local data.
         if os.path.exists(local_path_in_pvc):
             distutils.dir_util.copy_tree(local_path_in_pvc, local_path)
-            logger.info(f'Content from {local_path_in_pvc} has been copied to {local_path}')
+            logger.info(f'Content from pvc {local_path_in_pvc} has been copied to sandbox {local_path}')
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
         model_volume[local_path] = {'bind': LOCAL_FOLDER, 'mode': mode}
