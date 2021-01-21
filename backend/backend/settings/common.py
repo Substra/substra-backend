@@ -77,7 +77,8 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'substrapp',
     'node',
-    'users'
+    'users',
+    'drf_spectacular',
 ]
 
 AUTHENTICATION_BACKENDS = [

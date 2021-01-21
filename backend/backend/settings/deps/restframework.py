@@ -30,6 +30,7 @@ REST_FRAMEWORK = {
         'rest_framework.parsers.FormParser',
         'libs.json_multipart_parser.JsonMultiPartParser'
     ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 SIMPLE_JWT = {
@@ -38,4 +39,8 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': True,
     'AUTH_HEADER_TYPES': ('JWT',),
     'BLACKLIST_AFTER_ROTATION': True,
+}
+
+SPECTACULAR_SETTINGS = {
+    'SERVE_PERMISSIONS': ['rest_framework.permissions.IsAuthenticated'],
 }

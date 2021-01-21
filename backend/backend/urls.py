@@ -16,9 +16,14 @@ Including another URLconf
 from django.conf.urls import url
 from django.conf import settings
 from django.conf.urls.static import static
-from django.urls import include
+from django.urls import include, path
 from rest_framework.settings import api_settings
 from rest_framework.renderers import BrowsableAPIRenderer
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularRedocView,
+    SpectacularSwaggerView,
+)
 
 from backend.views import obtain_auth_token
 
@@ -35,7 +40,20 @@ urlpatterns = [
         url(r'^api-token-auth/', obtain_auth_token)  # for expiry token authent
     ])),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
-  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
+  + [  # OpenAPI spec and UI
+      path("schema/", SpectacularAPIView.as_view(), name="schema"),
+      path(
+          "schema/swagger-ui/",
+          SpectacularSwaggerView.as_view(url_name="schema"),
+          name="swagger-ui",
+      ),
+      path(
+          "schema/redoc/",
+          SpectacularRedocView.as_view(url_name="schema"),
+          name="redoc",
+      ),
+]
 
 # only allow session authentication is the browsable API is enabled
 if BrowsableAPIRenderer in api_settings.DEFAULT_RENDERER_CLASSES:
