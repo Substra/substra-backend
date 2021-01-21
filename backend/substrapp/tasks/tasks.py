@@ -730,7 +730,7 @@ def do_task(channel_name, subtuple, tuple_type):
         local_path_in_pvc = get_local_folder(compute_plan_key)
 
         # Copy content of local folder from subtuple directory to local folder in pvc
-        # to fetch modification of ocal folder content
+        # to fetch modification of local folder content
         distutils.dir_util.copy_tree(local_path, local_path_in_pvc)
         logger.info(f'Content from {local_path} has been copied to {local_path_in_pvc}')
 
