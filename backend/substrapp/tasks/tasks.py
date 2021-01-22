@@ -818,7 +818,7 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_pl
         get_or_create_local_volume(get_local_folder_name(compute_plan_key))
 
         # Copy content of local folder from pvc to local folder in subtuple directory
-        # It allows the cp subtuple to be retried with compromising the
+        # It allows the cp subtuple to be retried without compromising the
         # local data.
         if os.path.exists(local_path_in_pvc):
             distutils.dir_util.copy_tree(local_path_in_pvc, local_path)
