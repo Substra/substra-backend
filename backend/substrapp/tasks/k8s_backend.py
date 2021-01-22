@@ -598,11 +598,6 @@ def delete_compute_pod(name):
     logger.info(f'Deleted pod {NAMESPACE}/{name}')
 
 
-def k8s_get_or_create_local_volume(volume_id):
-    pvc = K8S_PVC['LOCAL_PVC']
-    logger.info(f'{volume_id} will be created in the PVC {pvc}')
-
-
 def get_security_context(enabled=True, root=False, privileged=False, add_capabilities=None):
     if enabled:
         if not root:

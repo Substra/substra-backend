@@ -271,13 +271,8 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, c
         raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
 
 
-def get_local_folder_name(compute_plan_key):
-    return f'local-{compute_plan_key}-{settings.ORG_NAME}'
-
-
-def get_local_folder(compute_plan_key):
-    volume_id = get_local_folder_name(compute_plan_key)
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'local', volume_id)
+def get_cp_local_folder(compute_plan_key):
+    return path.join(getattr(settings, 'MEDIA_ROOT'), 'local', f'local-{compute_plan_key}-{settings.ORG_NAME}')
 
 
 def get_subtuple_directory(subtuple_key):

@@ -8,8 +8,7 @@ from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
 
 from substrapp.tasks.k8s_backend import (
-    k8s_get_image, k8s_build_image, k8s_get_or_create_local_volume,
-    k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
+    k8s_get_image, k8s_build_image, k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
 
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celery:latest')
@@ -79,10 +78,6 @@ def list_files(startpath, as_json=True):
             res += f'{subindent}{f}' + "\n"
 
     return res
-
-
-def get_or_create_local_volume(volume_id):
-    return k8s_get_or_create_local_volume(volume_id)
 
 
 def remove_image(image_name):
