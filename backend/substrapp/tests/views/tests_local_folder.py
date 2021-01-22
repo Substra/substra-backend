@@ -53,7 +53,6 @@ class LocalFolderTests(APITestCase):
              mock.patch('substrapp.tasks.tasks.generate_command'),\
              mock.patch('substrapp.tasks.tasks.save_models'),\
              mock.patch('substrapp.tasks.tasks.compute_job') as mcompute_job:
-            mquery_ledger.return_value = {'tag': compute_plan_tag}
 
             def compute_job(*args, **kwargs):
                 for vol in kwargs['volumes']:
@@ -63,12 +62,16 @@ class LocalFolderTests(APITestCase):
                 if compute_job_raises:
                     raise Exception('Boom!')
 
+            mquery_ledger.return_value = {'tag': compute_plan_tag}
             mcompute_job.side_effect = compute_job
+
             try:
                 build_subtuple_folders(subtuple)
                 do_task(channel_name, subtuple, TRAINTUPLE_TYPE)
             except Exception:
-                pass
+                if compute_job_raises:
+                    # exception expected
+                    pass
 
         # Check the compute plan local folder value is correct:
         # - If do_task did raise an exception then the local value should be unchanged
