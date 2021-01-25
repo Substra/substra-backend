@@ -20,20 +20,21 @@ class HealthCheckMiddleware(object):
         """
         Returns that the server is alive.
         """
-        validate_solo_channels()
+        validate_channels()
         return HttpResponse("OK")
 
     def readiness(self, request):
         """
         Returns that the server is alive.
         """
-        validate_solo_channels()
+        validate_channels()
         return HttpResponse("OK")
 
 
-def validate_solo_channels():
+def validate_channels():
+    # Check ledger connection for each channel
     for channel_name, channel in settings.LEDGER_CHANNELS.items():
-        if channel_name.startswith('solo-') or channel['restricted']:
-            with get_hfc(channel_name) as (loop, client, user):
-                # get_hfc will throw if the solo channel has more than 1 member
-                pass
+        with get_hfc(channel_name) as (loop, client, user):
+            # if channel_name starts with 'solo-' channel name is include channel['restricted']
+            # get_hfc will throw if the solo channel has more than 1 member
+            pass
