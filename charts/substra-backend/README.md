@@ -23,7 +23,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |
 | `backend.kaniko.cache.warmer.images` | A list of docker images to warm up the kaniko local cache with | `[]` |
 | `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
-| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.0.0` |
+| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.3.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
 | `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `{ mychannel: { restricted: false, chaincode: { name: mycc, version: 1.0 } } }` |
 | `channels[].restricted` | If true, the channel must have at most 1 member, else the backend readiness/liveliness probes will fail. | (undefined) |

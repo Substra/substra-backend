@@ -259,7 +259,9 @@ def _k8s_build_image(path, tag, rm, cache_index):
         f'--dockerfile={dockerfile_fullpath}',
         f'--context=dir://{path}',
         f'--destination={REGISTRY}/{tag}:substra',
-        f'--cache={str(not(rm)).lower()}'
+        f'--cache={str(not(rm)).lower()}',
+        '--snapshotMode=redo',
+        '--single-snapshot'
     ]
 
     if REGISTRY_SCHEME == 'http':
