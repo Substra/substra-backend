@@ -3,6 +3,7 @@ from __future__ import absolute_import, unicode_literals
 from base64 import b64decode
 import os
 import shutil
+import distutils.dir_util
 import tempfile
 from os import path
 import json
@@ -21,13 +22,13 @@ import boto3
 
 from backend.celery import app
 from substrapp.utils import (get_hash, get_owner, create_directory, uncompress_content, raise_if_path_traversal,
-                             get_dir_hash, get_local_folder_name, get_subtuple_directory, get_chainkeys_directory,
-                             get_local_folder, timeit)
+                             get_dir_hash, get_subtuple_directory, get_chainkeys_directory,
+                             get_cp_local_folder, timeit)
 from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_tuple,
                                   query_tuples, get_object_from_ledger)
 from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
-                                   list_files, do_not_raise, get_or_create_local_volume, remove_image)
+                                   list_files, do_not_raise, remove_image)
 
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -50,6 +51,7 @@ TUPLE_COMMANDS = {
 
 DATA_FOLDER = '/sandbox/data'
 MODEL_FOLDER = '/sandbox/model'
+LOCAL_FOLDER = '/sandbox/local'
 OUTPUT_MODEL_FOLDER = '/sandbox/output_model'
 OUTPUT_PERF_PATH = '/sandbox/perf/perf.json'
 OUTPUT_HEAD_MODEL_FILENAME = 'head_model'
@@ -456,7 +458,7 @@ def remove_local_folders(compute_plan_key):
         return
 
     try:
-        local_folder = get_local_folder(compute_plan_key)
+        local_folder = get_cp_local_folder(compute_plan_key)
         logger.info(f'Deleting local folder {local_folder}')
         shutil.rmtree(local_folder)
     except FileNotFoundError:
@@ -720,6 +722,17 @@ def do_task(channel_name, subtuple, tuple_type):
     models = save_models(subtuple_directory, tuple_type, subtuple['key'])  # Can be empty if testtuple
     result = extract_result_from_models(tuple_type, models)  # Can be empty if testtuple
 
+    # local volume content shared by subtuples in compute plan
+    if compute_plan_key is not None:
+        subtuple_local_folder = path.join(subtuple_directory, 'local')
+        cp_local_folder = get_cp_local_folder(compute_plan_key)
+
+        # Copy content of subtuple local folder to compute plan local folder in order
+        # to fetch modifications made in the subtuple execution
+        distutils.dir_util.copy_tree(subtuple_local_folder, cp_local_folder)
+        logger.info(f'Content from subtuple local folder ({subtuple_local_folder}) '
+                    f'has been copied to compute plan local folder ({cp_local_folder})')
+
     # Evaluation
     if tuple_type == TESTTUPLE_TYPE:
 
@@ -795,13 +808,21 @@ def prepare_volumes(subtuple_directory, tuple_type, compute_plan_key, compute_pl
         output_model_path: {'bind': OUTPUT_MODEL_FOLDER, 'mode': 'rw'}
     }
 
-    # local volume for train like tuples in compute plan
+    # local volume content shared by subtuples in compute plan
     if compute_plan_key is not None:
-        volume_id = get_local_folder_name(compute_plan_key)
-        get_or_create_local_volume(volume_id)
+        subtuple_local_folder = path.join(subtuple_directory, 'local')
+        cp_local_folder = get_cp_local_folder(compute_plan_key)
+
+        # Copy content of compute plan local folder to subtuple local folder.
+        # It allows the compute plan subtuple to be retried without compromising the
+        # local data.
+        if os.path.exists(cp_local_folder):
+            distutils.dir_util.copy_tree(cp_local_folder, subtuple_local_folder)
+            logger.info(f'Content from compute plan local folder ({cp_local_folder}) '
+                        f'has been copied to subtuple local folder ({subtuple_local_folder})')
 
         mode = 'ro' if tuple_type == TESTTUPLE_TYPE else 'rw'
-        model_volume[volume_id] = {'bind': '/sandbox/local', 'mode': mode}
+        model_volume[subtuple_local_folder] = {'bind': LOCAL_FOLDER, 'mode': mode}
 
     chainkeys_volume = {}
     if compute_plan_key is not None and settings.TASK['CHAINKEYS_ENABLED']:
