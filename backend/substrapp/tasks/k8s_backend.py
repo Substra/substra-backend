@@ -88,7 +88,6 @@ def watch_pod(name, watch_init_container=False):
     attempt = 0
     max_attempts = 5 + (5 if watch_init_container else 0)
     error = None
-    error_pod = None
     watch_container = not watch_init_container
 
     logger.info(f'Waiting for pod {name}...')
@@ -104,9 +103,15 @@ def watch_pod(name, watch_init_container=False):
             # Handle pod error not linked with containers
             if api_response.status.phase == 'Failed' or (api_response.status.reason and
                'Evicted' in api_response.status.reason):
-                error_pod = f'Pod failed reason {api_response.status.reason})'
+
+                if api_response.status.reason:
+                    error = api_response.status.reason
+                else:
+                    error = f'Pod phase : {api_response.status.phase}'
+
                 logger.error(f'Status for pod "{name}" {api_response.status.phase.lower()} status')
                 finished = True
+                continue
 
             if watch_init_container:
                 if api_response.status.init_container_statuses:
@@ -151,13 +156,6 @@ def watch_pod(name, watch_init_container=False):
         except Exception as e:
             attempt += 1
             logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
-
-    # Merge error
-    if error_pod is not None:
-        if error is not None:
-            error = f'{error_pod} - {error}'
-        else:
-            error = error_pod
 
     if error is not None:
         raise PodErrorException(f'Pod {name} terminated with error: {error}')
