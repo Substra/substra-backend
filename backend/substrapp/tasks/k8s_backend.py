@@ -100,6 +100,19 @@ def watch_pod(name, watch_init_container=False):
                 pretty=True
             )
 
+            # Handle pod error not linked with containers
+            if api_response.status.phase == 'Failed' or (api_response.status.reason and
+               'Evicted' in api_response.status.reason):
+
+                if api_response.status.reason:
+                    error = api_response.status.reason
+                else:
+                    error = f'Pod phase : {api_response.status.phase}'
+
+                logger.error(f'Status for pod "{name}" {api_response.status.phase.lower()} status')
+                finished = True
+                continue
+
             if watch_init_container:
                 if api_response.status.init_container_statuses:
                     for init_container in api_response.status.init_container_statuses:
