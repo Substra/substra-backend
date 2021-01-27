@@ -105,9 +105,8 @@ def watch_pod(name, watch_init_container=False):
             if api_response.status.phase == 'Failed' or (api_response.status.reason and
                'Evicted' in api_response.status.reason):
                 error_pod = f'Pod failed reason {api_response.status.reason})'
-                attempt += 1
-                logger.error(f'Status for pod "{name}" {api_response.status.phase.lower()} status '
-                             f'(attempt {attempt}/{max_attempts}): {api_response.status.reason}')
+                logger.error(f'Status for pod "{name}" {api_response.status.phase.lower()} status')
+                finished = True
 
             if watch_init_container:
                 if api_response.status.init_container_statuses:
