@@ -101,7 +101,7 @@ def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
 
     logger.info(f'Processing cleaning task {key}: type=computePlan status={status}')
 
-    task_id = f'{key}-{block_number}'
+    task_id = f'{key}_{tx_id}'
 
     if AsyncResult(task_id).state != 'PENDING':
         logger.info(f'Skipping cleaning task {key} (from block {block_number}): already exists')
