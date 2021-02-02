@@ -1,11 +1,58 @@
 import json
 from substrapp.ledger.connection import get_hfc
 from pathlib import Path
+from django.conf import settings
+from typing import Generator, Dict
 
 
-def get_transactions(start_block, end_block):
+def dump_all_blocks(channel_name: str, start_block: int, end_block: int, out_folder: str) -> None:
+    """Dump all the blocks from `start_block` to `end_block` as JSON files in `out_folder`.
+    Files are named "{block_number},{transaction_index}.json", e.g. "0123,0.json"
+    """
+    for block_number, tx_index, tx in get_transactions(channel_name, start_block, end_block):
+        dump_block(block_number, tx_index, tx, out_folder)
+
+
+def get_mvcc_transactions(channel_name: str, start_block: int, end_block: int) -> Generator:
+    """Get the list of transactions which had a MVCC conflict. The items yielded by this
+    function are tuples in the form (block_number, tx_index, transaction). block_number and tx_index
+    can be used to identify transactions dumped by the dump_all_block function (which generates
+    "{block_number}, {tx_index}.json" files.
+
+    Example usage:
+
+      end_block = get_ledger_height('mychannel')
+      for i in get_mvcc_transactions('mychannel', 0, end_block):
+          # i[0] == block_number
+          # i[1] == tx_index
+          # i[2] == tx
+          print({i[0], i[1])
+    """
     for block_number in range(start_block, end_block + 1):
-        block = get_block(block_number)
+        block = get_block(channel_name, block_number)
+        for tx_index, tx in enumerate(block['data']['data']):
+            tx_id = tx['payload']['header']['channel_header']['tx_id']
+            if not tx_id:
+                continue
+            tx = get_transaction(channel_name, tx_id)
+            if tx['validation_code'] == 11:  # MVCC_READ_CONFLICT = 11
+                yield (block_number, tx_index, tx)
+
+
+def get_ledger_height(channel_name: str) -> int:
+    """Return the highest block number in the ledger (aka ledger height)"""
+    with get_hfc(channel_name) as (loop, client, user):
+        info = loop.run_until_complete(client.query_info(
+            user,
+            channel_name,
+            [settings.LEDGER_PEER_NAME],
+            decode=True))
+        return info.height
+
+
+def get_transactions(channel_name: str, start_block: int, end_block: int) -> Generator:
+    for block_number in range(start_block, end_block + 1):
+        block = get_block(channel_name, block_number)
         for tx_index, tx in enumerate(block['data']['data']):
             if "actions" not in tx['payload']['data']:
                 # not an invoke
@@ -16,33 +63,36 @@ def get_transactions(start_block, end_block):
                 yield block_number, tx_index, tx
 
 
-def get_block(block_number):
-    with get_hfc('mychannel') as (loop, client, user):
+def get_block(channel_name: str, block_number: int) -> Dict:
+    with get_hfc(channel_name) as (loop, client, user):
         block = loop.run_until_complete(client.query_block(
             user,
-            'mychannel',
-            ['peer'],
+            channel_name,
+            [settings.LEDGER_PEER_NAME],
             str(block_number),
             decode=True))
         return block
 
 
-def dump_all_blocks(start_block, end_block, out_folder):
-    """Dump all the blocks from `start_block` to `end_block` as JSON files in `out_folder`.
-    Files are named "{block_number}.{transaction_index}.json", e.g. "0123,0.json"
-    """
-    for block_number, tx_index, tx in get_transactions(start_block, end_block):
-        dump_block(block_number, tx_index, tx, out_folder)
+def get_transaction(channel_name: str, tx_id: str) -> Dict:
+    with get_hfc(channel_name) as (loop, client, user):
+        transaction = loop.run_until_complete(client.query_transaction(
+            user,
+            channel_name,
+            [settings.LEDGER_PEER_NAME],
+            tx_id=tx_id,
+            decode=True))
+        return transaction
 
 
-def dump_block(block_number, tx_index, tx, out_folder):
+def dump_block(block_number: int, tx_index: int, tx: Dict, out_folder: str) -> None:
     path = Path(out_folder)
     path.mkdir(parents=True, exist_ok=True)
     with open(path / f"{block_number:04},{tx_index}.json", "w") as json_file:
         json.dump(_make_jsonifiable(tx), json_file, indent=2)
 
 
-def _make_jsonifiable(x):
+def _make_jsonifiable(x: Dict) -> Dict:
     if type(x) == bytes:
         return str(x)
     if type(x) == dict:
