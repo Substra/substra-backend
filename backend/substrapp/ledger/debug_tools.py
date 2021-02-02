@@ -2,32 +2,32 @@ import json
 from substrapp.ledger.connection import get_hfc
 from pathlib import Path
 from django.conf import settings
-from typing import Generator, Dict
+from typing import Generator, Dict, List
 
 
-def dump_all_blocks(channel_name: str, start_block: int, end_block: int, out_folder: str) -> None:
+def dump_all_transactions(channel_name: str, start_block: int, end_block: int, out_folder: str) -> None:
     """Dump all the blocks from `start_block` to `end_block` as JSON files in `out_folder`.
     Files are named "{block_number},{transaction_index}.json", e.g. "0123,0.json"
     """
     for block_number, tx_index, tx in get_transactions(channel_name, start_block, end_block):
-        dump_block(block_number, tx_index, tx, out_folder)
+        dump_transaction(block_number, tx_index, tx, out_folder)
 
 
-def get_mvcc_transactions(channel_name: str, start_block: int, end_block: int) -> Generator:
-    """Get the list of transactions which had a MVCC conflict. The items yielded by this
-    function are tuples in the form (block_number, tx_index, transaction). block_number and tx_index
-    can be used to identify transactions dumped by the dump_all_block function (which generates
-    "{block_number}, {tx_index}.json" files.
+def get_mvcc_transactions(channel_name: str, start_block: int, end_block: int) -> List[Dict]:
+    """Get the list of transactions which have a MVCC conflict.
 
     Example usage:
 
       end_block = get_ledger_height('mychannel')
-      for i in get_mvcc_transactions('mychannel', 0, end_block):
-          # i[0] == block_number
-          # i[1] == tx_index
-          # i[2] == tx
-          print({i[0], i[1])
+      txs = get_mvcc_transactions('mychannel', 0, end_block)
+      txs[0]
+      # {
+      #     'block_number': 43,
+      #     'tx_index': 1,
+      #     'tx_id': 'fd31631d86e961caf97800d9ff5fae4b12b59ca20c364dc4868408f3c89e6c58'
+      # }
     """
+    res = []
     for block_number in range(start_block, end_block + 1):
         block = get_block(channel_name, block_number)
         for tx_index, tx in enumerate(block['data']['data']):
@@ -36,7 +36,12 @@ def get_mvcc_transactions(channel_name: str, start_block: int, end_block: int) -
                 continue
             tx = get_transaction(channel_name, tx_id)
             if tx['validation_code'] == 11:  # MVCC_READ_CONFLICT = 11
-                yield (block_number, tx_index, tx)
+                res.append({
+                    'block_number': block_number,
+                    'tx_index': tx_index,
+                    'tx_id': tx_id
+                })
+    return res
 
 
 def get_ledger_height(channel_name: str) -> int:
@@ -85,7 +90,7 @@ def get_transaction(channel_name: str, tx_id: str) -> Dict:
         return transaction
 
 
-def dump_block(block_number: int, tx_index: int, tx: Dict, out_folder: str) -> None:
+def dump_transaction(block_number: int, tx_index: int, tx: Dict, out_folder: str) -> None:
     path = Path(out_folder)
     path.mkdir(parents=True, exist_ok=True)
     with open(path / f"{block_number:04},{tx_index}.json", "w") as json_file:
