@@ -3,6 +3,7 @@ import contextlib
 import asyncio
 import glob
 import tempfile
+import threading
 
 from django.conf import settings
 from hfc.fabric import Client
@@ -13,6 +14,7 @@ from hfc.util.keyvaluestore import FileKeyValueStore
 from hfc.fabric.block_decoder import decode_fabric_MSP_config, decode_fabric_peers_info, decode_fabric_endpoints
 
 user = None
+user_lock = threading.Lock()
 
 
 def ledger_grpc_options(hostname):
@@ -46,16 +48,17 @@ def _get_hfc(channel_name):
     asyncio.set_event_loop(loop)
 
     if not user:
-        # Only call `create_user` once in the lifetime of the application.
-        # Calling `create_user` twice breaks thread-safety (bug in fabric-sdk-py)
-        user = create_user(
-            name=settings.LEDGER_USER_NAME,
-            org=settings.ORG_NAME,
-            state_store=FileKeyValueStore(settings.LEDGER_CLIENT_STATE_STORE),
-            msp_id=settings.LEDGER_MSP_ID,
-            key_path=glob.glob(settings.LEDGER_CLIENT_KEY_PATH)[0],
-            cert_path=settings.LEDGER_CLIENT_CERT_PATH
-        )
+        with user_lock:
+            # Only call `create_user` once in the lifetime of the application.
+            # Calling `create_user` twice breaks thread-safety (bug in fabric-sdk-py)
+            user = create_user(
+                name=settings.LEDGER_USER_NAME,
+                org=settings.ORG_NAME,
+                state_store=FileKeyValueStore(settings.LEDGER_CLIENT_STATE_STORE),
+                msp_id=settings.LEDGER_MSP_ID,
+                key_path=glob.glob(settings.LEDGER_CLIENT_KEY_PATH)[0],
+                cert_path=settings.LEDGER_CLIENT_CERT_PATH
+            )
 
     client = Client()
 

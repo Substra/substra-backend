@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+
+### Changed
+- Add new variable to define the path of the hlf user state store `backend.stateStorePath`
+
 
 ## 1.9.0
 

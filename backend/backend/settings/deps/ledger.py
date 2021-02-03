@@ -17,7 +17,7 @@ LEDGER_PEER_TLS_CA_CERTS = '/var/hyperledger/ca/cacert.pem'
 LEDGER_PEER_TLS_CLIENT_KEY = '/var/hyperledger/tls/client/pair/tls.key'
 LEDGER_PEER_TLS_CLIENT_CERT = '/var/hyperledger/tls/client/pair/tls.crt'
 
-LEDGER_CLIENT_STATE_STORE = '/tmp/hfc-cvs'
+LEDGER_CLIENT_STATE_STORE = os.getenv('LEDGER_CLIENT_STATE_STORE', '/tmp/hfc-cvs')
 LEDGER_CLIENT_KEY_PATH = '/var/hyperledger/msp/keystore/*'
 LEDGER_CLIENT_CERT_PATH = '/var/hyperledger/msp/signcerts/cert.pem'
 
