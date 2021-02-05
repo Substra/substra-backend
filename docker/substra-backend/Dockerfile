@@ -28,4 +28,8 @@ COPY --from=build /usr/src/app /usr/src/app
 
 WORKDIR /usr/src/app
 RUN chown -R ${USER_ID}:${GROUP_ID} /usr/src/app
+
+RUN mkdir -p /var/substra/
+RUN chown -R ${USER_ID}:${GROUP_ID} /var/substra/
+
 USER ${USER_ID}:${GROUP_ID}
