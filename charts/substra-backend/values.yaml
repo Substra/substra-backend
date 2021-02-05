@@ -7,7 +7,6 @@ backend:
   uwsgiProcesses: 20
   uwsgiThreads: 2
   gzipModels: false
-  stateStorePath: '/var/substra/hfc-cvs'
 
   kaniko:
     image: gcr.io/kaniko-project/executor:v1.3.0

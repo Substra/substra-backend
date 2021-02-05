@@ -16,4 +16,3 @@ data:
   LEDGER_QUERY_STRATEGY: {{ .Values.peer.strategy.query }}
   LEDGER_GRPC_KEEPALIVE_TIME_MS: {{ .Values.backend.grpc.keepalive.timeMs | quote }}
   LEDGER_GRPC_HTTP2_MIN_TIME_BETWEEN_PINGS_MS: {{ .Values.backend.grpc.keepalive.timeMs | quote }}
-  LEDGER_CLIENT_STATE_STORE: {{ .Values.backend.stateStorePath }}
