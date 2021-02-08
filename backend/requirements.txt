@@ -12,7 +12,7 @@ ipython==7.11.1
 ipython-genutils==0.2.0
 jedi==0.17.2  # Fix crashes in iPython. See https://github.com/ipython/ipython/issues/12740#issuecomment-751273584
               # A better solution would be to bump ipython to 7.20.0, but it needs python 3.7+
-kubernetes==11.0.0
+kubernetes==12.0.1
 psycopg2-binary==2.8.6
 requests>=2.20.0
 tldextract==2.2.3
