@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.1
+
+### Changed
+- `docker-registry` default service value to nodePort
+
 
 ## 1.9.0
 
