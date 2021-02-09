@@ -2,7 +2,6 @@ backend:
   replicaCount: 1
   settings: prod
   tokenStrategy: 'unique'  # 'reuse'
-  siteHost: localhost
   defaultDomain: localhost
   uwsgiProcesses: 20
   uwsgiThreads: 2
