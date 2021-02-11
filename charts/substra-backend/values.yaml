@@ -2,7 +2,6 @@ backend:
   replicaCount: 1
   settings: prod
   tokenStrategy: 'unique'  # 'reuse'
-  siteHost: localhost
   defaultDomain: localhost
   uwsgiProcesses: 20
   uwsgiThreads: 2
@@ -197,6 +196,9 @@ docker-registry:
     enabled: true
     size: 10Gi
     deleteEnabled: true
+  service:
+    type: NodePort
+    nodePort: 32000
 
 celerybeat:
   replicaCount: 1
