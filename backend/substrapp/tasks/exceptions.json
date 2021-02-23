@@ -445,5 +445,12 @@
     "timeout": "0444",
     "BadGzipFile": "0445",
     "InvalidCacheKey": "0446",
-    "_GiveupOnFastCopy": "0447"
+    "_GiveupOnFastCopy": "0447",
+    "BackendError": "0448",
+    "BackendGetMetaError": "0449",
+    "BackendStoreError": "0450",
+    "ClassFoundException": "0451",
+    "InvalidChunkLength": "0452",
+    "ProxySchemeUnsupported": "0453",
+    "URLSchemeUnknown": "0454"
 }
