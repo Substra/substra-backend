@@ -1,5 +1,6 @@
 FROM python:3.6-slim AS build
 
+ENV GRPC_POLL_STRATEGY=epoll1
 RUN apt-get update && apt-get install gcc -y && apt-get clean
 
 RUN mkdir -p /usr/src/app
@@ -21,6 +22,7 @@ FROM python:3.6-slim
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
+ENV GRPC_POLL_STRATEGY=epoll1
 
 COPY --from=build /usr/local/lib/python3.6/ /usr/local/lib/python3.6/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
