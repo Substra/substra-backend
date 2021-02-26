@@ -49,7 +49,7 @@ organization:
   name: MyOrg1
 
 peer:
-  host: network-org-1-peer-1-hlf-peer.org-1
+  host: network-org-1-peer-1-hlf-peer.org-1.svc.cluster.local
   port: 7051
   mspID: MyOrg1MSP
   waitForEventTimeoutSeconds: 120
