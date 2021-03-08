@@ -1,5 +1,11 @@
 # Changelog
 
+
+## 1.9.2
+
+### Changed
+- Add pod and host ip value to backend-server deployment as environment variables
+
 ## 1.9.1
 
 ### Changed
