@@ -155,3 +155,48 @@ class AuthenticationTests(APITestCase):
         response = self.client.post('/api-token-auth/',
                                     {'username': 'foo', 'password': 'bar'}, **self.extra)
         self.assertEqual(response.status_code, 200)
+
+
+@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+class TestLoginCase(APITestCase):
+
+    login_url = '/user/login/'
+    logout_url = '/user/logout/'
+    refresh_url = '/user/refresh/'
+
+    username = 'foo'
+    password = 'bar'
+
+    extra = {
+        'HTTP_ACCEPT': 'application/json;version=0.0'
+    }
+
+    @classmethod
+    def setUpTestData(cls):
+        user, created = User.objects.get_or_create(username=cls.username)
+        if created:
+            user.set_password(cls.password)
+            user.save()
+        cls.user = user
+
+    def _login(self):
+        data = {
+            'username': self.username,
+            'password': self.password
+        }
+        r = self.client.post(self.login_url, data, **self.extra)
+
+        return r.status_code, r
+
+    def test_logout_response_200(self):
+        _, login_response = self._login()
+        self.assertEqual(status.HTTP_200_OK, login_response.status_code)
+
+        response = self.client.post(self.refresh_url, cookies=login_response.cookies)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.get(self.logout_url, cookies=login_response.cookies)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        response = self.client.post(self.refresh_url, cookies=login_response.cookies)
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
