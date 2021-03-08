@@ -79,7 +79,7 @@ extraEnv:
   - name: CORS_ALLOW_CREDENTIALS
     value: "true"
   - name: ALLOWED_HOSTS
-    value: '[".node-2.com", ".org-2"]'
+    value: '[".node-2.com", ".org-2", ".org-2.svc.cluster.local"]'
   - name: DEFAULT_THROTTLE_RATES
     value: '120'
   - name: TASK_CACHE_DOCKER_IMAGES
