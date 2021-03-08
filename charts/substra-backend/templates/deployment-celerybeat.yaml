@@ -47,6 +47,8 @@ spec:
               value: backend.settings.common
             - name: SCHEDULE_TASK_PERIOD
               value: "{{ .Values.celerybeat.taskPeriod }}"
+            - name: FLUSH_EXPIRED_TOKENS_TASK_PERIOD
+              value: "{{ .Values.celerybeat.expiredTokensFlushPeriod }}"
             - name: PYTHONUNBUFFERED
               value: "1"
           resources:
