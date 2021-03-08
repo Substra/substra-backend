@@ -32,6 +32,7 @@ WORKDIR /usr/src/app
 RUN chown -R ${USER_ID}:${GROUP_ID} /usr/src/app
 
 RUN mkdir -p /var/substra/
-RUN chown -R ${USER_ID}:${GROUP_ID} /var/substra/
+RUN mkdir -p /tmp/django_cache
+RUN chown -R ${USER_ID}:${GROUP_ID} /var/substra/ /tmp/django_cache
 
 USER ${USER_ID}:${GROUP_ID}
