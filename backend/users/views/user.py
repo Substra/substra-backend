@@ -8,6 +8,7 @@ from rest_framework.decorators import action, throttle_classes
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework_simplejwt.authentication import AUTH_HEADER_TYPES
+from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, AuthenticationFailed
 
 from libs.user_login_throttle import UserLoginThrottle
@@ -113,6 +114,18 @@ class UserViewSet(GenericViewSet):
 
     @action(detail=False)
     def logout(self, request, *args, **kwargs):
+
+        # Blacklist jwt token at logout fetched from cookie
+        if 'refresh' in request.COOKIES:
+            refresh = RefreshToken(request.COOKIES['refresh'])
+            try:
+                # Attempt to blacklist the fetched refresh token
+                refresh.blacklist()
+            except AttributeError:
+                # If blacklist app not installed, `blacklist` method will
+                # not be present
+                pass
+
         response = Response({}, status=status.HTTP_200_OK)
 
         host = self.get_host(request)
