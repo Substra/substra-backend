@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import os
 import sys
+import json
 from datetime import timedelta
 
 from libs.gen_secret_key import write_secret_key
@@ -60,7 +61,11 @@ except IOError:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['127.0.0.1', '::1', 'localhost'] + json.loads(os.environ.get('ALLOWED_HOSTS', "[]"))
+if os.environ.get('HOST_IP'):
+    ALLOWED_HOSTS.append(os.environ.get('HOST_IP'))
+if os.environ.get('POD_IP'):
+    ALLOWED_HOSTS.append(os.environ.get('POD_IP'))
 
 # Application definition
 

@@ -75,6 +75,14 @@ spec:
             value: {{ .Values.backend.tokenStrategy }}
           - name: HTTP_CLIENT_TIMEOUT_SECONDS
             value: {{ .Values.httpClient.timeoutSeconds | quote }}
+          - name: HOST_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
