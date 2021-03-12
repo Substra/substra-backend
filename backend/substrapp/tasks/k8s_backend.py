@@ -450,21 +450,21 @@ def k8s_remove_image(image_name):
 def k8s_compute(image_name, job_name, command, volumes, task_label,
                 capture_logs, environment, remove_image, subtuple_key, compute_plan_key):
 
-    pullDomain = REGISTRY_PULL_DOMAIN
+    pull_domain = REGISTRY_PULL_DOMAIN
 
     if REGISTRY_IS_LOCAL:
         try:
             registry_port = get_docker_registry_port()
         except Exception as e:
             raise Exception("Failed to retrieve docker registry node port") from e
-        pullDomain += f":{registry_port}"
+        pull_domain += f":{registry_port}"
 
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
     task_args = {
-        'image': f'{pullDomain}/{image_name}:substra',
+        'image': f'{pull_domain}/{image_name}:substra',
         'name': job_name,
         'command': command,
         'volumes': volumes,
