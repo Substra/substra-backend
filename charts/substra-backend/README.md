@@ -105,8 +105,8 @@ The following table lists the configurable parameters of the substra-backend cha
 | `docker-registry.persistence.enabled` | Enable Docker Registry persistence using PVC | `true` |
 | `docker-registry.persistence.size` | Amount of space to claim for PVC | `10Gi` |
 | `docker-registry.persistence.deleteEnabled` | Enable the deletion of image blobs and manifests by digest | `true` |
-| `docker-registry.service.type` | service type (If you use the local docker registry, you must use a NodePort to expose it kubernetes) | `NodePort` |
-| `docker-registry.service.nodePort` | Docker Registry Node Port | `32000` |
+| `docker-registry.service.type` | service type (If you use the local docker registry, you must use a `NodePort` to expose it kubernetes) | `NodePort` |
+| `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined)` |
 | `celerybeat.replicaCount` | Replica count for celerybeat service | `1` |
 | `celerybeat.taskPeriod` | Celery beat task period | `10800` |
 | `celerybeat.image.repository` | `celerybeat` image repository | `substrafoundation/substra-backend` |
@@ -147,7 +147,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `registry.host` | Hostname of the external docker-registry, if `local` is false | `127.0.0.1` |
 | `registry.port` | Port of the external docker-registry, if `local` is false | `32000` |
 | `registry.scheme` | Scheme to use to pull image | `http` |
-| `registry.pullDomain` | Pull domain name to pull image for kubernetes (set to `127.0.0.1:32000` for local docker-registy configured in `docker-registry` with a NodePort) | `127.0.0.1:32000` |
+| `registry.pullDomain` | The domain to pull docker images from. If `registry.local` is false, set this value to your docker registry `<host>:<port>`. If `registry.local` is true, then set this value to  `127.0.0.1`. If `registry.local` is true and `docker-registry.service.nodePort` is set to an arbitrary port number, then set to `127.0.0.1:<nodePort>` | `127.0.0.1` |
 | `registry.prepopulate[]` | A list of docker images to prepopulate the local docker registry with | `[]` |
 | `registry.prepopulate[].image` | A docker image | (undefined) |
 | `registry.prepopulate[].sourceRegistry` | The URL of a docker registry to pull the image from (leave blank for Docker Hub) | (undefined) |

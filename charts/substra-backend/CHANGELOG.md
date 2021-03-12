@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+### Changed
+
+- Docker registry `NodePort` port is now auto-allocated:
+  - Remove `docker-registry.service.nodePort` (previously set to `32000`)
+  - Removed port number from `registry.pullDomain` (previously set to `127.0.0.1:32000`)
 
 ## 1.9.2
 

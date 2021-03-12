@@ -24,6 +24,8 @@ KANIKO_MIRROR = settings.TASK['KANIKO_MIRROR']
 KANIKO_IMAGE = settings.TASK['KANIKO_IMAGE']
 COMPUTE_REGISTRY = settings.TASK['COMPUTE_REGISTRY']
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
+REGISTRY_IS_LOCAL = settings.REGISTRY_IS_LOCAL
+REGISTRY_SERVICE_NAME = settings.REGISTRY_SERVICE_NAME
 
 K8S_PVC = {
     env_key: env_value for env_key, env_value in os.environ.items() if '_PVC' in env_key
@@ -448,12 +450,21 @@ def k8s_remove_image(image_name):
 def k8s_compute(image_name, job_name, command, volumes, task_label,
                 capture_logs, environment, remove_image, subtuple_key, compute_plan_key):
 
+    pullDomain = REGISTRY_PULL_DOMAIN
+
+    if REGISTRY_IS_LOCAL:
+        try:
+            registry_port = get_docker_registry_port()
+        except Exception as e:
+            raise Exception("Failed to retrieve docker registry node port") from e
+        pullDomain += f":{registry_port}"
+
     # We cannot currently set up shm_size
     # Suggestion  https://github.com/timescale/timescaledb-kubernetes/pull/131/files
     # 'shm_size': '8G'
 
     task_args = {
-        'image': f'{REGISTRY_PULL_DOMAIN}/{image_name}:substra',
+        'image': f'{pullDomain}/{image_name}:substra',
         'name': job_name,
         'command': command,
         'volumes': volumes,
@@ -647,3 +658,12 @@ def get_pod_security_context(enabled=True, root=False):
             )
 
     return None
+
+
+def get_docker_registry_port() -> int:
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+
+    svc = k8s_client.read_namespaced_service(REGISTRY_SERVICE_NAME, NAMESPACE)
+
+    return svc.spec.ports[0].node_port

@@ -127,6 +127,10 @@ spec:
             - name: REGISTRY
               value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
             {{ end }}
+            - name: REGISTRY_IS_LOCAL
+              value: "{{ $.Values.registry.local }}"
+            - name: REGISTRY_SERVICE_NAME
+              value: {{ include "call-nested" (list . "docker-registry" "docker-registry.fullname") }}
             - name: REGISTRY_SCHEME
               value: {{ .Values.registry.scheme}}
             - name: REGISTRY_PULL_DOMAIN

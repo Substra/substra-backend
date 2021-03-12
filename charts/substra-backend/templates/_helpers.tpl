@@ -56,3 +56,12 @@ Selector labels
 {{- define "substra.selectorLabels" -}}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+
+{{/* https://stackoverflow.com/a/52024583/1370722 */}}
+{{- define "call-nested" }}
+{{- $dot := index . 0 }}
+{{- $subchart := index . 1 }}
+{{- $template := index . 2 }}
+{{- include $template (dict "Chart" (dict "Name" $subchart) "Values" (index $dot.Values $subchart) "Release" $dot.Release "Capabilities" $dot.Capabilities) }}
+{{- end }}
