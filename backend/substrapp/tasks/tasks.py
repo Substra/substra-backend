@@ -30,8 +30,6 @@ from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
                                    list_files, do_not_raise, remove_image)
 
-from substrapp.tasks.exception_handler import compute_error_code
-
 logger = logging.getLogger(__name__)
 
 PREFIX_HEAD_FILENAME = 'head_'
@@ -583,13 +581,8 @@ class ComputeTask(Task):
         channel_name, tuple_type, subtuple, compute_plan_key = self.split_args(args)
 
         try:
-            error_code = compute_error_code(exc)
-            # Do not show traceback if it's a container error as we already see them in
-            # container log
-            type_exc = type(exc)
-            type_value = str(type_exc).split("'")[1]
-            logger.error(f'Failed compute task: {tuple_type} {subtuple["key"]} {error_code} - {type_value}')
-            log_fail_tuple(channel_name, tuple_type, subtuple['key'], error_code)
+            logger.error(f'Failed compute task: {tuple_type} {subtuple["key"]}')
+            log_fail_tuple(channel_name, tuple_type, subtuple['key'], "")
         except LedgerError as e:
             logger.exception(e)
 
