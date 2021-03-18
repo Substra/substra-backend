@@ -30,6 +30,9 @@ rules:
   - apiGroups: [""]
     resources: ["nodes"]
     verbs: ["get", "list", "watch"]
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get"]
   {{- if .Values.psp.create }}
   - apiGroups: [""]
     resources: ["podsecuritypolicies"]

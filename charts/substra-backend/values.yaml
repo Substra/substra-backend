@@ -198,7 +198,6 @@ docker-registry:
     deleteEnabled: true
   service:
     type: NodePort
-    nodePort: 32000
 
 celerybeat:
   replicaCount: 1
@@ -308,7 +307,7 @@ registry:
   host: 127.0.0.1
   port: 32000
   scheme: http
-  pullDomain: 127.0.0.1:32000
+  pullDomain: 127.0.0.1
 
   ## Local registry pre-populate
   prepopulate: []
