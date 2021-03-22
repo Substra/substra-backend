@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.1
+
+### Added
+- new `celerybeat.expiredTokensFlushPeriod` option
+
 ## 2.0.0
 
 ### Changed

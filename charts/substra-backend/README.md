@@ -108,6 +108,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `docker-registry.service.type` | service type (If you use the local docker registry, you must use a `NodePort` to expose it kubernetes) | `NodePort` |
 | `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined)` |
 | `celerybeat.replicaCount` | Replica count for celerybeat service | `1` |
+| `celerybeat.expiredTokensFlushPeriod` | Flushing of expired tokens task period | `86400` |
 | `celerybeat.taskPeriod` | Celery beat task period | `10800` |
 | `celerybeat.image.repository` | `celerybeat` image repository | `substrafoundation/substra-backend` |
 | `celerybeat.image.tag` | `celerybeat` image tag | `latest` |
@@ -163,4 +164,3 @@ The following table lists the configurable parameters of the substra-backend cha
 ### Basic example
 
 For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
-
