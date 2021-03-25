@@ -740,6 +740,9 @@ def do_task(channel_name, subtuple, tuple_type):
         pred_path = path.join(subtuple_directory, 'pred')
         common_volumes[pred_path]['mode'] = 'ro'
 
+        command = f'--output-perf-path {OUTPUT_PERF_PATH}'
+        command = add_data_sample_paths_arg(command, subtuple)
+
         # eval
         compute_job(
             subtuple_key=subtuple["key"],
@@ -748,7 +751,7 @@ def do_task(channel_name, subtuple, tuple_type):
             image_name=f'substra/metrics_{subtuple["objective"]["key"][0:8]}'.lower(),
             job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
-            command=f'--output-perf-path {OUTPUT_PERF_PATH}',
+            command=command,
             remove_image=compute_plan_key is None and not settings.TASK['CACHE_DOCKER_IMAGES'],
             remove_container=settings.TASK['CLEAN_EXECUTION_ENVIRONMENT'],
             capture_logs=settings.TASK['CAPTURE_LOGS'],
