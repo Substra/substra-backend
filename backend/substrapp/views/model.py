@@ -12,7 +12,7 @@ from node.authentication import NodeUser
 from substrapp.models import Model
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
-from substrapp.views.utils import validate_key, get_remote_asset, PermissionMixin, get_channel_name
+from substrapp.views.utils import validate_key, get_remote_asset, PermissionMixin, get_channel_name, PermissionError
 from substrapp.views.filters_utils import filter_list
 
 logger = logging.getLogger(__name__)
@@ -108,23 +108,40 @@ class ModelPermissionViewSet(PermissionMixin,
                              GenericViewSet):
 
     queryset = Model.objects.all()
-    ledger_query_call = 'queryModelPermissions'
+    ledger_query_call = 'queryModel'
 
-    def has_access(self, user, asset):
+    def check_access(self, channel_name, user, asset, is_proxied):
         """Returns true if API consumer can access asset data."""
-        if user.is_anonymous:  # safeguard, should never happened
-            return False
+        if user.is_anonymous:
+            raise PermissionError()
 
-        # user cannot download model, only node can
-        if not (type(user) is NodeUser):
-            return False
+        elif type(user) is NodeUser and is_proxied:  # Export request (proxied)
+            self._check_export_enabled(channel_name)
+            self._check_permission('download', asset, node_id=user.username)
 
-        permissions = asset['process']
-        node_id = user.username
+        elif type(user) is NodeUser:  # Node-to-node download
+            self._check_permission('process', asset, node_id=user.username)
 
-        return permissions['public'] or node_id in permissions['authorized_ids']
+        else:  # Export request (by end-user)
+            self._check_export_enabled(channel_name)
+            self._check_permission('download', asset, node_id=settings.LEDGER_MSP_ID)
+
+    def get_storage_address(self, asset, ledger_field) -> str:
+        return asset['storage_address']
+
+    @staticmethod
+    def _check_export_enabled(channel_name):
+        channel = settings.LEDGER_CHANNELS[channel_name]
+        if not channel.get("enable_model_export", False):
+            raise PermissionError(f'Disabled: enable_model_export is disabled on {settings.LEDGER_MSP_ID}')
+
+    @staticmethod
+    def _check_permission(permission_type, asset, node_id):
+        permissions = asset['permissions'][permission_type]
+        if not permissions['public'] and node_id not in permissions['authorized_ids']:
+            raise PermissionError()
 
     @gzip_action
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_local_file(request, django_field='file')
+        return self.download_file(request, django_field='file')

@@ -7,8 +7,7 @@ import requests
 from requests.auth import HTTPBasicAuth
 from rest_framework import status
 from rest_framework.test import APITestCase
-
-from substrapp.views.utils import PermissionMixin
+from substrapp.views.utils import PermissionMixin, PermissionError
 
 
 class MockRequest:
@@ -43,7 +42,10 @@ def with_permission_mixin(remote, same_file_property, has_access):
 
                 permission_mixin = PermissionMixin()
                 permission_mixin.get_object = mock.MagicMock(return_value=TestModel())
-                permission_mixin.has_access = mock.MagicMock(return_value=has_access)
+                if has_access:
+                    permission_mixin.check_access = mock.MagicMock()
+                else:
+                    permission_mixin.check_access = mock.MagicMock(side_effect=PermissionError())
                 permission_mixin.lookup_url_kwarg = 'foo'
                 permission_mixin.kwargs = {'foo': 'bar'}
                 permission_mixin.ledger_query_call = 'foo'

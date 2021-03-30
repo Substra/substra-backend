@@ -8,6 +8,10 @@ from rest_framework.response import Response
 from libs.expiry_token_authentication import token_expire_handler, expires_at
 from libs.user_login_throttle import UserLoginThrottle
 
+from rest_framework.views import APIView
+from substrapp.views.utils import get_channel_name
+from django.conf import settings
+
 
 class ExpiryObtainAuthToken(ObtainAuthToken):
     authentication_classes = []
@@ -36,4 +40,19 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         })
 
 
+class Config(APIView):
+
+    def get(self, request, *args, **kwargs):
+        channel_name = get_channel_name(request)
+        channel = settings.LEDGER_CHANNELS[channel_name]
+        return Response({
+            'msp_id': settings.LEDGER_MSP_ID,
+            'channel': channel_name,
+            'config': {
+                'enable_model_export': channel['enable_model_export'],
+            }
+        })
+
+
 obtain_auth_token = ExpiryObtainAuthToken.as_view()
+config_view = Config.as_view()

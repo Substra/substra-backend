@@ -82,8 +82,9 @@ The following table lists the configurable parameters of the substra-backend cha
 | `peer.waitForEventTimeoutSeconds` | Time to wait for confirmation from the peers that the transaction has been committed successfully | `45` |
 | `peer.strategy.invoke` | Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `ALL` |
 | `peer.strategy.query` | Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `SELF` |
-| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `{ mychannel: { restricted: False, chaincode: { name: mycc, version: 1.0 } } }` |
+| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `{ mychannel: { restricted: False, enable_model_export: False, chaincode: { name: mycc, version: 1.0 } } }` |
 | `channels[].restricted` | If true, the channel must have at most 1 member, else the backend readiness/liveliness probes will fail. | (undefined) |
+| `channels[].enable_model_export` | If True, allow logged-in users to download models trained on this node | (undefined) |
 | `channels[].chaincode.name` | The name of the chaincode instantiated on this channel. | (undefined) |
 | `channels[].chaincode.version` | The version of the chaincode instantiated on this channel. | (undefined) |
 | `postgresql` | PostgreSQL configuration. For more info, See [postgresql](https://github.com/bitnami/charts/tree/master/bitnami/postgresql) | |

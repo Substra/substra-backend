@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3
+
+### Added
+- New channel configuration setting `enable_model_export`. When enabled, it allows authenticated users to download models trained on the current node.
+
 ## 2.0.2
 
 - fix `service.port` incorrectly used in uwsgi configuration

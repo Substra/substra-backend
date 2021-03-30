@@ -25,7 +25,7 @@ from drf_spectacular.views import (
     SpectacularSwaggerView,
 )
 
-from backend.views import obtain_auth_token
+from backend.views import obtain_auth_token, config_view
 
 from substrapp.urls import router
 from node.urls import router as node_router
@@ -58,3 +58,5 @@ urlpatterns = [
 # only allow session authentication is the browsable API is enabled
 if BrowsableAPIRenderer in api_settings.DEFAULT_RENDERER_CLASSES:
     urlpatterns += [url(r'^api-auth/', include('rest_framework.urls'))]
+
+urlpatterns += [url(r'^config/', config_view)]
