@@ -63,7 +63,7 @@ class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def check_access(self, channel_name, user, asset, is_proxied):
+    def check_access(self, channel_name, user, asset, is_proxied_request):
         """Returns true if API consumer can access asset data."""
         if user.is_anonymous:  # safeguard, should never happened
             raise PermissionError()
@@ -95,7 +95,7 @@ class PermissionMixin(object):
             return Response({'message': str(e.msg)}, status=e.status)
 
         try:
-            self.check_access(channel_name, request.user, asset, is_proxied(request))
+            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except PermissionError as e:
             return Response({'message': str(e)},
                             status=status.HTTP_403_FORBIDDEN)
@@ -121,7 +121,7 @@ class PermissionMixin(object):
             return Response({'message': str(e.msg)}, status=e.status)
 
         try:
-            self.check_access(channel_name, request.user, asset, is_proxied(request))
+            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except PermissionError as e:
             return Response({'message': str(e)},
                             status=status.HTTP_403_FORBIDDEN)
@@ -213,5 +213,5 @@ def get_channel_name(request):
     raise exceptions.BadRequestError('Could not determine channel name')
 
 
-def is_proxied(request) -> bool:
+def is_proxied_request(request) -> bool:
     return HTTP_HEADER_PROXY_ASSET in request.headers

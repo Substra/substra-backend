@@ -110,19 +110,19 @@ class ModelPermissionViewSet(PermissionMixin,
     queryset = Model.objects.all()
     ledger_query_call = 'queryModel'
 
-    def check_access(self, channel_name, user, asset, is_proxied):
+    def check_access(self, channel_name, user, asset, is_proxied_request):
         """Returns true if API consumer can access asset data."""
         if user.is_anonymous:
             raise PermissionError()
 
-        elif type(user) is NodeUser and is_proxied:  # Export request (proxied)
+        elif type(user) is NodeUser and is_proxied_request:  # Export request (proxied)
             self._check_export_enabled(channel_name)
             self._check_permission('download', asset, node_id=user.username)
 
         elif type(user) is NodeUser:  # Node-to-node download
             self._check_permission('process', asset, node_id=user.username)
 
-        else:  # Export request (by end-user)
+        else:  # user is an end-user (not a NodeUser): this is an export request
             self._check_export_enabled(channel_name)
             self._check_permission('download', asset, node_id=settings.LEDGER_MSP_ID)
 
@@ -132,8 +132,8 @@ class ModelPermissionViewSet(PermissionMixin,
     @staticmethod
     def _check_export_enabled(channel_name):
         channel = settings.LEDGER_CHANNELS[channel_name]
-        if not channel.get("enable_model_export", False):
-            raise PermissionError(f'Disabled: enable_model_export is disabled on {settings.LEDGER_MSP_ID}')
+        if not channel.get("model_export_enabled", False):
+            raise PermissionError(f'Disabled: model_export_enabled is disabled on {settings.LEDGER_MSP_ID}')
 
     @staticmethod
     def _check_permission(permission_type, asset, node_id):

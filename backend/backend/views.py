@@ -49,7 +49,7 @@ class Config(APIView):
             'msp_id': settings.LEDGER_MSP_ID,
             'channel': channel_name,
             'config': {
-                'enable_model_export': channel['enable_model_export'],
+                'model_export_enabled': channel['model_export_enabled'],
             }
         })
 

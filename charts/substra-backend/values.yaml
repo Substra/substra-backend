@@ -167,7 +167,7 @@ peer:
 channels:
   - mychannel:
       restricted: false
-      enable_model_export: false
+      model_export_enabled: false
       chaincode:
         name: mycc
         version: "1.0"

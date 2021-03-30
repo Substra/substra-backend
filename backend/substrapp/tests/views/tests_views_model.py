@@ -162,53 +162,56 @@ class ModelViewTests(APITestCase):
 
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_model_download_by_node_not_proxied(self):
+    def test_model_download_by_node_for_worker(self):
+        """"Simple node-to-node download, e.g. worker downloads in-model"""
         pvs = ModelPermissionViewSet()
 
         pvs.check_access(
             CHANNEL,
             NodeUser(),
             {'permissions': {'process': {'public': True}}},
-            is_proxied=False)
+            is_proxied_request=False)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
                 {'permissions': {'process': {'public': False, 'authorized_ids': []}}},
-                is_proxied=False)
+                is_proxied_request=False)
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username='foo'),
             {'permissions': {'process': {'public': False, 'authorized_ids': ['foo']}}},
-            is_proxied=False)
+            is_proxied_request=False)
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {'enable_model_export': True}})
-    def test_model_download_by_node_proxied(self):
+    @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': True}})
+    def test_model_export_proxied(self):
+        """Model export (proxied) with option enabled"""
         pvs = ModelPermissionViewSet()
 
         pvs.check_access(
             CHANNEL,
             NodeUser(),
             {'permissions': {'download': {'public': True}}},
-            is_proxied=True)
+            is_proxied_request=True)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
                 {'permissions': {'download': {'public': False, 'authorized_ids': []}}},
-                is_proxied=True)
+                is_proxied_request=True)
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username='foo'),
             {'permissions': {'download': {'public': False, 'authorized_ids': ['foo']}}},
-            is_proxied=True)
+            is_proxied_request=True)
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {'enable_model_export': False}})
+    @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': False}})
     def test_model_download_by_node_proxied_option_disabled(self):
+        """Model export (proxied) with option disabled"""
         pvs = ModelPermissionViewSet()
 
         with self.assertRaises(PermissionError):
@@ -216,27 +219,29 @@ class ModelViewTests(APITestCase):
                 CHANNEL,
                 NodeUser(),
                 {'permissions': {'download': {'public': True}}},
-                is_proxied=True)
+                is_proxied_request=True)
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {'enable_model_export': True}})
+    @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': True}})
     def test_model_download_by_classic_user_enabled(self):
+        """Model export (by end-user, not proxied) with option enabled"""
         pvs = ModelPermissionViewSet()
 
         pvs.check_access(
             CHANNEL,
             User(),
             {'permissions': {'download': {'public': True}}},
-            is_proxied=False)
+            is_proxied_request=False)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 User(),
                 {'permissions': {'download': {'public': False, 'authorized_ids': []}}},
-                is_proxied=False)
+                is_proxied_request=False)
 
-    @override_settings(LEDGER_CHANNELS={CHANNEL: {'enable_model_export': False}})
+    @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': False}})
     def test_model_download_by_classic_user_disabled(self):
+        """Model export (by end-user, not proxied) with option disabled"""
         pvs = ModelPermissionViewSet()
 
         with self.assertRaises(PermissionError):
@@ -244,17 +249,17 @@ class ModelViewTests(APITestCase):
                 CHANNEL,
                 User(),
                 {'permissions': {'process': {'public': True}}},
-                is_proxied=False)
+                is_proxied_request=False)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {}})
     def test_model_download_by_classic_user_default(self):
         pvs = ModelPermissionViewSet()
 
-        # Access to model download should be denied because the "enable_model_export"
+        # Access to model download should be denied because the "model_export_enabled"
         # option is not specified in the app configuration.
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 User(),
                 {'permissions': {'process': {'public': True}}},
-                is_proxied=False)
+                is_proxied_request=False)
