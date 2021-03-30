@@ -40,7 +40,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         })
 
 
-class Config(APIView):
+class Info(APIView):
 
     def get(self, request, *args, **kwargs):
         channel_name = get_channel_name(request)
@@ -55,4 +55,4 @@ class Config(APIView):
 
 
 obtain_auth_token = ExpiryObtainAuthToken.as_view()
-config_view = Config.as_view()
+info_view = Info.as_view()
