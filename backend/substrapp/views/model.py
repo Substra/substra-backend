@@ -110,8 +110,12 @@ class ModelPermissionViewSet(PermissionMixin,
     queryset = Model.objects.all()
     ledger_query_call = 'queryModel'
 
-    def check_access(self, channel_name, user, asset, is_proxied_request):
-        """Returns true if API consumer can access asset data."""
+    def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
+        """Return true if API consumer is allowed to access the model.
+
+        :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
+        :raises: PermissionError
+        """
         if user.is_anonymous:
             raise PermissionError()
 

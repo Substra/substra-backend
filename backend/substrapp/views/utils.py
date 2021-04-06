@@ -63,8 +63,12 @@ class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def check_access(self, channel_name, user, asset, is_proxied_request):
-        """Returns true if API consumer can access asset data."""
+    def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
+        """Returns true if API consumer is allowed to access data.
+
+        :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
+        :raises: PermissionError
+        """
         if user.is_anonymous:  # safeguard, should never happened
             raise PermissionError()
 
@@ -214,4 +218,8 @@ def get_channel_name(request):
 
 
 def is_proxied_request(request) -> bool:
+    """Return True if the API consumer is another backend-server node proxying a user request.
+
+    :param request: incoming HTTP request
+    """
     return HTTP_HEADER_PROXY_ASSET in request.headers
