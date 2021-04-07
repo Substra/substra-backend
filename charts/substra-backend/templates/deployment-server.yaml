@@ -92,7 +92,7 @@ spec:
         {{- end }}
         ports:
           - name: http
-            containerPort: {{ .Values.backend.service.port }}
+            containerPort: 8000
             protocol: TCP
         volumeMounts:
           {{- range $key, $val := .Values.persistence.volumes }}

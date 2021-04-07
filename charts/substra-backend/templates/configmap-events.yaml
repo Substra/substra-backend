@@ -9,4 +9,4 @@ data:
   uwsgi.ini: |
     [uwsgi]
     module                        = backend.wsgi
-    http-socket                   = :{{ .Values.backend.service.port }}
+    http-socket                   = :8000

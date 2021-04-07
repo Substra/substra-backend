@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.2
+
+- fix `service.port` incorrectly used in uwsgi configuration
+
 ## 2.0.1
 
 ### Added

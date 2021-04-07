@@ -16,7 +16,7 @@ data:
     processes                     = {{ .Values.backend.uwsgiProcesses }}
     threads                       = {{ .Values.backend.uwsgiThreads }}
 
-    http-socket                   = :{{ .Values.backend.service.port }}
+    http-socket                   = :8000
 
     need-app                      = true
     socket-timeout                = 300
