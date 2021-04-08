@@ -247,7 +247,8 @@ class CompositeTraintupleQueryTests(APITestCase):
     def test_get_head_model_ko_wrong_node(self):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
-        permissions = {
+        model = {
+            "key": 'some key',
             "owner": TEST_ORG,
             "permissions": {
                 "process": {
@@ -260,7 +261,7 @@ class CompositeTraintupleQueryTests(APITestCase):
                 mock.patch('substrapp.views.utils.get_object_from_ledger') \
                 as mget_object_from_ledger, \
                 mock.patch('substrapp.views.model.type') as mtype:
-            mget_object_from_ledger.return_value = permissions
+            mget_object_from_ledger.return_value = model
             mtype.return_value = NodeUser
 
             extra = {

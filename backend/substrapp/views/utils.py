@@ -93,6 +93,8 @@ class PermissionMixin(object):
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
 
+        validate_key(key)
+
         try:
             asset = get_object_from_ledger(channel_name, key, self.ledger_query_call)
         except LedgerError as e:

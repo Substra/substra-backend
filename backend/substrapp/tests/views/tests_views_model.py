@@ -24,6 +24,7 @@ from ..assets import objective, datamanager, algo, model
 MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = 'mychannel'
 TEST_ORG = 'MyTestOrg'
+MODEL_KEY = 'some-key'
 
 
 # APITestCase
@@ -169,20 +170,20 @@ class ModelViewTests(APITestCase):
         pvs.check_access(
             CHANNEL,
             NodeUser(),
-            {'permissions': {'process': {'public': True}}},
+            {'key': MODEL_KEY, 'permissions': {'process': {'public': True}}},
             is_proxied_request=False)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {'permissions': {'process': {'public': False, 'authorized_ids': []}}},
+                {'key': MODEL_KEY, 'permissions': {'process': {'public': False, 'authorized_ids': []}}},
                 is_proxied_request=False)
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username='foo'),
-            {'permissions': {'process': {'public': False, 'authorized_ids': ['foo']}}},
+            {'key': MODEL_KEY, 'permissions': {'process': {'public': False, 'authorized_ids': ['foo']}}},
             is_proxied_request=False)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': True}})
@@ -193,20 +194,20 @@ class ModelViewTests(APITestCase):
         pvs.check_access(
             CHANNEL,
             NodeUser(),
-            {'permissions': {'download': {'public': True}}},
+            {'key': MODEL_KEY, 'permissions': {'download': {'public': True}}},
             is_proxied_request=True)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {'permissions': {'download': {'public': False, 'authorized_ids': []}}},
+                {'key': MODEL_KEY, 'permissions': {'download': {'public': False, 'authorized_ids': []}}},
                 is_proxied_request=True)
 
         pvs.check_access(
             CHANNEL,
             NodeUser(username='foo'),
-            {'permissions': {'download': {'public': False, 'authorized_ids': ['foo']}}},
+            {'key': MODEL_KEY, 'permissions': {'download': {'public': False, 'authorized_ids': ['foo']}}},
             is_proxied_request=True)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': False}})
@@ -218,7 +219,7 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 NodeUser(),
-                {'permissions': {'download': {'public': True}}},
+                {'key': MODEL_KEY, 'permissions': {'download': {'public': True}}},
                 is_proxied_request=True)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': True}})
@@ -229,14 +230,14 @@ class ModelViewTests(APITestCase):
         pvs.check_access(
             CHANNEL,
             User(),
-            {'permissions': {'download': {'public': True}}},
+            {'key': MODEL_KEY, 'permissions': {'download': {'public': True}}},
             is_proxied_request=False)
 
         with self.assertRaises(PermissionError):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {'permissions': {'download': {'public': False, 'authorized_ids': []}}},
+                {'key': MODEL_KEY, 'permissions': {'download': {'public': False, 'authorized_ids': []}}},
                 is_proxied_request=False)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {'model_export_enabled': False}})
@@ -248,7 +249,7 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {'permissions': {'process': {'public': True}}},
+                {'key': MODEL_KEY, 'permissions': {'process': {'public': True}}},
                 is_proxied_request=False)
 
     @override_settings(LEDGER_CHANNELS={CHANNEL: {}})
@@ -261,5 +262,5 @@ class ModelViewTests(APITestCase):
             pvs.check_access(
                 CHANNEL,
                 User(),
-                {'permissions': {'process': {'public': True}}},
+                {'key': MODEL_KEY, 'permissions': {'process': {'public': True}}},
                 is_proxied_request=False)

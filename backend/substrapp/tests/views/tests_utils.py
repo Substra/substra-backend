@@ -2,6 +2,7 @@ import functools
 import os
 import tempfile
 
+import uuid
 import mock
 import requests
 from requests.auth import HTTPBasicAuth
@@ -47,7 +48,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
                 else:
                     permission_mixin.check_access = mock.MagicMock(side_effect=PermissionError())
                 permission_mixin.lookup_url_kwarg = 'foo'
-                permission_mixin.kwargs = {'foo': 'bar'}
+                permission_mixin.kwargs = {'foo': str(uuid.uuid4())}
                 permission_mixin.ledger_query_call = 'foo'
 
                 kwargs = {
