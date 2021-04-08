@@ -143,7 +143,7 @@ class ModelPermissionViewSet(PermissionMixin,
     def _check_permission(permission_type, asset, node_id):
         permissions = asset['permissions'][permission_type]
         if not permissions['public'] and node_id not in permissions['authorized_ids']:
-            raise PermissionError()
+            raise PermissionError(f'{node_id} doesn\'t have permission to download model {asset["key"]}')
 
     @gzip_action
     @action(detail=True)
