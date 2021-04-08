@@ -153,7 +153,7 @@ class PermissionMixin(object):
             storage_address,
             auth,
             stream=True,
-            headers={HTTP_HEADER_PROXY_ASSET: True}
+            headers={HTTP_HEADER_PROXY_ASSET: 'True'}
         )
 
         if not r.ok:

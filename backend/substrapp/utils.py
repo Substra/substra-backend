@@ -216,10 +216,12 @@ class NodeError(Exception):
 
 def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
 
+    headers = {
+        'Accept': 'application/json;version=0.0',
+        'Substra-Channel-Name': channel_name
+    }
     kwargs.update({
-        'headers': {
-            'Accept': 'application/json;version=0.0',
-            'Substra-Channel-Name': channel_name},
+        'headers': {**headers, **kwargs.get('headers', {})},
         'auth': auth,
         'timeout': HTTP_CLIENT_TIMEOUT_SECONDS
     })
