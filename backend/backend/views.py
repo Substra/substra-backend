@@ -46,7 +46,7 @@ class Info(APIView):
         channel_name = get_channel_name(request)
         channel = settings.LEDGER_CHANNELS[channel_name]
         return Response({
-            'host': request.META['HTTP_HOST'],
+            'host': settings.DEFAULT_DOMAIN,
             'channel': channel_name,
             'config': {
                 'model_export_enabled': channel['model_export_enabled'],
