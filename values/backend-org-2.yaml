@@ -5,6 +5,8 @@ rabbitmq:
 docker-registry:
   service:
     type: NodePort
+  clean-images:
+    duration: 3600
 
 registry:
   local: true

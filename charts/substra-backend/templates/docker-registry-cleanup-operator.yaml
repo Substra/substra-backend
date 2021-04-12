@@ -1,0 +1,68 @@
+ {{- if index .Values "docker-registry" "enabled" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-registry-cleanup
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+        {{ include "substra.selectorLabels" . | nindent 8}}
+  template:
+    metadata:
+      labels:
+        {{ include "substra.labels" . | nindent 8 }}
+        app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+    spec:
+      serviceAccountName: {{ template "substra.fullname" . }}-registry-cleanup
+      containers:
+      - name: {{ index .Values "docker-registry" "clean-images" "image" "repository" }}
+        image: "{{ index .Values "docker-registry" "clean-images" "image" "repository" }}:{{ index .Values "docker-registry" "clean-images" "image" "tag" }}"
+        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          # Install dependencies
+          echo "Install dependencies"
+          apk add jq curl
+          curl -sLO https://storage.googleapis.com/kubernetes-release/release/v1.16.6/bin/linux/amd64/kubectl && chmod +x ./kubectl && mv ./kubectl /bin
+
+          while true; do
+
+            REGISTRY_URL={{ .Release.Name }}-docker-registry:5000
+
+            # List images with a tag defined
+            echo "Fetch images mdetada from ${REGISTRY_URL}"
+            IMAGES=$(curl -s ${REGISTRY_URL}/v2/_catalog | jq -r .repositories[] | xargs -I '{}' curl -s -H "Accept: application/vnd.docker.distribution.manifest.v2+json" ${REGISTRY_URL}/v2/'{}'/tags/list | jq -r 'select(.tags | index("substra")) | .name')
+
+            for IMAGE_NAME in ${IMAGES}; do
+                # Test if the image is older than MAXIMUM_IMAGES_DURATION
+                IS_OLDER_THAN_MAXIMUM_IMAGES_DURATION=$(curl -s ${REGISTRY_URL}/v2/${IMAGE_NAME}/manifests/substra | jq -r '.history[].v1Compatibility' | jq -s 'sort_by(.created)[-1].created' | jq -r --arg MAXIMUM_IMAGES_DURATION "$MAXIMUM_IMAGES_DURATION" 'sub("\\.[^.]*"; "Z") | fromdate | . < (now | . - ($MAXIMUM_IMAGES_DURATION| tonumber))')
+
+                if [ "${IS_OLDER_THAN_MAXIMUM_IMAGES_DURATION}" = "true" ]; then
+
+                    # Fetch docker image digest to remove it
+                    DIGEST=$(curl --head -s -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X GET ${REGISTRY_URL}/v2/${IMAGE_NAME}/manifests/substra | grep Docker-Content-Digest | awk '{print $2}')
+
+                    echo "Delete image : ${IMAGE_NAME}:substra ($DIGEST)"
+                    curl -H "Accept: application/vnd.docker.distribution.manifest.v2+json" -X DELETE ${REGISTRY_URL}/v2/${IMAGE_NAME}/manifests/${DIGEST}
+                fi
+            done
+
+            # Garbage collector
+            echo "Run docker-registry garbage-collector"
+            kubectl exec -n {{ .Release.Namespace }} $(kubectl get pods -n {{ .Release.Namespace }} -l app=docker-registry -o jsonpath='{.items[0].metadata.name}') -- /bin/registry garbage-collect /etc/docker/registry/config.yml | tail -n 1
+
+            sleep 60
+          done
+
+        resources:
+            {{- toYaml .Values.resources | nindent 14 }}
+        env:
+          - name: MAXIMUM_IMAGES_DURATION
+            value: {{ index .Values "docker-registry" "clean-images" "duration" | quote }}
+{{- end }}

@@ -106,7 +106,8 @@ The following table lists the configurable parameters of the substra-backend cha
 | `docker-registry.persistence.size` | Amount of space to claim for PVC | `10Gi` |
 | `docker-registry.persistence.deleteEnabled` | Enable the deletion of image blobs and manifests by digest | `true` |
 | `docker-registry.service.type` | service type (If you use the local docker registry, you must use a `NodePort` to expose it kubernetes) | `NodePort` |
-| `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined)` |
+| `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined) |
+| `docker-registry.images.duration` | Maximum image duration before removal in seconds| `604800` |
 | `celerybeat.replicaCount` | Replica count for celerybeat service | `1` |
 | `celerybeat.expiredTokensFlushPeriod` | Flushing of expired tokens task period | `86400` |
 | `celerybeat.taskPeriod` | Celery beat task period | `10800` |

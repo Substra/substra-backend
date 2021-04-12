@@ -58,3 +58,45 @@ roleRef:
   name: {{ template "substra.fullname" . }}-worker
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
+
+{{- if index .Values "docker-registry" "enabled" }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ template "substra.fullname" . }}-registry-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "substra.fullname" . }}-registry-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/log", "pods/exec"]
+    verbs: ["get", "list", "watch", "create"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ template "substra.fullname" . }}-registry-cleanup
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-registry-cleanup
+subjects:
+  - kind: ServiceAccount
+    name: {{ template "substra.fullname" . }}-registry-cleanup
+    namespace: {{ .Release.Namespace }}
+roleRef:
+  kind: ClusterRole
+  name: {{ template "substra.fullname" . }}-registry-cleanup
+  apiGroup: rbac.authorization.k8s.io
+{{- end }}

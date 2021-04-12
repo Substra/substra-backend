@@ -198,6 +198,13 @@ docker-registry:
     deleteEnabled: true
   service:
     type: NodePort
+  clean-images:
+    # maximum image duration before removal
+    duration: 604800 # 1 week
+    image:
+      repository: alpine
+      tag: latest
+      pullPolicy: IfNotPresent
 
 celerybeat:
   replicaCount: 1

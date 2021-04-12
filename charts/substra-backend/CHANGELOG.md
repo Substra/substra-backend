@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3
+
+- Add docker registry images cleanup and garbage collector execution
+
+
 ## 2.0.2
 
 - fix `service.port` incorrectly used in uwsgi configuration
