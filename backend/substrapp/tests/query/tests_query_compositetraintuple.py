@@ -19,9 +19,10 @@ from node.authentication import NodeUser
 from ..common import get_sample_objective, AuthenticatedClient, get_sample_model
 
 MEDIA_ROOT = tempfile.mkdtemp()
+TEST_ORG = 'MyTestOrg'
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={'mychannel': {}}, LEDGER_MSP_ID=TEST_ORG)
 class CompositeTraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -198,12 +199,15 @@ class CompositeTraintupleQueryTests(APITestCase):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
-            "process": {
-                "public": False,
-                "authorized_ids": ['substra']
+            "owner": TEST_ORG,
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorized_ids": ['substra']
+                }
             }
         }
-        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+        with mock.patch('substrapp.views.utils.get_owner', return_value=TEST_ORG), \
                 mock.patch('substrapp.views.utils.get_object_from_ledger') \
                 as mget_object_from_ledger, \
                 mock.patch('substrapp.views.model.type') as mtype:
@@ -221,12 +225,15 @@ class CompositeTraintupleQueryTests(APITestCase):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         permissions = {
-            "process": {
-                "public": False,
-                "authorized_ids": ['substra']
+            "owner": TEST_ORG,
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorized_ids": ['substra']
+                }
             }
         }
-        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+        with mock.patch('substrapp.views.utils.get_owner', return_value=TEST_ORG), \
                 mock.patch('substrapp.views.utils.get_object_from_ledger') \
                 as mget_object_from_ledger:
             mget_object_from_ledger.return_value = permissions
@@ -240,17 +247,21 @@ class CompositeTraintupleQueryTests(APITestCase):
     def test_get_head_model_ko_wrong_node(self):
         checksum = compute_hash(self.model.read(), key='key_traintuple')
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
-        permissions = {
-            "process": {
-                "public": False,
-                "authorized_ids": ['owkin']
+        model = {
+            "key": 'some key',
+            "owner": TEST_ORG,
+            "permissions": {
+                "process": {
+                    "public": False,
+                    "authorized_ids": ['owkin']
+                }
             }
         }
-        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+        with mock.patch('substrapp.views.utils.get_owner', return_value=TEST_ORG), \
                 mock.patch('substrapp.views.utils.get_object_from_ledger') \
                 as mget_object_from_ledger, \
                 mock.patch('substrapp.views.model.type') as mtype:
-            mget_object_from_ledger.return_value = permissions
+            mget_object_from_ledger.return_value = model
             mtype.return_value = NodeUser
 
             extra = {

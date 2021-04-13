@@ -1,7 +1,7 @@
 import os
 import uuid
 
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -19,6 +19,13 @@ from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
 from substrapp import exceptions
+
+HTTP_HEADER_PROXY_ASSET = 'Substra-Proxy-Asset'
+
+
+class PermissionError(Exception):
+    def __init__(self, message='Unauthorized'):
+        Exception.__init__(self, message)
 
 
 def authenticate_outgoing_request(outgoing_node_id):
@@ -56,58 +63,74 @@ class PermissionMixin(object):
     authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def has_access(self, user, asset):
-        """Returns true if API consumer can access asset data."""
-        if user.is_anonymous:  # safeguard, should never happened
-            return False
+    def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
+        """Returns true if API consumer is allowed to access data.
 
-        permission = asset['permissions']['process']
+        :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
+        :raises: PermissionError
+        """
+        if user.is_anonymous:  # safeguard, should never happened
+            raise PermissionError()
 
         if type(user) is NodeUser:  # for node
+            permission = asset['permissions']['process']
             node_id = user.username
-        else:  # for classic user, test on current msp id
+        else:
+            # for classic user, test on current msp id
+            # TODO: This should be 'download' instead of 'process',
+            #       but 'download' is not consistently exposed by chaincode yet.
+            permission = asset['permissions']['process']
             node_id = get_owner()
 
-        return permission['public'] or node_id in permission['authorized_ids']
+        if not permission['public'] and node_id not in permission['authorized_ids']:
+            raise PermissionError()
+
+    def get_storage_address(self, asset, ledger_field) -> str:
+        return asset[ledger_field]['storage_address']
 
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
+        channel_name = get_channel_name(request)
+
+        validate_key(key)
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
+            asset = get_object_from_ledger(channel_name, key, self.ledger_query_call)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
-        if not self.has_access(request.user, asset):
-            return Response({'message': 'Unauthorized'},
+        try:
+            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
+        except PermissionError as e:
+            return Response({'message': str(e)},
                             status=status.HTTP_403_FORBIDDEN)
-
-        if not ledger_field:
-            ledger_field = django_field
 
         if get_owner() == asset['owner']:
             response = self._download_local_file(django_field)
         else:
-            response = self._download_remote_file(get_channel_name(request), ledger_field, asset)
+            if not ledger_field:
+                ledger_field = django_field
+            storage_address = self.get_storage_address(asset, ledger_field)
+            response = self._download_remote_file(channel_name, storage_address, asset)
 
         return response
 
-    def download_local_file(self, request, django_field, ledger_field=None):
+    def download_local_file(self, request, django_field):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
+        channel_name = get_channel_name(request)
 
         try:
-            asset = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
+            asset = get_object_from_ledger(channel_name, key, self.ledger_query_call)
         except LedgerError as e:
-            return HttpResponse({'message': str(e.msg)}, status=e.status)
+            return Response({'message': str(e.msg)}, status=e.status)
 
-        if not self.has_access(request.user, asset):
-            return HttpResponse({'message': 'Unauthorized'},
-                                status=status.HTTP_403_FORBIDDEN)
-
-        if not ledger_field:
-            ledger_field = django_field
+        try:
+            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
+        except PermissionError as e:
+            return Response({'message': str(e)},
+                            status=status.HTTP_403_FORBIDDEN)
 
         return self._download_local_file(django_field)
 
@@ -121,10 +144,18 @@ class PermissionMixin(object):
         )
         return response
 
-    def _download_remote_file(self, channel_name, ledger_field, asset):
+    def _download_remote_file(self, channel_name, storage_address, asset):
         node_id = asset['owner']
         auth = authenticate_outgoing_request(node_id)
-        r = get_remote_file(channel_name, asset[ledger_field]['storage_address'], auth, stream=True)
+
+        r = get_remote_file(
+            channel_name,
+            storage_address,
+            auth,
+            stream=True,
+            headers={HTTP_HEADER_PROXY_ASSET: 'True'}
+        )
+
         if not r.ok:
             return Response({
                 'message': f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
@@ -186,3 +217,11 @@ def get_channel_name(request):
         return request.headers['Substra-Channel-Name']
 
     raise exceptions.BadRequestError('Could not determine channel name')
+
+
+def is_proxied_request(request) -> bool:
+    """Return True if the API consumer is another backend-server node proxying a user request.
+
+    :param request: incoming HTTP request
+    """
+    return HTTP_HEADER_PROXY_ASSET in request.headers
