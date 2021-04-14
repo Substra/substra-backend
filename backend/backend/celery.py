@@ -38,7 +38,7 @@ def setup_periodic_tasks(sender, **kwargs):
                                        prepare_testing_task,
                                        prepare_aggregate_task,
                                        prepare_composite_training_task,
-                                       garbage_collector_task,
+                                       docker_registry_garbage_collector_task,
                                        clean_old_images_task)
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
@@ -60,7 +60,7 @@ def setup_periodic_tasks(sender, **kwargs):
                              name='flush expired tokens')
 
     # Launch docker-registry garbage-collector to really remove images
-    sender.add_periodic_task(300, garbage_collector_task.s(), queue='scheduler',
+    sender.add_periodic_task(300, docker_registry_garbage_collector_task.s(), queue='scheduler',
                              name='garbage collect docker registry')
 
     max_duration = int(os.environ.get('MAXIMUM_IMAGES_DURATION', 7 * 24 * 3600))

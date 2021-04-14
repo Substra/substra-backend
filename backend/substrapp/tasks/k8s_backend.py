@@ -458,7 +458,7 @@ def k8s_remove_image(image_name):
         logger.exception(e)
 
 
-def k8s_get_image_list():
+def get_image_list_from_docker_registry():
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog',
         headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
@@ -482,9 +482,11 @@ def k8s_get_image_list():
     return images
 
 
-def k8s_fetch_old_algo_image_names(max_duration):
+def fetch_old_algo_image_names_from_docker_registry(max_duration):
 
-    images = [image for image in k8s_get_image_list() if image['tags'] and 'substra' in image['tags']]
+    logger.info(f'Fetch image names older than {max_duration}')
+
+    images = [image for image in get_image_list_from_docker_registry() if image['tags'] and 'substra' in image['tags']]
 
     old_images = []
 
@@ -510,13 +512,15 @@ def k8s_fetch_old_algo_image_names(max_duration):
 
 
 def k8s_docker_registry_garbage_collector():
+    logger.info('Launch garbage collect on docker-registry')
+
     kubernetes.config.load_incluster_config()
     k8s_client = kubernetes.client.CoreV1Api()
     pod_name = get_pod_name('docker-registry')
     exec_command = [
         '/bin/sh',
         '-c',
-        '/bin/registry garbage-collect /etc/docker/registry/config.yml'
+        '/bin/registry garbage-collect /etc/docker/registry/config.yml 2>&1'
     ]
 
     resp = kubernetes.stream.stream(
@@ -527,21 +531,18 @@ def k8s_docker_registry_garbage_collector():
         stderr=True,
         stdin=True,
         stdout=True,
-        tty=False,
+        tty=True,
         _preload_content=False,
     )
 
     logs = []
 
     while resp.is_open():
-        lines = ""
         resp.update(timeout=1)
         if resp.peek_stdout():
             lines = resp.read_stdout()
-        if resp.peek_stderr():
-            lines = resp.read_stderr()
-        for line in filter(None, lines.split("\n")):
-            logs.append(line)
+            for line in filter(None, lines.split("\n")):
+                logs.append(line)
     else:
         logger.info(logs[-1])
 

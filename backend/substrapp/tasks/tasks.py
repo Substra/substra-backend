@@ -28,8 +28,9 @@ from substrapp.ledger.api import (log_start_tuple, log_success_tuple, log_fail_t
                                   query_tuples, get_object_from_ledger)
 from substrapp.ledger.exceptions import LedgerError, LedgerStatusError
 from substrapp.tasks.utils import (compute_job, get_asset_content, get_and_put_asset_content,
-                                   list_files, do_not_raise, remove_image, fetch_old_algo_image_names,
-                                   garbage_collector)
+                                   list_files, do_not_raise, remove_image)
+from substrapp.tasks.k8s_backend import (fetch_old_algo_image_names_from_docker_registry,
+                                         k8s_docker_registry_garbage_collector)
 
 from substrapp.tasks.exception_handler import compute_error_code
 
@@ -1105,11 +1106,11 @@ def on_compute_plan(channel_name, compute_plan):
 
 @app.task(ignore_result=True)
 def clean_old_images_task(max_duration):
-    algo_image_names = fetch_old_algo_image_names(max_duration)
+    algo_image_names = fetch_old_algo_image_names_from_docker_registry(max_duration)
     for algo_image_name in algo_image_names:
         remove_image(algo_image_name)
 
 
 @app.task(ignore_result=True)
-def garbage_collector_task():
-    garbage_collector()
+def docker_registry_garbage_collector_task():
+    k8s_docker_registry_garbage_collector()
