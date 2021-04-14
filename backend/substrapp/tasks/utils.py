@@ -8,7 +8,8 @@ from requests.auth import HTTPBasicAuth
 from substrapp.utils import get_owner, get_remote_file_content, get_and_put_remote_file_content, NodeError, timeit
 
 from substrapp.tasks.k8s_backend import (
-    k8s_get_image, k8s_build_image, k8s_remove_image, k8s_compute, ImageNotFound, BuildError)
+    k8s_get_image, k8s_build_image, k8s_remove_image, k8s_compute, ImageNotFound, BuildError,
+    k8s_fetch_old_algo_image_names, k8s_docker_registry_garbage_collector)
 
 
 CELERYWORKER_IMAGE = os.environ.get('CELERYWORKER_IMAGE', 'substrafoundation/celery:latest')
@@ -149,3 +150,15 @@ def do_not_raise(fn):
         except Exception as e:
             logging.exception(e)
     return wrapper
+
+
+def fetch_old_algo_image_names(max_duration):
+
+    logger.info(f'Fetch image names older than {max_duration}')
+
+    return k8s_fetch_old_algo_image_names(max_duration)
+
+
+def garbage_collector():
+    logger.info('Launch garbage collect on docker-registry')
+    k8s_docker_registry_garbage_collector()

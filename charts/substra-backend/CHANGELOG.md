@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+
+### Added
+- Add new celerybeat configuration setting `maximumImagesDuration`, which will be the image lifetime in the local docker registry 
+- Fix deployment for celerybeat and celeryscheduler
 
 ## 2.0.4
 

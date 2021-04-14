@@ -38,21 +38,100 @@ spec:
           {{- if eq .Values.backend.settings "prod" }}
           args: ["-c", "celery -A backend beat -l debug"]
           {{ else }}
-          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend beat -l debug"]
+          args: ["-c", "celery -A backend beat -l debug"]
           {{ end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-ledger
           env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.celery.{{ .Values.backend.settings }}
+            - name: ORG_NAME
+              value: {{ .Values.organization.name }}
+            - name: BACKEND_DB_NAME
+              value: {{ .Values.postgresql.postgresqlDatabase }}
+            - name: BACKEND_DB_USER
+              value: {{ .Values.postgresql.postgresqlUsername }}
+            - name: BACKEND_DB_PWD
+              value: {{ .Values.postgresql.postgresqlPassword }}
+            - name: DATABASE_HOST
+              value: {{ .Release.Name }}-postgresql
             - name: CELERY_BROKER_URL
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-            - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.common
             - name: SCHEDULE_TASK_PERIOD
               value: "{{ .Values.celerybeat.taskPeriod }}"
             - name: FLUSH_EXPIRED_TOKENS_TASK_PERIOD
               value: "{{ .Values.celerybeat.expiredTokensFlushPeriod }}"
+            - name: MAXIMUM_IMAGES_DURATION
+              value: "{{ .Values.celerybeat.maximumImagesDuration }}"
             - name: PYTHONUNBUFFERED
               value: "1"
+            {{- if .Values.registry.local }}
+            - name: REGISTRY
+              value: {{ .Release.Name }}-docker-registry:5000
+            {{ else }}
+            - name: REGISTRY
+              value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
+            {{ end }}
+            - name: REGISTRY_IS_LOCAL
+              value: "{{ $.Values.registry.local }}"
+            - name: REGISTRY_SERVICE_NAME
+              value: {{ .Release.Name }}-docker-registry
+            - name: REGISTRY_SCHEME
+              value: {{ .Values.registry.scheme}}
+            - name: REGISTRY_PULL_DOMAIN
+              value: {{ .Values.registry.pullDomain}}
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: DOCKER_CACHE_PVC
+              value: {{ include "substra.fullname" $ }}-docker-cache
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: RUN_AS_USER
+              value: {{ .Values.securityContext.runAsUser | quote}}
+            - name: RUN_AS_GROUP
+              value: {{ .Values.securityContext.runAsGroup | quote }}
+            - name: FS_GROUP
+              value: {{ .Values.securityContext.fsGroup | quote }}
+            - name: KANIKO_IMAGE
+              value: {{ .Values.backend.kaniko.image | quote }}
+            - name: KANIKO_MIRROR
+              value: {{ .Values.backend.kaniko.mirror | quote }}
+            - name: COMPUTE_REGISTRY
+              value: {{ .Values.backend.compute.registry | quote }}
+            - name: HTTP_CLIENT_TIMEOUT_SECONDS
+              value: {{ .Values.httpClient.timeoutSeconds | quote  }}
+          volumeMounts:
+            - name: user-cert
+              mountPath: /var/hyperledger/msp/signcerts
+            - name: user-key
+              mountPath: /var/hyperledger/msp/keystore
+            - name: peer-tls-server
+              mountPath: /var/hyperledger/tls/server/pair
+            - name: peer-tls-client
+              mountPath: /var/hyperledger/tls/client/pair
+            - name: cacert
+              mountPath: /var/hyperledger/ca
           resources:
             {{- toYaml .Values.celerybeat.resources | nindent 12 }}
+      volumes:
+      - name: user-cert
+        secret:
+          secretName: {{ $.Values.secrets.user.cert }}
+      - name: user-key
+        secret:
+          secretName: {{ $.Values.secrets.user.key }}
+      - name: peer-tls-server
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.server }}
+      - name: peer-tls-client
+        secret:
+          secretName: {{ $.Values.secrets.peer.tls.client }}
+      - name: cacert
+        secret:
+          secretName: {{ $.Values.secrets.caCert }}
     {{- with .Values.celerybeat.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

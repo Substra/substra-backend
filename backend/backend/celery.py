@@ -32,12 +32,14 @@ def setup_log_format(sender, conf, **kwargs):
     ).format(sender)
 
 
-@app.on_after_configure.connect
+@app.on_after_finalize.connect
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks.tasks import (prepare_training_task,
                                        prepare_testing_task,
                                        prepare_aggregate_task,
-                                       prepare_composite_training_task)
+                                       prepare_composite_training_task,
+                                       garbage_collector_task,
+                                       clean_old_images_task)
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
 
@@ -56,6 +58,14 @@ def setup_periodic_tasks(sender, **kwargs):
     period = int(os.environ.get('FLUSH_EXPIRED_TOKENS_TASK_PERIOD', 24 * 3600))
     sender.add_periodic_task(period, flush_expired_tokens.s(), queue='scheduler',
                              name='flush expired tokens')
+
+    # Launch docker-registry garbage-collector to really remove images
+    sender.add_periodic_task(300, garbage_collector_task.s(), queue='scheduler',
+                             name='garbage collect docker registry')
+
+    max_duration = int(os.environ.get('MAXIMUM_IMAGES_DURATION', 7 * 24 * 3600))
+    sender.add_periodic_task(3600, clean_old_images_task.s(), queue='scheduler', args=[max_duration],
+                             name='remove old images from docker registry')
 
 
 @after_task_publish.connect
