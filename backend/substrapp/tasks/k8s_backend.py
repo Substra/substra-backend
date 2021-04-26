@@ -484,7 +484,7 @@ def get_image_list_from_docker_registry():
 
 def fetch_old_algo_image_names_from_docker_registry(max_duration):
 
-    logger.info(f'Fetch image names older than {max_duration}')
+    logger.info(f'Fetch image names older than {max_duration}s')
 
     images = [image for image in get_image_list_from_docker_registry() if image['tags'] and 'substra' in image['tags']]
 

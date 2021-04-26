@@ -62,8 +62,8 @@ spec:
               value: "{{ .Values.celerybeat.taskPeriod }}"
             - name: FLUSH_EXPIRED_TOKENS_TASK_PERIOD
               value: "{{ .Values.celerybeat.expiredTokensFlushPeriod }}"
-            - name: MAXIMUM_IMAGES_DURATION
-              value: "{{ .Values.celerybeat.maximumImagesDuration }}"
+            - name: MAXIMUM_IMAGES_TTL
+              value: "{{ .Values.celerybeat.maximumImagesTTL }}"
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- if .Values.registry.local }}

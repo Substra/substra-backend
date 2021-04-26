@@ -203,7 +203,7 @@ docker-registry:
 celerybeat:
   replicaCount: 1
   expiredTokensFlushPeriod: 86400
-  maximumImagesDuration: 86400
+  maximumImagesTTL: 86400
   taskPeriod: 10800
   image:
     repository: substrafoundation/substra-backend
