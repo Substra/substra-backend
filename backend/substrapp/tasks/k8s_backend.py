@@ -94,6 +94,8 @@ def watch_pod(name, watch_init_container=False):
 
     logger.info(f'Waiting for pod {name}...')
 
+    pod_status = None
+
     while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
@@ -101,6 +103,10 @@ def watch_pod(name, watch_init_container=False):
                 namespace=NAMESPACE,
                 pretty=True
             )
+
+            if api_response.status.phase != pod_status:
+                pod_status = api_response.status.phase
+                logger.info(f'Status for pod "{name}" {api_response.status.phase} status')
 
             # Handle pod error not linked with containers
             if api_response.status.phase == 'Failed' or (api_response.status.reason and
