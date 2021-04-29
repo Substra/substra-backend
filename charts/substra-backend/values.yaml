@@ -8,11 +8,11 @@ backend:
   gzipModels: false
 
   kaniko:
-    image: gcr.io/kaniko-project/executor:v1.3.0
+    image: gcr.io/kaniko-project/executor:v1.6.0
     mirror: false  # If true, kaniko will pull base images from the local registry
     cache:
       warmer:
-        image: gcr.io/kaniko-project/warmer:v1.3.0
+        image: gcr.io/kaniko-project/warmer:v1.6.0
         images: []
           # - image: substrafoundation/substra-tools:0.7.0
 
