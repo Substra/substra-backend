@@ -279,10 +279,9 @@ def _k8s_build_image(path, tag, rm, cache_index):
     args = [
         f'--dockerfile={dockerfile_fullpath}',
         f'--context=dir://{path}',
-        f'--destination={REGISTRY}/substra/substra:{tag}',
+        f'--destination={REGISTRY}/substrafoundation/user-image:{tag}',
         f'--cache={str(not(rm)).lower()}',
         '--snapshotMode=redo',
-        '--use-new-run',
         '--push-retry=3',
         '--cache-copy-layers',
         '--single-snapshot'
@@ -409,7 +408,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
 @timeit
 def k8s_get_image(image_name):
     response = requests.get(
-        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substra/substra/manifests/{image_name}',
+        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_name}',
         headers={'Accept': 'application/json'},
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS
     )
@@ -432,7 +431,7 @@ def k8s_remove_image(image_name):
     logger.info(f'Deleting image {image_name}')
     try:
         response = requests.get(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substra/substra/manifests/{image_name}',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_name}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
@@ -444,7 +443,7 @@ def k8s_remove_image(image_name):
         digest = response.headers['Docker-Content-Digest']
 
         response = requests.delete(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substra/substra/manifests/{digest}',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{digest}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
@@ -473,7 +472,7 @@ def k8s_compute(image_name, job_name, command, volumes, task_label,
     # 'shm_size': '8G'
 
     task_args = {
-        'image': f'{pull_domain}/substra/substra:{image_name}',
+        'image': f'{pull_domain}/substrafoundation/user-image:{image_name}',
         'name': job_name,
         'command': command,
         'volumes': volumes,
