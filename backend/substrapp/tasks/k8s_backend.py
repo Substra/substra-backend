@@ -6,6 +6,7 @@ from django.conf import settings
 from substrapp.utils import timeit
 from substrapp.exceptions import PodErrorException, PodTimeoutException
 import time
+import shlex
 
 logger = logging.getLogger(__name__)
 
@@ -548,7 +549,7 @@ def _k8s_compute(name, task_args, subtuple_key):
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=task_args['image'],
-        args=task_args['command'].split(" ") if task_args['command'] is not None else None,
+        args=shlex.split(task_args['command']) if task_args['command'] is not None else None,
         volume_mounts=volume_mounts,
         # resources=get_resources(task_args),
         security_context=get_security_context(),

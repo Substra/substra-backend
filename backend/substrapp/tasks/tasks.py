@@ -970,6 +970,9 @@ def generate_command(tuple_type, subtuple, rank):
         if rank is not None:
             command = f"{command} --rank {rank}"
 
+    if subtuple['metadata']:
+        command = f"{command} --metadata '{json.dumps(subtuple['metadata'])}'"
+
     return command
 
 
