@@ -29,7 +29,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |
 | `backend.kaniko.cache.warmer.images` | A list of docker images to warm up the kaniko local cache with | `[]` |
 | `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
-| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.3.0` |
+| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.6.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
 | `backend.compute.registry` | Optionally, the URL of a registry to pull the kaniko image from (`backend.kaniko.image`). This image will be used to build client images (compute tasks) | `nil` |
 | `backend.image.repository` | `substra-backend` image repository | `substrafoundation/substra-backend` |

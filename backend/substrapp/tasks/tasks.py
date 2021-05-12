@@ -748,7 +748,7 @@ def do_task(channel_name, subtuple, tuple_type):
             subtuple_key=subtuple["key"],
             compute_plan_key=compute_plan_key,
             dockerfile_path=f'{subtuple_directory}/metrics',
-            image_name=f'substra/metrics_{subtuple["objective"]["key"][0:8]}'.lower(),
+            image_name=f'metrics-{subtuple["objective"]["key"][0:8]}'.lower(),
             job_name=f'{tuple_type.replace("_", "-")}-{subtuple["key"][0:8]}-eval'.lower(),
             volumes=common_volumes,
             command=command,
@@ -1062,7 +1062,7 @@ def save_model(subtuple_directory, hash_key, filename='model'):
 
 def get_algo_image_name(algo_key):
     # tag must be lowercase for docker
-    return f'substra/algo_{algo_key[0:8]}'.lower()
+    return f'algo-{algo_key[0:8]}'.lower()
 
 
 def remove_algo_images(algo_keys):

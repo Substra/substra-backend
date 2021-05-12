@@ -94,6 +94,8 @@ def watch_pod(name, watch_init_container=False):
 
     logger.info(f'Waiting for pod {name}...')
 
+    pod_status = None
+
     while (not finished) and (attempt < max_attempts):
         try:
             api_response = k8s_client.read_namespaced_pod_status(
@@ -101,6 +103,10 @@ def watch_pod(name, watch_init_container=False):
                 namespace=NAMESPACE,
                 pretty=True
             )
+
+            if api_response.status.phase != pod_status:
+                pod_status = api_response.status.phase
+                logger.info(f'Status for pod "{name}" {api_response.status.phase} status')
 
             # Handle pod error not linked with containers
             if api_response.status.phase == 'Failed' or (api_response.status.reason and
@@ -273,9 +279,13 @@ def _k8s_build_image(path, tag, rm, cache_index):
     args = [
         f'--dockerfile={dockerfile_fullpath}',
         f'--context=dir://{path}',
-        f'--destination={REGISTRY}/{tag}:substra',
-        f'--cache={str(not(rm)).lower()}',
+        f'--destination={REGISTRY}/substrafoundation/user-image:{tag}',
+        '--cache=true',
+        '--log-timestamp=true',
+        '--verbosity=debug',
         '--snapshotMode=redo',
+        '--push-retry=3',
+        '--cache-copy-layers',
         '--single-snapshot'
     ]
 
@@ -400,7 +410,7 @@ def _k8s_build_image(path, tag, rm, cache_index):
 @timeit
 def k8s_get_image(image_name):
     response = requests.get(
-        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
+        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_name}',
         headers={'Accept': 'application/json'},
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS
     )
@@ -423,7 +433,7 @@ def k8s_remove_image(image_name):
     logger.info(f'Deleting image {image_name}')
     try:
         response = requests.get(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/substra',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_name}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
@@ -435,7 +445,7 @@ def k8s_remove_image(image_name):
         digest = response.headers['Docker-Content-Digest']
 
         response = requests.delete(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image_name}/manifests/{digest}',
+            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{digest}',
             headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS
         )
@@ -464,7 +474,7 @@ def k8s_compute(image_name, job_name, command, volumes, task_label,
     # 'shm_size': '8G'
 
     task_args = {
-        'image': f'{pull_domain}/{image_name}:substra',
+        'image': f'{pull_domain}/substrafoundation/user-image:{image_name}',
         'name': job_name,
         'command': command,
         'volumes': volumes,

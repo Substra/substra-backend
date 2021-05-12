@@ -1,5 +1,12 @@
 # Changelog
 
+
+## 2.0.4
+
+### Changed
+- `kaniko` image is now `gcr.io/kaniko-project/executor:v1.6.0`
+
+
 ## 2.0.3
 
 ### Added
