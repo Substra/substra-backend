@@ -285,7 +285,9 @@ events:
   affinity: {}
 
 
-extraEnv: []
+extraEnv:
+  - name: TASK_CACHE_DOCKER_IMAGES
+    value: 'True'
   # - name: ENV_VARIABLE
   #   value: false
 

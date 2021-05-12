@@ -32,7 +32,7 @@ def setup_log_format(sender, conf, **kwargs):
     ).format(sender)
 
 
-@app.on_after_finalize.connect
+@app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks.tasks import (prepare_training_task,
                                        prepare_testing_task,

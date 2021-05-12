@@ -459,6 +459,7 @@ def k8s_remove_image(image_name):
 
 
 def get_image_list_from_docker_registry():
+
     response = requests.get(
         f'{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog',
         headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
@@ -466,47 +467,48 @@ def get_image_list_from_docker_registry():
     )
 
     response.raise_for_status()
-
-    images = []
     res = response.json()
+
     for repository in res['repositories']:
-        response = requests.get(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list',
-            headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
-            timeout=HTTP_CLIENT_TIMEOUT_SECONDS
-        )
+        # get only user-image repo, images built by substra-backend
+        if repository == 'user-image':
+            response = requests.get(
+                f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list',
+                headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+            )
 
-        response.raise_for_status()
-        images.append(response.json())
+            response.raise_for_status()
+            return response.json()
 
-    return images
+    return None
 
 
 def fetch_old_algo_image_names_from_docker_registry(max_duration):
 
     logger.info(f'Fetch image names older than {max_duration}s')
 
-    images = [image for image in get_image_list_from_docker_registry() if image['tags'] and 'substra' in image['tags']]
+    images = get_image_list_from_docker_registry()
 
     old_images = []
+    if images:
+        for image in images['tags']:
+            response = requests.get(
+                f'{REGISTRY_SCHEME}://{REGISTRY}/v2/user-image/manifests/{image}',
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+            )
 
-    for image in images:
-        response = requests.get(
-            f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{image["name"]}/manifests/substra',
-            timeout=HTTP_CLIENT_TIMEOUT_SECONDS
-        )
+            response.raise_for_status()
 
-        response.raise_for_status()
+            # take the most recent date as creation date
+            created_date = max([
+                datetime.datetime.strptime(json.loads(e['v1Compatibility'])['created'].split('.')[0],
+                                           '%Y-%m-%dT%H:%M:%S')
+                for e in response.json()['history']
+            ])
 
-        # take the most recent date as creation date
-        created_date = max([
-            datetime.datetime.strptime(json.loads(e['v1Compatibility'])['created'].split('.')[0],
-                                       '%Y-%m-%dT%H:%M:%S')
-            for e in response.json()['history']
-        ])
-
-        if (datetime.datetime.now() - created_date).total_seconds() >= max_duration:
-            old_images.append(image["name"])
+            if (datetime.datetime.now() - created_date).total_seconds() >= max_duration:
+                old_images.append(image["name"])
 
     return old_images
 
