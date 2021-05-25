@@ -110,6 +110,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined)` |
 | `celerybeat.replicaCount` | Replica count for celerybeat service | `1` |
 | `celerybeat.expiredTokensFlushPeriod` | Flushing of expired tokens task period | `86400` |
+| `celerybeat.maximumImagesTTL` | Duration in seconds sent for image expiration (deleted from local registry) | `86400` |
 | `celerybeat.taskPeriod` | Celery beat task period | `10800` |
 | `celerybeat.image.repository` | `celerybeat` image repository | `substrafoundation/substra-backend` |
 | `celerybeat.image.tag` | `celerybeat` image tag | `latest` |

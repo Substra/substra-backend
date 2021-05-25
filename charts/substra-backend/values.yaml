@@ -203,6 +203,7 @@ docker-registry:
 celerybeat:
   replicaCount: 1
   expiredTokensFlushPeriod: 86400
+  maximumImagesTTL: 604800
   taskPeriod: 10800
   image:
     repository: substrafoundation/substra-backend
@@ -284,7 +285,9 @@ events:
   affinity: {}
 
 
-extraEnv: []
+extraEnv:
+  - name: TASK_CACHE_DOCKER_IMAGES
+    value: 'True'
   # - name: ENV_VARIABLE
   #   value: false
 

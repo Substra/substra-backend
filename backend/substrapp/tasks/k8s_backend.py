@@ -1,6 +1,8 @@
 import kubernetes
 import requests
 import os
+import json
+import datetime
 import logging
 from django.conf import settings
 from substrapp.utils import timeit
@@ -454,6 +456,105 @@ def k8s_remove_image(image_name):
             return
     except Exception as e:
         logger.exception(e)
+
+
+def get_image_list_from_docker_registry():
+
+    response = requests.get(
+        f'{REGISTRY_SCHEME}://{REGISTRY}/v2/_catalog',
+        headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
+        timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+    )
+
+    response.raise_for_status()
+    res = response.json()
+
+    for repository in res['repositories']:
+        # get only user-image repo, images built by substra-backend
+        if repository == 'user-image':
+            response = requests.get(
+                f'{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list',
+                headers={'Accept': 'application/vnd.docker.distribution.manifest.v2+json'},
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+            )
+
+            response.raise_for_status()
+            return response.json()
+
+    return None
+
+
+def fetch_old_algo_image_names_from_docker_registry(max_duration):
+
+    logger.info(f'Fetch image names older than {max_duration}s')
+
+    images = get_image_list_from_docker_registry()
+
+    old_images = []
+    if images:
+        for image in images['tags']:
+            response = requests.get(
+                f'{REGISTRY_SCHEME}://{REGISTRY}/v2/user-image/manifests/{image}',
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+            )
+
+            response.raise_for_status()
+
+            # take the most recent date as creation date
+            created_date = max([
+                datetime.datetime.strptime(json.loads(e['v1Compatibility'])['created'].split('.')[0],
+                                           '%Y-%m-%dT%H:%M:%S')
+                for e in response.json()['history']
+            ])
+
+            if (datetime.datetime.now() - created_date).total_seconds() >= max_duration:
+                old_images.append(image["name"])
+
+    return old_images
+
+
+def k8s_docker_registry_garbage_collector():
+    logger.info('Launch garbage collect on docker-registry')
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
+    pod_name = get_pod_name('docker-registry')
+    exec_command = [
+        '/bin/sh',
+        '-c',
+        '/bin/registry garbage-collect /etc/docker/registry/config.yml 2>&1'
+    ]
+
+    resp = kubernetes.stream.stream(
+        k8s_client.connect_get_namespaced_pod_exec,
+        pod_name,
+        NAMESPACE,
+        command=exec_command,
+        stderr=True,
+        stdin=True,
+        stdout=True,
+        tty=True,
+        _preload_content=False,
+    )
+
+    logs = []
+
+    while resp.is_open():
+        resp.update(timeout=1)
+        if resp.peek_stdout():
+            lines = resp.read_stdout()
+            for line in filter(None, lines.split("\n")):
+                logs.append(line)
+    else:
+        logger.info(logs[-1])
+
+    returncode = resp.returncode
+    resp.close()
+
+    if returncode != 0:
+        raise Exception(
+            f"Error running docker-registry garbage collector (exited with code {returncode})"
+        )
 
 
 @timeit

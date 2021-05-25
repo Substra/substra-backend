@@ -27,6 +27,9 @@ spec:
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      {{- if .Values.celeryworker.rbac.enable }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
+      {{- end }}
       initContainers:
       {{- if .Values.privateCa.enabled }}
       - name: add-cert
@@ -79,6 +82,43 @@ spec:
               value: "amqp://{{ .Values.rabbitmq.rabbitmq.username }}:{{ .Values.rabbitmq.rabbitmq.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: PYTHONUNBUFFERED
               value: "1"
+            {{- if .Values.registry.local }}
+            - name: REGISTRY
+              value: {{ .Release.Name }}-docker-registry:5000
+            {{ else }}
+            - name: REGISTRY
+              value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
+            {{ end }}
+            - name: REGISTRY_IS_LOCAL
+              value: "{{ $.Values.registry.local }}"
+            - name: REGISTRY_SERVICE_NAME
+              value: {{ .Release.Name }}-docker-registry
+            - name: REGISTRY_SCHEME
+              value: {{ .Values.registry.scheme}}
+            - name: REGISTRY_PULL_DOMAIN
+              value: {{ .Values.registry.pullDomain}}
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: DOCKER_CACHE_PVC
+              value: {{ include "substra.fullname" $ }}-docker-cache
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: RUN_AS_USER
+              value: {{ .Values.securityContext.runAsUser | quote}}
+            - name: RUN_AS_GROUP
+              value: {{ .Values.securityContext.runAsGroup | quote }}
+            - name: FS_GROUP
+              value: {{ .Values.securityContext.fsGroup | quote }}
+            - name: KANIKO_IMAGE
+              value: {{ .Values.backend.kaniko.image | quote }}
+            - name: KANIKO_MIRROR
+              value: {{ .Values.backend.kaniko.mirror | quote }}
+            - name: COMPUTE_REGISTRY
+              value: {{ .Values.backend.compute.registry | quote }}
+            - name: HTTP_CLIENT_TIMEOUT_SECONDS
+              value: {{ .Values.httpClient.timeoutSeconds | quote  }}
           volumeMounts:
             - name: user-cert
               mountPath: /var/hyperledger/msp/signcerts
