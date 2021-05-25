@@ -58,6 +58,7 @@ deploy:
           backend.image: substrafoundation/substra-backend
           celerybeat.image: substrafoundation/substra-backend
           celeryworker.image: substrafoundation/substra-backend
+        skipBuildDependencies: true # deps already built by other org-1 release
 
     flags:
       install: ["--create-namespace"]
@@ -71,3 +72,8 @@ profiles:
       - op: replace
         path: /deploy/helm/releases/1/overrides/backend/settings
         value: prod
+  - name: nodeps
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/skipBuildDependencies
+        value: true
