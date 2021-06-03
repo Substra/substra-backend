@@ -77,3 +77,7 @@ profiles:
       - op: add
         path: /deploy/helm/releases/0/skipBuildDependencies
         value: true
+  - name: single-org
+    patches:
+      - op: remove
+        path: /deploy/helm/releases/1
