@@ -6,6 +6,9 @@ import time
 from uuid import UUID
 from django.conf import settings
 from grpc import RpcError
+from substrapp.compute_tasks.categories import (
+    TASK_CATEGORY_TRAINTUPLE, TASK_CATEGORY_AGGREGATETUPLE, TASK_CATEGORY_COMPOSITETRAINTUPLE, TASK_CATEGORY_TESTTUPLE
+)
 from substrapp.ledger.connection import get_hfc
 from substrapp.ledger.exceptions import (raise_for_status, LedgerForbidden, LedgerTimeout, LedgerMVCCError,
                                          LedgerInvalidResponse, LedgerUnavailable, LedgerPhantomReadConflictError,
@@ -255,22 +258,22 @@ def get_object_from_ledger(channel_name, key, query):
 
 LOG_TUPLE_INVOKE_FCNS = {
     'doing': {
-        'traintuple': 'logStartTrain',
-        'testtuple': 'logStartTest',
-        'composite_traintuple': 'logStartCompositeTrain',
-        'aggregatetuple': 'logStartAggregate',
+        TASK_CATEGORY_TRAINTUPLE: 'logStartTrain',
+        TASK_CATEGORY_TESTTUPLE: 'logStartTest',
+        TASK_CATEGORY_COMPOSITETRAINTUPLE: 'logStartCompositeTrain',
+        TASK_CATEGORY_AGGREGATETUPLE: 'logStartAggregate',
     },
     'done': {
-        'traintuple': 'logSuccessTrain',
-        'testtuple': 'logSuccessTest',
-        'composite_traintuple': 'logSuccessCompositeTrain',
-        'aggregatetuple': 'logSuccessAggregate',
+        TASK_CATEGORY_TRAINTUPLE: 'logSuccessTrain',
+        TASK_CATEGORY_TESTTUPLE: 'logSuccessTest',
+        TASK_CATEGORY_COMPOSITETRAINTUPLE: 'logSuccessCompositeTrain',
+        TASK_CATEGORY_AGGREGATETUPLE: 'logSuccessAggregate',
     },
     'failed': {
-        'traintuple': 'logFailTrain',
-        'testtuple': 'logFailTest',
-        'composite_traintuple': 'logFailCompositeTrain',
-        'aggregatetuple': 'logFailAggregate',
+        TASK_CATEGORY_TRAINTUPLE: 'logFailTrain',
+        TASK_CATEGORY_TESTTUPLE: 'logFailTest',
+        TASK_CATEGORY_COMPOSITETRAINTUPLE: 'logFailCompositeTrain',
+        TASK_CATEGORY_AGGREGATETUPLE: 'logFailAggregate',
     },
 }
 
@@ -311,7 +314,7 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
         'log': '',
     }
 
-    if tuple_type in ('traintuple', 'aggregatetuple'):
+    if tuple_type in (TASK_CATEGORY_TRAINTUPLE, TASK_CATEGORY_AGGREGATETUPLE):
         extra_kwargs.update({
             'out_model': {
                 'key': res["end_model_key"],
@@ -320,7 +323,7 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
             },
         })
 
-    elif tuple_type == 'composite_traintuple':
+    elif tuple_type == TASK_CATEGORY_COMPOSITETRAINTUPLE:
         extra_kwargs.update({
             'out_head_model': {
                 'key': res["end_head_model_key"],
@@ -333,9 +336,32 @@ def log_success_tuple(channel_name, tuple_type, tuple_key, res):
             },
         })
 
-    elif tuple_type == 'testtuple':
+    elif tuple_type == TASK_CATEGORY_TESTTUPLE:
         extra_kwargs.update({
             'perf': float(res["global_perf"]),
         })
 
     _update_tuple_status(channel_name, tuple_type, tuple_key, 'done', extra_kwargs=extra_kwargs)
+
+
+def is_task_runnable(channel_name: str, task_key: str, task_category: str, compute_plan_key: str) -> bool:
+    """
+    Return True if the compute plan and the compute task are in a running state, else return False.
+    """
+
+    # TODO: orchestrator. It shouldn't be necessary to check the state of the compute plan
+    # because with the orchestrator, compute plan cancelled/failed status should be cascaded to tasks (?)
+    if compute_plan_key:
+        compute_plan = get_object_from_ledger(channel_name, compute_plan_key, "queryComputePlan")
+        if compute_plan["status"] != "doing":
+            return False
+
+    methods = {
+        TASK_CATEGORY_TRAINTUPLE: "queryTraintuple",
+        TASK_CATEGORY_COMPOSITETRAINTUPLE: "queryCompositeTraintuple",
+        TASK_CATEGORY_AGGREGATETUPLE: "queryAggregatetuple",
+        TASK_CATEGORY_TESTTUPLE: "queryTesttuple",
+    }
+
+    task = get_object_from_ledger(channel_name, task_key, methods[task_category])
+    return task["status"] == "doing"

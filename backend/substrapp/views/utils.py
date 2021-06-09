@@ -10,7 +10,7 @@ from rest_framework.settings import api_settings
 from node.authentication import NodeUser
 from substrapp.ledger.api import get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
-from substrapp.utils import NodeError, get_remote_file, get_owner, get_remote_file_content
+from substrapp.utils import get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
 
 from django.conf import settings
@@ -18,7 +18,7 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
-from substrapp import exceptions
+from substrapp.exceptions import NodeError, BadRequestError
 
 HTTP_HEADER_PROXY_ASSET = 'Substra-Proxy-Asset'
 
@@ -77,8 +77,8 @@ class PermissionMixin(object):
             node_id = user.username
         else:
             # for classic user, test on current msp id
-            # TODO: This should be 'download' instead of 'process',
-            #       but 'download' is not consistently exposed by chaincode yet.
+            # TODO orchestrator: This should be 'download' instead of 'process',
+            #               but 'download' is not consistently exposed by chaincode yet.
             permission = asset['permissions']['process']
             node_id = get_owner()
 
@@ -88,6 +88,9 @@ class PermissionMixin(object):
     def get_storage_address(self, asset, ledger_field) -> str:
         return asset[ledger_field]['storage_address']
 
+    def get_asset(self, channel_name: str, key: str):
+        return get_object_from_ledger(channel_name, key, self.ledger_query_call)
+
     def download_file(self, request, django_field, ledger_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
@@ -96,7 +99,7 @@ class PermissionMixin(object):
         validate_key(key)
 
         try:
-            asset = get_object_from_ledger(channel_name, key, self.ledger_query_call)
+            asset = self.get_asset(channel_name, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -107,7 +110,7 @@ class PermissionMixin(object):
                             status=status.HTTP_403_FORBIDDEN)
 
         if get_owner() == asset['owner']:
-            response = self._download_local_file(django_field)
+            response = self.get_local_file_response(django_field)
         else:
             if not ledger_field:
                 ledger_field = django_field
@@ -121,8 +124,10 @@ class PermissionMixin(object):
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
 
+        validate_key(key)
+
         try:
-            asset = get_object_from_ledger(channel_name, key, self.ledger_query_call)
+            asset = self.get_asset(channel_name, key)
         except LedgerError as e:
             return Response({'message': str(e.msg)}, status=e.status)
 
@@ -131,10 +136,9 @@ class PermissionMixin(object):
         except PermissionError as e:
             return Response({'message': str(e)},
                             status=status.HTTP_403_FORBIDDEN)
+        return self.get_local_file_response(django_field)
 
-        return self._download_local_file(django_field)
-
-    def _download_local_file(self, django_field):
+    def get_local_file_response(self, django_field):
         obj = self.get_object()
         data = getattr(obj, django_field)
         response = CustomFileResponse(
@@ -178,12 +182,12 @@ def validate_key(key):
     try:
         uuid.UUID(key)
     except ValueError:
-        raise exceptions.BadRequestError(f'key is not a valid UUID: "{key}"')
+        raise BadRequestError(f'key is not a valid UUID: "{key}"')
 
 
 def validate_sort(sort):
     if sort not in ['asc', 'desc']:
-        raise exceptions.BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
+        raise BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
 
 
 class LedgerException(Exception):
@@ -216,7 +220,7 @@ def get_channel_name(request):
     if 'Substra-Channel-Name' in request.headers:
         return request.headers['Substra-Channel-Name']
 
-    raise exceptions.BadRequestError('Could not determine channel name')
+    raise BadRequestError('Could not determine channel name')
 
 
 def is_proxied_request(request) -> bool:

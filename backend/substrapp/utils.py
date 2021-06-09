@@ -7,6 +7,7 @@ from os import path
 from os.path import isfile, isdir
 import shutil
 
+import functools
 import requests
 import tarfile
 import zipfile
@@ -14,9 +15,10 @@ import uuid
 import time
 
 from checksumdir import dirhash
-
 from django.conf import settings
 from rest_framework import status
+from requests.auth import HTTPBasicAuth
+from substrapp.exceptions import NodeError
 
 logger = logging.getLogger(__name__)
 
@@ -210,10 +212,6 @@ def uncompress_content(archive_content, to_directory):
             raise Exception('Archive must be zip or tar.*')
 
 
-class NodeError(Exception):
-    pass
-
-
 def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
 
     headers = {
@@ -275,19 +273,6 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, c
         raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
 
 
-def get_cp_local_folder(compute_plan_key):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'local', f'local-{compute_plan_key}-{settings.ORG_NAME}')
-
-
-def get_subtuple_directory(subtuple_key):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'subtuple', subtuple_key)
-
-
-def get_chainkeys_directory(compute_plan_key):
-    return path.join(getattr(settings, 'MEDIA_ROOT'), 'computeplan',
-                     compute_plan_key, 'chainkeys')
-
-
 def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
@@ -312,3 +297,74 @@ def timeit(function):
         return result
 
     return timed
+
+
+def delete_dir(path: str) -> None:
+    try:
+        shutil.rmtree(path)
+    except FileNotFoundError:
+        pass
+    except Exception as e:
+        logger.exception(e)
+    finally:
+        if os.path.exists(path):
+            logger.info(f"Failed to delete directory {path}")
+
+
+def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
+    return get_remote_file_content(channel_name, url, _authenticate_worker(node_id), content_checksum, salt=salt)
+
+
+def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
+    return get_and_put_remote_file_content(
+        channel_name,
+        url,
+        _authenticate_worker(node_id),
+        content_checksum,
+        content_dst_path=content_dst_path,
+        hash_key=hash_key,
+    )
+
+
+def _authenticate_worker(node_id):
+    from node.models import OutgoingNode
+
+    owner = get_owner()
+
+    try:
+        outgoing = OutgoingNode.objects.get(node_id=node_id)
+    except OutgoingNode.DoesNotExist:
+        raise NodeError(f"Unauthorized to call node_id: {node_id}")
+
+    if node_id != outgoing.node_id:
+        # Ensure the response is valid. This is a safety net for the case when the DB connection is shared
+        # across processes running in parallel.
+        raise NodeError(f"Wrong response: Request {node_id} - Get {outgoing.node_id}")
+
+    auth = HTTPBasicAuth(owner, outgoing.secret)
+
+    return auth
+
+
+def do_not_raise(fn):
+    @functools.wraps(fn)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except Exception as e:
+            logging.exception(e)
+
+    return wrapper
+
+
+def remove_directory_contents(folder: str) -> None:
+    # https://stackoverflow.com/a/185941/1370722
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print("Failed to delete %s. Reason: %s" % (file_path, e))

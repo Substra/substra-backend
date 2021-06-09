@@ -261,6 +261,12 @@ class FakeDataManager(object):
         self.data_opener = FakeOpener(filepath)
 
 
+class FakeDataSample(object):
+    def __init__(self, filepath, checksum):
+        self.path = filepath
+        self.checksum = checksum
+
+
 class FakeFilterDataManager(object):
     def __init__(self, count):
         self.count_value = count
@@ -272,33 +278,19 @@ class FakeFilterDataManager(object):
 class FakePath(object):
     def __init__(self, filepath):
         self.path = filepath
+        self.name = self.path
 
 
 class FakeModel(object):
-    def __init__(self, filepath):
+    def __init__(self, filepath, checksum):
         self.file = FakePath(filepath)
-
-
-class FakeAsyncResult(object):
-    def __init__(self, status=None, successful=True):
-        if status is not None:
-            self.status = status
-        self.success = successful
-        self.result = {'res': 'result'}
-
-    def successful(self):
-        return self.success
+        self.checksum = checksum
 
 
 class FakeRequest(object):
     def __init__(self, status, content):
         self.status_code = status
         self.content = content
-
-
-class FakeTask(object):
-    def __init__(self, task_id):
-        self.id = task_id
 
 
 def encode_filter(params):

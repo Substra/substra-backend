@@ -83,8 +83,6 @@ extraEnv:
     value: '120'
   - name: TASK_CACHE_DOCKER_IMAGES
     value: 'False'
-  - name: BUILD_IMAGE
-    value: 'True'
 
 channels:
   - mychannel:

@@ -4,17 +4,11 @@ import json
 import inspect
 
 
-LANGUAGES = {
-    'ShellScript': '00',
-    'Python': '01'
-}
+LANGUAGES = {"ShellScript": "00", "Python": "01"}
 
-SERVICES = {
-    'System': '00',
-    'Docker': '01'
-}
+SERVICES = {"System": "00", "Docker": "01"}
 
-EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'exceptions.json')
+EXCEPTION_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "exceptions.json")
 
 EXCEPTIONS_UUID_LENGTH = 7
 
@@ -30,8 +24,8 @@ else:
 
 def get_exception_code(exception_type):
 
-    service_code = SERVICES['System']
-    exception_code = EXCEPTIONS_MAP.get(exception_type.__name__, '0000')    # '0000' is default exception code
+    service_code = SERVICES["System"]
+    exception_code = EXCEPTIONS_MAP.get(exception_type.__name__, "0000")  # '0000' is default exception code
 
     return exception_code, service_code
 
@@ -51,8 +45,9 @@ def exception_tree(cls, exceptions_classes):
 
 def find_exception(module):
     # Exception classes in module
-    exceptions = [ename for ename, eclass in inspect.getmembers(module, inspect.isclass)
-                  if issubclass(eclass, BaseException)]
+    exceptions = [
+        ename for ename, eclass in inspect.getmembers(module, inspect.isclass) if issubclass(eclass, BaseException)
+    ]
 
     # Exception classes in submodule
 
@@ -67,15 +62,14 @@ def find_exception(module):
         except Exception:
             classes = []
 
-        exceptions += [ename for ename, eclass in classes
-                       if issubclass(eclass, BaseException)]
+        exceptions += [ename for ename, eclass in classes if issubclass(eclass, BaseException)]
 
     return set(exceptions)
 
 
 def generate_exceptions_map(append=True):
 
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'backend.settings.prod'
+    os.environ["DJANGO_SETTINGS_MODULE"] = "backend.settings.prod"
 
     import requests.exceptions
     import celery.exceptions
@@ -89,14 +83,23 @@ def generate_exceptions_map(append=True):
     import rest_framework.exceptions
 
     # Modules to inspect
-    MODULES = [requests.exceptions, celery.exceptions, tarfile,   # noqa: N806
-               django.core.exceptions, django.urls, django.db, django.http, django.db.transaction,
-               django.utils, rest_framework.exceptions]
+    modules = [
+        requests.exceptions,
+        celery.exceptions,
+        tarfile,  # noqa: N806
+        django.core.exceptions,
+        django.urls,
+        django.db,
+        django.http,
+        django.db.transaction,
+        django.utils,
+        rest_framework.exceptions,
+    ]
 
     exceptions_classes = set()
 
     # Add exceptions from modules
-    for errors_module in MODULES:
+    for errors_module in modules:
         exceptions_classes.update(find_exception(errors_module))
 
     # Add exceptions from python
@@ -115,7 +118,7 @@ def generate_exceptions_map(append=True):
         start_value = max(map(int, json_exceptions.values()))
 
         for code_exception, exception_name in enumerate(exceptions_classes, start=start_value + 1):
-            json_exceptions[exception_name] = f'{code_exception:04d}'
+            json_exceptions[exception_name] = f"{code_exception:04d}"
 
         return json_exceptions
 
@@ -123,14 +126,14 @@ def generate_exceptions_map(append=True):
         # Generate the json exceptions
         json_exceptions = dict()
         for code_exception, exception_name in enumerate(exceptions_classes, start=1):
-            json_exceptions[exception_name] = f'{code_exception:04d}'
+            json_exceptions[exception_name] = f"{code_exception:04d}"
 
         return json_exceptions
 
 
-if __name__ == '__main__':
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'backend.settings.common'
+if __name__ == "__main__":
+    os.environ["DJANGO_SETTINGS_MODULE"] = "backend.settings.common"
     json_exceptions = generate_exceptions_map()
-    with open(EXCEPTION_PATH, 'w') as outfile:
+    with open(EXCEPTION_PATH, "w") as outfile:
         json.dump(json_exceptions, outfile, indent=4)
-        outfile.write('\n')  # Add newline cause Py JSON does not
+        outfile.write("\n")  # Add newline cause Py JSON does not

@@ -14,4 +14,4 @@ exception_map:
 
 	# Use python3.7 so that the exception map is compatible with the python
 	# version used in Travis unit test builds.
-	python3.7 substrapp/tasks/exception_handler.py
+	python3.7 substrapp/compute_tasks/exception_handler.py

@@ -35,6 +35,9 @@ DATABASES = {
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', f'/substra/medias/{ORG_NAME}')
 
+SUBTUPLE_DIR = os.path.join(MEDIA_ROOT, "subtuple")
+ASSET_BUFFER_DIR = os.path.join(SUBTUPLE_DIR, "asset_buffer")
+
 SITE_HOST = os.environ.get('SITE_HOST', f'substra-backend.{ORG_NAME}.xyz')
 SITE_PORT = os.environ.get('SITE_PORT', DEFAULT_PORT)
 DEFAULT_DOMAIN = os.environ.get('DEFAULT_DOMAIN', f'http://{SITE_HOST}:{SITE_PORT}')

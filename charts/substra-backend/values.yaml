@@ -121,6 +121,8 @@ persistence:
         server: true
         worker: false
     subtuple:
+      # subtuple size should be at least equal to the combined size of the following PVCs:
+      # datasamples, models, local, objectives, datamanagers, algos, compositealgos,  aggregatealgos
       size: "10Gi"
       readOnly:
         server: true

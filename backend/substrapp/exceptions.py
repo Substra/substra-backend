@@ -45,3 +45,18 @@ class PodErrorException(Exception):
 
 class PodTimeoutException(Exception):
     pass
+
+
+class NodeError(Exception):
+    """An error occurred during the download of an asset from a node"""
+    pass
+
+
+class BuildError(Exception):
+    """An error occurred during the build of a container image"""
+    pass
+
+
+class TaskNotFoundError(Exception):
+    """A celery task was not found"""
+    pass

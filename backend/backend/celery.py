@@ -17,6 +17,7 @@ app = Celery('backend')
 #   should have a `CELERY_` prefix.
 app.config_from_object('django.conf:settings', namespace='CELERY')
 
+
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
 
@@ -34,12 +35,12 @@ def setup_log_format(sender, conf, **kwargs):
 
 @app.on_after_configure.connect
 def setup_periodic_tasks(sender, **kwargs):
-    from substrapp.tasks.tasks import (prepare_training_task,
-                                       prepare_testing_task,
-                                       prepare_aggregate_task,
-                                       prepare_composite_training_task,
-                                       docker_registry_garbage_collector_task,
-                                       clean_old_images_task)
+    from substrapp.tasks.tasks_prepare_task import prepare_training_task
+    from substrapp.tasks.tasks_prepare_task import prepare_testing_task
+    from substrapp.tasks.tasks_prepare_task import prepare_aggregate_task
+    from substrapp.tasks.tasks_prepare_task import prepare_composite_training_task
+    from substrapp.tasks.tasks_docker_registry import docker_registry_garbage_collector_task
+    from substrapp.tasks.tasks_docker_registry import clean_old_images_task
 
     period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
 

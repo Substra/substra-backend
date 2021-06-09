@@ -205,12 +205,9 @@ MEDIA_URL = '/media/'
 SITE_ID = 1
 
 TASK = {
-    'CAPTURE_LOGS': to_bool(os.environ.get('TASK_CAPTURE_LOGS', True)),
-    'CLEAN_EXECUTION_ENVIRONMENT': to_bool(os.environ.get('TASK_CLEAN_EXECUTION_ENVIRONMENT', True)),
     'CACHE_DOCKER_IMAGES': to_bool(os.environ.get('TASK_CACHE_DOCKER_IMAGES', False)),
     'CHAINKEYS_ENABLED': to_bool(os.environ.get('TASK_CHAINKEYS_ENABLED', False)),
     'LIST_WORKSPACE': to_bool(os.environ.get('TASK_LIST_WORKSPACE', True)),
-    'BUILD_IMAGE': to_bool(os.environ.get('BUILD_IMAGE', True)),
     'KANIKO_MIRROR': to_bool(os.environ.get('KANIKO_MIRROR', False)),
     'KANIKO_IMAGE': os.environ.get('KANIKO_IMAGE'),
     'COMPUTE_REGISTRY': os.environ.get('COMPUTE_REGISTRY'),
@@ -223,8 +220,15 @@ CELERY_TASK_TRACK_STARTED = True  # since 4.0
 CELERY_TASK_MAX_RETRIES = 5
 CELERY_TASK_RETRY_DELAY_SECONDS = 2
 CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', 1))
-CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//'),
+CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//')
 
+K8S_PVC = {env_key: env_value for env_key, env_value in os.environ.items() if "_PVC" in env_key}
+
+NAMESPACE = os.getenv("NAMESPACE")
+
+REGISTRY = os.getenv("REGISTRY")
+REGISTRY_SCHEME = os.getenv("REGISTRY_SCHEME")
+REGISTRY_PULL_DOMAIN = os.getenv("REGISTRY_PULL_DOMAIN")
 REGISTRY_IS_LOCAL = to_bool(os.environ.get('REGISTRY_IS_LOCAL'))
 REGISTRY_SERVICE_NAME = os.environ.get('REGISTRY_SERVICE_NAME')
 
@@ -234,11 +238,16 @@ EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFET
 
 GZIP_MODELS = to_bool(os.environ.get('GZIP_MODELS', False))
 
-ENABLE_REMOVE_LOCAL_CP_FOLDERS = to_bool(os.environ.get('ENABLE_REMOVE_LOCAL_CP_FOLDERS', True))
-
 HTTP_CLIENT_TIMEOUT_SECONDS = int(os.environ.get('HTTP_CLIENT_TIMEOUT_SECONDS', 30))
 
+LOG_LEVEL = os.environ.get('LOG_LEVEL', 'INFO')
 LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
+
+# With DEBUG_QUICK_IMAGE, container images are never deleted, and image names are based on the algo/metrics checksum
+# (instead of algo/metrics key, without the option). This allows reuse of images and significantly speeds up end-to-end
+# tests.
+DEBUG_QUICK_IMAGE = to_bool(os.environ.get('DEBUG_QUICK_IMAGE', False))
+DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get('DEBUG_KEEP_POD_AND_DIRS', False))
 
 
 # Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
@@ -276,12 +285,12 @@ LOGGING = {
             'propagate': False,
         },
         'substrapp': {
-            'level': 'DEBUG',
+            'level': LOG_LEVEL,
             'handlers': ['console'],
             'propagate': False,
         },
         'events': {
-            'level': 'DEBUG',
+            'level': LOG_LEVEL,
             'handlers': ['console'],
             'propagate': False,
         },

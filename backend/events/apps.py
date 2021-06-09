@@ -16,7 +16,8 @@ from hfc.fabric.peer import Peer
 from hfc.fabric.user import create_user
 from hfc.util.keyvaluestore import FileKeyValueStore
 
-from substrapp.tasks.tasks import prepare_tuple, on_compute_plan
+from substrapp.tasks.tasks_prepare_task import prepare_task
+from substrapp.tasks.tasks_compute_plan import on_compute_plan
 from substrapp.utils import get_owner
 from substrapp.ledger.connection import get_hfc, ledger_grpc_options
 
@@ -75,7 +76,7 @@ def on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, as
         logger.info(f'Skipping task {key}: already exists')
         return
 
-    prepare_tuple.apply_async(
+    prepare_task.apply_async(
         (channel_name, asset, event_type),
         task_id=key,
         queue=worker_queue

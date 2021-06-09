@@ -106,8 +106,6 @@ spec:
               value: /var/substra/medias/
             - name: PYTHONUNBUFFERED
               value: "1"
-            - name: "CELERYWORKER_IMAGE"
-              value: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
             - name: "CELERY_WORKER_CONCURRENCY"
               value: {{ .Values.celeryworker.concurrency | quote }}
             {{- if .Values.privateCa.enabled }}
