@@ -1,4 +1,4 @@
-FROM python:3.6-slim AS build
+FROM python:3.9-slim AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 RUN apt-get update && apt-get install gcc -y && apt-get clean
@@ -15,16 +15,16 @@ COPY ./backend/substrapp /usr/src/app/substrapp
 COPY ./backend/events /usr/src/app/events
 COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/node /usr/src/app/node
-COPY ./backend/node-register /usr/src/app/node-register
+COPY ./backend/node_register /usr/src/app/node_register
 COPY ./backend/users /usr/src/app/users
 
-FROM python:3.6-slim
+FROM python:3.9-slim
 
 ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV GRPC_POLL_STRATEGY=epoll1
 
-COPY --from=build /usr/local/lib/python3.6/ /usr/local/lib/python3.6/
+COPY --from=build /usr/local/lib/python3.9/ /usr/local/lib/python3.9/
 COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
 

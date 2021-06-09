@@ -26,9 +26,9 @@ build:
         - src: backend/node/**/*
           dest: /usr/src/app/node
           strip: backend/node/
-        - src: backend/node-register/**/*
-          dest: /usr/src/app/node-register
-          strip: backend/node-register/
+        - src: backend/node_register/**/*
+          dest: /usr/src/app/node_register
+          strip: backend/node_register/
         - src: backend/users/**/*
           dest: /usr/src/app/users
           strip: backend/users/

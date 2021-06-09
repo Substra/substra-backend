@@ -46,7 +46,7 @@ from substrapp.compute_tasks.exception_handler import compute_error_code
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.docker_registry import delete_container_image
 from substrapp.lock_local import lock_resource
-from celery.task import Task
+from celery import Task
 from backend.celery import app
 from substrapp.ledger.api import log_success_tuple, log_fail_tuple, is_task_runnable
 

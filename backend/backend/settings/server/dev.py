@@ -1,4 +1,4 @@
 from ..deps.ledger import *
 from ..dev import *
 
-INSTALLED_APPS += ['node-register']
+INSTALLED_APPS += ['node_register']

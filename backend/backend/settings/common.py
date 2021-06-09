@@ -110,6 +110,8 @@ if DJANGO_LOG_SQL_QUERIES:
         'libs.sql_printing_middleware.SQLPrintingMiddleware'
     )
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [

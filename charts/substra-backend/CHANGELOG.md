@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.1
+
+##Added
+- Add DJANGO_ALLOW_ASYNC_UNSAFE=true in event app deployment
+
 ## 2.2.0
 
 ### Added

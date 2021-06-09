@@ -52,6 +52,9 @@ spec:
         env:
           - name: DJANGO_SETTINGS_MODULE
             value: backend.settings.events.{{ .Values.backend.settings }}
+          # it's safe to allow async django db calls as the event app only reads
+          - name: DJANGO_ALLOW_ASYNC_UNSAFE
+            value: "true"
           - name: ORG_NAME
             value: {{ .Values.organization.name }}
           - name: BACKEND_DB_NAME

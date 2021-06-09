@@ -24,7 +24,7 @@ def _register_node(channel_name):
 
 
 class NodeRegisterConfig(AppConfig):
-    name = 'node-register'
+    name = 'node_register'
 
     def register_node(self, channel_name):
         proc = multiprocessing.Process(target=_register_node, args=[channel_name])
