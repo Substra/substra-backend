@@ -23,7 +23,7 @@ boto3==1.11.9
 grpcio==1.38.0
 fabric-sdk-py==1.0.0
 # dev-mode
-watchdog==1.0.1
+watchdog==2.1.2
 argh==0.26.2
 # tests
 coverage==5.3
