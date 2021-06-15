@@ -5,12 +5,12 @@ on:
     branches:
       - "master"
     paths:
-    - 'charts/**'
+      - "charts/**"
   pull_request:
     branches:
       - "master"
     paths:
-    - 'charts/**'
+      - "charts/**"
 
 jobs:
   test:
@@ -20,8 +20,10 @@ jobs:
       - uses: actions/checkout@v2
       - uses: azure/setup-helm@v1
         with:
-            version: 'v3.5.0'
+          version: "v3.5.0"
         id: install
+      - name: Build dependencies
+        run: helm dep build charts/substra-backend
       - name: Lint Chart
         run: helm lint charts/substra-backend
   publish:
@@ -33,25 +35,18 @@ jobs:
       - uses: actions/checkout@v2
       - uses: azure/setup-helm@v1
         with:
-            version: 'v3.5.0'
+          version: "v3.5.0"
         id: install
+      - name: Install tools
+        run: |
+          sudo snap install yq
+          helm plugin install https://github.com/chartmuseum/helm-push
       - name: Package chart
+        env:
+          HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
+          HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
         run: |
-          helm dep update charts/substra-backend
+          helm dep build charts/substra-backend
           helm package charts/substra-backend
-      - name: Setup key
-        run: |
-          mkdir $HOME/.ssh
-          echo "${{ secrets.CHARTS_ACCESS_KEY }}" > $HOME/.ssh/id_rsa
-          chmod 400 ~/.ssh/id_rsa
-      - name: Publish chart
-        run: |
-          git config --global user.email "gh-actions@github.com"
-          git config --global user.name "GitHub Action"
-          git clone git@github.com:SubstraFoundation/charts.git substra-charts
-          mv substra-backend-* substra-charts/
-          cd substra-charts
-          helm repo index .
-          git add .
-          git commit --message "GitHub Action: ${{ github.repository }}@${{ github.sha }}"
-          git push --quiet --set-upstream origin master
+          helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
+          helm push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
