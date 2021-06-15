@@ -26,6 +26,6 @@ fabric-sdk-py==1.0.0
 watchdog==2.1.2
 argh==0.26.2
 # tests
-coverage==5.3
+coverage==5.5
 mock==4.0.3
 parameterized==0.8.1
