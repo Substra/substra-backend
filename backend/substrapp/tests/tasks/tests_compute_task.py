@@ -19,6 +19,7 @@ class ComputeTaskTests(APITestCase):
         class FakeContext:
             directories = FakeDirectories()
             compute_plan_key = "some compute plan key"
+            task_category = TASK_CATEGORY_TRAINTUPLE
 
         task = {
             "key": "some task key",
@@ -34,24 +35,22 @@ class ComputeTaskTests(APITestCase):
         ) as minit_compute_plan_dirs, mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
         ) as minit_task_dirs, mock.patch(
-            "substrapp.tasks.tasks_compute_task.download_algo_and_metrics"
-        ) as mdownload_algo_and_metrics, mock.patch(
+            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
+        ) as madd_algo_to_buffer, mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ) as madd_task_assets_to_buffer, mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_buffer_to_taskdir"
-        ) as mmove_task_assets_from_buffer_to_taskdir, mock.patch(
-            "substrapp.tasks.tasks_compute_task.restore_local_folder"
-        ) as mrestore_local_folder, mock.patch(
+            "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
+        ) as madd_assets_to_taskdir, mock.patch(
+            "substrapp.tasks.tasks_compute_task.restore_dir"
+        ) as mrestore_dir, mock.patch(
             "substrapp.tasks.tasks_compute_task.build_images"
         ) as mbuild_images, mock.patch(
             "substrapp.tasks.tasks_compute_task.execute_compute_task"
         ) as mexecute_compute_task, mock.patch(
             "substrapp.tasks.tasks_compute_task.save_models"
         ) as msave_models, mock.patch(
-            "substrapp.tasks.tasks_compute_task.commit_local_folder"
-        ) as mcommit_local_folder, mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_taskdir_to_buffer"
-        ) as mmove_task_assets_from_taskdir_to_buffer, mock.patch(
+            "substrapp.tasks.tasks_compute_task.commit_dir"
+        ) as mcommit_dir, mock.patch(
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ) as mteardown_task_dirs, mock.patch(
             "substrapp.tasks.tasks_compute_task.log_success_tuple"
@@ -66,15 +65,14 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(mfrom_task.call_count, 1)
             self.assertEqual(minit_compute_plan_dirs.call_count, 1)
             self.assertEqual(minit_task_dirs.call_count, 1)
-            self.assertEqual(mdownload_algo_and_metrics.call_count, 1)
+            self.assertEqual(madd_algo_to_buffer.call_count, 1)
             self.assertEqual(madd_task_assets_to_buffer.call_count, 1)
-            self.assertEqual(mmove_task_assets_from_buffer_to_taskdir.call_count, 1)
-            self.assertEqual(mrestore_local_folder.call_count, 1)
+            self.assertEqual(madd_assets_to_taskdir.call_count, 1)
+            self.assertEqual(mrestore_dir.call_count, 2)  # local folder + chainkeys
             self.assertEqual(mbuild_images.call_count, 1)
             self.assertEqual(mexecute_compute_task.call_count, 1)
             self.assertEqual(msave_models.call_count, 1)
-            self.assertEqual(mcommit_local_folder.call_count, 1)
-            self.assertEqual(mmove_task_assets_from_taskdir_to_buffer.call_count, 1)
+            self.assertEqual(mcommit_dir.call_count, 2)  # local folder + chainkeys
             self.assertEqual(mteardown_task_dirs.call_count, 1)
 
             mlog_success_tuple.return_value = "data", 404
@@ -96,13 +94,13 @@ class ComputeTaskTests(APITestCase):
         ), mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.download_algo_and_metrics"
+            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_buffer_to_taskdir"
+            "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.restore_local_folder"
+            "substrapp.tasks.tasks_compute_task.restore_dir"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.build_images"
         ), mock.patch(
@@ -110,9 +108,7 @@ class ComputeTaskTests(APITestCase):
         ) as mexecute_compute_task, mock.patch(
             "substrapp.tasks.tasks_compute_task.save_models"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.commit_local_folder"
-        ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_taskdir_to_buffer"
+            "substrapp.tasks.tasks_compute_task.commit_dir"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ), mock.patch(

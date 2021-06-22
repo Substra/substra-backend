@@ -1,3 +1,4 @@
+import uuid
 import os
 import shutil
 import mock
@@ -9,25 +10,29 @@ from rest_framework.test import APITestCase
 
 from ..common import FakeModel, FakeDataManager, FakeDataSample
 from substrapp.utils import get_dir_hash, get_hash
-from substrapp.compute_tasks.directories import AssetBufferDirName
+from substrapp.compute_tasks.directories import AssetBufferDirName, init_task_dirs
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.asset_buffer import (
     _add_datasamples_to_buffer,
     _add_opener_to_buffer,
     _add_model_to_buffer,
     _add_assets_to_taskdir,
+    _download_algo,
+    _download_objective,
 )
-from substrapp.compute_tasks.directories import TaskDirName, CPDirName
+from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()
+ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()
+ASSET_BUFFER_DIR_2 = tempfile.mkdtemp()
+ASSET_BUFFER_DIR_3 = tempfile.mkdtemp()
 CHANNEL = "mychannel"
 
 
 @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR)
 class AssetBufferTests(APITestCase):
     def setUp(self):
-        init_asset_buffer()
         self._setup_directories()
         self._setup_opener()
         self._setup_data_sample()
@@ -42,6 +47,7 @@ class AssetBufferTests(APITestCase):
             task_dir = self.task_dir
 
         self.dirs = FakeDirectories()
+        init_task_dirs(self.dirs)
 
     def _setup_opener(self):
         self.dataset_key = "some_dataset_key"
@@ -76,7 +82,10 @@ class AssetBufferTests(APITestCase):
 
         self.model_checksum = get_hash(self.model_path, self.model_traintuple_key)
 
-    def test_populate_buffer_opener(self):
+    @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_1)
+    def test_add_opener_to_buffer(self):
+
+        init_asset_buffer()
         with mock.patch("substrapp.models.DataManager.objects.get") as mget:
 
             # Test 1: DB is empty
@@ -88,7 +97,7 @@ class AssetBufferTests(APITestCase):
 
             _add_opener_to_buffer(self.dataset_key, self.opener_checksum)
 
-            dest = os.path.join(ASSET_BUFFER_DIR, AssetBufferDirName.Openers, self.dataset_key, Filenames.Opener)
+            dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.dataset_key, Filenames.Opener)
             with open(dest) as f:
                 contents = f.read()
                 self.assertEqual(contents, self.opener_contents)
@@ -102,8 +111,10 @@ class AssetBufferTests(APITestCase):
             with self.assertRaises(Exception):
                 _add_opener_to_buffer(self.dataset_key, self.opener_checksum)
 
-    def test_populate_buffer_data_samples(self):
+    @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_2)
+    def test_add_datasamples_to_buffer(self):
 
+        init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
 
             # Test 1: DB is empty
@@ -115,12 +126,12 @@ class AssetBufferTests(APITestCase):
 
             _add_datasamples_to_buffer([self.data_sample_key])
 
-            dest = os.path.join(ASSET_BUFFER_DIR, AssetBufferDirName.Datasamples, self.data_sample_key)
+            dest = os.path.join(ASSET_BUFFER_DIR_2, AssetBufferDirName.Datasamples, self.data_sample_key)
             with open(os.path.join(dest, self.data_sample_filename)) as f:
                 contents = f.read()
                 self.assertEqual(contents, self.data_sample_contents)
 
-            shutil.rmtree(dest)  # delete folder, otherwise next call to _populate_buffer_data_samples will be a noop
+            shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasamples_to_buffer will be a noop
 
             # Test 3: File corrupted
             with open(self.data_sample_path, "a+") as f:
@@ -135,9 +146,11 @@ class AssetBufferTests(APITestCase):
             ("non_composite_head_model", False),
         ]
     )
+    @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_3)
     def test_add_model_to_buffer(self, _, is_head_model):
 
-        dest = os.path.join(ASSET_BUFFER_DIR, AssetBufferDirName.Models, self.model_key)
+        init_asset_buffer()
+        dest = os.path.join(ASSET_BUFFER_DIR_3, AssetBufferDirName.Models, self.model_key)
 
         model = {
             "key": self.model_key,
@@ -193,9 +206,10 @@ class AssetBufferTests(APITestCase):
                     CHANNEL, storage_address, node_id, self.model_checksum, dest, self.model_traintuple_key
                 )
 
-    def test_move_assets_from_buffer_to_taskdir_data_sample(self):
+    def test_add_assets_to_taskdir_data_sample(self):
 
         # populate the buffer
+        init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
             mget.return_value = FakeDataSample(self.data_sample_dir, self.data_sample_checksum)
             _add_datasamples_to_buffer([self.data_sample_key])
@@ -204,19 +218,22 @@ class AssetBufferTests(APITestCase):
         dest = os.path.join(
             self.dirs.task_dir, TaskDirName.Datasamples, self.data_sample_key, self.data_sample_filename
         )
-        _add_assets_to_taskdir(self.dirs, CPDirName.Datasamples, TaskDirName.Datasamples, [self.data_sample_key])
+        _add_assets_to_taskdir(
+            self.dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, [self.data_sample_key]
+        )
 
         # check task dir
         with open(dest) as f:
             contents = f.read()
             self.assertEqual(contents, self.data_sample_contents)
 
-    def test_move_assets_from_buffer_to_taskdir_model(self):
+    def test_add_assets_to_taskdir_model(self):
 
         # populate the buffer
+        init_asset_buffer()
         model = {
             "key": self.model_key,
-            "traintuple_key": "traintuple_key",
+            "traintuple_key": self.model_traintuple_key,
         }
         with mock.patch("substrapp.models.Model.objects.get") as mget:
             mget.return_value = FakeModel(self.model_path, self.model_checksum)
@@ -224,9 +241,36 @@ class AssetBufferTests(APITestCase):
 
         # load from buffer into task dir
         dest = os.path.join(self.dirs.task_dir, TaskDirName.InModels, self.model_key)
-        _add_assets_to_taskdir(self.dirs, CPDirName.Models, TaskDirName.InModels, [self.model_key])
+        _add_assets_to_taskdir(self.dirs, AssetBufferDirName.Models, TaskDirName.InModels, [self.model_key])
 
         # check task dir
         with open(dest) as f:
             contents = f.read()
             self.assertEqual(contents, self.model_contents)
+
+    def test_download_algo(self):
+
+        algo_content = b"123"
+
+        with mock.patch("substrapp.compute_tasks.asset_buffer.get_asset_content") as mget_asset_content, mock.patch(
+            "substrapp.compute_tasks.asset_buffer.get_object_from_ledger"
+        ):
+            mget_asset_content.return_value = algo_content
+
+            data = _download_algo(CHANNEL, "traintuple", "algo key")
+            self.assertEqual(algo_content, data)
+
+    def test_download_objective(self):
+
+        metrics_content = b"123"
+        objective_key = uuid.uuid4()
+
+        with mock.patch("substrapp.compute_tasks.asset_buffer.get_asset_content") as mget_asset_content, mock.patch(
+            "substrapp.compute_tasks.asset_buffer.get_object_from_ledger"
+        ):
+
+            mget_asset_content.return_value = metrics_content
+
+            objective = _download_objective(CHANNEL, {"objective": {"key": objective_key, "metrics": ""}})
+            self.assertTrue(isinstance(objective, bytes))
+            self.assertEqual(objective, metrics_content)

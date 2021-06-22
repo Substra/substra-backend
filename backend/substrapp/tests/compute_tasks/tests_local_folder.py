@@ -34,10 +34,12 @@ class LocalFolderTests(APITestCase):
 
         class FakeDirectories:
             compute_plan_dir = tempfile.mkdtemp()
+            task_dir = tempfile.mkdtemp()
 
         class FakeContext:
             directories = FakeDirectories()
             compute_plan_key = "some compute plan key"
+            task_category = TASK_CATEGORY_TRAINTUPLE
 
         ctx = FakeContext()
 
@@ -51,14 +53,12 @@ class LocalFolderTests(APITestCase):
 
         with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable") as mis_task_runnable, mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
-        ) as mfrom_task, mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
-            "substrapp.tasks.tasks_compute_task.init_task_dirs"
-        ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.download_algo_and_metrics"
+        ) as mfrom_task, mock.patch("substrapp.tasks.tasks_compute_task.init_asset_buffer"), mock.patch(
+            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_buffer_to_taskdir"
+            "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.build_images"
         ), mock.patch(
@@ -66,9 +66,9 @@ class LocalFolderTests(APITestCase):
         ) as mexecute_compute_task, mock.patch(
             "substrapp.tasks.tasks_compute_task.save_models"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.move_task_assets_from_taskdir_to_buffer"
-        ), mock.patch(
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
+        ), mock.patch(
+            "substrapp.tasks.tasks_compute_task.teardown_compute_plan_dir"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.log_success_tuple"
         ):

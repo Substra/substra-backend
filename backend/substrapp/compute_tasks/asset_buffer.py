@@ -129,8 +129,7 @@ def add_model_from_path(model_path: str, model_key: str) -> None:
     """
     Save a model computed by a compute task to the asset buffer.
 
-    Unlike other assets (handled by `move_task_assets_from_taskdir_to_buffer`), out-models are *new* assets that
-    weren't previously present in the asset buffer.
+    Unlike other assets, out-models are *new* assets that weren't previously present in the asset buffer.
     """
     dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model_key)
     os.rename(model_path, dst)
