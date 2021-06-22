@@ -199,7 +199,7 @@ def delete_pod(k8s_client, name: str) -> None:
     k8s_client.delete_namespaced_pod(
         name=name,
         namespace=NAMESPACE,
-        body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground", grace_period_seconds=0),
+        body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground"),
     )
 
     wait_for_pod_deletion(k8s_client, name)

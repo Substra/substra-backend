@@ -88,7 +88,8 @@ def create_pod(
     container_compute = kubernetes.client.V1Container(
         name=name,
         image=image,
-        command=["/bin/sh", "-c", "while true; do sleep 99999; done"],
+        # Wait until SIGTERM is received, then exit gracefully. See https://stackoverflow.com/a/21882119/1370722
+        command=["/bin/sh", "-c", "trap 'trap - TERM; kill -s TERM -- -$$' TERM; tail -f /dev/null & wait; exit 0"],
         args=None,
         volume_mounts=volume_mounts,
         security_context=get_security_context(),

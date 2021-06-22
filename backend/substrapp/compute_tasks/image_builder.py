@@ -4,7 +4,7 @@ import logging
 from django.conf import settings
 from substrapp.utils import timeit
 from substrapp.compute_tasks.compute_pod import Label
-from substrapp.kubernetes_utils import get_pod_logs, get_security_context, pod_exists, watch_pod
+from substrapp.kubernetes_utils import get_pod_logs, get_security_context, pod_exists, watch_pod, delete_pod
 from substrapp.docker_registry import container_image_exists
 from substrapp.lock_local import lock_resource
 from substrapp.compute_tasks.context import Context
@@ -197,11 +197,8 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
                 get_pod_logs(k8s_client, name=pod_name, container=pod_name),
                 log_prefix
             )
-            k8s_client.delete_namespaced_pod(
-                name=pod_name,
-                namespace=NAMESPACE,
-                body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground", grace_period_seconds=0),
-            )
+
+            delete_pod(k8s_client, pod_name)
 
 
 def _assert_dockerfile(dockerfile_path):
