@@ -23,7 +23,7 @@ jobs:
           version: "v3.5.0"
         id: install
       - name: Build dependencies
-        run: helm dep build charts/substra-backend
+        run: helm dep update charts/substra-backend
       - name: Lint Chart
         run: helm lint charts/substra-backend
   publish:
@@ -46,7 +46,7 @@ jobs:
           HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
           HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
         run: |
-          helm dep build charts/substra-backend
+          helm dep update charts/substra-backend
           helm package charts/substra-backend
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
           helm push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
