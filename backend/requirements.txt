@@ -1,9 +1,9 @@
 Django==3.2.4
-celery==5.1.0
-checksumdir==1.1.7
+celery==5.1.1
+checksumdir==1.2.0
 cryptography==3.4.7
 django-cors-headers==3.7.0
-django-celery-results==2.0.1
+django-celery-results==2.1.0
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.1
 drf-spectacular==0.17.2
@@ -11,9 +11,9 @@ pyjwt==2.1.0
 ipython==7.24.1
 ipython-genutils==0.2.0
 kubernetes==17.17.0
-psycopg2-binary==2.8.6
+psycopg2-binary==2.9.1
 requests>=2.20.0
-tldextract==2.2.3
+tldextract==3.1.0
 uwsgi==2.0.19.1
 zxcvbn==4.4.28
 boto3==1.11.9
