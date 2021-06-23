@@ -10,6 +10,7 @@ backend:
   kaniko:
     image: gcr.io/kaniko-project/executor:v1.6.0
     mirror: false  # If true, kaniko will pull base images from the local registry
+    dockerConfigSecretName: ""  # Name of the secret to mount in kaniko pod to be able to fetch from private registry
     cache:
       warmer:
         image: gcr.io/kaniko-project/warmer:v1.6.0

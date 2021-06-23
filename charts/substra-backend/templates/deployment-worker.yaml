@@ -151,6 +151,8 @@ spec:
               value: {{ .Values.backend.kaniko.image | quote }}
             - name: KANIKO_MIRROR
               value: {{ .Values.backend.kaniko.mirror | quote }}
+            - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
+              value: {{ .Values.backend.kaniko.dockerConfigSecretName | quote  }}
             - name: COMPUTE_REGISTRY
               value: {{ .Values.backend.compute.registry | quote }}
             - name: HTTP_CLIENT_TIMEOUT_SECONDS

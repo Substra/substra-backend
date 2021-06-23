@@ -212,6 +212,7 @@ TASK = {
     'LIST_WORKSPACE': to_bool(os.environ.get('TASK_LIST_WORKSPACE', True)),
     'KANIKO_MIRROR': to_bool(os.environ.get('KANIKO_MIRROR', False)),
     'KANIKO_IMAGE': os.environ.get('KANIKO_IMAGE'),
+    'KANIKO_DOCKER_CONFIG_SECRET_NAME': os.environ.get('KANIKO_DOCKER_CONFIG_SECRET_NAME'),
     'COMPUTE_REGISTRY': os.environ.get('COMPUTE_REGISTRY'),
 }
 

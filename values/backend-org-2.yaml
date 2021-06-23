@@ -26,6 +26,7 @@ backend:
   tokenStrategy: 'reuse'
   defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
   kaniko:
+    dockerConfigSecretName: "docker-config"
     cache:
       warmer:
         images:

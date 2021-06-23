@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+
+##Added
+- Add dockerConfigSecretName value under kaniko field to allow its builder to fetch images from private repository
+
+
 ## 2.2.1
 
 ##Added

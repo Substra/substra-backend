@@ -26,6 +26,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.uwsgiProcesses` | Number of uswgi processes | `20` |
 | `backend.uwsgiThreads` | Number of uwsgi threads per process | `2` |
 | `backend.gzipModels` | Enable models compression before transmission | `False` |
+| `backend.kaniko.dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | `""` |
 | `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |
 | `backend.kaniko.cache.warmer.images` | A list of docker images to warm up the kaniko local cache with | `[]` |
 | `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
@@ -166,3 +167,21 @@ The following table lists the configurable parameters of the substra-backend cha
 ### Basic example
 
 For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
+
+
+### Kaniko builder and private registry
+
+To be able to build images based on a private registry you need to provide `backend.kaniko.dockerConfigSecretName`
+
+For instance, for GCR, it can be done like this 
+
+```
+gcloud auth login
+gcloud iam service-accounts keys create /tmp/sa-key.json --iam-account=sa-name@project-id.iam.gserviceaccount.com
+
+kubectl create secret docker-registry docker-config --docker-server=gcr.io --docker-username=_json_key --docker-password="$(cat /tmp/sa-key.json)" -n org-1
+kubectl create secret docker-registry docker-config --docker-server=gcr.io --docker-username=_json_key --docker-password="$(cat /tmp/sa-key.json)" -n org-2
+
+```
+
+Where `docker-config` is the name of the docker config secret which needs to be used.

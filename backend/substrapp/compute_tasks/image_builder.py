@@ -18,6 +18,7 @@ REGISTRY_SCHEME = settings.REGISTRY_SCHEME
 NAMESPACE = settings.NAMESPACE
 KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
+KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 COMPUTE_REGISTRY = settings.TASK["COMPUTE_REGISTRY"]
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
 
@@ -116,6 +117,14 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
             }
         )
 
+    if KANIKO_DOCKER_CONFIG_SECRET_NAME:
+        container.volume_mounts.append(
+            {
+                "name": "docker-config",
+                "mountPath": "/kaniko/.docker"
+            }
+        )
+
     pod_affinity = kubernetes.client.V1Affinity(
         pod_affinity=kubernetes.client.V1PodAffinity(
             required_during_scheduling_ignored_during_execution=[
@@ -152,6 +161,15 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
             {
                 "name": "cache",
                 "persistentVolumeClaim": {"claimName": settings.K8S_PVC["DOCKER_CACHE_PVC"]},
+            }
+        )
+
+    if KANIKO_DOCKER_CONFIG_SECRET_NAME:
+        spec.volumes.append(
+            {
+                "name": "docker-config",
+                "secret": {"secretName": KANIKO_DOCKER_CONFIG_SECRET_NAME,
+                           "items": [{"key": ".dockerconfigjson", "path": "config.json"}]},
             }
         )
 
