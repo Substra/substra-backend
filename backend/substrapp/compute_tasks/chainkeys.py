@@ -8,22 +8,23 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-# Chainkeys are used as part of secure aggreagation (separate component, absent from
-# this repo)
+# Chainkeys are used as part of secure aggreagation (separate component, absent from this repo)
 
 
-def prepare_chainkeys_dir(chainkeys_dir: str, k8s_client, compute_plan_tag: str) -> None:
-    if os.path.exists(chainkeys_dir):
-        # Chainkeys have already been populated
+def prepare_chainkeys_dir(chainkeys_dir: str, compute_plan_tag: str) -> None:
+    if os.path.exists(chainkeys_dir) and os.listdir(chainkeys_dir):
+        logger.debug("Chainkeys: The folder exists and is non-empty: chainkeys have already been populated.")
         return
 
-    os.makedirs(chainkeys_dir)
-    _prepare_chainkeys(k8s_client, compute_plan_tag, chainkeys_dir)
+    _prepare_chainkeys(compute_plan_tag, chainkeys_dir)
 
 
-def _prepare_chainkeys(k8s_client, compute_plan_tag: str, chainkeys_dir: str) -> None:
+def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
     secret_namespace = os.getenv("K8S_SECRET_NAMESPACE", "default")
     label_selector = f"compute_plan={compute_plan_tag}"
+
+    kubernetes.config.load_incluster_config()
+    k8s_client = kubernetes.client.CoreV1Api()
 
     # fetch secrets and write them to disk
     try:

@@ -55,7 +55,7 @@ class Context:
         compute_plan_key = task.get("compute_plan_key")
         if compute_plan_key:
             compute_plan = get_object_from_ledger(channel_name, compute_plan_key, "queryComputePlan")
-            compute_plan_tag = compute_plan["tag"]
+            compute_plan_tag = compute_plan.get("tag") or None  # convert "" to None
 
         # TODO orchestrator: this property can be replaced with compute_plan_key once we integrate with orchestrator
         compute_plan_key_safe = compute_plan_key or task_key

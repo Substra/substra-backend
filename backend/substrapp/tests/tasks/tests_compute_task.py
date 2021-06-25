@@ -68,11 +68,11 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(madd_algo_to_buffer.call_count, 1)
             self.assertEqual(madd_task_assets_to_buffer.call_count, 1)
             self.assertEqual(madd_assets_to_taskdir.call_count, 1)
-            self.assertEqual(mrestore_dir.call_count, 2)  # local folder + chainkeys
+            self.assertEqual(mrestore_dir.call_count, 1)
             self.assertEqual(mbuild_images.call_count, 1)
             self.assertEqual(mexecute_compute_task.call_count, 1)
             self.assertEqual(msave_models.call_count, 1)
-            self.assertEqual(mcommit_dir.call_count, 2)  # local folder + chainkeys
+            self.assertEqual(mcommit_dir.call_count, 1)
             self.assertEqual(mteardown_task_dirs.call_count, 1)
 
             mlog_success_tuple.return_value = "data", 404

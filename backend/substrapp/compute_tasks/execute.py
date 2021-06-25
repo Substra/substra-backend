@@ -9,7 +9,6 @@ In these functions, we:
 
 from __future__ import absolute_import, unicode_literals
 
-import os
 import logging
 import kubernetes
 from typing import Any, List
@@ -20,12 +19,10 @@ from substrapp.utils import timeit
 from substrapp.compute_tasks.categories import (
     TASK_CATEGORY_TESTTUPLE,
 )
-from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.command import get_exec_command
-from substrapp.compute_tasks.directories import CPDirName
-from substrapp.compute_tasks.volumes import get_volumes, add_chainkeys_volume_mount
 from substrapp.compute_tasks.environment import get_environment
+from substrapp.compute_tasks.volumes import get_volumes
 from substrapp.exceptions import PodErrorException, PodTimeoutException
 from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector
 from substrapp.docker_registry import get_container_image_name
@@ -64,7 +61,6 @@ def execute_compute_task(ctx: Context) -> Any:
 def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
 
     channel_name = ctx.channel_name
-    task_category = ctx.task_category
     dirs = ctx.directories
     compute_plan_key = ctx.compute_plan_key
     image_tag = ctx.metrics_image_tag if is_testtuple_eval else ctx.algo_image_tag
@@ -82,15 +78,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
         should_create_pod = not pod_exists_by_label_selector(k8s_client, compute_pod.label_selector)
 
         if should_create_pod:
-            volume_mounts, volumes = get_volumes(dirs)
-
-            # TODO orchestrator: delete compute_plan_key condition
-            if (
-                compute_plan_key is not None and
-                settings.TASK["CHAINKEYS_ENABLED"] and
-                task_category != TASK_CATEGORY_TESTTUPLE
-            ):
-                _prepare_chainkeys(k8s_client, compute_plan_key, ctx.compute_plan_tag, volume_mounts)
+            volume_mounts, volumes = get_volumes(dirs, is_testtuple_eval)
 
             # Only create the pod if the compute plan hasn't been cancelled by a concurrent process
             should_run = is_task_runnable(channel_name, ctx.task_key, ctx.task_category, ctx.compute_plan_key)
@@ -161,9 +149,3 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
 
     resp.close()
     return resp.returncode
-
-
-def _prepare_chainkeys(k8s_client, compute_plan_dir: str, compute_plan_tag: str, volume_mounts: List[str]):
-    chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
-    prepare_chainkeys_dir(chainkeys_dir, k8s_client, compute_plan_tag)  # does nothing if chainkeys already populated
-    add_chainkeys_volume_mount(chainkeys_dir, volume_mounts)

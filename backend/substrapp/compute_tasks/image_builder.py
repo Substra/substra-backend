@@ -39,8 +39,7 @@ def build_container_image(path, tag, ctx):
     cache_index = None
     try:
         cache_index = _acquire_cache_index()
-        _build_container_image(path, tag, cache_index,
-                               ctx.compute_plan_key_safe, ctx.task_key, ctx.attempt)
+        _build_container_image(path, tag, cache_index, ctx.compute_plan_key_safe, ctx.task_key, ctx.attempt)
     except Exception:
         raise
     finally:
@@ -209,13 +208,7 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
     finally:
         if create_pod:
             log_prefix = f"[{cp_key[:8]}-{task_key[:8]}-b-{attempt}]"
-
-            _container_format_log(
-                pod_name,
-                get_pod_logs(k8s_client, name=pod_name, container=pod_name),
-                log_prefix
-            )
-
+            _container_format_log(pod_name, get_pod_logs(k8s_client, name=pod_name, container=pod_name), log_prefix)
             delete_pod(k8s_client, pod_name)
 
 

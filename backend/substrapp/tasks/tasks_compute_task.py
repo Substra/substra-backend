@@ -16,6 +16,7 @@ from __future__ import absolute_import, unicode_literals
 
 import logging
 import json
+import os
 from os import path
 from django.conf import settings
 from substrapp.compute_tasks.categories import TASK_CATEGORY_TESTTUPLE
@@ -39,6 +40,7 @@ from substrapp.compute_tasks.asset_buffer import (
     add_task_assets_to_buffer,
     add_assets_to_taskdir,
 )
+from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.save_models import save_models
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.execute import execute_compute_task
@@ -132,6 +134,8 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
     task_key = task["key"]
     logger.warning(f"{task_category} {task_key} {task}")
 
+    has_chainkeys = False
+
     # This lock serves multiple purposes:
     #
     # - *Prevent concurrent pod creation*
@@ -160,6 +164,7 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
             # Create context
             ctx = Context.from_task(channel_name, task, task_category, self.attempt)
             dirs = ctx.directories
+            has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and ctx.compute_plan_tag
 
             # Setup
             init_asset_buffer()
@@ -171,8 +176,10 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
             add_task_assets_to_buffer(ctx)
             add_assets_to_taskdir(ctx)
             if task_category != TASK_CATEGORY_TESTTUPLE:
-                restore_dir(dirs, CPDirName.Local, TaskDirName.Local)
-                restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
+                if has_chainkeys:
+                    _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
+                    restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
+            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
             build_images(ctx)
 
             # Command execution
@@ -184,7 +191,8 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
             else:
                 result["result"] = save_models(ctx)
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
-                commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
+                if has_chainkeys:
+                    commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
 
         except Exception as e:
             raise self.retry(
@@ -218,3 +226,8 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
 def _get_perf(dirs: Directories) -> object:
     with open(path.join(dirs.task_dir, TaskDirName.Perf, Filenames.Performance), "r") as perf_file:
         return {"global_perf": json.load(perf_file)["all"]}
+
+
+def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
+    chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
+    prepare_chainkeys_dir(chainkeys_dir, compute_plan_tag)  # does nothing if chainkeys already populated
