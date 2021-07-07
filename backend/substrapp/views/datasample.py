@@ -25,8 +25,6 @@ logger = logging.getLogger(__name__)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
-                        mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin,
                         GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer

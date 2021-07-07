@@ -3,7 +3,7 @@ import logging
 from functools import wraps
 from django.conf import settings
 from django.middleware.gzip import GZipMiddleware
-from rest_framework import status, mixins
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
@@ -18,9 +18,7 @@ from substrapp.views.filters_utils import filter_list
 logger = logging.getLogger(__name__)
 
 
-class ModelViewSet(mixins.RetrieveModelMixin,
-                   mixins.ListModelMixin,
-                   GenericViewSet):
+class ModelViewSet(GenericViewSet):
     queryset = Model.objects.all()
     ledger_query_call = 'queryModelDetails'
     # permission_classes = (permissions.IsAuthenticated,)

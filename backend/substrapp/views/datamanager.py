@@ -29,8 +29,6 @@ def replace_storage_addresses(request, data_manager):
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
-                         mixins.RetrieveModelMixin,
-                         mixins.ListModelMixin,
                          GenericViewSet):
     queryset = DataManager.objects.all()
     serializer_class = DataManagerSerializer

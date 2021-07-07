@@ -28,8 +28,6 @@ def replace_storage_addresses(request, aggregate_algo):
 
 
 class AggregateAlgoViewSet(mixins.CreateModelMixin,
-                           mixins.RetrieveModelMixin,
-                           mixins.ListModelMixin,
                            GenericViewSet):
     queryset = AggregateAlgo.objects.all()
     serializer_class = AggregateAlgoSerializer

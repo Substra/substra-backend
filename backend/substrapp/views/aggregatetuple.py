@@ -13,8 +13,6 @@ from substrapp.views.utils import (validate_key, get_success_create_code, Ledger
 
 
 class AggregateTupleViewSet(mixins.CreateModelMixin,
-                            mixins.RetrieveModelMixin,
-                            mixins.ListModelMixin,
                             GenericViewSet):
     serializer_class = LedgerAggregateTupleSerializer
     ledger_query_call = 'queryAggregatetuple'

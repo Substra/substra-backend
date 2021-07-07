@@ -31,8 +31,6 @@ def replace_storage_addresses(request, objective):
 
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
-                       mixins.ListModelMixin,
-                       mixins.RetrieveModelMixin,
                        GenericViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
