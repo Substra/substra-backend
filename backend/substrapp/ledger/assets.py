@@ -6,7 +6,7 @@ from django.core.exceptions import ObjectDoesNotExist
 
 from substrapp import models
 from substrapp.ledger.api import invoke_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError
 
 
 _MESSAGE = (
@@ -24,8 +24,8 @@ def __create_db_asset(channel_name, model, fcn, args, key, sync=False):
 
     try:
         data = invoke_ledger(channel_name, fcn=fcn, args=args, sync=sync)
-    except LedgerTimeout:
-        # LedgerTimeout herits from LedgerError do not delete
+    except LedgerTimeoutError:
+        # LedgerTimeoutError herits from LedgerError do not delete
         # In case of timeout we keep the instance if it exists
         raise
     except LedgerError:
@@ -58,8 +58,8 @@ def __create_db_assets(channel_name, model, fcn, args, keys, sync=False):
 
     try:
         data = invoke_ledger(channel_name, fcn=fcn, args=args, sync=sync)
-    except LedgerTimeout:
-        # LedgerTimeout herits from LedgerError do not delete
+    except LedgerTimeoutError:
+        # LedgerTimeoutError herits from LedgerError do not delete
         # In case of timeout we keep the instances if it exists
         raise
     except LedgerError:

@@ -25,12 +25,6 @@ logger = logging.getLogger(__name__)
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
 
-class JsonException(Exception):
-    def __init__(self, msg):
-        self.msg = msg
-        super(JsonException, self).__init__()
-
-
 def get_dir_hash(dir):
     if not os.listdir(dir):
         raise Exception(f"Cannot compute hash of folder {dir}: folder is empty.")

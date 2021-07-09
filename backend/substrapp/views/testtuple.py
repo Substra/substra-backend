@@ -8,7 +8,7 @@ from substrapp.serializers import LedgerTestTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_key, get_success_create_code, LedgerException, get_channel_name)
+from substrapp.views.utils import (validate_key, get_success_create_code, LedgerExceptionError, get_channel_name)
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
@@ -27,7 +27,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
         try:
             data = serializer.create(channel_name, serializer.validated_data)
         except LedgerError as e:
-            raise LedgerException({'message': str(e.msg)}, e.status)
+            raise LedgerExceptionError({'message': str(e.msg)}, e.status)
         else:
             return data
 
@@ -51,7 +51,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         try:
             data = self._create(request)
-        except LedgerException as e:
+        except LedgerExceptionError as e:
             return Response(e.data, status=e.st)
         else:
             headers = self.get_success_headers(data)

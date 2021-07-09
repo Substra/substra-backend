@@ -5,7 +5,7 @@ import time
 
 from django.conf import settings
 from substrapp.utils import timeit
-from substrapp.exceptions import PodErrorException, PodTimeoutException
+from substrapp.exceptions import PodError, PodTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -137,10 +137,10 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
             logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
 
     if error is not None:
-        raise PodErrorException(f"Pod {name} terminated with error: {error}")
+        raise PodError(f"Pod {name} terminated with error: {error}")
 
     if not finished:
-        raise PodTimeoutException(f"Pod {name} didn't complete after {max_attempts} attempts")
+        raise PodTimeoutError(f"Pod {name} didn't complete after {max_attempts} attempts")
 
 
 def _get_pod_error(state) -> str:

@@ -39,11 +39,11 @@ class BadRequestError(_ApiError):
     message = "Bad request."
 
 
-class PodErrorException(Exception):
+class PodError(Exception):
     pass
 
 
-class PodTimeoutException(Exception):
+class PodTimeoutError(Exception):
     pass
 
 

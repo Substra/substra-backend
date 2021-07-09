@@ -10,10 +10,10 @@ from substrapp.compute_tasks.categories import (
     TASK_CATEGORY_TRAINTUPLE, TASK_CATEGORY_AGGREGATETUPLE, TASK_CATEGORY_COMPOSITETRAINTUPLE, TASK_CATEGORY_TESTTUPLE
 )
 from substrapp.ledger.connection import get_hfc
-from substrapp.ledger.exceptions import (raise_for_status, LedgerForbidden, LedgerTimeout, LedgerMVCCError,
-                                         LedgerInvalidResponse, LedgerUnavailable, LedgerPhantomReadConflictError,
-                                         LedgerEndorsementPolicyFailure, LedgerStatusError, LedgerError,
-                                         LedgerAssetNotFound)
+from substrapp.ledger.exceptions import (raise_for_status, LedgerForbiddenError, LedgerTimeoutError, LedgerMVCCError,
+                                         LedgerInvalidResponseError, LedgerUnavailableError,
+                                         LedgerPhantomReadConflictError, LedgerEndorsementPolicyFailureError,
+                                         LedgerStatusError, LedgerError, LedgerAssetNotFoundError)
 
 logger = logging.getLogger(__name__)
 
@@ -22,11 +22,11 @@ def retry_on_error(delay=1, nbtries=15, backoff=2, exceptions=None):
     exceptions = exceptions or []
     exceptions_to_retry = [
         LedgerMVCCError,
-        LedgerInvalidResponse,
+        LedgerInvalidResponseError,
         RpcError,
-        LedgerUnavailable,
+        LedgerUnavailableError,
         LedgerPhantomReadConflictError,
-        LedgerEndorsementPolicyFailure,
+        LedgerEndorsementPolicyFailureError,
         # Retry on LedgerStatusError because of potential ledger state difference
         # caused by not synchronous committed block receipt between nodes.
         LedgerStatusError,
@@ -126,15 +126,15 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
         try:
             response = loop.run_until_complete(chaincode_calls[call_type](**params))
         except TimeoutError as e:
-            raise LedgerTimeout(str(e))
+            raise LedgerTimeoutError(str(e))
         except Exception as e:
             # TODO add a method to parse properly the base Exception raised by the fabric-sdk-py
             if hasattr(e, 'details') and 'access denied' in e.details():
-                raise LedgerForbidden(f'Access denied for {(fcn, args)}')
+                raise LedgerForbiddenError(f'Access denied for {(fcn, args)}')
 
             if hasattr(e, 'details') and 'failed to connect to all addresses' in e.details():
                 logger.error(f'failed to reach all peers {all_peers}, current_peer is {settings.LEDGER_PEER_NAME}')
-                raise LedgerUnavailable(f'Failed to connect to all addresses for {(fcn, args)}')
+                raise LedgerUnavailableError(f'Failed to connect to all addresses for {(fcn, args)}')
 
             for arg in e.args:
                 if 'MVCC_READ_CONFLICT' in arg:
@@ -147,7 +147,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
 
                 if 'ENDORSEMENT_POLICY_FAILURE' in arg:
                     logger.error(f'ENDORSEMENT_POLICY_FAILURE for {(fcn, args)}')
-                    raise LedgerEndorsementPolicyFailure(arg) from e
+                    raise LedgerEndorsementPolicyFailureError(arg) from e
 
             try:  # get first failed response from list of protobuf ProposalResponse
                 response = [r for r in e.args[0] if r.response.status != 200][0].response.message
@@ -158,7 +158,7 @@ def _call_ledger(channel_name, call_type, fcn, args=None, kwargs=None):
         try:
             response = json.loads(response)
         except json.decoder.JSONDecodeError:
-            raise LedgerInvalidResponse(response)
+            raise LedgerInvalidResponseError(response)
 
         # Raise errors if status is not ok
         raise_for_status(response)
@@ -219,7 +219,7 @@ def _invoke_ledger(channel_name, fcn, args=None, cc_pattern=None, sync=False, on
         return response
 
 
-@retry_on_error(exceptions=[LedgerTimeout])
+@retry_on_error(exceptions=[LedgerTimeoutError])
 def query_ledger(channel_name, fcn, args=None):
     # careful, passing invoke parameters to query_ledger will NOT fail
     return call_ledger(channel_name, 'query', fcn=fcn, args=args)
@@ -230,7 +230,7 @@ def invoke_ledger(channel_name, *args, **kwargs):
     return _invoke_ledger(channel_name, *args, **kwargs)
 
 
-@retry_on_error(exceptions=[LedgerTimeout, LedgerAssetNotFound])
+@retry_on_error(exceptions=[LedgerTimeoutError, LedgerAssetNotFoundError])
 def update_ledger(channel_name, *args, **kwargs):
     return _invoke_ledger(channel_name, *args, **kwargs)
 

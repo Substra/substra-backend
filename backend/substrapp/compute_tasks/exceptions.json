@@ -150,7 +150,7 @@
     "IllegalMonthError": "0149",
     "IllegalWeekdayError": "0150",
     "ImageLoadError": "0151",
-    "ImageNotFound": "0152",
+    "ImageNotFoundError": "0152",
     "ImportError": "0153",
     "ImportWarning": "0154",
     "Impossible": "0155",

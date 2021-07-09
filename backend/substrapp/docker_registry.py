@@ -19,7 +19,7 @@ REGISTRY_SERVICE_NAME = settings.REGISTRY_SERVICE_NAME
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
 
 
-class ImageNotFound(Exception):
+class ImageNotFoundError(Exception):
     pass
 
 
@@ -75,7 +75,7 @@ def delete_container_image(image_tag: str) -> None:
 def container_image_exists(image_name: str) -> bool:
     try:
         get_container_image(image_name)
-    except ImageNotFound:
+    except ImageNotFoundError:
         return False
     else:
         return True
@@ -88,7 +88,7 @@ def get_container_image(image_name: str) -> Dict:
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
     )
     if response.status_code != requests.status_codes.codes.ok:
-        raise ImageNotFound(f"Error when querying docker-registry, status code: {response.status_code}")
+        raise ImageNotFoundError(f"Error when querying docker-registry, status code: {response.status_code}")
 
     return response.json()
 

@@ -13,10 +13,11 @@ from substrapp.models import DataManager
 from substrapp.serializers import DataManagerSerializer, LedgerDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError, LedgerConflictError
 from substrapp.views.utils import (PermissionMixin,
-                                   validate_key, get_success_create_code, ValidationException, LedgerException,
-                                   get_remote_asset, node_has_process_permission, get_channel_name)
+                                   validate_key, get_success_create_code, ValidationExceptionError,
+                                   LedgerExceptionError, get_remote_asset, node_has_process_permission,
+                                   get_channel_name,)
 from substrapp.views.filters_utils import filter_list
 
 
@@ -62,13 +63,13 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         # create on ledger
         try:
             data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
-        except LedgerTimeout as e:
-            raise LedgerException('timeout', e.status)
-        except LedgerConflict as e:
-            raise ValidationException(e.msg, e.key, e.status)
+        except LedgerTimeoutError as e:
+            raise LedgerExceptionError('timeout', e.status)
+        except LedgerConflictError as e:
+            raise ValidationExceptionError(e.msg, e.key, e.status)
         except LedgerError as e:
             instance.delete()
-            raise LedgerException(str(e.msg), e.status)
+            raise LedgerExceptionError(str(e.msg), e.status)
         except Exception:
             instance.delete()
             raise
@@ -84,7 +85,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             checksum = get_hash(data_opener)
             key = checksum
         except Exception as e:
-            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
+            raise ValidationExceptionError(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
             'key': key,
@@ -97,7 +98,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         try:
             serializer.is_valid(raise_exception=True)
         except Exception as e:
-            raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
+            raise ValidationExceptionError(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
             # create on ledger + db
             return self.commit(serializer, request)
@@ -107,9 +108,9 @@ class DataManagerViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._create(request, data_opener)
-        except ValidationException as e:
+        except ValidationExceptionError as e:
             return Response({'message': e.data}, status=e.st)
-        except LedgerException as e:
+        except LedgerExceptionError as e:
             return Response({'message': e.data}, status=e.st)
         else:
             headers = self.get_success_headers(data)

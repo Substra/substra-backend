@@ -17,9 +17,10 @@ from rest_framework.viewsets import GenericViewSet
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
 from substrapp.utils import store_datasamples_archive, get_dir_hash
-from substrapp.views.utils import LedgerException, ValidationException, get_success_create_code, get_channel_name
+from substrapp.views.utils import (LedgerExceptionError, ValidationExceptionError,
+                                   get_success_create_code, get_channel_name)
 from substrapp.ledger.api import query_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError, LedgerConflictError
 
 logger = logging.getLogger(__name__)
 
@@ -53,14 +54,14 @@ class DataSampleViewSet(mixins.CreateModelMixin,
         # create on ledger
         try:
             data = ledger_serializer.create(channel_name, ledger_serializer.validated_data)
-        except LedgerTimeout as e:
-            raise LedgerException('timeout', e.status)
-        except LedgerConflict as e:
-            raise ValidationException(e.msg, e.key, e.status)
+        except LedgerTimeoutError as e:
+            raise LedgerExceptionError('timeout', e.status)
+        except LedgerConflictError as e:
+            raise ValidationExceptionError(e.msg, e.key, e.status)
         except LedgerError as e:
             for instance in instances:
                 instance.delete()
-            raise LedgerException(str(e.msg), e.status)
+            raise LedgerExceptionError(str(e.msg), e.status)
         except Exception:
             for instance in instances:
                 instance.delete()
@@ -158,7 +159,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
             try:
                 serializer.is_valid(raise_exception=True)
             except Exception as e:
-                raise ValidationException(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
+                raise ValidationExceptionError(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
             else:
 
                 # create on ledger + db
@@ -176,9 +177,9 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         try:
             data, st = self._create(request, data_manager_keys, test_only)
-        except ValidationException as e:
+        except ValidationExceptionError as e:
             return Response({'message': e.data}, status=e.st)
-        except LedgerException as e:
+        except LedgerExceptionError as e:
             return Response({'message': e.data}, status=e.st)
         except Exception as e:
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

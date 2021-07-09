@@ -6,10 +6,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.serializers import LedgerTrainTupleSerializer
 from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerConflict
+from substrapp.ledger.exceptions import LedgerError, LedgerConflictError
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
-from substrapp.views.utils import (validate_key, get_success_create_code, LedgerException, get_channel_name)
+from substrapp.views.utils import (validate_key, get_success_create_code, LedgerExceptionError, get_channel_name)
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
@@ -32,10 +32,10 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
                 res = create_compute_plan(channel_name, data={})
                 data['compute_plan_key'] = res['key']
             data = serializer.create(channel_name, data)
-        except LedgerConflict as e:
-            raise LedgerException({'message': str(e.msg), 'key': e.key}, e.status)
+        except LedgerConflictError as e:
+            raise LedgerExceptionError({'message': str(e.msg), 'key': e.key}, e.status)
         except LedgerError as e:
-            raise LedgerException({'message': str(e.msg)}, e.status)
+            raise LedgerExceptionError({'message': str(e.msg)}, e.status)
         else:
             return data
 
@@ -62,7 +62,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
     def create(self, request, *args, **kwargs):
         try:
             data = self._create(request)
-        except LedgerException as e:
+        except LedgerExceptionError as e:
             return Response(e.data, status=e.st)
         else:
             headers = self.get_success_headers(data)

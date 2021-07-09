@@ -38,12 +38,12 @@ class LedgerStatusError(LedgerError):
     pass
 
 
-class LedgerInvalidResponse(LedgerError):
+class LedgerInvalidResponseError(LedgerError):
     """Could not parse ledger response."""
     pass
 
 
-class LedgerTimeout(LedgerError):
+class LedgerTimeoutError(LedgerError):
     """Ledger does not respond in time."""
     status = status.HTTP_408_REQUEST_TIMEOUT
 
@@ -56,21 +56,21 @@ class LedgerPhantomReadConflictError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
-class LedgerEndorsementPolicyFailure(LedgerError):
+class LedgerEndorsementPolicyFailureError(LedgerError):
     status = status.HTTP_412_PRECONDITION_FAILED
 
 
-class LedgerUnavailable(LedgerError):
+class LedgerUnavailableError(LedgerError):
     """Ledger is not available."""
     status = status.HTTP_503_SERVICE_UNAVAILABLE
 
 
-class LedgerBadRequest(LedgerError):
+class LedgerBadRequestError(LedgerError):
     """Invalid request."""
     status = status.HTTP_400_BAD_REQUEST
 
 
-class LedgerConflict(LedgerError):
+class LedgerConflictError(LedgerError):
     """Asset already exists."""
     status = status.HTTP_409_CONFLICT
 
@@ -86,19 +86,19 @@ class LedgerConflict(LedgerError):
         return cls(response['error'], key=key)
 
 
-class LedgerAssetNotFound(LedgerError):
+class LedgerAssetNotFoundError(LedgerError):
     """Asset not found."""
     status = status.HTTP_404_NOT_FOUND
 
 
-class LedgerForbidden(LedgerError):
+class LedgerForbiddenError(LedgerError):
     """Organisation is not allowed to perform the operation."""
     status = status.HTTP_403_FORBIDDEN
 
 
 _STATUS_TO_EXCEPTION = {
-    status.HTTP_400_BAD_REQUEST: LedgerBadRequest,
-    status.HTTP_403_FORBIDDEN: LedgerForbidden,
-    status.HTTP_404_NOT_FOUND: LedgerAssetNotFound,
-    status.HTTP_409_CONFLICT: LedgerConflict,
+    status.HTTP_400_BAD_REQUEST: LedgerBadRequestError,
+    status.HTTP_403_FORBIDDEN: LedgerForbiddenError,
+    status.HTTP_404_NOT_FOUND: LedgerAssetNotFoundError,
+    status.HTTP_409_CONFLICT: LedgerConflictError,
 }

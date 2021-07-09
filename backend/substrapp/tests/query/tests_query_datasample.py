@@ -20,7 +20,7 @@ from substrapp.models import DataManager, DataSample
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
 from substrapp.utils import store_datasamples_archive
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeout
+from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError
 from substrapp.views import DataSampleViewSet
 
 from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sample_script, \
@@ -289,7 +289,7 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
                 mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.side_effect = LedgerTimeout('Timeout')
+            mcreate.side_effect = LedgerTimeoutError('Timeout')
             mis_zipfile.return_value = True
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
@@ -325,7 +325,7 @@ class DataSampleQueryTests(APITestCase):
             mget_validators.return_value = []
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            mcreate.side_effect = LedgerTimeout('Timeout')
+            mcreate.side_effect = LedgerTimeoutError('Timeout')
 
             response = self.client.post(url, data, format='multipart', **extra)
             self.assertEqual(DataSample.objects.count(), 2)

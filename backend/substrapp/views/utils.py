@@ -190,19 +190,19 @@ def validate_sort(sort):
         raise BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
 
 
-class LedgerException(Exception):
+class LedgerExceptionError(Exception):
     def __init__(self, data, st):
         self.data = data
         self.st = st
-        super(LedgerException).__init__()
+        super(LedgerExceptionError).__init__()
 
 
-class ValidationException(Exception):
+class ValidationExceptionError(Exception):
     def __init__(self, data, key, st):
         self.data = data
         self.key = key
         self.st = st
-        super(ValidationException).__init__()
+        super(ValidationExceptionError).__init__()
 
 
 def get_success_create_code():
