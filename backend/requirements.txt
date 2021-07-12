@@ -1,4 +1,4 @@
-Django==3.2.4
+Django==3.2.5
 celery==5.1.1
 checksumdir==1.2.0
 cryptography==3.4.7
