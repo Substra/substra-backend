@@ -1,14 +1,19 @@
 # Changelog
 
+## 3.0.0
+
+### Changed
+- Bump rabbitmq chart to 8.16.2 (see [UPGRADE.md](./UPGRADE.md))
+
 ## 2.3.0
 
-##Added
+### Added
 - Add dockerConfigSecretName value under kaniko field to allow its builder to fetch images from private repository
 
 
 ## 2.2.1
 
-##Added
+### Added
 - Add DJANGO_ALLOW_ASYNC_UNSAFE=true in event app deployment
 
 ## 2.2.0

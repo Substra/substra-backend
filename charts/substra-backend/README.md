@@ -96,8 +96,8 @@ The following table lists the configurable parameters of the substra-backend cha
 | `postgresql.persistence.enabled` | Enable PostgreSQL persistence using PVC | `false` |
 | `rabbitmq` | RabbitMQ configuration. For more info, see [rabbitmq](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq) | |
 | `rabbitmq.enabled` | Enable RabbitMQ database | `true` |
-| `rabbitmq.rabbitmq.username` | RabbitMQ username | `rabbitmq` |
-| `rabbitmq.rabbitmq.password` | RabbitMQ admin password  | `rabbitmq` |
+| `rabbitmq.auth.username` | RabbitMQ username | `rabbitmq` |
+| `rabbitmq.auth.password` | RabbitMQ admin password  | `rabbitmq` |
 | `rabbitmq.host` | RabbitMQ hostname | `rabbitmq` |
 | `rabbitmq.port` | RabbitMQ port | `5672` |
 | `rabbitmq.persistence.enabled` | Enable RabbitMQ persistence using PVC | `false` |
@@ -173,7 +173,7 @@ For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
 
 To be able to build images based on a private registry you need to provide `backend.kaniko.dockerConfigSecretName`
 
-For instance, for GCR, it can be done like this 
+For instance, for GCR, it can be done like this
 
 ```
 gcloud auth login

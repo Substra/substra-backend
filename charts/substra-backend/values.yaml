@@ -185,7 +185,7 @@ postgresql:
 
 rabbitmq:
   enabled: true
-  rabbitmq:
+  auth:
     username: rabbitmq
     password: rabbitmq
   host: rabbitmq
