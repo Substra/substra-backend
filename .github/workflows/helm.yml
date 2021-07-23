@@ -41,12 +41,16 @@ jobs:
         run: |
           sudo snap install yq
           helm plugin install https://github.com/chartmuseum/helm-push
+      - name: Add dependencies repo
+        run: |
+          helm repo add bitnami https://charts.bitnami.com/bitnami
+          helm repo add std-helm https://charts.helm.sh/stable
       - name: Package chart
         env:
           HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
           HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
         run: |
-          helm dep update charts/substra-backend
+          helm dep build charts/substra-backend
           helm package charts/substra-backend
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
           helm push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
