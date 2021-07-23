@@ -186,7 +186,7 @@ def _add_datasamples_to_buffer(data_sample_keys: List[str]) -> None:
 
         data_sample_checksum = get_dir_hash(data_sample.path)
         if data_sample_checksum != data_sample.checksum:
-            raise Exception("Data Sample checksum in tuple is not the same as in local db")
+            raise Exception(f"Data Sample ({key}) checksum in tuple is not the same as in local db")
 
         shutil.copytree(data_sample.path, dst)
         _log_added(dst)
