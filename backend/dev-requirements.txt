@@ -1,0 +1,3 @@
+-r requirements.txt
+flake8==3.9.2
+pep8-naming==0.12.0
