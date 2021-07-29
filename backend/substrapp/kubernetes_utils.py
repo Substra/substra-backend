@@ -174,11 +174,6 @@ def pod_exists_by_label_selector(k8s_client: kubernetes.client.CoreV1Api, label_
     return len(res.items) > 0
 
 
-def wait_for_pod_deletion(k8s_client, name: str) -> None:
-    while pod_exists(k8s_client, name):
-        time.sleep(0.1)
-
-
 @timeit
 def get_pod_logs(k8s_client, name: str, container: str) -> str:
     logs = f"No logs for pod {name}"
@@ -196,13 +191,25 @@ def delete_pod(k8s_client, name: str) -> None:
     if not pod_exists(k8s_client, name):
         return
 
+    # we retrieve the latest pod list version to retrieve only the latest events when watching for pod deletion
+    pod_list_ressource_version = k8s_client.list_namespaced_pod(namespace=NAMESPACE).metadata.resource_version
+
     k8s_client.delete_namespaced_pod(
         name=name,
         namespace=NAMESPACE,
         body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground"),
     )
 
-    wait_for_pod_deletion(k8s_client, name)
+    # watch for pod deletion
+    watch = kubernetes.watch.Watch()
+    for event in watch.stream(
+        func=k8s_client.list_namespaced_pod,
+        namespace=NAMESPACE,
+        resource_version=pod_list_ressource_version
+    ):
+        if event['type'] == 'DELETED' and event['object'].metadata.name == name:
+            watch.stop()
+
     logger.info(f"Deleted pod {NAMESPACE}/{name}")
 
 
