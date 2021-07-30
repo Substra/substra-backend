@@ -23,7 +23,7 @@ from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.environment import get_environment
 from substrapp.compute_tasks.volumes import get_volumes
-from substrapp.exceptions import PodError, PodTimeoutError
+from substrapp.exceptions import PodError, PodReadinessTimeoutError, PodTimeoutError
 from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector
 from substrapp.docker_registry import get_container_image_name
 from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
@@ -98,6 +98,11 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
 
     except (PodError, PodTimeoutError) as e:
         logger.error(e)
+        raise
+
+    except PodReadinessTimeoutError as e:
+        logger.exception(e)
+        delete_pod(k8s_client, pod_name)
         raise
 
     except Exception as e:

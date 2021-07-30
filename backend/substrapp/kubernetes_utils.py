@@ -5,7 +5,7 @@ import time
 
 from django.conf import settings
 from substrapp.utils import timeit
-from substrapp.exceptions import PodError, PodTimeoutError
+from substrapp.exceptions import PodError, PodTimeoutError, PodDeletedError, PodReadinessTimeoutError
 
 logger = logging.getLogger(__name__)
 
@@ -228,9 +228,9 @@ def wait_for_pod_readiness(k8s_client, label_selector: str, timeout: int = 60) -
             return
         if event["type"] == "DELETED":
             watch.stop()
-            raise Exception(f"Pod {label_selector} was deleted before it started.")
+            raise PodDeletedError(f"Pod {label_selector} was deleted before it started.")
 
-    raise Exception(f'Pod {label_selector} failed to reach the "Running" phase after {timeout} seconds.')
+    raise PodReadinessTimeoutError(f'Pod {label_selector} failed to reach the "Running" phase after {timeout} seconds.')
 
 
 def get_pod_by_label_selector(label_selector: str) -> object:
