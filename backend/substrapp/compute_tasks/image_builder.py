@@ -5,7 +5,7 @@ from django.conf import settings
 from substrapp.utils import timeit
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.kubernetes_utils import get_pod_logs, get_security_context, pod_exists, watch_pod, delete_pod
-from substrapp.docker_registry import container_image_exists
+from substrapp.docker_registry import container_image_exists, USER_IMAGE_REPOSITORY
 from substrapp.lock_local import lock_resource
 from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import BuildError
@@ -67,7 +67,7 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
     args = [
         f"--dockerfile={dockerfile_fullpath}",
         f"--context=dir://{path}",
-        f"--destination={REGISTRY}/substrafoundation/user-image:{tag}",
+        f"--destination={REGISTRY}/{USER_IMAGE_REPOSITORY}:{tag}",
         "--cache=true",
         "--log-timestamp=true",
         "--snapshotMode=redo",

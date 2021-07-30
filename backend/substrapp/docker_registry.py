@@ -17,6 +17,7 @@ NAMESPACE = settings.NAMESPACE
 REGISTRY_IS_LOCAL = settings.REGISTRY_IS_LOCAL
 REGISTRY_SERVICE_NAME = settings.REGISTRY_SERVICE_NAME
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
+USER_IMAGE_REPOSITORY = "substrafoundation/user-image"
 
 
 class ImageNotFoundError(Exception):
@@ -42,7 +43,7 @@ def get_container_image_name(image_name: str) -> str:
             raise Exception("Failed to retrieve docker registry node port") from e
         pull_domain += f":{registry_port}"
 
-    return f"{pull_domain}/substrafoundation/user-image:{image_name}"
+    return f"{pull_domain}/{USER_IMAGE_REPOSITORY}:{image_name}"
 
 
 def delete_container_image(image_tag: str) -> None:
@@ -50,7 +51,7 @@ def delete_container_image(image_tag: str) -> None:
 
     try:
         response = requests.get(
-            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_tag}",
+            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_tag}",
             headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
         )
@@ -61,7 +62,7 @@ def delete_container_image(image_tag: str) -> None:
         digest = response.headers["Docker-Content-Digest"]
 
         response = requests.delete(
-            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{digest}",
+            f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{digest}",
             headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
             timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
         )
@@ -83,7 +84,7 @@ def container_image_exists(image_name: str) -> bool:
 
 def get_container_image(image_name: str) -> Dict:
     response = requests.get(
-        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/substrafoundation/user-image/manifests/{image_name}",
+        f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image_name}",
         headers={"Accept": "application/json"},
         timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
     )
@@ -105,7 +106,7 @@ def get_container_images() -> List[Dict]:
 
     for repository in res["repositories"]:
         # get only user-image repo, images built by substra-backend
-        if repository == "user-image":
+        if repository == USER_IMAGE_REPOSITORY:
             response = requests.get(
                 f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{repository}/tags/list",
                 headers={"Accept": "application/vnd.docker.distribution.manifest.v2+json"},
@@ -127,7 +128,8 @@ def fetch_old_algo_image_names(max_duration: int) -> List[str]:
     if images:
         for image in images["tags"]:
             response = requests.get(
-                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/user-image/manifests/{image}", timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+                f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image}",
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
             )
 
             response.raise_for_status()
