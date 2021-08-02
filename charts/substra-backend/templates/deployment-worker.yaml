@@ -155,6 +155,8 @@ spec:
               value: {{ .Values.backend.kaniko.dockerConfigSecretName | quote  }}
             - name: COMPUTE_REGISTRY
               value: {{ .Values.backend.compute.registry | quote }}
+            - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
+              value: {{ .Values.backend.compute.podMaxStartupWaitSeconds | quote }}
             - name: HTTP_CLIENT_TIMEOUT_SECONDS
               value: {{ .Values.httpClient.timeoutSeconds | quote  }}
           {{- with .Values.extraEnv }}

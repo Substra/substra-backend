@@ -214,6 +214,7 @@ TASK = {
     'KANIKO_IMAGE': os.environ.get('KANIKO_IMAGE'),
     'KANIKO_DOCKER_CONFIG_SECRET_NAME': os.environ.get('KANIKO_DOCKER_CONFIG_SECRET_NAME'),
     'COMPUTE_REGISTRY': os.environ.get('COMPUTE_REGISTRY'),
+    'COMPUTE_POD_STARTUP_TIMEOUT_SECONDS': int(os.environ.get('COMPUTE_POD_STARTUP_TIMEOUT_SECONDS', 300)),
 }
 
 CELERY_ACCEPT_CONTENT = ['application/json']
@@ -251,7 +252,6 @@ LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
 # tests.
 DEBUG_QUICK_IMAGE = to_bool(os.environ.get('DEBUG_QUICK_IMAGE', False))
 DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get('DEBUG_KEEP_POD_AND_DIRS', False))
-
 
 # Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
 # Importing the module early ensures these steps happen in order:

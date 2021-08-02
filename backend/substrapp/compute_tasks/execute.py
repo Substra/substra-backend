@@ -31,7 +31,6 @@ from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
 logger = logging.getLogger(__name__)
 
 NAMESPACE = settings.NAMESPACE
-COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS = 60
 
 
 @timeit
@@ -88,7 +87,8 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
                 )
 
             create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
-            wait_for_pod_readiness(k8s_client, f"{Label.PodName}={pod_name}", COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS)
+            wait_for_pod_readiness(k8s_client, f"{Label.PodName}={pod_name}",
+                                   settings.TASK["COMPUTE_POD_STARTUP_TIMEOUT_SECONDS"])
         else:
             logger.info(f"Reusing pod {pod_name}")
 

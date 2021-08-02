@@ -33,6 +33,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.6.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
 | `backend.compute.registry` | Optionally, the URL of a registry to pull the kaniko image from (`backend.kaniko.image`). This image will be used to build client images (compute tasks) | `nil` |
+| `backend.compute.podStartupTimeoutSeconds` | The maximum time to wait for a compute pod to start in seconds | `300` |
 | `backend.image.repository` | `substra-backend` image repository | `substrafoundation/substra-backend` |
 | `backend.image.tag` | `substra-backend` image tag | `latest` |
 | `backend.image.pullPolicy` | Image pull policy | `IfNotPresent` |

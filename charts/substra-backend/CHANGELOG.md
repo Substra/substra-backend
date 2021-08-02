@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.1.0
+
+### Added
+- Add podStartupTimeoutSeconds value under compute field to define the maximum time to wait for a compute pod to start in seconds
+
 ## 3.0.0
 
 ### Changed

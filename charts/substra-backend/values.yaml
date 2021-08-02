@@ -19,6 +19,9 @@ backend:
 
   compute:
     registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
+    # Increase this value if the pods take too much time to start; it can happen when compute docker
+    # image size is a few gigabytes and depending on the deployment environment
+    podStartupTimeoutSeconds: 300
 
   image:
     repository: substrafoundation/substra-backend
