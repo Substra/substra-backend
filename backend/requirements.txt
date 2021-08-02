@@ -6,7 +6,7 @@ django-cors-headers==3.7.0
 django-celery-results==2.1.0
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.1
-drf-spectacular==0.17.2
+drf-spectacular==0.17.3
 pyjwt==2.1.0
 ipython==7.25.0
 ipython-genutils==0.2.0
