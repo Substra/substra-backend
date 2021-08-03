@@ -9,4 +9,4 @@ dependencies:
   repository: https://charts.helm.sh/stable
   version: 1.9.2
 digest: sha256:e2b1024a856ebfe164cfd0361dbbc13d317ac1a047e02d23124d2af8168b22fb
-generated: "2021-07-06T15:27:49.526486138-04:00"
+generated: "2021-08-03T14:52:42.199774+02:00"
