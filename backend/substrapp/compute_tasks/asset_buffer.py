@@ -295,15 +295,8 @@ def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List
 
         if os.path.isdir(src):
             # We cannot hardlink directories. Replicate the folder hierarchy, and hardlink files.
-            for dir, _, files in os.walk(src):
-                dst_dir = os.path.abspath(os.path.join(dst, os.path.relpath(dir, src)))
-                logger.debug(f"Create folder {dst_dir}")
-                os.mkdir(dst_dir)
-                for f in files:
-                    src_file = os.path.join(dir, f)
-                    dst_file = os.path.join(dst_dir, f)
-                    logger.debug(f"Create hardlink {src_file} -> {dst_file}")
-                    os.link(src_file, dst_file)
+            logger.debug(f"Create hardlink {src} -> {dst}")
+            shutil.copytree(src, dst, copy_function=os.link)
         else:
             logger.debug(f"Create hardlink {src} -> {dst}")
             os.link(src, dst)
