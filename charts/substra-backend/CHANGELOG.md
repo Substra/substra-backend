@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.2.0
+
+### Added
+
+- Helm hook to delete remaining compute pods after application deletion
+
 ## 3.1.0
 
 ### Added

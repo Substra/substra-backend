@@ -62,6 +62,10 @@ deploy:
 
     flags:
       install: ["--create-namespace"]
+  kubectl:
+    manifests:
+      - values/serviceAccounts/serviceAccount-org-1.yaml
+      - values/serviceAccounts/serviceAccount-org-2.yaml
 
 profiles:
   - name: prod
@@ -81,3 +85,5 @@ profiles:
     patches:
       - op: remove
         path: /deploy/helm/releases/1
+      - op: remove
+        path: /deploy/kubectl/manifests/1

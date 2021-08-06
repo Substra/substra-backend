@@ -1,0 +1,46 @@
+{{- if .Values.hooks.deleteComputePods.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-hook-delete-pods
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+  labels:
+    "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  ttlSecondsAfterFinished: 0
+  parallelism: 1
+  completions: 1
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: {{ template "substra.name" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.hooks.serviceAccount.name }}
+      containers:
+        - name: kubectl
+          image: "{{ .Values.hooks.deleteComputePods.image.repository }}:{{ .Values.hooks.deleteComputePods.image.tag }}"
+          args:
+            - delete
+            - pods
+            - --namespace=$(SUBSTRA_NAMESPACE)
+            - --ignore-not-found=true
+            - --wait=true
+            - -l
+            - substra.ai/pod-type in (compute-task, image-build)
+          env:
+            - name: SUBSTRA_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+{{- end }}

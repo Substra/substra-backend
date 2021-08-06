@@ -162,6 +162,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `securityContext.fsGroup` | Pod Security Context filesystem group ID | `1001` |
 | `securityContext.runAsUser` | Pod Security Context user ID | `1001` |
 | `securityContext.runAsGroup` | Pod Security Context group ID | `1001` |
+| `hooks.deleteComputePods.enabled` | If true, enable the deletion job that removes deployed compute pods after the application is deleted | `False` |
 
 ## Usage
 

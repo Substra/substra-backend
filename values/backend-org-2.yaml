@@ -98,3 +98,9 @@ channels:
       chaincode:
         name: yourcc
         version: "1.0"
+
+hooks:
+  serviceAccount:
+    name: substra-backend-delete-hook
+  deleteComputePods:
+    enabled: True
