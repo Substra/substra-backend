@@ -37,7 +37,13 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
     if not secrets:
         raise Exception(f"No secret found using label selector {label_selector}")
 
-    formatted_secrets = {s["metadata"]["labels"]["index"]: list(b64decode(s["data"]["key"])) for s in secrets}
+    formatted_secrets = {}
+
+    for secret in secrets:
+        if secret["data"]:
+            formatted_secrets[secret["metadata"]["labels"]["index"]] = list(b64decode(secret["data"]["key"]))
+        else:
+            raise Exception(f'Secret {secret["metadata"]["name"]} does not contain any data')
 
     with open(path.join(chainkeys_dir, "chainkeys.json"), "w") as f:
         json.dump({"chain_keys": formatted_secrets}, f)
