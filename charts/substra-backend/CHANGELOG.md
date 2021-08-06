@@ -1,5 +1,10 @@
 # Changelog
 
+## 3.3.0
+
+### Added
+- Add `PAGINATION_MAX_PAGE_SIZE` configuration to backend chart
+
 ## 3.2.0
 
 ### Added

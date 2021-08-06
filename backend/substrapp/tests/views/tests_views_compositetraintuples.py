@@ -3,6 +3,7 @@ import shutil
 import logging
 
 import mock
+from parameterized import parameterized
 
 from django.urls import reverse
 from django.test import override_settings
@@ -62,7 +63,7 @@ class CompositeTraintupleViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_compositetraintuple_retrieve(self):
 
@@ -103,4 +104,22 @@ class CompositeTraintupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
+
+    @parameterized.expand([
+        ("one_page_test", 8, 1, 0, 8),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+        ("two_element_per_page_page_three", 2, 3, 4, 6)
+    ])
+    def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:composite_traintuple-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = compositetraintuple
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], compositetraintuple[index_down:index_up])

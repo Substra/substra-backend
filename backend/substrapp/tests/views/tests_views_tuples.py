@@ -5,6 +5,8 @@ import urllib
 
 import mock
 
+from parameterized import parameterized
+
 from django.urls import reverse
 from django.test import override_settings
 
@@ -63,7 +65,7 @@ class TraintupleViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_traintuple_retrieve(self):
 
@@ -105,7 +107,7 @@ class TraintupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 2)
+            self.assertEqual(len(r['results']), 2)
 
     def test_traintuple_list_filter_compute_plan_key(self):
         url = reverse('substrapp:traintuple-list')
@@ -116,7 +118,7 @@ class TraintupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 2)
+            self.assertEqual(len(r['results']), 2)
 
 
 # APITestCase
@@ -153,7 +155,7 @@ class TesttupleViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_testtuple_retrieve(self):
 
@@ -194,10 +196,46 @@ class TesttupleViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
             search_params = '?search=testtuple%253Atag%253Afoo'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 0)
+            self.assertEqual(len(r['results']), 0)
+
+    @parameterized.expand([
+        ("one_page_test", 9, 1, 0, 9),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+        ("two_element_per_page_page_two", 2, 2, 2, 4)
+    ])
+    def test_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:traintuple-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = traintuple
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], traintuple[index_down:index_up])
+
+    @parameterized.expand([
+        ("one_page_test", 5, 1, 0, 5),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+        ("two_element_per_page_page_two", 2, 2, 2, 4)
+    ])
+    def test_testtuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:testtuple-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = testtuple
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], testtuple[index_down:index_up])

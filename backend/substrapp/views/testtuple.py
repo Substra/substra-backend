@@ -9,12 +9,15 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_key, get_success_create_code, LedgerExceptionError, get_channel_name)
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 class TestTupleViewSet(mixins.CreateModelMixin,
+                       PaginationMixin,
                        GenericViewSet):
     serializer_class = LedgerTestTupleSerializer
     ledger_query_call = 'queryTesttuple'
+    pagination_class = DefaultPageNumberPagination
 
     def get_queryset(self):
         return []
@@ -75,7 +78,7 @@ class TestTupleViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, channel_name, key):
         validate_key(key)

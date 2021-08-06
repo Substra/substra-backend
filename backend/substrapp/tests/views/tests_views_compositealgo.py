@@ -6,6 +6,8 @@ import json
 
 import mock
 
+from parameterized import parameterized
+
 from django.urls import reverse
 from django.test import override_settings
 
@@ -54,7 +56,7 @@ class CompositeAlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_composite_algo_list_success(self):
         url = reverse('substrapp:composite_algo-list')
@@ -63,7 +65,7 @@ class CompositeAlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, compositealgo)
+            self.assertEqual(r['results'], compositealgo)
 
     def test_composite_algo_list_filter_fail(self):
         url = reverse('substrapp:composite_algo-list')
@@ -87,7 +89,7 @@ class CompositeAlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_composite_algo_list_filter_dual(self):
         url = reverse('substrapp:composite_algo-list')
@@ -100,7 +102,7 @@ class CompositeAlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_composite_algo_list_filter_algo(self):
         url = reverse('substrapp:composite_algo-list')
@@ -111,7 +113,7 @@ class CompositeAlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 0)
+            self.assertEqual(len(r['results']), 0)
 
     def test_composite_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:composite_algo-list')
@@ -155,7 +157,7 @@ class CompositeAlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_composite_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -246,7 +248,7 @@ class CompositeAlgoViewTests(APITestCase):
             res = self.client.get(url, **self.extra)
             res_composite_algos = res.data
             self.assertEqual(len(res_composite_algos), len(compositealgo))
-            for i, res_composite_algo in enumerate(res_composite_algos):
+            for i, res_composite_algo in enumerate(res_composite_algos['results']):
                 for field in ('description', 'content'):
                     self.assertEqual(res_composite_algo[field]['storage_address'],
                                      compositealgo[i][field]['storage_address'])
@@ -294,3 +296,21 @@ class CompositeAlgoViewTests(APITestCase):
             for field in ('description', 'content'):
                 self.assertEqual(res.data[field]['storage_address'],
                                  compositealgo[0][field]['storage_address'])
+
+    @parameterized.expand([
+        ("one_page_test", 9, 1, 0, 9),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+        ("two_element_per_page_page_two", 2, 2, 2, 4)
+    ])
+    def test_composite_algo_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:composite_algo-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.compositealgo.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = compositealgo
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], compositealgo[index_down:index_up])

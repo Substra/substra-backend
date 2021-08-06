@@ -5,6 +5,7 @@ import logging
 import json
 
 import mock
+from parameterized import parameterized
 
 from django.urls import reverse
 from django.test import override_settings
@@ -54,7 +55,7 @@ class AlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_algo_list_success(self):
         url = reverse('substrapp:algo-list')
@@ -63,7 +64,7 @@ class AlgoViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, algo)
+            self.assertEqual(r, {'count': 5, 'next': None, 'previous': None, 'results': algo})
 
     def test_algo_list_filter_fail(self):
         url = reverse('substrapp:algo-list')
@@ -87,7 +88,8 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
+            self.assertEqual(r['count'], 1)
 
     def test_algo_list_filter_dual(self):
         url = reverse('substrapp:algo-list')
@@ -99,7 +101,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_algo_list_filter_datamanager_fail(self):
         url = reverse('substrapp:algo-list')
@@ -141,7 +143,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_algo_retrieve(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -229,8 +231,11 @@ class AlgoViewTests(APITestCase):
 
             # actual test
             res = self.client.get(url, **self.extra)
-            res_algos = res.data
+            res_data = res.data
+            res_algos = res_data['results']
+            count = res_data['count']
             self.assertEqual(len(res_algos), len(algo))
+            self.assertEqual(count, len(algo))
             for i, res_algo in enumerate(res_algos):
                 for field in ('description', 'content'):
                     self.assertEqual(res_algo[field]['storage_address'],
@@ -279,3 +284,21 @@ class AlgoViewTests(APITestCase):
             for field in ('description', 'content'):
                 self.assertEqual(res.data[field]['storage_address'],
                                  algo[0][field]['storage_address'])
+
+    @parameterized.expand([
+        ("one_page_test", 5, 1, 0, 5),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+        ("two_element_per_page_page_three", 2, 3, 4, 5)
+    ])
+    def test_algo_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:algo-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.algo.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = algo
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], algo[index_down:index_up])

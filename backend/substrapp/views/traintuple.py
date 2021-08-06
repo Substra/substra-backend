@@ -10,12 +10,15 @@ from substrapp.ledger.exceptions import LedgerError, LedgerConflictError
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import (validate_key, get_success_create_code, LedgerExceptionError, get_channel_name)
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 class TrainTupleViewSet(mixins.CreateModelMixin,
+                        PaginationMixin,
                         GenericViewSet):
     serializer_class = LedgerTrainTupleSerializer
     ledger_query_call = 'queryTraintuple'
+    pagination_class = DefaultPageNumberPagination
 
     def get_queryset(self):
         return []
@@ -86,7 +89,7 @@ class TrainTupleViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     def _retrieve(self, channel_name, key):
         validate_key(key)

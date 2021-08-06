@@ -21,14 +21,17 @@ from substrapp.views.utils import (LedgerExceptionError, ValidationExceptionErro
                                    get_success_create_code, get_channel_name)
 from substrapp.ledger.api import query_ledger
 from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError, LedgerConflictError
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 logger = logging.getLogger(__name__)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin,
+                        PaginationMixin,
                         GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
+    pagination_class = DefaultPageNumberPagination
 
     @staticmethod
     def check_datamanagers(data_manager_keys):
@@ -195,7 +198,7 @@ class DataSampleViewSet(mixins.CreateModelMixin,
 
         data = data or []
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=False)
     def bulk_update(self, request):

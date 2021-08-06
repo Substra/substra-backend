@@ -18,6 +18,7 @@ from substrapp.views.utils import (PermissionMixin,
                                    ValidationExceptionError, get_remote_asset, node_has_process_permission,
                                    get_channel_name)
 from substrapp.views.filters_utils import filter_list
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 def replace_storage_addresses(request, composite_algo):
@@ -29,9 +30,11 @@ def replace_storage_addresses(request, composite_algo):
 
 
 class CompositeAlgoViewSet(mixins.CreateModelMixin,
+                           PaginationMixin,
                            GenericViewSet):
     queryset = CompositeAlgo.objects.all()
     serializer_class = CompositeAlgoSerializer
+    pagination_class = DefaultPageNumberPagination
     ledger_query_call = 'queryCompositeAlgo'
 
     def perform_create(self, serializer):
@@ -188,7 +191,7 @@ class CompositeAlgoViewSet(mixins.CreateModelMixin,
         for composite_algo in data:
             replace_storage_addresses(request, composite_algo)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
 
 class CompositeAlgoPermissionViewSet(PermissionMixin,

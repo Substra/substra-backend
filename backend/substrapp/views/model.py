@@ -14,13 +14,16 @@ from substrapp.ledger.api import query_ledger, get_object_from_ledger
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.utils import validate_key, get_remote_asset, PermissionMixin, get_channel_name, PermissionError
 from substrapp.views.filters_utils import filter_list
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 logger = logging.getLogger(__name__)
 
 
-class ModelViewSet(GenericViewSet):
+class ModelViewSet(PaginationMixin,
+                   GenericViewSet):
     queryset = Model.objects.all()
     ledger_query_call = 'queryModelDetails'
+    pagination_class = DefaultPageNumberPagination
     # permission_classes = (permissions.IsAuthenticated,)
 
     def create_or_update_model(self, channel_name, traintuple, key):
@@ -86,7 +89,7 @@ class ModelViewSet(GenericViewSet):
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
 
 def gzip_action(func):

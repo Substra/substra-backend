@@ -71,7 +71,7 @@ class ComputePlanViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_computeplan_list_success(self):
         url = reverse('substrapp:compute_plan-list')
@@ -80,7 +80,7 @@ class ComputePlanViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, computeplan)
+            self.assertEqual(r['results'], computeplan)
 
     def test_computeplan_retrieve(self):
         with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:

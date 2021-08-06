@@ -7,6 +7,8 @@ import json
 
 import mock
 
+from parameterized import parameterized
+
 from django.urls import reverse
 from django.test import override_settings
 
@@ -73,7 +75,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_objective_list_success(self):
         url = reverse('substrapp:objective-list')
@@ -82,7 +84,7 @@ class ObjectiveViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, objective)
+            self.assertEqual(r['results'], objective)
 
     def test_objective_list_filter_fail(self):
         url = reverse('substrapp:objective-list')
@@ -106,7 +108,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_objective_list_filter_metrics(self):
         url = reverse('substrapp:objective-list')
@@ -117,7 +119,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), len(objective))
+            self.assertEqual(len(r['results']), len(objective))
 
     def test_objective_list_filter_datamanager(self):
         url = reverse('substrapp:objective-list')
@@ -134,7 +136,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_objective_list_filter_model(self):
         url = reverse('substrapp:objective-list')
@@ -152,7 +154,7 @@ class ObjectiveViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_objective_retrieve(self):
         url = reverse('substrapp:objective-list')
@@ -276,7 +278,7 @@ class ObjectiveViewTests(APITestCase):
 
             # actual test
             res = self.client.get(url, **self.extra)
-            res_objectives = res.data
+            res_objectives = res.data['results']
             self.assertEqual(len(res_objectives), len(objective))
             for i, res_objective in enumerate(res_objectives):
                 for field in ('description', 'metrics'):
@@ -326,3 +328,20 @@ class ObjectiveViewTests(APITestCase):
             for field in ('description', 'metrics'):
                 self.assertEqual(res.data[field]['storage_address'],
                                  objective[0][field]['storage_address'])
+
+    @parameterized.expand([
+        ("one_page_test", 2, 1, 0, 2),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+    ])
+    def test_objective_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:objective-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.objective.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = objective
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], objective[index_down:index_up])

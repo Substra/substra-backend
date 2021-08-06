@@ -7,6 +7,9 @@ backend:
   uwsgiThreads: 2
   gzipModels: false
 
+  pagination:
+    maxPageSize: 100
+
   kaniko:
     image: gcr.io/kaniko-project/executor:v1.6.0
     mirror: false  # If true, kaniko will pull base images from the local registry

@@ -20,6 +20,7 @@ from substrapp.views.utils import (PermissionMixin, validate_key,
                                    LedgerExceptionError, get_remote_asset, validate_sort,
                                    node_has_process_permission, get_channel_name)
 from substrapp.views.filters_utils import filter_list
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 def replace_storage_addresses(request, objective):
@@ -31,10 +32,12 @@ def replace_storage_addresses(request, objective):
 
 
 class ObjectiveViewSet(mixins.CreateModelMixin,
+                       PaginationMixin,
                        GenericViewSet):
     queryset = Objective.objects.all()
     serializer_class = ObjectiveSerializer
     ledger_query_call = 'queryObjective'
+    pagination_class = DefaultPageNumberPagination
 
     def perform_create(self, serializer):
         return serializer.save()
@@ -190,7 +193,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         for objective in data:
             replace_storage_addresses(request, objective)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):

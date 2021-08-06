@@ -10,6 +10,7 @@ from substrapp.ledger.api import invoke_ledger, query_ledger, get_object_from_le
 from substrapp.ledger.exceptions import LedgerError
 from substrapp.views.utils import get_success_create_code, validate_key, get_channel_name
 from substrapp.views.filters_utils import filter_list
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 def create_compute_plan(channel_name, data):
@@ -23,9 +24,11 @@ def create_compute_plan(channel_name, data):
 
 
 class ComputePlanViewSet(mixins.CreateModelMixin,
+                         PaginationMixin,
                          GenericViewSet):
 
     serializer_class = LedgerComputePlanSerializer
+    pagination_class = DefaultPageNumberPagination
 
     def get_queryset(self):
         return []
@@ -73,7 +76,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['POST'])
     def cancel(self, request, *args, **kwargs):

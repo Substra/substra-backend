@@ -189,8 +189,8 @@ class DataSampleViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, ['DataSampleA', 'DataSampleB'])
+            self.assertEqual(r, {'count': 2, 'next': None, 'previous': None, 'results': ['DataSampleA', 'DataSampleB']})

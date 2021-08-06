@@ -253,6 +253,8 @@ LOGGING_USE_COLORS = to_bool(os.environ.get('LOGGING_USE_COLORS', True))
 DEBUG_QUICK_IMAGE = to_bool(os.environ.get('DEBUG_QUICK_IMAGE', False))
 DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get('DEBUG_KEEP_POD_AND_DIRS', False))
 
+PAGINATION_MAX_PAGE_SIZE = int(os.environ.get('PAGINATION_MAX_PAGE_SIZE', 100))
+
 # Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
 # Importing the module early ensures these steps happen in order:
 # 1. hfc.fabric is imported and all the associated loggers are configured  (log level, handler, etc...)

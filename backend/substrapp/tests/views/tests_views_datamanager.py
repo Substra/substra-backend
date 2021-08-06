@@ -4,6 +4,7 @@ import shutil
 import logging
 
 import mock
+from parameterized import parameterized
 
 from django.urls import reverse
 from django.test import override_settings
@@ -53,7 +54,7 @@ class DataManagerViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, [])
+            self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_datamanager_list_success(self):
         url = reverse('substrapp:data_manager-list')
@@ -62,7 +63,7 @@ class DataManagerViewTests(APITestCase):
 
             response = self.client.get(url, **self.extra)
             r = response.json()
-            self.assertEqual(r, datamanager)
+            self.assertEqual(r['results'], datamanager)
 
     def test_datamanager_list_filter_fail(self):
         url = reverse('substrapp:data_manager-list')
@@ -86,7 +87,7 @@ class DataManagerViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_datamanager_list_filter_objective(self):
         url = reverse('substrapp:data_manager-list')
@@ -104,7 +105,7 @@ class DataManagerViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 1)
+            self.assertEqual(len(r['results']), 1)
 
     def test_datamanager_list_filter_model(self):
         url = reverse('substrapp:data_manager-list')
@@ -122,7 +123,7 @@ class DataManagerViewTests(APITestCase):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r), 2)
+            self.assertEqual(len(r['results']), 2)
 
     def test_datamanager_retrieve(self):
         url = reverse('substrapp:data_manager-list')
@@ -185,7 +186,7 @@ class DataManagerViewTests(APITestCase):
 
             # actual test
             res = self.client.get(url, **self.extra)
-            res_datamanagers = res.data
+            res_datamanagers = res.data['results']
             self.assertEqual(len(res_datamanagers), len(datamanager))
             for i, res_datamanager in enumerate(res_datamanagers):
                 for field in ('description', 'opener'):
@@ -235,3 +236,20 @@ class DataManagerViewTests(APITestCase):
             for field in ('description', 'opener'):
                 self.assertEqual(res.data[field]['storage_address'],
                                  datamanager[0][field]['storage_address'])
+
+    @parameterized.expand([
+        ("one_page_test", 2, 1, 0, 2),
+        ("one_element_per_page_page_two", 1, 2, 1, 2),
+    ])
+    def test_data_manager_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        url = reverse('substrapp:data_manager-list')
+        url = f"{url}?page_size={page_size}&page={page_number}"
+        with mock.patch('substrapp.views.datamanager.query_ledger') as mquery_ledger:
+            mquery_ledger.return_value = datamanager
+            response = self.client.get(url, **self.extra)
+        r = response.json()
+        self.assertContains(response, 'count', 1)
+        self.assertContains(response, 'next', 1)
+        self.assertContains(response, 'previous', 1)
+        self.assertContains(response, 'results', 1)
+        self.assertEqual(r['results'], datamanager[index_down:index_up])

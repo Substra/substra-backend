@@ -19,6 +19,7 @@ from substrapp.views.utils import (PermissionMixin,
                                    LedgerExceptionError, get_remote_asset, node_has_process_permission,
                                    get_channel_name,)
 from substrapp.views.filters_utils import filter_list
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 
 def replace_storage_addresses(request, data_manager):
@@ -30,9 +31,11 @@ def replace_storage_addresses(request, data_manager):
 
 
 class DataManagerViewSet(mixins.CreateModelMixin,
+                         PaginationMixin,
                          GenericViewSet):
     queryset = DataManager.objects.all()
     serializer_class = DataManagerSerializer
+    pagination_class = DefaultPageNumberPagination
     ledger_query_call = 'queryDataManager'
 
     def perform_create(self, serializer):
@@ -208,7 +211,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         for data_manager in data:
             replace_storage_addresses(request, data_manager)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data, status=status.HTTP_200_OK)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):
