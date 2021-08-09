@@ -22,10 +22,26 @@ jobs:
         with:
           version: "v3.5.0"
         id: install
+      - name: Install tools
+        run: |
+          sudo snap install yq
       - name: Build dependencies
         run: helm dep update charts/substra-backend
       - name: Lint Chart
         run: helm lint charts/substra-backend
+      - name: Validate version increment
+        run: |
+          helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
+          helm repo update
+
+          RES=$(helm search repo owkin-priv/substra-backend --version $(yq eval .version charts/substra-backend/Chart.yaml))
+
+          if [ "${RES}" != "No results found" ]; then
+            echo "Validation failed, you should upgrade the chart version in Chart.yaml"
+            exit 1
+          else
+            echo "Version incremented"
+
   publish:
     name: Publish
     runs-on: ubuntu-latest
