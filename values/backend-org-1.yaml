@@ -12,7 +12,8 @@ registry:
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: substrafoundation/substra-tools:0.7.0-minimal
+    - image: gcr.io/connect-314908/connect-tools:0.8.0-minimal
+      dockerConfigSecretName: "docker-config"
 
 secrets:
   fabricConfigmap: network-org-1-hlf-k8s-fabric
@@ -31,7 +32,7 @@ backend:
     cache:
       warmer:
         images:
-          - image: substrafoundation/substra-tools:0.7.0-minimal
+          - image: gcr.io/connect-314908/connect-tools:0.8.0-minimal
   ingress:
     enabled: true
     hosts:

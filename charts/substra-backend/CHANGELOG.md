@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.3.1
+
+- Fixed kaniko cache warmer
+
 ## 3.3.0
 
 ### Added

@@ -36,17 +36,10 @@ def build_container_image(path, tag, ctx):
         logger.info(f"Image found: {tag}. Using it.")
         return
 
-    cache_index = None
-    try:
-        cache_index = _acquire_cache_index()
-        _build_container_image(path, tag, cache_index, ctx.compute_plan_key_safe, ctx.task_key, ctx.attempt)
-    except Exception:
-        raise
-    finally:
-        _release_cache_index(cache_index)
+    _build_container_image(path, tag, ctx.compute_plan_key_safe, ctx.task_key, ctx.attempt)
 
 
-def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
+def _build_container_image(path, tag, cp_key, task_key, attempt):
 
     _assert_dockerfile(path)
 
@@ -62,7 +55,6 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
     image = KANIKO_IMAGE
     command = None
     mount_path_dockerfile = path
-    mount_path_cache = "/cache"
 
     args = [
         f"--dockerfile={dockerfile_fullpath}",
@@ -74,6 +66,7 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
         "--push-retry=3",
         "--cache-copy-layers",
         "--single-snapshot",
+        f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
     ]
 
     if REGISTRY_SCHEME == "http":
@@ -106,15 +99,13 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
         security_context=container_security_context,
     )
 
-    if mount_path_cache is not None:
-        container.volume_mounts.append(
-            {
-                "name": "cache",
-                "mountPath": mount_path_cache,
-                "subPath": cache_index,
-                "readOnly": True,
-            }
-        )
+    container.volume_mounts.append(
+        {
+            "name": "cache",
+            "mountPath": "/cache",
+            "readOnly": True,
+        }
+    )
 
     if KANIKO_DOCKER_CONFIG_SECRET_NAME:
         container.volume_mounts.append(
@@ -155,13 +146,12 @@ def _build_container_image(path, tag, cache_index, cp_key, task_key, attempt):
         ],
     )
 
-    if mount_path_cache is not None:
-        spec.volumes.append(
-            {
-                "name": "cache",
-                "persistentVolumeClaim": {"claimName": settings.K8S_PVC["DOCKER_CACHE_PVC"]},
-            }
-        )
+    spec.volumes.append(
+        {
+            "name": "cache",
+            "persistentVolumeClaim": {"claimName": settings.K8S_PVC["DOCKER_CACHE_PVC"]},
+        }
+    )
 
     if KANIKO_DOCKER_CONFIG_SECRET_NAME:
         spec.volumes.append(
@@ -226,43 +216,3 @@ def _container_format_log(container_name, container_logs, log_prefix):
 
     for log in logs:
         logger.info(log)
-
-
-def _get_cache_index_lock_file(cache_index):
-    return f"/tmp/cache-index-{cache_index}.lock"
-
-
-def _try_create_lock_file(path):
-    try:
-        fd = os.open(path, os.O_CREAT | os.O_EXCL)
-        os.close(fd)
-        return True
-    except FileExistsError:
-        return False
-
-
-def _acquire_cache_index():
-    if CELERY_WORKER_CONCURRENCY == 1:
-        return None
-
-    max_attempts = 12
-    attempt = 0
-
-    while attempt < max_attempts:
-        for cache_index in range(1, CELERY_WORKER_CONCURRENCY + 1):
-            lock_file = _get_cache_index_lock_file(cache_index)
-            if _try_create_lock_file(lock_file):
-                return str(cache_index)
-            attempt += 1
-
-    raise Exception(f"Could not acquire cache index after {max_attempts} attempts")
-
-
-def _release_cache_index(cache_index):
-    if cache_index is None:
-        return
-    lock_file = _get_cache_index_lock_file(cache_index)
-    try:
-        os.remove(lock_file)
-    except FileNotFoundError:
-        pass

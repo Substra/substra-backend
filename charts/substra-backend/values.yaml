@@ -18,7 +18,7 @@ backend:
       warmer:
         image: gcr.io/kaniko-project/warmer:v1.6.0
         images: []
-          # - image: substrafoundation/substra-tools:0.7.0
+          # - image: gcr.io/connect-314908/connect-tools:0.8.0-minimal
 
   compute:
     registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry

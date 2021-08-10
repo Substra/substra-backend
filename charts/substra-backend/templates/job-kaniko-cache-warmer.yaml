@@ -37,14 +37,26 @@ spec:
         {{- end }}
         - "--verbosity=debug"
         volumeMounts:
-        - name: kaniko-cache
-          mountPath: /cache
-          readOnly: False
+          - name: kaniko-cache
+            mountPath: /cache
+            readOnly: False
+          {{- if .Values.backend.kaniko.dockerConfigSecretName }}
+          - name: docker-config
+            mountPath: /kaniko/.docker
+          {{- end }}
       restartPolicy: Never
       volumes:
-      - name: kaniko-cache
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-docker-cache
+        - name: kaniko-cache
+          persistentVolumeClaim:
+            claimName: {{ include "substra.fullname" $ }}-docker-cache
+        {{- if .Values.backend.kaniko.dockerConfigSecretName }}
+        - name: docker-config
+          secret:
+            secretName: {{ .Values.backend.kaniko.dockerConfigSecretName }}
+            items:
+            - key: .dockerconfigjson
+              path: config.json
+        {{- end }}
   backoffLimit: 4
 
 {{- end}}

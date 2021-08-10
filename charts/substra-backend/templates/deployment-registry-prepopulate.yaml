@@ -22,6 +22,9 @@ spec:
         app.kubernetes.io/instance: {{ $.Release.Name }}
     spec:
       initContainers:
+      - name: wait-registry
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
         image: {{ $.Values.backend.kaniko.image }}
         args: ["--context=/docker-context",
