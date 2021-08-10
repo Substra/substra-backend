@@ -30,17 +30,20 @@ jobs:
       - name: Lint Chart
         run: helm lint charts/substra-backend
       - name: Validate version increment
+        env:
+          HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}
+          HARBOR_AUTH_USER: "robot$connect-backend+connect-backend-pusher"
         run: |
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
-          helm repo update
 
           RES=$(helm search repo owkin-priv/substra-backend --version $(yq eval .version charts/substra-backend/Chart.yaml))
 
-          if [ "${RES}" != "No results found" ]; then
+          if [ "${RES}" == "No results found" ]; then
+            echo "Version incremented"
+          else
             echo "Validation failed, you should upgrade the chart version in Chart.yaml"
             exit 1
-          else
-            echo "Version incremented"
+          fi
 
   publish:
     name: Publish
