@@ -68,3 +68,13 @@ class BuildError(Exception):
 class TaskNotFoundError(Exception):
     """A celery task was not found"""
     pass
+
+
+class ServerMediasPathError(Exception):
+    """A supplied servermedias path was invalid"""
+    pass
+
+
+class ServerMediasNoSubdirError(Exception):
+    """A supplied servermedias path didn't contain the expected subdir"""
+    pass

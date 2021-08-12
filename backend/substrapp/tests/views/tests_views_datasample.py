@@ -2,6 +2,7 @@ import os
 import shutil
 import logging
 import json
+import ntpath
 
 import mock
 
@@ -14,7 +15,6 @@ from rest_framework.test import APITestCase
 
 from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
 
-from substrapp.views.datasample import path_leaf
 from substrapp.utils import uncompress_content
 
 from substrapp.models import DataManager
@@ -194,3 +194,8 @@ class DataSampleViewTests(APITestCase):
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, {'count': 2, 'next': None, 'previous': None, 'results': ['DataSampleA', 'DataSampleB']})
+
+
+def path_leaf(path):
+    head, tail = ntpath.split(path)
+    return tail or ntpath.basename(head)
