@@ -8,7 +8,7 @@ from django.test import override_settings
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
-from ..common import FakeModel, FakeDataManager, FakeDataSample
+from ..common import FakeModel, FakeDataSample
 from substrapp.utils import get_dir_hash, get_hash
 from substrapp.compute_tasks.directories import AssetBufferDirName, init_task_dirs
 from substrapp.compute_tasks.command import Filenames
@@ -50,7 +50,6 @@ class AssetBufferTests(APITestCase):
         init_task_dirs(self.dirs)
 
     def _setup_opener(self):
-        self.dataset_key = "some_dataset_key"
         self.opener_contents = "opener contents"
         self.opener_path = os.path.join(tempfile.mkdtemp(), "opener.py")
 
@@ -58,6 +57,15 @@ class AssetBufferTests(APITestCase):
             f.write(self.opener_contents)
 
         self.opener_checksum = get_hash(self.opener_path)
+        self.opener_storage_address = "some storage address"
+        self.data_manager_key = "some_data_manager_key"
+        self.data_manager = {
+            "key": self.data_manager_key,
+            "opener": {
+                "storage_address": self.opener_storage_address,
+                "checksum": self.opener_checksum,
+            },
+        }
 
     def _setup_data_sample(self):
         self.data_sample_dir = tempfile.mkdtemp()
@@ -86,30 +94,21 @@ class AssetBufferTests(APITestCase):
     def test_add_opener_to_buffer(self):
 
         init_asset_buffer()
-        with mock.patch("substrapp.models.DataManager.objects.get") as mget:
+        node_id = "node id"
 
-            # Test 1: DB is empty
-            with self.assertRaises(Exception):
-                _add_opener_to_buffer(self.dataset_key, self.opener_checksum)
+        dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.data_manager_key, Filenames.Opener)
 
-            # Test 2: OK
-            mget.return_value = FakeDataManager(self.opener_path)
+        with mock.patch(
+            "substrapp.compute_tasks.asset_buffer.get_and_put_asset_content"
+        ) as mget_and_put_asset_content, mock.patch("substrapp.compute_tasks.asset_buffer.get_owner") as mget_owner:
 
-            _add_opener_to_buffer(self.dataset_key, self.opener_checksum)
+            mget_owner.return_value = node_id
 
-            dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.dataset_key, Filenames.Opener)
-            with open(dest) as f:
-                contents = f.read()
-                self.assertEqual(contents, self.opener_contents)
+            _add_opener_to_buffer(CHANNEL, self.data_manager)
 
-            os.remove(dest)  # delete file, otherwise next call to _populate_buffer_opener will be a noop
-
-            # Test 3: File corrupted
-            with open(self.opener_path, "a+") as f:
-                f.write("corrupted")
-
-            with self.assertRaises(Exception):
-                _add_opener_to_buffer(self.dataset_key, self.opener_checksum)
+            mget_and_put_asset_content.assert_called_once_with(
+                CHANNEL, self.opener_storage_address, node_id, self.opener_checksum, dest, hash_key=None
+            )
 
     @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_2)
     def test_add_datasamples_to_buffer(self):

@@ -22,6 +22,7 @@ from substrapp.utils import (
     get_dir_hash,
     get_hash,
     get_and_put_asset_content,
+    get_owner,
     timeit,
     uncompress_content,
     get_asset_content,
@@ -115,9 +116,9 @@ def add_task_assets_to_buffer(ctx: Context) -> None:
         _add_datasamples_to_buffer(data_sample_keys)
 
     # Openers
-    dataset_key = _get_task_dataset_key(task)
-    if dataset_key:
-        _add_opener_to_buffer(dataset_key, task["dataset"]["opener_checksum"])
+    data_manager = _get_task_data_manager(ctx.channel_name, task)
+    if data_manager:
+        _add_opener_to_buffer(ctx.channel_name, data_manager)
 
     # In-models
     models = _get_task_models(ctx.channel_name, task, ctx.task_category)
@@ -146,9 +147,9 @@ def add_assets_to_taskdir(ctx: Context) -> None:
     if data_sample_keys:
         _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, data_sample_keys)
 
-    dataset_key = _get_task_dataset_key(task)
-    if dataset_key:
-        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [dataset_key])
+    data_manager = _get_task_data_manager(ctx.channel_name, task)
+    if data_manager:
+        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [data_manager["key"]])
 
     models = _get_task_models(ctx.channel_name, task, task_category)
     if models:
@@ -192,26 +193,27 @@ def _add_datasamples_to_buffer(data_sample_keys: List[str]) -> None:
         _log_added(dst)
 
 
-def _add_opener_to_buffer(dataset_key: str, opener_checksum: str) -> None:
+def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
     """Copy opener to the asset buffer"""
-    from substrapp.models import DataManager
 
-    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, dataset_key, Filenames.Opener)
+    dir = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager["key"])
+    dst = os.path.join(dir, Filenames.Opener)
 
-    if os.path.exists(dst):
+    if os.path.exists(dir):
         # asset already exists
         return
 
-    datamanager = DataManager.objects.get(key=dataset_key)
+    os.mkdir(dir)
 
-    if not os.path.exists(datamanager.data_opener.path) or not os.path.isfile(datamanager.data_opener.path):
-        raise Exception(f"DataOpener file ({datamanager.data_opener.path}) is missing in local storage")
+    get_and_put_asset_content(
+        channel_name,
+        data_manager["opener"]["storage_address"],
+        get_owner(),
+        data_manager["opener"]["checksum"],
+        dst,
+        hash_key=None,
+    )
 
-    if get_hash(datamanager.data_opener.path) != opener_checksum:
-        raise Exception("DataOpener checksum in Subtuple is not the same as in local db")
-
-    os.makedirs(os.path.dirname(dst))
-    shutil.copy(datamanager.data_opener.path, dst)
     _log_added(dst)
 
 
@@ -308,10 +310,10 @@ def _get_task_data_sample_keys(task) -> List[str]:
     return []
 
 
-def _get_task_dataset_key(task) -> str:
-    if "dataset" in task:
-        return task["dataset"]["key"]
-    return None
+def _get_task_data_manager(channel_name, task) -> Dict:
+    if "dataset" not in task:
+        return None
+    return get_object_from_ledger(channel_name, task["dataset"]["key"], "queryDataManager")
 
 
 def _get_task_models(channel_name: str, task: Dict, task_category: str) -> List[str]:
