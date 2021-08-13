@@ -203,8 +203,9 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
 
         finally:
             # Teardown
+            teardown_task_dirs(dirs)
+
             if not settings.DEBUG_KEEP_POD_AND_DIRS:
-                teardown_task_dirs(dirs)
 
                 # TODO orchestrator: delete this block
                 if not ctx.compute_plan_key:

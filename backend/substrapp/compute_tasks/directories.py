@@ -3,7 +3,7 @@ import logging
 import shutil
 from django.conf import settings
 from substrapp.utils import remove_directory_contents, create_directory, delete_dir
-from distutils.dir_util import copy_tree
+from shutil import copytree
 
 logger = logging.getLogger(__name__)
 
@@ -137,8 +137,7 @@ def restore_dir(dirs: Directories, cp_folder: str, task_folder):
     if os.path.exists(dest):
         remove_directory_contents(dest)
 
-    # We can't copy src to dst beacuse dst is mounted. Instead, copy the _contents_.
-    copy_tree(src, dest)
+    copytree(src, dest, dirs_exist_ok=True)
 
 
 def commit_dir(dirs: Directories, task_folder: str, cp_folder: str):
