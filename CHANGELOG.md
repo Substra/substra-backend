@@ -5,8 +5,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.3.0] - 2021-08-17
 ### Added
-- API: Added Pagination for lists of asset
+- API: Added Pagination for lists of asset (#123)
+
+### Fixed
+- Fix kaniko local directory cache for base images (#190)
+- The backend is compatible with FL worflow again (#194)
+- lock_resource was raising a FileNotFound exception in high concurrency scenarios (#187)
+
+### Changed
+- Refactor views/datasamples.py (#189)
+- The opener is now downloaded instead of being copied from disk (#193)
+- Better use of shutil.copytree (#182)
 
 ## [0.2.0] - 2021-08-04
 ### Added
