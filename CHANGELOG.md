@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Fix compute-plan-less compute tasks all using the same lock key (#205)
+
 ## [0.3.0] - 2021-08-17
 ### Added
 - API: Added Pagination for lists of asset (#123)

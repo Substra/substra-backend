@@ -159,7 +159,9 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
     #   task in between the two steps would result in the shared folder (task_dir) being altered, and `pred.json`
     #   potentially be lost or overwritten. The function `execute_compute_task` takes care of running both the
     #   "predict" and "evaluate" steps of the testtuple.
-    with lock_resource("compute-plan", compute_plan_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
+
+    # TODO orchestrator: remove "or task key" in the next line
+    with lock_resource("compute-plan", compute_plan_key or task_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
         try:
             # Create context
             ctx = Context.from_task(channel_name, task, task_category, self.attempt)
