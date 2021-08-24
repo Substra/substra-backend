@@ -163,7 +163,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
         data = data or []
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
     @action(methods=["post"], detail=False)
     def bulk_update(self, request):

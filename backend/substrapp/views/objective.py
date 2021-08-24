@@ -193,7 +193,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         for objective in data:
             replace_storage_addresses(request, objective)
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
     @action(detail=True)
     def data(self, request, *args, **kwargs):

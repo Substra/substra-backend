@@ -88,7 +88,7 @@ class CompositeTraintupleViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
     def _retrieve(self, channel_name, key):
         validate_key(key)

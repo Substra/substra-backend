@@ -8,7 +8,13 @@ from .algo import AlgoViewSet, AlgoPermissionViewSet
 from .traintuple import TrainTupleViewSet
 from .testtuple import TestTupleViewSet
 from .aggregatetuple import AggregateTupleViewSet
-from .computeplan import ComputePlanViewSet
+from .computeplan import (
+    ComputePlanViewSet,
+    CPTraintupleViewSet,
+    CPAggregatetupleViewSet,
+    CPCompositeTraintupleViewSet,
+    CPTesttupleViewSet,
+)
 from .compositetraintuple import CompositeTraintupleViewSet
 from .compositealgo import CompositeAlgoViewSet, CompositeAlgoPermissionViewSet
 from .aggregatealgo import AggregateAlgoViewSet, AggregateAlgoPermissionViewSet
@@ -17,5 +23,7 @@ __all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'DataManagerPermissionView
            'ObjectivePermissionViewSet', 'ModelViewSet', 'ModelPermissionViewSet', 'AlgoViewSet',
            'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'ComputePlanViewSet',
            'CompositeTraintupleViewSet', 'CompositeAlgoViewSet', 'CompositeAlgoPermissionViewSet',
-           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet', 'AggregateTupleViewSet'
+           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet', 'AggregateTupleViewSet',
+           'CPTraintupleViewSet', 'CPAggregatetupleViewSet', 'CPCompositeTraintupleViewSet',
+           'CPTesttupleViewSet'
            ]

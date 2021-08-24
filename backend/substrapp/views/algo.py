@@ -191,7 +191,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         for algo in data:
             replace_storage_addresses(request, algo)
 
-        return self.paginate_response(data, status.HTTP_200_OK)
+        return self.paginate_response(data)
 
 
 class AlgoPermissionViewSet(PermissionMixin,

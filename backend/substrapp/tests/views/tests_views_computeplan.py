@@ -13,7 +13,7 @@ from substrapp.ledger.exceptions import LedgerError
 from substrapp.serializers import LedgerComputePlanSerializer
 
 from ..common import AuthenticatedClient
-from ..assets import computeplan
+from ..assets import computeplan, traintuple
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -132,3 +132,17 @@ class ComputePlanViewTests(APITestCase):
             response = self.client.post(url, **self.extra)
             r = response.json()
             self.assertEqual(r, cp)
+
+    def test_can_see_traintuple(self):
+        cp = computeplan[0]
+        compute_plan_key = cp['key']
+        url = reverse('substrapp:compute_plan_traintuple-list', args=[compute_plan_key])
+        url = f"{url}?page_size=2"
+
+        with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mquery_ledger:
+            mquery_ledger.side_effect = [computeplan[0], traintuple[0], traintuple[1]]
+            response = self.client.get(url, **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['results'], traintuple[0:2])
+        # # maybe add a test without ?page_size=<int> and add a forbidden response

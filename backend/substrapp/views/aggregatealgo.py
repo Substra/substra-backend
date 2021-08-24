@@ -191,7 +191,7 @@ class AggregateAlgoViewSet(mixins.CreateModelMixin,
         for aggregate_algo in data:
             replace_storage_addresses(request, aggregate_algo)
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
 
 class AggregateAlgoPermissionViewSet(PermissionMixin,

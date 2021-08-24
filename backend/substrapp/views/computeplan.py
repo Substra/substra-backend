@@ -76,7 +76,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             except LedgerError as e:
                 return Response({'message': str(e.msg)}, status=e.status)
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
     @action(detail=True, methods=['POST'])
     def cancel(self, request, *args, **kwargs):
@@ -115,3 +115,81 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         headers = self.get_success_headers(data)
         status = get_success_create_code()
         return Response(data, status=status, headers=headers)
+
+
+class GenericSubassetViewset(PaginationMixin,
+                             GenericViewSet):
+
+    pagination_class = DefaultPageNumberPagination
+
+    def get_queryset(self):
+        return []
+
+    def list(self, request, compute_plan_pk, ledger_query_call, subasset_name):
+        if not self.is_page_size_param_present():
+            # We choose to force the page_size parameter in these views in order to limit the number of queries
+            # to the chaincode
+            return Response(status=status.HTTP_400_BAD_REQUEST, data='page_size param is required')
+
+        validate_key(compute_plan_pk)
+        channel_name = get_channel_name(request)
+
+        try:
+            compute_plan = get_object_from_ledger(channel_name, compute_plan_pk, 'queryComputePlan')
+        except LedgerError as e:
+            return Response({'message': str(e.msg)}, status=e.status)
+
+        subasset_keys = compute_plan.get(f"{subasset_name}_keys", [])
+
+        page_subasset_keys = self.paginate_queryset(subasset_keys)
+
+        subasset_list = []
+
+        # Use the get method from traintuple view
+        for key in page_subasset_keys:
+            try:
+                asset = get_object_from_ledger(channel_name, key, f"{ledger_query_call}")
+                subasset_list.append(asset)
+            except LedgerError as e:
+                return Response({'message': str(e.msg)}, status=e.status)
+
+        return self.get_paginated_response(subasset_list)
+
+
+class CPTraintupleViewSet(GenericSubassetViewset):
+
+    def list(self, request, compute_plan_pk):
+        return super().list(
+            request=request,
+            compute_plan_pk=compute_plan_pk,
+            ledger_query_call='queryTraintuple',
+            subasset_name='traintuple')
+
+
+class CPAggregatetupleViewSet(GenericSubassetViewset):
+    def list(self, request, compute_plan_pk):
+        return super().list(
+            request=request,
+            compute_plan_pk=compute_plan_pk,
+            ledger_query_call='queryAggregatetuple',
+            subasset_name='aggregatetuple')
+
+
+class CPCompositeTraintupleViewSet(GenericSubassetViewset):
+
+    def list(self, request, compute_plan_pk):
+        return super().list(
+            request=request,
+            compute_plan_pk=compute_plan_pk,
+            ledger_query_call='queryCompositeTraintuple',
+            subasset_name='composite_traintuple')
+
+
+class CPTesttupleViewSet(GenericSubassetViewset):
+
+    def list(self, request, compute_plan_pk):
+        return super().list(
+            request=request,
+            compute_plan_pk=compute_plan_pk,
+            ledger_query_call='queryTesttuple',
+            subasset_name='testtuple')

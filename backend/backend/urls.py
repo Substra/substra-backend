@@ -27,14 +27,14 @@ from drf_spectacular.views import (
 
 from backend.views import obtain_auth_token, info_view
 
-from substrapp.urls import router
+from substrapp.urls import router, compute_plan_router
 from node.urls import router as node_router
 from users.urls import router as user_router
 
 
 urlpatterns = [
     url(r'^', include([
-        url(r'^', include((router.urls, 'substrapp'))),
+        url(r'^', include((router.urls + compute_plan_router.urls, 'substrapp'))),
         url(r'^', include((node_router.urls, 'node'))),
         url(r'^', include((user_router.urls, 'user'))),  # for secure jwt authent
         url(r'^api-token-auth/', obtain_auth_token)  # for expiry token authent

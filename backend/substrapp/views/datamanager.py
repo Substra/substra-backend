@@ -211,7 +211,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         for data_manager in data:
             replace_storage_addresses(request, data_manager)
 
-        return self.paginate_response(data, status=status.HTTP_200_OK)
+        return self.paginate_response(data)
 
     @action(methods=['post'], detail=True)
     def update_ledger(self, request, *args, **kwargs):

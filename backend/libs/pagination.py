@@ -15,10 +15,14 @@ class DefaultPageNumberPagination(PageNumberPagination):
 
 
 class PaginationMixin:
-    def paginate_response(self, data, status):
+    def paginate_response(self, data):
         data_for_one_page = self.paginate_queryset(data)
         if data_for_one_page is None:
             raise Exception("Failed to build a chunk of data for 1 page.\
  Hint: PaginationMixin is expected to be used in conjunction with DefaultPageNumberPagination")
 
         return self.get_paginated_response(data_for_one_page)
+
+    def is_page_size_param_present(self):
+        page_size = self.request.query_params.get(DefaultPageNumberPagination.page_size_query_param)
+        return page_size is not None
