@@ -1,0 +1,26 @@
+graph LR
+    A1[Datasample] -->|Copy from disk| B[(Asset buffer)]
+    A3[Head model] -->|Copy from disk| B
+    A2[Other Model] -->|Download| B
+    A4[Opener] -->|Download| B
+    A5[Algo] -->|Download| B
+    A6[Metrics] -->|Download| B
+
+    subgraph Compute Plan dir
+    subgraph Task dir
+    C1[in_models]
+    C2[datasamples]
+    C3[openers]
+    end
+    end
+
+    B-. Hard link .-> C1
+    B-. Hard link .-> C2
+    B-. Hard link .-> C3
+
+
+    D[Compute Pod]
+
+    C1-. Mount .-> D
+    C2-. Mount .-> D
+    C3-. Mount .-> D
