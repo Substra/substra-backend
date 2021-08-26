@@ -175,7 +175,7 @@ def _add_datasamples_to_buffer(data_sample_keys: List[str]) -> None:
 
         if os.path.exists(dst):
             # asset already exists
-            return
+            continue
 
         data_sample = DataSample.objects.get(key=key)
 

@@ -28,6 +28,35 @@ ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_2 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_3 = tempfile.mkdtemp()
 CHANNEL = "mychannel"
+NUM_DATA_SAMPLES = 3
+
+
+class TestDataSample:
+    key: uuid.uuid4
+    dir: str
+    filename: str
+    path: str
+    contents: str
+    checksum: str
+
+    @classmethod
+    def create(cls, index: int):
+        res = TestDataSample()
+        res.key = str(uuid.uuid4())
+        res.dir = tempfile.mkdtemp()
+        res.filename = "datasample.csv"
+        res.path = os.path.join(res.dir, res.filename)
+        res.contents = f"data sample contents {index}"
+
+        with open(res.path, "w") as f:
+            f.write(res.contents)
+
+        res.checksum = get_dir_hash(res.dir)
+
+        return res
+
+    def to_fake_data_sample(self):
+        return FakeDataSample(self.dir, self.checksum)
 
 
 @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR)
@@ -35,7 +64,7 @@ class AssetBufferTests(APITestCase):
     def setUp(self):
         self._setup_directories()
         self._setup_opener()
-        self._setup_data_sample()
+        self._setup_data_samples()
         self._setup_model()
 
     def _setup_directories(self):
@@ -67,17 +96,11 @@ class AssetBufferTests(APITestCase):
             },
         }
 
-    def _setup_data_sample(self):
-        self.data_sample_dir = tempfile.mkdtemp()
-        self.data_sample_filename = "datasample.csv"
-        self.data_sample_path = os.path.join(self.data_sample_dir, self.data_sample_filename)
-        self.data_sample_contents = "data sample contents"
-        self.data_sample_key = "some_data_sample_key"
-
-        with open(self.data_sample_path, "w") as f:
-            f.write(self.data_sample_contents)
-
-        self.data_sample_checksum = get_dir_hash(self.data_sample_dir)
+    def _setup_data_samples(self):
+        self.data_samples = {}
+        for i in range(NUM_DATA_SAMPLES):
+            data_sample = TestDataSample.create(i)
+            self.data_samples[data_sample.key] = data_sample
 
     def _setup_model(self):
         self.model_key = "some_model_key"
@@ -115,29 +138,32 @@ class AssetBufferTests(APITestCase):
 
         init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
+            data_samples = list(self.data_samples.values())
 
             # Test 1: DB is empty
             with self.assertRaises(Exception):
-                _add_datasamples_to_buffer([self.data_sample_key])
+                _add_datasamples_to_buffer([self.data_samples.keys()[0]])
 
             # Test 2: OK
-            mget.return_value = FakeDataSample(self.data_sample_dir, self.data_sample_checksum)
+            mget.side_effect = lambda key: self.data_samples[key].to_fake_data_sample()
 
-            _add_datasamples_to_buffer([self.data_sample_key])
+            # Add one of the data samples twice, to check that scenario
+            _add_datasamples_to_buffer(list(self.data_samples.keys())[:2])  # add samples 0 and 1
+            _add_datasamples_to_buffer(list(self.data_samples.keys())[1:])  # add samples 1 and 2
 
-            dest = os.path.join(ASSET_BUFFER_DIR_2, AssetBufferDirName.Datasamples, self.data_sample_key)
-            with open(os.path.join(dest, self.data_sample_filename)) as f:
-                contents = f.read()
-                self.assertEqual(contents, self.data_sample_contents)
-
-            shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasamples_to_buffer will be a noop
+            for i in range(NUM_DATA_SAMPLES):
+                data_sample = data_samples[i]
+                dest = os.path.join(ASSET_BUFFER_DIR_2, AssetBufferDirName.Datasamples, data_sample.key)
+                with open(os.path.join(dest, data_sample.filename)) as f:
+                    contents = f.read()
+                    self.assertEqual(contents, data_sample.contents)
+                shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasamples_to_buffer will be a noop
 
             # Test 3: File corrupted
-            with open(self.data_sample_path, "a+") as f:
+            with open(data_samples[0].path, "a+") as f:
                 f.write("corrupted")
-
             with self.assertRaises(Exception):
-                _add_datasamples_to_buffer([self.data_sample_key])
+                _add_datasamples_to_buffer([data_samples[0].key])
 
     @parameterized.expand(
         [
@@ -206,25 +232,26 @@ class AssetBufferTests(APITestCase):
                 )
 
     def test_add_assets_to_taskdir_data_sample(self):
+        data_samples = list(self.data_samples.values())
 
         # populate the buffer
         init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
-            mget.return_value = FakeDataSample(self.data_sample_dir, self.data_sample_checksum)
-            _add_datasamples_to_buffer([self.data_sample_key])
+            mget.side_effect = lambda key: self.data_samples[key].to_fake_data_sample()
+            _add_datasamples_to_buffer(self.data_samples.keys())
 
         # load from buffer into task dir
-        dest = os.path.join(
-            self.dirs.task_dir, TaskDirName.Datasamples, self.data_sample_key, self.data_sample_filename
-        )
         _add_assets_to_taskdir(
-            self.dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, [self.data_sample_key]
+            self.dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, self.data_samples.keys()
         )
 
         # check task dir
-        with open(dest) as f:
-            contents = f.read()
-            self.assertEqual(contents, self.data_sample_contents)
+        for i in range(NUM_DATA_SAMPLES):
+            data_sample = data_samples[i]
+            dest = os.path.join(self.dirs.task_dir, TaskDirName.Datasamples, data_sample.key, data_sample.filename)
+            with open(dest) as f:
+                contents = f.read()
+                self.assertEqual(contents, data_sample.contents)
 
     def test_add_assets_to_taskdir_model(self):
 
