@@ -16,6 +16,7 @@ from substrapp.ledger.api import get_object_from_ledger
 from substrapp.compute_tasks.command import (
     get_composite_traintuple_out_models,
     get_traintuple_out_model,
+    get_aggregatetuple_out_model,
     Filenames,
 )
 from substrapp.utils import (
@@ -326,9 +327,18 @@ def _get_task_models(channel_name: str, task: Dict, task_category: str) -> List[
             head_model["traintuple_key"] = task["traintuple_key"]
             trunk_model["traintuple_key"] = task["traintuple_key"]
             return [head_model, trunk_model]
-        else:
+
+        elif task["traintuple_type"] == TASK_CATEGORY_TRAINTUPLE:
             in_model = _get_traintuple_out_model(channel_name, task["traintuple_key"])
             return [in_model]
+
+        elif task["traintuple_type"] == TASK_CATEGORY_AGGREGATETUPLE:
+            in_model = _get_aggregatetuple_out_model(channel_name, task["traintuple_key"])
+            return [in_model]
+
+        else:
+            raise NotImplementedError
+
     elif task_category == TASK_CATEGORY_COMPOSITETRAINTUPLE:
         if task["in_head_model"] and task["in_trunk_model"]:
             return [task["in_head_model"], task["in_trunk_model"]]
@@ -342,6 +352,13 @@ def _get_traintuple_out_model(channel_name: str, traintuple_key: str) -> Dict:
     # TODO orchestrator: this needs to die too
     res = get_traintuple_out_model(channel_name, traintuple_key)
     res["traintuple_key"] = traintuple_key
+    return res
+
+
+def _get_aggregatetuple_out_model(channel_name: str, tuple_key: str) -> Dict:
+    # TODO orchestrator: this needs to die too
+    res = get_aggregatetuple_out_model(channel_name, tuple_key)
+    res["traintuple_key"] = tuple_key
     return res
 
 

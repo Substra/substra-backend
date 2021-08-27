@@ -118,9 +118,17 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
             )
             command += ["--input-head-model-filename", os.path.join(in_models_dir, head_model_key)]
             command += ["--input-trunk-model-filename", os.path.join(in_models_dir, trunk_model_key)]
-        else:
+
+        elif task["traintuple_type"] == TASK_CATEGORY_TRAINTUPLE:
             in_model_key = get_traintuple_out_model_key(channel_name, task["traintuple_key"])
             command += [os.path.join(in_models_dir, in_model_key)]
+
+        elif task["traintuple_type"] == TASK_CATEGORY_AGGREGATETUPLE:
+            in_model_key = get_aggregatetuple_out_model_key(channel_name, task["traintuple_key"])
+            command += [os.path.join(in_models_dir, in_model_key)]
+
+        else:
+            raise NotImplementedError
 
         command += ["--opener-path", os.path.join(openers_dir, task["dataset"]["key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [
@@ -166,6 +174,16 @@ def get_traintuple_out_model(channel_name: str, task_key: str) -> str:
 
 def get_traintuple_out_model_key(channel_name: str, task_key: str) -> str:
     model = get_traintuple_out_model(channel_name, task_key)
+    return model["key"]
+
+
+def get_aggregatetuple_out_model(channel_name: str, task_key: str) -> str:
+    metadata = get_object_from_ledger(channel_name, task_key, "queryAggregatetuple")
+    return metadata["out_model"]
+
+
+def get_aggregatetuple_out_model_key(channel_name: str, task_key: str) -> str:
+    model = get_aggregatetuple_out_model(channel_name, task_key)
     return model["key"]
 
 
