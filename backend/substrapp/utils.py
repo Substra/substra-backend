@@ -127,9 +127,10 @@ def raise_if_path_traversal(requested_paths, to_directory):
 
     for requested_path in requested_paths:
         real_requested_path = os.path.realpath(requested_path)
-        is_traversal = os.path.commonprefix([real_requested_path, safe_directory]) != safe_directory
+        common_prefix = os.path.commonprefix([real_requested_path, safe_directory])
+        is_valid = common_prefix == safe_directory or real_requested_path + '/' == safe_directory
 
-        if is_traversal:
+        if not is_valid:
             raise Exception(f'Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.')
 
 
