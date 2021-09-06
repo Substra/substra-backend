@@ -107,19 +107,19 @@ def prepare_task(channel_name: str, task: Dict, task_category: str) -> None:
     compute_task.apply_async((channel_name, task_category, task, compute_plan_key), queue=worker_queue)
 
 
-def _find_training_step_tuple_from_key(channel_name, task_category):
+def _find_training_step_tuple_from_key(channel_name, task_key):
     """Get task category and tuple metadata from task key.
 
     Applies to traintuple, composite traintuple and aggregatetuple.
     """
-    metadata = get_object_from_ledger(channel_name, task_category, "queryModelDetails")
+    metadata = get_object_from_ledger(channel_name, task_key, "queryModelDetails")
     if metadata.get("aggregatetuple"):
         return TASK_CATEGORY_AGGREGATETUPLE, metadata["aggregatetuple"]
     if metadata.get("composite_traintuple"):
         return TASK_CATEGORY_COMPOSITETRAINTUPLE, metadata["composite_traintuple"]
     if metadata.get("traintuple"):
         return TASK_CATEGORY_TRAINTUPLE, metadata["traintuple"]
-    raise TaskNotFoundError(f"Key {task_category}: no task found for training step: model: {metadata}")
+    raise TaskNotFoundError(f"Key {task_key}: no task found for training step: model: {metadata}")
 
 
 def _get_testtuple(channel_name, key):
