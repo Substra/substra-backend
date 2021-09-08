@@ -4,19 +4,9 @@ import shutil
 from django.conf import settings
 from typing import List, Dict
 from billiard import Process
-from substrapp.compute_tasks.categories import (
-    TASK_CATEGORY_TRAINTUPLE,
-    TASK_CATEGORY_AGGREGATETUPLE,
-    TASK_CATEGORY_COMPOSITETRAINTUPLE,
-    TASK_CATEGORY_TESTTUPLE,
-)
 from substrapp.compute_tasks.directories import Directories, TaskDirName, AssetBufferDirName
 from substrapp.compute_tasks.context import Context
-from substrapp.ledger.api import get_object_from_ledger
 from substrapp.compute_tasks.command import (
-    get_composite_traintuple_out_models,
-    get_traintuple_out_model,
-    get_aggregatetuple_out_model,
     Filenames,
 )
 from substrapp.utils import (
@@ -29,6 +19,7 @@ from substrapp.utils import (
     get_asset_content,
     create_directory,
 )
+from substrapp.orchestrator.api import get_orchestrator_client
 
 logger = logging.getLogger(__name__)
 
@@ -73,16 +64,13 @@ def add_algo_to_buffer(ctx: Context) -> None:
 
     If the algo is already present in the asset buffer, skip the download.
     """
-    task = ctx.task
-    task_category = ctx.task_category
     dst = ctx.algo_docker_context_dir
 
     if os.path.exists(dst):
         # algo already exists
         return
 
-    task_category = task["traintuple_type"] if task_category == TASK_CATEGORY_TESTTUPLE else task_category
-    content = _download_algo(ctx.channel_name, task_category, ctx.algo_key)
+    content = _download_algo(ctx)
     uncompress_content(content, dst)
 
 
@@ -99,7 +87,7 @@ def add_metrics_to_buffer(ctx: Context) -> None:
         # metrics already exists
         return
 
-    metrics_content = _download_objective(ctx.channel_name, ctx.objective_key)
+    metrics_content = _download_objective(ctx)
     uncompress_content(metrics_content, dst)
 
 
@@ -109,22 +97,17 @@ def add_task_assets_to_buffer(ctx: Context) -> None:
 
     Assets which are already present in the asset buffer are not copied/downloaded again.
     """
-    task = ctx.task
-
     # Data samples
-    data_sample_keys = _get_task_data_sample_keys(task)
-    if data_sample_keys:
-        _add_datasamples_to_buffer(data_sample_keys)
+    if ctx.data_sample_keys:
+        _add_datasamples_to_buffer(ctx.data_sample_keys)
 
     # Openers
-    data_manager = _get_task_data_manager(ctx.channel_name, task)
-    if data_manager:
-        _add_opener_to_buffer(ctx.channel_name, data_manager)
+    if ctx.data_manager:
+        _add_opener_to_buffer(ctx.channel_name, ctx.data_manager)
 
     # In-models
-    models = _get_task_models(ctx.channel_name, task, ctx.task_category)
-    if models:
-        _add_models_to_buffer(ctx.channel_name, models)
+    if ctx.in_models:
+        _add_models_to_buffer(ctx.channel_name, ctx.in_models)
 
 
 def add_model_from_path(model_path: str, model_key: str) -> None:
@@ -141,21 +124,16 @@ def add_model_from_path(model_path: str, model_key: str) -> None:
 def add_assets_to_taskdir(ctx: Context) -> None:
 
     dirs = ctx.directories
-    task = ctx.task
-    task_category = ctx.task_category
 
-    data_sample_keys = _get_task_data_sample_keys(task)
-    if data_sample_keys:
-        _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, data_sample_keys)
+    if ctx.data_sample_keys:
+        _add_assets_to_taskdir(dirs, AssetBufferDirName.Datasamples, TaskDirName.Datasamples, ctx.data_sample_keys)
 
-    data_manager = _get_task_data_manager(ctx.channel_name, task)
-    if data_manager:
-        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [data_manager["key"]])
+    if ctx.data_manager:
+        _add_assets_to_taskdir(dirs, AssetBufferDirName.Openers, TaskDirName.Openers, [ctx.data_manager["key"]])
 
-    models = _get_task_models(ctx.channel_name, task, task_category)
-    if models:
+    if ctx.in_models:
         _add_assets_to_taskdir(
-            dirs, AssetBufferDirName.Models, TaskDirName.InModels, [model["key"] for model in models]
+            dirs, AssetBufferDirName.Models, TaskDirName.InModels, [model["key"] for model in ctx.in_models]
         )
 
 
@@ -231,7 +209,9 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
     exceptions = []
 
     for model in models:
-        args = (channel_name, model)
+        with get_orchestrator_client(channel_name) as client:
+            parent_task = client.query_task(model["compute_task_key"])
+        args = (channel_name, model, parent_task["worker"])
         proc = Process(target=_add_model_to_buffer, args=args)
         procs.append((proc, args))
         proc.start()
@@ -247,7 +227,7 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
         raise Exception(exceptions)
 
 
-def _add_model_to_buffer(channel_name: str, model: Dict) -> None:
+def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
     from substrapp.models import Model
 
     dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model["key"])
@@ -256,12 +236,15 @@ def _add_model_to_buffer(channel_name: str, model: Dict) -> None:
         # asset already exists
         return
 
-    if "storage_address" in model and model["storage_address"]:
-        tuple_type, metadata = _find_training_step_tuple_from_key(channel_name, model["traintuple_key"])
-        node_id = _get_tuple_owner(tuple_type, metadata)
+    if "address" in model and "storage_address" in model["address"] and model["address"]["storage_address"]:
 
         get_and_put_asset_content(
-            channel_name, model["storage_address"], node_id, model["checksum"], dst, model["traintuple_key"]
+            channel_name,
+            model["address"]["storage_address"],
+            node_id,
+            model["address"]["checksum"],
+            dst,
+            model["compute_task_key"],
         )
 
     else:  # head model
@@ -270,19 +253,12 @@ def _add_model_to_buffer(channel_name: str, model: Dict) -> None:
         if not os.path.exists(m.file.path) or not os.path.isfile(m.file.path):
             raise Exception(f"Model file ({m.file.path}) is missing in local storage")
 
-        if get_hash(m.file.path, model["traintuple_key"]) != m.checksum:
+        if get_hash(m.file.path, model["compute_task_key"]) != m.checksum:
             raise Exception("Model checksum in Subtuple is not the same as in local db")
 
         shutil.copy(m.file.path, dst)
 
     _log_added(dst)
-
-
-def _get_tuple_owner(tuple_type, tuple_):
-    # TODO orchestrator: burn with fire
-    if tuple_type == TASK_CATEGORY_AGGREGATETUPLE:
-        return tuple_["worker"]
-    return tuple_["dataset"]["worker"]
 
 
 def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List[str]):
@@ -305,111 +281,22 @@ def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List
             os.link(src, dst)
 
 
-def _get_task_data_sample_keys(task) -> List[str]:
-    if "dataset" in task and "data_sample_keys" in task["dataset"]:
-        return task["dataset"]["data_sample_keys"]
-    return []
-
-
-def _get_task_data_manager(channel_name, task) -> Dict:
-    if "dataset" not in task:
-        return None
-    return get_object_from_ledger(channel_name, task["dataset"]["key"], "queryDataManager")
-
-
-def _get_task_models(channel_name: str, task: Dict, task_category: str) -> List[str]:
-    # TODO orchestrator: what a nightmare, bring the gasoline tanks please
-    if task_category == TASK_CATEGORY_TRAINTUPLE:
-        return [_get_traintuple_out_model(channel_name, model["traintuple_key"]) for model in (task["in_models"] or [])]
-    elif task_category == TASK_CATEGORY_TESTTUPLE:
-        if task["traintuple_type"] == TASK_CATEGORY_COMPOSITETRAINTUPLE:
-            head_model, trunk_model = get_composite_traintuple_out_models(channel_name, task["traintuple_key"])
-            head_model["traintuple_key"] = task["traintuple_key"]
-            trunk_model["traintuple_key"] = task["traintuple_key"]
-            return [head_model, trunk_model]
-
-        elif task["traintuple_type"] == TASK_CATEGORY_TRAINTUPLE:
-            in_model = _get_traintuple_out_model(channel_name, task["traintuple_key"])
-            return [in_model]
-
-        elif task["traintuple_type"] == TASK_CATEGORY_AGGREGATETUPLE:
-            in_model = _get_aggregatetuple_out_model(channel_name, task["traintuple_key"])
-            return [in_model]
-
-        else:
-            raise NotImplementedError
-
-    elif task_category == TASK_CATEGORY_COMPOSITETRAINTUPLE:
-        if task["in_head_model"] and task["in_trunk_model"]:
-            return [task["in_head_model"], task["in_trunk_model"]]
-        else:
-            return []
-    elif task_category == TASK_CATEGORY_AGGREGATETUPLE:
-        return task["in_models"] or {}
-
-
-def _get_traintuple_out_model(channel_name: str, traintuple_key: str) -> Dict:
-    # TODO orchestrator: this needs to die too
-    res = get_traintuple_out_model(channel_name, traintuple_key)
-    res["traintuple_key"] = traintuple_key
-    return res
-
-
-def _get_aggregatetuple_out_model(channel_name: str, tuple_key: str) -> Dict:
-    # TODO orchestrator: this needs to die too
-    res = get_aggregatetuple_out_model(channel_name, tuple_key)
-    res["traintuple_key"] = tuple_key
-    return res
-
-
-def _find_training_step_tuple_from_key(channel_name, tuple_key):
-    # TODO orchestrator: burn with fire
-    """Get tuple type and tuple metadata from tuple key.
-    Applies to traintuple, composite traintuple and aggregatetuple.
-    """
-    metadata = get_object_from_ledger(channel_name, tuple_key, "queryModelDetails")
-    if metadata.get("aggregatetuple"):
-        return TASK_CATEGORY_AGGREGATETUPLE, metadata["aggregatetuple"]
-    if metadata.get("composite_traintuple"):
-        return TASK_CATEGORY_COMPOSITETRAINTUPLE, metadata["composite_traintuple"]
-    if metadata.get("traintuple"):
-        return TASK_CATEGORY_TRAINTUPLE, metadata["traintuple"]
-    raise Exception(f"Key {tuple_key}: no tuple found for training step: model: {metadata}")
-
-
-def _download_algo(channel_name: str, task_category: str, algo_key: str) -> bytes:
-    query_method_names_mapper = {
-        TASK_CATEGORY_TRAINTUPLE: "queryAlgo",
-        TASK_CATEGORY_COMPOSITETRAINTUPLE: "queryCompositeAlgo",
-        TASK_CATEGORY_AGGREGATETUPLE: "queryAggregateAlgo",
-    }
-
-    if task_category not in query_method_names_mapper:
-        raise Exception(f"Cannot find algo with key {algo_key}")
-    method_name = query_method_names_mapper[task_category]
-
-    metadata = get_object_from_ledger(channel_name, algo_key, method_name)
-
-    content = get_asset_content(
-        channel_name,
-        metadata["content"]["storage_address"],
-        metadata["owner"],
-        metadata["content"]["checksum"],
-    )
-    return content
-
-
-def _download_objective(channel_name: str, objective_key: str) -> bytes:
-    objective_metadata = get_object_from_ledger(channel_name, objective_key, "queryObjective")
-
-    objective_content = get_asset_content(
-        channel_name,
-        objective_metadata["metrics"]["storage_address"],
-        objective_metadata["owner"],
-        objective_metadata["metrics"]["checksum"],
+def _download_algo(ctx: Context) -> bytes:
+    return get_asset_content(
+        ctx.channel_name,
+        ctx.algo["algorithm"]["storage_address"],
+        ctx.algo["owner"],
+        ctx.algo["algorithm"]["checksum"],
     )
 
-    return objective_content
+
+def _download_objective(ctx: Context) -> bytes:
+    return get_asset_content(
+        ctx.channel_name,
+        ctx.objective["metrics"]["storage_address"],
+        ctx.objective["owner"],
+        ctx.objective["metrics"]["checksum"],
+    )
 
 
 def _log_added(path: str) -> None:

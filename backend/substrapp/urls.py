@@ -21,22 +21,22 @@ router.register(r'data_manager', views.DataManagerViewSet, basename='data_manage
 router.register(r'data_manager', views.DataManagerPermissionViewSet, basename='data_manager')
 router.register(r'algo', views.AlgoViewSet, basename='algo')
 router.register(r'algo', views.AlgoPermissionViewSet, basename='algo')
-router.register(r'traintuple', views.TrainTupleViewSet, basename='traintuple')
-router.register(r'testtuple', views.TestTupleViewSet, basename='testtuple')
-router.register(r'aggregatetuple', views.AggregateTupleViewSet, basename='aggregatetuple')
+router.register(r'composite_algo', views.AlgoViewSet, basename='composite_algo')
+router.register(r'composite_algo', views.AlgoPermissionViewSet, basename='composite_algo')
+router.register(r'aggregate_algo', views.AlgoViewSet, basename='aggregate_algo')
+router.register(r'aggregate_algo', views.AlgoPermissionViewSet, basename='aggregate_algo')
+router.register(r'traintuple', views.ComputeTaskViewSet, basename='traintuple')
+router.register(r'testtuple', views.ComputeTaskViewSet, basename='testtuple')
+router.register(r'aggregatetuple', views.ComputeTaskViewSet, basename='aggregatetuple')
+router.register(r'composite_traintuple', views.ComputeTaskViewSet, basename='composite_traintuple')
 router.register(r'compute_plan', views.ComputePlanViewSet, basename='compute_plan')
-router.register(r'composite_traintuple', views.CompositeTraintupleViewSet, basename='composite_traintuple')
-router.register(r'composite_algo', views.CompositeAlgoViewSet, basename='composite_algo')
-router.register(r'composite_algo', views.CompositeAlgoPermissionViewSet, basename='composite_algo')
-router.register(r'aggregate_algo', views.AggregateAlgoViewSet, basename='aggregate_algo')
-router.register(r'aggregate_algo', views.AggregateAlgoPermissionViewSet, basename='aggregate_algo')
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
-compute_plan_router.register(r"traintuple", views.CPTraintupleViewSet, basename="compute_plan_traintuple")
-compute_plan_router.register(r"aggregatetuple", views.CPAggregatetupleViewSet, basename="compute_plan_aggregatetuple")
-compute_plan_router.register(r"composite_traintuple", views.CPCompositeTraintupleViewSet,
+compute_plan_router.register(r"traintuple", views.CPTaskViewSet, basename="compute_plan_traintuple")
+compute_plan_router.register(r"aggregatetuple", views.CPTaskViewSet, basename="compute_plan_aggregatetuple")
+compute_plan_router.register(r"composite_traintuple", views.CPTaskViewSet,
                              basename="compute_plan_composite_traintuple")
-compute_plan_router.register(r"testtuple", views.CPTesttupleViewSet, basename="compute_plan_testtuple")
+compute_plan_router.register(r"testtuple", views.CPTaskViewSet, basename="compute_plan_testtuple")
 
 
 urlpatterns = [

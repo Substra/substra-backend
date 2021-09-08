@@ -6,4 +6,6 @@ exclude = backend/substrapp/migrations/*,
           backend/backend/settings/*,
           backend/node/migrations/*,
           backend/medias/*,
+          backend/substrapp/orchestrator/*_pb2.py,
+          backend/substrapp/orchestrator/*_grpc.py,
           .env, .venv

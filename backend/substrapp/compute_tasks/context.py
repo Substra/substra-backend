@@ -1,13 +1,23 @@
 import os
 import logging
-from typing import Dict
-from substrapp.compute_tasks.categories import TASK_CATEGORY_TESTTUPLE
+from typing import Dict, List
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.directories import AssetBufferDirName, Directories
-from substrapp.ledger.api import get_object_from_ledger
+from substrapp.orchestrator.api import get_orchestrator_client
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
+
+TASK_DATA_FIELD = {
+    computetask_pb2.TASK_TRAIN: "train",
+    computetask_pb2.TASK_TEST: "test",
+    computetask_pb2.TASK_AGGREGATE: "aggregate",
+    computetask_pb2.TASK_COMPOSITE: "composite",
+}
+
+METRICS_IMAGE_PREFIX = "metrics"
+ALGO_IMAGE_PREFIX = "algo"
 
 
 class Context:
@@ -20,10 +30,14 @@ class Context:
 
     _channel_name: str = None
     _task = None
-    _task_category = None
+    _task_category: int = None
     _task_key: str = None
     _compute_plan_key: str = None
-    _compute_plan_tag = None
+    _compute_plan_tag: str = None
+    _in_models: List[Dict] = None
+    _algo: Dict = None
+    _objective: Dict = None
+    _data_manager: Dict = None
     _directories: Directories = None
     _attempt: int = None  # The attempt number, eg; the number of retries + 1
 
@@ -31,10 +45,14 @@ class Context:
         self,
         channel_name: str,
         task: Dict,
-        task_category: str,
+        task_category: int,
         task_key: str,
         compute_plan_key: str,
         compute_plan_tag: str,
+        in_models: List[Dict],
+        algo: Dict,
+        objective: Dict,
+        data_manager: Dict,
         directories: Directories,
         attempt: int,
     ):
@@ -44,25 +62,54 @@ class Context:
         self._task_key = task_key
         self._compute_plan_key = compute_plan_key
         self._compute_plan_tag = compute_plan_tag
+        self._in_models = in_models
+        self._algo = algo
+        self._objective = objective
+        self._data_manager = data_manager
         self._directories = directories
         self._attempt = attempt
 
     @classmethod
-    def from_task(cls, channel_name: str, task: Dict, task_category: str, attempt: int):
+    def from_task(cls, channel_name: str, task: Dict, attempt: int):
         task_key = task["key"]
         compute_plan_key = None
         compute_plan_tag = None
         compute_plan_key = task.get("compute_plan_key")
-        if compute_plan_key:
-            compute_plan = get_object_from_ledger(channel_name, compute_plan_key, "queryComputePlan")
-            compute_plan_tag = compute_plan.get("tag") or None  # convert "" to None
+        objective = None
+        data_manager = None
 
-        # TODO orchestrator: this property can be replaced with compute_plan_key once we integrate with orchestrator
-        compute_plan_key_safe = compute_plan_key or task_key
-        directories = Directories(compute_plan_key_safe)
+        task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
+        task_data = task[TASK_DATA_FIELD[task_category]]
+
+        # fetch more information from the orchestrator
+        with get_orchestrator_client(channel_name) as client:
+            compute_plan = client.query_compute_plan(compute_plan_key)
+            in_models = client.get_computetask_input_models(task["key"])
+            algo = client.query_algo(task["algo"]["key"])
+
+            if task_category == computetask_pb2.TASK_TEST:
+                objective = client.query_objective(task_data["objective_key"])
+
+            if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
+                data_manager = client.query_datamanager(task_data["data_manager_key"])
+
+        compute_plan_tag = compute_plan.get("tag") or None  # convert "" to None
+
+        directories = Directories(compute_plan_key)
 
         return cls(
-            channel_name, task, task_category, task_key, compute_plan_key, compute_plan_tag, directories, attempt
+            channel_name,
+            task,
+            task_category,
+            task_key,
+            compute_plan_key,
+            compute_plan_tag,
+            in_models,
+            algo,
+            objective,
+            data_manager,
+            directories,
+            attempt,
         )
 
     @property
@@ -74,7 +121,7 @@ class Context:
         return self._task
 
     @property
-    def task_category(self) -> None:
+    def task_category(self) -> int:
         return self._task_category
 
     @property
@@ -98,36 +145,65 @@ class Context:
         return self._attempt
 
     @property
-    def compute_plan_key_safe(self):
-        # TODO orchestrator: delete this property
-        return self.compute_plan_key or self.task_key
-
-    @property
     def algo_key(self):
         return self.task["algo"]["key"]
 
     @property
     def objective_key(self):
-        if self.task_category != TASK_CATEGORY_TESTTUPLE:
+        if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: objective_key for {self.task_category}")
-        return self.task["objective"]["key"]
+        return self.task_data["objective_key"]
+
+    @property
+    def in_models(self) -> List[Dict]:
+        return self._in_models
+
+    @property
+    def algo(self) -> Dict:
+        return self._algo
+
+    @property
+    def objective(self) -> Dict:
+        return self._objective
+
+    @property
+    def data_manager(self) -> Dict:
+        return self._data_manager
 
     @property
     def algo_image_tag(self):
-        return get_algo_image_tag(
-            self.task["algo"]["checksum"] if settings.DEBUG_QUICK_IMAGE else self.task["algo"]["key"]
-        )
+        algo_key = self.task["algo"]["key"]
+        algo_checksum = self.task["algo"]["algorithm"]["checksum"]
+        return get_image_tag(ALGO_IMAGE_PREFIX, algo_checksum if settings.DEBUG_QUICK_IMAGE else algo_key)
+
+    @property
+    def task_data(self):
+        task_data_field = TASK_DATA_FIELD[self.task_category]
+        return self.task[task_data_field]
+
+    @property
+    def data_sample_keys(self):
+        if self.task_category not in [
+            computetask_pb2.TASK_COMPOSITE,
+            computetask_pb2.TASK_TRAIN,
+            computetask_pb2.TASK_TEST,
+        ]:
+            return None
+        return self.task_data["data_sample_keys"]
 
     @property
     def metrics_image_tag(self):
-        if self.task_category != TASK_CATEGORY_TESTTUPLE:
+        if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: metrics_docker_tag for {self.task_category}")
-        slug = (
-            self.task["objective"]["metrics"]["checksum"]
-            if settings.DEBUG_QUICK_IMAGE
-            else self.task["objective"]["key"]
-        )
-        return f"metrics-{slug[0:8]}".lower()
+
+        objective_key = self.task_data["objective_key"]
+
+        if settings.DEBUG_QUICK_IMAGE:
+            slug = self.objective["metrics"]["checksum"]
+        else:
+            slug = objective_key
+
+        return get_image_tag(METRICS_IMAGE_PREFIX, slug)
 
     @property
     def algo_docker_context_dir(self):
@@ -138,9 +214,9 @@ class Context:
         return os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, self.objective_key)
 
     def get_compute_pod(self, is_testtuple_eval: bool) -> ComputePod:
-        return ComputePod(self.compute_plan_key_safe, self.algo_key, self.objective_key if is_testtuple_eval else None)
+        return ComputePod(self.compute_plan_key, self.algo_key, self.objective_key if is_testtuple_eval else None)
 
 
-def get_algo_image_tag(algo_key):
+def get_image_tag(prefix, key):
     # tag must be lowercase for docker
-    return f"algo-{algo_key[0:8]}".lower()
+    return f"{prefix}-{key[0:8]}".lower()

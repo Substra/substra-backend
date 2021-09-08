@@ -17,10 +17,12 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import DataManager, DataSample
-from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
+from substrapp.serializers import DataSampleSerializer
+from substrapp.orchestrator.api import OrchestratorClient
+from substrapp.orchestrator.error import OrcError
+from grpc import StatusCode
 
 from substrapp.utils import store_datasamples_archive
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError
 from substrapp.views import DataSampleViewSet
 
 from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sample_script, \
@@ -29,7 +31,8 @@ from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sam
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class DataSampleQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -51,6 +54,8 @@ class DataSampleQueryTests(APITestCase):
 
         self.data_description2, self.data_description_filename2, self.data_data_opener2, \
             self.data_opener_filename2 = get_sample_datamanager2()
+
+        self.url = reverse('substrapp:data_sample-list')
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -78,40 +83,32 @@ class DataSampleQueryTests(APITestCase):
 
         return data
 
-    def test_add_data_sample_sync_ok(self):
-
+    def test_add_data_sample_ok(self):
         self.add_default_data_manager()
         data = self.get_default_datasample_data()
 
-        url = reverse('substrapp:data_sample-list')
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.create_datasamples') as mcreate_ledger_assets:
-            mcreate_ledger_assets.return_value = {
-                'key': 'some key',
-                'validated': True
-            }
+        with mock.patch.object(OrchestratorClient, 'register_datasamples',
+                               return_value={}):
 
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-
-            self.assertIsNotNone(r[0]['key'])
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            self.assertIsNotNone(response.json()[0]['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_bulk_add_data_sample_sync_ok(self):
+    def test_bulk_add_data_sample_ok(self):
 
         self.add_default_data_manager()
 
-        url = reverse('substrapp:data_sample-list')
-
         file_mock = MagicMock(spec=InMemoryUploadedFile)
-        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock2.name = 'bar.zip'
         file_mock.read = MagicMock(return_value=self.data_file.read())
+
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2.name = 'bar.zip'
         file_mock2.read = MagicMock(return_value=self.data_file_2.read())
 
         data = {
@@ -127,13 +124,13 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.create_datasamples') as mcreate_ledger_assets:
+        with mock.patch.object(OrchestratorClient, 'register_datasamples',
+                               return_value={}):
+
             self.data_file.seek(0)
             self.data_file_2.seek(0)
-            ledger_data = {'key': ['some key', 'some other key'], 'validated': True}
-            mcreate_ledger_assets.return_value = ledger_data
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(self.url, data, format='multipart', **extra)
             r = response.json()
 
             self.assertEqual(len(r), 2)
@@ -141,49 +138,21 @@ class DataSampleQueryTests(APITestCase):
             self.assertIsNotNone(r[1]['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @override_settings(LEDGER_SYNC_ENABLED=False)
-    @override_settings(
-        task_eager_propagates=True,
-        task_always_eager=True,
-        broker_url='memory://',
-        backend='memory'
-    )
-    def test_add_data_sample_no_sync_ok(self):
-        self.add_default_data_manager()
-        data = self.get_default_datasample_data()
-
-        url = reverse('substrapp:data_sample-list')
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.create_datasamples') as mcreate_ledger_assets:
-            mcreate_ledger_assets.return_value = ''
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertIsNotNone(r[0]['key'])
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
     def test_add_data_sample_ko(self):
-        url = reverse('substrapp:data_sample-list')
-
-        self.add_default_data_manager()
-        data_manager_key = str(uuid.uuid4())
-
         # missing datamanager
-        data = {'data_manager_keys': [data_manager_key]}
+        data = {'data_manager_keys': [str(uuid.uuid4())]}
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='json', **extra)
-        r = response.json()
+        response = self.client.post(self.url, data, format='json', **extra)
         self.assertEqual(
-            r['message'],
+            response.json()['message'],
             "One or more datamanager keys provided do not exist in local database. "
-            f"Please create them before. DataManager keys: ['{data_manager_key}']")
+            "Please create them before. DataManager keys: ['"
+            f"{data['data_manager_keys'][0]}"
+            "']")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         self.add_default_data_manager()
@@ -191,18 +160,16 @@ class DataSampleQueryTests(APITestCase):
         # missing local storage field
         data = {'data_manager_keys': [self.data_manager_key1],
                 'test_only': True, }
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(self.url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        # missing ledger field
+        # missing orchestrator field
         data = {'data_manager_keys': [self.data_manager_key1],
                 'file': self.script, }
-        response = self.client.post(url, data, format='multipart', **extra)
+        response = self.client.post(self.url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ok_already_exists(self):
-        url = reverse('substrapp:data_sample-list')
-
         self.add_default_data_manager()
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
@@ -213,8 +180,7 @@ class DataSampleQueryTests(APITestCase):
         _, datasamples_path_from_file = store_datasamples_archive(file_mock)
 
         d = DataSample(path=datasamples_path_from_file)
-        # trigger pre save
-        d.save()
+        d.save()  # trigger pre save
 
         data = {
             'file': file_mock,
@@ -228,22 +194,17 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
+        with mock.patch.object(zipfile, 'is_zipfile', return_value=True), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}):
 
-            ledger_data = {'key': ['some key'], 'validated': False}
-            mcreate.return_value = ledger_data, status.HTTP_200_OK
-
-            mis_zipfile.return_value = True
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(self.url, data, format='multipart', **extra)
             # it's ok to save duplicate datasamples
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_data_sample_ko_not_a_zip(self):
-        url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
-
         file_mock = MagicMock(spec=File)
         file_mock.name = 'foo.zip'
         file_mock.read = MagicMock(return_value=b'foo')
@@ -260,13 +221,11 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        response = self.client.post(url, data, format='multipart', **extra)
-        r = response.json()
-        self.assertEqual(r['message'], 'Archive must be zip or tar.*')
+        response = self.client.post(self.url, data, format='multipart', **extra)
+        self.assertEqual(response.json()['message'], 'Archive must be zip or tar.*')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_408(self):
-        url = reverse('substrapp:data_sample-list')
 
         self.add_default_data_manager()
 
@@ -287,18 +246,18 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.side_effect = LedgerTimeoutError('Timeout')
-            mis_zipfile.return_value = True
-            response = self.client.post(url, data, format='multipart', **extra)
+        error = OrcError()
+        error.details = 'timeout'
+        error.code = StatusCode.CANCELLED
+        with mock.patch.object(zipfile, 'is_zipfile', return_value=True), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  side_effect=error):
+            response = self.client.post(self.url, data, format='multipart', **extra)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ko_408(self):
 
         self.add_default_data_manager()
-
-        url = reverse('substrapp:data_sample-list')
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
         file_mock2 = MagicMock(spec=InMemoryUploadedFile)
@@ -320,28 +279,29 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mget_validators.return_value = []
+        error = OrcError()
+        error.details = 'timeout'
+        error.code = StatusCode.CANCELLED
+        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators', return_value=[]), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  side_effect=error):
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            mcreate.side_effect = LedgerTimeoutError('Timeout')
 
-            response = self.client.post(url, data, format='multipart', **extra)
-            self.assertEqual(DataSample.objects.count(), 2)
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            self.assertEqual(DataSample.objects.count(), 0)
             self.assertEqual(response.status_code, status.HTTP_408_REQUEST_TIMEOUT)
 
     def test_bulk_add_data_sample_ok_same_key(self):
 
         self.add_default_data_manager()
 
-        url = reverse('substrapp:data_sample-list')
-
         file_mock = MagicMock(spec=InMemoryUploadedFile)
-        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
         file_mock.name = 'foo.zip'
-        file_mock2.name = 'bar.tar.gz'
         file_mock.read = MagicMock(return_value=self.data_file.read())
+
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2.name = 'bar.tar.gz'
         file_mock2.read = MagicMock(return_value=self.data_tar_file.read())
 
         data = {
@@ -357,15 +317,13 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators') as mget_validators, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mget_validators.return_value = []
+        with mock.patch('substrapp.serializers.datasample.DataSampleSerializer.get_validators', return_value=[]), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}):
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
-            ledger_data = {'key': ['some key', 'some other key'], 'validated': False}
-            mcreate.return_value = ledger_data, status.HTTP_200_OK
 
-            response = self.client.post(url, data, format='multipart', **extra)
+            response = self.client.post(self.url, data, format='multipart', **extra)
             # It's ok to add the same data sample multiple times
             self.assertEqual(DataSample.objects.count(), 2)
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -391,18 +349,18 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate:
-            mcreate.side_effect = LedgerError('Failed')
-            mis_zipfile.return_value = True
+        error = OrcError()
+        error.details = 'Failed'
+        error.code = StatusCode.INVALID_ARGUMENT
+
+        with mock.patch.object(zipfile, 'is_zipfile', return_value=True), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  side_effect=error):
             response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertEqual(r['message'], 'Failed')
+            self.assertEqual(response.json()['message'], 'Failed')
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_serializer_invalid(self):
-        url = reverse('substrapp:data_sample-list')
-
         self.add_default_data_manager()
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
@@ -421,23 +379,17 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-                mock.patch.object(DataSampleViewSet, 'get_serializer') as mget_serializer:
-            mocked_serializer = MagicMock(DataSampleSerializer)
-            mocked_serializer.is_valid.return_value = True
-            mocked_serializer.save.side_effect = Exception('Failed')
-            mget_serializer.return_value = mocked_serializer
+        mocked_serializer = MagicMock(DataSampleSerializer)
+        mocked_serializer.is_valid.return_value = True
+        mocked_serializer.save.side_effect = Exception('Failed')
+        with mock.patch.object(zipfile, 'is_zipfile', return_value=True), \
+                mock.patch.object(DataSampleViewSet, 'get_serializer', return_value=mocked_serializer):
 
-            mis_zipfile.return_value = True
-
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertEqual(r['message'], "Failed")
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            self.assertEqual(response.json()['message'], "Failed")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def test_add_data_sample_ko_ledger_invalid(self):
-        url = reverse('substrapp:data_sample-list')
-
+    def test_add_data_sample_ko_orchestrator_invalid(self):
         self.add_default_data_manager()
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
@@ -456,18 +408,15 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch.object(zipfile, 'is_zipfile') as mis_zipfile, \
-                mock.patch('substrapp.views.datasample.LedgerDataSampleSerializer',
-                           spec=True) as mLedgerDataSampleSerializer:  # noqa: N806
-            mocked_LedgerDataSampleSerializer = MagicMock()  # noqa: N806
-            mocked_LedgerDataSampleSerializer.is_valid.return_value = False
-            mocked_LedgerDataSampleSerializer.errors = 'Failed'
-            mLedgerDataSampleSerializer.return_value = mocked_LedgerDataSampleSerializer
+        mocked_OrchestratorDataSampleSerializer = MagicMock()  # noqa: N806
+        mocked_OrchestratorDataSampleSerializer.is_valid.return_value = False
+        mocked_OrchestratorDataSampleSerializer.errors = 'Failed'
+        with mock.patch.object(zipfile, 'is_zipfile', return_value=True), \
+                mock.patch('substrapp.views.datasample.OrchestratorDataSampleSerializer',
+                           return_value=mocked_OrchestratorDataSampleSerializer):
 
-            mis_zipfile.return_value = True
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertEqual(r['message'], "[ErrorDetail(string='Failed', code='invalid')]")
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            self.assertEqual(response.json()['message'], "[ErrorDetail(string='Failed', code='invalid')]")
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_bulk_update_data(self):
@@ -496,11 +445,8 @@ class DataSampleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'keys': [
-                d.key]}
+        with mock.patch.object(OrchestratorClient, 'update_datasample', return_value={'keys': [d.key]}):
 
             response = self.client.post(url, data, format='json', **extra)
-            r = response.json()
-            self.assertEqual(r['keys'], [d.key])
+            self.assertEqual(response.json()['keys'], [d.key])
             self.assertEqual(response.status_code, status.HTTP_200_OK)

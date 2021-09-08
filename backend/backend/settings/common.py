@@ -255,12 +255,6 @@ DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get('DEBUG_KEEP_POD_AND_DIRS', Fals
 
 PAGINATION_MAX_PAGE_SIZE = int(os.environ.get('PAGINATION_MAX_PAGE_SIZE', 100))
 
-# Without this import statement, hfc.fabric outputs DEBUG-level logs regardless of LOGGING configuration.
-# Importing the module early ensures these steps happen in order:
-# 1. hfc.fabric is imported and all the associated loggers are configured  (log level, handler, etc...)
-# 2. Loggers are re-configured with the `LOGGING` statement, overriding the configuration from step 1
-import hfc.fabric
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -279,7 +273,7 @@ LOGGING = {
     'loggers': {
         # root logger
         '': {
-            'level': 'WARNING',
+            'level': 'DEBUG' if DEBUG else 'WARNING',
             'handlers': ['console'],
             'propagate': True,
         },

@@ -9,7 +9,7 @@ from substrapp.docker_registry import container_image_exists, USER_IMAGE_REPOSIT
 from substrapp.lock_local import lock_resource
 from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import BuildError
-from substrapp.compute_tasks.categories import TASK_CATEGORY_TESTTUPLE
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
 
 def build_images(ctx: Context) -> None:
     build_container_image(ctx.algo_docker_context_dir, ctx.algo_image_tag, ctx)
-    if ctx.task_category == TASK_CATEGORY_TESTTUPLE:
+    if ctx.task_category == computetask_pb2.TASK_TEST:
         build_container_image(ctx.metrics_docker_context_dir, ctx.metrics_image_tag, ctx)
 
 
@@ -36,7 +36,7 @@ def build_container_image(path, tag, ctx):
         logger.info(f"Image found: {tag}. Using it.")
         return
 
-    _build_container_image(path, tag, ctx.compute_plan_key_safe, ctx.task_key, ctx.attempt)
+    _build_container_image(path, tag, ctx.compute_plan_key, ctx.task_key, ctx.attempt)
 
 
 def _build_container_image(path, tag, cp_key, task_key, attempt):
@@ -108,12 +108,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
     )
 
     if KANIKO_DOCKER_CONFIG_SECRET_NAME:
-        container.volume_mounts.append(
-            {
-                "name": "docker-config",
-                "mountPath": "/kaniko/.docker"
-            }
-        )
+        container.volume_mounts.append({"name": "docker-config", "mountPath": "/kaniko/.docker"})
 
     pod_affinity = kubernetes.client.V1Affinity(
         pod_affinity=kubernetes.client.V1PodAffinity(
@@ -157,8 +152,10 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         spec.volumes.append(
             {
                 "name": "docker-config",
-                "secret": {"secretName": KANIKO_DOCKER_CONFIG_SECRET_NAME,
-                           "items": [{"key": ".dockerconfigjson", "path": "config.json"}]},
+                "secret": {
+                    "secretName": KANIKO_DOCKER_CONFIG_SECRET_NAME,
+                    "items": [{"key": ".dockerconfigjson", "path": "config.json"}],
+                },
             }
         )
 

@@ -234,6 +234,13 @@ def get_sample_objective_metadata():
     }
 
 
+def get_sample_datamanager_metadata():
+    return {
+        'owner': 'foo',
+        'permissions': DEFAULT_PERMISSIONS,
+    }
+
+
 class FakeMetrics(object):
     def __init__(self, filepath='path'):
         self.path = filepath

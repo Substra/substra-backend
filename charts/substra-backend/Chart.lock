@@ -4,9 +4,9 @@ dependencies:
   version: 8.16.2
 - name: postgresql
   repository: https://charts.bitnami.com/bitnami
-  version: 8.10.5
+  version: 10.3.6
 - name: docker-registry
   repository: https://charts.helm.sh/stable
   version: 1.9.2
-digest: sha256:e2b1024a856ebfe164cfd0361dbbc13d317ac1a047e02d23124d2af8168b22fb
-generated: "2021-08-03T14:52:42.199774+02:00"
+digest: sha256:9ef8d3e8134712e9877c19e550f48564cc2b5bbf8f14dd838938ec5d03765b50
+generated: "2021-07-26T15:13:17.984004+02:00"

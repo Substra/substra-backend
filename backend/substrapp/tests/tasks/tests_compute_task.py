@@ -2,15 +2,22 @@ import mock
 
 from django.test import override_settings
 from rest_framework.test import APITestCase
-from substrapp.compute_tasks.categories import TASK_CATEGORY_TRAINTUPLE
 
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.tasks.tasks_compute_task import compute_task
 import tempfile
+from substrapp.orchestrator.api import OrchestratorClient
+from grpc import RpcError, StatusCode
+
 
 CHANNEL = "mychannel"
 
 
-@override_settings(MEDIA_ROOT=tempfile.mkdtemp())
+@override_settings(
+    MEDIA_ROOT=tempfile.mkdtemp(),
+    SUBTUPLE_DIR=tempfile.mkdtemp(),
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+)
 class ComputeTaskTests(APITestCase):
     def test_compute_task_exception(self):
         class FakeDirectories:
@@ -19,18 +26,21 @@ class ComputeTaskTests(APITestCase):
         class FakeContext:
             directories = FakeDirectories()
             compute_plan_key = "some compute plan key"
-            task_category = TASK_CATEGORY_TRAINTUPLE
+            task_category = computetask_pb2.TASK_TRAIN
 
         task = {
             "key": "some task key",
+            "category": "TASK_TRAIN",
             "compute_plan_key": "some compute plan key",
             "in_models": None,
-            "algo": {"key": "algo key"},
+            "algo": {"key": "algo key",
+                     "algorithm": {
+                        "checksum": "aa8d43bf6e3341b0034a2e396451ab731ccca95a4c1d4f65a4fcd30f9081ec7d",
+                        "storage_address": "http://testserver/algo/17f98afc-2b82-4ce9-b232-1a471633d020/file/"}},
+            "train": {"data_manager_key": "some data manager key"}
         }
 
-        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable") as mis_task_runnable, mock.patch(
-            "substrapp.tasks.tasks_compute_task.Context.from_task"
-        ) as mfrom_task, mock.patch(
+        with mock.patch(
             "substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"
         ) as minit_compute_plan_dirs, mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
@@ -52,17 +62,21 @@ class ComputeTaskTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.commit_dir"
         ) as mcommit_dir, mock.patch(
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
-        ) as mteardown_task_dirs, mock.patch(
-            "substrapp.tasks.tasks_compute_task.log_success_tuple"
-        ) as mlog_success_tuple:
+        ) as mteardown_task_dirs, mock.patch.object(
+            OrchestratorClient, "register_performance"
+        ) as mregister_performance, mock.patch.object(
+            OrchestratorClient, "is_task_in_final_state", return_value=False
+        ) as mis_task_in_final_state, mock.patch.object(
+            OrchestratorClient, "query_compute_plan", return_value={}), mock.patch.object(
+            OrchestratorClient, "get_computetask_input_models"
+        ), mock.patch.object(
+            OrchestratorClient, "query_algo"
+        ), mock.patch.object(
+            OrchestratorClient, "query_datamanager"
+        ):
 
-            mis_task_runnable.return_value = True
-            mfrom_task.return_value = FakeContext
+            compute_task(CHANNEL, task, None)
 
-            mlog_success_tuple.return_value = "data", 201
-            compute_task(CHANNEL, TASK_CATEGORY_TRAINTUPLE, task, None)
-
-            self.assertEqual(mfrom_task.call_count, 1)
             self.assertEqual(minit_compute_plan_dirs.call_count, 1)
             self.assertEqual(minit_task_dirs.call_count, 1)
             self.assertEqual(madd_algo_to_buffer.call_count, 1)
@@ -74,22 +88,31 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(msave_models.call_count, 1)
             self.assertEqual(mcommit_dir.call_count, 1)
             self.assertEqual(mteardown_task_dirs.call_count, 1)
+            self.assertEqual(mis_task_in_final_state.call_count, 1)
 
-            mlog_success_tuple.return_value = "data", 404
-            compute_task(CHANNEL, TASK_CATEGORY_TRAINTUPLE, task, None)
+            error = RpcError()
+            error.details = 'OE0000'
+            error.code = lambda: StatusCode.NOT_FOUND
 
-            with mock.patch("substrapp.tasks.tasks_compute_task.log_fail_tuple") as mlog_fail_tuple:
+            mregister_performance.side_effect = error
+            compute_task(CHANNEL, task, None)
+
+            with mock.patch.object(OrchestratorClient, "update_task_status"):
                 mexecute_compute_task.side_effect = Exception("Test")
-                mlog_fail_tuple.return_value = "data", 404
                 with self.assertRaises(Exception) as exc:
-                    compute_task(CHANNEL, TASK_CATEGORY_TRAINTUPLE, task, None)
+                    compute_task(CHANNEL, task, None)
                 self.assertEqual(str(exc.exception), "Test")
 
     def test_celery_retry(self):
-        subtuple_key = "test_owkin"
-        subtuple = {"key": subtuple_key, "compute_plan_key": None, "in_models": None}
 
-        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable") as mis_task_runnable, mock.patch(
+        task = {
+            "key": "some key",
+            "compute_plan_key": None,
+            "in_models": None,
+            "category": computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST),
+        }
+
+        with mock.patch.object(OrchestratorClient, "is_task_in_final_state", return_value=False), mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ), mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
@@ -112,15 +135,12 @@ class ComputeTaskTests(APITestCase):
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.log_success_tuple"
-        ), mock.patch(
             "substrapp.tasks.tasks_compute_task.ComputeTask.retry"
         ) as mretry:
 
-            mis_task_runnable.return_value = True
             mexecute_compute_task.side_effect = Exception("An exeption that should trigger retry mechanism")
 
             with self.assertRaises(Exception):
-                compute_task(CHANNEL, "traintuple", subtuple, None)
+                compute_task(CHANNEL, task, None)
 
             self.assertEqual(mretry.call_count, 1)

@@ -48,6 +48,8 @@ spec:
         envFrom:
           - configMapRef:
               name: {{ include "substra.fullname" . }}-ledger
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
         env:
           - name: ORG_NAME
             value: {{ .Values.organization.name }}
@@ -58,11 +60,11 @@ spec:
           - name: BACKEND_DB_PWD
             value: {{ .Values.postgresql.postgresqlPassword }}
           - name: DATABASE_HOST
-            value: {{ .Release.Name }}-postgresql
+            value: {{ template  "postgresql.serviceName" . }}
           - name: DEFAULT_DOMAIN
             value: "{{ .Values.backend.defaultDomain }}"
           - name: CELERY_BROKER_URL
-            value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+            value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
           - name: BACKEND_DEFAULT_PORT
             value: {{ .Values.backend.service.port | quote}}
           - name: MEDIA_ROOT
@@ -110,20 +112,18 @@ spec:
             mountPath: /usr/src/app/uwsgi.ini
             subPath: uwsgi.ini
             readOnly: true
-          - name: user-cert
-            mountPath: /var/hyperledger/msp/signcerts
-          - name: user-key
-            mountPath: /var/hyperledger/msp/keystore
-          - name: peer-tls-server
-            mountPath: /var/hyperledger/tls/server/pair
-          - name: peer-tls-client
-            mountPath: /var/hyperledger/tls/client/pair
-          - name: cacert
-            mountPath: /var/hyperledger/ca
           {{- if .Values.privateCa.enabled }}
           - mountPath: /etc/ssl/certs
             name: ssl-certs
           {{- end }}
+          {{ if $.Values.orchestrator.tls.enabled }}
+          - name: orchestrator-tls-cacert
+            mountPath: /var/substra/orchestrator/tls/server
+          {{ if $.Values.orchestrator.tls.mtls.enabled }}
+          - name: orchestrator-tls-client-pair
+            mountPath: /var/substra/orchestrator/tls/client
+          {{ end }}
+          {{ end }}
         livenessProbe:
           httpGet:
             path: /liveness
@@ -178,7 +178,7 @@ spec:
       {{- end }}
       - name: wait-postgresql
         image: jwilder/dockerize
-        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
+        command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       - name: init-migrate
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'migrate']
@@ -187,9 +187,6 @@ spec:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           runAsGroup: {{ .Values.securityContext.runAsGroup }}
         {{- end }}
-        envFrom:
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-ledger
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.backend.settings }}
@@ -202,7 +199,7 @@ spec:
         - name: BACKEND_DB_PWD
           value: {{ .Values.postgresql.postgresqlPassword }}
         - name: DATABASE_HOST
-          value: {{ .Release.Name }}-postgresql
+          value: {{ template  "postgresql.serviceName" . }}
       - name: init-collectstatic
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
@@ -233,18 +230,6 @@ spec:
       - name: uwsgi
         configMap:
           name: {{ include "substra.fullname" . }}-server-uwsgi
-      - name: user-cert
-        secret:
-          secretName: {{ $.Values.secrets.user.cert }}
-      - name: user-key
-        secret:
-          secretName: {{ $.Values.secrets.user.key }}
-      - name: peer-tls-server
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.server }}
-      - name: peer-tls-client
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}
@@ -252,9 +237,16 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      - name: cacert
+      {{ if $.Values.orchestrator.tls.enabled }}
+      - name: orchestrator-tls-cacert
         secret:
-          secretName: {{ $.Values.secrets.caCert }}
+          secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
+      {{ if $.Values.orchestrator.tls.mtls.enabled }}
+      - name: orchestrator-tls-client-pair
+        secret:
+          secretName: {{ $.Values.orchestrator.tls.mtls.secrets.pair }}
+      {{ end }}
+      {{ end }}
     {{- with .Values.backend.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

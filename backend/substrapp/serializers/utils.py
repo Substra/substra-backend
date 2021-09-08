@@ -1,6 +1,8 @@
 import tarfile
 import zipfile
 
+from rest_framework import serializers
+
 from django.core.exceptions import ValidationError
 
 from django.utils.deconstruct import deconstructible
@@ -57,3 +59,12 @@ class FileValidator(object):
                     archive.close()
                 else:
                     raise ValidationError(self.error_messages['open'])
+
+
+class PermissionsSerializer(serializers.Serializer):
+    public = serializers.BooleanField()
+    authorized_ids = serializers.ListField(child=serializers.CharField())
+
+
+class PrivatePermissionsSerializer(serializers.Serializer):
+    authorized_ids = serializers.ListField(child=serializers.CharField())

@@ -108,6 +108,7 @@ def teardown_task_dirs(dirs: Directories) -> None:
 
 
 def teardown_compute_plan_dir(dirs: Directories) -> None:
+    logger.debug(f"Deleting compute plan directory {dirs.compute_plan_dir}")
     delete_dir(dirs.compute_plan_dir)
 
 

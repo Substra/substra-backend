@@ -5,25 +5,20 @@ from .datamanager import DataManagerViewSet, DataManagerPermissionViewSet
 from .objective import ObjectiveViewSet, ObjectivePermissionViewSet
 from .model import ModelViewSet, ModelPermissionViewSet
 from .algo import AlgoViewSet, AlgoPermissionViewSet
-from .traintuple import TrainTupleViewSet
-from .testtuple import TestTupleViewSet
-from .aggregatetuple import AggregateTupleViewSet
-from .computeplan import (
-    ComputePlanViewSet,
-    CPTraintupleViewSet,
-    CPAggregatetupleViewSet,
-    CPCompositeTraintupleViewSet,
-    CPTesttupleViewSet,
-)
-from .compositetraintuple import CompositeTraintupleViewSet
-from .compositealgo import CompositeAlgoViewSet, CompositeAlgoPermissionViewSet
-from .aggregatealgo import AggregateAlgoViewSet, AggregateAlgoPermissionViewSet
+from .computetask import ComputeTaskViewSet
+from .computeplan import ComputePlanViewSet, CPTaskViewSet
 
-__all__ = ['DataSampleViewSet', 'DataManagerViewSet', 'DataManagerPermissionViewSet', 'ObjectiveViewSet',
-           'ObjectivePermissionViewSet', 'ModelViewSet', 'ModelPermissionViewSet', 'AlgoViewSet',
-           'AlgoPermissionViewSet', 'TrainTupleViewSet', 'TestTupleViewSet', 'ComputePlanViewSet',
-           'CompositeTraintupleViewSet', 'CompositeAlgoViewSet', 'CompositeAlgoPermissionViewSet',
-           'AggregateAlgoViewSet', 'AggregateAlgoPermissionViewSet', 'AggregateTupleViewSet',
-           'CPTraintupleViewSet', 'CPAggregatetupleViewSet', 'CPCompositeTraintupleViewSet',
-           'CPTesttupleViewSet'
-           ]
+__all__ = [
+    'DataSampleViewSet',
+    'DataManagerViewSet',
+    'DataManagerPermissionViewSet',
+    'ObjectiveViewSet',
+    'ObjectivePermissionViewSet',
+    'ModelViewSet',
+    'ModelPermissionViewSet',
+    'AlgoViewSet',
+    'AlgoPermissionViewSet',
+    'ComputeTaskViewSet',
+    'ComputePlanViewSet',
+    'CPTaskViewSet',
+]

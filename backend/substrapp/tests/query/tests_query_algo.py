@@ -3,7 +3,6 @@ import shutil
 import tempfile
 import json
 import mock
-import uuid
 
 from django.urls import reverse
 from django.test import override_settings
@@ -11,20 +10,22 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Objective, Algo
-from substrapp.serializers import LedgerAlgoSerializer
-from substrapp.utils import compute_hash
-from substrapp.ledger.exceptions import LedgerError
+from grpc import StatusCode
 
-from ..common import get_sample_objective, get_sample_datamanager, \
-    get_sample_algo, get_sample_algo_zip, AuthenticatedClient, \
-    get_sample_algo_metadata
+from substrapp.models import Algo
+from substrapp.serializers import OrchestratorAlgoSerializer
+from substrapp.utils import compute_hash
+from substrapp.orchestrator.api import OrchestratorClient
+from substrapp.orchestrator.error import OrcError
+
+from ..common import (get_sample_datamanager, get_sample_algo, get_sample_algo_zip,
+                      AuthenticatedClient, get_sample_algo_metadata)
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
-@override_settings(DEFAULT_DOMAIN='http://testserver')
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
     objective_key = None
@@ -33,9 +34,7 @@ class AlgoQueryTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.objective_description, self.objective_description_filename, \
-            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
-
+        self.url = reverse('substrapp:algo-list')
         self.algo, self.algo_filename = get_sample_algo()
         self.algo_zip, self.algo_filename_zip = get_sample_algo_zip()
 
@@ -45,23 +44,18 @@ class AlgoQueryTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def add_default_objective(self):
-        o = Objective.objects.create(description=self.objective_description,
-                                     metrics=self.objective_metrics)
-        self.objective_key = str(o.key)
-
     def get_default_algo_data(self):
         return {
             'file': self.algo,
             'description': self.data_description,  # fake it
             'json': json.dumps({
+                'metadata': {},
                 'name': 'super top algo',
-                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
-                    'authorized_ids': [],
-                },
-            }),
+                    'authorized_ids': []
+                }
+            })
         }
 
     def get_default_algo_data_zip(self):
@@ -69,122 +63,71 @@ class AlgoQueryTests(APITestCase):
             'file': self.algo_zip,
             'description': self.data_description,  # fake it
             'json': json.dumps({
+                'metadata': {},
                 'name': 'super top algo',
-                'objective_key': self.objective_key,
                 'permissions': {
                     'public': True,
-                    'authorized_ids': [],
-                },
+                    'authorized_ids': []
+                }
             })
         }
 
-    def test_add_algo_sync_ok(self):
-        self.add_default_objective()
-        data = self.get_default_algo_data_zip()
-
-        url = reverse('substrapp:algo-list')
+    def test_add_algo_ok(self):
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'key': 'some key'}
-
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-
-            self.assertIsNotNone(r['key'])
+        with mock.patch.object(OrchestratorClient, 'register_algo', return_value={'key': 'some key'}):
+            response = self.client.post(self.url, self.get_default_algo_data_zip(), format='multipart', **extra)
+            self.assertIsNotNone(response.json()['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @override_settings(LEDGER_SYNC_ENABLED=False)
-    @override_settings(
-        task_eager_propagates=True,
-        task_always_eager=True,
-        broker_url='memory://',
-        backend='memory'
-    )
-    def test_add_algo_no_sync_ok(self):
-        self.add_default_objective()
-        data = self.get_default_algo_data()
+    def test_add_algo_ko(self):
 
-        url = reverse('substrapp:algo-list')
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {
-                'message': 'Algo added in local db waiting for validation.'
-                           'The substra network has been notified for adding this Algo'
+
+        error = OrcError()
+        error.details = 'OE0006'
+        error.code = StatusCode.ALREADY_EXISTS
+
+        # already exists
+        with mock.patch.object(OrchestratorAlgoSerializer, 'create', side_effect=error):
+            response = self.client.post(self.url, self.get_default_algo_data(), format='multipart', **extra)
+            self.assertIn('OE0006', response.json()['message'])
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+        # missing local storage field
+        data = {
+            'metadata': {},
+            'name': 'super top algo',
+            'permissions': {
+                'public': True,
+                'authorized_ids': []
             }
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
+        }
+        response = self.client.post(self.url, data, format='json', **extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-            self.assertIsNotNone(r['key'])
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
-    def test_add_algo_ko(self):
-        url = reverse('substrapp:algo-list')
-
-        # non existing associated objective
+        # missing orchestrator field
         data = {
             'file': self.algo,
             'description': self.data_description,
             'json': json.dumps({
+                'metadata': {},
                 'name': 'super top algo',
-                'objective_key': str(uuid.uuid4()),
-                'permissions': {
-                    'public': True,
-                    'authorized_ids': [],
-                },
-            }),
+            })
         }
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch.object(LedgerAlgoSerializer, 'create') as mcreate:
-            mcreate.side_effect = LedgerError('Fail to add algo. Objective does not exist')
-
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertIn('does not exist', r['message'])
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            Objective.objects.create(description=self.objective_description,
-                                     metrics=self.objective_metrics)
-
-            # missing local storage field
-            data = {
-                'name': 'super top algo',
-                'objective_key': self.objective_key,
-                'permissions': {
-                    'public': True,
-                    'authorized_ids': [],
-                },
-            }
-            response = self.client.post(url, data, format='json', **extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-            # missing ledger field
-            data = {
-                'file': self.algo,
-                'description': self.data_description,
-                'json': json.dumps({
-                    'objective_key': self.objective_key,
-                })
-            }
-            response = self.client.post(url, data, format='multipart', **extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        response = self.client.post(self.url, data, format='multipart', **extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_get_algo_files(self):
         algo = Algo.objects.create(file=self.algo)
         with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
-                mock.patch('substrapp.views.utils.get_object_from_ledger') \
-                as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = get_sample_algo_metadata()
+                mock.patch.object(OrchestratorClient, 'query_algo', return_value=get_sample_algo_metadata()):
 
             extra = {
                 'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',

@@ -13,13 +13,15 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective
+from substrapp.orchestrator.api import OrchestratorClient
 
 from ..common import get_sample_objective, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class TraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -40,7 +42,7 @@ class TraintupleQueryTests(APITestCase):
         ("with_compute_plan", True),
         ("without_compute_plan", False)
     ])
-    def test_add_traintuple_sync_ok(self, _, with_compute_plan):
+    def test_add_traintuple_ok(self, _, with_compute_plan):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -53,7 +55,8 @@ class TraintupleQueryTests(APITestCase):
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
             'objective_key': self.fake_key,
-            'in_models_keys': [self.fake_key]}
+            'in_models_keys': [self.fake_key]
+        }
 
         if with_compute_plan:
             data['compute_plan_key'] = self.fake_key
@@ -63,89 +66,15 @@ class TraintupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-
-            key = uuid.uuid4()
-            mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = {'key': key}
-
-            response = self.client.post(url, data, format='json', **extra)
-
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    def test_add_traintuple_with_implicit_compute_plan(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:traintuple-list')
-
-        data = {
-            'train_data_sample_keys': self.train_data_sample_keys,
-            'algo_key': self.fake_key,
-            'data_manager_key': self.fake_key,
-            'objective_key': self.fake_key,
-            'in_models_keys': [self.fake_key],
-            # implicit compute plan
-            'rank': 0,
-            'compute_plan_key': None
-        }
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.create_computeplan') as mcreate_computeplan, \
-                mock.patch('substrapp.ledger.assets.create_traintuple') as mcreate_traintuple:
-
-            mcreate_computeplan.return_value = {'key': str(uuid.uuid4())}
-            mcreate_traintuple.return_value = {'key': str(uuid.uuid4())}
-
-            response = self.client.post(url, data, format='json', **extra)
-
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-            self.assertEqual(mcreate_computeplan.call_count, 1)
-            self.assertEqual(mcreate_traintuple.call_count, 1)
-
-    @override_settings(LEDGER_SYNC_ENABLED=False)
-    @override_settings(
-        task_eager_propagates=True,
-        task_always_eager=True,
-        broker_url='memory://',
-        backend='memory'
-    )
-    def test_add_traintuple_no_sync_ok(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:traintuple-list')
-
-        data = {
-            'train_data_sample_keys': self.train_data_sample_keys,
-            'algo_key': self.fake_key,
-            'data_manager_key': self.fake_key,
-            'objective_key': self.fake_key,
-            'compute_plan_key': self.fake_key,
-            'in_models_keys': [self.fake_key]}
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-
-            key = uuid.uuid4()
-            mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = None
-
-            response = self.client.post(url, data, format='json', **extra)
-
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
+        with mock.patch.object(OrchestratorClient, 'register_tasks') as mregister_task:
+            with mock.patch.object(OrchestratorClient, 'register_compute_plan') as mregister_compute_plan:
+                response = self.client.post(url, data, format='json', **extra)
+                self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+                self.assertEqual(mregister_task.call_count, 1)
+                if with_compute_plan:
+                    self.assertEqual(mregister_compute_plan.call_count, 0)
+                else:
+                    self.assertEqual(mregister_compute_plan.call_count, 1)
 
     def test_add_traintuple_ko(self):
         url = reverse('substrapp:traintuple-list')
@@ -161,8 +90,7 @@ class TraintupleQueryTests(APITestCase):
         }
 
         response = self.client.post(url, data, format='json', **extra)
-        r = response.json()
-        self.assertIn('This field may not be null.', r['algo_key'])
+        self.assertIn('This field may not be null.', response.json()['message'][0]['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         o = Objective.objects.create(description=self.objective_description,
@@ -172,7 +100,8 @@ class TraintupleQueryTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class TesttupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -193,7 +122,7 @@ class TesttupleQueryTests(APITestCase):
         ("with_data_manager", True),
         ("without_data_manager", False)
     ])
-    def test_add_testtuple_sync_ok(self, _, with_data_manager):
+    def test_add_testtuple_ok(self, _, with_data_manager):
         # Add associated objective
         description, _, metrics, _ = get_sample_objective()
         Objective.objects.create(description=description,
@@ -202,9 +131,11 @@ class TesttupleQueryTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
 
         data = {
+            'algo_key': self.fake_key,
             'objective_key': self.objective_key,
             'test_data_sample_keys': self.test_data_sample_keys,
-            'traintuple_key': self.fake_key}
+            'traintuple_key': self.fake_key
+        }
 
         if with_data_manager:
             data['data_manager_key'] = self.fake_key
@@ -214,52 +145,12 @@ class TesttupleQueryTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-
-            key = uuid.uuid4()
-            mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = {'key': key}
-
+        with mock.patch.object(OrchestratorClient, 'register_tasks', return_value={}), \
+                mock.patch.object(OrchestratorClient, 'query_task',
+                                  return_value={'algo': {'key': uuid.uuid4()},
+                                                'compute_plan_key': uuid.uuid4()}):
             response = self.client.post(url, data, format='json', **extra)
-
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-    @override_settings(LEDGER_SYNC_ENABLED=False)
-    @override_settings(
-        task_eager_propagates=True,
-        task_always_eager=True,
-        broker_url='memory://',
-        backend='memory'
-    )
-    def test_add_testtuple_no_sync_ok(self):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
-        # post data
-        url = reverse('substrapp:testtuple-list')
-
-        data = {
-            'objective_key': self.objective_key,
-            'test_data_sample_keys': self.test_data_sample_keys,
-            'traintuple_key': self.fake_key,
-            'data_manager_key': self.fake_key}
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger, \
-                mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-
-            key = uuid.uuid4()
-            mquery_ledger.return_value = {'key': key}
-            minvoke_ledger.return_value = None
-
-            response = self.client.post(url, data, format='json', **extra)
-
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
 
     def test_add_testtuple_ko(self):
         url = reverse('substrapp:testtuple-list')
@@ -274,6 +165,5 @@ class TesttupleQueryTests(APITestCase):
         }
 
         response = self.client.post(url, data, format='json', **extra)
-        r = response.json()
-        self.assertIn('This field may not be null.', r['traintuple_key'])
+        self.assertIn('This field may not be null.', response.json()['message'][0]['traintuple_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)

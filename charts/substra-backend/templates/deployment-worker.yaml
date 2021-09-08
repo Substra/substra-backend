@@ -85,6 +85,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-ledger
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -97,11 +99,11 @@ spec:
             - name: BACKEND_DB_PWD
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: DATABASE_HOST
-              value: {{ .Release.Name }}-postgresql
+              value: {{ template  "postgresql.serviceName" . }}
             - name: DEFAULT_DOMAIN
               value: "{{ .Values.backend.defaultDomain }}"
             - name: CELERY_BROKER_URL
-              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: MEDIA_ROOT
               value: /var/substra/medias/
             - name: PYTHONUNBUFFERED
@@ -171,20 +173,18 @@ spec:
             - name: data-servermedias
               mountPath: /var/substra/servermedias
               readOnly: true
-            - name: user-cert
-              mountPath: /var/hyperledger/msp/signcerts
-            - name: user-key
-              mountPath: /var/hyperledger/msp/keystore
-            - name: peer-tls-server
-              mountPath: /var/hyperledger/tls/server/pair
-            - name: peer-tls-client
-              mountPath: /var/hyperledger/tls/client/pair
-            - name: cacert
-              mountPath: /var/hyperledger/ca
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
               name: ssl-certs
             {{- end }}
+            {{ if $.Values.orchestrator.tls.enabled }}
+            - name: orchestrator-tls-cacert
+              mountPath: /var/substra/orchestrator/tls/server
+            {{ if $.Values.orchestrator.tls.mtls.enabled }}
+            - name: orchestrator-tls-client-pair
+              mountPath: /var/substra/orchestrator/tls/client
+            {{ end }}
+            {{ end }}
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
@@ -196,18 +196,6 @@ spec:
       - name: data-servermedias
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-servermedias
-      - name: user-cert
-        secret:
-          secretName: {{ $.Values.secrets.user.cert }}
-      - name: user-key
-        secret:
-          secretName: {{ $.Values.secrets.user.key }}
-      - name: peer-tls-server
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.server }}
-      - name: peer-tls-client
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}
@@ -215,9 +203,16 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      - name: cacert
+      {{ if $.Values.orchestrator.tls.enabled }}
+      - name: orchestrator-tls-cacert
         secret:
-          secretName: {{ $.Values.secrets.caCert }}
+          secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
+      {{ if $.Values.orchestrator.tls.mtls.enabled }}
+      - name: orchestrator-tls-client-pair
+        secret:
+          secretName: {{ $.Values.orchestrator.tls.mtls.secrets.pair }}
+      {{ end }}
+      {{ end }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

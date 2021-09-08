@@ -1,3 +1,4 @@
+aio-pika==6.8.0
 Django==2.2.24  # https://github.com/owkin/connect-backend/issues/121
 celery==5.1.2
 checksumdir==1.2.0
@@ -18,11 +19,8 @@ tldextract==3.1.0
 uwsgi==2.0.19.1
 zxcvbn==4.4.28
 boto3==1.11.9
-# Note, grpcio>1.30.0 requires setting GRPC_POLL_STRATEGY=epoll1
-# See https://github.com/grpc/grpc/issues/23796 and
-# https://github.com/grpc/grpc/blob/v1.35.x/doc/core/grpc-polling-engines.md#polling-engine-implementations-in-grpc
 grpcio==1.39.0
-fabric-sdk-py==1.0.0
+grpcio-tools==1.36.1
 # dev-mode
 watchdog==2.1.3
 argh==0.26.2

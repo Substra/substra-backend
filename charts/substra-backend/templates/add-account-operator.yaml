@@ -57,7 +57,7 @@ spec:
           - name: BACKEND_DB_PWD
             value: {{ .Values.postgresql.postgresqlPassword }}
           - name: DATABASE_HOST
-            value: {{ .Release.Name }}-postgresql
+            value: {{ template  "postgresql.serviceName" . }}
           - name: PYTHONUNBUFFERED
             value: "1"
         volumeMounts:
@@ -67,7 +67,7 @@ spec:
       initContainers:
       - name: wait-postgresql
         image: jwilder/dockerize
-        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
+        command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       volumes:
         - name: accounts
           configMap:

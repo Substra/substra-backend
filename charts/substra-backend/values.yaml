@@ -27,8 +27,8 @@ backend:
     podStartupTimeoutSeconds: 300
 
   image:
-    repository: substrafoundation/substra-backend
-    tag: latest
+    repository: gcr.io/connect-314908/connect-backend
+    tag: orc-rc8
     pullPolicy: IfNotPresent
     pullSecrets: []
 
@@ -145,19 +145,6 @@ persistence:
         server: true
         worker: false
 
-# Secrets names
-secrets:
-  caCert: hlf-cacert
-  user:
-    # Certificate, saved under key 'cert.pem'
-    cert: hlf-msp-cert-user
-    # Key, saved under 'key.pem'
-    key: hlf-msp-key-user
-  peer:
-    tls: # TLS secret, saved under keys 'tls.crt' and 'tls.key' (to conform with K8S nomenclature)
-      client: hlf-tls-user
-      server: hlf-tls-admin
-
 organization:
   name: substra
 
@@ -165,13 +152,24 @@ user:
   name: user
 
 peer:
-  host: healthchain-peer.owkin.com
-  port: 443
   mspID: OwkinPeerMSP
-  waitForEventTimeoutSeconds: 45
-  strategy:
-    invoke: ALL
-    query: SELF
+
+orchestrator:
+  host: owkin-orchestrator-org-1.org-1.svc.cluster.local
+  port: 9000
+  tls:
+    enabled: false
+    mtls:
+      enabled: false
+  rabbitmq:
+    host: owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local
+    port: 5672
+    auth:
+      username: user
+      password: password
+    tls:
+      enabled: false
+      port: 5671
 
 channels:
   - mychannel:
@@ -194,10 +192,10 @@ rabbitmq:
   auth:
     username: rabbitmq
     password: rabbitmq
-  host: rabbitmq
-  port: 5672
   persistence:
     enabled: false
+  port: 5672
+  # host: rabbitmq.local
 
 docker-registry:
   enabled: true

@@ -9,11 +9,13 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 from substrapp.tests.common import AuthenticatedClient
+from substrapp.orchestrator.api import OrchestratorClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class ModelViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -35,14 +37,10 @@ class ModelViewTests(APITestCase):
 
     def test_node_list_success(self):
         url = reverse('node:node-list')
-        with mock.patch('node.views.node.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = [{'id': 'foo'}, {'id': 'bar'}]
-            with mock.patch('node.views.node.get_owner') as mget_owner:
-                mget_owner.return_value = 'foo'
-
-                response = self.client.get(url, **self.extra)
-                r = response.json()
-                self.assertEqual(r, [
-                    {'id': 'foo', 'is_current': True},
-                    {'id': 'bar', 'is_current': False}
-                ])
+        with mock.patch.object(OrchestratorClient, 'query_nodes', return_value=[{'id': 'foo'}, {'id': 'bar'}]), \
+                mock.patch('node.views.node.get_owner', return_value='foo'):
+            response = self.client.get(url, **self.extra)
+            self.assertEqual(response.json(), [
+                {'id': 'foo', 'is_current': True},
+                {'id': 'bar', 'is_current': False}
+            ])

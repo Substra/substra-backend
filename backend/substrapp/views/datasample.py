@@ -4,25 +4,23 @@ import shutil
 import uuid
 
 from os.path import normpath
-from django.conf import settings
-from rest_framework import serializers, status, mixins
+from rest_framework import status, mixins
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from substrapp.exceptions import ServerMediasPathError, ServerMediasNoSubdirError
 
 from substrapp.models import DataSample, DataManager
-from substrapp.serializers import DataSampleSerializer, LedgerDataSampleSerializer, LedgerDataSampleUpdateSerializer
+from substrapp.serializers import (DataSampleSerializer,
+                                   OrchestratorDataSampleSerializer,
+                                   OrchestratorDataSampleUpdateSerializer)
 from substrapp.utils import store_datasamples_archive, get_dir_hash
-from substrapp.views.utils import (
-    LedgerExceptionError,
-    ValidationExceptionError,
-    get_success_create_code,
-    get_channel_name,
-)
-from substrapp.ledger.api import query_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError, LedgerConflictError
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
+from substrapp.views.utils import ValidationExceptionError, get_channel_name
+
+from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator.error import OrcError
 
 logger = logging.getLogger(__name__)
 
@@ -33,19 +31,19 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
     pagination_class = DefaultPageNumberPagination
 
     def create(self, request, *args, **kwargs):
-        """Wrapper to handle exceptions and responses."""
+
         try:
             data = self._create(request)
         except ValidationExceptionError as e:
-            return Response({"message": e.data}, status=e.st)
-        except LedgerExceptionError as e:
-            return Response({"message": e.data}, status=e.st)
+            return Response({'message': e.data, 'key': e.key}, status=e.st)
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
         except Exception as e:
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = get_success_create_code()
-            return Response(data, status=st, headers=headers)
+            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _create(self, request):
         paths_to_remove = []
@@ -58,24 +56,31 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             for file_data in self._get_files(request, paths_to_remove):
                 instances.append(self._db_create(data=file_data))
 
-            # bulk save in ledger
-            ledger_data = {
-                "instances": instances,
-                "data_manager_keys": data_manager_keys,
-                "test_only": request.data.get("test_only", False),
-            }
-            try:
-                ledger_result = self._ledger_create(ledger_data, get_channel_name(request))
-            except LedgerTimeoutError as e:
-                raise LedgerExceptionError("timeout", e.status)
-            except LedgerConflictError as e:
-                raise ValidationExceptionError(e.msg, e.key, e.status)
-            except LedgerError as e:
-                for instance in ledger_data["instances"]:
+            # serialized data for orchestrator db
+            orchestrator_serializer = OrchestratorDataSampleSerializer(
+                data={
+                    'test_only': request.data.get('test_only', False),
+                    'data_manager_keys': request.data.get('data_manager_keys') or [],
+                    'instances': instances
+                },
+                context={
+                    'request': request
+                }
+            )
+
+            if not orchestrator_serializer.is_valid():
+                for instance in instances:
                     instance.delete()
-                raise LedgerExceptionError(str(e.msg), e.status)
-            except (ValidationExceptionError, serializers.ValidationError):
-                for instance in ledger_data["instances"]:
+                raise ValidationError(orchestrator_serializer.errors)
+
+            # create on orchestrator db
+            try:
+                orchestrator_result = orchestrator_serializer.create(
+                    get_channel_name(request),
+                    orchestrator_serializer.validated_data
+                )
+            except Exception:
+                for instance in instances:
                     instance.delete()
                 raise
 
@@ -83,9 +88,9 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             for instance in instances:
                 serializer = self.get_serializer(instance)
                 if (
-                    "key" in ledger_result and
-                    ledger_result["validated"] and
-                    serializer.data["key"] in ledger_result["key"]
+                    "key" in orchestrator_result and
+                    orchestrator_result["validated"] and
+                    serializer.data["key"] in orchestrator_result["key"]
                 ):
                     serializer.data["validated"] = True
                 data.append(serializer.data)
@@ -99,16 +104,6 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
         return serializer.save()
-
-    @staticmethod
-    def _ledger_create(ledger_data, channel_name):
-        ledger_serializer = LedgerDataSampleSerializer(data=ledger_data)
-        if not ledger_serializer.is_valid():
-            raise serializers.ValidationError(ledger_serializer.errors)
-        return ledger_serializer.create(
-            channel_name,
-            ledger_serializer.validated_data,
-        )
 
     @staticmethod
     def check_datamanagers(data_manager_keys):
@@ -157,30 +152,41 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
     def list(self, request, *args, **kwargs):
         try:
-            data = query_ledger(get_channel_name(request), fcn="queryDataSamples", args=[])
-        except LedgerError as e:
-            return Response({"message": str(e.msg)}, status=e.status)
-
-        data = data or []
+            with get_orchestrator_client(get_channel_name(request)) as client:
+                data = client.query_datasamples()
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+        except Exception as e:
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return self.paginate_response(data)
 
     @action(methods=["post"], detail=False)
     def bulk_update(self, request):
-        ledger_serializer = LedgerDataSampleUpdateSerializer(data=dict(request.data))
-        ledger_serializer.is_valid(raise_exception=True)
 
+        # serialized data for orchestrator db
+        orchestrator_serializer = OrchestratorDataSampleUpdateSerializer(
+            data=dict(request.data),
+            context={
+                'request': request
+            }
+        )
+        orchestrator_serializer.is_valid(raise_exception=True)
+
+        # create on orchestrator db
         try:
-            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
-        except LedgerError as e:
-            return Response({"message": str(e.msg)}, status=e.status)
+            data = orchestrator_serializer.create(
+                get_channel_name(request),
+                orchestrator_serializer.validated_data
+            )
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+        except Exception as e:
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        if settings.LEDGER_SYNC_ENABLED:
-            st = status.HTTP_200_OK
-        else:
-            st = status.HTTP_202_ACCEPTED
-
-        return Response(data, status=st)
+        return Response(data, status=status.HTTP_200_OK)
 
 
 def get_subpaths(paths, raise_no_subdir=False):

@@ -78,3 +78,8 @@ class ServerMediasPathError(Exception):
 class ServerMediasNoSubdirError(Exception):
     """A supplied servermedias path didn't contain the expected subdir"""
     pass
+
+
+class AssetPermissionError(Exception):
+    def __init__(self, message="Unauthorized"):
+        Exception.__init__(self, message)

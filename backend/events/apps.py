@@ -1,30 +1,34 @@
 import asyncio
 import json
 import logging
-import multiprocessing
-import time
 import contextlib
-
+import time
+import ssl
 from django.apps import AppConfig
 
 from django.conf import settings
 
-import glob
+import aio_pika
 
-from hfc.fabric import Client
-from hfc.fabric.peer import Peer
-from hfc.fabric.user import create_user
-from hfc.util.keyvaluestore import FileKeyValueStore
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+import substrapp.orchestrator.computeplan_pb2 as computeplan_pb2
+import substrapp.orchestrator.common_pb2 as common_pb2
+import substrapp.orchestrator.event_pb2 as event_pb2
+from substrapp.orchestrator.api import get_orchestrator_client
 
 from substrapp.tasks.tasks_prepare_task import prepare_task
-from substrapp.tasks.tasks_compute_plan import on_compute_plan
 from substrapp.utils import get_owner
-from substrapp.ledger.connection import get_hfc, ledger_grpc_options
 
 from celery.result import AsyncResult
 
+from substrapp.tasks.tasks_compute_plan import on_compute_plan_finished
+from substrapp.tasks.tasks_remove_intermediary_models import (
+    remove_intermediary_models,
+    remove_intermediary_models_from_buffer
+)
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger('events')
 
 
 @contextlib.contextmanager
@@ -37,186 +41,154 @@ def get_event_loop():
         loop.close()
 
 
-def tuple_get_worker(event_type, asset):
-    if event_type == 'aggregatetuple':
-        return asset['worker']
-    return asset['dataset']['worker']
-
-
-def on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset):
-
-    owner = get_owner()
+def on_computetask_event(payload):
+    current_worker = get_owner()
     worker_queue = f"{settings.ORG_NAME}.worker"
+    asset_key = payload['asset_key']
+    channel_name = payload['channel']
+    event_kind = payload['event_kind']
+    metadata = payload['metadata']
 
-    key = asset['key']
-    status = asset['status']
+    logger.info(f'Processing task {asset_key}: type={event_kind} event status={metadata["status"]}')
 
-    if tx_status != 'VALID':
-        logger.error(
-            f'Failed transaction on task {key}: type={event_type}'
-            f' status={status} with tx status: {tx_status}')
+    event_task_status = computetask_pb2.ComputeTaskStatus.Value(metadata["status"])
+
+    if event_task_status in [
+            computetask_pb2.STATUS_DONE,
+            computetask_pb2.STATUS_CANCELED,
+            computetask_pb2.STATUS_FAILED]:
+        with get_orchestrator_client(channel_name) as client:
+            task = client.query_task(asset_key)
+
+            # Handle intermediary models
+            models = []
+            for parent_key in task['parent_task_keys']:
+                models.extend(client.get_computetask_output_models(parent_key))
+
+            model_keys = [model['key'] for model in models
+                          if model['owner'] == current_worker and client.can_disable_model(model['key'])]
+            if model_keys:
+                remove_intermediary_models.apply_async((channel_name, model_keys), queue=worker_queue)
+
+            compute_plan = client.query_compute_plan(task['compute_plan_key'])
+            if computeplan_pb2.ComputePlanStatus.Value(compute_plan['status']) in [
+                    computeplan_pb2.PLAN_STATUS_DONE,
+                    computeplan_pb2.PLAN_ACTION_CANCELED,
+                    computeplan_pb2.PLAN_STATUS_FAILED]:
+                logger.info('Compute plan %s finished with status: %s', compute_plan['key'], compute_plan['status'])
+                on_compute_plan_finished.apply_async((channel_name, compute_plan), queue=worker_queue)
+
+    if event_task_status != computetask_pb2.STATUS_TODO:
         return
 
-    logger.info(f'Processing task {key}: type={event_type} status={status}')
-
-    if status != 'todo':
+    if event_pb2.EventKind.Value(event_kind) not in [event_pb2.EVENT_ASSET_CREATED, event_pb2.EVENT_ASSET_UPDATED]:
         return
 
-    if event_type is None:
+    if metadata['worker'] != current_worker:
+        logger.info(f'Skipping task {asset_key}: worker does not match'
+                    f' ({metadata["worker"] } vs {current_worker})')
         return
 
-    tuple_owner = tuple_get_worker(event_type, asset)
+    with get_orchestrator_client(channel_name) as client:
+        task = client.query_task(asset_key)
 
-    if tuple_owner != owner:
-        logger.info(f'Skipping task {key}: owner does not match'
-                    f' ({tuple_owner} vs {owner})')
-        return
+    task_status = computetask_pb2.ComputeTaskStatus.Value(task["status"])
 
-    if AsyncResult(key).state != 'PENDING':
-        logger.info(f'Skipping task {key}: already exists')
+    if task_status != event_task_status:
+        raise ValueError(f'Task {asset_key} status out of sync: task status={task["status"]} '
+                         f'!= event status={metadata["status"]}')
+
+    if AsyncResult(asset_key).state != 'PENDING':
+        logger.info(f'Skipping task {asset_key}: already exists')
         return
 
     prepare_task.apply_async(
-        (channel_name, asset, event_type),
-        task_id=key,
+        (channel_name, task),
+        task_id=asset_key,
         queue=worker_queue
     )
 
 
-def on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset):
-
+def on_model_event(payload):
     worker_queue = f"{settings.ORG_NAME}.worker"
+    asset_key = payload["asset_key"]
+    event_kind = payload['event_kind']
 
-    key = asset['compute_plan_key']
+    logger.info(f'Processing model {asset_key}: type={event_kind}')
 
-    # Currently, we received this event on done, failed and canceled status
-    # We apply the same behavior for those three status.
-    # In the future, we can apply a conditional strategy based on the status.
-    status = asset['status']
+    if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_DISABLED:
+        remove_intermediary_models_from_buffer.apply_async([asset_key], queue=worker_queue)
 
-    if tx_status != 'VALID':
-        logger.error(
-            f'Failed transaction on cleaning task {key}: type=computePlan'
-            f' status={status} with tx status: {tx_status}')
-        return
 
-    logger.info(f'Processing cleaning task {key}: type=computePlan status={status}')
+async def on_message(message: aio_pika.IncomingMessage):
+    async with message.process(requeue=True):
+        payload = json.loads(message.body)
+        logger.debug(f"Received payload: {payload}")
+        asset_kind = common_pb2.AssetKind.Value(payload['asset_kind'])
 
-    task_id = f'{key}_{tx_id}'
+        if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
+            on_computetask_event(payload)
+        elif asset_kind == common_pb2.ASSET_MODEL:
+            on_model_event(payload)
+        else:
+            logger.debug(f"Nothing to do for {payload['asset_kind']} event")
 
-    if AsyncResult(task_id).state != 'PENDING':
-        logger.info(f'Skipping cleaning task: already exists. '
-                    f'Info: compute_plan={key}, block_numer={block_number}, tx_id={tx_id}')
-        return
 
-    on_compute_plan.apply_async(
-        (channel_name, asset, ),
-        task_id=task_id,
-        queue=worker_queue
+async def consume(loop):
+    # Queues are defined by the orchestrator
+    queue_name = f"{settings.ORCHESTRATOR_RABBITMQ_AUTH_USER}"
+
+    ssl_options = None
+    if settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED:
+        ssl_options = {
+            "ca_certs": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH,
+            "certfile": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH,
+            "keyfile": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH,
+            "cert_reqs": ssl.CERT_REQUIRED,
+        }
+
+    logger.info(f"Attempting to connect to orchestrator RabbitMQ queue {queue_name}")
+
+    connection = await aio_pika.connect_robust(
+        host=settings.ORCHESTRATOR_RABBITMQ_HOST,
+        port=settings.ORCHESTRATOR_RABBITMQ_PORT,
+        login=settings.ORCHESTRATOR_RABBITMQ_AUTH_USER,
+        password=settings.ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD,
+        ssl=settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED,
+        ssl_options=ssl_options,
+        loop=loop
     )
 
+    logger.info(f"Connected to orchestrator RabbitMQ queue {queue_name}")
 
-def on_event(channel_name, cc_event, block_number, tx_id, tx_status):
-    payload = json.loads(cc_event['payload'])
+    # Creating channel
+    channel = await connection.channel()    # type: aio_pika.Channel
 
-    for event_type, assets in payload.items():
+    # Declaring queue
+    queue = await channel.get_queue(queue_name, ensure=True)   # type: aio_pika.Queue
 
-        if not assets:
-            continue
+    await queue.consume(on_message)
 
-        for asset in assets:
-            if event_type == 'compute_plan':
-                on_compute_plan_event(channel_name, block_number, tx_id, tx_status, asset)
-            else:
-                on_tuples_event(channel_name, block_number, tx_id, tx_status, event_type, asset)
-
-
-def wait(channel_name):
-
-    def on_channel_event(cc_event, block_number, tx_id, tx_status):
-        on_event(channel_name, cc_event, block_number, tx_id, tx_status)
-
-    with get_event_loop() as loop:
-
-        client = Client()
-
-        channel = client.new_channel(channel_name)
-
-        target_peer = Peer(name=settings.LEDGER_PEER_NAME)
-
-        target_peer.init_with_bundle({
-            'url': f'{settings.LEDGER_PEER_HOST}:{settings.LEDGER_PEER_PORT}',
-            'grpcOptions': ledger_grpc_options(settings.LEDGER_PEER_HOST),
-            'tlsCACerts': {'path': settings.LEDGER_PEER_TLS_CA_CERTS},
-            'clientKey': {'path': settings.LEDGER_PEER_TLS_CLIENT_KEY},
-            'clientCert': {'path': settings.LEDGER_PEER_TLS_CLIENT_CERT},
-        })
-
-        try:
-            # can fail
-            requestor = create_user(
-                name=f'{settings.LEDGER_USER_NAME}_events',
-                org=settings.ORG_NAME,
-                state_store=FileKeyValueStore(settings.LEDGER_CLIENT_STATE_STORE),
-                msp_id=settings.LEDGER_MSP_ID,
-                key_path=glob.glob(settings.LEDGER_CLIENT_KEY_PATH)[0],
-                cert_path=settings.LEDGER_CLIENT_CERT_PATH
-            )
-        except BaseException:
-            pass
-        else:
-
-            # Note:
-            #   We do a loop to connect to the channel event hub because grpc may disconnect and create an exception
-            #   Since we're in a django app of backend, an exception here will not crash the server (if the "ready"
-            #   method has already returned "true").
-            #   It makes it difficult to reconnect automatically because we need to kill the server
-            #   to trigger the connexion.
-            #   So we catch this exception (RPC error) and retry to connect to the event loop.
-
-            while True:
-                # use chaincode event
-                channel_event_hub = channel.newChannelEventHub(target_peer,
-                                                               requestor)
-                try:
-                    # We want to replay blocks from the beginning (start=0) if channel event hub was disconnected during
-                    # events emission
-                    stream = channel_event_hub.connect(start=0,
-                                                       filtered=False)
-
-                    channel_event_hub.registerChaincodeEvent(
-                        settings.LEDGER_CHANNELS[channel_name]['chaincode']['name'],
-                        'chaincode-updates',
-                        onEvent=on_channel_event)
-
-                    logger.info(f'Connect to Channel Event Hub ({channel_name})')
-                    loop.run_until_complete(stream)
-
-                except Exception as e:
-                    logger.error(f'Channel Event Hub failed for {channel_name} ({type(e)}): {e} re-connecting in 5s')
-                    time.sleep(5)
+    return connection
 
 
 class EventsConfig(AppConfig):
     name = 'events'
-
-    def listen_to_channel(self, channel_name):
-        # We try to connect a client first, if it fails the backend will not start.
-        # It prevents potential issues when we launch the channel event hub in a subprocess.
-        while True:
-            try:
-                with get_hfc(channel_name) as (loop, client, user):
-                    logger.info(f'Events: Connected to channel {channel_name}.')
-            except Exception as e:
-                logger.exception(e)
-                time.sleep(5)
-                logger.error(f'Events: Retry connecting to channel {channel_name}.')
-            else:
-                break
-
-        p1 = multiprocessing.Process(target=wait, args=[channel_name])
-        p1.start()
+    logger.info("starting event app")
 
     def ready(self):
-        for channel_name in settings.LEDGER_CHANNELS.keys():
-            self.listen_to_channel(channel_name)
+        with get_event_loop() as loop:
+
+            while True:
+                try:
+                    connection = loop.run_until_complete(consume(loop))
+                except Exception as e:
+                    logger.exception(e)
+                    time.sleep(5)
+                    logger.error('Retry connecting to orchestrator RabbitMQ queue')
+                else:
+                    break
+            try:
+                loop.run_forever()
+            finally:
+                loop.run_until_complete(connection.close())

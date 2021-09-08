@@ -100,7 +100,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `rabbitmq.enabled` | Enable RabbitMQ database | `true` |
 | `rabbitmq.auth.username` | RabbitMQ username | `rabbitmq` |
 | `rabbitmq.auth.password` | RabbitMQ admin password  | `rabbitmq` |
-| `rabbitmq.host` | RabbitMQ hostname | `rabbitmq` |
+| `rabbitmq.host` | RabbitMQ hostname | `nil` |
 | `rabbitmq.port` | RabbitMQ port | `5672` |
 | `rabbitmq.persistence.enabled` | Enable RabbitMQ persistence using PVC | `false` |
 | `docker-registry` | Docker Registry configuration. For more info, See [docker-registry](https://artifacthub.io/packages/helm/twuni/docker-registry) | |
@@ -164,6 +164,19 @@ The following table lists the configurable parameters of the substra-backend cha
 | `securityContext.runAsUser` | Pod Security Context user ID | `1001` |
 | `securityContext.runAsGroup` | Pod Security Context group ID | `1001` |
 | `hooks.deleteComputePods.enabled` | If true, enable the deletion job that removes deployed compute pods after the application is deleted | `False` |
+| `orchestrator.host` | The orchestrator gRPC endpoint hostname | `owkin-orchestrator-org-1.org-1.svc.cluster.local` |
+| `orchestrator.port` | The orchestrator gRPC endpoint port | `9000` |
+| `orchestrator.tls.enabled` | If true, enable TLS for the orchestrator gRPC endpoint | `false` |
+| `orchestrator.tls.secrets.cacert` | A secret containing the orchestrator CA Certificate `ca.crt` | `orchestrator-tls-server-cacert` |
+| `orchestrator.tls.mtls.enabled` | If true, enable client verification for the orchestrator gRPC endpoint | `false` |
+| `orchestrator.tls.mtls.secrets.pair` | A secret containing the client certificate `tls.crt` and private key `tls.key` | `orchestrator-tls-client-pair` |
+| `orchestrator.rabbitmq.host` | The orchestrator RabbitMQ endpoint hostname | `owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local` |
+| `orchestrator.rabbitmq.port` | The orchestrator RabbitMQ endpoint port | `5672` |
+| `orchestrator.rabbitmq.auth.username` | The orchestrator RabbitMQ user name | `user` |
+| `orchestrator.rabbitmq.auth.password` | The orchestrator RabbitMQ password | `password` |
+| `orchestrator.rabbitmq.tls.enabled` | If true, enable TLS for the orchestrator RabbitMQ endpoint | `false` |
+| `orchestrator.rabbitmq.tls.port` | The orchestrator RabbitMQ endpoint TLS port | `5671` |
+| `orchestrator.rabbitmq.tls.secrets.pair` | A secret containing the client certificate `tls.crt` and private key `tls.key` | `orchestrator-tls-client-pair` |
 
 ## Usage
 

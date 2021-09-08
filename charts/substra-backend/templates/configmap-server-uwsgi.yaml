@@ -32,3 +32,4 @@ data:
     ignore-sigpipe                = true
     ignore-write-errors           = true
     disable-write-exception       = true
+    wsgi-disable-file-wrapper     = true

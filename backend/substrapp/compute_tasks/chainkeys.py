@@ -4,7 +4,7 @@ import kubernetes
 import os
 import logging
 import json
-from django.conf import settings
+from substrapp.utils import list_dir
 
 logger = logging.getLogger(__name__)
 
@@ -71,36 +71,4 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
     else:
         logger.info(f"{len(secrets)} secrets have been removed")
 
-    logger.info(f"Prepared chainkeys: {_list_files(chainkeys_dir)}")
-
-
-def _list_files(startpath, as_json=True):
-    if not settings.TASK["LIST_WORKSPACE"]:
-        return "Error: listing files is disabled."
-
-    if not os.path.exists(startpath):
-        return f"Error: {startpath} does not exist."
-
-    if as_json:
-        return json.dumps(_path_to_dict(startpath))
-
-    res = ""
-    for root, dirs, files in os.walk(startpath, followlinks=True):
-        level = root.replace(startpath, "").count(os.sep)
-        indent = " " * 4 * (level)
-        res += f"{indent}{os.path.basename(root)}/" + "\n"
-        subindent = " " * 4 * (level + 1)
-        for f in files:
-            res += f"{subindent}{f}" + "\n"
-
-    return res
-
-
-def _path_to_dict(path):
-    d = {"name": os.path.basename(path)}
-    if os.path.isdir(path):
-        d["type"] = "directory"
-        d["children"] = [_path_to_dict(os.path.join(path, x)) for x in os.listdir(path)]
-    else:
-        d["type"] = "file"
-    return d
+    logger.info(f"Prepared chainkeys: {list_dir(chainkeys_dir)}")

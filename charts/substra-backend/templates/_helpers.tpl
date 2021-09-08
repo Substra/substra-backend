@@ -56,3 +56,34 @@ Selector labels
 {{- define "substra.selectorLabels" -}}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+
+{{/*
+Redefine the postgresql service name because we can't use subchart templates directly.
+*/}}
+{{- define "postgresql.serviceName" -}}
+{{- $name := default "postgresql" .Values.postgresql.nameOverride -}}
+{{- $fullname := default (printf "%s-%s" .Release.Name $name) .Values.postgresql.fullnameOverride -}}
+{{- if .Values.postgresql.replication.enabled -}}
+{{- printf "%s-%s" $fullname "primary" | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s" $fullname | trunc 63 | trimSuffix "-" }}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Redefine the rabbitmq service name because we can't use subchart templates directly.
+*/}}
+{{- define "rabbitmq.serviceName" -}}
+{{- if .Values.rabbitmq.fullnameOverride -}}
+{{- .Values.rabbitmq.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "rabbitmq" .Values.rabbitmq.nameOverride -}}
+{{- if contains $name (printf "%s" .Release.Name) -}}
+{{- printf "%s" .Release.Name | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+{{- end -}}

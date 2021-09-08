@@ -4,7 +4,7 @@ from substrapp.compute_tasks.transfer_bucket import (
     TAG_VALUE_FOR_TRANSFER_BUCKET,
     TRANSFER_BUCKET_TESTTUPLE_TAG,
 )
-from substrapp.compute_tasks.categories import TASK_CATEGORY_TESTTUPLE
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 
 
 def get_environment(ctx: Context):
@@ -17,7 +17,7 @@ def get_environment(ctx: Context):
 
     # Transfer bucket
     tag = ctx.task.get("tag")
-    if ctx.task_category == TASK_CATEGORY_TESTTUPLE:
+    if ctx.task_category == computetask_pb2.TASK_TEST:
         if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
             env[TRANSFER_BUCKET_TESTTUPLE_TAG] = TAG_VALUE_FOR_TRANSFER_BUCKET
 

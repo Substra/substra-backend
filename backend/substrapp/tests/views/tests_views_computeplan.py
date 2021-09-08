@@ -1,5 +1,6 @@
 import os
 import shutil
+from grpc import RpcError, StatusCode
 import mock
 import uuid
 
@@ -9,8 +10,8 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.ledger.exceptions import LedgerError
-from substrapp.serializers import LedgerComputePlanSerializer
+from substrapp.orchestrator.api import OrchestratorClient
+from substrapp.views import ComputePlanViewSet
 
 from ..common import AuthenticatedClient
 from ..assets import computeplan, traintuple
@@ -19,7 +20,8 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 
 # APITestCase
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class ComputePlanViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -32,12 +34,12 @@ class ComputePlanViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.url = reverse('substrapp:compute_plan-list')
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
     def test_create(self):
-        url = reverse('substrapp:compute_plan-list')
-
         dummy_key = str(uuid.uuid4())
 
         data = {
@@ -54,84 +56,104 @@ class ComputePlanViewTests(APITestCase):
             }]
         }
 
-        with mock.patch.object(LedgerComputePlanSerializer, 'create') as mcreate:
-            with mock.patch('substrapp.views.computeplan.query_ledger') as mquery:
-                mcreate.return_value = {}
-                mquery.return_value = {}
+        with mock.patch.object(OrchestratorClient, 'register_compute_plan', return_value={}), \
+                mock.patch.object(OrchestratorClient, 'register_tasks', return_value={}):
+            response = self.client.post(self.url, data=data, format='json', **self.extra)
+            self.assertEqual(response.json(), {})
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-                response = self.client.post(url, data=data, format='json', **self.extra)
+    def test_create_without_tasks(self):
+        data = {}
 
-        self.assertEqual(response.json(), {})
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        with mock.patch.object(OrchestratorClient, 'register_compute_plan', return_value={}):
+            response = self.client.post(self.url, data=data, format='json', **self.extra)
+            self.assertEqual(response.json(), {})
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_computeplan_list_empty(self):
-        url = reverse('substrapp:compute_plan-list')
-        with mock.patch('substrapp.views.computeplan.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = []
-
-            response = self.client.get(url, **self.extra)
+        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=[]):
+            response = self.client.get(self.url, **self.extra)
             r = response.json()
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_computeplan_list_success(self):
-        url = reverse('substrapp:compute_plan-list')
-        with mock.patch('substrapp.views.computeplan.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = computeplan
-
-            response = self.client.get(url, **self.extra)
+        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=computeplan):
+            response = self.client.get(self.url, **self.extra)
             r = response.json()
             self.assertEqual(r['results'], computeplan)
 
     def test_computeplan_retrieve(self):
-        with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = computeplan[0]
-
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=computeplan[0]):
             url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['key']])
             response = self.client.get(url, **self.extra)
             r = response.json()
-
             self.assertEqual(r, computeplan[0])
 
     def test_computeplan_retrieve_fail(self):
-        url = reverse('substrapp:compute_plan-list')
-
         # Key < 32 chars
         search_params = '12312323/'
-        response = self.client.get(url + search_params, **self.extra)
+        response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Key not hexa
         search_params = 'X' * 32 + '/'
-        response = self.client.get(url + search_params, **self.extra)
+        response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = LedgerError('TEST')
+        error = RpcError()
+        error.details = 'out of range test'
+        error.code = lambda: StatusCode.OUT_OF_RANGE
 
-            search_params = computeplan[0]['key']
-            response = self.client.get(url + search_params + '/', **self.extra)
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', side_effect=error):
+            response = self.client.get(f'{self.url}{computeplan[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_computeplan_cancel(self):
         cp = computeplan[0]
         key = cp['key']
-        with mock.patch('substrapp.views.computeplan.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = cp
-
+        with mock.patch.object(OrchestratorClient, 'cancel_compute_plan'), \
+                mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp):
             url = reverse('substrapp:compute_plan-cancel', args=[key])
             response = self.client.post(url, **self.extra)
             r = response.json()
             self.assertEqual(r, cp)
 
-    def test_computeplan_update(self):
-        cp = computeplan[0]
-        compute_plan_key = cp['key']
-        url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_key])
+    def test_parse_composite_traintuples(self):
+        dummy_key = str(uuid.uuid4())
+        dummy_key2 = str(uuid.uuid4())
 
-        with mock.patch('substrapp.ledger.assets.update_computeplan', return_value=cp):
-            response = self.client.post(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, cp)
+        composite = [
+            {
+                "composite_traintuple_id": dummy_key,
+                "in_head_model_id": dummy_key,
+                "in_trunk_model_id": dummy_key2,
+                "algo_key": dummy_key,
+                "metadata": {
+                    "simple_metadata": "data"
+                },
+                "data_manager_key": dummy_key,
+                "train_data_sample_keys": [dummy_key, dummy_key],
+                "out_trunk_model_permissions": {
+                    "public": False,
+                    "authorized_ids": ["test-org"]
+                }
+            }
+        ]
+
+        cp = ComputePlanViewSet()
+        tasks = cp.parse_composite_traintuple(None, composite, dummy_key)
+
+        self.assertEqual(len(tasks[dummy_key]["parent_task_keys"]), 2)
+
+    # def test_computeplan_update(self):
+    #     cp = computeplan[0]
+    #     compute_plan_key = cp['key']
+    #     url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_key])
+
+    #     with mock.patch('substrapp.ledger.assets.update_computeplan', return_value=cp):
+    #         response = self.client.post(url, **self.extra)
+    #         r = response.json()
+    #         self.assertEqual(r, cp)
 
     def test_can_see_traintuple(self):
         cp = computeplan[0]
@@ -139,8 +161,10 @@ class ComputePlanViewTests(APITestCase):
         url = reverse('substrapp:compute_plan_traintuple-list', args=[compute_plan_key])
         url = f"{url}?page_size=2"
 
-        with mock.patch('substrapp.views.computeplan.get_object_from_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [computeplan[0], traintuple[0], traintuple[1]]
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
+                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[traintuple[0], traintuple[1]]), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+
             response = self.client.get(url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)

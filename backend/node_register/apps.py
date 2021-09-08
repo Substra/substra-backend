@@ -1,9 +1,11 @@
 import time
 import logging
 import multiprocessing
+from grpc import StatusCode
 from django.apps import AppConfig
 from django.conf import settings
-from substrapp.ledger.api import invoke_ledger
+from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator.error import OrcError
 
 logger = logging.getLogger(__name__)
 
@@ -11,16 +13,19 @@ logger = logging.getLogger(__name__)
 def _register_node(channel_name):
     # We try until success, if it fails the backend will not start
     while True:
-        try:
-            # args is set to empty because fabric-sdk-py doesn't allow None args for invoke operations
-            invoke_ledger(channel_name, fcn='registerNode', args=[''], sync=True)
-        except Exception as e:
-            logger.exception(e)
-            time.sleep(1)
-            logger.info(f'({channel_name}) Retry registring the node on the ledger')
-        else:
-            logger.info(f'({channel_name}) Node registered on the ledger')
-            break
+        with get_orchestrator_client(channel_name) as client:
+            try:
+                client.register_node()
+            except OrcError as rpc_error:
+                code = rpc_error.code
+                if code == StatusCode.ALREADY_EXISTS:
+                    break
+                time.sleep(1)
+                logger.exception(rpc_error)
+                logger.info(f'({channel_name}) Retry registring the node on the orchestrator')
+            else:
+                logger.info(f'({channel_name}) Node registered on the orchestrator')
+                break
 
 
 class NodeRegisterConfig(AppConfig):

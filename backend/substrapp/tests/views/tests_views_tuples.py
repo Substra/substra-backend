@@ -13,9 +13,10 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import TrainTupleViewSet, TestTupleViewSet
+from substrapp.views import ComputeTaskViewSet
 
-from substrapp.ledger.exceptions import LedgerError
+from substrapp.orchestrator.api import OrchestratorClient
+from grpc import RpcError, StatusCode
 
 from ..assets import traintuple, testtuple, objective
 from ..common import AuthenticatedClient
@@ -32,7 +33,8 @@ def get_compute_plan_key(assets):
 
 
 # APITestCase
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class TraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -55,24 +57,23 @@ class TraintupleViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_traintuple_queryset(self):
-        traintuple_view = TrainTupleViewSet()
+        traintuple_view = ComputeTaskViewSet()
         self.assertFalse(traintuple_view.get_queryset())
 
     def test_traintuple_list_empty(self):
         url = reverse('substrapp:traintuple-list')
-        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = []
 
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[]):
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_traintuple_retrieve(self):
+        url = reverse('substrapp:traintuple-list')
+        search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
-        with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = traintuple[0]
-            url = reverse('substrapp:traintuple-list')
-            search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
+        with mock.patch.object(OrchestratorClient, 'query_task', return_value=traintuple[0]), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, traintuple[0])
@@ -91,19 +92,21 @@ class TraintupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.traintuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = LedgerError('Test')
+        error = RpcError()
+        error.details = 'out of range test'
+        error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
             response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
-
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_traintuple_list_filter_tag(self):
         url = reverse('substrapp:traintuple-list')
-        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = traintuple
-            target_tag = 'foo'
-            search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
+        target_tag = 'foo'
+        search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
+
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -111,18 +114,19 @@ class TraintupleViewTests(APITestCase):
 
     def test_traintuple_list_filter_compute_plan_key(self):
         url = reverse('substrapp:traintuple-list')
-        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = traintuple
-            compute_plan_key = get_compute_plan_key(traintuple)
-            search_params = f'?search=traintuple%253Acompute_plan_key%253A{compute_plan_key}'
+        compute_plan_key = get_compute_plan_key(traintuple)
+        search_params = f'?search=traintuple%253Acompute_plan_key%253A{compute_plan_key}'
+
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-
-            self.assertEqual(len(r['results']), 2)
+            self.assertEqual(len(r['results']), 1)
 
 
 # APITestCase
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class TesttupleViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -145,24 +149,23 @@ class TesttupleViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_testtuple_queryset(self):
-        testtuple_view = TestTupleViewSet()
+        testtuple_view = ComputeTaskViewSet()
         self.assertFalse(testtuple_view.get_queryset())
 
     def test_testtuple_list_empty(self):
         url = reverse('substrapp:testtuple-list')
-        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = []
-
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[]):
             response = self.client.get(url, **self.extra)
             r = response.json()
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_testtuple_retrieve(self):
+        url = reverse('substrapp:testtuple-list')
+        search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
-        with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = testtuple[0]
-            url = reverse('substrapp:testtuple-list')
-            search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
+        with mock.patch.object(OrchestratorClient, 'query_task', return_value=testtuple[0]), \
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
+                                  return_value={'performance_value': 1}):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, testtuple[0])
@@ -181,28 +184,30 @@ class TesttupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.testtuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = LedgerError('Test')
-            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
+        error = RpcError()
+        error.details = 'out of range test'
+        error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
+            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_testtuple_list_filter_tag(self):
         url = reverse('substrapp:testtuple-list')
-        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = testtuple
 
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
+                                  return_value={'performance_value': 1}):
             search_params = '?search=testtuple%253Atag%253Abar'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-
             self.assertEqual(len(r['results']), 1)
 
             search_params = '?search=testtuple%253Atag%253Afoo'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
-            self.assertEqual(len(r['results']), 0)
+            self.assertEqual(len(r['results']), 1)
 
     @parameterized.expand([
         ("one_page_test", 9, 1, 0, 9),
@@ -212,8 +217,8 @@ class TesttupleViewTests(APITestCase):
     def test_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         url = reverse('substrapp:traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch('substrapp.views.traintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = traintuple
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
@@ -230,8 +235,9 @@ class TesttupleViewTests(APITestCase):
     def test_testtuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         url = reverse('substrapp:testtuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch('substrapp.views.testtuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = testtuple
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
+                                  return_value={'performance_value': 1}):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

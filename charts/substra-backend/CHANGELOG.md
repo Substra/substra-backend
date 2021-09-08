@@ -1,5 +1,19 @@
 # Changelog
 
+## 4.0.0
+
+### Changed
+- updated rabbitmq dependency chart
+- updated postgresql dependency chart
+- `rabbitmq.host` to target a custom rabbitmq host
+- `rabbitmq.auth.user` to `rabbitmq.auth.username` to match the rabbitmq chart values structure
+- remove ledger configuration
+
+### Added
+- support for subchart fullnameOverride
+- support orchestrator connection configuration (grpc + rabbitmq)
+
+
 ## 3.3.1
 
 - Fixed kaniko cache warmer
@@ -25,6 +39,7 @@
 ### Changed
 - Bump rabbitmq chart to 8.16.2 (see [UPGRADE.md](./UPGRADE.md))
 
+
 ## 2.3.0
 
 ### Added
@@ -46,6 +61,7 @@
 
 ### Removed
 - Unused `CELERYWORKER_IMAGE` env variable
+
 
 ## 2.1.0
 

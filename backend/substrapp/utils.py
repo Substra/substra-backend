@@ -6,7 +6,7 @@ import tempfile
 from os import path
 from os.path import isfile, isdir
 import shutil
-
+import json
 import functools
 import requests
 import tarfile
@@ -25,10 +25,10 @@ logger = logging.getLogger(__name__)
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
 
-def get_dir_hash(dir):
-    if not os.listdir(dir):
-        raise Exception(f"Cannot compute hash of folder {dir}: folder is empty.")
-    return dirhash(dir, 'sha256')
+def get_dir_hash(directory):
+    if not os.listdir(directory):
+        raise Exception(f"Cannot compute hash of folder {directory}: folder is empty.")
+    return dirhash(directory, 'sha256')
 
 
 def get_archive_hash(archive_object):
@@ -363,3 +363,37 @@ def remove_directory_contents(folder: str) -> None:
                 shutil.rmtree(file_path)
         except Exception as e:
             print("Failed to delete %s. Reason: %s" % (file_path, e))
+
+
+def list_dir(startpath: str, as_json=True) -> str:
+    """Walks a directory and returns a string containing all the files/subfolders"""
+
+    if not settings.TASK["LIST_WORKSPACE"]:
+        return "Error: listing files is disabled."
+
+    if not os.path.exists(startpath):
+        return f"Error: {startpath} does not exist."
+
+    if as_json:
+        return json.dumps(_path_to_dict(startpath))
+
+    res = ""
+    for root, _, files in os.walk(startpath, followlinks=True):
+        level = root.replace(startpath, "").count(os.sep)
+        indent = " " * 4 * (level)
+        res += f"{indent}{os.path.basename(root)}/" + "\n"
+        subindent = " " * 4 * (level + 1)
+        for f in files:
+            res += f"{subindent}{f}" + "\n"
+
+    return res
+
+
+def _path_to_dict(path):
+    d = {"name": os.path.basename(path)}
+    if os.path.isdir(path):
+        d["type"] = "directory"
+        d["children"] = [_path_to_dict(os.path.join(path, x)) for x in os.listdir(path)]
+    else:
+        d["type"] = "file"
+    return d

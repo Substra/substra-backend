@@ -8,23 +8,28 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
+from substrapp import exceptions
 from substrapp.models import Algo
-from substrapp.serializers import LedgerAlgoSerializer, AlgoSerializer
 from substrapp.utils import get_hash
-from substrapp.ledger.api import query_ledger, get_object_from_ledger
-from substrapp.ledger.exceptions import LedgerError, LedgerTimeoutError, LedgerConflictError
-from substrapp.views.utils import (PermissionMixin,
-                                   validate_key, get_success_create_code, LedgerExceptionError,
-                                   ValidationExceptionError, get_remote_asset, node_has_process_permission,
-                                   get_channel_name,)
+from substrapp.serializers import OrchestratorAlgoSerializer, AlgoSerializer
+from substrapp.views.utils import (PermissionMixin, validate_key, ValidationExceptionError,
+                                   get_remote_asset, node_has_process_permission,
+                                   get_channel_name, ALGO_CATEGORY)
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
+
+from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator.error import OrcError
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def replace_storage_addresses(request, algo):
     algo['description']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:algo-description', args=[algo['key']]))
-    algo['content']['storage_address'] = request.build_absolute_uri(
+    algo['algorithm']['storage_address'] = request.build_absolute_uri(
         reverse('substrapp:algo-file', args=[algo['key']])
     )
 
@@ -34,56 +39,46 @@ class AlgoViewSet(mixins.CreateModelMixin,
                   GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
-    ledger_query_call = 'queryAlgo'
     pagination_class = DefaultPageNumberPagination
-
-    def perform_create(self, serializer):
-        return serializer.save()
 
     def commit(self, serializer, request):
         # create on db
-        instance = self.perform_create(serializer)
+        instance = serializer.save()
 
-        ledger_data = {
-            'name': request.data.get('name'),
-            'permissions': request.data.get('permissions'),
-            'metadata': request.data.get('metadata')
-        }
-
-        # init ledger serializer
-        ledger_data.update({'instance': instance})
-        ledger_serializer = LedgerAlgoSerializer(data=ledger_data,
-                                                 context={'request': request})
-        if not ledger_serializer.is_valid():
-            # delete instance
+        # serialized data for orchestrator db
+        orchestrator_serializer = OrchestratorAlgoSerializer(
+            data={
+                'name': request.data.get('name'),
+                'category': ALGO_CATEGORY[self.basename],
+                'permissions': request.data.get('permissions'),
+                'metadata': request.data.get('metadata'),
+                'instance': instance
+            },
+            context={
+                'request': request
+            }
+        )
+        if not orchestrator_serializer.is_valid():
             instance.delete()
-            raise ValidationError(ledger_serializer.errors)
+            raise ValidationError(orchestrator_serializer.errors)
 
-        # create on ledger
+        # create on orchestrator db
         try:
-            data = ledger_serializer.create(get_channel_name(request), ledger_serializer.validated_data)
-        except LedgerTimeoutError as e:
-            if isinstance(serializer.data, list):
-                key = [x['key'] for x in serializer.data]
-            else:
-                key = [serializer.data['key']]
-            data = {'key': key, 'validated': False}
-            raise LedgerExceptionError(data, e.status)
-        except LedgerConflictError as e:
-            raise ValidationExceptionError(e.msg, e.key, e.status)
-        except LedgerError as e:
-            instance.delete()
-            raise LedgerExceptionError(str(e.msg), e.status)
+            data = orchestrator_serializer.create(
+                get_channel_name(request),
+                orchestrator_serializer.validated_data
+            )
         except Exception:
             instance.delete()
             raise
 
-        d = dict(serializer.data)
-        d.update(data)
+        merged_data = dict(serializer.data)
+        merged_data.update(data)
 
-        return d
+        return merged_data
 
-    def _create(self, request, file):
+    def _create(self, request):
+        file = request.data.get('file')
         try:
             checksum = get_hash(file)
         except Exception as e:
@@ -100,57 +95,63 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except Exception as e:
             raise ValidationExceptionError(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
         else:
-            # create on ledger + db
             return self.commit(serializer, request)
 
     def create(self, request, *args, **kwargs):
-        file = request.data.get('file')
-
         try:
-            data = self._create(request, file)
+            data = self._create(request)
         except ValidationExceptionError as e:
             return Response({'message': e.data, 'key': e.key}, status=e.st)
-        except LedgerExceptionError as e:
-            return Response({'message': e.data}, status=e.st)
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+        except Exception as e:
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
-            st = get_success_create_code()
-            return Response(data, status=st, headers=headers)
+            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def create_or_update_algo(self, channel_name, algo, key):
-        # get algo description from remote node
-        url = algo['description']['storage_address']
+    def create_or_update_algo_description(self, channel_name, algo, key):
+        # We need to have, at least, algo description for the frontend
+        content = get_remote_asset(
+            channel_name=channel_name,
+            url=algo['description']['storage_address'],
+            node_id=algo['owner'],
+            content_checksum=algo['description']['checksum']
+        )
 
-        content = get_remote_asset(channel_name, url, algo['owner'], algo['description']['checksum'])
+        description_file = tempfile.TemporaryFile()
+        description_file.write(content)
 
-        f = tempfile.TemporaryFile()
-        f.write(content)
-
-        # save/update objective in local db for later use
         instance, created = Algo.objects.update_or_create(key=key, validated=True)
-        instance.description.save('description.md', f)
+        instance.description.save('description.md', description_file)
 
         return instance
 
     def _retrieve(self, request, key):
         validate_key(key)
-        data = get_object_from_ledger(get_channel_name(request), key, self.ledger_query_call)
 
-        # do not cache if node has not process permission
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_algo(key)
+
+        # verify if algo description exists for the frontend view
+        # if not fetch it if it's possible
+        # do not fetch  algo description if node has not process permission
         if node_has_process_permission(data):
-            # try to get it from local db to check if description exists
             try:
                 instance = self.get_object()
             except Http404:
                 instance = None
             finally:
-                # check if instance has description
                 if not instance or not instance.description:
-                    instance = self.create_or_update_algo(get_channel_name(request), data, key)
+                    instance = self.create_or_update_algo_description(
+                        get_channel_name(request),
+                        data,
+                        key
+                    )
 
                 # For security reason, do not give access to local file address
                 # Restrain data to some fields
-                # TODO: do we need to send creation date and/or last modified date ?
                 serializer = self.get_serializer(instance, fields=('owner'))
                 data.update(serializer.data)
 
@@ -164,18 +165,27 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         try:
             data = self._retrieve(request, key)
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+        except exceptions.BadRequestError:
+            raise
+        except Exception as e:
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        try:
-            data = query_ledger(get_channel_name(request), fcn='queryAlgos', args=[])
-        except LedgerError as e:
-            return Response({'message': str(e.msg)}, status=e.status)
 
-        # parse filters
+        try:
+            with get_orchestrator_client(get_channel_name(request)) as client:
+                data = client.query_algos(ALGO_CATEGORY[self.basename])
+        except OrcError as rpc_error:
+            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+        except Exception as e:
+            logger.exception(e)
+            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         query_params = request.query_params.get('search')
 
         if query_params is not None:
@@ -185,8 +195,11 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     object_type='algo',
                     data=data,
                     query_params=query_params)
-            except LedgerError as e:
-                return Response({'message': str(e.msg)}, status=e.status)
+            except OrcError as rpc_error:
+                return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            except Exception as e:
+                logger.exception(e)
+                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         for algo in data:
             replace_storage_addresses(request, algo)
@@ -198,11 +211,10 @@ class AlgoPermissionViewSet(PermissionMixin,
                             GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
-    ledger_query_call = 'queryAlgo'
 
     @action(detail=True)
     def file(self, request, *args, **kwargs):
-        return self.download_file(request, 'file', 'content')
+        return self.download_file(request, 'query_algo', 'file', 'algorithm')
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -210,4 +222,4 @@ class AlgoPermissionViewSet(PermissionMixin,
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path='description', url_name='description')
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, 'description')
+        return self.download_file(request, 'query_algo', 'description')

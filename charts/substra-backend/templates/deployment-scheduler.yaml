@@ -65,6 +65,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-ledger
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -77,9 +79,9 @@ spec:
             - name: BACKEND_DB_PWD
               value: {{ .Values.postgresql.postgresqlPassword }}
             - name: DATABASE_HOST
-              value: {{ .Release.Name }}-postgresql
+              value: {{ template  "postgresql.serviceName" . }}
             - name: CELERY_BROKER_URL
-              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ .Release.Name }}-{{ .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
+              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
             - name: PYTHONUNBUFFERED
               value: "1"
             {{- if .Values.registry.local }}
@@ -120,16 +122,6 @@ spec:
             - name: HTTP_CLIENT_TIMEOUT_SECONDS
               value: {{ .Values.httpClient.timeoutSeconds | quote  }}
           volumeMounts:
-            - name: user-cert
-              mountPath: /var/hyperledger/msp/signcerts
-            - name: user-key
-              mountPath: /var/hyperledger/msp/keystore
-            - name: peer-tls-server
-              mountPath: /var/hyperledger/tls/server/pair
-            - name: peer-tls-client
-              mountPath: /var/hyperledger/tls/client/pair
-            - name: cacert
-              mountPath: /var/hyperledger/ca
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
               name: ssl-certs
@@ -137,18 +129,6 @@ spec:
           resources:
             {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
       volumes:
-      - name: user-cert
-        secret:
-          secretName: {{ $.Values.secrets.user.cert }}
-      - name: user-key
-        secret:
-          secretName: {{ $.Values.secrets.user.key }}
-      - name: peer-tls-server
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.server }}
-      - name: peer-tls-client
-        secret:
-          secretName: {{ $.Values.secrets.peer.tls.client }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}
@@ -156,9 +136,6 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      - name: cacert
-        secret:
-          secretName: {{ $.Values.secrets.caCert }}
     {{- with .Values.celeryworker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

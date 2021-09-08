@@ -8,15 +8,26 @@ import mock
 from django.urls import reverse
 from django.test import override_settings
 
+from parameterized import parameterized
+
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from ..common import get_sample_datamanager, AuthenticatedClient
+from substrapp.models import Objective, DataManager
+from substrapp.orchestrator.api import OrchestratorClient
+from substrapp.orchestrator.error import OrcError
+from substrapp.serializers import OrchestratorDataManagerSerializer
+
+from grpc import StatusCode
+
+from ..common import (get_sample_datamanager, AuthenticatedClient, get_sample_objective,
+                      get_sample_datamanager_metadata)
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 @override_settings(DEFAULT_DOMAIN='http://testserver')
 class DataManagerQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -28,77 +39,98 @@ class DataManagerQueryTests(APITestCase):
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_datamanager()
 
+        self.objective_description, self.objective_description_filename, \
+            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+
+        self.url = reverse('substrapp:data_manager-list')
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def get_default_datamanager_data(self):
+    def get_default_datamanager_data(self, with_test_objective=False):
+        json_ = {'name': 'slide opener',
+                 'type': 'images',
+                 'permissions': {
+                     'public': True,
+                     'authorized_ids': [],
+                 },
+                 'objective_key': None}
+
+        if with_test_objective:
+            json_['objective_key'] = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
+
         return {
-            'json': json.dumps({
-                'name': 'slide opener',
-                'type': 'images',
-                'permissions': {
-                    'public': True,
-                    'authorized_ids': [],
-                },
-                'objective_key': None,
-            }),
+            'json': json.dumps(json_),
             'description': self.data_description,
             'data_opener': self.data_data_opener
         }
 
-    def test_add_datamanager_sync_ok(self):
+    def add_default_objective(self):
+        objective = Objective.objects.create(
+            description=self.objective_description,
+            metrics=self.objective_metrics)
 
-        data = self.get_default_datamanager_data()
+        self.objective_key = str(objective.key)
 
-        url = reverse('substrapp:data_manager-list')
+    @parameterized.expand([
+        ("with_test_objective", True),
+        ("without_test_objective", False)
+    ])
+    def test_add_datamanager_ok(self, _, with_test_objective):
+        self.add_default_objective()
+        data = self.get_default_datamanager_data(with_test_objective)
+
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
 
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {'key': 'some key'}
-
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-            self.assertIsNotNone(r['key'])
+        with mock.patch.object(OrchestratorClient, 'register_datamanager', return_value={'key': 'some key'}):
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            self.assertIsNotNone(response.json()['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    @override_settings(LEDGER_SYNC_ENABLED=False)
-    @override_settings(
-        task_eager_propagates=True,
-        task_always_eager=True,
-        broker_url='memory://',
-        backend='memory'
-    )
-    def test_add_datamanager_no_sync_ok(self):
-
-        data = self.get_default_datamanager_data()
-
-        url = reverse('substrapp:data_manager-list')
-        extra = {
-            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
-            'HTTP_ACCEPT': 'application/json;version=0.0',
-        }
-
-        with mock.patch('substrapp.ledger.assets.invoke_ledger') as minvoke_ledger:
-            minvoke_ledger.return_value = {
-                'message': 'DataManager added in local db waiting for validation.'
-                           'The substra network has been notified for adding this DataManager'
-            }
-            response = self.client.post(url, data, format='multipart', **extra)
-            r = response.json()
-
-            self.assertIsNotNone(r['key'])
-            self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED)
-
     def test_add_datamanager_ko(self):
-        data = {'name': 'toto'}
-
-        url = reverse('substrapp:data_manager-list')
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
             'HTTP_ACCEPT': 'application/json;version=0.0',
         }
-        response = self.client.post(url, data, format='multipart', **extra)
+
+        error = OrcError()
+        error.details = 'OE0006'
+        error.code = StatusCode.ALREADY_EXISTS
+
+        # already exists
+        with mock.patch.object(OrchestratorDataManagerSerializer, 'create', side_effect=error):
+            response = self.client.post(self.url, self.get_default_datamanager_data(), format='multipart', **extra)
+            self.assertIn('OE0006', response.json()['message'])
+            self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+        data = {'name': 'empty datamanager'}
+        response = self.client.post(self.url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        data = {'description': self.data_description,
+                'data_opener': self.data_data_opener}
+        response = self.client.post(self.url, data, format='multipart', **extra)
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_datamanager_opener(self):
+        datamanager = DataManager.objects.create(name='slide opener',
+                                                 description=self.data_description,
+                                                 data_opener=self.data_data_opener)
+
+        with mock.patch('substrapp.views.utils.get_owner', return_value='foo'), \
+                mock.patch.object(OrchestratorClient, 'query_datamanager',
+                                  return_value=get_sample_datamanager_metadata()):
+
+            extra = {
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get(
+                f'/data_manager/{datamanager.key}/opener/', **extra)
+
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+            self.assertEqual(self.data_opener_filename,
+                             response.filename)

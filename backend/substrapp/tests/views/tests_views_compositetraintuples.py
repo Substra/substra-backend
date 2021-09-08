@@ -11,9 +11,10 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views import CompositeTraintupleViewSet
+from substrapp.views import ComputeTaskViewSet
 
-from substrapp.ledger.exceptions import LedgerError
+from substrapp.orchestrator.api import OrchestratorClient
+from grpc import RpcError, StatusCode
 
 from ..assets import compositetraintuple, objective
 from ..common import AuthenticatedClient
@@ -30,7 +31,8 @@ def get_compute_plan_key(assets):
 
 
 # APITestCase
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class CompositeTraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -43,6 +45,8 @@ class CompositeTraintupleViewTests(APITestCase):
             'HTTP_ACCEPT': 'application/json;version=0.0'
         }
 
+        self.url = reverse('substrapp:composite_traintuple-list')
+
         self.logger = logging.getLogger('django.request')
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
@@ -53,55 +57,48 @@ class CompositeTraintupleViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_compositetraintuple_queryset(self):
-        compositetraintuple_view = CompositeTraintupleViewSet()
+        compositetraintuple_view = ComputeTaskViewSet()
         self.assertFalse(compositetraintuple_view.get_queryset())
 
     def test_compositetraintuple_list_empty(self):
-        url = reverse('substrapp:composite_traintuple-list')
-        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = []
-
-            response = self.client.get(url, **self.extra)
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[]):
+            response = self.client.get(self.url, **self.extra)
             r = response.json()
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_compositetraintuple_retrieve(self):
 
-        with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.return_value = compositetraintuple[0]
-            url = reverse('substrapp:composite_traintuple-list')
+        with mock.patch.object(OrchestratorClient, 'query_task', return_value=compositetraintuple[0]), \
+             mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, compositetraintuple[0])
 
     def test_compositetraintuple_retrieve_fail(self):
-
-        url = reverse('substrapp:composite_traintuple-list')
-
         # Key < 32 chars
         search_params = '12312323/'
-        response = self.client.get(url + search_params, **self.extra)
+        response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Key not hexa
         search_params = 'X' * 32 + '/'
-        response = self.client.get(url + search_params, **self.extra)
+        response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        with mock.patch('substrapp.views.compositetraintuple.get_object_from_ledger') as mget_object_from_ledger:
-            mget_object_from_ledger.side_effect = LedgerError('Test')
-            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
+        error = RpcError()
+        error.details = 'out of range test'
+        error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
+            response = self.client.get(f'{self.url}{objective[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetraintuple_list_filter_tag(self):
-        url = reverse('substrapp:composite_traintuple-list')
-        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = compositetraintuple
-
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             search_params = '?search=composite_traintuple%253Atag%253Asubstra'
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r['results']), 1)
@@ -114,8 +111,8 @@ class CompositeTraintupleViewTests(APITestCase):
     def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         url = reverse('substrapp:composite_traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch('substrapp.views.compositetraintuple.query_ledger') as mquery_ledger:
-            mquery_ledger.return_value = compositetraintuple
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

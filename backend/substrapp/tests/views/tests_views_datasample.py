@@ -13,7 +13,9 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 
-from substrapp.serializers import LedgerDataSampleSerializer, DataSampleSerializer
+from substrapp.serializers import DataSampleSerializer
+
+from substrapp.orchestrator.api import OrchestratorClient
 
 from substrapp.utils import uncompress_content
 
@@ -26,7 +28,8 @@ MEDIA_ROOT = "/tmp/unittests_views/"
 
 
 # APITestCase
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(MEDIA_ROOT=MEDIA_ROOT,
+                   LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 @override_settings(DEFAULT_DOMAIN='https://localhost')
 class DataSampleViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -34,6 +37,8 @@ class DataSampleViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
+
+        self.url = reverse('substrapp:data_sample-list')
 
         self.data_description, self.data_description_filename, \
             self.data_data_opener, self.data_opener_filename = get_sample_datamanager()
@@ -53,10 +58,7 @@ class DataSampleViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_data_create_bulk(self):
-        url = reverse('substrapp:data_sample-list')
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
-
         data_path1 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         data_path2 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
         checksum1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
@@ -72,13 +74,12 @@ class DataSampleViewTests(APITestCase):
             })
         }
 
-        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+        with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}), \
                 mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
-            mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate_ledger.return_value = {'keys': ['some_key', 'some_other_key']}
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
+            response = self.client.post(self.url, data=data, format='multipart', **self.extra)
 
         self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum1)
         self.assertEqual(mcreate.call_args_list[1][0][0]['checksum'], checksum2)
@@ -90,13 +91,9 @@ class DataSampleViewTests(APITestCase):
             data[x].close()
 
     def test_data_create(self):
-        url = reverse('substrapp:data_sample-list')
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
-
         data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
-
         data = {
             'file': open(data_path, 'rb'),
             'json': json.dumps({
@@ -105,13 +102,12 @@ class DataSampleViewTests(APITestCase):
             })
         }
 
-        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+        with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}), \
                 mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
-            mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate_ledger.return_value = {'keys': ['some_key']}
-            response = self.client.post(url, data=data, format='multipart', **self.extra)
+            response = self.client.post(self.url, data=data, format='multipart', **self.extra)
 
         self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
         self.assertIsNotNone(response.data[0]['key'])
@@ -120,10 +116,7 @@ class DataSampleViewTests(APITestCase):
         data['file'].close()
 
     def test_data_create_parent_path(self):
-        url = reverse('substrapp:data_sample-list')
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
-
         data_zip_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
         data_parent_path = os.path.join(MEDIA_ROOT, 'data_samples')
         data_path = os.path.join(data_parent_path, '0024700')
@@ -140,13 +133,12 @@ class DataSampleViewTests(APITestCase):
             'multiple': True,
         }
 
-        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+        with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}), \
                 mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
 
-            mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate_ledger.return_value = {'keys': ['some_key']}
-            response = self.client.post(url, data=data, format='json', **self.extra)
+            response = self.client.post(self.url, data=data, format='json', **self.extra)
 
         self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
         self.assertIsNotNone(response.data[0]['key'])
@@ -170,12 +162,10 @@ class DataSampleViewTests(APITestCase):
             'data_manager_keys': [datamanager[0]['key']],
             'test_only': False
         }
-        with mock.patch.object(DataManager.objects, 'filter') as mdatamanager, \
-                mock.patch.object(LedgerDataSampleSerializer, 'create') as mcreate_ledger, \
+        with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
+                mock.patch.object(OrchestratorClient, 'register_datasamples',
+                                  return_value={}), \
                 mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
-
-            mdatamanager.return_value = FakeFilterDataManager(1)
-            mcreate_ledger.return_value = {'keys': ['some_key']}
             response = self.client.post(url, data=data, format='json', **self.extra)
 
         self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
@@ -184,8 +174,8 @@ class DataSampleViewTests(APITestCase):
 
     def test_datasamples_list(self):
         url = reverse('substrapp:data_sample-list')
-        with mock.patch('substrapp.views.datasample.query_ledger') as mquery_ledger:
-            mquery_ledger.side_effect = [None, ['DataSampleA', 'DataSampleB']]
+        with mock.patch.object(OrchestratorClient, 'query_datasamples',
+                               side_effect=[[], ['DataSampleA', 'DataSampleB']]):
 
             response = self.client.get(url, **self.extra)
             r = response.json()

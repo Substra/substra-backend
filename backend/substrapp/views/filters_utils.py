@@ -3,19 +3,20 @@ import itertools
 
 from urllib.parse import unquote
 
-from substrapp.ledger.api import query_ledger
+from substrapp.orchestrator.api import get_orchestrator_client
 from substrapp import exceptions
+from substrapp.views.utils import ALGO_CATEGORY
 
 logger = logging.getLogger(__name__)
 
 
 FILTER_QUERIES = {
-    'dataset': 'queryDataManagers',
-    'algo': 'queryAlgos',
-    'objective': 'queryObjectives',
-    'model': 'queryModels',
-    'composite_algo': 'queryCompositeAlgos',
-    'aggregate_algo': 'queryAggregateAlgos'
+    'dataset': 'query_datamanagers',
+    'algo': 'query_algos',
+    'objective': 'query_objectives',
+    'model': 'query_models',
+    'composite_algo': 'query_algos',
+    'aggregate_algo': 'query_algos',
 }
 
 AUTHORIZED_FILTERS = {
@@ -140,7 +141,7 @@ def filter_list(channel_name, object_type, data, query_params):
                 elif filter_key == 'objective':
                     for attribute, val in subfilters.items():
                         if attribute == 'metrics':  # specific to nested metrics
-                            filtered_list = [x for x in filtered_list if x[attribute]['name'] in val]
+                            filtered_list = [x for x in filtered_list if x['metrics_name'] in val]
                         else:
                             filtered_list = [x for x in filtered_list if x[attribute] in val]
 
@@ -151,7 +152,11 @@ def filter_list(channel_name, object_type, data, query_params):
                 # Filter by other asset
 
                 # Get other asset list
-                filtering_data = query_ledger(channel_name, fcn=FILTER_QUERIES[filter_key], args=[])
+                with get_orchestrator_client(channel_name) as client:
+                    if filter_key in ['algo', 'composite_algo', 'aggregate_algo']:
+                        filtering_data = getattr(client, FILTER_QUERIES[filter_key])(ALGO_CATEGORY[filter_key])
+                    else:
+                        filtering_data = getattr(client, FILTER_QUERIES[filter_key])()
 
                 filtering_data = filtering_data if filtering_data else []
 
@@ -222,12 +227,12 @@ def filter_list(channel_name, object_type, data, query_params):
                             objective_keys = [x['objective_key'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list
                                              if x['key'] in objective_keys or
-                                             (x['test_dataset'] and x['test_dataset']['data_manager_key'] in keys)]
+                                             (x['data_manager_key'] and x['data_manager_key'] in keys)]
 
                 elif filter_key == 'objective':
                     for attribute, val in subfilters.items():
                         if attribute == 'metrics':  # specific to nested metrics
-                            filtering_data = [x for x in filtering_data if x[attribute]['name'] in val]
+                            filtering_data = [x for x in filtering_data if x['metrics_name'] in val]
                         else:
                             filtering_data = [x for x in filtering_data if x[attribute] in val]
 

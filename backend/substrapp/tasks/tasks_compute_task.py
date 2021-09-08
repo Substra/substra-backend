@@ -19,9 +19,12 @@ import json
 import os
 from os import path
 from django.conf import settings
-from substrapp.compute_tasks.categories import TASK_CATEGORY_TESTTUPLE
+import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.orchestrator.api import get_orchestrator_client
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
+from substrapp.lock_local import lock_resource
+from substrapp.utils import list_dir
 from substrapp.compute_tasks.directories import (
     Directories,
     CPDirName,
@@ -29,7 +32,6 @@ from substrapp.compute_tasks.directories import (
     init_compute_plan_dirs,
     init_task_dirs,
     teardown_task_dirs,
-    teardown_compute_plan_dir,
     restore_dir,
     commit_dir,
 )
@@ -45,12 +47,8 @@ from substrapp.compute_tasks.save_models import save_models
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.exception_handler import compute_error_code
-from substrapp.ledger.exceptions import LedgerError
-from substrapp.docker_registry import delete_container_image
-from substrapp.lock_local import lock_resource
 from celery import Task
 from backend.celery import app
-from substrapp.ledger.api import log_success_tuple, log_fail_tuple, is_task_runnable
 
 
 logger = logging.getLogger(__name__)
@@ -71,11 +69,12 @@ class ComputeTask(Task):
 
         close_old_connections()
 
-        channel_name, task_category, task = self.split_args(args)
-        try:
-            log_success_tuple(channel_name, task_category, task["key"], retval["result"])
-        except LedgerError as e:
-            logger.exception(e)
+        channel_name, task = self.split_args(args)
+        with get_orchestrator_client(channel_name) as client:
+            category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
+            if category == computetask_pb2.TASK_TEST:
+                client.register_performance({'compute_task_key': task["key"],
+                                             'performance_value': float(retval['result']['global_perf'])})
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         logger.info(f"Retrying task {task_id} (attempt {self.request.retries + 2}/{CELERY_TASK_MAX_RETRIES + 1})")
@@ -84,24 +83,21 @@ class ComputeTask(Task):
         from django.db import close_old_connections
 
         close_old_connections()
-        channel_name, task_category, task = self.split_args(args)
+        channel_name, task = self.split_args(args)
 
-        try:
-            error_code = compute_error_code(exc)
-            # Do not show traceback if it's a container error as we already see them in
-            # container log
-            type_exc = type(exc)
-            type_value = str(type_exc).split("'")[1]
-            logger.error(f'Failed compute task: {task_category} {task["key"]} {error_code} - {type_value}')
-            log_fail_tuple(channel_name, task_category, task["key"], error_code)
-        except LedgerError as e:
-            logger.exception(e)
+        error_code = compute_error_code(exc)
+        # Do not show traceback if it's a container error as we already see them in
+        # container log
+        type_exc = type(exc)
+        type_value = str(type_exc).split("'")[1]
+        logger.error(f'Failed compute task: {task["category"]} {task["key"]} {error_code} - {type_value}')
+        with get_orchestrator_client(channel_name) as client:
+            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_code)
 
     def split_args(self, celery_args):
         channel_name = celery_args[0]
-        task_category = celery_args[1]
-        task = celery_args[2]
-        return channel_name, task_category, task
+        task = celery_args[1]
+        return channel_name, task
 
 
 @app.task(
@@ -114,7 +110,9 @@ class ComputeTask(Task):
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self, channel_name: str, task_category: str, task, compute_plan_key):
+def compute_task(self, channel_name: str, task, compute_plan_key):
+    task_category = computetask_pb2.ComputeTaskCategory.Value(task['category'])
+
     try:
         worker = self.request.hostname.split("@")[1]
         queue = self.request.delivery_info["routing_key"]
@@ -124,16 +122,18 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
 
     result = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
 
-    # In case of retries: only execute the compute task if the compute plan hasn't been cancelled
-    should_run = is_task_runnable(channel_name, task["key"], task_category, task["compute_plan_key"])
-    if not should_run:
+    # In case of retries: only execute the compute task if it is not in a final state
+    with get_orchestrator_client(channel_name) as client:
+        should_not_run = client.is_task_in_final_state(task["key"])
+    if should_not_run:
         raise Exception(
             f"Gracefully aborting execution of task {task['key']}. Task is not in a runnable state anymore."
         )
 
     task_key = task["key"]
-    logger.warning(f"{task_category} {task_key} {task}")
-
+    logger.warning(f"{computetask_pb2.ComputeTaskCategory.Name(task_category)} {task_key} {task}")
+    ctx = None
+    dirs = None
     has_chainkeys = False
 
     # This lock serves multiple purposes:
@@ -164,7 +164,7 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
     with lock_resource("compute-plan", compute_plan_key or task_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
         try:
             # Create context
-            ctx = Context.from_task(channel_name, task, task_category, self.attempt)
+            ctx = Context.from_task(channel_name, task, self.attempt)
             dirs = ctx.directories
             has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and ctx.compute_plan_tag
 
@@ -173,22 +173,25 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
             init_compute_plan_dirs(dirs)
             init_task_dirs(dirs)
             add_algo_to_buffer(ctx)
-            if ctx.task_category == TASK_CATEGORY_TESTTUPLE:
+            if ctx.task_category == computetask_pb2.TASK_TEST:
                 add_metrics_to_buffer(ctx)
             add_task_assets_to_buffer(ctx)
             add_assets_to_taskdir(ctx)
-            if task_category != TASK_CATEGORY_TESTTUPLE:
+            if task_category != computetask_pb2.TASK_TEST:
                 if has_chainkeys:
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
-            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
+            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)   # testtuple "predict" may need local dir
+
+            logger.debug(f"Task directory: {list_dir(dirs.task_dir)}")
+
             build_images(ctx)
 
             # Command execution
             execute_compute_task(ctx)
 
             # Collect results
-            if task_category == TASK_CATEGORY_TESTTUPLE:
+            if task_category == computetask_pb2.TASK_TEST:
                 result["result"] = _get_perf(dirs)
             else:
                 result["result"] = save_models(ctx)
@@ -206,21 +209,6 @@ def compute_task(self, channel_name: str, task_category: str, task, compute_plan
         finally:
             # Teardown
             teardown_task_dirs(dirs)
-
-            if not settings.DEBUG_KEEP_POD_AND_DIRS:
-
-                # TODO orchestrator: delete this block
-                if not ctx.compute_plan_key:
-                    teardown_compute_plan_dir(dirs)
-
-            # TODO orchestrator: delete this block
-            if (
-                ctx.compute_plan_key is None and
-                not settings.TASK["CACHE_DOCKER_IMAGES"] and
-                not settings.DEBUG_QUICK_IMAGE
-            ):
-                image_tag = ctx.metrics_image_tag if task_category == TASK_CATEGORY_TESTTUPLE else ctx.algo_image_tag
-                delete_container_image(image_tag)
 
     logger.warning(f"result: {result['result']}")
     return result

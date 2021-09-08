@@ -51,6 +51,16 @@ make coverage
 
 Should you prefer an HTML report, you can use `coverage html` from the `backend` directory.
 
+## Updating gRPC definitions
+
+Assuming you have cloned the [orchestrator](https://github.com/owkin/orchestrator) in `<orchestrator_root>`:
+```sh
+cd backend
+ORCHESTRATOR_ROOT=<orchestrator_root> make orchestrator-grpc
+```
+
+Note that this requires grpcio-tools, which should be available if you installed requirements (see above).
+
 ## Accessing the app
 
 On deployment, several user accounts are created (for [./values/backend-org-1.yaml](org1) and [./values/backend-org-2.yaml](org2)).
@@ -79,7 +89,7 @@ skaffold deploy --images substrafoundation/substra-backend:$SUBSTRA_BACKEND_VERS
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
 
 - [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
-- [substra-chaincode](https://github.com/SubstraFoundation/substra-chaincode) is the chaincode powering the Fabric network
+- [orchestrator](https://github.com/owkin/orchestrator) contains the orchestration logic of a federated learning deployment
 - [substra-frontend](https://github.com/SubstraFoundation/substra-frontend) is the frontend consuming the API exposed by the backend
 - [substra-tests](https://github.com/SubstraFoundation/substra-tests) is the Substra end to end test suite
 

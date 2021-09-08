@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponse
-from substrapp.ledger.connection import get_hfc
+from substrapp.orchestrator.api import get_orchestrator_client
 
 
 class HealthCheckMiddleware(object):
@@ -32,9 +32,12 @@ class HealthCheckMiddleware(object):
 
 
 def validate_channels():
-    # Check ledger connection for each channel
-    for channel_name, channel in settings.LEDGER_CHANNELS.items():
-        with get_hfc(channel_name) as (loop, client, user):
-            # if channel_name starts with 'solo-' channel name is include channel['restricted']
-            # get_hfc will throw if the solo channel has more than 1 member
-            pass
+    # Check orchetrator connection for each channel
+    for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
+        with get_orchestrator_client(channel_name) as client:
+            # throw an Execption if the solo channel has more than 1 member
+            if channel_name.startswith('solo-') or channel_settings['restricted']:
+                nodes = [node['id'] for node in client.query_nodes()]
+                if (len(nodes) > 1):
+                    raise Exception(f'Restricted channel {channel_name} should have at most 1 member, but has '
+                                    f'{len(nodes)}')

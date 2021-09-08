@@ -86,8 +86,7 @@ def lock_resource(resource_type: str, unique_identifier: str, ttl: int, delay: i
             raise Exception(f"Failed to acquire resource lock {unique_identifier} after {timeout} seconds")
         time.sleep(delay)
 
-    if did_wait:
-        logger.debug(f"Lock: Acquired resource {lock_file}")
+    logger.debug(f"Lock: Acquired resource {lock_file}")
 
     try:
         yield

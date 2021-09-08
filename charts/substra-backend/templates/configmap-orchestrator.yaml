@@ -1,0 +1,25 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "substra.fullname" . }}-orchestrator
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ include "substra.name" . }}
+data:
+  ORCHESTRATOR_HOST: "{{ $.Values.orchestrator.host }}"
+  ORCHESTRATOR_PORT: "{{ $.Values.orchestrator.port }}"
+  ORCHESTRATOR_TLS_ENABLED: "{{ $.Values.orchestrator.tls.enabled }}"
+  ORCHESTRATOR_MTLS_ENABLED: "{{ and $.Values.orchestrator.tls.enabled $.Values.orchestrator.tls.mtls.enabled }}"
+  ORCHESTRATOR_TLS_SERVER_CACERT_PATH: "/var/substra/orchestrator/tls/server/ca.crt"
+  ORCHESTRATOR_TLS_CLIENT_CERT_PATH: "/var/substra/orchestrator/tls/client/tls.crt"
+  ORCHESTRATOR_TLS_CLIENT_KEY_PATH: "/var/substra/orchestrator/tls/client/tls.key"
+
+  # RabbitMQ
+  ORCHESTRATOR_RABBITMQ_HOST: "{{ $.Values.orchestrator.rabbitmq.host }}"
+  ORCHESTRATOR_RABBITMQ_PORT: {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}"{{ $.Values.orchestrator.rabbitmq.tls.port }}"{{ else }}"{{ $.Values.orchestrator.rabbitmq.port }}"{{ end }}
+  ORCHESTRATOR_RABBITMQ_AUTH_USER: "{{ $.Values.orchestrator.rabbitmq.auth.username }}"
+  ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD: "{{ $.Values.orchestrator.rabbitmq.auth.password }}"
+  ORCHESTRATOR_RABBITMQ_TLS_ENABLED: "{{ $.Values.orchestrator.rabbitmq.tls.enabled }}"
+  ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH: "/var/substra/orchestrator_rabbitmq/tls/client/ca.crt"
+  ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH: "/var/substra/orchestrator_rabbitmq/tls/client/tls.crt"
+  ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH: "/var/substra/orchestrator_rabbitmq/tls/client/tls.key"
