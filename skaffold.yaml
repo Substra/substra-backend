@@ -105,3 +105,11 @@ profiles:
       - op: add
         path: /deploy/helm/releases/1/setValues/orchestrator.rabbitmq.host
         value: owkin-orchestrator-org-2-rabbitmq.org-2.svc.cluster.local
+  - name: persist-db
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/setValues/postgresql.persistence.enabled
+        value: true
+      - op: add
+        path: /deploy/helm/releases/1/setValues/postgresql.persistence.enabled
+        value: true
