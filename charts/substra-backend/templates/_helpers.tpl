@@ -17,6 +17,16 @@ We truncate at 63 chars because some Kubernetes name fields are limited to this 
 
 
 {{/*
+Create a fully qualified app name for the server.
+We truncate at 56 chars because some Kubernetes name fields are limited to 63 chars (by the DNS naming spec).
+*/}}
+{{- define "substra.server.fullname" -}}
+{{- $name := include "substra.fullname" . | trunc 56 | trimSuffix "-" -}}
+{{- printf "%s-server" $name -}}
+{{- end -}}
+
+
+{{/*
 Return the appropriate apiVersion for PodSecurityPolicy.
 */}}
 {{- define "podsecuritypolicy.apiVersion" -}}
@@ -86,4 +96,17 @@ Redefine the rabbitmq service name because we can't use subchart templates direc
 {{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
+{{- end -}}
+
+{{/*
+Renders a value that contains template.
+Usage:
+{{ include "common.tplvalues.render" ( dict "value" .Values.path.to.the.Value "context" $) }}
+*/}}
+{{- define "common.tplvalues.render" -}}
+    {{- if typeIs "string" .value }}
+        {{- tpl .value .context }}
+    {{- else }}
+        {{- tpl (.value | toYaml) .context }}
+    {{- end }}
 {{- end -}}

@@ -44,18 +44,51 @@ backend:
     # nodePort: 30000
 
   ingress:
+    # Enable ingress ressource for the connect API
     enabled: false
-    annotations: {}
-      # kubernetes.io/ingress.class: nginx
-      # kubernetes.io/tls-acme: "true"
-    hosts:
-      - host: chart-example.local
-        paths: []
 
-    tls: []
-    #  - secretName: chart-example-tls
-    #    hosts:
-    #      - chart-example.local
+    # Path for the default host
+    path: /
+
+    # The list of extra paths to be created for the default host
+    # e.g:
+    # extraPaths:
+    #   - path: /
+    #     pathType: ImplementationSpecific
+    #     backend:
+    #       service:
+    #         name: substra-backend-svc
+    #         port:
+    #           name: http
+    extraPaths: []
+
+    # Ingress path type
+    pathType: ImplementationSpecific
+
+    # Default host for the ingress
+    hostname: chart-example.local
+
+    annotations: {}
+
+    # The list of additional hostnames to be covered with this ingress record
+    # e.g:
+    # extraHosts:
+    #   - name: chart-example.local
+    #     path: /
+    #     pathType: ImplementationSpecific
+    extraHosts: []
+
+    # The tls configuration for hostnames to be coverred by the ingress
+    # e.g:
+    # extraTls:
+    #   - hosts:
+    #       - chart-example.local
+    #     secretName: connect-tls
+    extraTls: []
+
+    # IngressClass that will be used to implement the Ingress
+    # This is required if you have more than one default ingress class in your cluster
+    ingressClassName:
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious

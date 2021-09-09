@@ -47,10 +47,13 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.service.labels` | Service labels | `{}` (evaluated as a template) |
 | `backend.service.annotations` | Service annotations | `{}` (evaluated as a template) |
 | `backend.ingress.enabled` | Enable ingress resource for Management console | `False` |
-| `backend.ingress.annotations` | Ingress annotations | `{}`                           |
-| `backend.ingress.hosts[].host` | Hostname for the ingress resource | `chart-example.local`
-| `backend.ingress.hosts[].paths` | Paths for the host | `[]` |
-| `backend.ingress.tls` | TLS configuration for the hosts defined in `backend.ingress.hosts[]`| `[]` |
+| `backend.ingress.path` | Path for the default host | `/` |
+| `backend.ingress.pathType` | Ingress path type | `ImplementationSpecific` |
+| `backend.ingress.hostname` | Default host for the ingress | `chart-example.local` |
+| `backend.ingress.annotations` | Annotations for the ingress | `{}` |
+| `backend.ingress.extraHosts` | The list of additionnal hostnames to be covered by the ingress | `[]` |
+| `backend.ingress.extraTls` | The tls configuration for the ingress hostnames | `[]` |
+| `backend.ingress.ingressClassName` | IngressClass that will be used to implement the ingress | `nil` |
 | `backend.resources` | Resources configuration for the `substra-backend` container | `{}` |
 | `backend.grpc.keepalive.timeMs` | The number of milliseconds between each client GRPC keepalive ping | `120000` |
 | `backend.pagination.maxPageSize` | The maximum elements per page authorized | `100` |

@@ -1,4 +1,14 @@
 # Changelog
+## 5.0.0
+
+### Added
+- support for Kubernetes 1.22
+
+### Changed
+- Ingress values definitions
+
+### Removed
+- support for Kubernetes versions <= 1.19.0
 
 ## 4.0.0
 
@@ -13,9 +23,9 @@
 - support for subchart fullnameOverride
 - support orchestrator connection configuration (grpc + rabbitmq)
 
-
 ## 3.3.1
 
+### Fixed
 - Fixed kaniko cache warmer
 
 ## 3.3.0

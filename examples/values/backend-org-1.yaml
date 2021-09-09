@@ -32,8 +32,7 @@ backend:
           - image: gcr.io/connect-314908/connect-tools:0.9.0-minimal
   ingress:
     enabled: true
-    hosts:
-      - { host: substra-backend.node-1.com, paths: ["/"] }
+    hostname: "substra-backend.node-1.com"
     annotations:
       kubernetes.io/ingress.class: nginx
       nginx.ingress.kubernetes.io/client-body-buffer-size: 100m

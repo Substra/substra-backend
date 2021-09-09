@@ -1,35 +1,48 @@
 {{- if .Values.backend.ingress.enabled -}}
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ template "substra.fullname" . }}-server
+  name: {{ template "substra.server.fullname" . }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-  {{- with .Values.backend.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
-  {{- end }}
+    {{- if .Values.backend.ingress.annotations -}}
+    {{- include "common.tplvalues.render" (dict "value" .Values.backend.ingress.annotations "context" $ ) | nindent 4 }}
+    {{- end }}
 spec:
-{{- if .Values.backend.ingress.tls }}
-  tls:
-  {{- range .Values.backend.ingress.tls }}
-    - hosts:
-      {{- range .hosts }}
-        - {{ . | quote }}
-      {{- end }}
-      secretName: {{ .secretName }}
+  {{- if .Values.backend.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.backend.ingressClassName | quote }}
   {{- end }}
-{{- end }}
   rules:
-  {{- range .Values.backend.ingress.hosts }}
-    - host: {{ .host | quote }}
+    {{- if .Values.backend.ingress.hostname }}
+    - host: {{ include "common.tplvalues.render" ( dict "value" .Values.backend.ingress.hostname "context" $ ) }}
       http:
         paths:
-        {{- range .paths }}
-          - path: {{ . }}
+          {{- if .Values.backend.ingress.extraPaths }}
+          {{- toYaml .Values.backend.ingress.extraPaths | nindent 10 }}
+          {{- end }}
+          - path: {{ .Values.backend.ingress.path }}
+            pathType: {{ .Values.backend.ingress.pathType }}
             backend:
-              serviceName: {{ template "substra.fullname" $ }}-server
-              servicePort: http
-        {{- end }}
+              service:
+                name: {{ template "substra.server.fullname" . }}
+                port:
+                  name: http
+    {{- end }}
+    {{- range .Values.backend.ingress.extraHosts }}
+    - host: {{ include "common.tplvalues.render" ( dict "value" .name "context" $ ) }}
+      http:
+        paths:
+          - path: {{ default "/" .path }}
+            pathType: {{ default "ImplementationSpecific" .pathType }}
+            backend:
+              service:
+                name: {{ template "substra.server.fullname" $ }}
+                port:
+                  name: http
+    {{- end }}
+  {{- if .Values.backend.ingress.extraTls }}
+  tls:
+    {{- include "common.tplvalues.render" (dict "value" .Values.backend.ingress.extraTls "context" $) | nindent 4 }}
   {{- end }}
 {{- end }}
