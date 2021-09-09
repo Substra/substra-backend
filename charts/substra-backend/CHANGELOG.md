@@ -1,4 +1,10 @@
 # Changelog
+
+## 5.0.1
+
+### Added
+- Support for 1.19.x pre-releases
+
 ## 5.0.0
 
 ### Added
