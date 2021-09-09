@@ -73,7 +73,7 @@ def on_computetask_event(payload):
             compute_plan = client.query_compute_plan(task['compute_plan_key'])
             if computeplan_pb2.ComputePlanStatus.Value(compute_plan['status']) in [
                     computeplan_pb2.PLAN_STATUS_DONE,
-                    computeplan_pb2.PLAN_ACTION_CANCELED,
+                    computeplan_pb2.PLAN_STATUS_CANCELED,
                     computeplan_pb2.PLAN_STATUS_FAILED]:
                 logger.info('Compute plan %s finished with status: %s', compute_plan['key'], compute_plan['status'])
                 on_compute_plan_finished.apply_async((channel_name, compute_plan), queue=worker_queue)
