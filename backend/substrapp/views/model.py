@@ -75,7 +75,7 @@ class ModelViewSet(PaginationMixin,
         try:
             data = self._retrieve(request, key)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
             raise
         except Exception as e:
@@ -89,7 +89,7 @@ class ModelViewSet(PaginationMixin,
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_models()
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -104,7 +104,7 @@ class ModelViewSet(PaginationMixin,
                     query_params=query_params,
                 )
             except OrcError as rpc_error:
-                return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
             except Exception as e:
                 logger.exception(e)
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

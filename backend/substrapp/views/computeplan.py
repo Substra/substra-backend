@@ -233,7 +233,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         except ValidationExceptionError as e:
             return Response({'message': e.data, 'key': e.key}, status=e.st)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -250,7 +250,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_compute_plan(key)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
             raise
         except Exception as e:
@@ -264,7 +264,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_compute_plans()
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -278,7 +278,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                     data=data,
                     query_params=query_params)
             except OrcError as rpc_error:
-                return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
             except Exception as e:
                 logger.exception(e)
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -295,7 +295,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                 client.cancel_compute_plan(key)
                 compute_plan = client.query_compute_plan(key)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -334,7 +334,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                     "tasks": tasks
                 })
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -366,7 +366,7 @@ class GenericSubassetViewset(PaginationMixin,
                 for datum in data:
                     datum = add_task_extra_information(client, basename, datum)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)

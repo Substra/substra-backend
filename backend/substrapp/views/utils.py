@@ -136,7 +136,7 @@ class PermissionMixin(object):
                 asset = getattr(client, query_method)(key)
         except OrcError as rpc_error:
             return Response(
-                {"message": str(rpc_error.details)}, status=rpc_error.http_status()
+                {"message": rpc_error.details}, status=rpc_error.http_status()
             )
 
         try:
@@ -169,7 +169,7 @@ class PermissionMixin(object):
                 asset = getattr(client, query_method)(key)
         except OrcError as rpc_error:
             return Response(
-                {"message": str(rpc_error.details)}, status=rpc_error.http_status()
+                {"message": rpc_error.details}, status=rpc_error.http_status()
             )
 
         try:

@@ -33,8 +33,16 @@ from functools import wraps
 
 logger = logging.getLogger(__name__)
 
+GRPC_RETRYABLE_ERRORS = [
+    grpc.StatusCode.UNKNOWN,
+    grpc.StatusCode.UNAVAILABLE,
+]
+
 
 def grpc_retry(func):
+    """Decorator to handle grpc errors from the orchestrator.
+    It retries on UNKNOWN or UNAVAILABLE error and wraps the returned error as an OrcError.
+    """
     # In case of grpc status code unknow, we retry 5 times spaced by 1s
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -47,9 +55,9 @@ def grpc_retry(func):
 
                 err = OrcError()
                 err.code = grpc.StatusCode(rpc_error.code())
-                err.details = str(rpc_error.details)
+                err.details = rpc_error.details()
 
-                if rpc_error.code() in [grpc.StatusCode.UNKNOWN, grpc.StatusCode.UNAVAILABLE]:
+                if rpc_error.code() in GRPC_RETRYABLE_ERRORS:
                     retry_exception = err
                     logger.exception(rpc_error)
 

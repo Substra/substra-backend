@@ -103,7 +103,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         except ValidationExceptionError as e:
             return Response({'message': e.data, 'key': e.key}, status=e.st)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -166,7 +166,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
         try:
             data = self._retrieve(request, key)
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
             raise
         except Exception as e:
@@ -181,7 +181,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_algos(ALGO_CATEGORY[self.basename])
         except OrcError as rpc_error:
-            return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
@@ -196,7 +196,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     data=data,
                     query_params=query_params)
             except OrcError as rpc_error:
-                return Response({'message': str(rpc_error.details)}, status=rpc_error.http_status())
+                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
             except Exception as e:
                 logger.exception(e)
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
