@@ -47,6 +47,10 @@ from substrapp.compute_tasks.save_models import save_models
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.exception_handler import compute_error_code
+from substrapp.compute_tasks.transfer_bucket import (
+    TAG_VALUE_FOR_TRANSFER_BUCKET,
+    transfer_to_bucket,
+)
 from celery import Task
 from backend.celery import app
 
@@ -193,6 +197,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             # Collect results
             if task_category == computetask_pb2.TASK_TEST:
                 result["result"] = _get_perf(dirs)
+                _transfer_model_to_bucket(ctx)
             else:
                 result["result"] = save_models(ctx)
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
@@ -222,3 +227,10 @@ def _get_perf(dirs: Directories) -> object:
 def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
     chainkeys_dir = os.path.join(compute_plan_dir, CPDirName.Chainkeys)
     prepare_chainkeys_dir(chainkeys_dir, compute_plan_tag)  # does nothing if chainkeys already populated
+
+
+def _transfer_model_to_bucket(ctx: Context) -> None:
+    """Export model to S3 bucket if the CP has appropriate tag"""
+    if ctx.compute_plan_tag and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.compute_plan_tag:
+        logger.debug("CP eligible to bucket export")
+        transfer_to_bucket(ctx)

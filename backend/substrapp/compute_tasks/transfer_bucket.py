@@ -25,7 +25,11 @@ logger = logging.getLogger(__name__)
 @timeit
 def transfer_to_bucket(ctx: Context) -> None:
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
-        logger.error(f"S3 settings for bucket transfer are not set: {ACCESS_KEY} {SECRET_KEY} {BUCKET_NAME}")
+        redacted_secret_key = "*" * len(SECRET_KEY) if SECRET_KEY else None
+        logger.error(
+            f"S3 settings for bucket transfer are not set: "
+            f"ACCESS_KEY:{ACCESS_KEY} SECRET_KEY:{redacted_secret_key} BUCKET_NAME:{BUCKET_NAME}"
+        )
         return
 
     paths = [
@@ -36,7 +40,7 @@ def transfer_to_bucket(ctx: Context) -> None:
 
     with tempfile.TemporaryDirectory(prefix="/tmp/") as tmpdir:
 
-        tar_name = f"{ctx.task['key']}.tar.gz"
+        tar_name = f"{ctx.compute_plan_key}-{ctx.task['key']}.tar.gz"
         tar_path = os.path.join(tmpdir, tar_name)
 
         with tarfile.open(tar_path, "x:gz") as tar:
@@ -50,4 +54,6 @@ def transfer_to_bucket(ctx: Context) -> None:
             region_name=S3_REGION_NAME,
         )
 
-        s3.upload_file(tar_path, BUCKET_NAME, f"{S3_PREFIX}/{tar_name}" if S3_PREFIX else tar_name)
+        s3.upload_file(
+            tar_path, BUCKET_NAME, f"{S3_PREFIX}/{tar_name}" if S3_PREFIX else tar_name
+        )
