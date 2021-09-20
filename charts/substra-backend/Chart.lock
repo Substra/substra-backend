@@ -6,7 +6,7 @@ dependencies:
   repository: https://charts.bitnami.com/bitnami
   version: 10.3.6
 - name: docker-registry
-  repository: https://charts.helm.sh/stable
-  version: 1.9.2
-digest: sha256:9ef8d3e8134712e9877c19e550f48564cc2b5bbf8f14dd838938ec5d03765b50
-generated: "2021-07-26T15:13:17.984004+02:00"
+  repository: https://helm.twun.io
+  version: 1.13.0
+digest: sha256:5d83eff4013dddd2a11d506d3a6e7afbc33178352fd080e0ace3c5d9f9ef1974
+generated: "2021-09-17T10:25:09.279599+02:00"

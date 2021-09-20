@@ -64,6 +64,7 @@ jobs:
         run: |
           helm repo add bitnami https://charts.bitnami.com/bitnami
           helm repo add std-helm https://charts.helm.sh/stable
+          helm repo add twuni https://helm.twun.io
       - name: Package chart
         env:
           HARBOR_AUTH_TOKEN: ${{ secrets.HARBOR_AUTH_TOKEN }}

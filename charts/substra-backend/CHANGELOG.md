@@ -1,5 +1,12 @@
 # Changelog
 
+
+## 6.0.0
+
+### Changed
+- Change docker-registry helm chart from stable deprecated for twuni maintained
+
+
 ## 5.0.1
 
 ### Added
