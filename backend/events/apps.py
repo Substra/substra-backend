@@ -21,7 +21,7 @@ from substrapp.utils import get_owner
 
 from celery.result import AsyncResult
 
-from substrapp.tasks.tasks_compute_plan import on_compute_plan_finished
+from substrapp.tasks.tasks_compute_plan import delete_cp_pod_and_dirs_and_optionally_images
 from substrapp.tasks.tasks_remove_intermediary_models import (
     remove_intermediary_models,
     remove_intermediary_models_from_buffer
@@ -76,7 +76,10 @@ def on_computetask_event(payload):
                     computeplan_pb2.PLAN_STATUS_CANCELED,
                     computeplan_pb2.PLAN_STATUS_FAILED]:
                 logger.info('Compute plan %s finished with status: %s', compute_plan['key'], compute_plan['status'])
-                on_compute_plan_finished.apply_async((channel_name, compute_plan), queue=worker_queue)
+                if not settings.DEBUG_KEEP_POD_AND_DIRS:
+                    delete_cp_pod_and_dirs_and_optionally_images.apply_async(
+                        (channel_name, compute_plan), queue=worker_queue
+                    )
 
     if event_task_status != computetask_pb2.STATUS_TODO:
         return

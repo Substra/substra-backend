@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 @app.task(ignore_result=False)
-def on_compute_plan_finished(channel_name, compute_plan):
+def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
 
     compute_plan_key = compute_plan["key"]
     with get_orchestrator_client(channel_name) as client:
@@ -23,8 +23,6 @@ def on_compute_plan_finished(channel_name, compute_plan):
     algo_keys = [x["key"] for x in algos]
     objective_keys = [x["test"]["objective_key"] for x in test_tasks]
 
-    if settings.DEBUG_KEEP_POD_AND_DIRS:
-        return
     # See lock function PyDoc for explanation as to why this lock is necessary
     with get_compute_plan_lock(compute_plan_key):
 
