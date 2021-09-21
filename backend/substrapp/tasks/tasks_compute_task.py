@@ -127,14 +127,16 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
     result = {"worker": worker, "queue": queue, "compute_plan_key": compute_plan_key}
 
     # In case of retries: only execute the compute task if it is not in a final state
-    with get_orchestrator_client(channel_name) as client:
-        should_not_run = client.is_task_in_final_state(task["key"])
-    if should_not_run:
-        raise Exception(
-            f"Gracefully aborting execution of task {task['key']}. Task is not in a runnable state anymore."
-        )
 
     task_key = task["key"]
+
+    with get_orchestrator_client(channel_name) as client:
+        should_not_run = client.is_task_in_final_state(task_key)
+    if should_not_run:
+        raise Exception(
+            f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore."
+        )
+
     logger.warning(f"{computetask_pb2.ComputeTaskCategory.Name(task_category)} {task_key} {task}")
     ctx = None
     dirs = None
@@ -164,8 +166,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
     #   potentially be lost or overwritten. The function `execute_compute_task` takes care of running both the
     #   "predict" and "evaluate" steps of the testtuple.
 
-    # TODO orchestrator: remove "or task key" in the next line
-    with lock_resource("compute-plan", compute_plan_key or task_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
+    with lock_resource("compute-plan", compute_plan_key, ttl=MAX_TASK_DURATION, timeout=MAX_TASK_DURATION):
         try:
             # Create context
             ctx = Context.from_task(channel_name, task, self.attempt)
