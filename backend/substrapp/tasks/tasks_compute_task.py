@@ -232,6 +232,6 @@ def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
 
 def _transfer_model_to_bucket(ctx: Context) -> None:
     """Export model to S3 bucket if the task has appropriate tag"""
-    if ctx.task_tag and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
+    if ctx.task["tag"] and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
         logger.info("Task eligible to bucket export")
         transfer_to_bucket(ctx)
