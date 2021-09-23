@@ -3,6 +3,7 @@ import json
 from typing import List
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import TaskDirName, SANDBOX_DIR
+from substrapp.compute_tasks.transfer_bucket import TRANSFER_BUCKET_TESTTUPLE_TAG, TAG_VALUE_FOR_TRANSFER_BUCKET
 import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 import substrapp.orchestrator.model_pb2 as model_pb2
 import substrapp.orchestrator.algo_pb2 as algo_pb2
@@ -36,8 +37,10 @@ def get_exec_command(ctx: Context, is_testtuple_eval: bool) -> List[str]:
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
+    env = _get_env(ctx, is_testtuple_eval)
     args = _get_args(ctx, is_testtuple_eval)
-    return command + args
+
+    return env + command + args
 
 
 def _get_command_from_dockerfile(dockerfile_dir: str) -> List[str]:
@@ -152,3 +155,17 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
         command += ["--output-predictions-path", pred_path]
 
     return command
+
+
+def _get_env(ctx: Context, is_testtuple_eval: bool) -> List[str]:
+    """This return environment variables for the task"""
+
+    env = []
+
+    # Transfer bucket
+    tag = ctx.task.get("tag")
+    if ctx.task_category == computetask_pb2.TASK_TEST and not is_testtuple_eval:
+        if tag and TAG_VALUE_FOR_TRANSFER_BUCKET in tag:
+            env.append(f"{TRANSFER_BUCKET_TESTTUPLE_TAG}={TAG_VALUE_FOR_TRANSFER_BUCKET}")
+
+    return env
