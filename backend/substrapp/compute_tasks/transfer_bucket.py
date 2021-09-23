@@ -35,7 +35,7 @@ def transfer_to_bucket(ctx: Context) -> None:
     paths = [
         os.path.join(ctx.directories.task_dir, TaskDirName.Pred),
         os.path.join(ctx.directories.task_dir, TaskDirName.Perf),
-        os.path.join(ctx.directories.compute_plan_dir, TaskDirName.Export),
+        os.path.join(ctx.directories.task_dir, TaskDirName.Export),
     ]
 
     with tempfile.TemporaryDirectory(prefix="/tmp/") as tmpdir:
