@@ -47,5 +47,4 @@ jobs:
         context: .
         tags: ${{ steps.docker-metadata.outputs.tags }}
         labels: ${{ steps.docker-metadata.outputs.labels }}
-        build-args:
-          - BACKEND_VERSION=${{ BACKEND_VERSION }}
+        build-args: BACKEND_VERSION=${{ env.BACKEND_VERSION }}
