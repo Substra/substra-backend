@@ -306,3 +306,5 @@ LOGGING = {
         },
     }
 }
+
+BACKEND_VERSION = os.environ.get('BACKEND_VERSION')

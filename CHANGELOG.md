@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Models exported to bucket are prefixed with their compute plan's ID
+- Backend version build in docker image and exposed in `/info`
 
 ## [0.3.1] - 2021-08-25
 

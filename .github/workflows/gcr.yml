@@ -17,9 +17,11 @@ jobs:
         if [ "${{ github.ref }}" = "refs/heads/master" ]; then
           echo "LATEST=true" >> $GITHUB_ENV
           echo "LATEST is set to true"
+          echo "BACKEND_VERSION=latest+`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
         else
           echo "LATEST=false" >> $GITHUB_ENV
           echo "LATEST is set to false"
+          echo "BACKEND_VERSION=`echo $GITHUB_REF | cut -d / -f 3`+`echo ${GITHUB_SHA} | cut -c1-8`" >> $GITHUB_ENV
         fi
 
     - name: Login to GCR
@@ -45,3 +47,5 @@ jobs:
         context: .
         tags: ${{ steps.docker-metadata.outputs.tags }}
         labels: ${{ steps.docker-metadata.outputs.labels }}
+        build-args:
+          - BACKEND_VERSION=${{ BACKEND_VERSION }}
