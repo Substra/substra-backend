@@ -1,4 +1,3 @@
-import os
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.throttling import AnonRateThrottle
 
@@ -23,7 +22,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        if os.environ.get('TOKEN_STRATEGY', 'unique') == 'reuse':
+        if settings.TOKEN_STRATEGY == 'reuse':
             token, created = Token.objects.get_or_create(user=user)
 
             # token_expire_handler will check, if the token is expired it will generate new one
