@@ -107,11 +107,6 @@ def compute_hash(bytes, key=None):
     return sha256_hash.hexdigest()
 
 
-def create_directory(directory):
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-
-
 def raise_if_path_traversal(requested_paths, to_directory):
     # Inspired from https://stackoverflow.com/a/45188896
 

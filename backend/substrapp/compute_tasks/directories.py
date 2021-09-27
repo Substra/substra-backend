@@ -2,7 +2,7 @@ import os
 import logging
 import shutil
 from django.conf import settings
-from substrapp.utils import remove_directory_contents, create_directory, delete_dir
+from substrapp.utils import remove_directory_contents, delete_dir
 from shutil import copytree
 
 logger = logging.getLogger(__name__)
@@ -87,16 +87,16 @@ class Directories:
 
 
 def init_compute_plan_dirs(dirs: Directories) -> None:
-    create_directory(dirs.compute_plan_dir)
+    os.makedirs(dirs.compute_plan_dir, exist_ok=True)
     for folder_name in CPDirName.All:
-        create_directory(os.path.join(dirs.compute_plan_dir, folder_name))
+        os.makedirs(os.path.join(dirs.compute_plan_dir, folder_name), exist_ok=True)
 
 
 def init_task_dirs(dirs: Directories) -> None:
-    create_directory(dirs.task_dir)
+    os.makedirs(dirs.task_dir, exist_ok=True)
     for folder_name in TaskDirName.All:
         dir = os.path.join(dirs.task_dir, folder_name)
-        create_directory(dir)
+        os.makedirs(dir, exist_ok=True)
 
 
 def teardown_task_dirs(dirs: Directories) -> None:

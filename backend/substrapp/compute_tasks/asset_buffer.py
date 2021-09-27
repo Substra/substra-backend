@@ -17,7 +17,6 @@ from substrapp.utils import (
     timeit,
     uncompress_content,
     get_asset_content,
-    create_directory,
 )
 from substrapp.orchestrator.api import get_orchestrator_client
 
@@ -52,9 +51,9 @@ logger = logging.getLogger(__name__)
 
 
 def init_asset_buffer() -> None:
-    create_directory(settings.ASSET_BUFFER_DIR)
+    os.makedirs(settings.ASSET_BUFFER_DIR, exist_ok=True)
     for folder_name in AssetBufferDirName.All:
-        create_directory(os.path.join(settings.ASSET_BUFFER_DIR, folder_name))
+        os.makedirs(os.path.join(settings.ASSET_BUFFER_DIR, folder_name), exist_ok=True)
 
 
 @timeit
