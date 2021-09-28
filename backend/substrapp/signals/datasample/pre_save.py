@@ -1,4 +1,4 @@
-import logging
+import structlog
 import shutil
 
 from os import path, link
@@ -6,7 +6,7 @@ from os.path import normpath
 from django.conf import settings
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def data_sample_pre_save(sender, instance, **kwargs):
@@ -21,9 +21,9 @@ def data_sample_pre_save(sender, instance, **kwargs):
     try:
         shutil.copytree(src_path, destination_path, copy_function=link)
     except Exception:
-        logger.exception(f'error happened while copying data from {src_path} to {destination_path}')
+        logger.error("Error while copying data", src=src_path, dest=destination_path)
         shutil.rmtree(destination_path, ignore_errors=True)
-        logger.info(f'directory {destination_path} deleted')
+        logger.info("Directory deleted", directory=destination_path)
     else:
         # override path for getting our hardlink
         instance.path = destination_path

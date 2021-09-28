@@ -1,5 +1,5 @@
 import time
-import logging
+import structlog
 import multiprocessing
 from grpc import StatusCode
 from django.apps import AppConfig
@@ -7,10 +7,13 @@ from django.conf import settings
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def _register_node(channel_name):
+    log = logger.bind(
+        channel=channel_name
+    )
     # We try until success, if it fails the backend will not start
     while True:
         with get_orchestrator_client(channel_name) as client:
@@ -21,10 +24,9 @@ def _register_node(channel_name):
                 if code == StatusCode.ALREADY_EXISTS:
                     break
                 time.sleep(1)
-                logger.exception(rpc_error)
-                logger.info(f'({channel_name}) Retry registring the node on the orchestrator')
+                logger.info('Retry registring the node on the orchestrator', exc_info=rpc_error)
             else:
-                logger.info(f'({channel_name}) Node registered on the orchestrator')
+                log.info('Node registered on the orchestrator')
                 break
 
 

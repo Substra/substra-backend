@@ -1,5 +1,5 @@
 import tempfile
-import logging
+import structlog
 from functools import wraps
 from django.conf import settings
 from django.middleware.gzip import GZipMiddleware
@@ -20,7 +20,7 @@ from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def replace_storage_addresses(request, model):

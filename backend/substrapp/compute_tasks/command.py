@@ -7,9 +7,9 @@ from substrapp.compute_tasks.transfer_bucket import TRANSFER_BUCKET_TESTTUPLE_TA
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
 import orchestrator.algo_pb2 as algo_pb2
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class Filenames:
@@ -153,6 +153,8 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
             os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
         ]
         command += ["--output-predictions-path", pred_path]
+
+    logger.debug("Generated task command", command=command)
 
     return command
 

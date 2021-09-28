@@ -1,8 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 import os
+import logging
 from celery import Celery
 from celery import current_app
-from celery.signals import after_task_publish, celeryd_init
+from celery.signals import after_task_publish, celeryd_init, setup_logging
+from django_structlog.celery.steps import DjangoStructLogInitStep
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
@@ -16,6 +18,8 @@ app = Celery('backend')
 # - namespace='CELERY' means all celery-related configuration keys
 #   should have a `CELERY_` prefix.
 app.config_from_object('django.conf:settings', namespace='CELERY')
+
+app.steps['worker'].add(DjangoStructLogInitStep)
 
 
 # Load task modules from all registered Django app configs.
@@ -31,6 +35,14 @@ def setup_log_format(sender, conf, **kwargs):
         '%(asctime)s: %(levelname)s/%(processName)s {0} '
         '[%(task_name)s(%(task_id)s)] %(message)s'
     ).format(sender)
+
+
+@setup_logging.connect
+def receiver_setup_logging(loglevel, logfile, format, colorize, **kwargs):  # pragma: no cover
+    """setup structlog for celery
+    See https://django-structlog.readthedocs.io/en/latest/celery.html#configure-celery-s-logger
+    """
+    logging.config.dictConfig(settings.LOGGING)
 
 
 @app.on_after_configure.connect

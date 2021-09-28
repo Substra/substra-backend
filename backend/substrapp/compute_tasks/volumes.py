@@ -1,9 +1,6 @@
 import os
-import logging
 from django.conf import settings
 from substrapp.compute_tasks.directories import Directories, SANDBOX_DIR, TaskDirName
-
-logger = logging.getLogger(__name__)
 
 
 def get_volumes(dirs: Directories, is_testtuple_eval: bool):

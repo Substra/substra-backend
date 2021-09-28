@@ -1,6 +1,6 @@
 import io
 import hashlib
-import logging
+import structlog
 import os
 import tempfile
 from os import path
@@ -20,7 +20,7 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from substrapp.exceptions import NodeError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
 
@@ -241,7 +241,7 @@ def get_remote_file_content(channel_name, url, auth, content_checksum, salt=None
     response = get_remote_file(channel_name, url, auth)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
+        logger.error('failed to fetch content', url=url, status=response.status_code, text=response.text)
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     computed_checksum = compute_hash(response.content, key=salt)
@@ -255,7 +255,7 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, c
     response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error(f'Url: {url} returned status code: {response.status_code}: {response.text}')
+        logger.error('failed to fetch content', url=url, status=response.status_code, text=response.text)
         raise NodeError(f'Url: {url} returned status code: {response.status_code}')
 
     computed_checksum = get_hash(content_dst_path, key=hash_key)
@@ -275,12 +275,17 @@ def timeit(function):
 
         elaps = (time.time() - ts) * 1000
 
+        log = logger.bind(
+            function=function.__name__,
+            duration=f'{elaps:.2f}ms',
+        )
+
         if exception is None:
-            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms')
+            log.info('(profiler) function succeeded')
         else:
             # Intentionally use logger.info (and not logger.error)
             # Leave the responsibility of logging errors to the function caller.
-            logger.info(f'(profiler) {function.__name__} took {elaps:.2f} ms (with error)')
+            log.info('(profiler) function returned an error')
 
         if exception is not None:
             raise exception
@@ -298,7 +303,7 @@ def delete_dir(path: str) -> None:
         logger.exception(e)
     finally:
         if os.path.exists(path):
-            logger.info(f"Failed to delete directory {path}")
+            logger.info("Failed to delete directory", path=path)
 
 
 def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
@@ -342,7 +347,7 @@ def do_not_raise(fn):
         try:
             return fn(*args, **kwargs)
         except Exception as e:
-            logging.exception(e)
+            logger.exception(e)
 
     return wrapper
 

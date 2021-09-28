@@ -1,4 +1,3 @@
-import logging
 import os
 from django.conf import settings
 from typing import Any, Tuple
@@ -12,8 +11,6 @@ import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.orchestrator import get_orchestrator_client
-
-logger = logging.getLogger(__name__)
 
 
 def save_models(ctx: Context) -> object:

@@ -1,4 +1,4 @@
-import logging
+import structlog
 import os
 import shutil
 import uuid
@@ -22,7 +22,7 @@ from substrapp.views.utils import ValidationExceptionError, get_channel_name
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):

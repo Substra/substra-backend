@@ -1,11 +1,11 @@
 import contextlib
 import os
-import logging
+import structlog
 import time
 import uuid
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 LOCK_FILE_FOLDER = "/tmp"
 LOCK_FILE_PREFIX = "lock_"
@@ -81,12 +81,12 @@ def lock_resource(resource_type: str, unique_identifier: str, ttl: int, delay: i
     while not acquire_lock():
         if not did_wait:
             did_wait = True
-            logger.debug(f"Lock: waiting for resource {lock_file} to be freed")
+            logger.debug("Lock: waiting for resource to be freed", lock_file=lock_file)
         if time.time() - start > timeout:
             raise Exception(f"Failed to acquire resource lock {unique_identifier} after {timeout} seconds")
         time.sleep(delay)
 
-    logger.debug(f"Lock: Acquired resource {lock_file}")
+    logger.debug("Lock: Acquired resource", lock_file=lock_file)
 
     try:
         yield

@@ -1,6 +1,6 @@
 import grpc
 
-import logging
+import structlog
 import orchestrator.node_pb2 as node_pb2
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.objective_pb2 as objective_pb2
@@ -30,7 +30,7 @@ from google.protobuf.json_format import MessageToDict
 import time
 from functools import wraps
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 GRPC_RETRYABLE_ERRORS = [
     grpc.StatusCode.UNKNOWN,
@@ -66,8 +66,11 @@ def grpc_retry(func):
                         sleep_duration = 1
 
                     logger.info(
-                        f"grpc.RpcError thrown when attempting to run {func}, attempt "
-                        f"{attempt + 1} of {times}. Retry in {sleep_duration}s\n"
+                        "grpc.RpcError thrown on orchestrator api request",
+                        function=func,
+                        attempt=(attempt + 1),
+                        max_attempts=times,
+                        delay=f"{sleep_duration}s"
                     )
 
                     time.sleep(sleep_duration)

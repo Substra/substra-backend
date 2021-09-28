@@ -1,6 +1,6 @@
 import kubernetes
 import requests
-import logging
+import structlog
 import datetime
 import json
 from typing import List, Dict
@@ -8,7 +8,7 @@ from substrapp.kubernetes_utils import get_pod_by_label_selector
 
 from django.conf import settings
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
@@ -47,7 +47,7 @@ def get_container_image_name(image_name: str) -> str:
 
 
 def delete_container_image(image_tag: str) -> None:
-    logger.info(f"Deleting image {image_tag}")
+    logger.info("Deleting image", image=image_tag)
 
     try:
         response = requests.get(
@@ -120,7 +120,7 @@ def get_container_images() -> List[Dict]:
 
 
 def fetch_old_algo_image_names(max_duration: int) -> List[str]:
-    logger.info(f"Fetch image names older than {max_duration}s")
+    logger.info("Fetch old image names", max_duration=f"{max_duration}s")
 
     images = get_container_images()
 

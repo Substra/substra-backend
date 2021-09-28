@@ -14,6 +14,7 @@ import os
 import sys
 import json
 from datetime import timedelta
+import structlog
 
 from libs.gen_secret_key import write_secret_key
 
@@ -101,6 +102,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'libs.health_check_middleware.HealthCheckMiddleware',
+    'django_structlog.middlewares.RequestMiddleware',
+    'django_structlog.middlewares.CeleryMiddleware',
 ]
 
 
@@ -256,19 +259,26 @@ DEBUG_KEEP_POD_AND_DIRS = to_bool(os.environ.get('DEBUG_KEEP_POD_AND_DIRS', Fals
 
 PAGINATION_MAX_PAGE_SIZE = int(os.environ.get('PAGINATION_MAX_PAGE_SIZE', 100))
 
+pre_chain = [
+    structlog.processors.TimeStamper(fmt="iso"),
+    structlog.stdlib.add_logger_name,
+    structlog.stdlib.add_log_level,
+]
+
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'simple': {
-            'class': 'libs.formatters.TaskFormatter',
-            'format': '%(asctime)s - %(task_id)s - %(levelname)s - %(message)s'
-        }
+        "key_value": {
+            "()": structlog.stdlib.ProcessorFormatter,
+            "processor": structlog.processors.KeyValueRenderer(key_order=['timestamp', 'level', 'logger', 'event']),
+            "foreign_pre_chain": pre_chain,
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
-            'formatter': 'simple',
+            'formatter': 'key_value',
         },
     },
     'loggers': {
@@ -295,11 +305,6 @@ LOGGING = {
             'propagate': False,
         },
         # third-party libraries
-        'hfc': {
-            'level': 'WARNING',
-            'handlers': ['console'],
-            'propagate': True,
-        },
         'celery': {
             'level': 'INFO',
             'handlers': ['console'],
@@ -309,3 +314,21 @@ LOGGING = {
 }
 
 BACKEND_VERSION = os.environ.get('BACKEND_VERSION')
+
+structlog.configure(
+    processors=[
+        structlog.stdlib.filter_by_level,
+        structlog.processors.TimeStamper(fmt="iso"),
+        structlog.stdlib.add_logger_name,
+        structlog.stdlib.add_log_level,
+        structlog.stdlib.PositionalArgumentsFormatter(),
+        structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
+        structlog.processors.UnicodeDecoder(),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,
+    ],
+    context_class=structlog.threadlocal.wrap_dict(dict),
+    logger_factory=structlog.stdlib.LoggerFactory(),
+    wrapper_class=structlog.stdlib.BoundLogger,
+    cache_logger_on_first_use=True,
+)

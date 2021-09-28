@@ -1,4 +1,4 @@
-import logging
+import structlog
 import itertools
 
 from urllib.parse import unquote
@@ -6,7 +6,7 @@ from urllib.parse import unquote
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp import exceptions
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 FILTER_QUERIES = {

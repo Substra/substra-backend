@@ -1,10 +1,10 @@
-import logging
+import structlog
 from typing import List
 from backend.celery import app
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.compute_tasks.asset_buffer import delete_models_from_buffer
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @app.task(ignore_result=False)
@@ -26,8 +26,7 @@ def remove_intermediary_models(channel_name: str, model_keys: List[str]) -> None
             for model_key in filtered_model_keys:
                 client.disable_model(model_key)
 
-        log_model_keys = ", ".join(filtered_model_keys)
-        logger.info(f"Delete intermediary models: {log_model_keys}")
+        logger.info("Delete intermediary models", model_keys=", ".join(filtered_model_keys))
 
 
 @app.task(ignore_result=False)

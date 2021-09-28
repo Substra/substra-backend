@@ -1,5 +1,4 @@
 from __future__ import absolute_import, unicode_literals
-import logging
 from django.conf import settings
 from backend.celery import app
 from substrapp.compute_tasks.context import get_image_tag, METRICS_IMAGE_PREFIX, ALGO_IMAGE_PREFIX
@@ -9,8 +8,6 @@ from substrapp.compute_tasks.lock import get_compute_plan_lock
 from substrapp.orchestrator import get_orchestrator_client
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.docker_registry import delete_container_image
-
-logger = logging.getLogger(__name__)
 
 
 @app.task(ignore_result=False)

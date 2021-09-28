@@ -22,9 +22,9 @@ import orchestrator.algo_pb2 as algo_pb2
 from orchestrator.error import OrcError
 from substrapp.orchestrator import get_orchestrator_client
 
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def replace_storage_addresses(request, algo):

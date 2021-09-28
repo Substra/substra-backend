@@ -9,7 +9,7 @@ In these functions, we:
 
 from __future__ import absolute_import, unicode_literals
 
-import logging
+import structlog
 import kubernetes
 from typing import Any, List
 from django.conf import settings
@@ -26,7 +26,7 @@ from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.orchestrator import get_orchestrator_client
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
 
@@ -89,7 +89,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
             wait_for_pod_readiness(k8s_client, f"{Label.PodName}={pod_name}",
                                    settings.TASK["COMPUTE_POD_STARTUP_TIMEOUT_SECONDS"])
         else:
-            logger.info(f"Reusing pod {pod_name}")
+            logger.info("Reusing pod", pod=pod_name)
 
         returncode = _exec(k8s_client, ctx, compute_pod, exec_command)
         if returncode != 0:
@@ -118,7 +118,14 @@ def _get_k8s_client():
 def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]) -> int:
     """Execute a command on a compute pod"""
 
-    logger.debug(f"Running command {' '.join(exec_command)}")
+    log = logger.bind(
+        plan_key=ctx.compute_plan_key,
+        task_key=ctx.task_key,
+        eval=compute_pod.is_testtuple_eval,
+        attempt=ctx.attempt
+    )
+
+    log.debug("Running command", command=exec_command)
 
     resp = stream(
         k8s_client.connect_get_namespaced_pod_exec,
@@ -134,12 +141,9 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
         _preload_content=False,
     )
 
-    comp_or_eval = "e" if compute_pod.is_testtuple_eval else "c"
-    log_prefix = f"[{ctx.compute_plan_key[:8]}-{ctx.task_key[:8]}-{(comp_or_eval)}-{ctx.attempt}]"
-
     def print_log(lines):
         for line in filter(None, lines.split("\n")):
-            logger.info(f"{log_prefix} {line}")
+            log.info(line)
 
     while resp.is_open():
         resp.update(timeout=1)

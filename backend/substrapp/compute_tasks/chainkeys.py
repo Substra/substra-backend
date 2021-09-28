@@ -2,18 +2,21 @@ from base64 import b64decode
 from os import path
 import kubernetes
 import os
-import logging
+import structlog
 import json
 from substrapp.utils import list_dir
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 # Chainkeys are used as part of secure aggreagation (separate component, absent from this repo)
 
 
 def prepare_chainkeys_dir(chainkeys_dir: str, compute_plan_tag: str) -> None:
     if os.path.exists(chainkeys_dir) and os.listdir(chainkeys_dir):
-        logger.debug("Chainkeys: The folder exists and is non-empty: chainkeys have already been populated.")
+        logger.debug(
+            "Chainkeys: The folder exists and is non-empty: chainkeys have already been populated.",
+            dir=chainkeys_dir
+        )
         return
 
     _prepare_chainkeys(compute_plan_tag, chainkeys_dir)
@@ -30,7 +33,7 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
     try:
         secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
     except kubernetes.client.rest.ApiException as e:
-        logger.error(f"failed to fetch namespaced secrets {secret_namespace} with selector {label_selector}")
+        logger.error("failed to fetch namespaced secrets", namespace=secret_namespace, selector=label_selector)
         raise e
 
     secrets = secrets.to_dict()["items"]
@@ -66,7 +69,7 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
                 ),
             )
         except kubernetes.client.rest.ApiException as e:
-            logger.error(f"failed to remove secrets from namespace {secret_namespace}")
+            logger.error("failed to remove secrets from namespace", namespace=secret_namespace)
             raise e
     else:
         logger.info(f"{len(secrets)} secrets have been removed")

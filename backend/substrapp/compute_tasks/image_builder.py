@@ -1,6 +1,6 @@
 import kubernetes
 import os
-import logging
+import structlog
 from django.conf import settings
 from substrapp.utils import timeit
 from substrapp.compute_tasks.compute_pod import Label
@@ -11,7 +11,7 @@ from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import BuildError
 import orchestrator.computetask_pb2 as computetask_pb2
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 REGISTRY = settings.REGISTRY
 REGISTRY_SCHEME = settings.REGISTRY_SCHEME
@@ -33,7 +33,7 @@ def build_images(ctx: Context) -> None:
 def build_container_image(path, tag, ctx):
 
     if container_image_exists(tag):
-        logger.info(f"Image found: {tag}. Using it.")
+        logger.info("Reusing existing image", image=tag)
         return
 
     _build_container_image(path, tag, ctx.compute_plan_key, ctx.task_key, ctx.attempt)
@@ -66,6 +66,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         "--push-retry=3",
         "--cache-copy-layers",
         "--single-snapshot",
+        "--log-format=text",
         f"--verbosity={('debug' if settings.LOG_LEVEL == 'DEBUG' else 'info')}",
     ]
 
@@ -177,7 +178,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         create_pod = not pod_exists(k8s_client, pod_name)
         if create_pod:
             try:
-                logger.info(f"Building image {tag}. Creating pod {NAMESPACE}/{pod_name}")
+                logger.info("creating pod: building image", namespace=NAMESPACE, pod=pod_name, image=tag)
                 k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
             except kubernetes.client.rest.ApiException as e:
                 raise Exception(
@@ -190,7 +191,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         # In case of concurrent build, it may fail
         # check if image exists
         if not container_image_exists(tag):
-            logger.error(f"Kaniko build failed, error: {e}")
+            logger.error("Kaniko build failed", exc_info=e)
             raise BuildError(f"Kaniko build failed, error: {e}")
     finally:
         if create_pod:

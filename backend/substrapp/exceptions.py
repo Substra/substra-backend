@@ -1,15 +1,15 @@
-import logging
+import structlog
 
 import rest_framework as drf
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def api_exception_handler(exc, context):
     """API Exception handler."""
     if isinstance(exc, _ApiError):
         # emits a warning for all requests returning an API error response
-        logger.warning(f"{exc.__class__.__name__}: {exc}")
+        logger.warning("exception", class_name=exc.__class__.__name__, exception=exc)
         response = exc.response()
     else:
         response = drf.views.exception_handler(exc, context)

@@ -22,9 +22,9 @@ from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
 
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def replace_storage_addresses(request, objective):

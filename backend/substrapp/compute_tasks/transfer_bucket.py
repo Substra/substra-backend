@@ -1,5 +1,5 @@
 import os
-import logging
+import structlog
 import boto3
 import tarfile
 import tempfile
@@ -18,7 +18,7 @@ BUCKET_NAME = os.getenv("BUCKET_TRANSFER_NAME")
 S3_PREFIX = os.getenv("BUCKET_TRANSFER_PREFIX")
 S3_REGION_NAME = os.getenv("BUCKET_TRANSFER_REGION", "eu-west-1")
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @do_not_raise
@@ -26,10 +26,11 @@ logger = logging.getLogger(__name__)
 def transfer_to_bucket(ctx: Context) -> None:
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
         redacted_secret_key = "*" * len(SECRET_KEY) if SECRET_KEY else None
-        logger.error(
-            f"S3 settings for bucket transfer are not set: "
-            f"ACCESS_KEY:{ACCESS_KEY} SECRET_KEY:{redacted_secret_key} BUCKET_NAME:{BUCKET_NAME}"
-        )
+        logger.error("S3 settings for bucket transfer are not set",
+                     ACCESS_KEY=ACCESS_KEY,
+                     SECRET_KEY=redacted_secret_key,
+                     BUCKET_NAME=BUCKET_NAME,
+                     )
         return
 
     paths = [

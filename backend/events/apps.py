@@ -1,6 +1,6 @@
 import asyncio
 import json
-import logging
+import structlog
 import contextlib
 import time
 import ssl
@@ -28,7 +28,7 @@ from substrapp.tasks.tasks_remove_intermediary_models import (
 )
 
 
-logger = logging.getLogger('events')
+logger = structlog.get_logger('events')
 
 
 @contextlib.contextmanager
@@ -49,7 +49,13 @@ def on_computetask_event(payload):
     event_kind = payload['event_kind']
     metadata = payload['metadata']
 
-    logger.info(f'Processing task {asset_key}: type={event_kind} event status={metadata["status"]}')
+    log = logger.bind(
+        asset_key=asset_key,
+        kind=event_kind,
+        status=metadata["status"],
+    )
+
+    log.info('Processing task')
 
     event_task_status = computetask_pb2.ComputeTaskStatus.Value(metadata["status"])
 
@@ -75,7 +81,7 @@ def on_computetask_event(payload):
                     computeplan_pb2.PLAN_STATUS_DONE,
                     computeplan_pb2.PLAN_STATUS_CANCELED,
                     computeplan_pb2.PLAN_STATUS_FAILED]:
-                logger.info('Compute plan %s finished with status: %s', compute_plan['key'], compute_plan['status'])
+                log.info('Compute plan finished', plan=compute_plan['key'], status=compute_plan['status'])
                 if not settings.DEBUG_KEEP_POD_AND_DIRS:
                     delete_cp_pod_and_dirs_and_optionally_images.apply_async(
                         (channel_name, compute_plan), queue=worker_queue
@@ -88,8 +94,7 @@ def on_computetask_event(payload):
         return
 
     if metadata['worker'] != current_worker:
-        logger.info(f'Skipping task {asset_key}: worker does not match'
-                    f' ({metadata["worker"] } vs {current_worker})')
+        log.info('Skipping task', current_worker=current_worker, task_worker=metadata["worker"])
         return
 
     with get_orchestrator_client(channel_name) as client:
@@ -102,7 +107,7 @@ def on_computetask_event(payload):
                          f'!= event status={metadata["status"]}')
 
     if AsyncResult(asset_key).state != 'PENDING':
-        logger.info(f'Skipping task {asset_key}: already exists')
+        log.info('Skipping task: already exists')
         return
 
     prepare_task.apply_async(
@@ -117,7 +122,7 @@ def on_model_event(payload):
     asset_key = payload["asset_key"]
     event_kind = payload['event_kind']
 
-    logger.info(f'Processing model {asset_key}: type={event_kind}')
+    logger.info('Processing model', asset_key=asset_key, kind=event_kind)
 
     if event_pb2.EventKind.Value(event_kind) == event_pb2.EVENT_ASSET_DISABLED:
         remove_intermediary_models_from_buffer.apply_async([asset_key], queue=worker_queue)
@@ -126,7 +131,7 @@ def on_model_event(payload):
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process(requeue=True):
         payload = json.loads(message.body)
-        logger.debug(f"Received payload: {payload}")
+        logger.debug("Received payload", payload=payload)
         asset_kind = common_pb2.AssetKind.Value(payload['asset_kind'])
 
         if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
@@ -134,12 +139,16 @@ async def on_message(message: aio_pika.IncomingMessage):
         elif asset_kind == common_pb2.ASSET_MODEL:
             on_model_event(payload)
         else:
-            logger.debug(f"Nothing to do for {payload['asset_kind']} event")
+            logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
 
 
 async def consume(loop):
     # Queues are defined by the orchestrator
-    queue_name = f"{settings.ORCHESTRATOR_RABBITMQ_AUTH_USER}"
+    queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
+
+    log = logger.bind(
+        queue=queue_name,
+    )
 
     ssl_options = None
     if settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED:
@@ -150,7 +159,7 @@ async def consume(loop):
             "cert_reqs": ssl.CERT_REQUIRED,
         }
 
-    logger.info(f"Attempting to connect to orchestrator RabbitMQ queue {queue_name}")
+    log.info("Attempting to connect to orchestrator RabbitMQ")
 
     connection = await aio_pika.connect_robust(
         host=settings.ORCHESTRATOR_RABBITMQ_HOST,
@@ -162,7 +171,7 @@ async def consume(loop):
         loop=loop
     )
 
-    logger.info(f"Connected to orchestrator RabbitMQ queue {queue_name}")
+    log.info("Connected to orchestrator RabbitMQ")
 
     # Creating channel
     channel = await connection.channel()    # type: aio_pika.Channel
@@ -186,9 +195,8 @@ class EventsConfig(AppConfig):
                 try:
                     connection = loop.run_until_complete(consume(loop))
                 except Exception as e:
-                    logger.exception(e)
                     time.sleep(5)
-                    logger.error('Retry connecting to orchestrator RabbitMQ queue')
+                    logger.error('Retry connecting to orchestrator RabbitMQ queue', error=e)
                 else:
                     break
             try:

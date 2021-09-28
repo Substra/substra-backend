@@ -1,6 +1,6 @@
-import logging
 import uuid
 
+import structlog
 from rest_framework import mixins, status
 from django.urls import reverse
 from rest_framework.response import Response
@@ -22,7 +22,7 @@ from substrapp.views.utils import (TASK_CATEGORY,
                                    get_channel_name,
                                    validate_key)
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def replace_storage_addresses(request, basename, task):

@@ -1,13 +1,13 @@
 import kubernetes
 import os
-import logging
+import structlog
 import time
 
 from django.conf import settings
 from substrapp.utils import timeit
 from substrapp.exceptions import PodError, PodTimeoutError, PodDeletedError, PodReadinessTimeoutError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
@@ -56,7 +56,11 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
     error = None
     watch_container = not watch_init_container
 
-    logger.info(f"Waiting for pod {name}...")
+    log = logger.bind(
+        pod_name=name,
+    )
+
+    log.info("Waiting for pod")
 
     pod_status = None
 
@@ -66,7 +70,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
 
             if api_response.status.phase != pod_status:
                 pod_status = api_response.status.phase
-                logger.info(f'Status for pod "{name}" {api_response.status.phase} status')
+                log.info('Status for pod', status=api_response.status.phase)
 
             # Handle pod error not linked with containers
             if api_response.status.phase == "Failed" or (
@@ -78,7 +82,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                 else:
                     error = f"Pod phase : {api_response.status.phase}"
 
-                logger.error(f'Status for pod "{name}" {api_response.status.phase.lower()} status')
+                log.error('Status for pod', status=api_response.status.phase.lower())
                 finished = True
                 continue
 
@@ -100,9 +104,11 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                             ]:
                                 error = "InitContainer: " + _get_pod_error(state.waiting)
                                 attempt += 1
-                                logger.error(
-                                    f'InitContainer for pod "{name}" waiting status '
-                                    f"(attempt {attempt}/{max_attempts}): {state.waiting.message}"
+                                log.error(
+                                    'InitContainer waiting status',
+                                    attempt=attempt,
+                                    max_attempts=max_attempts,
+                                    state=state.waiting.message,
                                 )
 
             if watch_container:
@@ -124,9 +130,11 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                             ]:
                                 error = _get_pod_error(state.waiting)
                                 attempt += 1
-                                logger.error(
-                                    f'Container for pod "{name}" waiting status '
-                                    f"(attempt {attempt}/{max_attempts}): {state.waiting.message}"
+                                log.error(
+                                    'Container waiting status',
+                                    attempt=attempt,
+                                    max_attempts=max_attempts,
+                                    state=state.waiting.message,
                                 )
 
             if not finished:
@@ -134,7 +142,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
 
         except Exception as e:
             attempt += 1
-            logger.error(f'Could not get pod "{name}" status (attempt {attempt}/{max_attempts}): {e}')
+            log.error('Could not get pod status', exc_info=e, attempt=attempt, max_attempts=max_attempts)
 
     if error is not None:
         raise PodError(f"Pod {name} terminated with error: {error}")
@@ -210,7 +218,7 @@ def delete_pod(k8s_client, name: str) -> None:
         if event['type'] == 'DELETED' and event['object'].metadata.name == name:
             watch.stop()
 
-    logger.info(f"Deleted pod {NAMESPACE}/{name}")
+    logger.info("Deleted pod", namespace=NAMESPACE, name=name)
 
 
 def wait_for_pod_readiness(k8s_client, label_selector: str, timeout: int = 60) -> None:

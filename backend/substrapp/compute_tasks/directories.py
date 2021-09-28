@@ -1,11 +1,11 @@
 import os
-import logging
+import structlog
 import shutil
 from django.conf import settings
 from substrapp.utils import remove_directory_contents, delete_dir
 from shutil import copytree
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 SANDBOX_DIR = "/sandbox"
 
@@ -104,11 +104,11 @@ def teardown_task_dirs(dirs: Directories) -> None:
         # We can't delete the directoy because it's mounted, instead, delete the _contents_
         dir = os.path.join(dirs.task_dir, folder_name)
         remove_directory_contents(dir)
-        logger.debug(f"Cleared {dir}")
+        logger.debug("Cleared directory", dir=dir)
 
 
 def teardown_compute_plan_dir(dirs: Directories) -> None:
-    logger.debug(f"Deleting compute plan directory {dirs.compute_plan_dir}")
+    logger.debug("Deleting compute plan directory", dir=dirs.compute_plan_dir)
     delete_dir(dirs.compute_plan_dir)
 
 

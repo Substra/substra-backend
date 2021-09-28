@@ -1,11 +1,11 @@
 import kubernetes
-import logging
+import structlog
 from django.conf import settings
 from substrapp.kubernetes_utils import get_pod_security_context, get_security_context
 from substrapp.kubernetes_utils import delete_pod
 
 NAMESPACE = settings.NAMESPACE
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class Label:
@@ -125,7 +125,7 @@ def create_pod(
     pod = kubernetes.client.V1Pod(api_version="v1", kind="Pod", metadata=metadata, spec=spec)
 
     try:
-        logger.info(f"Creating pod {NAMESPACE}/{name}")
+        logger.info("Creating pod", namespace=NAMESPACE, name=name)
         k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
     except kubernetes.client.rest.ApiException as e:
         raise Exception(

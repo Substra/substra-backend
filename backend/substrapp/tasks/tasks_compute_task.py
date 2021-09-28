@@ -14,7 +14,7 @@ We also handle the retry logic here.
 
 from __future__ import absolute_import, unicode_literals
 
-import logging
+import structlog
 import json
 import os
 from os import path
@@ -55,7 +55,7 @@ from celery import Task
 from backend.celery import app
 
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 CELERY_TASK_MAX_RETRIES = int(getattr(settings, "CELERY_TASK_MAX_RETRIES"))
 CELERY_TASK_RETRY_DELAY_SECONDS = int(getattr(settings, "CELERY_TASK_RETRY_DELAY_SECONDS"))
@@ -81,7 +81,11 @@ class ComputeTask(Task):
                                              'performance_value': float(retval['result']['global_perf'])})
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
-        logger.info(f"Retrying task {task_id} (attempt {self.request.retries + 2}/{CELERY_TASK_MAX_RETRIES + 1})")
+        logger.info("Retrying task",
+                    celery_task_id=task_id,
+                    attempt=(self.request.retries + 2),
+                    max_attempts=(CELERY_TASK_MAX_RETRIES + 1),
+                    )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
@@ -94,7 +98,12 @@ class ComputeTask(Task):
         # container log
         type_exc = type(exc)
         type_value = str(type_exc).split("'")[1]
-        logger.error(f'Failed compute task: {task["category"]} {task["key"]} {error_code} - {type_value}')
+        logger.error("Failed compute task",
+                     task_key=task["key"],
+                     task_category=task["category"],
+                     error_code=error_code,
+                     exc_type=type_value,
+                     )
         with get_orchestrator_client(channel_name) as client:
             client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_code)
 
@@ -137,7 +146,11 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore."
         )
 
-    logger.warning(f"{computetask_pb2.ComputeTaskCategory.Name(task_category)} {task_key} {task}")
+    logger.info("Computing task",
+                task_key=task_key,
+                task_category=computetask_pb2.ComputeTaskCategory.Name(task_category),
+                task=task,
+                )
     ctx = None
     dirs = None
     has_chainkeys = False
@@ -188,7 +201,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
             restore_dir(dirs, CPDirName.Local, TaskDirName.Local)   # testtuple "predict" may need local dir
 
-            logger.debug(f"Task directory: {list_dir(dirs.task_dir)}")
+            logger.debug("Task directory", directory=list_dir(dirs.task_dir))
 
             build_images(ctx)
 
@@ -216,7 +229,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             # Teardown
             teardown_task_dirs(dirs)
 
-    logger.warning(f"result: {result['result']}")
+    logger.info("Compute task finished", result=result['result'])
     return result
 
 
@@ -233,5 +246,5 @@ def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
 def _transfer_model_to_bucket(ctx: Context) -> None:
     """Export model to S3 bucket if the task has appropriate tag"""
     if ctx.task["tag"] and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
-        logger.info("Task eligible to bucket export")
+        logger.info("Task eligible to bucket export", task_key=ctx.task_key())
         transfer_to_bucket(ctx)

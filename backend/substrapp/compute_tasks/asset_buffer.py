@@ -1,5 +1,5 @@
 import os
-import logging
+import structlog
 import shutil
 from django.conf import settings
 from typing import List, Dict
@@ -20,7 +20,7 @@ from substrapp.utils import (
 )
 from substrapp.orchestrator import get_orchestrator_client
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 ################
 # ASSET BUFFER #
@@ -271,12 +271,12 @@ def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List
         src = os.path.join(settings.ASSET_BUFFER_DIR, b_dir, key)
         dst = os.path.join(dirs.task_dir, t_dir, key)
 
+        logger.debug("Create hardlink", src=src, dst=dst)
+
         if os.path.isdir(src):
             # We cannot hardlink directories. Replicate the folder hierarchy, and hardlink files.
-            logger.debug(f"Create hardlink {src} -> {dst}")
             shutil.copytree(src, dst, copy_function=os.link)
         else:
-            logger.debug(f"Create hardlink {src} -> {dst}")
             os.link(src, dst)
 
 
@@ -299,4 +299,4 @@ def _download_objective(ctx: Context) -> bytes:
 
 
 def _log_added(path: str) -> None:
-    logger.debug(f"Added to buffer: {path}")
+    logger.debug("Added to buffer", path=path)

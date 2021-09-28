@@ -9,9 +9,9 @@ from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
 
 
-import logging
+import structlog
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class NodeViewSet(mixins.ListModelMixin,
@@ -27,8 +27,7 @@ class NodeViewSet(mixins.ListModelMixin,
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
-            logger.exception(e)
-            print(e)
+            logger.error("cannot list nodes", error=e)
             return Response({'message': 'Internal Server Error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         current_node_id = get_owner()

@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   * all algos are now served through `/algo` and `/algo/:key`
   * when creating a new algo, you must give a `category` property which value is one of `ALGO_SIMPLE`, `ALGO_COMPOSITE` or `ALGO_AGGREGATE`
 
+- switched to structured logging
+
 ### Removed
 - Removed routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
 
