@@ -3,12 +3,12 @@ import uuid
 import mock
 import os
 from grpc import RpcError, StatusCode
-import substrapp.orchestrator.model_pb2 as model_pb2
+import orchestrator.model_pb2 as model_pb2
 from rest_framework.test import APITestCase
 from parameterized import parameterized
 from substrapp.compute_tasks.save_models import _save_model
 from substrapp.compute_tasks.command import Filenames
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from django.test import override_settings
 
 MEDIA_ROOT = tempfile.mkdtemp()

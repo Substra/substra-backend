@@ -18,7 +18,7 @@ from node.authentication import NodeUser
 from substrapp.views.model import ModelPermissionViewSet
 from substrapp.views.utils import AssetPermissionError
 
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_model, AuthenticatedClient, encode_filter

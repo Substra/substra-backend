@@ -6,8 +6,8 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from substrapp import exceptions
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
+from orchestrator.error import OrcError
 from substrapp.serializers import (OrchestratorAggregateTaskSerializer,
                                    OrchestratorCompositeTrainTaskSerializer,
                                    OrchestratorTestTaskSerializer,

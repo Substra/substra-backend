@@ -9,7 +9,7 @@ from substrapp.docker_registry import container_image_exists, USER_IMAGE_REPOSIT
 from substrapp.lock_local import lock_resource
 from substrapp.compute_tasks.context import Context
 from substrapp.exceptions import BuildError
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
 
 logger = logging.getLogger(__name__)
 

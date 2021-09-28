@@ -13,7 +13,7 @@ from rest_framework.test import APITestCase
 
 from substrapp.views import ComputeTaskViewSet
 
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..assets import compositetraintuple, objective

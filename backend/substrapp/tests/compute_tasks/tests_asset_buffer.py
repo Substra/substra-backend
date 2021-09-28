@@ -22,7 +22,7 @@ from substrapp.compute_tasks.asset_buffer import (
 )
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()

@@ -16,10 +16,10 @@ from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
 from substrapp.exceptions import AssetPermissionError, NodeError, BadRequestError
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-import substrapp.orchestrator.model_pb2 as model_pb2
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.model_pb2 as model_pb2
+from orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
 
 
 TASK_CATEGORY = {

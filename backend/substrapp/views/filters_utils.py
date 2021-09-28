@@ -3,7 +3,7 @@ import itertools
 
 from urllib.parse import unquote
 
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp import exceptions
 
 logger = logging.getLogger(__name__)

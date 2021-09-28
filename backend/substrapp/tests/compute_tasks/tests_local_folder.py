@@ -7,8 +7,8 @@ from rest_framework.test import APITestCase
 from parameterized import parameterized
 from substrapp.compute_tasks.directories import CPDirName, TaskDirName
 from substrapp.tasks.tasks_compute_task import compute_task
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.orchestrator.api import OrchestratorClient
+import orchestrator.computetask_pb2 as computetask_pb2
+from orchestrator.client import OrchestratorClient
 
 
 MEDIA_ROOT = tempfile.mkdtemp()

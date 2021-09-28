@@ -19,8 +19,8 @@ from substrapp.utils import store_datasamples_archive, get_dir_hash
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.views.utils import ValidationExceptionError, get_channel_name
 
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
+from orchestrator.error import OrcError
 
 logger = logging.getLogger(__name__)
 

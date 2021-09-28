@@ -18,8 +18,8 @@ from rest_framework.test import APITestCase
 
 from substrapp.models import DataManager, DataSample
 from substrapp.serializers import DataSampleSerializer
-from substrapp.orchestrator.api import OrchestratorClient
-from substrapp.orchestrator.error import OrcError
+from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 from grpc import StatusCode
 
 from substrapp.utils import store_datasamples_archive

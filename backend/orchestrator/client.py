@@ -1,31 +1,30 @@
 import grpc
 
 import logging
-import substrapp.orchestrator.node_pb2 as node_pb2
-import substrapp.orchestrator.algo_pb2 as algo_pb2
-import substrapp.orchestrator.objective_pb2 as objective_pb2
-import substrapp.orchestrator.datasample_pb2 as datasample_pb2
-import substrapp.orchestrator.datamanager_pb2 as datamanager_pb2
-import substrapp.orchestrator.dataset_pb2 as dataset_pb2
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-import substrapp.orchestrator.computeplan_pb2 as computeplan_pb2
-import substrapp.orchestrator.model_pb2 as model_pb2
-import substrapp.orchestrator.performance_pb2 as performance_pb2
-import substrapp.orchestrator.common_pb2 as common_pb2
-import substrapp.orchestrator.event_pb2 as event_pb2
-from substrapp.orchestrator.error import OrcError
-from substrapp.orchestrator.node_pb2_grpc import NodeServiceStub
-from substrapp.orchestrator.algo_pb2_grpc import AlgoServiceStub
-from substrapp.orchestrator.objective_pb2_grpc import ObjectiveServiceStub
-from substrapp.orchestrator.datasample_pb2_grpc import DataSampleServiceStub
-from substrapp.orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
-from substrapp.orchestrator.dataset_pb2_grpc import DatasetServiceStub
-from substrapp.orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
-from substrapp.orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
-from substrapp.orchestrator.model_pb2_grpc import ModelServiceStub
-from substrapp.orchestrator.performance_pb2_grpc import PerformanceServiceStub
-from substrapp.orchestrator.event_pb2_grpc import EventServiceStub
-from django.conf import settings
+import orchestrator.node_pb2 as node_pb2
+import orchestrator.algo_pb2 as algo_pb2
+import orchestrator.objective_pb2 as objective_pb2
+import orchestrator.datasample_pb2 as datasample_pb2
+import orchestrator.datamanager_pb2 as datamanager_pb2
+import orchestrator.dataset_pb2 as dataset_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.model_pb2 as model_pb2
+import orchestrator.performance_pb2 as performance_pb2
+import orchestrator.common_pb2 as common_pb2
+import orchestrator.event_pb2 as event_pb2
+from orchestrator.error import OrcError
+from orchestrator.node_pb2_grpc import NodeServiceStub
+from orchestrator.algo_pb2_grpc import AlgoServiceStub
+from orchestrator.objective_pb2_grpc import ObjectiveServiceStub
+from orchestrator.datasample_pb2_grpc import DataSampleServiceStub
+from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
+from orchestrator.dataset_pb2_grpc import DatasetServiceStub
+from orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
+from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
+from orchestrator.model_pb2_grpc import ModelServiceStub
+from orchestrator.performance_pb2_grpc import PerformanceServiceStub
+from orchestrator.event_pb2_grpc import EventServiceStub
 from google.protobuf.json_format import MessageToDict
 
 import time
@@ -89,31 +88,13 @@ CONVERT_SETTINGS = {
 SORT_ORDER = {"asc": common_pb2.ASCENDING, "desc": common_pb2.DESCENDING}
 
 
-def get_orchestrator_client(channel_name):
-
-    host = f"{settings.ORCHESTRATOR_HOST}:{settings.ORCHESTRATOR_PORT}"
-
-    cacert = None
-    client_key = None
-    client_cert = None
-
-    if settings.ORCHESTRATOR_TLS_ENABLED:
-        cacert = settings.ORCHESTRATOR_TLS_SERVER_CACERT_PATH
-
-    if settings.ORCHESTRATOR_MTLS_ENABLED:
-        client_key = settings.ORCHESTRATOR_TLS_CLIENT_KEY_PATH
-        client_cert = settings.ORCHESTRATOR_TLS_CLIENT_CERT_PATH
-
-    return OrchestratorClient(
-        host, channel_name, cacert, client_key, client_cert, opts=None
-    )
-
-
 class OrchestratorClient:
     def __init__(
         self,
         target,
         channel_name,
+        mspid,
+        chaincode,
         cacert=None,
         client_key=None,
         client_cert=None,
@@ -174,9 +155,9 @@ class OrchestratorClient:
         self._event_client = EventServiceStub(self._channel)
 
         self._metadata = (
-            ("mspid", settings.LEDGER_MSP_ID),
+            ("mspid", mspid),
             ("channel", channel_name),
-            ("chaincode", settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]),
+            ("chaincode", chaincode),
         )
 
     @grpc_retry

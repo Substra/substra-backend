@@ -12,7 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.views.utils import PermissionMixin, AssetPermissionError
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 
 
 class MockRequest:

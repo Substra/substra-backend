@@ -9,7 +9,7 @@ from django.conf import settings
 from substrapp.utils import get_hash
 from substrapp.serializers.utils import FileValidator, PermissionsSerializer
 
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 
 class ObjectiveSerializer(DynamicFieldsModelSerializer):

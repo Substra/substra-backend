@@ -14,8 +14,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective, DataManager
-from substrapp.orchestrator.api import OrchestratorClient
-from substrapp.orchestrator.error import OrcError
+from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 from substrapp.serializers import OrchestratorDataManagerSerializer
 
 from grpc import StatusCode

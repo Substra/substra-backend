@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import CharField, DictField, IntegerField
 
 from substrapp.serializers.utils import PermissionsSerializer
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 
 class GenericComputeTaskSerializer(serializers.Serializer):

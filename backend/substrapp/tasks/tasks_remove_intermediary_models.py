@@ -1,7 +1,7 @@
 import logging
 from typing import List
 from backend.celery import app
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.compute_tasks.asset_buffer import delete_models_from_buffer
 
 logger = logging.getLogger(__name__)

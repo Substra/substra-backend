@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 from node.models import IncomingNode, OutgoingNode
 from substrapp.models import Algo
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 
 from ..common import generate_basic_auth_header, get_sample_algo_metadata, get_sample_algo, get_description_algo
 from django.test import override_settings

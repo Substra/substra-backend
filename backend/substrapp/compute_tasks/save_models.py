@@ -8,10 +8,10 @@ from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.asset_buffer import add_model_from_path
 from substrapp.compute_tasks.context import Context
 from substrapp.utils import get_hash
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-import substrapp.orchestrator.model_pb2 as model_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.model_pb2 as model_pb2
 from substrapp.compute_tasks.directories import TaskDirName
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 logger = logging.getLogger(__name__)
 

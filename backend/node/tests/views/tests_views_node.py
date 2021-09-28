@@ -9,7 +9,7 @@ from django.test import override_settings
 from rest_framework.test import APITestCase
 
 from substrapp.tests.common import AuthenticatedClient
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 

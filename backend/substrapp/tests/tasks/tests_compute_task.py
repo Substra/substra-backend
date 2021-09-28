@@ -3,10 +3,10 @@ import mock
 from django.test import override_settings
 from rest_framework.test import APITestCase
 
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.tasks.tasks_compute_task import compute_task
 import tempfile
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 

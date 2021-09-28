@@ -10,11 +10,11 @@ from django.conf import settings
 
 import aio_pika
 
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-import substrapp.orchestrator.computeplan_pb2 as computeplan_pb2
-import substrapp.orchestrator.common_pb2 as common_pb2
-import substrapp.orchestrator.event_pb2 as event_pb2
-from substrapp.orchestrator.api import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.common_pb2 as common_pb2
+import orchestrator.event_pb2 as event_pb2
+from substrapp.orchestrator import get_orchestrator_client
 
 from substrapp.tasks.tasks_prepare_task import prepare_task
 from substrapp.utils import get_owner

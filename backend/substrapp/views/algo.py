@@ -18,9 +18,9 @@ from substrapp.views.utils import (PermissionMixin, validate_key, ValidationExce
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
-import substrapp.orchestrator.algo_pb2 as algo_pb2
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+import orchestrator.algo_pb2 as algo_pb2
+from orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
 
 import logging
 

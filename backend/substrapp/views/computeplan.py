@@ -20,8 +20,8 @@ from substrapp.views.utils import (
     get_channel_name,
     validate_key)
 from substrapp.views.utils import TASK_CATEGORY, add_task_extra_information
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
+from orchestrator.error import OrcError
 
 logger = logging.getLogger(__name__)
 

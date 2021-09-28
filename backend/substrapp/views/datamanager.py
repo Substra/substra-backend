@@ -17,8 +17,8 @@ from substrapp.views.utils import (PermissionMixin,
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
+from orchestrator.error import OrcError
 
 import logging
 

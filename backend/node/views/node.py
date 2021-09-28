@@ -4,9 +4,9 @@ from rest_framework.viewsets import GenericViewSet
 
 from substrapp.utils import get_owner
 from substrapp.views.utils import get_channel_name
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
-from substrapp.orchestrator.error import OrcError
+from orchestrator.error import OrcError
 
 
 import logging

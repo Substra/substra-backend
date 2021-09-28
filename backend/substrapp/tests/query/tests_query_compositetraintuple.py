@@ -10,7 +10,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 from substrapp.models import Model, Objective
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from substrapp.utils import compute_hash
 
 from ..common import (AuthenticatedClient, get_sample_model,

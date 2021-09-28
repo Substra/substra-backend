@@ -13,7 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from substrapp.models import Objective
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 
 from ..common import get_sample_objective, AuthenticatedClient
 

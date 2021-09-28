@@ -10,8 +10,8 @@ from backend.celery import app
 from substrapp.utils import (
     get_owner,
 )
-from substrapp.orchestrator.api import get_orchestrator_client
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.orchestrator import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.exceptions import TaskNotFoundError
 
 logger = logging.getLogger(__name__)

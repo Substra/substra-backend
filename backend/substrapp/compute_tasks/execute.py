@@ -23,8 +23,8 @@ from substrapp.exceptions import PodError, PodReadinessTimeoutError, PodTimeoutE
 from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector
 from substrapp.docker_registry import get_container_image_name
 from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.orchestrator.api import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.orchestrator import get_orchestrator_client
 
 logger = logging.getLogger(__name__)
 

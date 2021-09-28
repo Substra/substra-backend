@@ -18,7 +18,7 @@ from substrapp.utils import (
     uncompress_content,
     get_asset_content,
 )
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 logger = logging.getLogger(__name__)
 

@@ -11,7 +11,7 @@ from substrapp.models import DataSample
 from substrapp.utils import raise_if_path_traversal
 
 from django.utils.deconstruct import deconstructible
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 
 @deconstructible

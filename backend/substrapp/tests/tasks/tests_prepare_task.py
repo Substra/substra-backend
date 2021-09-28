@@ -4,7 +4,7 @@ from rest_framework.test import APITestCase
 from django.test import override_settings
 from django_celery_results.models import TaskResult
 from substrapp.tasks.tasks_prepare_task import prepare_task
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 
 CHANNEL = "mychannel"
 

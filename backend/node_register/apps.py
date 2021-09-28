@@ -4,8 +4,8 @@ import multiprocessing
 from grpc import StatusCode
 from django.apps import AppConfig
 from django.conf import settings
-from substrapp.orchestrator.api import get_orchestrator_client
-from substrapp.orchestrator.error import OrcError
+from substrapp.orchestrator import get_orchestrator_client
+from orchestrator.error import OrcError
 
 logger = logging.getLogger(__name__)
 

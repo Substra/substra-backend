@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from rest_framework.fields import DictField, CharField
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 
 class OrchestratorComputePlanSerializer(serializers.Serializer):

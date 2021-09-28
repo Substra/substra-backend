@@ -19,8 +19,8 @@ import json
 import os
 from os import path
 from django.conf import settings
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.orchestrator.api import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
 from substrapp.lock_local import lock_resource

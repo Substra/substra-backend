@@ -13,7 +13,7 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.orchestrator.api import OrchestratorClient
+from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_datamanager, AuthenticatedClient, encode_filter

@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.http import HttpResponse
-from substrapp.orchestrator.api import get_orchestrator_client
+from substrapp.orchestrator import get_orchestrator_client
 
 
 class HealthCheckMiddleware(object):

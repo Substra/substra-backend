@@ -4,9 +4,9 @@ from typing import List
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import TaskDirName, SANDBOX_DIR
 from substrapp.compute_tasks.transfer_bucket import TRANSFER_BUCKET_TESTTUPLE_TAG, TAG_VALUE_FOR_TRANSFER_BUCKET
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
-import substrapp.orchestrator.model_pb2 as model_pb2
-import substrapp.orchestrator.algo_pb2 as algo_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.model_pb2 as model_pb2
+import orchestrator.algo_pb2 as algo_pb2
 import logging
 
 logger = logging.getLogger(__name__)

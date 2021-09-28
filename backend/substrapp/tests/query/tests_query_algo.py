@@ -15,8 +15,8 @@ from grpc import StatusCode
 from substrapp.models import Algo
 from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.utils import compute_hash
-from substrapp.orchestrator.api import OrchestratorClient
-from substrapp.orchestrator.error import OrcError
+from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 
 from ..common import (get_sample_datamanager, get_sample_algo, get_sample_algo_zip,
                       AuthenticatedClient, get_sample_algo_metadata)

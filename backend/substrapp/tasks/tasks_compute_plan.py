@@ -6,8 +6,8 @@ from substrapp.compute_tasks.context import get_image_tag, METRICS_IMAGE_PREFIX,
 from substrapp.compute_tasks.directories import Directories, teardown_compute_plan_dir
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.lock import get_compute_plan_lock
-from substrapp.orchestrator.api import get_orchestrator_client
-import substrapp.orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.orchestrator import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.docker_registry import delete_container_image
 
 logger = logging.getLogger(__name__)
