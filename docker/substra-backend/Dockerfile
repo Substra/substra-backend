@@ -17,6 +17,7 @@ COPY ./backend/backend /usr/src/app/backend
 COPY ./backend/node /usr/src/app/node
 COPY ./backend/node_register /usr/src/app/node_register
 COPY ./backend/users /usr/src/app/users
+COPY ./backend/orchestrator /usr/src/app/orchestrator
 
 FROM python:3.9-slim
 
