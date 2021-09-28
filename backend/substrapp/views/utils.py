@@ -16,19 +16,11 @@ from requests.auth import HTTPBasicAuth
 from wsgiref.util import is_hop_by_hop
 
 from substrapp.exceptions import AssetPermissionError, NodeError, BadRequestError
-import substrapp.orchestrator.algo_pb2 as algo_pb2
 import substrapp.orchestrator.computetask_pb2 as computetask_pb2
 import substrapp.orchestrator.model_pb2 as model_pb2
 from substrapp.orchestrator.api import get_orchestrator_client
 from substrapp.orchestrator.error import OrcError
 
-
-ALGO_CATEGORY = {
-    "unknown": algo_pb2.ALGO_UNKNOWN,
-    "algo": algo_pb2.ALGO_SIMPLE,
-    "composite_algo": algo_pb2.ALGO_COMPOSITE,
-    "aggregate_algo": algo_pb2.ALGO_AGGREGATE,
-}
 
 TASK_CATEGORY = {
     'unknown': computetask_pb2.TASK_UNKNOWN,

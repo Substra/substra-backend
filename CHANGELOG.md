@@ -10,6 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Models exported to bucket are prefixed with their compute plan's ID
 - Backend version build in docker image and exposed in `/info`
 
+### Changed
+- Unified all 3 categories of algos in a single endpoint.
+
+  * all algos are now served through `/algo` and `/algo/:key`
+  * when creating a new algo, you must give a `category` property which value is one of `ALGO_SIMPLE`, `ALGO_COMPOSITE` or `ALGO_AGGREGATE`
+
+### Removed
+- Removed routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
+
 ## [0.3.1] - 2021-08-25
 
 ### Added

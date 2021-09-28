@@ -14,10 +14,11 @@ from substrapp.utils import get_hash
 from substrapp.serializers import OrchestratorAlgoSerializer, AlgoSerializer
 from substrapp.views.utils import (PermissionMixin, validate_key, ValidationExceptionError,
                                    get_remote_asset, node_has_process_permission,
-                                   get_channel_name, ALGO_CATEGORY)
+                                   get_channel_name)
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
+import substrapp.orchestrator.algo_pb2 as algo_pb2
 from substrapp.orchestrator.api import get_orchestrator_client
 from substrapp.orchestrator.error import OrcError
 
@@ -45,11 +46,17 @@ class AlgoViewSet(mixins.CreateModelMixin,
         # create on db
         instance = serializer.save()
 
+        try:
+            category = algo_pb2.AlgoCategory.Value(request.data.get('category'))
+        except ValueError:
+            instance.delete()
+            raise ValidationError({'category': 'Invalid category'})
+
         # serialized data for orchestrator db
         orchestrator_serializer = OrchestratorAlgoSerializer(
             data={
                 'name': request.data.get('name'),
-                'category': ALGO_CATEGORY[self.basename],
+                'category': category,
                 'permissions': request.data.get('permissions'),
                 'metadata': request.data.get('metadata'),
                 'instance': instance
@@ -179,7 +186,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_algos(ALGO_CATEGORY[self.basename])
+                data = client.query_algos()
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:

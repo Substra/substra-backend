@@ -130,16 +130,6 @@ persistence:
       readOnly:
         server: false
         worker: true
-    aggregatealgos:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
-    compositealgos:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
     datamanagers:
       size: "10Gi"
       readOnly:
@@ -162,7 +152,7 @@ persistence:
         worker: false
     subtuple:
       # subtuple size should be at least equal to the combined size of the following PVCs:
-      # datasamples, models, local, objectives, datamanagers, algos, compositealgos,  aggregatealgos
+      # datasamples, models, local, objectives, datamanagers, algos
       size: "10Gi"
       readOnly:
         server: true

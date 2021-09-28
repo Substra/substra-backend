@@ -5,7 +5,6 @@ from urllib.parse import unquote
 
 from substrapp.orchestrator.api import get_orchestrator_client
 from substrapp import exceptions
-from substrapp.views.utils import ALGO_CATEGORY
 
 logger = logging.getLogger(__name__)
 
@@ -15,18 +14,14 @@ FILTER_QUERIES = {
     'algo': 'query_algos',
     'objective': 'query_objectives',
     'model': 'query_models',
-    'composite_algo': 'query_algos',
-    'aggregate_algo': 'query_algos',
 }
 
 AUTHORIZED_FILTERS = {
     'compute_plan': ['compute_plan'],
     'dataset': ['dataset', 'model', 'objective'],
-    'algo': ['model', 'algo', 'composite_algo', 'aggregate_algo'],
-    'composite_algo': ['composite_algo', 'algo', 'aggregate_algo', 'model'],
-    'aggregate_algo': ['aggregate_algo', 'algo', 'composite_algo', 'model'],
+    'algo': ['model', 'algo'],
     'objective': ['model', 'dataset', 'objective'],
-    'model': ['model', 'algo', 'composite_algo', 'aggregate_algo', 'dataset', 'objective'],
+    'model': ['model', 'algo', 'dataset', 'objective'],
     'traintuple': ['traintuple'],
     'testtuple': ['testtuple'],
     'composite_traintuple': ['composite_traintuple'],
@@ -71,14 +66,6 @@ def get_filters(query_params):
                     filters[idx].update({parent: filter})
 
     return filters
-
-
-def _same_nature(filter_key, object_type):
-    if filter_key == object_type:
-        return True
-
-    # algo and composite algos are of the same nature
-    return {filter_key, object_type} <= {'algo', 'composite_algo', 'aggregate_algo'}
 
 
 def _get_model_tuple(model):
@@ -133,7 +120,7 @@ def filter_list(channel_name, object_type, data, query_params):
             # Will be appended in object_list after been filtered
             filtered_list = data
 
-            if _same_nature(filter_key, object_type):
+            if filter_key == object_type:
                 # Filter by own asset
                 if filter_key == 'model':
                     for attribute, val in subfilters.items():
@@ -153,14 +140,11 @@ def filter_list(channel_name, object_type, data, query_params):
 
                 # Get other asset list
                 with get_orchestrator_client(channel_name) as client:
-                    if filter_key in ['algo', 'composite_algo', 'aggregate_algo']:
-                        filtering_data = getattr(client, FILTER_QUERIES[filter_key])(ALGO_CATEGORY[filter_key])
-                    else:
-                        filtering_data = getattr(client, FILTER_QUERIES[filter_key])()
+                    filtering_data = getattr(client, FILTER_QUERIES[filter_key])()
 
                 filtering_data = filtering_data if filtering_data else []
 
-                if filter_key in ('algo', 'composite_algo', 'aggregate_algo'):
+                if filter_key == 'algo':
                     for attribute, val in subfilters.items():
                         filtering_data = [x for x in filtering_data if x[attribute] in val]
                         keys = [x['key'] for x in filtering_data]
@@ -188,7 +172,7 @@ def filter_list(channel_name, object_type, data, query_params):
                             )
                         ]
 
-                        if object_type in ['algo', 'composite_algo', 'aggregate_algo']:
+                        if object_type == 'algo':
                             keys = [_get_model_tuple(x)['algo']['key'] for x in filtering_data]
                             filtered_list = [x for x in filtered_list if x['key'] in keys]
 

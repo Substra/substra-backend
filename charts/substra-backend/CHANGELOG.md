@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 7.0.0
+
+### Removed
+- removed unused aggregatealgos and compositealgos volumes
+
 ## 6.0.0
 
 ### Changed

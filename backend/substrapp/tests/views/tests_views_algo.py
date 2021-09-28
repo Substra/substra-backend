@@ -154,6 +154,7 @@ class AlgoViewTests(APITestCase):
             'json': json.dumps({
                 'name': 'Logistic regression',
                 'objective_key': 'some key',
+                'category': 'ALGO_SIMPLE',
                 'permissions': {
                     'public': True,
                     'authorized_ids': [],

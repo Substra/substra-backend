@@ -51,6 +51,7 @@ class AlgoQueryTests(APITestCase):
             'json': json.dumps({
                 'metadata': {},
                 'name': 'super top algo',
+                'category': 'ALGO_SIMPLE',
                 'permissions': {
                     'public': True,
                     'authorized_ids': []
@@ -65,6 +66,7 @@ class AlgoQueryTests(APITestCase):
             'json': json.dumps({
                 'metadata': {},
                 'name': 'super top algo',
+                'category': 'ALGO_SIMPLE',
                 'permissions': {
                     'public': True,
                     'authorized_ids': []

@@ -26,7 +26,6 @@ def main():
     assets['testtuple'] = json.dumps(to_dict(client.list_testtuple()), indent=4)
     assets['computeplan'] = json.dumps(to_dict(client.list_compute_plan()), indent=4)
     assets['compositetraintuple'] = json.dumps(to_dict(client.list_composite_traintuple()), indent=4)
-    assets['compositealgo'] = json.dumps(to_dict(client.list_composite_algo()), indent=4)
     assets['model'] = json.dumps(to_dict(client._backend.list(substra.sdk.schemas.Type.Model)), indent=4)
 
     with open(assets_path, 'w') as f:
