@@ -3,9 +3,7 @@ import shutil
 import logging
 
 import mock
-import unittest
 from parameterized import parameterized
-
 from django.contrib.auth.models import User
 from django.urls import reverse
 from django.test import override_settings
@@ -21,8 +19,8 @@ from substrapp.views.utils import AssetPermissionError
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..common import get_sample_model, AuthenticatedClient, encode_filter
-from ..assets import objective, datamanager, algo, model
+from ..common import get_sample_model, AuthenticatedClient
+from ..assets import objective, model
 
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -75,43 +73,12 @@ class ModelViewTests(APITestCase):
             r = response.json()
             self.assertIn('Malformed search filters', r['message'])
 
-    @unittest.skip("filter on model key does not work anymore")
     def test_model_list_filter_key(self):
         with mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
             key = model[1]['key']
             search_params = f'?search=model%253Akey%253A{key}'
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(len(r['results']), 1)
-
-    @unittest.skip("filter on model key does not work anymore")
-    def test_model_list_filter_datamanager(self):
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model), \
-             mock.patch.object(OrchestratorClient, 'query_datamanagers', return_value=datamanager):
-            search_params = f'?search=dataset%253Aname%253A{encode_filter(datamanager[0]["name"])}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r['results']), 1)
-
-    @unittest.skip("filter on model key does not work anymore")
-    def test_model_list_filter_objective(self):
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model), \
-             mock.patch.object(OrchestratorClient, 'query_objectives', return_value=objective):
-            search_params = f'?search=objective%253Aname%253A{encode_filter(objective[0]["name"])}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(len(r['results']), 1)
-
-    @unittest.skip("filter on model key does not work anymore")
-    def test_model_list_filter_algo(self):
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model), \
-             mock.patch.object(OrchestratorClient, 'query_algos', return_value=algo):
-
-            search_params = f'?search=algo%253Aname%253A{encode_filter(algo[0]["name"])}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
             self.assertEqual(len(r['results']), 1)
 
     def test_model_retrieve(self):

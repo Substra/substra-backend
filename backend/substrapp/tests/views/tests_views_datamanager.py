@@ -4,7 +4,6 @@ import shutil
 import logging
 
 import mock
-import unittest
 from parameterized import parameterized
 
 from django.urls import reverse
@@ -17,7 +16,7 @@ from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_datamanager, AuthenticatedClient, encode_filter
-from ..assets import objective, datamanager, model
+from ..assets import objective, datamanager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = 'mychannel'
@@ -82,30 +81,6 @@ class DataManagerViewTests(APITestCase):
             r = response.json()
 
             self.assertEqual(len(r['results']), 1)
-
-    def test_datamanager_list_filter_objective(self):
-        objective_key = [dm['objective_key'] for dm in datamanager if dm['objective_key']][0]
-        objective_to_filter = encode_filter([o for o in objective
-                                             if o['key'] == objective_key].pop()['name'])
-
-        with mock.patch.object(OrchestratorClient, 'query_datamanagers', return_value=datamanager), \
-                mock.patch.object(OrchestratorClient, 'query_objectives', return_value=objective):
-            search_params = f'?search=objective%253Aname%253A{objective_to_filter}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r['results']), 1)
-
-    @unittest.skip("filter on model key does not work anymore")
-    def test_datamanager_list_filter_model(self):
-        with mock.patch.object(OrchestratorClient, 'query_datamanagers', return_value=datamanager), \
-                mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
-
-            search_params = f'?search=model%253Akey%253A{model[0]}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r['results']), 2)
 
     def test_datamanager_retrieve(self):
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),

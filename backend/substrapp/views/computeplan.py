@@ -273,7 +273,6 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 data = filter_list(
-                    channel_name=get_channel_name(request),
                     object_type='compute_plan',
                     data=data,
                     query_params=query_params)

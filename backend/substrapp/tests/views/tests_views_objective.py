@@ -6,7 +6,6 @@ import copy
 import json
 
 import mock
-import unittest
 from parameterized import parameterized
 
 from django.urls import reverse
@@ -19,7 +18,7 @@ from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_objective, AuthenticatedClient, encode_filter
-from ..assets import objective, datamanager, model
+from ..assets import objective, datamanager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = 'mychannel'
@@ -93,38 +92,15 @@ class ObjectiveViewTests(APITestCase):
             search_params = f'?search=objective%253Aname%253A{name_to_filter}'
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
-
             self.assertEqual(len(r['results']), 1)
 
     def test_objective_list_filter_metrics(self):
         with mock.patch.object(OrchestratorClient, 'query_objectives', return_value=objective):
-            search_params = '?search=objective%253Ametrics%253Atest%2520metrics'
+            search_params = '?search=objective%253Ametrics_name%253Atest%2520metrics'
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r['results']), len(objective))
-
-    def test_objective_list_filter_datamanager(self):
-        datamanager_key = objective[0]['data_manager_key']
-        datamanager_to_filter = encode_filter([dm for dm in datamanager
-                                               if dm['key'] == datamanager_key].pop()['name'])
-        with mock.patch.object(OrchestratorClient, 'query_objectives', return_value=objective), \
-                mock.patch.object(OrchestratorClient, 'query_datamanagers', return_value=datamanager):
-            search_params = f'?search=dataset%253Aname%253A{datamanager_to_filter}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r['results']), 1)
-
-    @unittest.skip("filter on model key does not work anymore")
-    def test_objective_list_filter_model(self):
-        with mock.patch.object(OrchestratorClient, 'query_objectives', return_value=objective), \
-                mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
-
-            search_params = f'?search=model%253Akey%253A{model[0]}'
-            response = self.client.get(self.url + search_params, **self.extra)
-
-            self.assertEqual(len(response.json()), 1)
 
     def test_objective_retrieve(self):
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),

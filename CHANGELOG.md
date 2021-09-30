@@ -15,11 +15,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
   * all algos are now served through `/algo` and `/algo/:key`
   * when creating a new algo, you must give a `category` property which value is one of `ALGO_SIMPLE`, `ALGO_COMPOSITE` or `ALGO_AGGREGATE`
+- Search objective by metrics with `/objective?search=objective:metrics_name:[METRIC_NAME]` instead of `/objective?search=objective:metrics:[METRIC_NAME]`
+
 
 - switched to structured logging
 
 ### Removed
 - Removed routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)
+- Asset filters on attributes from different assets are removed 
+exemple : ` GET /objective?search=traintuple:key:foo`
+The composed filter that are removed are:
+```
+    /dataset?search=model:field_key:value
+    /dataset?search=objective:field_key:value
+    /algo?search=model:field_key:value
+    /objective?search=model:field_key:value
+    /objective?search=dataset:field_key:value
+    /model?search=algo:field_key:value
+    /model?search=dataset:field_key:value
+    /model?search=objective:field_key:value
+```
 
 ## [0.3.1] - 2021-08-25
 
