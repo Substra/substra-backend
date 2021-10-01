@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Models exported to bucket are prefixed with their compute plan's ID
 - Backend version build in docker image and exposed in `/info`
+- Orchestrator and chaincode version in `/info`
 
 ### Changed
 - Unified all 3 categories of algos in a single endpoint.

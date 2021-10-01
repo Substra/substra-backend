@@ -13,6 +13,7 @@ import orchestrator.model_pb2 as model_pb2
 import orchestrator.performance_pb2 as performance_pb2
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
+import orchestrator.info_pb2 as info_pb2
 from orchestrator.error import OrcError
 from orchestrator.node_pb2_grpc import NodeServiceStub
 from orchestrator.algo_pb2_grpc import AlgoServiceStub
@@ -25,6 +26,7 @@ from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
 from orchestrator.performance_pb2_grpc import PerformanceServiceStub
 from orchestrator.event_pb2_grpc import EventServiceStub
+from orchestrator.info_pb2_grpc import InfoServiceStub
 from google.protobuf.json_format import MessageToDict
 
 import time
@@ -156,6 +158,7 @@ class OrchestratorClient:
         self._model_client = ModelServiceStub(self._channel)
         self._performance_client = PerformanceServiceStub(self._channel)
         self._event_client = EventServiceStub(self._channel)
+        self._info_client = InfoServiceStub(self._channel)
 
         self._metadata = (
             ("mspid", mspid),
@@ -623,6 +626,16 @@ class OrchestratorClient:
                 break
 
         return res
+
+    def query_version(
+        self,
+    ):
+        data = self._info_client.QueryVersion(
+            info_pb2.QueryVersionParam(),
+            metadata=self._metadata,
+        )
+        data = MessageToDict(data, **CONVERT_SETTINGS)
+        return data
 
     def __enter__(self):
         return self

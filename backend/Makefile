@@ -27,6 +27,6 @@ exception_map:
 	python3.7 substrapp/compute_tasks/exception_handler.py
 
 orchestrator-grpc:
-	python -m grpc_tools.protoc -I ${ORCHESTRATOR_ROOT}/lib/asset/ --python_out=./substrapp/orchestrator --grpc_python_out=./substrapp/orchestrator ${ORCHESTRATOR_ROOT}/lib/asset/*.proto
+	python -m grpc_tools.protoc -I ${ORCHESTRATOR_ROOT}/lib/asset/ --python_out=./orchestrator --grpc_python_out=./orchestrator ${ORCHESTRATOR_ROOT}/lib/asset/*.proto
 
-	${SED_BINARY} -i -E 's/^import.*_pb2/from . \0/' ./substrapp/orchestrator/*_pb2*.py
+	${SED_BINARY} -i -E 's/^import.*_pb2/from . \0/' ./orchestrator/*_pb2*.py
