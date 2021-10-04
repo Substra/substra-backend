@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 - switched to structured logging
+- made `/info` semi-public: returns some information for anonymous users and some more for authenticated ones
 
 ### Removed
 - Removed routes `/aggregate_algo`, `/aggregate_algo/:key`, `/composite_algo` and `/composite_algo/:key` (all algos now served through `/algo` and `/algo/:key`)

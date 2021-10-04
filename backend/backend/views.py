@@ -3,6 +3,7 @@ from rest_framework.throttling import AnonRateThrottle
 
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 
 from libs.expiry_token_authentication import token_expire_handler, expires_at
 from libs.user_login_throttle import UserLoginThrottle
@@ -10,6 +11,7 @@ from libs.user_login_throttle import UserLoginThrottle
 from rest_framework.views import APIView
 from substrapp.views.utils import get_channel_name
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_owner
 from django.conf import settings
 
 
@@ -39,25 +41,29 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
 
 
 class Info(APIView):
+    permission_classes = [AllowAny]
+
     def get(self, request, *args, **kwargs):
-        channel_name = get_channel_name(request)
-        channel = settings.LEDGER_CHANNELS[channel_name]
-
-        with get_orchestrator_client(channel_name) as client:
-            orchestrator_versions = client.query_version()
-
         res = {
-            "host": settings.DEFAULT_DOMAIN,
-            "version": settings.BACKEND_VERSION,
-            "orchestrator_version": orchestrator_versions.get("orchestrator"),
-            "channel": channel_name,
-            "config": {
-                "model_export_enabled": channel["model_export_enabled"],
-            },
+            'host': settings.DEFAULT_DOMAIN,
+            'node_id': get_owner(),
+            'config': {},
         }
 
-        if orchestrator_versions.get("chaincode"):
-            res["chaincode_version"] = orchestrator_versions.get("chaincode")
+        if request.user.is_authenticated:
+            channel_name = get_channel_name(request)
+            channel = settings.LEDGER_CHANNELS[channel_name]
+
+            with get_orchestrator_client(channel_name) as client:
+                orchestrator_versions = client.query_version()
+
+            res['channel'] = channel_name
+            res['version'] = settings.BACKEND_VERSION,
+            res['orchestrator_version'] = orchestrator_versions.get("orchestrator"),
+            res['config']['model_export_enabled'] = channel['model_export_enabled']
+
+            if orchestrator_versions.get("chaincode"):
+                res["chaincode_version"] = orchestrator_versions.get("chaincode")
 
         return Response(res)
 
