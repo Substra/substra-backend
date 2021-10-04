@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Task data are now mounted on `/substra_internal` instead of `/sandbox`.
+
+### Fixed
+- Set the local folder dynamically instead of leaving it to connect-tools default.
+
+
 ## [0.4.0] 2021-10-04
 
 ### Added

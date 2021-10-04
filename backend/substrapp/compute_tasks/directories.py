@@ -7,7 +7,7 @@ from shutil import copytree
 
 logger = structlog.get_logger(__name__)
 
-SANDBOX_DIR = "/sandbox"
+SANDBOX_DIR = "/substra_internal"
 
 
 # /var/medias/substra/subtuple     <- SUBTUPLE_DIR

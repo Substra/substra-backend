@@ -75,6 +75,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
     perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, Filenames.Performance)
     pred_path = os.path.join(SANDBOX_DIR, TaskDirName.Pred, Filenames.Predictions)
+    local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
 
     if is_testtuple_eval:
         command = ["--input-predictions-path", pred_path]
@@ -105,6 +106,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
             os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
         ]
         command += ["--output-model-path", os.path.join(out_models_dir, Filenames.OutModel)]
+        command += ["--compute-plan-path", local_folder]
 
     elif task_category == computetask_pb2.TASK_COMPOSITE:
 
@@ -125,6 +127,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
         command += ["--output-models-path", out_models_dir]
         command += ["--output-head-model-filename", Filenames.OutHeadModel]
         command += ["--output-trunk-model-filename", Filenames.OutTrunkModel]
+        command += ["--compute-plan-path", local_folder]
 
     elif task_category == computetask_pb2.TASK_AGGREGATE:
 
@@ -135,6 +138,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
             command += ["--rank", rank]
 
         command += ["--output-model-path", os.path.join(out_models_dir, Filenames.OutModel)]
+        command += ["--compute-plan-path", local_folder]
 
     elif task_category == computetask_pb2.TASK_TEST:
 
@@ -153,6 +157,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
             os.path.join(datasamples_dir, key) for key in task_data["data_sample_keys"]
         ]
         command += ["--output-predictions-path", pred_path]
+        command += ["--compute-plan-path", local_folder]
 
     logger.debug("Generated task command", command=command)
 
