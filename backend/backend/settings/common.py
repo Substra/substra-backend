@@ -310,6 +310,11 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': True,
         },
+        'kubernetes.client.rest': { # This is too verbose in debug level
+            'level': 'INFO' if DEBUG else 'WARNING',
+            'handlers': ['console'],
+            'propagate': False,
+        },
     }
 }
 
