@@ -14,8 +14,6 @@ from rest_framework_simplejwt.exceptions import TokenError, InvalidToken, Authen
 from libs.user_login_throttle import UserLoginThrottle
 from users.serializers import CustomTokenObtainPairSerializer, CustomTokenRefreshSerializer
 
-import tldextract
-
 
 class UserViewSet(GenericViewSet):
     queryset = User.objects.all()
@@ -30,14 +28,6 @@ class UserViewSet(GenericViewSet):
             AUTH_HEADER_TYPES[0],
             self.www_authenticate_realm,
         )
-
-    def get_host(self, request):
-        ext = tldextract.extract(request.get_host())
-        host = ext.domain
-        if ext.suffix:
-            host += '.' + ext.suffix
-
-        return host
 
     @action(methods=['post'], detail=False)
     @throttle_classes([AnonRateThrottle, UserLoginThrottle])
@@ -65,14 +55,14 @@ class UserViewSet(GenericViewSet):
 
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
-        host = self.get_host(request)
-
         secure = not settings.DEBUG
 
-        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure, domain=host)
-        response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
+        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure,
+                            domain=settings.COMMON_HOST_DOMAIN)
+        response.set_cookie('signature', value=signature, httponly=True, secure=secure,
+                            domain=settings.COMMON_HOST_DOMAIN)
         response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
-                            domain=host)
+                            domain=settings.COMMON_HOST_DOMAIN)
 
         return response
 
@@ -101,14 +91,14 @@ class UserViewSet(GenericViewSet):
 
         response = Response(access_token.payload, status=status.HTTP_200_OK)
 
-        host = self.get_host(request)
-
         secure = not settings.DEBUG
 
-        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure, domain=host)
-        response.set_cookie('signature', value=signature, httponly=True, secure=secure, domain=host)
+        response.set_cookie('header.payload', value=header_payload, expires=access_expires, secure=secure,
+                            domain=settings.COMMON_HOST_DOMAIN)
+        response.set_cookie('signature', value=signature, httponly=True, secure=secure,
+                            domain=settings.COMMON_HOST_DOMAIN)
         response.set_cookie('refresh', value=str(refresh_token), expires=refresh_expires, httponly=True, secure=secure,
-                            domain=host)
+                            domain=settings.COMMON_HOST_DOMAIN)
 
         return response
 
@@ -128,10 +118,8 @@ class UserViewSet(GenericViewSet):
 
         response = Response({}, status=status.HTTP_200_OK)
 
-        host = self.get_host(request)
-
-        response.delete_cookie('header.payload', domain=host)
-        response.delete_cookie('signature', domain=host)
-        response.delete_cookie('refresh', domain=host)
+        response.delete_cookie('header.payload', domain=settings.COMMON_HOST_DOMAIN)
+        response.delete_cookie('signature', domain=settings.COMMON_HOST_DOMAIN)
+        response.delete_cookie('refresh', domain=settings.COMMON_HOST_DOMAIN)
 
         return response

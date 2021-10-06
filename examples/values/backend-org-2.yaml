@@ -23,6 +23,7 @@ backend:
   settings: dev
   tokenStrategy: 'reuse'
   defaultDomain: http://backend-org-2-substra-backend-server.org-2:8000
+  commonHostDomain: node-2.com
   kaniko:
     dockerConfigSecretName: "docker-config"
     cache:

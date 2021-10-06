@@ -6,6 +6,7 @@ backend:
   uwsgiProcesses: 20
   uwsgiThreads: 2
   gzipModels: false
+  # commonHostDomain: 'yourdomain.tld'
 
   pagination:
     maxPageSize: 100

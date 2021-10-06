@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for filters on compute plan sub routes
+- `COMMON_HOST_DOMAIN` variable env now required to set domain property of JWT cookies
 
 ### Changed
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`.

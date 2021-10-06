@@ -79,6 +79,8 @@ spec:
             value: {{ .Values.httpClient.timeoutSeconds | quote }}
           - name: PAGINATION_MAX_PAGE_SIZE
             value: {{ .Values.backend.pagination.maxPageSize | quote }}
+          - name: COMMON_HOST_DOMAIN
+            value: {{ .Values.backend.commonHostDomain | quote }}
           - name: HOST_IP
             valueFrom:
               fieldRef:

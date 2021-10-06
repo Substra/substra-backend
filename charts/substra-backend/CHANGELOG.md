@@ -1,5 +1,13 @@
 # Changelog
 
+## 8.0.0
+
+### Changed
+- `backend.commonHostDomain` is now required to ensure cookies set by the backend will be returned by the frontend.
+  
+  It must contain the common part of the frontend and backend domain.
+
+  E.g. `substra-frontend.node-1.com` / `substra-backend.node-1.com` -> `COMMON_HOST_DOMAIN=node-1.com`
 
 ## 7.0.0
 

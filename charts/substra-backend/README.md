@@ -57,6 +57,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.resources` | Resources configuration for the `substra-backend` container | `{}` |
 | `backend.grpc.keepalive.timeMs` | The number of milliseconds between each client GRPC keepalive ping | `120000` |
 | `backend.pagination.maxPageSize` | The maximum elements per page authorized | `100` |
+| `backend.commonHostDomain` | The common host under which both backend and frontend are served | `nil` |
 | `outgoingNodes[]` | Outgoing nodes credentials for substra-backend node-to-node communication | `[]` |
 | `outgoingNodes[].name` | Outgoing node username | (undefined) |
 | `outgoingNodes[].secret` | Outgoing node password | (undefined) |
