@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Support for filters on compute plan sub routes
+
 ### Changed
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`.
 

@@ -370,6 +370,19 @@ class GenericSubassetViewset(PaginationMixin,
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+        query_params = request.query_params.get('search')
+        if query_params is not None:
+            try:
+                data = filter_list(
+                    object_type=basename,
+                    data=data,
+                    query_params=query_params)
+            except OrcError as rpc_error:
+                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            except Exception as e:
+                logger.exception(e)
+                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         return self.paginate_response(data)
 
 

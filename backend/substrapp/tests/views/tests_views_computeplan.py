@@ -2,6 +2,7 @@ import os
 import shutil
 from grpc import RpcError, StatusCode
 import mock
+import urllib
 import uuid
 
 from django.urls import reverse
@@ -170,3 +171,17 @@ class ComputePlanViewTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.json()['results'], traintuple[0:2])
         # # maybe add a test without ?page_size=<int> and add a forbidden response
+
+    def test_can_filter_tuples(self):
+        cp = computeplan[0]
+        url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
+        target_tag = 'foo'
+        search_params = '?page_size=10&page=1&search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
+
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
+                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+            response = self.client.get(url + search_params, **self.extra)
+            r = response.json()
+
+            self.assertEqual(len(r['results']), 2)
