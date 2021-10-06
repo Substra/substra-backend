@@ -153,7 +153,6 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
                 )
     ctx = None
     dirs = None
-    has_chainkeys = False
 
     # This lock serves multiple purposes:
     #
@@ -184,7 +183,6 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             # Create context
             ctx = Context.from_task(channel_name, task, self.attempt)
             dirs = ctx.directories
-            has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and ctx.compute_plan_tag
 
             # Setup
             init_asset_buffer()
@@ -196,7 +194,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             add_task_assets_to_buffer(ctx)
             add_assets_to_taskdir(ctx)
             if task_category != computetask_pb2.TASK_TEST:
-                if has_chainkeys:
+                if ctx.has_chainkeys:
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
             restore_dir(dirs, CPDirName.Local, TaskDirName.Local)   # testtuple "predict" may need local dir
@@ -215,7 +213,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             else:
                 result["result"] = save_models(ctx)
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
-                if has_chainkeys:
+                if ctx.has_chainkeys:
                     commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
 
         except Exception as e:

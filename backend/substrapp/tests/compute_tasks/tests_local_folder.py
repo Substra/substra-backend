@@ -46,6 +46,7 @@ class LocalFolderTests(APITestCase):
             directories = FakeDirectories()
             compute_plan_key = "some compute plan key"
             task_category = computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
+            has_chainkeys = False
 
         ctx = FakeContext()
 

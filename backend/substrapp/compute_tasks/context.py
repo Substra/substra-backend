@@ -38,6 +38,7 @@ class Context:
     _data_manager: Dict = None
     _directories: Directories = None
     _attempt: int = None  # The attempt number, eg; the number of retries + 1
+    _has_chainkeys: bool = None
 
     def __init__(
         self,
@@ -53,6 +54,7 @@ class Context:
         data_manager: Dict,
         directories: Directories,
         attempt: int,
+        has_chainkeys: bool,
     ):
         self._channel_name = channel_name
         self._task = task
@@ -66,6 +68,7 @@ class Context:
         self._data_manager = data_manager
         self._directories = directories
         self._attempt = attempt
+        self._has_chainkeys = has_chainkeys
 
     @classmethod
     def from_task(cls, channel_name: str, task: Dict, attempt: int):
@@ -95,6 +98,8 @@ class Context:
 
         directories = Directories(compute_plan_key)
 
+        has_chainkeys = settings.TASK["CHAINKEYS_ENABLED"] and compute_plan_tag
+
         return cls(
             channel_name,
             task,
@@ -108,6 +113,7 @@ class Context:
             data_manager,
             directories,
             attempt,
+            has_chainkeys,
         )
 
     @property
@@ -141,6 +147,10 @@ class Context:
     @property
     def attempt(self) -> int:
         return self._attempt
+
+    @property
+    def has_chainkeys(self) -> bool:
+        return self._has_chainkeys
 
     @property
     def algo_key(self):

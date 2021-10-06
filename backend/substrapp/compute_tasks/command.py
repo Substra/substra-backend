@@ -76,6 +76,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
     perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, Filenames.Performance)
     pred_path = os.path.join(SANDBOX_DIR, TaskDirName.Pred, Filenames.Predictions)
     local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
+    chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
 
     if is_testtuple_eval:
         command = ["--input-predictions-path", pred_path]
@@ -158,6 +159,9 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
         ]
         command += ["--output-predictions-path", pred_path]
         command += ["--compute-plan-path", local_folder]
+
+    if ctx.has_chainkeys:
+        command += ["--chainkeys-path", chainkeys_folder]
 
     logger.debug("Generated task command", command=command)
 
