@@ -73,4 +73,4 @@ jobs:
           helm dep build charts/substra-backend
           helm package charts/substra-backend
           helm repo add --username=$HARBOR_AUTH_USER --password=$HARBOR_AUTH_TOKEN owkin-priv https://core.harbor.tooling.owkin.com/chartrepo/connect-backend
-          helm push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
+          helm cm-push substra-backend-$(yq eval .version charts/substra-backend/Chart.yaml).tgz owkin-priv
