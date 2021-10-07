@@ -20,6 +20,12 @@ backend:
         image: gcr.io/kaniko-project/warmer:v1.6.0
         images: []
           # - image: gcr.io/connect-314908/connect-tools:0.8.0-minimal
+    persistence:
+      # storageClassName: ""
+      # hostPath: "/substra"
+      volumes:
+        docker-cache:
+          size: "10Gi"
 
   compute:
     registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
@@ -268,8 +274,6 @@ celeryworker:
       subtuple:
         # subtuple size should be *at least* equal to the combined size of the following PVCs:
         # datasamples, models, objectives, datamanagers, algos, compositealgos, and aggregatealgos.
-        size: "10Gi"
-      docker-cache:
         size: "10Gi"
 
 events:

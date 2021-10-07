@@ -32,6 +32,10 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
 | `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.6.0` |
 | `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
+| `backend.kaniko.persistence.storageClassName` | PVC Storage Class name for kaniko pods volumes | (undefined) |
+| `backend.kaniko.persistence.hostPath` | Host path for PVC Storage in case of local storage | (undefined) |
+| `backend.kaniko.persistence.volumes` | Volumes definition for kaniko pods storage | `subtuple` |
+| `backend.kaniko.persistence.volumes[].size` | kaniko pods volumes size | |
 | `backend.compute.registry` | Optionally, the URL of a registry to pull the kaniko image from (`backend.kaniko.image`). This image will be used to build client images (compute tasks) | `nil` |
 | `backend.compute.podStartupTimeoutSeconds` | The maximum time to wait for a compute pod to start in seconds | `300` |
 | `backend.image.repository` | `substra-backend` image repository | `substrafoundation/substra-backend` |

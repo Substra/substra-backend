@@ -1,6 +1,9 @@
 
 ## unreleased
 
+## 10.0.0
+- Note that the kaniko cache volume is now configurable via `backend.kaniko.persistence` fields.
+
 ## 9.0.0
 
 1. Persistence. In this order:
@@ -10,8 +13,10 @@
     - Remove `persistence.local`.
     - Rename `persistence.volumes.subtuple` to `celeryworker.persistence.volumes.subtuple`. `subtuple` should be at least as large as the MinIO disk (see below).
     - Rename `persistence` to `backend.persistence`
-    - for each volume in `backend.persistence.volumes`: remove `[volume].readOnly`
-    - for each volume in `celeryworker.persistence.volumes`: remove `[volume].readOnly`.
+    - For each volume in `backend.persistence.volumes`: remove `[volume].readOnly`
+    - For each volume in `celeryworker.persistence.volumes`: remove `[volume].readOnly`.
+    - If you wish to use `hostPath` for the volumes defined under `celeryworker.persistence`, do so in the `celery.persistence` field.
+
     - Here is an example of the diff for a `backend` volume:
         ```yaml
             # __before__ (8.x.x)

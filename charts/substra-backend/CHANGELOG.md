@@ -1,4 +1,9 @@
 # Changelog
+## 10.0.0
+
+### Changed
+- `docker-cache` pvc is now configurable in the values file (under `backend.kaniko.persistence`)
+
 ## 9.0.0
 
 See [UPGRADE.md](./UPGRADE.md#9.0.0)
