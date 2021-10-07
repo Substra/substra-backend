@@ -186,7 +186,7 @@
     "InvalidHeaderError": "0185",
     "InvalidMultipartContentTransferEncodingDefect": "0186",
     "InvalidOperation": "0187",
-    "InvalidPath": "0188",
+    "InvalidPathError": "0188",
     "InvalidProxyConfigurationWarning": "0189",
     "InvalidProxyURL": "0190",
     "InvalidQuery": "0191",

@@ -1,23 +1,28 @@
 import structlog
 import os
 import shutil
-import uuid
+from typing import Tuple, List, Union, BinaryIO
+import zipfile
+import tarfile
+import tempfile
 
-from os.path import normpath
-from rest_framework import status, mixins
+from rest_framework import serializers, status, mixins
+from tarfile import TarFile
+from django.conf import settings
+from django.core.files import File
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from substrapp.exceptions import ServerMediasPathError, ServerMediasNoSubdirError
+from substrapp.exceptions import ServerMediasNoSubdirError
+from substrapp.utils import ZipFile, get_dir_hash, raise_if_path_traversal
 
 from substrapp.models import DataSample, DataManager
 from substrapp.serializers import (DataSampleSerializer,
                                    OrchestratorDataSampleSerializer,
                                    OrchestratorDataSampleUpdateSerializer)
-from substrapp.utils import store_datasamples_archive, get_dir_hash
-from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.views.utils import ValidationExceptionError, get_channel_name
+from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
@@ -46,59 +51,53 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _create(self, request):
-        paths_to_remove = []
         data_manager_keys = request.data.get("data_manager_keys") or []
         self.check_datamanagers(data_manager_keys)
 
-        try:
-            # incrementally save in db
-            instances = []
-            for file_data in self._get_files(request, paths_to_remove):
-                instances.append(self._db_create(data=file_data))
+        # incrementally save in db
+        instances = []
+        for file_data in self._get_files(request):
+            instances.append(self._db_create(file_data))
 
-            # serialized data for orchestrator db
-            orchestrator_serializer = OrchestratorDataSampleSerializer(
-                data={
-                    'test_only': request.data.get('test_only', False),
-                    'data_manager_keys': request.data.get('data_manager_keys') or [],
-                    'instances': instances
-                },
-                context={
-                    'request': request
-                }
-            )
+        # serialized data for orchestrator db
+        orchestrator_serializer = OrchestratorDataSampleSerializer(
+            data={
+                'test_only': request.data.get('test_only', False),
+                'data_manager_keys': request.data.get('data_manager_keys') or [],
+                'instances': instances
+            },
+            context={
+                'request': request
+            }
+        )
 
-            if not orchestrator_serializer.is_valid():
-                for instance in instances:
-                    instance.delete()
-                raise ValidationError(orchestrator_serializer.errors)
-
-            # create on orchestrator db
-            try:
-                orchestrator_result = orchestrator_serializer.create(
-                    get_channel_name(request),
-                    orchestrator_serializer.validated_data
-                )
-            except Exception:
-                for instance in instances:
-                    instance.delete()
-                raise
-
-            data = []
+        if not orchestrator_serializer.is_valid():
             for instance in instances:
-                serializer = self.get_serializer(instance)
-                if (
-                    "key" in orchestrator_result and
-                    orchestrator_result["validated"] and
-                    serializer.data["key"] in orchestrator_result["key"]
-                ):
-                    serializer.data["validated"] = True
-                data.append(serializer.data)
-            return data
+                instance.delete()
+            raise ValidationError(orchestrator_serializer.errors)
 
-        finally:
-            for gpath in paths_to_remove:
-                shutil.rmtree(gpath, ignore_errors=True)
+        # create on orchestrator db
+        try:
+            orchestrator_result = orchestrator_serializer.create(
+                get_channel_name(request),
+                orchestrator_serializer.validated_data
+            )
+        except Exception:
+            for instance in instances:
+                instance.delete()
+            raise
+
+        data = []
+        for instance in instances:
+            serializer = self.get_serializer(instance)
+            if (
+                "key" in orchestrator_result and
+                orchestrator_result["validated"] and
+                serializer.data["key"] in orchestrator_result["key"]
+            ):
+                serializer.data["validated"] = True
+            data.append(serializer.data)
+        return data
 
     def _db_create(self, data):
         serializer = self.get_serializer(data=data)
@@ -116,22 +115,48 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
                 f"Please create them before. DataManager keys: {data_manager_keys}"
             )
 
-    @staticmethod
-    def _get_files(request, paths_to_remove: list):
-        """
-        Preprocess files on view side (instead of serializer)
-        is more handy to deal with inputs heterogeneity
-        """
-        # mode 1: files uploaded via http
-        if len(request.FILES) > 0:
-            for f in request.FILES.values():
-                key = uuid.uuid4()
-                checksum, datasamples_path_from_file = store_datasamples_archive(f)  # can raise
-                paths_to_remove.append(datasamples_path_from_file)
-                yield {"key": key, "path": datasamples_path_from_file, "checksum": checksum}
-            return
+    def _get_files(self, request):
+        return (
+            self._get_files_from_http_upload(request) if request.FILES else self._get_files_from_servermedias(request)
+        )
 
-        # mode 2: files present on file system
+    @staticmethod
+    def _get_files_from_http_upload(request):
+        """
+        Yield files uploaded via HTTP.
+
+        The yielded dictionaries have a "file" key and a "checksum" key.
+        """
+        for f in request.FILES.values():
+            try:
+                f.seek(0)
+            except Exception:
+                raise serializers.ValidationError("Cannot handle this file object")
+            else:
+                archive = None
+
+                try:
+                    archive = _get_archive(f)
+                except Exception as e:
+                    logger.error(e)
+                    raise e
+                else:
+                    with tempfile.TemporaryDirectory() as tmp_path:
+                        archive.extractall(path=tmp_path)
+                        checksum = get_dir_hash(tmp_path)
+                    f.seek(0)
+                    yield {"file": f, "checksum": checksum}
+                finally:
+                    if archive:
+                        archive.close()
+
+    @staticmethod
+    def _get_files_from_servermedias(request):
+        """
+        Yield files from servermedias, based on the HTTP POST request's "path" and "paths" keys.
+
+        The yielded dictionaries have a "path" key and a "checksum" key.
+        """
         path = request.data.get("path")
         paths = request.data.get("paths") or []
         if path and paths:
@@ -140,15 +165,20 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             paths = [path]
 
         if request.data.get("multiple") in (True, "true"):
-            paths = get_subpaths(paths, raise_no_subdir=True)
+            paths = _get_servermedias_subpaths(paths, raise_no_subdir=True)
 
         for path in paths:
-            validate_servermedias_path(path)
+            _validate_servermedias_path(path)
 
-            key = uuid.uuid4()
             checksum = get_dir_hash(path)
 
-            yield {"key": key, "path": normpath(path), "checksum": checksum}
+            if settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:  # save path
+                yield {'path': path, 'checksum': checksum}
+
+            else:  # upload to MinIO
+                with tempfile.TemporaryDirectory() as archive_tmp_path:
+                    archive = shutil.make_archive(archive_tmp_path, "tar", root_dir=path)
+                yield {'file': File(open(archive, "rb")), 'checksum': checksum}
 
     def list(self, request, *args, **kwargs):
         try:
@@ -189,7 +219,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         return Response(data, status=status.HTTP_200_OK)
 
 
-def get_subpaths(paths, raise_no_subdir=False):
+def _get_servermedias_subpaths(paths, raise_no_subdir=False):
     """
     For each path, return path of first level subdirs.
     `raise_no_subdir` expect all paths to contain subdir(s).
@@ -212,10 +242,36 @@ def get_subpaths(paths, raise_no_subdir=False):
     return subpaths
 
 
-def validate_servermedias_path(path):
+def _validate_servermedias_path(path):
     if not os.path.exists(path):
-        raise ServerMediasPathError(f"Invalid path, not found: {path}")
+        raise serializers.ValidationError(f"Invalid path, not found: {path}")
     if not os.path.isdir(path):
-        raise ServerMediasPathError(f"Invalid path, not a directory: {path}")
+        raise serializers.ValidationError(f"Invalid path, not a directory: {path}")
     if not os.listdir(path):
-        raise ServerMediasPathError(f"Invalid path, empty directory: {path}")
+        raise serializers.ValidationError(f"Invalid path, empty directory: {path}")
+
+
+def _get_archive(f: BinaryIO) -> Union[ZipFile, TarFile]:
+    archive, files = _get_archive_and_files(f)
+    if not len(files):
+        raise serializers.ValidationError("Ensure your archive contains at least one file.")
+    try:
+        raise_if_path_traversal(files, "./")
+    except Exception:
+        raise serializers.ValidationError(
+            "Ensure your archive does not contain traversal filenames (e.g. filename with `..` inside)"
+        )
+
+    return archive
+
+
+def _get_archive_and_files(f: BinaryIO) -> Tuple[Union[ZipFile, TarFile], List[str]]:
+    if zipfile.is_zipfile(f):
+        archive = zipfile.ZipFile(file=f)
+        return archive, archive.namelist()
+    f.seek(0)
+    try:
+        archive = tarfile.open(fileobj=f)
+        return archive, archive.getnames()
+    except tarfile.TarError:
+        raise serializers.ValidationError("Archive must be zip or tar")

@@ -1,0 +1,91 @@
+{{- range $key, $val := .Values.backend.persistence.volumes }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    {{ include "substra.labels" $ | nindent 4 }}
+  name: {{ template "substra.fullname" $ }}-{{ $key }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .size | quote }}
+  {{- if $.Values.backend.persistence.hostPath }}
+  selector:
+    matchLabels:
+      {{ include "substra.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ $key }}
+  {{- else if $.Values.backend.persistence.storageClassName }}
+  storageClassName: {{ $.Values.backend.persistence.storageClassName }}
+  {{- end }}
+---
+{{- if $.Values.backend.persistence.hostPath }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "substra.fullname" $ }}-{{ $key }}
+  labels:
+    {{ include "substra.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ $key }}
+spec:
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Recycle
+  claimRef:
+    name: {{ template "substra.fullname" $ }}-{{ $key }}
+    namespace: {{ $.Release.Namespace }}
+  capacity:
+    storage: {{ $val.size | quote }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ $.Values.backend.persistence.hostPath }}/medias/{{ $key }}
+    type: DirectoryOrCreate
+{{- end }}
+{{- end }}
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ template "substra.fullname" $ }}-servermedias
+  labels:
+  {{ include "substra.labels" $ | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ $.Values.backend.persistence.servermedias.size | quote }}
+  {{- if $.Values.backend.persistence.hostPath }}
+  selector:
+    matchLabels:
+      {{ include "substra.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
+  {{- else if $.Values.backend.persistence.storageClassName }}
+  storageClassName: {{ $.Values.backend.persistence.storageClassName }}
+  {{- end }}
+---
+{{- if $.Values.backend.persistence.servermedias.hostPath }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ template "substra.fullname" $ }}-servermedias
+  labels:
+    {{ include "substra.labels" $ | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" $ }}-servermedias
+spec:
+  storageClassName: ""
+  persistentVolumeReclaimPolicy: Recycle
+  claimRef:
+    name: {{ template "substra.fullname" $ }}-servermedias
+    namespace: {{ $.Release.Namespace }}
+  capacity:
+    storage: {{ $.Values.backend.persistence.servermedias.size | quote }}
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: {{ $.Values.backend.persistence.servermedias.hostPath }}/servermedias
+    type: DirectoryOrCreate
+{{- end }}
+---

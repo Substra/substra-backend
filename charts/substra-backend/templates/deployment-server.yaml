@@ -50,6 +50,8 @@ spec:
               name: {{ include "substra.fullname" . }}-ledger
           - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-objectstore
         env:
           - name: ORG_NAME
             value: {{ .Values.organization.name }}
@@ -89,10 +91,14 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
+          - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
+            value: {{ .Values.celeryworker.persistence.servermedias.enableDatasampleStorage | quote }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
           {{- end }}
+          - name: OBJECTSTORE_URL
+            value: {{ .Release.Name }}-minio:9000
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}
@@ -101,10 +107,9 @@ spec:
             containerPort: 8000
             protocol: TCP
         volumeMounts:
-          {{- range $key, $val := .Values.persistence.volumes }}
+          {{- range $key, $val := .Values.backend.persistence.volumes }}
           - name: data-{{ $key }}
             mountPath: /var/substra/medias/{{ $key }}
-            readOnly: {{ $val.readOnly.server }}
           {{- end }}
           - name: data-servermedias
             mountPath: /var/substra/servermedias
@@ -162,7 +167,7 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if and .Values.securityContext.enabled .Values.persistence.hostPath }}
+      {{- if and .Values.securityContext.enabled .Values.backend.persistence.hostPath }}
       - name: chown-pvc
         image: alpine:latest
         imagePullPolicy: IfNotPresent
@@ -173,7 +178,7 @@ spec:
             chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
           done
         volumeMounts:
-          {{- range $key, $val := .Values.persistence.volumes }}
+          {{- range $key, $val := .Values.backend.persistence.volumes }}
           - name: data-{{ $key }}
             mountPath: /var/substra/medias/{{ $key }}
           {{- end }}
@@ -181,6 +186,9 @@ spec:
       - name: wait-postgresql
         image: jwilder/dockerize
         command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+      - name: wait-minio
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       - name: init-migrate
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'migrate']
@@ -189,6 +197,9 @@ spec:
           runAsUser: {{ .Values.securityContext.runAsUser }}
           runAsGroup: {{ .Values.securityContext.runAsGroup }}
         {{- end }}
+        envFrom:
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-objectstore
         env:
         - name: DJANGO_SETTINGS_MODULE
           value: backend.settings.{{ .Values.backend.settings }}
@@ -202,6 +213,8 @@ spec:
           value: {{ .Values.postgresql.postgresqlPassword }}
         - name: DATABASE_HOST
           value: {{ template  "postgresql.serviceName" . }}
+        - name: OBJECTSTORE_URL
+          value: {{ .Release.Name }}-minio:9000
       - name: init-collectstatic
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
@@ -219,7 +232,7 @@ spec:
           - name: statics
             mountPath: /usr/src/app/backend/statics
       volumes:
-      {{- range $key, $val := .Values.persistence.volumes }}
+      {{- range $key, $val := .Values.backend.persistence.volumes }}
       - name: data-{{ $key }}
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-{{ $key }}

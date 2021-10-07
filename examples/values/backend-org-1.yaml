@@ -42,6 +42,9 @@ backend:
       nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
       nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
       nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
+  persistence:
+    servermedias:
+      hostPath: /tmp/org-1/
 
 organization:
   name: MyOrg1
@@ -64,9 +67,6 @@ users:
   - name: "node-1-yourchannel"
     secret: "p@$swr0d44"
     channel: "yourchannel"
-
-persistence:
-  hostPathServerMedias: "/tmp/org-1/"
 
 extraEnv:
   # Should be a json list

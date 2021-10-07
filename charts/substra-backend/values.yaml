@@ -107,6 +107,19 @@ backend:
     keepalive:
       timeMs: 120000
 
+  persistence:
+    # storageClassName: ""
+    # hostPath: "/substra"
+    servermedias:
+      size: 10Gi
+      # hostPath: /host/servermedias
+    volumes:
+      algos:
+        size: "10Gi"
+      datamanagers:
+        size: "10Gi"
+      objectives:
+        size: "10Gi"
 
 outgoingNodes: []
   # - name: nodeId
@@ -119,55 +132,6 @@ users: []
   # - name: username
   #   secret: password
   #   channel: mychannel
-
-persistence:
-  # storageClassName: ""
-  # hostPath: "/substra"
-  # hostPathServerMedias: "/host/servermedias"
-  size: "10Gi"
-  volumes:
-    algos:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
-    datamanagers:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
-    datasamples:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
-    objectives:
-      size: "10Gi"
-      readOnly:
-        server: false
-        worker: true
-    models:
-      size: "10Gi"
-      readOnly:
-        server: true
-        worker: false
-    subtuple:
-      # subtuple size should be at least equal to the combined size of the following PVCs:
-      # datasamples, models, local, objectives, datamanagers, algos
-      size: "10Gi"
-      readOnly:
-        server: true
-        worker: false
-    computeplan:
-      size: "10Gi"
-      readOnly:
-        server: true
-        worker: false
-    local:
-      size: "10Gi"
-      readOnly:
-        server: true
-        worker: false
 
 organization:
   name: substra
@@ -292,9 +256,21 @@ celeryworker:
   affinity: {}
 
   rbac:
+    # Add ServiceAccount for celeryworker
     enable: True
-  # Add ServiceAccount for celeryworker
 
+  persistence:
+    # storageClassName: ""
+    # hostPath: "/substra"
+    servermedias:
+      enableDatasampleStorage: False  # when using "path" to upload datasamples, the datasample will be stored in servermedia instead of MinIO. Can be put to True only if running on one kubernetes node.
+    volumes:
+      subtuple:
+        # subtuple size should be *at least* equal to the combined size of the following PVCs:
+        # datasamples, models, objectives, datamanagers, algos, compositealgos, and aggregatealgos.
+        size: "10Gi"
+      docker-cache:
+        size: "10Gi"
 
 events:
   resources: {}
@@ -315,6 +291,15 @@ events:
 
   affinity: {}
 
+minio:
+  enabled: true
+  accessKey:
+    password: minio
+    forcePassword: true   # required for helm upgrade to work well (https://github.com/bitnami/charts/blob/master/bitnami/minio/values.yaml#L95)
+  secretKey:
+    password: minio1234
+    forcePassword: true   # required for helm upgrade to work well (https://github.com/bitnami/charts/blob/master/bitnami/minio/values.yaml#L104)
+  forceNewKeys: true      # required to take into account new access and secret keys
 
 extraEnv:
   - name: TASK_CACHE_DOCKER_IMAGES

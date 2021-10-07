@@ -5,6 +5,8 @@ from .deps.cors import *
 from .deps.org import *
 from .deps.restframework import *
 
+from substrapp.storages.minio import MinioStorage
+
 DEBUG = True
 
 # Enable Browsable API
@@ -28,6 +30,12 @@ DATABASES = {
         'PORT': 5432,
     }
 }
+
+DATASAMPLE_BUCKET_NAME = "substra-datasample"
+DATASAMPLE_STORAGE = MinioStorage(DATASAMPLE_BUCKET_NAME)
+
+MODEL_BUCKET_NAME = "substra-model"
+MODEL_STORAGE = MinioStorage(MODEL_BUCKET_NAME)
 
 MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(PROJECT_ROOT, f'medias/{ORG_NAME}'))
 

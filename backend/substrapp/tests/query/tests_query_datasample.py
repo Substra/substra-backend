@@ -22,7 +22,6 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from grpc import StatusCode
 
-from substrapp.utils import store_datasamples_archive
 from substrapp.views import DataSampleViewSet
 
 from ..common import get_sample_datamanager, get_sample_zip_data_sample, get_sample_script, \
@@ -83,7 +82,8 @@ class DataSampleQueryTests(APITestCase):
 
         return data
 
-    def test_add_data_sample_ok(self):
+    def test_add_data_sample_from_upload_sync_ok(self):
+
         self.add_default_data_manager()
         data = self.get_default_datasample_data()
 
@@ -99,8 +99,38 @@ class DataSampleQueryTests(APITestCase):
             self.assertIsNotNone(response.json()[0]['key'])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
-    def test_bulk_add_data_sample_ok(self):
+    def _test_add_datasample_from_path_sync_ok(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        path = os.path.join(dir_path, '../../../../fixtures/owkin/datasamples/test/0024900')
 
+        self.add_default_data_manager()
+
+        data = {
+            "json": json.dumps(
+                {
+                    "path": path,
+                    "data_manager_keys": [self.data_manager_key1],
+                    "test_only": True,
+                }
+            ),
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            "HTTP_ACCEPT": "application/json;version=0.0",
+        }
+
+        with mock.patch.object(OrchestratorClient, 'register_datasamples',
+                               return_value={}):
+
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            jsonr = response.json()
+            self.assertIsNotNone(jsonr[0]['key'])
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+            # sensitive data should never be served by the API.
+            self.assertNotIn('file', jsonr[0])
+
+    def test_bulk_add_data_sample_ok(self):
         self.add_default_data_manager()
 
         file_mock = MagicMock(spec=InMemoryUploadedFile)
@@ -133,6 +163,83 @@ class DataSampleQueryTests(APITestCase):
             response = self.client.post(self.url, data, format='multipart', **extra)
             r = response.json()
 
+            self.assertEqual(len(r), 2)
+            self.assertIsNotNone(r[0]['key'])
+            self.assertIsNotNone(r[1]['key'])
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    @override_settings(ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True)
+    def test_add_data_sample_from_path_with_servermedia_sync_ok(self):
+        self._test_add_datasample_from_path_sync_ok()
+
+    @override_settings(ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=False)
+    def test_add_data_sample_from_path_with_minio_sync_ok(self):
+        # test upload file to minio from provided path
+        self._test_add_datasample_from_path_sync_ok()
+
+    def test_bulk_add_data_sample_from_path_sync_ok(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        path1 = os.path.join(dir_path, '../../../../fixtures/owkin/datasamples/test/0024900')
+        path2 = os.path.join(dir_path, '../../../../fixtures/owkin/datasamples/test/0024901')
+
+        self.add_default_data_manager()
+
+        data = {
+            "json": json.dumps(
+                {
+                    "paths": [path1, path2],
+                    "data_manager_keys": [self.data_manager_key1],
+                    "test_only": True,
+                }
+            ),
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            "HTTP_ACCEPT": "application/json;version=0.0",
+        }
+
+        with mock.patch.object(OrchestratorClient, 'register_datasamples',
+                               return_value={}):
+
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            r = response.json()
+            self.assertEqual(len(r), 2)
+            self.assertIsNotNone(r[0]['key'])
+            self.assertIsNotNone(r[1]['key'])
+            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_bulk_add_data_sample_sync_ok(self):
+        self.add_default_data_manager()
+
+        file_mock = MagicMock(spec=InMemoryUploadedFile)
+        file_mock.name = 'foo.zip'
+        file_mock.read = MagicMock(return_value=self.data_file.read())
+
+        file_mock2 = MagicMock(spec=InMemoryUploadedFile)
+        file_mock2.name = 'bar.zip'
+        file_mock2.read = MagicMock(return_value=self.data_file_2.read())
+
+        data = {
+            file_mock.name: file_mock,
+            file_mock2.name: file_mock2,
+            'json': json.dumps({
+                'data_manager_keys': [self.data_manager_key1, self.data_manager_key2],
+                'test_only': True,
+            }),
+        }
+        extra = {
+            'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+            'HTTP_ACCEPT': 'application/json;version=0.0',
+        }
+
+        with mock.patch.object(OrchestratorClient, 'register_datasamples',
+                               return_value={}):
+
+            self.data_file.seek(0)
+            self.data_file_2.seek(0)
+
+            response = self.client.post(self.url, data, format='multipart', **extra)
+            r = response.json()
             self.assertEqual(len(r), 2)
             self.assertIsNotNone(r[0]['key'])
             self.assertIsNotNone(r[1]['key'])
@@ -177,10 +284,8 @@ class DataSampleQueryTests(APITestCase):
         file_mock.read = MagicMock(return_value=self.data_file.file.read())
         file_mock.open = MagicMock(return_value=file_mock)
 
-        _, datasamples_path_from_file = store_datasamples_archive(file_mock)
-
-        d = DataSample(path=datasamples_path_from_file)
-        d.save()  # trigger pre save
+        d = DataSample(file=File(self.data_file.file), checksum="checksum")
+        d.save()
 
         data = {
             'file': file_mock,
@@ -222,7 +327,8 @@ class DataSampleQueryTests(APITestCase):
         }
 
         response = self.client.post(self.url, data, format='multipart', **extra)
-        self.assertEqual(response.json()['message'], 'Archive must be zip or tar.*')
+        self.assertEqual(response.json()['message'],
+                         "[ErrorDetail(string='Archive must be zip or tar', code='invalid')]")
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko_408(self):
@@ -428,9 +534,7 @@ class DataSampleQueryTests(APITestCase):
         datamanager2 = DataManager.objects.create(name='slide opener 2',
                                                   description=self.data_description2,
                                                   data_opener=self.data_data_opener2)
-
-        d = DataSample(path=self.data_file_filename)
-        # trigger pre save
+        d = DataSample(file=File(self.data_file), checksum="checksum")
         d.save()
         d.key = 'ae' * 16  # set key manually otherwise it's empty
 

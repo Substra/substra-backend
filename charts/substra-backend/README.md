@@ -58,6 +58,12 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.grpc.keepalive.timeMs` | The number of milliseconds between each client GRPC keepalive ping | `120000` |
 | `backend.pagination.maxPageSize` | The maximum elements per page authorized | `100` |
 | `backend.commonHostDomain` | The common host under which both backend and frontend are served | `nil` |
+| `backend.persistence.storageClassName` | PVC Storage Class name for the server data volumes | (undefined) |
+| `backend.persistence.hostPath` | Host path for PVC Storage in case of local storage for the server data volumes | (undefined) |
+| `backend.persistence.servermedias.hostPath` | Host path for server medias, in case of local storage | (undefined) |
+| `backend.persistence.servermedias.size` |  PVC Storage Request for server medias volume | `10Gi` |
+| `backend.persistence.volumes` | Volume definitions for the server assets storage | `algos, ..., objectives` |
+| `backend.persistence.volumes[].size` | Server volume size | |
 | `outgoingNodes[]` | Outgoing nodes credentials for substra-backend node-to-node communication | `[]` |
 | `outgoingNodes[].name` | Outgoing node username | (undefined) |
 | `outgoingNodes[].secret` | Outgoing node password | (undefined) |
@@ -68,14 +74,6 @@ The following table lists the configurable parameters of the substra-backend cha
 | `users[].name` | The user login | (undefined) |
 | `users[].password` | The user password | (undefined) |
 | `users[].channel` | The user channel. This is the name of a Hyperledger Fabric channel (see [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s)). All operations by the user will be executed against this channel. | (undefined) |
-| `persistence.storageClassName` | PVC Storage Class name for data volumes | (undefined) |
-| `persistence.hostPath` | Host path for PVC Storage in case of local storage | (undefined) |
-| `persistence.hostPathServerMedias` | Server medias host path for server medias PVC Storage in case of local storage | (undefined) |
-| `persistence.size` |  PVC Storage Request for data volume | `10Gi` |
-| `persistence.volumes` | Additional volumes definition for substra-backend assets storage | `algos, ..., local` |
-| `persistence.volumes[].size` | Additional volume size | |
-| `persistence.volumes[].readOnly.server` | If true, the additional volume will be read-only on the backend-server pod | |
-| `persistence.volumes[].readOnly.worker` | If true, the additional volume will be read-only on the backend-worker pod | |
 | `secrets.caCert` | Hyperledger Fabric Peer CA Cert  | `hlf-cacert` |
 | `secrets.user.cert` | Hyperledger Fabric Peer user certificate | `hlf-msp-cert-user` |
 | `secrets.user.key` | Hyperledger Fabric Peer user key | `hlf-msp-key-user` |
@@ -140,9 +138,20 @@ The following table lists the configurable parameters of the substra-backend cha
 | `celeryworker.tolerations` | Toleration labels for pod assignment | `[]` |
 | `celeryworker.affinity` | Affinity settings for pod assignment | `{}` |
 | `celeryworker.rbac.enable` | Enable rbac for the celery worker | `True` |
+| `celeryworker.persistence.servermedias.enableDatasampleStorage` |  when using "path" to upload datasamples, use the local file system, via server-media, instead of MinIO. Can be set to True only if the backend-server and the backend-worker pods are running on the same kubernetes node. See [datasample storage](#datasample-storage). | `False` |
+| `celeryworker.persistence.storageClassName` | PVC Storage Class name for worker volumes | (undefined) |
+| `celeryworker.persistence.hostPath` | Host path for PVC Storage in case of local storage | (undefined) |
+| `celeryworker.persistence.volumes` | Volumes definition for celeryworker storage | `subtuple` |
+| `celeryworker.persistence.volumes[].size` | Celeryworker volumes size | |
 | `events.nodeSelector` | Node labels for pod assignment | `{}` |
 | `events.tolerations` | Toleration labels for pod assignment | `[]` |
 | `events.affinity` | Affinity settings for pod assignment | `{}` |
+| `minio.enabled` | Enable the `objectstore` deployment/service | `True` |
+| `minio.accessKey.password` | Accesskey to the objectstore | `mino` |
+| `minio.accessKey.forcePassword` | Forces the use of `minio.accessKey.password`. Required for helm upgrade to work well ([see MinIO doc](https://github.com/bitnami/charts/blob/ba5e36845d00ccb7513d4f5ed7a3c70ce5a1529e/bitnami/minio/values.yaml#L103-L106)) | `mino` |
+| `minio.secretKey.password` | Secretkey to the objectstore | `minio1234` |
+| `minio.secretKey.forcePassword` | Forces the use of `minio.secretKey.password`. Required for helm upgrade to work well ([see MinIO doc](https://github.com/bitnami/charts/blob/ba5e36845d00ccb7513d4f5ed7a3c70ce5a1529e/bitnami/minio/values.yaml#L112-L115)) | `minio1234` |
+| `minio.forceNewKeys` | Force reconfiguring new keys whenever the credentials change (`minio.accessKey.password` and `minio.secretKey.password`)| true
 | `extraEnv[]` | Additional environment variables to add to substra-backend pods | `[]` |
 | `extraEnv[].name` | Environment variable name | (undefined) |
 | `extraEnv[].value` | Environment variable value | (undefined) |
@@ -205,3 +214,19 @@ kubectl create secret docker-registry docker-config --docker-server=gcr.io --doc
 ```
 
 Where `docker-config` is the name of the docker config secret which needs to be used.
+
+### Data sample storage {#datasample-storage}
+
+By default (`celeryworker.persistence.servermedias.enableDatasampleStorage` set to `False`), all the datasamples are stored in MinIO.
+
+_In a context where there is only one kubernetes node only_: it is possible to set `celeryworker.persistence.servermedias.enableDatasampleStorage` to `true`. In this case, the datasamples that are registered by a "path" are kept on the "servermedias" volume. If set to `false` (default value), the datasample will be duplicated to MinIO.
+
+Activating this option prevents the datasamples from being duplicated in the servermedia and MinIO.
+
+It is recommended to activate this option for environments that have limited storage available.
+
+Note that if `celeryworker.persistence.servermedias.enableDatasampleStorage` is set to `true`, scaling is not supported: it will not be possible to increase the number of kubernetes nodes, nor of workers without re-registering all the datasamples. This even if `celeryworker.persistence.servermedias.enableDatasampleStorage` is set back to `false`.
+
+Also note that registering datasamples by sending a file will work in the same way independently from this option: in either cases the file will be uploaded to MinIO.
+
+For additional information: [here](https://github.com/Substra/substra/blob/master/references/sdk.md#add_data_sample) is the documentation of Substra SDK for registering datasamples.

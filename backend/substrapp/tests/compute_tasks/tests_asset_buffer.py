@@ -3,8 +3,11 @@ import os
 import shutil
 import mock
 import tempfile
+from collections import ChainMap
+from abc import ABCMeta, abstractmethod
 
 from django.test import override_settings
+from django.core.files import File
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
@@ -29,35 +32,92 @@ ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_2 = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_3 = tempfile.mkdtemp()
 CHANNEL = "mychannel"
-NUM_DATA_SAMPLES = 3
+NUM_DATA_SAMPLES = 2 * 3  # half will be registered via a path in the db, the other half by a file
 
 
-class TestDataSample:
+class TestDataSample(metaclass=ABCMeta):
     key: uuid.uuid4
-    dir: str
     filename: str
-    path: str
     contents: str
     checksum: str
 
     @classmethod
     def create(cls, index: int):
-        res = TestDataSample()
+        res = cls()
         res.key = str(uuid.uuid4())
-        res.dir = tempfile.mkdtemp()
         res.filename = "datasample.csv"
-        res.path = os.path.join(res.dir, res.filename)
         res.contents = f"data sample contents {index}"
+        return res
 
-        with open(res.path, "w") as f:
+    @abstractmethod
+    def to_fake_data_sample(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def falsify_content(self, new_content):
+        raise NotImplementedError
+
+
+class TestDataSampleSavedByPath(TestDataSample):
+    _dir: str
+    _path: str
+
+    @classmethod
+    def create(cls, index: int):
+        res = super().create(index)
+        res._dir = tempfile.mkdtemp()
+        res._path = os.path.join(res._dir, res.filename)
+
+        with open(res._path, "w") as f:
             f.write(res.contents)
 
-        res.checksum = get_dir_hash(res.dir)
+        res.checksum = get_dir_hash(res._dir)
 
         return res
 
     def to_fake_data_sample(self):
-        return FakeDataSample(self.dir, self.checksum)
+        return FakeDataSample(path=self._dir, checksum=self.checksum)
+
+    def falsify_content(self, new_content):
+        self.contents = new_content
+        with open(self._path, "w") as f:
+            f.write(self.contents)
+
+
+class TestDataSampleSavedByFile(TestDataSample):
+    _archive_path: str
+
+    @classmethod
+    def create(cls, index: int):
+        res = super().create(index)
+        archive_dir = tempfile.mkdtemp()
+        uncompressed_dir = tempfile.mkdtemp()
+        uncompressed_file_path = os.path.join(uncompressed_dir, res.filename)
+
+        with open(uncompressed_file_path, "w") as f:
+            f.write(res.contents)
+
+        res._archive_path = shutil.make_archive(archive_dir, "tar", root_dir=uncompressed_dir)
+
+        with tempfile.TemporaryDirectory() as tmp_path:
+            shutil.unpack_archive(res._archive_path, tmp_path)
+            res.checksum = get_dir_hash(tmp_path)
+
+        return res
+
+    def to_fake_data_sample(self):
+        return FakeDataSample(file=File(open(self._archive_path, "rb")), checksum=self.checksum)
+
+    def falsify_content(self, new_content):
+        self.contents = new_content
+        archive_dir = tempfile.mkdtemp()
+        uncompressed_dir = tempfile.mkdtemp()
+        uncompressed_file_path = os.path.join(uncompressed_dir, self.filename)
+
+        with open(uncompressed_file_path, "w") as f:
+            f.write(self.contents)
+
+        self._archive_path = shutil.make_archive(archive_dir, "tar", root_dir=uncompressed_dir)
 
 
 @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR,
@@ -101,10 +161,19 @@ class AssetBufferTests(APITestCase):
         }
 
     def _setup_data_samples(self):
-        self.data_samples = {}
-        for i in range(NUM_DATA_SAMPLES):
-            data_sample = TestDataSample.create(i)
-            self.data_samples[data_sample.key] = data_sample
+        # half are registered in the db by a path
+        self.data_samples_saved_as_path = {}
+        for i in range(NUM_DATA_SAMPLES // 2):
+            data_sample = TestDataSampleSavedByPath.create(i)
+            self.data_samples_saved_as_path[data_sample.key] = data_sample
+
+        # half are registered in the db by a file
+        self.data_samples_saved_as_file = {}
+        for i in range(int(NUM_DATA_SAMPLES / 2)):
+            data_sample = TestDataSampleSavedByFile.create(i)
+            self.data_samples_saved_as_file[data_sample.key] = data_sample
+
+        self.data_samples = dict(ChainMap(self.data_samples_saved_as_path, self.data_samples_saved_as_file))
 
     def _setup_model(self):
         self.model_key = str(uuid.uuid4())
@@ -155,7 +224,10 @@ class AssetBufferTests(APITestCase):
                 CHANNEL, self.opener_storage_address, node_id, self.opener_checksum, dest, hash_key=None
             )
 
-    @override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_2)
+    @override_settings(
+        ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_2,
+        ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True,
+    )
     def test_add_datasamples_to_buffer(self):
 
         init_asset_buffer()
@@ -171,7 +243,7 @@ class AssetBufferTests(APITestCase):
 
             # Add one of the data samples twice, to check that scenario
             _add_datasamples_to_buffer(list(self.data_samples.keys())[:2])  # add samples 0 and 1
-            _add_datasamples_to_buffer(list(self.data_samples.keys())[1:])  # add samples 1 and 2
+            _add_datasamples_to_buffer(list(self.data_samples.keys())[1:])  # add samples 1 and the following ones
 
             for i in range(NUM_DATA_SAMPLES):
                 data_sample = data_samples[i]
@@ -182,8 +254,8 @@ class AssetBufferTests(APITestCase):
                 shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasamples_to_buffer will be a noop
 
             # Test 3: File corrupted
-            with open(data_samples[0].path, "a+") as f:
-                f.write("corrupted")
+            data_samples[0].falsify_content("corrupted")
+
             with self.assertRaises(Exception):
                 _add_datasamples_to_buffer([data_samples[0].key])
 
@@ -207,13 +279,15 @@ class AssetBufferTests(APITestCase):
         if is_head_model:
 
             with mock.patch("substrapp.models.Model.objects.get") as mget:
+                instance = None
+                mget.side_effect = lambda key: instance
 
                 # Test 1: DB is empty
                 with self.assertRaises(Exception):
                     _add_model_to_buffer(CHANNEL, model, "node 1")
 
                 # Test 2: OK
-                mget.return_value = FakeModel(self.model_path, self.model_checksum)
+                instance = FakeModel(File(open(self.model_path, "rb")), self.model_checksum)
                 _add_model_to_buffer(CHANNEL, model, "node 1")
 
                 with open(dest) as f:
@@ -246,6 +320,7 @@ class AssetBufferTests(APITestCase):
                     CHANNEL, storage_address, node_id, self.model_checksum, dest, self.model_compute_task_key
                 )
 
+    @override_settings(ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True)
     def test_add_assets_to_taskdir_data_sample(self):
         data_samples = list(self.data_samples.values())
 
@@ -277,7 +352,7 @@ class AssetBufferTests(APITestCase):
             "compute_task_key": self.model_compute_task_key,
         }
         with mock.patch("substrapp.models.Model.objects.get") as mget:
-            mget.return_value = FakeModel(self.model_path, self.model_checksum)
+            mget.return_value = FakeModel(File(open(self.model_path, "rb")), self.model_checksum)
             _add_model_to_buffer(CHANNEL, model, "node 1")
 
         # load from buffer into task dir

@@ -10,6 +10,8 @@ from rest_framework.settings import api_settings
 from node.authentication import NodeUser
 from substrapp.utils import get_remote_file, get_owner, get_remote_file_content
 from node.models import OutgoingNode
+from substrapp.storages.minio import MinioStorage
+
 
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
@@ -182,10 +184,18 @@ class PermissionMixin(object):
     def get_local_file_response(self, django_field):
         obj = self.get_object()
         data = getattr(obj, django_field)
+        filename = None
+
+        if hasattr(obj, 'file') and isinstance(obj.file.storage, MinioStorage):
+            filename = str(obj.key)
+        else:
+            filename = os.path.basename(data.path)
+            data = open(data.path, 'rb')
+
         response = CustomFileResponse(
-            open(data.path, "rb"),
+            data,
             as_attachment=True,
-            filename=os.path.basename(data.path),
+            filename=filename,
         )
         return response
 

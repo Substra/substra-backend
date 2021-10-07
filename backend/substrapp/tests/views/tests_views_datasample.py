@@ -1,10 +1,11 @@
-import os
-import shutil
-import logging
 import json
 import ntpath
 
+import logging
 import mock
+import os
+import shutil
+import tempfile
 
 from django.urls import reverse
 from django.test import override_settings
@@ -12,19 +13,27 @@ from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-
 from substrapp.serializers import DataSampleSerializer
 
 from orchestrator.client import OrchestratorClient
 
-from substrapp.utils import uncompress_content
-
 from substrapp.models import DataManager
+
+from substrapp.utils import get_dir_hash
 
 from ..common import get_sample_datamanager, FakeFilterDataManager, AuthenticatedClient
 from ..assets import datamanager
 
+
 MEDIA_ROOT = "/tmp/unittests_views/"
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+FIXTURE_PATH = os.path.join(DIR_PATH, '../../../../fixtures/chunantes/datasamples')
+
+
+def _get_archive_checksum(path):
+    with tempfile.TemporaryDirectory() as tmp_path:
+        shutil.unpack_archive(path, tmp_path)
+        return get_dir_hash(tmp_path)
 
 
 # APITestCase
@@ -58,11 +67,10 @@ class DataSampleViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_data_create_bulk(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_path1 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        data_path2 = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample0/0024899.zip')
-        checksum1 = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
-        checksum2 = '30f6c797e277451b0a08da7119ed86fb2986fa7fab2258bf3edbd9f1752ed553'
+        data_path1 = os.path.join(FIXTURE_PATH, 'datasample1/0024700.zip')
+        data_path2 = os.path.join(FIXTURE_PATH, 'datasample0/0024899.zip')
+        checksum1 = _get_archive_checksum(data_path1)
+        checksum2 = _get_archive_checksum(data_path2)
 
         data = {
             'files': [path_leaf(data_path1), path_leaf(data_path2)],
@@ -77,12 +85,12 @@ class DataSampleViewTests(APITestCase):
         with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
                 mock.patch.object(OrchestratorClient, 'register_datasamples',
                                   return_value={}), \
-                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create):
 
             response = self.client.post(self.url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum1)
-        self.assertEqual(mcreate.call_args_list[1][0][0]['checksum'], checksum2)
+        self.assertEqual(response.data[0]['checksum'], checksum1)
+        self.assertEqual(response.data[1]['checksum'], checksum2)
         self.assertIsNotNone(response.data[0]['key'])
         self.assertIsNotNone(response.data[1]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -91,9 +99,9 @@ class DataSampleViewTests(APITestCase):
             data[x].close()
 
     def test_data_create(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        data_path = os.path.join(FIXTURE_PATH, 'datasample1/0024700.zip')
+        checksum = _get_archive_checksum(data_path)
+
         data = {
             'file': open(data_path, 'rb'),
             'json': json.dumps({
@@ -105,29 +113,25 @@ class DataSampleViewTests(APITestCase):
         with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
                 mock.patch.object(OrchestratorClient, 'register_datasamples',
                                   return_value={}), \
-                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create):
 
             response = self.client.post(self.url, data=data, format='multipart', **self.extra)
 
-        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertEqual(response.data[0]['checksum'], checksum)
         self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
         data['file'].close()
 
     def test_data_create_parent_path(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        data_zip_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        data_parent_path = os.path.join(MEDIA_ROOT, 'data_samples')
-        data_path = os.path.join(data_parent_path, '0024700')
-
-        with open(data_zip_path, 'rb') as data_zip:
-            uncompress_content(data_zip.read(), data_path)
-
-        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        source_path = os.path.join(FIXTURE_PATH, 'datasample1/0024700.zip')
+        parent_path = os.path.join(MEDIA_ROOT, 'data_samples')
+        target_path = os.path.join(parent_path, '0024700')
+        shutil.unpack_archive(source_path, target_path)
+        checksum = get_dir_hash(target_path)
 
         data = {
-            'path': data_parent_path,
+            'path': parent_path,
             'data_manager_keys': [datamanager[0]['key']],
             'test_only': False,
             'multiple': True,
@@ -136,39 +140,34 @@ class DataSampleViewTests(APITestCase):
         with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
                 mock.patch.object(OrchestratorClient, 'register_datasamples',
                                   return_value={}), \
-                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create):
 
             response = self.client.post(self.url, data=data, format='json', **self.extra)
 
-        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertEqual(response.data[0]['checksum'], checksum)
         self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_data_create_path(self):
         url = reverse('substrapp:data_sample-list')
 
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        data_zip_path = os.path.join(dir_path, '../../../../fixtures/chunantes/datasamples/datasample1/0024700.zip')
-        data_path = os.path.join(MEDIA_ROOT, '0024700')
-
-        with open(data_zip_path, 'rb') as data_zip:
-            uncompress_content(data_zip.read(), data_path)
-
-        checksum = '24fb12ff87485f6b0bc5349e5bf7f36ccca4eb1353395417fdae7d8d787f178c'
+        source_path = os.path.join(FIXTURE_PATH, 'datasample1/0024700.zip')
+        target_path = os.path.join(MEDIA_ROOT, '0024700')
+        shutil.unpack_archive(source_path, target_path)
+        checksum = get_dir_hash(target_path)
 
         data = {
-            'path': data_path,
+            'path': target_path,
             'data_manager_keys': [datamanager[0]['key']],
             'test_only': False
         }
         with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \
                 mock.patch.object(OrchestratorClient, 'register_datasamples',
                                   return_value={}), \
-                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create) as mcreate:
+                mock.patch.object(DataSampleSerializer, 'create', wraps=DataSampleSerializer().create):
             response = self.client.post(url, data=data, format='json', **self.extra)
 
-        self.assertEqual(mcreate.call_args_list[0][0][0]['checksum'], checksum)
+        self.assertEqual(response.data[0]['checksum'], checksum)
         self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 

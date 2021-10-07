@@ -1,19 +1,23 @@
 from django.db import models
-from substrapp.utils import get_hash
+from django.conf import settings
 import uuid
+
+
+def upload_to(instance, filename):
+    return str(instance.key)
 
 
 class DataSample(models.Model):
     """Storage Data table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False)
-    path = models.FilePathField(max_length=500, blank=True, null=True)  # path max length to 500 instead of default 100
-    checksum = models.CharField(max_length=64, blank=True)
+    checksum = models.CharField(max_length=64)
 
-    def save(self, *args, **kwargs):
-        if not self.checksum and self.path:
-            self.checksum = get_hash(self.path)
-        super(DataSample, self).save(*args, **kwargs)
+    file = models.FileField(
+        storage=settings.DATASAMPLE_STORAGE, max_length=500, upload_to=upload_to, blank=True, null=True
+    )
+    # servermedias use path instead of file
+    path = models.FilePathField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f'DataSample with key {self.key} with validated {self.validated}'

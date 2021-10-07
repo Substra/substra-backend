@@ -137,7 +137,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         volumes=[
             {
                 "name": "dockerfile",
-                "persistentVolumeClaim": {"claimName": settings.K8S_PVC["SUBTUPLE_PVC"]},
+                "persistentVolumeClaim": {"claimName": settings.WORKER_PVC_SUBTUPLE},
             }
         ],
     )
@@ -145,7 +145,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
     spec.volumes.append(
         {
             "name": "cache",
-            "persistentVolumeClaim": {"claimName": settings.K8S_PVC["DOCKER_CACHE_PVC"]},
+            "persistentVolumeClaim": {"claimName": settings.WORKER_PVC_DOCKER_CACHE},
         }
     )
 

@@ -25,8 +25,9 @@ spec:
       securityContext:
         fsGroup: {{ .Values.securityContext.fsGroup }}
       {{- end }}
+      {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
       # Run the worker on the same pod as the server.
-      # That's necessary because the worker and the server use the same PV.
+      # That's necessary because both the worker and the server pods use the servermedias PVC.
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -37,6 +38,7 @@ spec:
                 values:
                 - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
+      {{- end }}
       {{- with $.Values.celeryworker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
@@ -65,6 +67,28 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
+      {{- if and .Values.securityContext.enabled .Values.celeryworker.persistence.hostPath }}
+      - name: chown-pvc
+        image: alpine:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c"]
+        args:
+        - |
+          for dir in `ls -d /var/substra/medias/*`; do
+            chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
+          done
+        volumeMounts:
+          {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
+          - name: data-{{ $key }}
+            mountPath: /var/substra/medias/{{ $key }}
+          {{- end }}
+      {{- end }}
+      - name: wait-postgresql
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-postgresql:5432']
+      - name: wait-minio
+        image: jwilder/dockerize
+        command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       containers:
         - name: worker
           image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
@@ -87,6 +111,8 @@ spec:
                 name: {{ include "substra.fullname" . }}-ledger
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-orchestrator
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-objectstore
           env:
             - name: DJANGO_SETTINGS_MODULE
               value: backend.settings.celery.{{ .Values.backend.settings }}
@@ -110,16 +136,14 @@ spec:
               value: "1"
             - name: "CELERY_WORKER_CONCURRENCY"
               value: {{ .Values.celeryworker.concurrency | quote }}
+            - name: WORKER_PVC_DOCKER_CACHE
+              value: {{ include "substra.fullname" $ }}-docker-cache
+            - name: WORKER_PVC_SUBTUPLE
+              value: {{ include "substra.fullname" $ }}-subtuple
             {{- if .Values.privateCa.enabled }}
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
             {{- end }}
-            {{- range $key, $val := .Values.persistence.volumes }}
-            - name: {{ $key | upper }}_PVC
-              value: {{ include "substra.fullname" $ }}-{{ $key }}
-            {{- end }}
-            - name: SERVERMEDIAS_PVC
-              value: {{ template "substra.fullname" $ }}-servermedias
             {{- if .Values.registry.local }}
             - name: REGISTRY
               value: {{ .Release.Name }}-docker-registry:5000
@@ -137,8 +161,6 @@ spec:
               value: {{ .Values.registry.pullDomain}}
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
-            - name: DOCKER_CACHE_PVC
-              value: {{ include "substra.fullname" $ }}-docker-cache
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
@@ -161,18 +183,23 @@ spec:
               value: {{ .Values.backend.compute.podMaxStartupWaitSeconds | quote }}
             - name: HTTP_CLIENT_TIMEOUT_SECONDS
               value: {{ .Values.httpClient.timeoutSeconds | quote  }}
+            - name: OBJECTSTORE_URL
+              value: {{ .Release.Name }}-minio:9000
+            - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
+              value: {{ .Values.celeryworker.persistence.servermedias.enableDatasampleStorage | quote }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
           volumeMounts:
-            {{- range $key, $val := .Values.persistence.volumes }}
+            {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
             - name: data-{{ $key }}
               mountPath: /var/substra/medias/{{ $key }}
-              readOnly: {{ $val.readOnly.worker }}
             {{- end }}
+            {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
             - name: data-servermedias
               mountPath: /var/substra/servermedias
               readOnly: true
+            {{- end }}
             {{- if .Values.privateCa.enabled }}
             - mountPath: /etc/ssl/certs
               name: ssl-certs
@@ -188,14 +215,16 @@ spec:
           resources:
             {{- toYaml .Values.celeryworker.resources | nindent 12 }}
       volumes:
-      {{- range $key, $val := .Values.persistence.volumes }}
+      {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
       - name: data-{{ $key }}
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-{{ $key }}
       {{- end }}
+      {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
       - name: data-servermedias
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-servermedias
+      {{- end }}
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}

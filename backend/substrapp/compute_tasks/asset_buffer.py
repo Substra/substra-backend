@@ -157,17 +157,28 @@ def _add_datasamples_to_buffer(data_sample_keys: List[str]) -> None:
 
         data_sample = DataSample.objects.get(key=key)
 
-        if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
-            raise Exception(f"Data Sample ({data_sample.path}) is missing in local storage")
+        if data_sample.file:
+            # add from storage
+            content = data_sample.file.read()
+            uncompress_content(content, dst)
+        elif not settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:
+            # the `datasample.path` field is filled but Server Media is not available.
+            # it is not possible to retrieve datasamples
+            raise Exception(f"Server Media usage is disabled, Data Sample ({key}) cannot be retrieved")
+        else:
+            # add from servermedias
+            if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
+                raise Exception(f"Data Sample ({data_sample.path}) is missing in local storage")
+            if not os.listdir(data_sample.path):
+                raise Exception(f"Data Sample ({data_sample.path}) is empty in local storage")
+            shutil.copytree(data_sample.path, dst)
 
-        if not os.listdir(data_sample.path):
-            raise Exception(f"Data Sample ({data_sample.path}) is empty in local storage")
-
-        data_sample_checksum = get_dir_hash(data_sample.path)
-        if data_sample_checksum != data_sample.checksum:
+        # verify checksum
+        checksum = get_dir_hash(dst)
+        if checksum != data_sample.checksum:
+            shutil.rmtree(os.path.dirname(dst))
             raise Exception(f"Data Sample ({key}) checksum in tuple is not the same as in local db")
 
-        shutil.copytree(data_sample.path, dst)
         _log_added(dst)
 
 
@@ -248,14 +259,14 @@ def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
 
     else:  # head model
         m = Model.objects.get(key=model["key"])
+        content = m.file.read()
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
+        with open(dst, "wb") as f:
+            f.write(content)
 
-        if not os.path.exists(m.file.path) or not os.path.isfile(m.file.path):
-            raise Exception(f"Model file ({m.file.path}) is missing in local storage")
-
-        if get_hash(m.file.path, model["compute_task_key"]) != m.checksum:
+        if get_hash(dst, model["compute_task_key"]) != m.checksum:
+            shutil.rmtree(os.path.dirname(dst))
             raise Exception("Model checksum in Subtuple is not the same as in local db")
-
-        shutil.copy(m.file.path, dst)
 
     _log_added(dst)
 

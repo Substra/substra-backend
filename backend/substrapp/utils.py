@@ -3,7 +3,6 @@ import hashlib
 import structlog
 import os
 import tempfile
-from os import path
 from os.path import isfile, isdir
 import shutil
 import json
@@ -11,7 +10,6 @@ import functools
 import requests
 import tarfile
 import zipfile
-import uuid
 import time
 
 from checksumdir import dirhash
@@ -42,31 +40,6 @@ def get_archive_hash(archive_object):
             raise e
         else:
             return get_dir_hash(temp_dir)
-
-
-def store_datasamples_archive(archive_object):
-
-    try:
-        content = archive_object.read()
-        archive_object.seek(0)
-    except Exception as e:
-        logger.error(e)
-        raise e
-
-    # Temporary directory for uncompress
-    datasamples_uuid = uuid.uuid4().hex
-    tmp_datasamples_path = path.join(getattr(settings, 'MEDIA_ROOT'),
-                                     f'datasamples/{datasamples_uuid}')
-    try:
-        uncompress_content(content, tmp_datasamples_path)
-    except Exception as e:
-        shutil.rmtree(tmp_datasamples_path, ignore_errors=True)
-        logger.error(e)
-        raise e
-    else:
-        # return the directory hash of the uncompressed file and the path of
-        # the temporary directory. The removal should be handled externally.
-        return get_dir_hash(tmp_datasamples_path), tmp_datasamples_path
 
 
 def get_hash(file, key=None):

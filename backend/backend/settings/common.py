@@ -17,6 +17,7 @@ from datetime import timedelta
 import structlog
 
 from libs.gen_secret_key import write_secret_key
+from django.core.files.storage import FileSystemStorage
 
 
 TRUE_VALUES = {
@@ -149,6 +150,13 @@ DATABASES = {
     }
 }
 
+DATASAMPLE_STORAGE = FileSystemStorage()
+MODEL_STORAGE = FileSystemStorage()
+
+OBJECTSTORE_URL = os.environ.get('OBJECTSTORE_URL')
+OBJECTSTORE_ACCESSKEY = os.environ.get("OBJECTSTORE_ACCESSKEY")
+OBJECTSTORE_SECRETKEY = os.environ.get("OBJECTSTORE_SECRETKEY")
+
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
@@ -229,7 +237,8 @@ CELERY_TASK_RETRY_DELAY_SECONDS = 2
 CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', 1))
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//')
 
-K8S_PVC = {env_key: env_value for env_key, env_value in os.environ.items() if "_PVC" in env_key}
+WORKER_PVC_DOCKER_CACHE = os.environ.get('WORKER_PVC_DOCKER_CACHE')
+WORKER_PVC_SUBTUPLE = os.environ.get('WORKER_PVC_SUBTUPLE')
 
 NAMESPACE = os.getenv("NAMESPACE")
 
@@ -264,6 +273,7 @@ pre_chain = [
     structlog.stdlib.add_logger_name,
     structlog.stdlib.add_log_level,
 ]
+ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS = to_bool(os.environ.get('ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS', False))
 
 LOGGING = {
     'version': 1,

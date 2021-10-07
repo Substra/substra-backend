@@ -70,11 +70,6 @@ class TaskNotFoundError(Exception):
     pass
 
 
-class ServerMediasPathError(Exception):
-    """A supplied servermedias path was invalid"""
-    pass
-
-
 class ServerMediasNoSubdirError(Exception):
     """A supplied servermedias path didn't contain the expected subdir"""
     pass

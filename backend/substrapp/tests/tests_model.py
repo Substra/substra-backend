@@ -1,14 +1,14 @@
-import os
 import shutil
 import tempfile
 
+from django.core.files import File
 from django.test import TestCase, override_settings
 
 from substrapp.models import Objective, DataManager, DataSample, Algo, Model
-from substrapp.utils import get_hash, get_dir_hash
+from substrapp.utils import get_hash
 
 from .common import get_sample_objective, get_sample_datamanager, \
-    get_sample_script, get_sample_model
+    get_sample_script, get_sample_model, get_sample_zip_data_sample
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -39,10 +39,8 @@ class ModelTests(TestCase):
         self.assertIn(f'name {datamanager.name}', str(datamanager))
 
     def test_create_data(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(dir_path, '../../../fixtures/chunantes/datasamples/train/0024308')
-        data_sample = DataSample.objects.create(path=path)
-        self.assertEqual(data_sample.checksum, get_dir_hash(path))
+        data_file, _ = get_sample_zip_data_sample()
+        data_sample = DataSample.objects.create(file=File(data_file), checksum="checksum")
         self.assertFalse(data_sample.validated)
         self.assertIn(f'key {data_sample.key}', str(data_sample))
         self.assertIn(f'validated {data_sample.validated}', str(data_sample))

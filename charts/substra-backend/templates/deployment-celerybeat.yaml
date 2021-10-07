@@ -85,8 +85,6 @@ spec:
               value: {{ .Values.registry.pullDomain}}
             - name: NAMESPACE
               value: {{ .Release.Namespace }}
-            - name: DOCKER_CACHE_PVC
-              value: {{ include "substra.fullname" $ }}-docker-cache
             - name: NODE_NAME
               valueFrom:
                 fieldRef:

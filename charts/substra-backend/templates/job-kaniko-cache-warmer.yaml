@@ -14,9 +14,6 @@ spec:
     spec:
       # Run the cache warmer on the same node as the worker pod, because
       # they both use the "docker-cache" PV.
-      # Use "server" pod affinity (and not "worker" pod) because the server
-      # is started earlier, so the warmer can also start earlier. The worker
-      # is always scheduled on the same node as the server.
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -25,7 +22,7 @@ spec:
               - key: app.kubernetes.io/name
                 operator: In
                 values:
-                - {{ template "substra.name" . }}-server
+                - {{ template "substra.name" . }}-worker
             topologyKey: kubernetes.io/hostname
       containers:
       - name: kaniko-cache-warmer

@@ -1,5 +1,8 @@
-from django.db import models
 import uuid
+
+from django.conf import settings
+from django.db import models
+
 from substrapp.utils import get_hash
 
 
@@ -11,7 +14,11 @@ class Model(models.Model):
     """Storage Data table"""
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False)
-    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    file = models.FileField(
+        storage=settings.MODEL_STORAGE,
+        upload_to=upload_to,
+        max_length=500,
+    )  # path max length to 500 instead of default 100
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs):

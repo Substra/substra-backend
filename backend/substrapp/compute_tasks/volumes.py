@@ -28,7 +28,7 @@ def get_volumes(dirs: Directories, is_testtuple_eval: bool):
     volumes = [
         {
             "name": "subtuple",
-            "persistentVolumeClaim": {"claimName": settings.K8S_PVC["SUBTUPLE_PVC"]},
+            "persistentVolumeClaim": {"claimName": settings.WORKER_PVC_SUBTUPLE},
         }
     ]
 

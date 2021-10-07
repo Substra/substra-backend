@@ -265,8 +265,9 @@ class FakeDataManager(object):
 
 
 class FakeDataSample(object):
-    def __init__(self, filepath, checksum):
-        self.path = filepath
+    def __init__(self, file=None, path=None, checksum=None):
+        self.file = file
+        self.path = path
         self.checksum = checksum
 
 
@@ -278,15 +279,9 @@ class FakeFilterDataManager(object):
         return self.count_value
 
 
-class FakePath(object):
-    def __init__(self, filepath):
-        self.path = filepath
-        self.name = self.path
-
-
 class FakeModel(object):
-    def __init__(self, filepath, checksum):
-        self.file = FakePath(filepath)
+    def __init__(self, file, checksum):
+        self.file = file
         self.checksum = checksum
 
 

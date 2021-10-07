@@ -1,4 +1,18 @@
 # Changelog
+## 9.0.0
+
+See [UPGRADE.md](./UPGRADE.md#9.0.0)
+
+### Changed
+- `subtuple` pvc is `worker`-only (not `server` anymore)
+- `algos`, `aggregatealgos`, `compositealgos`, `datamanagers` and `objectives` pvcs are `server`-only (not `worker` anymore)
+
+### Added
+- Add an `objectstore` deployment / service (minio)
+- Add `celeryworker.persistence.servermedias.enableDatasampleStorage`
+
+### Removed
+- The pvc `datasamples`, `models`,  `computeplan` and `local`
 
 ## 8.0.0
 
