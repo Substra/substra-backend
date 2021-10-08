@@ -13,7 +13,7 @@ test:
 	DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
 
 .PHONY: coverage
-coverage:
+coverage: test
 	coverage report
 
 .PHONY: exception_map
