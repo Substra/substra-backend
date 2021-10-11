@@ -47,6 +47,7 @@ from substrapp.compute_tasks.save_models import save_models
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.exception_handler import compute_error_code
+from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
 from substrapp.compute_tasks.transfer_bucket import (
     TAG_VALUE_FOR_TRANSFER_BUCKET,
     transfer_to_bucket,
@@ -81,6 +82,9 @@ class ComputeTask(Task):
                                              'performance_value': float(retval['result']['global_perf'])})
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
+        _, task = self.split_args(args)
+        # delete compute pod to reset hardware ressources
+        delete_compute_plan_pods(task['compute_plan_key'])
         logger.info("Retrying task",
                     celery_task_id=task_id,
                     attempt=(self.request.retries + 2),
