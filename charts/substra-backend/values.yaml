@@ -231,12 +231,12 @@ celerybeat:
   affinity: {}
 
 celeryscheduler:
+  replicaCount: 1
   resources: {}
 
 celeryworker:
   replicaCount: 1
   concurrency: 1  # Max number of tasks to process in parallel
-  updateStrategy: RollingUpdate
   image:
     repository: substrafoundation/substra-backend
     tag: latest
@@ -356,6 +356,11 @@ securityContext:
 hooks:
   serviceAccount:
     name: ""
+  deleteWorkerPvc:
+    enabled: False
+    image:
+      repository: bitnami/kubectl
+      tag: latest
   deleteComputePods:
     enabled: False
     image:

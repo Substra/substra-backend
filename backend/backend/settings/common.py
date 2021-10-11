@@ -16,6 +16,7 @@ import json
 from datetime import timedelta
 import structlog
 
+from .deps.org import *
 from libs.gen_secret_key import write_secret_key
 from django.core.files.storage import FileSystemStorage
 
@@ -236,9 +237,13 @@ CELERY_TASK_MAX_RETRIES = 5
 CELERY_TASK_RETRY_DELAY_SECONDS = 2
 CELERY_WORKER_CONCURRENCY = int(os.environ.get('CELERY_WORKER_CONCURRENCY', 1))
 CELERY_BROKER_URL = os.environ.get('CELERY_BROKER_URL', 'amqp://localhost:5672//')
+CELERY_BROADCAST = f'{ORG_NAME}.broadcast'
 
+WORKER_PVC_IS_HOSTPATH = to_bool(os.environ.get('WORKER_PVC_IS_HOSTPATH'))
 WORKER_PVC_DOCKER_CACHE = os.environ.get('WORKER_PVC_DOCKER_CACHE')
 WORKER_PVC_SUBTUPLE = os.environ.get('WORKER_PVC_SUBTUPLE')
+WORKER_REPLICA_SET_NAME = os.environ.get('WORKER_REPLICA_SET_NAME')
+
 
 NAMESPACE = os.getenv("NAMESPACE")
 

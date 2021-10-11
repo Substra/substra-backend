@@ -130,9 +130,9 @@ The following table lists the configurable parameters of the substra-backend cha
 | `celerybeat.tolerations` | Toleration labels for pod assignment | `[]` |
 | `celerybeat.affinity` | Affinity settings for pod assignment | `{}` |
 | `celeryscheduler.resources` | Resources configuration for the `celeryscheduler` container | `{}` |
+| `celeryscheduler.replicaCount` | Replica count for celeryworker service `celeryscheduler` service | 1 |
 | `celeryworker.replicaCount` | Replica count for celeryworker service | `1` |
 | `celeryworker.concurrency` | Celery worker concurrency  (max task to process in parallel) | `1` |
-| `celeryworker.updateStrategy` | Pod update strategy| `RollingUpdate` |
 | `celeryworker.image.repository` | `celeryworker` image repository | `substrafoundation/substra-backend` |
 | `celeryworker.image.tag` | `celeryworker` image tag | `latest` |
 | `celeryworker.image.pullPolicy` | Image pull policy | `IfNotPresent` |
@@ -181,6 +181,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `securityContext.runAsUser` | Pod Security Context user ID | `1001` |
 | `securityContext.runAsGroup` | Pod Security Context group ID | `1001` |
 | `hooks.deleteComputePods.enabled` | If true, enable the deletion job that removes deployed compute pods after the application is deleted | `False` |
+| `hooks.deleteWorkerPvc.enabled` | If true, enable the deletion job that removes the worker PVC after the application is deleted | `False` |
 | `orchestrator.host` | The orchestrator gRPC endpoint hostname | `owkin-orchestrator-org-1.org-1.svc.cluster.local` |
 | `orchestrator.port` | The orchestrator gRPC endpoint port | `9000` |
 | `orchestrator.tls.enabled` | If true, enable TLS for the orchestrator gRPC endpoint | `false` |

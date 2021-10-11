@@ -8,6 +8,7 @@ from substrapp.kubernetes_utils import get_pod_logs, get_security_context, pod_e
 from substrapp.docker_registry import container_image_exists, USER_IMAGE_REPOSITORY
 from substrapp.lock_local import lock_resource
 from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name, get_docker_cache_pvc_name
 from substrapp.exceptions import BuildError
 import orchestrator.computetask_pb2 as computetask_pb2
 
@@ -118,9 +119,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
                     label_selector=kubernetes.client.V1LabelSelector(
                         match_expressions=[
                             kubernetes.client.V1LabelSelectorRequirement(
-                                key="app.kubernetes.io/component",
-                                operator="In",
-                                values=["substra-worker"],
+                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv('HOSTNAME')]
                             )
                         ]
                     ),
@@ -137,7 +136,11 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
         volumes=[
             {
                 "name": "dockerfile",
-                "persistentVolumeClaim": {"claimName": settings.WORKER_PVC_SUBTUPLE},
+                "persistentVolumeClaim": {
+                    "claimName": settings.WORKER_PVC_SUBTUPLE
+                    if settings.WORKER_PVC_IS_HOSTPATH
+                    else get_worker_subtuple_pvc_name()
+                },
             }
         ],
     )
@@ -145,7 +148,11 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
     spec.volumes.append(
         {
             "name": "cache",
-            "persistentVolumeClaim": {"claimName": settings.WORKER_PVC_DOCKER_CACHE},
+            "persistentVolumeClaim": {
+                "claimName": settings.WORKER_PVC_DOCKER_CACHE
+                if settings.WORKER_PVC_IS_HOSTPATH
+                else get_docker_cache_pvc_name()
+            },
         }
     )
 

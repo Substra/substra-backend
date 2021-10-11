@@ -1,5 +1,6 @@
 import kubernetes
 import structlog
+import os
 from django.conf import settings
 from substrapp.kubernetes_utils import get_pod_security_context, get_security_context
 from substrapp.kubernetes_utils import delete_pod
@@ -103,7 +104,7 @@ def create_pod(
                     label_selector=kubernetes.client.V1LabelSelector(
                         match_expressions=[
                             kubernetes.client.V1LabelSelectorRequirement(
-                                key="app.kubernetes.io/component", operator="In", values=["substra-worker"]
+                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv('HOSTNAME')]
                             )
                         ]
                     ),

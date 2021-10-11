@@ -6,7 +6,7 @@ metadata:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
 spec:
-  replicas: {{ .Values.celeryworker.replicaCount }}
+  replicas: {{ .Values.celeryscheduler.replicaCount }}
   selector:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler

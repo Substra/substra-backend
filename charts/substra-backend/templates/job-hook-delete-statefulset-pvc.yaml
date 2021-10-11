@@ -1,0 +1,50 @@
+{{/*
+Delete all the PVCs created by the StatefulSet substra-backend-worker.
+This is necessary because kubernetes doesn't automatically delete StatefulSet PVCs.
+See: https://github.com/kubernetes/kubernetes/issues/55045
+*/}}
+{{- if .Values.hooks.deleteWorkerPvc.enabled }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "substra.fullname" . }}-hook-delete-worker-pvc
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+  labels:
+    "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  ttlSecondsAfterFinished: 0
+  parallelism: 1
+  completions: 1
+  backoffLimit: 1
+  template:
+    metadata:
+      labels:
+        "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+        app.kubernetes.io/name: {{ template "substra.name" . }}
+        app.kubernetes.io/managed-by: {{ .Release.Service }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ .Values.hooks.serviceAccount.name }}
+      containers:
+        - name: kubectl
+          image: "{{ .Values.hooks.deleteWorkerPvc.image.repository }}:{{ .Values.hooks.deleteWorkerPvc.image.tag }}"
+          args:
+            - delete
+            - pvc
+            - --namespace=$(SUBSTRA_NAMESPACE)
+            - --ignore-not-found=true
+            - -l
+            - app.kubernetes.io/name={{ template "substra.name" . }}-worker
+          env:
+            - name: SUBSTRA_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+{{- end }}

@@ -1,0 +1,15 @@
+# Spread workers evenly across kube nodes
+# aka, a kubernetes node should schedule at most 1 backend-worker pod per namespace
+celeryworker:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 100
+        podAffinityTerm:
+          labelSelector:
+            matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+              - substra-backend-worker
+          topologyKey: "kubernetes.io/hostname"

@@ -7,5 +7,6 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django_celery_results',
     'rest_framework',
-    'events'
+    'events',
+    'substrapp',
 ]

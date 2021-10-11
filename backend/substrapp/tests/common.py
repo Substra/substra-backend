@@ -253,15 +253,10 @@ class FakeObjective(object):
         self.metrics = FakeMetrics(filepath)
 
 
-class FakeOpener(object):
-    def __init__(self, filepath):
-        self.path = filepath
-        self.name = self.path
-
-
 class FakeDataManager(object):
-    def __init__(self, filepath):
-        self.data_opener = FakeOpener(filepath)
+    def __init__(self, file, checksum):
+        self.data_opener = file
+        self.checksum = checksum
 
 
 class FakeDataSample(object):

@@ -29,6 +29,7 @@ spec:
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
       containers:
       - name: {{ template "substra.name" . }}
         image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
@@ -75,6 +76,10 @@ spec:
             value: {{ .Values.backend.service.port | quote}}
           - name: PYTHONUNBUFFERED
             value: "1"
+          - name: WORKER_REPLICA_SET_NAME
+            value: {{ template "substra.fullname" . }}-worker
+          - name: NAMESPACE
+            value: {{ .Release.Namespace }}
         {{- with .Values.extraEnv }}
 {{ toYaml . | indent 10 }}
         {{- end }}

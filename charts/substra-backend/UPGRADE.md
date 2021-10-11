@@ -1,5 +1,10 @@
-
 ## unreleased
+
+## 11.0.0
+
+1. Set `hooks.deleteWorkerPvc.enabled` to the desired value. Note that delete hooks are triggered only when deploying with helm.
+2. Optional: set `celeryworker.replicaCount` value
+3. Optional: on multi node set up. Set up the way pods are scheduled across kubernetes nodes either with affinity or anti-affinity, see the [spread workers accross nodes](../../values/spread-workers.yaml) for the full configuration, or using `nodeSelector` and labelling.
 
 ## 10.0.0
 - Note that the kaniko cache volume is now configurable via `backend.kaniko.persistence` fields.

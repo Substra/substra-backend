@@ -5,6 +5,7 @@ from celery import Celery
 from celery import current_app
 from celery.signals import after_task_publish, celeryd_init, setup_logging
 from django_structlog.celery.steps import DjangoStructLogInitStep
+from kombu.common import Broadcast
 
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings.prod')
@@ -24,6 +25,19 @@ app.steps['worker'].add(DjangoStructLogInitStep)
 
 # Load task modules from all registered Django app configs.
 app.autodiscover_tasks()
+
+
+# Declare broadcasting queue accross worker
+app.conf.task_queues = (
+    Broadcast(settings.CELERY_BROADCAST),
+)
+
+app.conf.task_routes = {
+    'substrapp.tasks.tasks_remove_intermediary_models.remove_intermediary_models_from_buffer': {
+        'queue': settings.CELERY_BROADCAST,
+        'exchange': settings.CELERY_BROADCAST
+    }
+}
 
 
 @celeryd_init.connect

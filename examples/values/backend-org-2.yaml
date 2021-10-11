@@ -99,6 +99,8 @@ hooks:
     name: substra-backend-delete-hook
   deleteComputePods:
     enabled: True
+  deleteWorkerPvc:
+    enabled: True
 
 privateCa:
   enabled: true
@@ -126,3 +128,4 @@ orchestrator:
       enabled: true
       secrets:
         pair: orchestrator-tls-client-pair
+

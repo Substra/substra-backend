@@ -18,9 +18,9 @@ from substrapp.utils import timeit
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.environment import get_environment
-from substrapp.compute_tasks.volumes import get_volumes
+from substrapp.compute_tasks.volumes import get_volumes, get_worker_subtuple_pvc_name
 from substrapp.exceptions import PodError, PodReadinessTimeoutError, PodTimeoutError
-from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector
+from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector, get_volume
 from substrapp.docker_registry import get_container_image_name
 from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -91,6 +91,11 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
         else:
             logger.info("Reusing pod", pod=pod_name)
 
+        # This a sanity check that the compute pod uses the subtuple of the present worker
+        # Does not concern the WORKER_PVC_IS_HOSTPATH case because this case is for a single worker set up.
+        if not settings.WORKER_PVC_IS_HOSTPATH:
+            _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
+
         returncode = _exec(k8s_client, ctx, compute_pod, exec_command)
         if returncode != 0:
             raise Exception(f"Error running compute task. Compute task process exited with code {returncode}")
@@ -112,6 +117,26 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
 def _get_k8s_client():
     kubernetes.config.load_incluster_config()
     return kubernetes.client.CoreV1Api()
+
+
+def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.client.CoreV1Api, pod_name: str) -> None:
+    # This a sanity check that the compute pod uses the subtuple of the present worker.
+    # The contrary should never happen as _acquire_worker_index in backend/substrapp/task_routing.py
+    # is ensuring that the right worker is assigned.
+    # This check is here for a faster debugging if something is going wrong.
+    subtuple_volume = get_volume(k8s_client, pod_name, "subtuple")
+
+    if not subtuple_volume:
+        raise Exception("no subtuple volume is attached to compute pod")
+
+    compute_pod_subtuple_claim_name = subtuple_volume.persistent_volume_claim.claim_name
+    worker_subtuple_claim_name = get_worker_subtuple_pvc_name()
+
+    if compute_pod_subtuple_claim_name != worker_subtuple_claim_name:
+        raise Exception(
+            f"This worker and the compute pod {pod_name} do not share the same "
+            "subtuple volume. It will not be possible for the task to retrieve the data."
+        )
 
 
 @timeit

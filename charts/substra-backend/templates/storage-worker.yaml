@@ -1,3 +1,4 @@
+{{- if .Values.celeryworker.persistence.hostPath }}
 {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
 ---
 kind: PersistentVolumeClaim
@@ -12,16 +13,11 @@ spec:
   resources:
     requests:
       storage: {{ .size | quote }}
-  {{- if $.Values.celeryworker.persistence.hostPath }}
   selector:
     matchLabels:
       {{ include "substra.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/name: {{ template "substra.name" $ }}-{{ $key }}
-  {{- else if $.Values.celeryworker.persistence.storageClassName }}
-  storageClassName: {{ $.Values.celeryworker.persistence.storageClassName }}
-  {{- end }}
 ---
-{{- if $.Values.celeryworker.persistence.hostPath }}
 apiVersion: v1
 kind: PersistentVolume
 metadata:

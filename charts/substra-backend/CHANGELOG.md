@@ -1,4 +1,21 @@
 # Changelog
+
+## 11.0.0
+
+See [UPGRADE.md](./UPGRADE.md#11.0.0)
+
+### Added
+- `deleteWorkerPvc` added
+- `worker pods` are controlled by a `statefulset` (previously by a `deployment`)
+- each `celeryWorker` instance is listening to 3 queues:
+  1. `{{ .Values.organization.name }}.worker` generic shared worker queue
+  2. `{{ .Values.organization.name }}.worker-${HOSTNAME##*-}` worker specific queue
+  3. `{{ .Values.organization.name }}.broadcast` broadcast shared accross the workers
+- Optional skaffold profile: [preferred](../../examples/values/spread_workers.yaml) `antiAffinity` to schedule 1 worker pod per namespace
+
+### Changed
+- `Kaniko cache warming` is performed in each `worker pod` instead of a separate pod
+
 ## 10.0.0
 
 ### Changed
@@ -23,7 +40,7 @@ See [UPGRADE.md](./UPGRADE.md#9.0.0)
 
 ### Changed
 - `backend.commonHostDomain` is now required to ensure cookies set by the backend will be returned by the frontend.
-  
+
   It must contain the common part of the frontend and backend domain.
 
   E.g. `substra-frontend.node-1.com` / `substra-backend.node-1.com` -> `COMMON_HOST_DOMAIN=node-1.com`
@@ -37,7 +54,6 @@ See [UPGRADE.md](./UPGRADE.md#9.0.0)
 
 ### Changed
 - Change docker-registry helm chart from stable deprecated for twuni maintained
-
 
 ## 5.0.1
 

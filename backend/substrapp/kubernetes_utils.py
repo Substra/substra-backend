@@ -253,3 +253,25 @@ def get_pod_by_label_selector(label_selector: str) -> object:
         raise Exception(f"Could not get pod name {label_selector}")
 
     return pod
+
+
+def get_worker_replica_set_scale() -> int:
+    """Return the number of workers in the worker replica set"""
+    kubernetes.config.load_incluster_config()
+    api_instance = kubernetes.client.AppsV1Api()
+    resp = api_instance.read_namespaced_stateful_set_scale(settings.WORKER_REPLICA_SET_NAME, NAMESPACE)
+    return resp.spec.replicas
+
+
+def get_volume(
+        k8s_client: kubernetes.client.CoreV1Api,
+        pod_name: str,
+        volume_name: str,) -> kubernetes.client.V1Volume:
+
+    pod = k8s_client.read_namespaced_pod(name=pod_name, namespace=NAMESPACE)
+
+    for volume in pod.spec.volumes:
+        if volume.name == volume_name:
+            return volume
+
+    return None
