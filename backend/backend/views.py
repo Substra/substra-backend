@@ -58,8 +58,8 @@ class Info(APIView):
                 orchestrator_versions = client.query_version()
 
             res['channel'] = channel_name
-            res['version'] = settings.BACKEND_VERSION,
-            res['orchestrator_version'] = orchestrator_versions.get("orchestrator"),
+            res['version'] = settings.BACKEND_VERSION
+            res['orchestrator_version'] = orchestrator_versions.get("orchestrator")
             res['config']['model_export_enabled'] = channel['model_export_enabled']
 
             if orchestrator_versions.get("chaincode"):

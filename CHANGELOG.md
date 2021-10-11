@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Set the local folder dynamically instead of leaving it to connect-tools default.
+- Fix trailing comma that turned versions at /info into lists
 
 
 ## [0.4.0] 2021-10-04
