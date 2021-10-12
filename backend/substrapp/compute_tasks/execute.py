@@ -11,7 +11,7 @@ from __future__ import absolute_import, unicode_literals
 
 import structlog
 import kubernetes
-from typing import Any, List
+from typing import List
 from django.conf import settings
 from kubernetes.stream import stream
 from substrapp.utils import timeit
@@ -32,7 +32,7 @@ NAMESPACE = settings.NAMESPACE
 
 
 @timeit
-def execute_compute_task(ctx: Context) -> Any:
+def execute_compute_task(ctx: Context) -> None:
 
     _execute_compute_task(ctx, is_testtuple_eval=False)
 

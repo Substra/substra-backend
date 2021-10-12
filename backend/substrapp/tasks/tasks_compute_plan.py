@@ -50,7 +50,7 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         algos = client.query_algos(compute_plan_key=compute_plan_key)
         test_tasks = client.query_tasks(category=computetask_pb2.TASK_TEST, compute_plan_key=compute_plan_key)
     algo_keys = [x["key"] for x in algos]
-    metric_keys = [y for x in test_tasks for y in x["test"]["metric_keys"]]
+    metric_keys = [key for task in test_tasks for key in task["test"]["metric_keys"]]
 
     # See lock function PyDoc for explanation as to why this lock is necessary
     with get_compute_plan_lock(compute_plan_key):

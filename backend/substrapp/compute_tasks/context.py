@@ -154,11 +154,11 @@ class Context:
         return self._has_chainkeys
 
     @property
-    def algo_key(self):
+    def algo_key(self) -> str:
         return self.task["algo"]["key"]
 
     @property
-    def metric_keys(self):
+    def metric_keys(self) -> List[str]:
         if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: metric_keys for {self.task_category}")
         return self.task_data["metric_keys"]
@@ -180,18 +180,18 @@ class Context:
         return self._data_manager
 
     @property
-    def algo_image_tag(self):
+    def algo_image_tag(self) -> str:
         algo_key = self.task["algo"]["key"]
         algo_checksum = self.task["algo"]["algorithm"]["checksum"]
         return get_image_tag(ALGO_IMAGE_PREFIX, algo_checksum if settings.DEBUG_QUICK_IMAGE else algo_key)
 
     @property
-    def task_data(self):
+    def task_data(self) -> Dict:
         task_data_field = TASK_DATA_FIELD[self.task_category]
         return self.task[task_data_field]
 
     @property
-    def data_sample_keys(self):
+    def data_sample_keys(self) -> List[str]:
         if self.task_category not in [
             computetask_pb2.TASK_COMPOSITE,
             computetask_pb2.TASK_TRAIN,
@@ -201,7 +201,7 @@ class Context:
         return self.task_data["data_sample_keys"]
 
     @property
-    def metrics_image_tags(self):
+    def metrics_image_tags(self) -> List[str]:
         if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: metrics_docker_tag for {self.task_category}")
 
@@ -215,11 +215,11 @@ class Context:
         return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in slugs}
 
     @property
-    def algo_docker_context_dir(self):
+    def algo_docker_context_dir(self) -> str:
         return os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Algos, self.algo_key)
 
     @property
-    def metrics_docker_context_dirs(self):
+    def metrics_docker_context_dirs(self) -> Dict:
         return {metric_key: os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, metric_key)
                 for metric_key in self.metric_keys}
 
