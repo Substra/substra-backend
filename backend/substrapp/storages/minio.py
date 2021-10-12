@@ -1,3 +1,4 @@
+import time
 from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
@@ -26,7 +27,20 @@ class MinioStorage(Storage):
             )
             if not self._client.bucket_exists(self.bucket):
                 self._client.make_bucket(self.bucket)
+                # make sure that the bucket is created before continuing.
+                # Otherwise this may cause `NoSuchBucket` errors when using the client.
+                self.wait_for_bucket_creation(timeout=60)  # can raise
         return self._client
+
+    def wait_for_bucket_creation(self, timeout):
+        polling_period = 0.2
+        tstart = time.time()
+
+        while not self._client.bucket_exists(self.bucket):
+            if time.time() - tstart > timeout:
+                raise TimeoutError(
+                    f"Timeout on bucket creation for bucket: {self.bucket}.")
+            time.sleep(polling_period)
 
     def _open(self, name, mode):
         res = self.client.get_object(self.bucket, name)
