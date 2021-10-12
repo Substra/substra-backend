@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import uuid
 
 import mock
 from django.test import override_settings
@@ -13,7 +14,7 @@ from substrapp.models import Model, Metric
 from orchestrator.client import OrchestratorClient
 from substrapp.utils import compute_hash
 
-from ..common import (AuthenticatedClient, get_sample_model,
+from ..common import (DEFAULT_STORAGE_ADDRESS, AuthenticatedClient, get_sample_model,
                       get_sample_metric)
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -114,6 +115,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         model = {
             "key": 'some key',
+            "address": DEFAULT_STORAGE_ADDRESS,
             "permissions": {
                 "process": {
                     "public": False,
@@ -146,6 +148,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
         model = {
             "key": 'some key',
+            "address": DEFAULT_STORAGE_ADDRESS,
             "permissions": {
                 "process": {
                     "public": False,
@@ -179,6 +182,7 @@ class CompositeTraintupleQueryTests(APITestCase):
         model = {
             "key": 'some key',
             "owner": TEST_ORG,
+            "address": DEFAULT_STORAGE_ADDRESS,
             "permissions": {
                 "process": {
                     "public": False,
@@ -204,3 +208,27 @@ class CompositeTraintupleQueryTests(APITestCase):
             }
             response = self.client.get(f'/model/{head_model.key}/file/', **extra)
             self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_get_deleted_intermediary_model(self):
+        # When disabled the model has no storage address
+        model = {
+            "key": uuid.uuid4(),
+            "owner": TEST_ORG,
+            "permissions": {
+                "process": {
+                    "public": True,
+                },
+                "download": {
+                    "public": True,
+                }
+            }
+        }
+        with mock.patch("substrapp.views.utils.get_owner", return_value=TEST_ORG), \
+                mock.patch.object(OrchestratorClient, 'query_model', return_value=model), \
+                mock.patch('substrapp.views.model.type', return_value=NodeUser):
+            extra = {
+                'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',
+                'HTTP_ACCEPT': 'application/json;version=0.0',
+            }
+            response = self.client.get(f'/model/{model["key"]}/file/', **extra)
+            self.assertEqual(response.status_code, status.HTTP_410_GONE)

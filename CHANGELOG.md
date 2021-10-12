@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Set the local folder dynamically instead of leaving it to connect-tools default.
 - Fix trailing comma that turned versions at /info into lists
 - Accept `UUID.hex` UUID as asset keys
+- Trying to download a disabled model will now result in a consistent http 410 error code instead of an http 500 or http 404 error code
 
 
 ## [0.4.0] 2021-10-04

@@ -215,11 +215,18 @@ DEFAULT_PERMISSIONS = {
     }
 }
 
+DEFAULT_STORAGE_ADDRESS = {
+    'checksum': 'f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2',
+    'storage_address': 'http://fake_address.com',
+}
+
 
 def get_sample_algo_metadata():
     return {
         'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
+        'description': DEFAULT_STORAGE_ADDRESS,
+        'algorithm': DEFAULT_STORAGE_ADDRESS,
     }
 
 
@@ -227,6 +234,8 @@ def get_sample_metric_metadata():
     return {
         'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
+        'description': DEFAULT_STORAGE_ADDRESS,
+        'address': DEFAULT_STORAGE_ADDRESS,
     }
 
 
@@ -234,6 +243,8 @@ def get_sample_datamanager_metadata():
     return {
         'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
+        'description': DEFAULT_STORAGE_ADDRESS,
+        'opener': DEFAULT_STORAGE_ADDRESS,
     }
 
 

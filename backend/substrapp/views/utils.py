@@ -114,7 +114,16 @@ class PermissionMixin(object):
             raise AssetPermissionError()
 
     def get_storage_address(self, asset, ledger_field) -> str:
-        return asset[ledger_field]["storage_address"]
+        """returns the storage address of the asset or nothing if there is no storage address
+
+        Args:
+            asset (Dict): Asset from the Orchestrator
+            ledger_field (str): Key of the dict containing the storage address
+
+        Returns:
+            str: The asset storage address
+        """
+        return asset.get(ledger_field, {}).get("storage_address")
 
     def download_file(
         self, request, query_method, django_field, orchestrator_field=None
@@ -140,12 +149,15 @@ class PermissionMixin(object):
         except AssetPermissionError as e:
             return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
+        if not orchestrator_field:
+            orchestrator_field = django_field
+        storage_address = self.get_storage_address(asset, orchestrator_field)
+        if not storage_address:
+            return Response({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
+
         if get_owner() == asset["owner"]:
             response = self.get_local_file_response(django_field)
         else:
-            if not orchestrator_field:
-                orchestrator_field = django_field
-            storage_address = self.get_storage_address(asset, orchestrator_field)
             response = self._download_remote_file(channel_name, storage_address, asset)
 
         return response
