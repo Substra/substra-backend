@@ -281,7 +281,9 @@ def add_task_extra_information(client, basename, data):
             data[TASK_FIELD[basename]]['models'] = client.get_computetask_output_models(data['key'])
     elif basename in ['testtuple']:
         if computetask_pb2.ComputeTaskStatus.Value(data['status']) == computetask_pb2.STATUS_DONE:
-            performance = client.get_compute_task_performance(data['key'])['performance_value']
-            data[TASK_FIELD[basename]]['perf'] = performance
+            performances = client.get_compute_task_performances(data['key'])
+            performances = {performance['metric_key']: performance['performance_value']
+                            for performance in performances}
+            data[TASK_FIELD[basename]]['perfs'] = performances
 
     return data

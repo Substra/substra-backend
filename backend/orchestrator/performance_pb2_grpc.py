@@ -19,10 +19,10 @@ class PerformanceServiceStub(object):
                 request_serializer=performance__pb2.NewPerformance.SerializeToString,
                 response_deserializer=performance__pb2.Performance.FromString,
                 )
-        self.GetComputeTaskPerformance = channel.unary_unary(
-                '/orchestrator.PerformanceService/GetComputeTaskPerformance',
-                request_serializer=performance__pb2.GetComputeTaskPerformanceParam.SerializeToString,
-                response_deserializer=performance__pb2.Performance.FromString,
+        self.QueryPerformances = channel.unary_unary(
+                '/orchestrator.PerformanceService/QueryPerformances',
+                request_serializer=performance__pb2.QueryPerformancesParam.SerializeToString,
+                response_deserializer=performance__pb2.QueryPerformancesResponse.FromString,
                 )
 
 
@@ -35,7 +35,7 @@ class PerformanceServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
-    def GetComputeTaskPerformance(self, request, context):
+    def QueryPerformances(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -49,10 +49,10 @@ def add_PerformanceServiceServicer_to_server(servicer, server):
                     request_deserializer=performance__pb2.NewPerformance.FromString,
                     response_serializer=performance__pb2.Performance.SerializeToString,
             ),
-            'GetComputeTaskPerformance': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetComputeTaskPerformance,
-                    request_deserializer=performance__pb2.GetComputeTaskPerformanceParam.FromString,
-                    response_serializer=performance__pb2.Performance.SerializeToString,
+            'QueryPerformances': grpc.unary_unary_rpc_method_handler(
+                    servicer.QueryPerformances,
+                    request_deserializer=performance__pb2.QueryPerformancesParam.FromString,
+                    response_serializer=performance__pb2.QueryPerformancesResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -82,7 +82,7 @@ class PerformanceService(object):
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetComputeTaskPerformance(request,
+    def QueryPerformances(request,
             target,
             options=(),
             channel_credentials=None,
@@ -92,8 +92,8 @@ class PerformanceService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.PerformanceService/GetComputeTaskPerformance',
-            performance__pb2.GetComputeTaskPerformanceParam.SerializeToString,
-            performance__pb2.Performance.FromString,
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.PerformanceService/QueryPerformances',
+            performance__pb2.QueryPerformancesParam.SerializeToString,
+            performance__pb2.QueryPerformancesResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

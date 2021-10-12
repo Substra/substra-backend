@@ -34,7 +34,7 @@ NAMESPACE = settings.NAMESPACE
 @timeit
 def execute_compute_task(ctx: Context) -> Any:
 
-    result = _execute_compute_task(ctx, is_testtuple_eval=False)
+    _execute_compute_task(ctx, is_testtuple_eval=False)
 
     # Testtuple evaluation
     #
@@ -49,24 +49,23 @@ def execute_compute_task(ctx: Context) -> Any:
     # - The "evaluate" step uses the metrics container image. It uses the prediction file as an input, and outputs
     #   a performance score. The "evaluate" step doesn't have access to data samples
     if ctx.task_category == computetask_pb2.TASK_TEST:
-        result = _execute_compute_task(ctx, is_testtuple_eval=True)
-
-    return result
+        for metric_key, metrics_image_tag in ctx.metrics_image_tags.items():
+            _execute_compute_task(ctx, is_testtuple_eval=True, image_tag=metrics_image_tag, metric_key=metric_key)
 
 
 @timeit
-def _execute_compute_task(ctx: Context, is_testtuple_eval: bool) -> None:
+def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str = None, metric_key: str = None) -> None:
 
     channel_name = ctx.channel_name
     dirs = ctx.directories
-    image_tag = ctx.metrics_image_tag if is_testtuple_eval else ctx.algo_image_tag
+    image_tag = image_tag if is_testtuple_eval else ctx.algo_image_tag
 
-    compute_pod = ctx.get_compute_pod(is_testtuple_eval)
+    compute_pod = ctx.get_compute_pod(is_testtuple_eval, metric_key)
     pod_name = compute_pod.name
 
     env = get_environment(ctx)
     image = get_container_image_name(image_tag)
-    exec_command = get_exec_command(ctx, is_testtuple_eval)
+    exec_command = get_exec_command(ctx, is_testtuple_eval, metric_key)
 
     k8s_client = _get_k8s_client()
 

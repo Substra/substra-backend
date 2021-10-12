@@ -81,7 +81,7 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
             data['parent_task_keys'] = [item for item in parent_task_keys if item]
 
         elif self.basename == 'testtuple':
-            data['metric_key'] = request.data.get('metric_key')
+            data['metric_keys'] = request.data.get('metric_keys')
             data['data_manager_key'] = request.data.get('data_manager_key')
             data['data_sample_keys'] = request.data.get('test_data_sample_keys')
 

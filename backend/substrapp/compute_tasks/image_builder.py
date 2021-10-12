@@ -27,7 +27,8 @@ CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
 def build_images(ctx: Context) -> None:
     build_container_image(ctx.algo_docker_context_dir, ctx.algo_image_tag, ctx)
     if ctx.task_category == computetask_pb2.TASK_TEST:
-        build_container_image(ctx.metrics_docker_context_dir, ctx.metrics_image_tag, ctx)
+        for metric_key, metrics_image_tag in ctx.metrics_image_tags.items():
+            build_container_image(ctx.metrics_docker_context_dirs[metric_key], metrics_image_tag, ctx)
 
 
 @timeit

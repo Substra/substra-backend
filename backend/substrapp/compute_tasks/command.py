@@ -29,16 +29,19 @@ TASK_COMMANDS = {
 }
 
 
-def get_exec_command(ctx: Context, is_testtuple_eval: bool) -> List[str]:
+def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:
 
-    docker_context_dir = ctx.metrics_docker_context_dir if is_testtuple_eval else ctx.algo_docker_context_dir
+    if is_testtuple_eval:
+        docker_context_dir = ctx.metrics_docker_context_dirs[metric_key]
+    else:
+        docker_context_dir = ctx.algo_docker_context_dir
 
     command = _get_command_from_dockerfile(docker_context_dir)
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
     env = _get_env(ctx, is_testtuple_eval)
-    args = _get_args(ctx, is_testtuple_eval)
+    args = _get_args(ctx, is_testtuple_eval, metric_key)
 
     return env + command + args
 
@@ -63,7 +66,7 @@ def _get_command_from_dockerfile(dockerfile_dir: str) -> List[str]:
     raise Exception("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
-def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
+def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:
 
     task = ctx.task
     task_category = ctx.task_category
@@ -73,12 +76,12 @@ def _get_args(ctx: Context, is_testtuple_eval: bool) -> List[str]:
     out_models_dir = os.path.join(SANDBOX_DIR, TaskDirName.OutModels)
     openers_dir = os.path.join(SANDBOX_DIR, TaskDirName.Openers)
     datasamples_dir = os.path.join(SANDBOX_DIR, TaskDirName.Datasamples)
-    perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, Filenames.Performance)
     pred_path = os.path.join(SANDBOX_DIR, TaskDirName.Pred, Filenames.Predictions)
     local_folder = os.path.join(SANDBOX_DIR, TaskDirName.Local)
     chainkeys_folder = os.path.join(SANDBOX_DIR, TaskDirName.Chainkeys)
 
     if is_testtuple_eval:
+        perf_path = os.path.join(SANDBOX_DIR, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance]))
         command = ["--input-predictions-path", pred_path]
         command += ["--opener-path", os.path.join(openers_dir, task_data["data_manager_key"], Filenames.Opener)]
         command += ["--data-sample-paths"] + [

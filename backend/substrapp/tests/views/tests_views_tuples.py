@@ -164,8 +164,8 @@ class TesttupleViewTests(APITestCase):
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=testtuple[0]), \
-                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
-                                  return_value={'performance_value': 1}):
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, testtuple[0])
@@ -196,8 +196,8 @@ class TesttupleViewTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
-                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
-                                  return_value={'performance_value': 1}):
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
             search_params = '?search=testtuple%253Atag%253Abar'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -236,8 +236,8 @@ class TesttupleViewTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
-                mock.patch.object(OrchestratorClient, 'get_compute_task_performance',
-                                  return_value={'performance_value': 1}):
+                mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

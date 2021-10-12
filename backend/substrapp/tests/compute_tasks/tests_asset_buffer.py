@@ -187,14 +187,16 @@ class AssetBufferTests(APITestCase):
         self.model_checksum = get_hash(self.model_path, self.model_compute_task_key)
 
     def _setup_context(self):
+        self.metric_key = str(uuid.uuid4())
+
         class FakeContext:
             directories = self.dirs
             channel_name = CHANNEL
             compute_plan_key = "some compute plan key"
             task_category = computetask_pb2.TASK_TRAIN
-            metric = {'key': str(uuid.uuid4()),
-                      'owner': 'test',
-                      'address': {'storage_address': 'test', 'checksum': 'check'}}
+            metrics = {self.metric_key: {'key': self.metric_key,
+                                         'owner': 'test',
+                                         'address': {'storage_address': 'test', 'checksum': 'check'}}}
             algo = {'key': str(uuid.uuid4()),
                     'owner': 'test',
                     'algorithm': {'storage_address': 'test', 'checksum': 'check'}}
@@ -381,6 +383,6 @@ class AssetBufferTests(APITestCase):
 
             mget_asset_content.return_value = metrics_content
 
-            metric = _download_metric(self.ctx)
+            metric = _download_metric(self.ctx, self.metric_key)
             self.assertTrue(isinstance(metric, bytes))
             self.assertEqual(metric, metrics_content)

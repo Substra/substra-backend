@@ -558,14 +558,26 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def get_compute_task_performance(self, compute_task_key):
-        data = self._performance_client.GetComputeTaskPerformance(
-            performance_pb2.GetComputeTaskPerformanceParam(
-                compute_task_key=compute_task_key
-            ),
-            metadata=self._metadata,
+    def get_compute_task_performances(self, compute_task_key, metric_key=""):
+        performance_filter = performance_pb2.PerformanceQueryFilter(
+            compute_task_key=compute_task_key, metric_key=metric_key
         )
-        return MessageToDict(data, **CONVERT_SETTINGS)
+
+        res = []
+        page_token = ""
+        while True:
+            data = self._performance_client.QueryPerformances(
+                performance_pb2.QueryPerformancesParam(filter=performance_filter, page_token=page_token),
+                metadata=self._metadata,
+            )
+            data = MessageToDict(data, **CONVERT_SETTINGS)
+            performances = data.get("Performances", [])
+            page_token = data.get("next_page_token")
+            res.extend(performances)
+            if page_token == "" or not performances:
+                break
+
+        return res
 
     @grpc_retry
     def is_task_doing(self, key):

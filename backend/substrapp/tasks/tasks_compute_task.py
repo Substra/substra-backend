@@ -78,8 +78,10 @@ class ComputeTask(Task):
         with get_orchestrator_client(channel_name) as client:
             category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
             if category == computetask_pb2.TASK_TEST:
-                client.register_performance({'compute_task_key': task["key"],
-                                             'performance_value': float(retval['result']['global_perf'])})
+                for metric_key, perf in retval['result']['performances'].items():
+                    client.register_performance({'compute_task_key': task['key'],
+                                                 'metric_key': metric_key,
+                                                 'performance_value': float(perf)})
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         _, task = self.split_args(args)
@@ -212,7 +214,10 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
 
             # Collect results
             if task_category == computetask_pb2.TASK_TEST:
-                result["result"] = _get_perf(dirs)
+                result["result"] = {"performances": {}}
+                for metric_key in ctx.metric_keys:
+                    result["result"]["performances"][metric_key] = _get_perf(dirs, metric_key)
+
                 _transfer_model_to_bucket(ctx)
             else:
                 result["result"] = save_models(ctx)
@@ -231,13 +236,14 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
             # Teardown
             teardown_task_dirs(dirs)
 
-    logger.info("Compute task finished", result=result['result'])
+    logger.info("Compute task finished", result=result["result"])
     return result
 
 
-def _get_perf(dirs: Directories) -> object:
-    with open(path.join(dirs.task_dir, TaskDirName.Perf, Filenames.Performance), "r") as perf_file:
-        return {"global_perf": json.load(perf_file)["all"]}
+def _get_perf(dirs: Directories, metric_key: str) -> object:
+    with open(path.join(dirs.task_dir, TaskDirName.Perf,
+                        "-".join([metric_key, Filenames.Performance])), "r") as perf_file:
+        return json.load(perf_file)["all"]
 
 
 def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):

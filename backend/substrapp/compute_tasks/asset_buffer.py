@@ -80,14 +80,13 @@ def add_metrics_to_buffer(ctx: Context) -> None:
 
     If the metrics is already present in the asset buffer, skip the download.
     """
-    dst = ctx.metrics_docker_context_dir
+    for metric_key, dst in ctx.metrics_docker_context_dirs.items():
+        if os.path.exists(dst):
+            # metrics already exists
+            continue
 
-    if os.path.exists(dst):
-        # metrics already exists
-        return
-
-    metrics_content = _download_metric(ctx)
-    uncompress_content(metrics_content, dst)
+        metrics_content = _download_metric(ctx, metric_key)
+        uncompress_content(metrics_content, dst)
 
 
 def add_task_assets_to_buffer(ctx: Context) -> None:
@@ -300,12 +299,12 @@ def _download_algo(ctx: Context) -> bytes:
     )
 
 
-def _download_metric(ctx: Context) -> bytes:
+def _download_metric(ctx: Context, metric_key) -> bytes:
     return get_asset_content(
         ctx.channel_name,
-        ctx.metric["address"]["storage_address"],
-        ctx.metric["owner"],
-        ctx.metric["address"]["checksum"],
+        ctx.metrics[metric_key]["address"]["storage_address"],
+        ctx.metrics[metric_key]["owner"],
+        ctx.metrics[metric_key]["address"]["checksum"],
     )
 
 

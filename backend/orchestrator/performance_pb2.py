@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11performance.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"E\n\x0eNewPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\"u\n\x0bPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\x12\x31\n\rcreation_date\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\":\n\x1eGetComputeTaskPerformanceParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t2\xca\x01\n\x12PerformanceService\x12N\n\x13RegisterPerformance\x12\x1c.orchestrator.NewPerformance\x1a\x19.orchestrator.Performance\x12\x64\n\x19GetComputeTaskPerformance\x12,.orchestrator.GetComputeTaskPerformanceParam\x1a\x19.orchestrator.PerformanceB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x11performance.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"Y\n\x0eNewPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\"\x89\x01\n\x0bPerformance\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x05 \x01(\t\x12\x19\n\x11performance_value\x18\x02 \x01(\x02\x12\x31\n\rcreation_date\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"F\n\x16PerformanceQueryFilter\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12\x12\n\nmetric_key\x18\x02 \x01(\t\"u\n\x16QueryPerformancesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12\x34\n\x06\x66ilter\x18\x03 \x01(\x0b\x32$.orchestrator.PerformanceQueryFilter\"e\n\x19QueryPerformancesResponse\x12/\n\x0cPerformances\x18\x01 \x03(\x0b\x32\x19.orchestrator.Performance\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\xc8\x01\n\x12PerformanceService\x12N\n\x13RegisterPerformance\x12\x1c.orchestrator.NewPerformance\x1a\x19.orchestrator.Performance\x12\x62\n\x11QueryPerformances\x12$.orchestrator.QueryPerformancesParam\x1a\'.orchestrator.QueryPerformancesResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -43,7 +43,14 @@ _NEWPERFORMANCE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='performance_value', full_name='orchestrator.NewPerformance.performance_value', index=1,
+      name='metric_key', full_name='orchestrator.NewPerformance.metric_key', index=1,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='performance_value', full_name='orchestrator.NewPerformance.performance_value', index=2,
       number=2, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
@@ -62,7 +69,7 @@ _NEWPERFORMANCE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=68,
-  serialized_end=137,
+  serialized_end=157,
 )
 
 
@@ -82,14 +89,21 @@ _PERFORMANCE = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='performance_value', full_name='orchestrator.Performance.performance_value', index=1,
+      name='metric_key', full_name='orchestrator.Performance.metric_key', index=1,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='performance_value', full_name='orchestrator.Performance.performance_value', index=2,
       number=2, type=2, cpp_type=6, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='creation_date', full_name='orchestrator.Performance.creation_date', index=2,
+      name='creation_date', full_name='orchestrator.Performance.creation_date', index=3,
       number=3, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -107,22 +121,29 @@ _PERFORMANCE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=139,
-  serialized_end=256,
+  serialized_start=160,
+  serialized_end=297,
 )
 
 
-_GETCOMPUTETASKPERFORMANCEPARAM = _descriptor.Descriptor(
-  name='GetComputeTaskPerformanceParam',
-  full_name='orchestrator.GetComputeTaskPerformanceParam',
+_PERFORMANCEQUERYFILTER = _descriptor.Descriptor(
+  name='PerformanceQueryFilter',
+  full_name='orchestrator.PerformanceQueryFilter',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
     _descriptor.FieldDescriptor(
-      name='compute_task_key', full_name='orchestrator.GetComputeTaskPerformanceParam.compute_task_key', index=0,
+      name='compute_task_key', full_name='orchestrator.PerformanceQueryFilter.compute_task_key', index=0,
       number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metric_key', full_name='orchestrator.PerformanceQueryFilter.metric_key', index=1,
+      number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -139,14 +160,103 @@ _GETCOMPUTETASKPERFORMANCEPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=258,
-  serialized_end=316,
+  serialized_start=299,
+  serialized_end=369,
+)
+
+
+_QUERYPERFORMANCESPARAM = _descriptor.Descriptor(
+  name='QueryPerformancesParam',
+  full_name='orchestrator.QueryPerformancesParam',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='page_token', full_name='orchestrator.QueryPerformancesParam.page_token', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='page_size', full_name='orchestrator.QueryPerformancesParam.page_size', index=1,
+      number=2, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='filter', full_name='orchestrator.QueryPerformancesParam.filter', index=2,
+      number=3, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=371,
+  serialized_end=488,
+)
+
+
+_QUERYPERFORMANCESRESPONSE = _descriptor.Descriptor(
+  name='QueryPerformancesResponse',
+  full_name='orchestrator.QueryPerformancesResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='Performances', full_name='orchestrator.QueryPerformancesResponse.Performances', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='next_page_token', full_name='orchestrator.QueryPerformancesResponse.next_page_token', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=490,
+  serialized_end=591,
 )
 
 _PERFORMANCE.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_QUERYPERFORMANCESPARAM.fields_by_name['filter'].message_type = _PERFORMANCEQUERYFILTER
+_QUERYPERFORMANCESRESPONSE.fields_by_name['Performances'].message_type = _PERFORMANCE
 DESCRIPTOR.message_types_by_name['NewPerformance'] = _NEWPERFORMANCE
 DESCRIPTOR.message_types_by_name['Performance'] = _PERFORMANCE
-DESCRIPTOR.message_types_by_name['GetComputeTaskPerformanceParam'] = _GETCOMPUTETASKPERFORMANCEPARAM
+DESCRIPTOR.message_types_by_name['PerformanceQueryFilter'] = _PERFORMANCEQUERYFILTER
+DESCRIPTOR.message_types_by_name['QueryPerformancesParam'] = _QUERYPERFORMANCESPARAM
+DESCRIPTOR.message_types_by_name['QueryPerformancesResponse'] = _QUERYPERFORMANCESRESPONSE
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 NewPerformance = _reflection.GeneratedProtocolMessageType('NewPerformance', (_message.Message,), {
@@ -163,12 +273,26 @@ Performance = _reflection.GeneratedProtocolMessageType('Performance', (_message.
   })
 _sym_db.RegisterMessage(Performance)
 
-GetComputeTaskPerformanceParam = _reflection.GeneratedProtocolMessageType('GetComputeTaskPerformanceParam', (_message.Message,), {
-  'DESCRIPTOR' : _GETCOMPUTETASKPERFORMANCEPARAM,
+PerformanceQueryFilter = _reflection.GeneratedProtocolMessageType('PerformanceQueryFilter', (_message.Message,), {
+  'DESCRIPTOR' : _PERFORMANCEQUERYFILTER,
   '__module__' : 'performance_pb2'
-  # @@protoc_insertion_point(class_scope:orchestrator.GetComputeTaskPerformanceParam)
+  # @@protoc_insertion_point(class_scope:orchestrator.PerformanceQueryFilter)
   })
-_sym_db.RegisterMessage(GetComputeTaskPerformanceParam)
+_sym_db.RegisterMessage(PerformanceQueryFilter)
+
+QueryPerformancesParam = _reflection.GeneratedProtocolMessageType('QueryPerformancesParam', (_message.Message,), {
+  'DESCRIPTOR' : _QUERYPERFORMANCESPARAM,
+  '__module__' : 'performance_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.QueryPerformancesParam)
+  })
+_sym_db.RegisterMessage(QueryPerformancesParam)
+
+QueryPerformancesResponse = _reflection.GeneratedProtocolMessageType('QueryPerformancesResponse', (_message.Message,), {
+  'DESCRIPTOR' : _QUERYPERFORMANCESRESPONSE,
+  '__module__' : 'performance_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.QueryPerformancesResponse)
+  })
+_sym_db.RegisterMessage(QueryPerformancesResponse)
 
 
 DESCRIPTOR._options = None
@@ -180,8 +304,8 @@ _PERFORMANCESERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=319,
-  serialized_end=521,
+  serialized_start=594,
+  serialized_end=794,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterPerformance',
@@ -194,12 +318,12 @@ _PERFORMANCESERVICE = _descriptor.ServiceDescriptor(
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
-    name='GetComputeTaskPerformance',
-    full_name='orchestrator.PerformanceService.GetComputeTaskPerformance',
+    name='QueryPerformances',
+    full_name='orchestrator.PerformanceService.QueryPerformances',
     index=1,
     containing_service=None,
-    input_type=_GETCOMPUTETASKPERFORMANCEPARAM,
-    output_type=_PERFORMANCE,
+    input_type=_QUERYPERFORMANCESPARAM,
+    output_type=_QUERYPERFORMANCESRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

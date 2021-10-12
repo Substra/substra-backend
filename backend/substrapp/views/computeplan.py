@@ -150,7 +150,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
                 'compute_plan_key': compute_plan_key,
                 'metadata': testtuple.get('metadata'),
                 'tag': testtuple.get('tag', ''),
-                'metric_key': testtuple.get('metric_key'),
+                'metric_keys': testtuple.get('metric_keys'),
                 'data_manager_key': testtuple.get('data_manager_key'),
                 'data_sample_keys': testtuple.get('test_data_sample_keys'),
                 'parent_task_keys': []

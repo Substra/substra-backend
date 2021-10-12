@@ -13,7 +13,6 @@ _sym_db = _symbol_database.Default()
 
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 from . import common_pb2 as common__pb2
-from . import algo_pb2 as algo__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -22,9 +21,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0cmetric.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\x1a\nalgo.proto\"\xd8\x02\n\x06Metric\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12*\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x34\n\x08metadata\x18\x12 \x03(\x0b\x32\".orchestrator.Metric.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa3\x02\n\tNewMetric\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12*\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x37\n\x08metadata\x18\x12 \x03(\x0b\x32%.orchestrator.NewMetric.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1d\n\x0eGetMetricParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"V\n\x14QueryMetricsResponse\x12%\n\x07metrics\x18\x01 \x03(\x0b\x32\x14.orchestrator.Metric\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\":\n\x11QueryMetricsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"i\n\tBoardItem\x12 \n\x04\x61lgo\x18\x01 \x01(\x0b\x32\x12.orchestrator.Algo\x12\x12\n\nmetric_key\x18\x03 \x01(\t\x12\x18\n\x10\x63ompute_task_key\x18\x04 \x01(\t\x12\x0c\n\x04perf\x18\x05 \x01(\x02\x32\xe6\x01\n\rMetricService\x12?\n\x0eRegisterMetric\x12\x17.orchestrator.NewMetric\x1a\x14.orchestrator.Metric\x12?\n\tGetMetric\x12\x1c.orchestrator.GetMetricParam\x1a\x14.orchestrator.Metric\x12S\n\x0cQueryMetrics\x12\x1f.orchestrator.QueryMetricsParam\x1a\".orchestrator.QueryMetricsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x0cmetric.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xd8\x02\n\x06Metric\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12*\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x07 \x01(\t\x12\x31\n\rcreation_date\x18\x08 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x34\n\x08metadata\x18\x12 \x03(\x0b\x32\".orchestrator.Metric.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xa3\x02\n\tNewMetric\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12.\n\x0b\x64\x65scription\x18\x03 \x01(\x0b\x32\x19.orchestrator.Addressable\x12*\n\x07\x61\x64\x64ress\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x35\n\x0fnew_permissions\x18\x06 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12\x37\n\x08metadata\x18\x12 \x03(\x0b\x32%.orchestrator.NewMetric.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x1d\n\x0eGetMetricParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"V\n\x14QueryMetricsResponse\x12%\n\x07metrics\x18\x01 \x03(\x0b\x32\x14.orchestrator.Metric\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\":\n\x11QueryMetricsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r2\xe6\x01\n\rMetricService\x12?\n\x0eRegisterMetric\x12\x17.orchestrator.NewMetric\x1a\x14.orchestrator.Metric\x12?\n\tGetMetric\x12\x1c.orchestrator.GetMetricParam\x1a\x14.orchestrator.Metric\x12S\n\x0cQueryMetrics\x12\x1f.orchestrator.QueryMetricsParam\x1a\".orchestrator.QueryMetricsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
-  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,algo__pb2.DESCRIPTOR,])
+  dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
 
 
 
@@ -63,8 +62,8 @@ _METRIC_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=387,
-  serialized_end=434,
+  serialized_start=375,
+  serialized_end=422,
 )
 
 _METRIC = _descriptor.Descriptor(
@@ -143,8 +142,8 @@ _METRIC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=90,
-  serialized_end=434,
+  serialized_start=78,
+  serialized_end=422,
 )
 
 
@@ -182,8 +181,8 @@ _NEWMETRIC_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=387,
-  serialized_end=434,
+  serialized_start=375,
+  serialized_end=422,
 )
 
 _NEWMETRIC = _descriptor.Descriptor(
@@ -248,8 +247,8 @@ _NEWMETRIC = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=437,
-  serialized_end=728,
+  serialized_start=425,
+  serialized_end=716,
 )
 
 
@@ -280,8 +279,8 @@ _GETMETRICPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=730,
-  serialized_end=759,
+  serialized_start=718,
+  serialized_end=747,
 )
 
 
@@ -319,8 +318,8 @@ _QUERYMETRICSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=761,
-  serialized_end=847,
+  serialized_start=749,
+  serialized_end=835,
 )
 
 
@@ -358,61 +357,8 @@ _QUERYMETRICSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=849,
-  serialized_end=907,
-)
-
-
-_BOARDITEM = _descriptor.Descriptor(
-  name='BoardItem',
-  full_name='orchestrator.BoardItem',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='algo', full_name='orchestrator.BoardItem.algo', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='metric_key', full_name='orchestrator.BoardItem.metric_key', index=1,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='compute_task_key', full_name='orchestrator.BoardItem.compute_task_key', index=2,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='perf', full_name='orchestrator.BoardItem.perf', index=3,
-      number=5, type=2, cpp_type=6, label=1,
-      has_default_value=False, default_value=float(0),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=909,
-  serialized_end=1014,
+  serialized_start=837,
+  serialized_end=895,
 )
 
 _METRIC_METADATAENTRY.containing_type = _METRIC
@@ -427,13 +373,11 @@ _NEWMETRIC.fields_by_name['address'].message_type = common__pb2._ADDRESSABLE
 _NEWMETRIC.fields_by_name['new_permissions'].message_type = common__pb2._NEWPERMISSIONS
 _NEWMETRIC.fields_by_name['metadata'].message_type = _NEWMETRIC_METADATAENTRY
 _QUERYMETRICSRESPONSE.fields_by_name['metrics'].message_type = _METRIC
-_BOARDITEM.fields_by_name['algo'].message_type = algo__pb2._ALGO
 DESCRIPTOR.message_types_by_name['Metric'] = _METRIC
 DESCRIPTOR.message_types_by_name['NewMetric'] = _NEWMETRIC
 DESCRIPTOR.message_types_by_name['GetMetricParam'] = _GETMETRICPARAM
 DESCRIPTOR.message_types_by_name['QueryMetricsResponse'] = _QUERYMETRICSRESPONSE
 DESCRIPTOR.message_types_by_name['QueryMetricsParam'] = _QUERYMETRICSPARAM
-DESCRIPTOR.message_types_by_name['BoardItem'] = _BOARDITEM
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Metric = _reflection.GeneratedProtocolMessageType('Metric', (_message.Message,), {
@@ -487,13 +431,6 @@ QueryMetricsParam = _reflection.GeneratedProtocolMessageType('QueryMetricsParam'
   })
 _sym_db.RegisterMessage(QueryMetricsParam)
 
-BoardItem = _reflection.GeneratedProtocolMessageType('BoardItem', (_message.Message,), {
-  'DESCRIPTOR' : _BOARDITEM,
-  '__module__' : 'metric_pb2'
-  # @@protoc_insertion_point(class_scope:orchestrator.BoardItem)
-  })
-_sym_db.RegisterMessage(BoardItem)
-
 
 DESCRIPTOR._options = None
 _METRIC_METADATAENTRY._options = None
@@ -506,8 +443,8 @@ _METRICSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1017,
-  serialized_end=1247,
+  serialized_start=898,
+  serialized_end=1128,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterMetric',
