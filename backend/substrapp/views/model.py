@@ -59,10 +59,10 @@ class ModelViewSet(PaginationMixin,
         return instance
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_model(key)
+            data = client.query_model(validated_key)
 
         replace_storage_addresses(request, data)
 

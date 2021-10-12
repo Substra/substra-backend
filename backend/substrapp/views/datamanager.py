@@ -145,12 +145,12 @@ class DataManagerViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             # use query_dataset instead of query_datamanager to
             # get the datamanager but also its samples
-            data = client.query_dataset(key)
+            data = client.query_dataset(validated_key)
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -163,7 +163,7 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                     instance = self.create_or_update_datamanager(
                         get_channel_name(request),
                         data,
-                        key
+                        validated_key
                     )
 
                 # For security reason, do not give access to local file address

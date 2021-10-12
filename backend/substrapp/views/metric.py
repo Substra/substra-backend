@@ -130,10 +130,10 @@ class MetricViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_metric(key)
+            data = client.query_metric(validated_key)
 
         # verify if objectve description exists for the frontend view
         # if not fetch it if it's possible
@@ -148,7 +148,7 @@ class MetricViewSet(mixins.CreateModelMixin,
                     instance = self.create_or_update_metric_description(
                         get_channel_name(request),
                         data,
-                        key
+                        validated_key
                     )
 
             # For security reason, do not give access to local file address

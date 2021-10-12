@@ -18,6 +18,7 @@ from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.views.utils import (
     ValidationExceptionError,
     get_channel_name,
+    to_string_uuid,
     validate_key)
 from substrapp.views.utils import TASK_CATEGORY, add_task_extra_information
 from substrapp.orchestrator import get_orchestrator_client
@@ -157,14 +158,16 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
             }
 
             if testtuple.get('traintuple_id'):
-                data['parent_task_keys'].append(testtuple.get('traintuple_id'))
-                algo_key = compute_tasks.get(testtuple.get('traintuple_id'), {}).get('algo_key')
+                # This conversion is required to accept hex UUID format for the traintuple_id
+                traintuple_id = to_string_uuid(testtuple.get('traintuple_id'))
+                data['parent_task_keys'].append(traintuple_id)
+                algo_key = compute_tasks.get(traintuple_id, {}).get('algo_key')
                 if algo_key:
                     data['algo_key'] = algo_key
                 else:
                     # The training task might already be registered and not part of the current batch
                     with get_orchestrator_client(get_channel_name(request)) as client:
-                        task = client.query_task(testtuple.get('traintuple_id'))
+                        task = client.query_task(traintuple_id)
                         data['algo_key'] = task['algo']['key']
             else:
                 raise ValidationExceptionError(
@@ -244,11 +247,11 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
-        validate_key(key)
+        validated_key = validate_key(key)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_compute_plan(key)
+                data = client.query_compute_plan(validated_key)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
@@ -287,12 +290,12 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
     def cancel(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
-        validate_key(key)
+        validated_key = validate_key(key)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 client.cancel_compute_plan(key)
-                compute_plan = client.query_compute_plan(key)
+                compute_plan = client.query_compute_plan(validated_key)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
@@ -304,19 +307,19 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
     def update_ledger(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
-        validate_key(key)
+        validated_key = validate_key(key)
 
         traintuples = request.data.get('traintuples', [])
-        validated_traintuples = self.parse_traintuples(request, traintuples, key)
+        validated_traintuples = self.parse_traintuples(request, traintuples, validated_key)
         composites = request.data.get('composite_traintuples', [])
-        validated_composites = self.parse_composite_traintuple(request, composites, key)
+        validated_composites = self.parse_composite_traintuple(request, composites, validated_key)
         aggregatetuples = request.data.get('aggregatetuples', [])
-        validated_aggregates = self.parse_aggregate_traintuple(request, aggregatetuples, key)
+        validated_aggregates = self.parse_aggregate_traintuple(request, aggregatetuples, validated_key)
         testtuples = request.data.get('testtuples', [])
         validated_testtuples = self.parse_testtuple(
             request,
             testtuples,
-            key,
+            validated_key,
             {**validated_traintuples, **validated_composites, **validated_aggregates}
         )
 
@@ -355,13 +358,13 @@ class GenericSubassetViewset(PaginationMixin,
             # to the chaincode
             return Response(status=status.HTTP_400_BAD_REQUEST, data='page_size param is required')
 
-        validate_key(compute_plan_pk)
+        validated_key = validate_key(compute_plan_pk)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_tasks(
                     category=TASK_CATEGORY[basename],
-                    compute_plan_key=compute_plan_pk)
+                    compute_plan_key=validated_key)
                 for datum in data:
                     datum = add_task_extra_information(client, basename, datum)
         except OrcError as rpc_error:

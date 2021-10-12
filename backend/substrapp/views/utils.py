@@ -123,11 +123,11 @@ class PermissionMixin(object):
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
 
-        validate_key(key)
+        validated_key = validate_key(key)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                asset = getattr(client, query_method)(key)
+                asset = getattr(client, query_method)(validated_key)
         except OrcError as rpc_error:
             return Response(
                 {"message": rpc_error.details}, status=rpc_error.http_status()
@@ -156,11 +156,11 @@ class PermissionMixin(object):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
-        validate_key(key)
+        validated_key = validate_key(key)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                asset = getattr(client, query_method)(key)
+                asset = getattr(client, query_method)(validated_key)
         except OrcError as rpc_error:
             return Response(
                 {"message": rpc_error.details}, status=rpc_error.http_status()
@@ -233,11 +233,23 @@ class PermissionMixin(object):
         return response
 
 
-def validate_key(key):
+def validate_key(key) -> str:
+    """Validates an asset key and return the validated key.
+
+    Args:
+        key (str): A valid UUID in string format
+
+    Raises:
+        BadRequestError: Raised if the key value isn't an UUID.
+
+    Returns:
+        str: A valid UUID in str standard format
+    """
     try:
-        uuid.UUID(key)
+        uid = to_string_uuid(key)
     except ValueError:
         raise BadRequestError(f'key is not a valid UUID: "{key}"')
+    return uid
 
 
 def validate_sort(sort):
@@ -287,3 +299,16 @@ def add_task_extra_information(client, basename, data):
             data[TASK_FIELD[basename]]['perfs'] = performances
 
     return data
+
+
+def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:
+    """converts an UUID string of form 32 char hex string or standard form to a standard form UUID.
+
+    Args:
+        str_or_hex_uuid (str): input UUID of form '412511b1-f9f5-49cc-a4bb-4f1640c877f6'
+            or '412511b1f9f549cca4bb4f1640c877f6'.
+
+    Returns:
+        str: UUID of form '412511b1-f9f5-49cc-a4bb-4f1640c877f6'
+    """
+    return str(uuid.UUID(str_or_hex_uuid))

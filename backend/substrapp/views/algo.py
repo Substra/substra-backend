@@ -136,10 +136,10 @@ class AlgoViewSet(mixins.CreateModelMixin,
         return instance
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_algo(key)
+            data = client.query_algo(validated_key)
 
         # verify if algo description exists for the frontend view
         # if not fetch it if it's possible
@@ -154,7 +154,7 @@ class AlgoViewSet(mixins.CreateModelMixin,
                     instance = self.create_or_update_algo_description(
                         get_channel_name(request),
                         data,
-                        key
+                        validated_key
                     )
 
                 # For security reason, do not give access to local file address
