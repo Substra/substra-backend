@@ -4,10 +4,10 @@ import tempfile
 from django.core.files import File
 from django.test import TestCase, override_settings
 
-from substrapp.models import Objective, DataManager, DataSample, Algo, Model
+from substrapp.models import Metric, DataManager, DataSample, Algo, Model
 from substrapp.utils import get_hash
 
-from .common import get_sample_objective, get_sample_datamanager, \
+from .common import get_sample_metric, get_sample_datamanager, \
     get_sample_script, get_sample_model, get_sample_zip_data_sample
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -20,15 +20,15 @@ class ModelTests(TestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def test_create_objective(self):
-        description, _, metrics, _ = get_sample_objective()
-        objective = Objective.objects.create(description=description,
-                                             metrics=metrics)
+    def test_create_metric(self):
+        description, _, metrics, _ = get_sample_metric()
+        metric = Metric.objects.create(description=description,
+                                       address=metrics)
 
-        self.assertEqual(objective.checksum, get_hash(description))
-        self.assertFalse(objective.validated)
-        self.assertIn(f'key {objective.key}', str(objective))
-        self.assertIn(f'validated {objective.validated}', str(objective))
+        self.assertEqual(metric.checksum, get_hash(description))
+        self.assertFalse(metric.validated)
+        self.assertIn(f'key {metric.key}', str(metric))
+        self.assertIn(f'validated {metric.validated}', str(metric))
 
     def test_create_datamanager(self):
         description, _, data_opener, _ = get_sample_datamanager()

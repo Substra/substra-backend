@@ -13,14 +13,14 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Objective, DataManager
+from substrapp.models import Metric, DataManager
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.serializers import OrchestratorDataManagerSerializer
 
 from grpc import StatusCode
 
-from ..common import (get_sample_datamanager, AuthenticatedClient, get_sample_objective,
+from ..common import (get_sample_datamanager, AuthenticatedClient, get_sample_metric,
                       get_sample_datamanager_metadata)
 
 MEDIA_ROOT = tempfile.mkdtemp()
@@ -39,25 +39,25 @@ class DataManagerQueryTests(APITestCase):
         self.data_description, self.data_description_filename, self.data_data_opener, \
             self.data_opener_filename = get_sample_datamanager()
 
-        self.objective_description, self.objective_description_filename, \
-            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+        self.metric_description, self.metric_description_filename, \
+            self.metric_metrics, self.metric_metrics_filename = get_sample_metric()
 
         self.url = reverse('substrapp:data_manager-list')
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
-    def get_default_datamanager_data(self, with_test_objective=False):
+    def get_default_datamanager_data(self, with_test_metric=False):
         json_ = {'name': 'slide opener',
                  'type': 'images',
                  'permissions': {
                      'public': True,
                      'authorized_ids': [],
                  },
-                 'objective_key': None}
+                 'metric_key': None}
 
-        if with_test_objective:
-            json_['objective_key'] = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
+        if with_test_metric:
+            json_['metric_key'] = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
 
         return {
             'json': json.dumps(json_),
@@ -65,20 +65,20 @@ class DataManagerQueryTests(APITestCase):
             'data_opener': self.data_data_opener
         }
 
-    def add_default_objective(self):
-        objective = Objective.objects.create(
-            description=self.objective_description,
-            metrics=self.objective_metrics)
+    def add_default_metric(self):
+        metric = Metric.objects.create(
+            description=self.metric_description,
+            address=self.metric_metrics)
 
-        self.objective_key = str(objective.key)
+        self.metric_key = str(metric.key)
 
     @parameterized.expand([
-        ("with_test_objective", True),
-        ("without_test_objective", False)
+        ("with_test_metric", True),
+        ("without_test_metric", False)
     ])
-    def test_add_datamanager_ok(self, _, with_test_objective):
-        self.add_default_objective()
-        data = self.get_default_datamanager_data(with_test_objective)
+    def test_add_datamanager_ok(self, _, with_test_metric):
+        self.add_default_metric()
+        data = self.get_default_datamanager_data(with_test_metric)
 
         extra = {
             'HTTP_SUBSTRA_CHANNEL_NAME': 'mychannel',

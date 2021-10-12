@@ -23,7 +23,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11\x63omputetask.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\nalgo.proto\x1a\x0c\x63ommon.proto\"\xfa\x04\n\x0b\x43omputeTask\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12 \n\x04\x61lgo\x18\x03 \x01(\x0b\x32\x12.orchestrator.Algo\x12\r\n\x05owner\x18\x04 \x01(\t\x12\x18\n\x10\x63ompute_plan_key\x18\x05 \x01(\t\x12\x18\n\x10parent_task_keys\x18\x06 \x03(\t\x12\x0c\n\x04rank\x18\x07 \x01(\x05\x12/\n\x06status\x18\x08 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskStatus\x12\x0e\n\x06worker\x18\t \x01(\t\x12\x31\n\rcreation_date\x18\n \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12*\n\x04test\x18\x0c \x01(\x0b\x32\x1a.orchestrator.TestTaskDataH\x00\x12,\n\x05train\x18\r \x01(\x0b\x32\x1b.orchestrator.TrainTaskDataH\x00\x12\x39\n\tcomposite\x18\x0e \x01(\x0b\x32$.orchestrator.CompositeTrainTaskDataH\x00\x12\x39\n\taggregate\x18\x0f \x01(\x0b\x32$.orchestrator.AggregateTrainTaskDataH\x00\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.ComputeTask.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04\x64\x61ta\"\xeb\x03\n\x0eNewComputeTask\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12\x10\n\x08\x61lgo_key\x18\x03 \x01(\t\x12\x18\n\x10\x63ompute_plan_key\x18\x04 \x01(\t\x12\x18\n\x10parent_task_keys\x18\x05 \x03(\t\x12-\n\x04test\x18\x0c \x01(\x0b\x32\x1d.orchestrator.NewTestTaskDataH\x00\x12/\n\x05train\x18\r \x01(\x0b\x32\x1e.orchestrator.NewTrainTaskDataH\x00\x12<\n\tcomposite\x18\x0e \x01(\x0b\x32\'.orchestrator.NewCompositeTrainTaskDataH\x00\x12<\n\taggregate\x18\x0f \x01(\x0b\x32\'.orchestrator.NewAggregateTrainTaskDataH\x00\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewComputeTask.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04\x64\x61ta\"y\n\rTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x34\n\x11model_permissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\"F\n\x10NewTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\"l\n\x0cTestTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x15\n\robjective_key\x18\x03 \x01(\t\x12\x11\n\tcertified\x18\x04 \x01(\x08\"\\\n\x0fNewTestTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x15\n\robjective_key\x18\x03 \x01(\t\"\xb7\x01\n\x16\x43ompositeTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x33\n\x10head_permissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\x34\n\x11trunk_permissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\"\x88\x01\n\x19NewCompositeTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x37\n\x11trunk_permissions\x18\x04 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\"N\n\x16\x41ggregateTrainTaskData\x12\x34\n\x11model_permissions\x18\x02 \x01(\x0b\x32\x19.orchestrator.Permissions\"+\n\x19NewAggregateTrainTaskData\x12\x0e\n\x06worker\x18\x02 \x01(\t\"A\n\x12RegisterTasksParam\x12+\n\x05tasks\x18\x01 \x03(\x0b\x32\x1c.orchestrator.NewComputeTask\"\x17\n\x15RegisterTasksResponse\"\xb3\x01\n\x0fTaskQueryFilter\x12\x0e\n\x06worker\x18\x01 \x01(\t\x12/\n\x06status\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskStatus\x12\x33\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12\x18\n\x10\x63ompute_plan_key\x18\x04 \x01(\t\x12\x10\n\x08\x61lgo_key\x18\x05 \x01(\t\"g\n\x0fQueryTasksParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.TaskQueryFilter\"W\n\x12QueryTasksResponse\x12(\n\x05tasks\x18\x01 \x03(\x0b\x32\x19.orchestrator.ComputeTask\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x1b\n\x0cGetTaskParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"n\n\x14\x41pplyTaskActionParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12/\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskAction\x12\x0b\n\x03log\x18\x03 \x01(\t\"\x19\n\x17\x41pplyTaskActionResponse*n\n\x13\x43omputeTaskCategory\x12\x10\n\x0cTASK_UNKNOWN\x10\x00\x12\x0e\n\nTASK_TRAIN\x10\x01\x12\x12\n\x0eTASK_AGGREGATE\x10\x02\x12\x12\n\x0eTASK_COMPOSITE\x10\x03\x12\r\n\tTASK_TEST\x10\x04*\x97\x01\n\x11\x43omputeTaskStatus\x12\x12\n\x0eSTATUS_UNKNOWN\x10\x00\x12\x12\n\x0eSTATUS_WAITING\x10\x01\x12\x0f\n\x0bSTATUS_TODO\x10\x02\x12\x10\n\x0cSTATUS_DOING\x10\x03\x12\x0f\n\x0bSTATUS_DONE\x10\x04\x12\x13\n\x0fSTATUS_CANCELED\x10\x05\x12\x11\n\rSTATUS_FAILED\x10\x06*u\n\x11\x43omputeTaskAction\x12\x17\n\x13TASK_ACTION_UNKNOWN\x10\x00\x12\x15\n\x11TASK_ACTION_DOING\x10\x01\x12\x18\n\x14TASK_ACTION_CANCELED\x10\x02\x12\x16\n\x12TASK_ACTION_FAILED\x10\x03\x32\xdb\x02\n\x12\x43omputeTaskService\x12V\n\rRegisterTasks\x12 .orchestrator.RegisterTasksParam\x1a#.orchestrator.RegisterTasksResponse\x12M\n\nQueryTasks\x12\x1d.orchestrator.QueryTasksParam\x1a .orchestrator.QueryTasksResponse\x12@\n\x07GetTask\x12\x1a.orchestrator.GetTaskParam\x1a\x19.orchestrator.ComputeTask\x12\\\n\x0f\x41pplyTaskAction\x12\".orchestrator.ApplyTaskActionParam\x1a%.orchestrator.ApplyTaskActionResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x11\x63omputetask.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\nalgo.proto\x1a\x0c\x63ommon.proto\"\xfa\x04\n\x0b\x43omputeTask\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12 \n\x04\x61lgo\x18\x03 \x01(\x0b\x32\x12.orchestrator.Algo\x12\r\n\x05owner\x18\x04 \x01(\t\x12\x18\n\x10\x63ompute_plan_key\x18\x05 \x01(\t\x12\x18\n\x10parent_task_keys\x18\x06 \x03(\t\x12\x0c\n\x04rank\x18\x07 \x01(\x05\x12/\n\x06status\x18\x08 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskStatus\x12\x0e\n\x06worker\x18\t \x01(\t\x12\x31\n\rcreation_date\x18\n \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12*\n\x04test\x18\x0c \x01(\x0b\x32\x1a.orchestrator.TestTaskDataH\x00\x12,\n\x05train\x18\r \x01(\x0b\x32\x1b.orchestrator.TrainTaskDataH\x00\x12\x39\n\tcomposite\x18\x0e \x01(\x0b\x32$.orchestrator.CompositeTrainTaskDataH\x00\x12\x39\n\taggregate\x18\x0f \x01(\x0b\x32$.orchestrator.AggregateTrainTaskDataH\x00\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.ComputeTask.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04\x64\x61ta\"\xeb\x03\n\x0eNewComputeTask\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x33\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12\x10\n\x08\x61lgo_key\x18\x03 \x01(\t\x12\x18\n\x10\x63ompute_plan_key\x18\x04 \x01(\t\x12\x18\n\x10parent_task_keys\x18\x05 \x03(\t\x12-\n\x04test\x18\x0c \x01(\x0b\x32\x1d.orchestrator.NewTestTaskDataH\x00\x12/\n\x05train\x18\r \x01(\x0b\x32\x1e.orchestrator.NewTrainTaskDataH\x00\x12<\n\tcomposite\x18\x0e \x01(\x0b\x32\'.orchestrator.NewCompositeTrainTaskDataH\x00\x12<\n\taggregate\x18\x0f \x01(\x0b\x32\'.orchestrator.NewAggregateTrainTaskDataH\x00\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewComputeTask.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\x42\x06\n\x04\x64\x61ta\"y\n\rTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x34\n\x11model_permissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\"F\n\x10NewTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\"V\n\x0cTestTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x12\n\nmetric_key\x18\x03 \x01(\t\"Y\n\x0fNewTestTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x12\n\nmetric_key\x18\x03 \x01(\t\"\xb7\x01\n\x16\x43ompositeTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x33\n\x10head_permissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\x34\n\x11trunk_permissions\x18\x06 \x01(\x0b\x32\x19.orchestrator.Permissions\"\x88\x01\n\x19NewCompositeTrainTaskData\x12\x18\n\x10\x64\x61ta_manager_key\x18\x01 \x01(\t\x12\x18\n\x10\x64\x61ta_sample_keys\x18\x02 \x03(\t\x12\x37\n\x11trunk_permissions\x18\x04 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\"N\n\x16\x41ggregateTrainTaskData\x12\x34\n\x11model_permissions\x18\x02 \x01(\x0b\x32\x19.orchestrator.Permissions\"+\n\x19NewAggregateTrainTaskData\x12\x0e\n\x06worker\x18\x02 \x01(\t\"A\n\x12RegisterTasksParam\x12+\n\x05tasks\x18\x01 \x03(\x0b\x32\x1c.orchestrator.NewComputeTask\"\x17\n\x15RegisterTasksResponse\"\xb3\x01\n\x0fTaskQueryFilter\x12\x0e\n\x06worker\x18\x01 \x01(\t\x12/\n\x06status\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskStatus\x12\x33\n\x08\x63\x61tegory\x18\x03 \x01(\x0e\x32!.orchestrator.ComputeTaskCategory\x12\x18\n\x10\x63ompute_plan_key\x18\x04 \x01(\t\x12\x10\n\x08\x61lgo_key\x18\x05 \x01(\t\"g\n\x0fQueryTasksParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12-\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1d.orchestrator.TaskQueryFilter\"W\n\x12QueryTasksResponse\x12(\n\x05tasks\x18\x01 \x03(\x0b\x32\x19.orchestrator.ComputeTask\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x1b\n\x0cGetTaskParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"n\n\x14\x41pplyTaskActionParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\x12/\n\x06\x61\x63tion\x18\x02 \x01(\x0e\x32\x1f.orchestrator.ComputeTaskAction\x12\x0b\n\x03log\x18\x03 \x01(\t\"\x19\n\x17\x41pplyTaskActionResponse*n\n\x13\x43omputeTaskCategory\x12\x10\n\x0cTASK_UNKNOWN\x10\x00\x12\x0e\n\nTASK_TRAIN\x10\x01\x12\x12\n\x0eTASK_AGGREGATE\x10\x02\x12\x12\n\x0eTASK_COMPOSITE\x10\x03\x12\r\n\tTASK_TEST\x10\x04*\x97\x01\n\x11\x43omputeTaskStatus\x12\x12\n\x0eSTATUS_UNKNOWN\x10\x00\x12\x12\n\x0eSTATUS_WAITING\x10\x01\x12\x0f\n\x0bSTATUS_TODO\x10\x02\x12\x10\n\x0cSTATUS_DOING\x10\x03\x12\x0f\n\x0bSTATUS_DONE\x10\x04\x12\x13\n\x0fSTATUS_CANCELED\x10\x05\x12\x11\n\rSTATUS_FAILED\x10\x06*u\n\x11\x43omputeTaskAction\x12\x17\n\x13TASK_ACTION_UNKNOWN\x10\x00\x12\x15\n\x11TASK_ACTION_DOING\x10\x01\x12\x18\n\x14TASK_ACTION_CANCELED\x10\x02\x12\x16\n\x12TASK_ACTION_FAILED\x10\x03\x32\xdb\x02\n\x12\x43omputeTaskService\x12V\n\rRegisterTasks\x12 .orchestrator.RegisterTasksParam\x1a#.orchestrator.RegisterTasksResponse\x12M\n\nQueryTasks\x12\x1d.orchestrator.QueryTasksParam\x1a .orchestrator.QueryTasksResponse\x12@\n\x07GetTask\x12\x1a.orchestrator.GetTaskParam\x1a\x19.orchestrator.ComputeTask\x12\\\n\x0f\x41pplyTaskAction\x12\".orchestrator.ApplyTaskActionParam\x1a%.orchestrator.ApplyTaskActionResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,algo__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
 
@@ -62,8 +62,8 @@ _COMPUTETASKCATEGORY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2710,
-  serialized_end=2820,
+  serialized_start=2685,
+  serialized_end=2795,
 )
 _sym_db.RegisterEnumDescriptor(_COMPUTETASKCATEGORY)
 
@@ -113,8 +113,8 @@ _COMPUTETASKSTATUS = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2823,
-  serialized_end=2974,
+  serialized_start=2798,
+  serialized_end=2949,
 )
 _sym_db.RegisterEnumDescriptor(_COMPUTETASKSTATUS)
 
@@ -149,8 +149,8 @@ _COMPUTETASKACTION = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=2976,
-  serialized_end=3093,
+  serialized_start=2951,
+  serialized_end=3068,
 )
 _sym_db.RegisterEnumDescriptor(_COMPUTETASKACTION)
 
@@ -593,16 +593,9 @@ _TESTTASKDATA = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='objective_key', full_name='orchestrator.TestTaskData.objective_key', index=2,
+      name='metric_key', full_name='orchestrator.TestTaskData.metric_key', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='certified', full_name='orchestrator.TestTaskData.certified', index=3,
-      number=4, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
@@ -619,7 +612,7 @@ _TESTTASKDATA = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1420,
-  serialized_end=1528,
+  serialized_end=1506,
 )
 
 
@@ -646,7 +639,7 @@ _NEWTESTTASKDATA = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='objective_key', full_name='orchestrator.NewTestTaskData.objective_key', index=2,
+      name='metric_key', full_name='orchestrator.NewTestTaskData.metric_key', index=2,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -664,8 +657,8 @@ _NEWTESTTASKDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1530,
-  serialized_end=1622,
+  serialized_start=1508,
+  serialized_end=1597,
 )
 
 
@@ -717,8 +710,8 @@ _COMPOSITETRAINTASKDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1625,
-  serialized_end=1808,
+  serialized_start=1600,
+  serialized_end=1783,
 )
 
 
@@ -763,8 +756,8 @@ _NEWCOMPOSITETRAINTASKDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1811,
-  serialized_end=1947,
+  serialized_start=1786,
+  serialized_end=1922,
 )
 
 
@@ -795,8 +788,8 @@ _AGGREGATETRAINTASKDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1949,
-  serialized_end=2027,
+  serialized_start=1924,
+  serialized_end=2002,
 )
 
 
@@ -827,8 +820,8 @@ _NEWAGGREGATETRAINTASKDATA = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2029,
-  serialized_end=2072,
+  serialized_start=2004,
+  serialized_end=2047,
 )
 
 
@@ -859,8 +852,8 @@ _REGISTERTASKSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2074,
-  serialized_end=2139,
+  serialized_start=2049,
+  serialized_end=2114,
 )
 
 
@@ -884,8 +877,8 @@ _REGISTERTASKSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2141,
-  serialized_end=2164,
+  serialized_start=2116,
+  serialized_end=2139,
 )
 
 
@@ -944,8 +937,8 @@ _TASKQUERYFILTER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2167,
-  serialized_end=2346,
+  serialized_start=2142,
+  serialized_end=2321,
 )
 
 
@@ -990,8 +983,8 @@ _QUERYTASKSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2348,
-  serialized_end=2451,
+  serialized_start=2323,
+  serialized_end=2426,
 )
 
 
@@ -1029,8 +1022,8 @@ _QUERYTASKSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2453,
-  serialized_end=2540,
+  serialized_start=2428,
+  serialized_end=2515,
 )
 
 
@@ -1061,8 +1054,8 @@ _GETTASKPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2542,
-  serialized_end=2569,
+  serialized_start=2517,
+  serialized_end=2544,
 )
 
 
@@ -1107,8 +1100,8 @@ _APPLYTASKACTIONPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2571,
-  serialized_end=2681,
+  serialized_start=2546,
+  serialized_end=2656,
 )
 
 
@@ -1132,8 +1125,8 @@ _APPLYTASKACTIONRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2683,
-  serialized_end=2708,
+  serialized_start=2658,
+  serialized_end=2683,
 )
 
 _COMPUTETASK_METADATAENTRY.containing_type = _COMPUTETASK
@@ -1365,8 +1358,8 @@ _COMPUTETASKSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=3096,
-  serialized_end=3443,
+  serialized_start=3071,
+  serialized_end=3418,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterTasks',

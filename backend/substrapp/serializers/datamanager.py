@@ -22,7 +22,6 @@ class DataManagerSerializer(DynamicFieldsModelSerializer):
 class OrchestratorDataManagerSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=100)
     type = serializers.CharField(max_length=30)
-    objective_key = serializers.UUIDField(required=False, allow_null=True)
     permissions = PermissionsSerializer()
     metadata = DictField(child=CharField(), required=False, allow_null=True)
 
@@ -31,7 +30,6 @@ class OrchestratorDataManagerSerializer(serializers.Serializer):
         name = validated_data.get('name')
         data_type = validated_data.get('type')
         permissions = validated_data.get('permissions')
-        objective_key = validated_data.get('objective_key')
         metadata = validated_data.get('metadata')
 
         current_site = settings.DEFAULT_DOMAIN
@@ -48,7 +46,6 @@ class OrchestratorDataManagerSerializer(serializers.Serializer):
                 'checksum': get_hash(instance.description),
                 'storage_address': current_site + reverse('substrapp:data_manager-description', args=[instance.key])
             },
-            'objective_key': str(objective_key) if objective_key else "",
             'new_permissions': {
                 'public': permissions.get('public'),
                 'authorized_ids': permissions.get('authorized_ids'),

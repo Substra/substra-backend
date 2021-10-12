@@ -86,7 +86,7 @@ def add_metrics_to_buffer(ctx: Context) -> None:
         # metrics already exists
         return
 
-    metrics_content = _download_objective(ctx)
+    metrics_content = _download_metric(ctx)
     uncompress_content(metrics_content, dst)
 
 
@@ -300,12 +300,12 @@ def _download_algo(ctx: Context) -> bytes:
     )
 
 
-def _download_objective(ctx: Context) -> bytes:
+def _download_metric(ctx: Context) -> bytes:
     return get_asset_content(
         ctx.channel_name,
-        ctx.objective["metrics"]["storage_address"],
-        ctx.objective["owner"],
-        ctx.objective["metrics"]["checksum"],
+        ctx.metric["address"]["storage_address"],
+        ctx.metric["owner"],
+        ctx.metric["address"]["checksum"],
     )
 
 

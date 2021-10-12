@@ -2,7 +2,7 @@
 
 from .datasample import DataSampleViewSet
 from .datamanager import DataManagerViewSet, DataManagerPermissionViewSet
-from .objective import ObjectiveViewSet, ObjectivePermissionViewSet
+from .metric import MetricViewSet, MetricPermissionViewSet
 from .model import ModelViewSet, ModelPermissionViewSet
 from .algo import AlgoViewSet, AlgoPermissionViewSet
 from .computetask import ComputeTaskViewSet
@@ -12,8 +12,8 @@ __all__ = [
     'DataSampleViewSet',
     'DataManagerViewSet',
     'DataManagerPermissionViewSet',
-    'ObjectiveViewSet',
-    'ObjectivePermissionViewSet',
+    'MetricViewSet',
+    'MetricPermissionViewSet',
     'ModelViewSet',
     'ModelPermissionViewSet',
     'AlgoViewSet',

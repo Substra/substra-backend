@@ -10,7 +10,7 @@ logger = structlog.get_logger(__name__)
 FILTER_QUERIES = {
     'dataset': 'query_datamanagers',
     'algo': 'query_algos',
-    'objective': 'query_objectives',
+    'metric': 'query_metrics',
     'model': 'query_models',
 }
 

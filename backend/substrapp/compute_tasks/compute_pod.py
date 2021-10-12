@@ -16,7 +16,7 @@ class Label:
     PodName = "substra.ai/pod-name"
     ComputePlanKey = "substra.ai/compute-plan-key"
     AlgoKey = "substra.ai/algo-key"
-    ObjectiveKey = "substra.ai/testtuple-eval-objective-key"
+    MetricKey = "substra.ai/testtuple-eval-metric-key"
     RandomToken = "substra.ai/random-token"
 
     # Values
@@ -27,26 +27,26 @@ class Label:
 class ComputePod:
     compute_plan_key: str = None
     algo_key: str = None
-    objective_key: str = None  # only if this is a testtuple eval pod
+    metric_key: str = None  # only if this is a testtuple eval pod
 
     def __init__(
         self,
         compute_plan_key: str,
         algo_key: str,
-        objective_key: str,
+        metric_key: str,
     ):
         self.compute_plan_key = compute_plan_key
         self.algo_key = algo_key
-        self.objective_key = objective_key
+        self.metric_key = metric_key
 
     @property
     def is_testtuple_eval(self) -> bool:
-        return self.objective_key is not None
+        return self.metric_key is not None
 
     @property
     def name(self) -> str:
         if self.is_testtuple_eval:
-            return f"substra-{self.compute_plan_key[:8]}-eval-{self.objective_key[:8]}"
+            return f"substra-{self.compute_plan_key[:8]}-eval-{self.metric_key[:8]}"
         else:
             return f"substra-{self.compute_plan_key[:8]}-compute-{self.algo_key[:8]}"
 
@@ -61,7 +61,7 @@ class ComputePod:
 
     @property
     def label_selector(self) -> str:
-        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.AlgoKey, Label.ObjectiveKey]})
+        return ",".join({f"{k}={self.labels[k]}" for k in [Label.ComputePlanKey, Label.AlgoKey, Label.MetricKey]})
 
     @property
     def labels(self) -> object:
@@ -71,7 +71,7 @@ class ComputePod:
             Label.Component: Label.Component_Compute,
             Label.ComputePlanKey: self.compute_plan_key,
             Label.AlgoKey: self.algo_key or "",
-            Label.ObjectiveKey: self.objective_key or "",
+            Label.MetricKey: self.metric_key or "",
         }
 
 

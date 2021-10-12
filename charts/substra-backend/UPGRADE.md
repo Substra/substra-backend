@@ -1,5 +1,8 @@
 ## unreleased
 
+## 12.0.0
+- Note that the objectives volume is renamed metrics
+
 ## 11.0.0
 
 1. Set `hooks.deleteWorkerPvc.enabled` to the desired value. Note that delete hooks are triggered only when deploying with helm.

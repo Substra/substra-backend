@@ -124,7 +124,7 @@ backend:
         size: "10Gi"
       datamanagers:
         size: "10Gi"
-      objectives:
+      metrics:
         size: "10Gi"
 
 outgoingNodes: []
@@ -273,7 +273,7 @@ celeryworker:
     volumes:
       subtuple:
         # subtuple size should be *at least* equal to the combined size of the following PVCs:
-        # datasamples, models, objectives, datamanagers, algos, compositealgos, and aggregatealgos.
+        # datasamples, models, metrics, datamanagers, algos, compositealgos, and aggregatealgos.
         size: "10Gi"
 
 events:

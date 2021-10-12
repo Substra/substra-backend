@@ -16,7 +16,7 @@ from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_datamanager, AuthenticatedClient, encode_filter
-from ..assets import objective, datamanager
+from ..assets import metric, datamanager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = 'mychannel'
@@ -118,7 +118,7 @@ class DataManagerViewTests(APITestCase):
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, 'query_dataset', side_effect=error):
-            response = self.client.get(f'{self.url}{objective[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_datamanager_list_storage_addresses_update(self):

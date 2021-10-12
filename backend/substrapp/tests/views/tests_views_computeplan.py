@@ -52,7 +52,7 @@ class ComputePlanViewTests(APITestCase):
             }],
             'testtuples': [{
                 'traintuple_id': dummy_key,
-                'objective_key': dummy_key,
+                'metric_key': dummy_key,
                 'data_manager_key': dummy_key,
             }]
         }

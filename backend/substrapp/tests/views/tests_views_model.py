@@ -20,7 +20,7 @@ from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_model, AuthenticatedClient
-from ..assets import objective, model
+from ..assets import metric, model
 
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -105,7 +105,7 @@ class ModelViewTests(APITestCase):
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, 'query_model', side_effect=error):
-            response = self.client.get(f'{self.url}{objective[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_model_download_by_node_for_worker(self):

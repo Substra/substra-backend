@@ -69,18 +69,18 @@ def get_temporary_text_file(contents, filename):
     return text_file
 
 
-def get_sample_objective():
+def get_sample_metric():
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
 
-    description_content = "Super objective"
+    description_content = "Super metric"
     description_filename = "description.md"
     description = get_temporary_text_file(description_content, description_filename)
 
     metrics_filename = "metrics.zip"
     f = BytesIO(b'')
     with open(os.path.join(dir_path,
-                           '../../../fixtures/chunantes/objectives/objective0/metrics.zip'), 'rb') as zip_file:
+                           '../../../fixtures/chunantes/metrics/metric0/metrics.zip'), 'rb') as zip_file:
         flength = f.write(zip_file.read())
     metrics = InMemoryUploadedFile(f, None, metrics_filename,
                                    'application/zip', flength, None)
@@ -223,7 +223,7 @@ def get_sample_algo_metadata():
     }
 
 
-def get_sample_objective_metadata():
+def get_sample_metric_metadata():
     return {
         'owner': 'foo',
         'permissions': DEFAULT_PERMISSIONS,
@@ -248,9 +248,9 @@ class FakeMetrics(object):
         return b'foo'
 
 
-class FakeObjective(object):
+class FakeMetric(object):
     def __init__(self, filepath='path'):
-        self.metrics = FakeMetrics(filepath)
+        self.file = FakeMetrics(filepath)
 
 
 class FakeDataManager(object):

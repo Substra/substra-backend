@@ -50,7 +50,7 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         algos = client.query_algos(compute_plan_key=compute_plan_key)
         test_tasks = client.query_tasks(category=computetask_pb2.TASK_TEST, compute_plan_key=compute_plan_key)
     algo_keys = [x["key"] for x in algos]
-    objective_keys = [x["test"]["objective_key"] for x in test_tasks]
+    metric_keys = [x["test"]["metric_key"] for x in test_tasks]
 
     # See lock function PyDoc for explanation as to why this lock is necessary
     with get_compute_plan_lock(compute_plan_key):
@@ -71,7 +71,7 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
 
     if not settings.DEBUG_QUICK_IMAGE:
         _remove_docker_images(ALGO_IMAGE_PREFIX, algo_keys)
-        _remove_docker_images(METRICS_IMAGE_PREFIX, objective_keys)
+        _remove_docker_images(METRICS_IMAGE_PREFIX, metric_keys)
 
 
 def _remove_docker_images(image_prefix, keys):

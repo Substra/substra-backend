@@ -3,7 +3,7 @@ import grpc
 import structlog
 import orchestrator.node_pb2 as node_pb2
 import orchestrator.algo_pb2 as algo_pb2
-import orchestrator.objective_pb2 as objective_pb2
+import orchestrator.metric_pb2 as metric_pb2
 import orchestrator.datasample_pb2 as datasample_pb2
 import orchestrator.datamanager_pb2 as datamanager_pb2
 import orchestrator.dataset_pb2 as dataset_pb2
@@ -17,7 +17,7 @@ import orchestrator.info_pb2 as info_pb2
 from orchestrator.error import OrcError
 from orchestrator.node_pb2_grpc import NodeServiceStub
 from orchestrator.algo_pb2_grpc import AlgoServiceStub
-from orchestrator.objective_pb2_grpc import ObjectiveServiceStub
+from orchestrator.metric_pb2_grpc import MetricServiceStub
 from orchestrator.datasample_pb2_grpc import DataSampleServiceStub
 from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
 from orchestrator.dataset_pb2_grpc import DatasetServiceStub
@@ -149,7 +149,7 @@ class OrchestratorClient:
 
         self._node_client = NodeServiceStub(self._channel)
         self._algo_client = AlgoServiceStub(self._channel)
-        self._objective_client = ObjectiveServiceStub(self._channel)
+        self._metric_client = MetricServiceStub(self._channel)
         self._datasample_client = DataSampleServiceStub(self._channel)
         self._datamanager_client = DataManagerServiceStub(self._channel)
         self._dataset_client = DatasetServiceStub(self._channel)
@@ -215,45 +215,35 @@ class OrchestratorClient:
         return res
 
     @grpc_retry
-    def register_objective(self, args):
-        data = self._objective_client.RegisterObjective(
-            objective_pb2.NewObjective(**args), metadata=self._metadata
+    def register_metric(self, args):
+        data = self._metric_client.RegisterMetric(
+            metric_pb2.NewMetric(**args), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_objective(self, key):
-        data = self._objective_client.GetObjective(
-            objective_pb2.GetObjectiveParam(key=key), metadata=self._metadata
+    def query_metric(self, key):
+        data = self._metric_client.GetMetric(
+            metric_pb2.GetMetricParam(key=key), metadata=self._metadata
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_objectives(self):
+    def query_metrics(self):
         res = []
         page_token = ""
         while True:
-            data = self._objective_client.QueryObjectives(
-                objective_pb2.QueryObjectivesParam(page_token=page_token),
+            data = self._metric_client.QueryMetrics(
+                metric_pb2.QueryMetricsParam(page_token=page_token),
                 metadata=self._metadata,
             )
             data = MessageToDict(data, **CONVERT_SETTINGS)
-            objectives = data.get("objectives", [])
+            metrics = data.get("metrics", [])
             page_token = data.get("next_page_token")
-            res.extend(objectives)
-            if page_token == "" or not objectives:
+            res.extend(metrics)
+            if page_token == "" or not metrics:
                 break
         return res
-
-    @grpc_retry
-    def query_objective_leaderboard(self, key, sort="desc"):
-        data = self._objective_client.GetLeaderboard(
-            objective_pb2.LeaderboardQueryParam(
-                objective_key=key, sort_order=SORT_ORDER[sort]
-            ),
-            metadata=self._metadata,
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def register_datasamples(self, args):

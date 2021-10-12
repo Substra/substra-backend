@@ -16,7 +16,7 @@ from substrapp.views import ComputeTaskViewSet
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..assets import compositetraintuple, objective
+from ..assets import compositetraintuple, metric
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -91,7 +91,7 @@ class CompositeTraintupleViewTests(APITestCase):
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
-            response = self.client.get(f'{self.url}{objective[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetraintuple_list_filter_tag(self):

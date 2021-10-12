@@ -70,7 +70,7 @@ class OrchestratorCompositeTrainTaskSerializer(GenericComputeTaskSerializer):
 
 class OrchestratorTestTaskSerializer(GenericComputeTaskSerializer):
     data_manager_key = serializers.UUIDField(required=False, allow_null=True)
-    objective_key = serializers.UUIDField(required=False)
+    metric_key = serializers.UUIDField(required=False)
     data_sample_keys = serializers.ListField(child=serializers.UUIDField(),
                                              min_length=0, required=False, allow_null=True)
 
@@ -81,7 +81,7 @@ class OrchestratorTestTaskSerializer(GenericComputeTaskSerializer):
         datamanager_key = validated_data.get('data_manager_key', '') or ''
 
         args['test'] = {
-            'objective_key': str(validated_data.get('objective_key')),
+            'metric_key': str(validated_data.get('metric_key')),
             'data_manager_key': str(datamanager_key),
             'data_sample_keys': [str(ds) for ds in datasample_keys],
         }

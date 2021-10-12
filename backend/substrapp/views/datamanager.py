@@ -50,7 +50,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
                 'name': request.data.get('name'),
                 'permissions': request.data.get('permissions'),
                 'type': request.data.get('type'),
-                'objective_key': request.data.get('objective_key'),
                 'metadata': request.data.get('metadata'),
                 'instance': instance
             },
@@ -220,33 +219,6 @@ class DataManagerViewSet(mixins.CreateModelMixin,
             replace_storage_addresses(request, data_manager)
 
         return self.paginate_response(data)
-
-    # We cannot change the method name as it needs to change substra CLI
-    @action(methods=['post'], detail=True)
-    def update_ledger(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = self.kwargs[lookup_url_kwarg]
-
-        validate_key(key)
-
-        objective_key = request.data.get('objective_key')
-
-        args = {
-            'key': str(key),
-            'objective_key': str(objective_key) if objective_key else "",
-        }
-
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                client.update_datamanager(args)
-                data = client.query_datamanager(key)
-        except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
 
 
 class DataManagerPermissionViewSet(PermissionMixin,

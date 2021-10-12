@@ -3,7 +3,7 @@
 from .datasample import (DataSampleSerializer,
                          OrchestratorDataSampleSerializer,
                          OrchestratorDataSampleUpdateSerializer)
-from .objective import ObjectiveSerializer, OrchestratorObjectiveSerializer
+from .metric import MetricSerializer, OrchestratorMetricSerializer
 from .datamanager import DataManagerSerializer, OrchestratorDataManagerSerializer
 from .algo import AlgoSerializer, OrchestratorAlgoSerializer
 from .computetask import (OrchestratorTrainTaskSerializer,
@@ -19,8 +19,8 @@ __all__ = [
     'OrchestratorDataSampleUpdateSerializer',
     'DataManagerSerializer',
     'OrchestratorDataManagerSerializer',
-    'ObjectiveSerializer',
-    'OrchestratorObjectiveSerializer',
+    'MetricSerializer',
+    'OrchestratorMetricSerializer',
     'AlgoSerializer',
     'OrchestratorAlgoSerializer',
     'OrchestratorTrainTaskSerializer',

@@ -28,7 +28,7 @@ MEDIA_ROOT = tempfile.mkdtemp()
                    LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
-    objective_key = None
+    metric_key = None
 
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):

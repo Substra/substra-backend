@@ -12,8 +12,8 @@ import substrapp.views as views
 # Create a router and register our viewsets with it.
 
 router = DefaultRouter()
-router.register(r'objective', views.ObjectiveViewSet, basename='objective')
-router.register(r'objective', views.ObjectivePermissionViewSet, basename='objective')
+router.register(r'metric', views.MetricViewSet, basename='metric')
+router.register(r'metric', views.MetricPermissionViewSet, basename='metric')
 router.register(r'model', views.ModelViewSet, basename='model')
 router.register(r'model', views.ModelPermissionViewSet, basename='model')
 router.register(r'data_sample', views.DataSampleViewSet, basename='data_sample')

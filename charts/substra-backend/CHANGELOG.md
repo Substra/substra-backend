@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.0
+
+### Changed
+- (BREAKING) Replace pvc name objectives by metrics
+
 ## 11.0.0
 
 See [UPGRADE.md](./UPGRADE.md#11.0.0)

@@ -66,7 +66,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.persistence.hostPath` | Host path for PVC Storage in case of local storage for the server data volumes | (undefined) |
 | `backend.persistence.servermedias.hostPath` | Host path for server medias, in case of local storage | (undefined) |
 | `backend.persistence.servermedias.size` |  PVC Storage Request for server medias volume | `10Gi` |
-| `backend.persistence.volumes` | Volume definitions for the server assets storage | `algos, ..., objectives` |
+| `backend.persistence.volumes` | Volume definitions for the server assets storage | `algos, ..., metrics` |
 | `backend.persistence.volumes[].size` | Server volume size | |
 | `outgoingNodes[]` | Outgoing nodes credentials for substra-backend node-to-node communication | `[]` |
 | `outgoingNodes[].name` | Outgoing node username | (undefined) |

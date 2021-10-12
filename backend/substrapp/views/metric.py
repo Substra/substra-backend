@@ -9,12 +9,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from substrapp import exceptions
-from substrapp.models import Objective
-from substrapp.serializers import ObjectiveSerializer, OrchestratorObjectiveSerializer
+from substrapp.models import Metric
+from substrapp.serializers import MetricSerializer, OrchestratorMetricSerializer
 
 from substrapp.utils import get_hash
 from substrapp.views.utils import (PermissionMixin, ValidationExceptionError, validate_key,
-                                   get_remote_asset, validate_sort, node_has_process_permission,
+                                   get_remote_asset, node_has_process_permission,
                                    get_channel_name)
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
@@ -27,19 +27,19 @@ import structlog
 logger = structlog.get_logger(__name__)
 
 
-def replace_storage_addresses(request, objective):
-    objective['description']['storage_address'] = request.build_absolute_uri(
-        reverse('substrapp:objective-description', args=[objective['key']]))
-    objective['metrics']['storage_address'] = request.build_absolute_uri(
-        reverse('substrapp:objective-metrics', args=[objective['key']])
+def replace_storage_addresses(request, metric):
+    metric['description']['storage_address'] = request.build_absolute_uri(
+        reverse('substrapp:metric-description', args=[metric['key']]))
+    metric['address']['storage_address'] = request.build_absolute_uri(
+        reverse('substrapp:metric-metrics', args=[metric['key']])
     )
 
 
-class ObjectiveViewSet(mixins.CreateModelMixin,
-                       PaginationMixin,
-                       GenericViewSet):
-    queryset = Objective.objects.all()
-    serializer_class = ObjectiveSerializer
+class MetricViewSet(mixins.CreateModelMixin,
+                    PaginationMixin,
+                    GenericViewSet):
+    queryset = Metric.objects.all()
+    serializer_class = MetricSerializer
     pagination_class = DefaultPageNumberPagination
 
     def commit(self, serializer, request):
@@ -47,13 +47,10 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         instance = serializer.save()
 
         # serialized data for orchestrator db
-        orchestrator_serializer = OrchestratorObjectiveSerializer(
+        orchestrator_serializer = OrchestratorMetricSerializer(
             data={
                 'name': request.data.get('name'),
-                'data_sample_keys': request.data.get('test_data_sample_keys') or [],
-                'data_manager_key': request.data.get('test_data_manager_key'),
                 'permissions': request.data.get('permissions'),
-                'metrics_name': request.data.get('metrics_name'),
                 'metadata': request.data.get('metadata'),
                 'instance': instance
             },
@@ -88,7 +85,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             raise ValidationExceptionError(e.args, '(not computed)', status.HTTP_400_BAD_REQUEST)
 
         serializer = self.get_serializer(data={
-            'metrics': request.data.get('metrics'),
+            'address': request.data.get('file'),
             'description': description,
             'checksum': checksum
         })
@@ -115,19 +112,19 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
             headers = self.get_success_headers(data)
             return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def create_or_update_objective_description(self, channel_name, objective, key):
-        # We need to have, at least, objective description for the frontend
+    def create_or_update_metric_description(self, channel_name, metric, key):
+        # We need to have, at least, metric description for the frontend
         content = get_remote_asset(
             channel_name=channel_name,
-            url=objective['description']['storage_address'],
-            node_id=objective['owner'],
-            content_checksum=objective['description']['checksum']
+            url=metric['description']['storage_address'],
+            node_id=metric['owner'],
+            content_checksum=metric['description']['checksum']
         )
 
         description_file = tempfile.TemporaryFile()
         description_file.write(content)
 
-        instance, created = Objective.objects.update_or_create(key=key, validated=True)
+        instance, created = Metric.objects.update_or_create(key=key, validated=True)
         instance.description.save('description.md', description_file)
 
         return instance
@@ -136,7 +133,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_objective(key)
+            data = client.query_metric(key)
 
         # verify if objectve description exists for the frontend view
         # if not fetch it if it's possible
@@ -148,7 +145,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 instance = None
             finally:
                 if not instance or not instance.description:
-                    instance = self.create_or_update_objective_description(
+                    instance = self.create_or_update_metric_description(
                         get_channel_name(request),
                         data,
                         key
@@ -182,7 +179,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
     def list(self, request, *args, **kwargs):
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_objectives()
+                data = client.query_metrics()
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
@@ -193,7 +190,7 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
         if query_params is not None:
             try:
                 data = filter_list(
-                    object_type='objective',
+                    object_type='metric',
                     data=data,
                     query_params=query_params)
             except OrcError as rpc_error:
@@ -202,40 +199,16 @@ class ObjectiveViewSet(mixins.CreateModelMixin,
                 logger.exception(e)
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        for objective in data:
-            replace_storage_addresses(request, objective)
+        for metric in data:
+            replace_storage_addresses(request, metric)
 
         return self.paginate_response(data)
 
-    @action(detail=True, methods=['GET'])
-    def leaderboard(self, request, *args, **kwargs):
-        lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
-        key = self.kwargs[lookup_url_kwarg]
 
-        validate_key(key)
-        sort = request.query_params.get('sort', 'desc')
-
-        try:
-            validate_sort(sort)
-        except Exception as e:
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                leaderboard = client.query_objective_leaderboard(key, sort)
-        except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(leaderboard, status=status.HTTP_200_OK)
-
-
-class ObjectivePermissionViewSet(PermissionMixin,
-                                 GenericViewSet):
-    queryset = Objective.objects.all()
-    serializer_class = ObjectiveSerializer
+class MetricPermissionViewSet(PermissionMixin,
+                              GenericViewSet):
+    queryset = Metric.objects.all()
+    serializer_class = MetricSerializer
 
     # actions cannot be named "description"
     # https://github.com/encode/django-rest-framework/issues/6490
@@ -243,8 +216,8 @@ class ObjectivePermissionViewSet(PermissionMixin,
     # https://www.django-rest-framework.org/api-guide/viewsets/#introspecting-viewset-actions
     @action(detail=True, url_path='description', url_name='description')
     def description_(self, request, *args, **kwargs):
-        return self.download_file(request, 'query_objective', 'description')
+        return self.download_file(request, 'query_metric', 'description')
 
     @action(detail=True)
     def metrics(self, request, *args, **kwargs):
-        return self.download_file(request, 'query_objective', 'metrics')
+        return self.download_file(request, 'query_metric', 'address')

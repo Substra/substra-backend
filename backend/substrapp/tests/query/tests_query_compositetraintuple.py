@@ -9,12 +9,12 @@ from node.authentication import NodeUser
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
-from substrapp.models import Model, Objective
+from substrapp.models import Model, Metric
 from orchestrator.client import OrchestratorClient
 from substrapp.utils import compute_hash
 
 from ..common import (AuthenticatedClient, get_sample_model,
-                      get_sample_objective)
+                      get_sample_metric)
 
 MEDIA_ROOT = tempfile.mkdtemp()
 TEST_ORG = 'MyTestOrg'
@@ -30,8 +30,8 @@ class CompositeTraintupleQueryTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.objective_description, self.objective_description_filename, \
-            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+        self.metric_description, self.metric_description_filename, \
+            self.metric_metrics, self.metric_metrics_filename = get_sample_metric()
 
         self.train_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
         self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
@@ -48,10 +48,10 @@ class CompositeTraintupleQueryTests(APITestCase):
         ("without_in_models", False, False)
     ])
     def test_add_compositetraintuple_ok(self, _, with_in_models, with_compute_plan):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
+        # Add associated metric
+        description, _, metrics, _ = get_sample_metric()
+        Metric.objects.create(description=description,
+                              address=metrics)
         # post data
         url = reverse('substrapp:composite_traintuple-list')
 
@@ -59,7 +59,7 @@ class CompositeTraintupleQueryTests(APITestCase):
             'train_data_sample_keys': self.train_data_sample_keys,
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
-            'objective_key': self.fake_key,
+            'metric_key': self.fake_key,
             'out_trunk_model_permissions': {
                 'public': False,
                 'authorized_ids': ["Node-1", "Node-2"],
@@ -103,9 +103,9 @@ class CompositeTraintupleQueryTests(APITestCase):
         self.assertIn('This field may not be null.', response.json()['message'][0]['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        o = Objective.objects.create(description=self.objective_description,
-                                     metrics=self.objective_metrics)
-        data = {'objective': o.key}
+        o = Metric.objects.create(description=self.metric_description,
+                                  address=self.metric_metrics)
+        data = {'metric': o.key}
         response = self.client.post(self.url, data, format='multipart', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 

@@ -18,7 +18,7 @@ from substrapp.views import ComputeTaskViewSet
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..assets import traintuple, testtuple, objective
+from ..assets import traintuple, testtuple, metric
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -97,7 +97,7 @@ class TraintupleViewTests(APITestCase):
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
-            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{url}{metric[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_traintuple_list_filter_tag(self):
@@ -189,7 +189,7 @@ class TesttupleViewTests(APITestCase):
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
-            response = self.client.get(f'{url}{objective[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{url}{metric[0]["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_testtuple_list_filter_tag(self):

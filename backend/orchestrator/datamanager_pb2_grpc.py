@@ -19,11 +19,6 @@ class DataManagerServiceStub(object):
                 request_serializer=datamanager__pb2.NewDataManager.SerializeToString,
                 response_deserializer=datamanager__pb2.DataManager.FromString,
                 )
-        self.UpdateDataManager = channel.unary_unary(
-                '/orchestrator.DataManagerService/UpdateDataManager',
-                request_serializer=datamanager__pb2.DataManagerUpdateParam.SerializeToString,
-                response_deserializer=datamanager__pb2.DataManagerUpdateResponse.FromString,
-                )
         self.GetDataManager = channel.unary_unary(
                 '/orchestrator.DataManagerService/GetDataManager',
                 request_serializer=datamanager__pb2.GetDataManagerParam.SerializeToString,
@@ -40,12 +35,6 @@ class DataManagerServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def RegisterDataManager(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
-    def UpdateDataManager(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -70,11 +59,6 @@ def add_DataManagerServiceServicer_to_server(servicer, server):
                     servicer.RegisterDataManager,
                     request_deserializer=datamanager__pb2.NewDataManager.FromString,
                     response_serializer=datamanager__pb2.DataManager.SerializeToString,
-            ),
-            'UpdateDataManager': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateDataManager,
-                    request_deserializer=datamanager__pb2.DataManagerUpdateParam.FromString,
-                    response_serializer=datamanager__pb2.DataManagerUpdateResponse.SerializeToString,
             ),
             'GetDataManager': grpc.unary_unary_rpc_method_handler(
                     servicer.GetDataManager,
@@ -110,23 +94,6 @@ class DataManagerService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.DataManagerService/RegisterDataManager',
             datamanager__pb2.NewDataManager.SerializeToString,
             datamanager__pb2.DataManager.FromString,
-            options, channel_credentials,
-            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
-
-    @staticmethod
-    def UpdateDataManager(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(request, target, '/orchestrator.DataManagerService/UpdateDataManager',
-            datamanager__pb2.DataManagerUpdateParam.SerializeToString,
-            datamanager__pb2.DataManagerUpdateResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

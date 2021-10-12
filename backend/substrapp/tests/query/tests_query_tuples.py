@@ -12,10 +12,10 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.models import Objective
+from substrapp.models import Metric
 from orchestrator.client import OrchestratorClient
 
-from ..common import get_sample_objective, AuthenticatedClient
+from ..common import get_sample_metric, AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -29,8 +29,8 @@ class TraintupleQueryTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.objective_description, self.objective_description_filename, \
-            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
+        self.metric_description, self.metric_description_filename, \
+            self.metric_metrics, self.metric_metrics_filename = get_sample_metric()
 
         self.train_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
         self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
@@ -43,10 +43,10 @@ class TraintupleQueryTests(APITestCase):
         ("without_compute_plan", False)
     ])
     def test_add_traintuple_ok(self, _, with_compute_plan):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
+        # Add associated metric
+        description, _, metrics, _ = get_sample_metric()
+        Metric.objects.create(description=description,
+                              address=metrics)
         # post data
         url = reverse('substrapp:traintuple-list')
 
@@ -54,7 +54,7 @@ class TraintupleQueryTests(APITestCase):
             'train_data_sample_keys': self.train_data_sample_keys,
             'algo_key': self.fake_key,
             'data_manager_key': self.fake_key,
-            'objective_key': self.fake_key,
+            'metric_key': self.fake_key,
             'in_models_keys': [self.fake_key]
         }
 
@@ -93,9 +93,9 @@ class TraintupleQueryTests(APITestCase):
         self.assertIn('This field may not be null.', response.json()['message'][0]['algo_key'])
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        o = Objective.objects.create(description=self.objective_description,
-                                     metrics=self.objective_metrics)
-        data = {'objective': o.key}
+        o = Metric.objects.create(description=self.metric_description,
+                                  address=self.metric_metrics)
+        data = {'metric': o.key}
         response = self.client.post(url, data, format='json', **extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -109,9 +109,9 @@ class TesttupleQueryTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
 
-        self.objective_description, self.objective_description_filename, \
-            self.objective_metrics, self.objective_metrics_filename = get_sample_objective()
-        self.objective_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
+        self.metric_description, self.metric_description_filename, \
+            self.metric_metrics, self.metric_metrics_filename = get_sample_metric()
+        self.metric_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
         self.test_data_sample_keys = ['5c1d9cd1-c2c1-082d-de09-21b56d11030c']
         self.fake_key = '5c1d9cd1-c2c1-082d-de09-21b56d11030c'
 
@@ -123,16 +123,16 @@ class TesttupleQueryTests(APITestCase):
         ("without_data_manager", False)
     ])
     def test_add_testtuple_ok(self, _, with_data_manager):
-        # Add associated objective
-        description, _, metrics, _ = get_sample_objective()
-        Objective.objects.create(description=description,
-                                 metrics=metrics)
+        # Add associated metric
+        description, _, metrics, _ = get_sample_metric()
+        Metric.objects.create(description=description,
+                              address=metrics)
         # post data
         url = reverse('substrapp:testtuple-list')
 
         data = {
             'algo_key': self.fake_key,
-            'objective_key': self.objective_key,
+            'metric_key': self.metric_key,
             'test_data_sample_keys': self.test_data_sample_keys,
             'traintuple_key': self.fake_key
         }

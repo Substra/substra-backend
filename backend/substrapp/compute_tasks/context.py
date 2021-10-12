@@ -34,7 +34,7 @@ class Context:
     _compute_plan_tag: str = None
     _in_models: List[Dict] = None
     _algo: Dict = None
-    _objective: Dict = None
+    _metric: Dict = None
     _data_manager: Dict = None
     _directories: Directories = None
     _attempt: int = None  # The attempt number, eg; the number of retries + 1
@@ -50,7 +50,7 @@ class Context:
         compute_plan_tag: str,
         in_models: List[Dict],
         algo: Dict,
-        objective: Dict,
+        metric: Dict,
         data_manager: Dict,
         directories: Directories,
         attempt: int,
@@ -64,7 +64,7 @@ class Context:
         self._compute_plan_tag = compute_plan_tag
         self._in_models = in_models
         self._algo = algo
-        self._objective = objective
+        self._metric = metric
         self._data_manager = data_manager
         self._directories = directories
         self._attempt = attempt
@@ -76,7 +76,7 @@ class Context:
         compute_plan_key = None
         compute_plan_tag = None
         compute_plan_key = task.get("compute_plan_key")
-        objective = None
+        metric = None
         data_manager = None
 
         task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
@@ -89,7 +89,7 @@ class Context:
             algo = client.query_algo(task["algo"]["key"])
 
             if task_category == computetask_pb2.TASK_TEST:
-                objective = client.query_objective(task_data["objective_key"])
+                metric = client.query_metric(task_data["metric_key"])
 
             if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])
@@ -109,7 +109,7 @@ class Context:
             compute_plan_tag,
             in_models,
             algo,
-            objective,
+            metric,
             data_manager,
             directories,
             attempt,
@@ -157,10 +157,10 @@ class Context:
         return self.task["algo"]["key"]
 
     @property
-    def objective_key(self):
+    def metric_key(self):
         if self.task_category != computetask_pb2.TASK_TEST:
-            raise Exception(f"Invalid operation: objective_key for {self.task_category}")
-        return self.task_data["objective_key"]
+            raise Exception(f"Invalid operation: metric_key for {self.task_category}")
+        return self.task_data["metric_key"]
 
     @property
     def in_models(self) -> List[Dict]:
@@ -171,8 +171,8 @@ class Context:
         return self._algo
 
     @property
-    def objective(self) -> Dict:
-        return self._objective
+    def metric(self) -> Dict:
+        return self._metric
 
     @property
     def data_manager(self) -> Dict:
@@ -204,12 +204,12 @@ class Context:
         if self.task_category != computetask_pb2.TASK_TEST:
             raise Exception(f"Invalid operation: metrics_docker_tag for {self.task_category}")
 
-        objective_key = self.task_data["objective_key"]
+        metric_key = self.task_data["metric_key"]
 
         if settings.DEBUG_QUICK_IMAGE:
-            slug = self.objective["metrics"]["checksum"]
+            slug = self.metric["address"]["checksum"]
         else:
-            slug = objective_key
+            slug = metric_key
 
         return get_image_tag(METRICS_IMAGE_PREFIX, slug)
 
@@ -219,10 +219,10 @@ class Context:
 
     @property
     def metrics_docker_context_dir(self):
-        return os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, self.objective_key)
+        return os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, self.metric_key)
 
     def get_compute_pod(self, is_testtuple_eval: bool) -> ComputePod:
-        return ComputePod(self.compute_plan_key, self.algo_key, self.objective_key if is_testtuple_eval else None)
+        return ComputePod(self.compute_plan_key, self.algo_key, self.metric_key if is_testtuple_eval else None)
 
 
 def get_image_tag(prefix, key):

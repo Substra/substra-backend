@@ -4,7 +4,7 @@ from django.db import migrations, models
 import substrapp.models.algo
 import substrapp.models.datamanager
 import substrapp.models.model
-import substrapp.models.objective
+import substrapp.models.metric
 import uuid
 
 
@@ -56,14 +56,14 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='Objective',
+            name='Metric',
             fields=[
                 ('creation_date', models.DateTimeField(editable=False)),
                 ('last_modified', models.DateTimeField(editable=False)),
                 ('key', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
                 ('validated', models.BooleanField(blank=True, default=False)),
-                ('description', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.objective.upload_to)),
-                ('metrics', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.objective.upload_to)),
+                ('description', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.metric.upload_to)),
+                ('address', models.FileField(blank=True, max_length=500, null=True, upload_to=substrapp.models.metric.upload_to)),
                 ('checksum', models.CharField(blank=True, max_length=64)),
             ],
             options={

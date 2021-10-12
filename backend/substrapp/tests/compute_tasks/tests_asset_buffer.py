@@ -21,7 +21,7 @@ from substrapp.compute_tasks.asset_buffer import (
     _add_model_to_buffer,
     _add_assets_to_taskdir,
     _download_algo,
-    _download_objective,
+    _download_metric,
 )
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
@@ -192,9 +192,9 @@ class AssetBufferTests(APITestCase):
             channel_name = CHANNEL
             compute_plan_key = "some compute plan key"
             task_category = computetask_pb2.TASK_TRAIN
-            objective = {'key': str(uuid.uuid4()),
-                         'owner': 'test',
-                         'metrics': {'storage_address': 'test', 'checksum': 'check'}}
+            metric = {'key': str(uuid.uuid4()),
+                      'owner': 'test',
+                      'address': {'storage_address': 'test', 'checksum': 'check'}}
             algo = {'key': str(uuid.uuid4()),
                     'owner': 'test',
                     'algorithm': {'storage_address': 'test', 'checksum': 'check'}}
@@ -374,13 +374,13 @@ class AssetBufferTests(APITestCase):
             data = _download_algo(self.ctx)
             self.assertEqual(algo_content, data)
 
-    def test_download_objective(self):
+    def test_download_metric(self):
 
         metrics_content = b"123"
         with mock.patch("substrapp.compute_tasks.asset_buffer.get_asset_content") as mget_asset_content:
 
             mget_asset_content.return_value = metrics_content
 
-            objective = _download_objective(self.ctx)
-            self.assertTrue(isinstance(objective, bytes))
-            self.assertEqual(objective, metrics_content)
+            metric = _download_metric(self.ctx)
+            self.assertTrue(isinstance(metric, bytes))
+            self.assertEqual(metric, metrics_content)
