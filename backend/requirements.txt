@@ -11,7 +11,7 @@ djangorestframework-simplejwt==4.7.1
 drf-spectacular==0.17.3
 drf-nested-routers==0.93.3
 pyjwt==2.1.0
-ipython==7.25.0
+ipython==7.28.0
 ipython-genutils==0.2.0
 kubernetes==17.17.0
 psycopg2-binary==2.8.6  # psycopg 2.9+ is not compatible with Django <3.2
