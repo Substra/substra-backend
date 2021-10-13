@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.1
+
+### Changed
+- updated chart logo
+
 ## 12.0.0
 
 ### Changed
