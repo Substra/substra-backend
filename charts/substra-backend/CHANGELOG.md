@@ -1,9 +1,14 @@
 # Changelog
 
+## 2.1.1
+
+### Changed
+- update chart's logo
+
 ## 2.1.0
 
 ### Added
-- Add new celerybeat configuration setting `maximumImagesTTL`, which will be the image lifetime in the local docker registry 
+- Add new celerybeat configuration setting `maximumImagesTTL`, which will be the image lifetime in the local docker registry
 - Fix deployment for celerybeat and celeryscheduler
 - Set extra env `TASK_CACHE_DOCKER_IMAGES` to `'True'` by default
 
