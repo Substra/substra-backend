@@ -233,6 +233,8 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
     # Close django old connections to avoid potential leak
     db.close_old_connections()
     if exceptions:
+        # avoid partial model download
+        delete_models_from_buffer([model['key'] for model in models])
         raise Exception(exceptions)
 
 
