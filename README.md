@@ -30,7 +30,7 @@ The backend can be deployed on a kubernete cluster running more than one kuberne
 To run the worker and the server on two different nodes (requires the nodes to be labelled [see wiki](`https://github.com/owkin/connect-backend/wiki/Running-the-backend-on-Multinode`)
 
 Deploy the backend with:
-    - `skaffold run -p 2-nodes` to run 1 server pod and 1 worker pod on 2 separate kubernetes nodes. The nodes need to be labeled (see `2-nodes.yaml`)
+    - `skaffold run -p add-worker-server-node-selectors` to run 1 server pod and 1 worker pod on 2 separate kubernetes nodes. The nodes need to be labelled (see `add-worker-server-node-selectors.yaml`)
     - `skaffold run -p spread-workers` to spread the workers across the `x` different nodes.
 
 You can draw from this documentation to set up the config according to your needs: number of kubernetes nodes, number of worker replicas, way to spread workers across the kubernetes nodes.
