@@ -19,7 +19,7 @@ from substrapp.views.utils import (TASK_CATEGORY,
                                    TASK_FIELD,
                                    add_task_extra_information,
                                    ValidationExceptionError,
-                                   get_channel_name,
+                                   get_channel_name, to_string_uuid,
                                    validate_key)
 
 logger = structlog.get_logger(__name__)
@@ -95,7 +95,8 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
                 )
 
             with get_orchestrator_client(get_channel_name(request)) as client:
-                parent_task = client.query_task(data['parent_task_keys'][0])
+                first_parent_task_id = to_string_uuid(data['parent_task_keys'][0])
+                parent_task = client.query_task(first_parent_task_id)
                 data['algo_key'] = parent_task['algo']['key']
                 data['compute_plan_key'] = parent_task['compute_plan_key']
 
@@ -185,9 +186,9 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
         return self.paginate_response(data)
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_task(key)
+            data = client.query_task(validated_key)
             data = add_task_extra_information(client, self.basename, data)
 
         replace_storage_addresses(request, self.basename, data)

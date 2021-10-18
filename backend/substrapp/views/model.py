@@ -59,10 +59,10 @@ class ModelViewSet(PaginationMixin,
         return instance
 
     def _retrieve(self, request, key):
-        validate_key(key)
+        validated_key = validate_key(key)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_model(key)
+            data = client.query_model(validated_key)
 
         replace_storage_addresses(request, data)
 
@@ -153,9 +153,6 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
             self._check_export_enabled(channel_name)
             self._check_permission("download", asset, node_id=settings.LEDGER_MSP_ID)
 
-    def get_storage_address(self, asset, ledger_field) -> str:
-        return asset["address"]["storage_address"]
-
     @staticmethod
     def _check_export_enabled(channel_name):
         channel = settings.LEDGER_CHANNELS[channel_name]
@@ -176,5 +173,5 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
     @action(detail=True)
     def file(self, request, *args, **kwargs):
         return self.download_file(
-            request, query_method="query_model", django_field="file"
+            request, query_method="query_model", django_field="file", orchestrator_field="address"
         )

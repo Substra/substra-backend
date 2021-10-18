@@ -40,7 +40,7 @@ backend:
     pullSecrets: []
 
   service:
-    type: NodePort
+    type: ClusterIP
     port: 8000
     annotations: {}
     labels: {}

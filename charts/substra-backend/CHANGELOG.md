@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.3
+### Changed
+
+- Substra backend service type is now `ClusterIP` instead of `NodePort` by default as it's more secure to keep traffic internal by default.
+
 ## 12.0.2
 
 ### Changed

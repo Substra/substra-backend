@@ -42,7 +42,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.image.tag` | `substra-backend` image tag | `latest` |
 | `backend.image.pullPolicy` | Image pull policy | `IfNotPresent` |
 | `backend.image.pullSecrets` | Image pull secrets | `[]` |
-| `backend.service.type` | Kubernetes Service type | `NodePort` |
+| `backend.service.type` | Kubernetes Service type | `ClusterIP` |
 | `backend.service.port` | substra-backend service port | `8000` |
 | `backend.service.loadBalancerSourceRanges` | CIDR range of IP addresses allowed to access the service, when the service is of type LoadBalancer | `[]` |
 | `backend.service.loadBalancerIP`  | LoadBalancerIP for the service | `nil` |
