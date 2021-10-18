@@ -43,7 +43,9 @@ spec:
         {{- if eq .Values.backend.settings "prod" }}
         args: ["-c", "uwsgi --ini uwsgi.ini"]
         {{- else }}
-        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
+        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini --honour-stdin"]
+        stdin: true
+        tty: true
         {{- end }}
         envFrom:
           - configMapRef:

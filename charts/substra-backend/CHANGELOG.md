@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.2
+
+### Changed
+- Open stdin to enable debugger (dev only).
+
 ## 12.0.1
 
 ### Changed

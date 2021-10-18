@@ -23,6 +23,18 @@ Each organization will have:
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
 - the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the chaincode into celery tasks
 
+### Use debugger
+
+Add a breakpoint, then attach to the `backend-server` container.
+
+```sh
+kubectl attach -it -n org-1 $(kubectl get pods -o=name -n org-1 -l app.kubernetes.io/name=substra-backend-server)
+```
+
+Use `Ctrl+p` then `Ctrl+q` to detach without killing the container.
+
+See: https://docs.python.org/fr/3/library/pdb.html
+
 ### Running on multiple kubernetes nodes
 
 The backend can be deployed on a kubernete cluster running more than one kubernetes node.
