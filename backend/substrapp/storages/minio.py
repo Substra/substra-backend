@@ -1,4 +1,3 @@
-import time
 import structlog
 from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
@@ -22,28 +21,18 @@ class MinioStorage(Storage):
     @property
     def client(self):
         if not self._client:
-            self._client = Minio(
+            client = Minio(
                 settings.OBJECTSTORE_URL,
                 access_key=settings.OBJECTSTORE_ACCESSKEY,
                 secret_key=settings.OBJECTSTORE_SECRETKEY,
                 secure=False,
             )
-            if not self._client.bucket_exists(self.bucket):
-                self._client.make_bucket(self.bucket)
-                # make sure that the bucket is created before continuing.
-                # Otherwise this may cause `NoSuchBucket` errors when using the client.
-                self.wait_for_bucket_creation(timeout=60)  # can raise
+            # for simplicity we always make the bucket.
+            # it will not override the current bucket if it already exists.
+            # same interface as `mkdir -p`
+            client.make_bucket(self.bucket)
+            self._client = client
         return self._client
-
-    def wait_for_bucket_creation(self, timeout):
-        polling_period = 0.2
-        tstart = time.time()
-
-        while not self._client.bucket_exists(self.bucket):
-            if time.time() - tstart > timeout:
-                raise TimeoutError(
-                    f"Timeout on bucket creation for bucket: {self.bucket}.")
-            time.sleep(polling_period)
 
     def _open(self, name, mode):
         res = self.client.get_object(self.bucket, name)
