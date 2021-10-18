@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `COMMON_HOST_DOMAIN` variable env now required to set domain property of JWT cookies
 - Models and Datasamples are now stored in MinIO (they were previously stored on the filesystem)
 - Possibility to deploy deploy multiple workers on different kubernetes nodes in order to use compute resources in parallel. See [charts CHANGELOG.md](./charts/substra-backend/CHANGELOG.md#6.0.0) for more details.
+- post_delete signal upon model deletion to remove the model from Minio storage.
 
 ### Changed
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`.

@@ -1,10 +1,13 @@
 import time
+import structlog
 from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from minio import Minio
 from minio.error import S3Error
 from django.conf import settings
+
+logger = structlog.get_logger(__name__)
 
 
 @deconstructible
@@ -52,7 +55,8 @@ class MinioStorage(Storage):
         return name
 
     def delete(self, name):
-        self.client.remove(self.bucket, name)
+        logger.debug("Deleting object from Minio", name=name, bucket=self.bucket)
+        self.client.remove_object(self.bucket, name)
 
     def exists(self, name):
         try:
