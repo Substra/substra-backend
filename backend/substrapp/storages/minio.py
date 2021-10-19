@@ -27,10 +27,13 @@ class MinioStorage(Storage):
                 secret_key=settings.OBJECTSTORE_SECRETKEY,
                 secure=False,
             )
-            # for simplicity we always make the bucket.
-            # it will not override the current bucket if it already exists.
-            # same interface as `mkdir -p`
-            client.make_bucket(self.bucket)
+            try:
+                client.make_bucket(self.bucket)
+            except S3Error as err:
+                if err.code != "BucketAlreadyOwnedByYou":
+                    raise
+            else:
+                logger.info("MinIO bucket created", bucket=self.bucket)
             self._client = client
         return self._client
 
