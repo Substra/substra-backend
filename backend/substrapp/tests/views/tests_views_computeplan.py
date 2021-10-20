@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 from grpc import RpcError, StatusCode
@@ -84,11 +85,12 @@ class ComputePlanViewTests(APITestCase):
             self.assertEqual(r['results'], computeplan)
 
     def test_computeplan_retrieve(self):
+        expected = copy.deepcopy(computeplan[0])
         with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=computeplan[0]):
             url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['key']])
             response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, computeplan[0])
+            actual = response.json()
+            self.assertEqual(actual, expected)
 
     def test_computeplan_retrieve_fail(self):
         # Key < 32 chars

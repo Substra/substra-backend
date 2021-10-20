@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import logging
@@ -72,11 +73,14 @@ class TraintupleViewTests(APITestCase):
         url = reverse('substrapp:traintuple-list')
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
+        expected = copy.deepcopy(traintuple[0])
+        expected['train']['models'] = None
+
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=traintuple[0]), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(r, traintuple[0])
+            actual = response.json()
+            self.assertEqual(actual, expected)
 
     def test_traintuple_retrieve_fail(self):
 
@@ -163,12 +167,15 @@ class TesttupleViewTests(APITestCase):
         url = reverse('substrapp:testtuple-list')
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
+        expected = copy.deepcopy(testtuple[0])
+        expected['test']['perfs'] = {'key': 1}
+
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=testtuple[0]), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
                                   return_value=[{'metric_key': 'key', 'performance_value': 1}]):
             response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(r, testtuple[0])
+            actual = response.json()
+            self.assertEqual(actual, expected)
 
     def test_testtuple_retrieve_fail(self):
 

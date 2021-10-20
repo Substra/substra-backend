@@ -95,6 +95,7 @@ class MetricViewTests(APITestCase):
             self.assertEqual(len(r['results']), 1)
 
     def test_metric_retrieve(self):
+        expected = copy.deepcopy(metric[0])
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                '../../../../fixtures/owkin/metrics/metric0/description.md'), 'rb') as f:
             content = f.read()
@@ -102,7 +103,7 @@ class MetricViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, 'query_metric', return_value=metric[0]), \
                 mock.patch('substrapp.views.metric.get_remote_asset', return_value=content):
             response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
-            self.assertEqual(response.json(), metric[0])
+            self.assertEqual(response.json(), expected)
 
     def test_metric_retrieve_fail(self):
         # Key < 32 chars

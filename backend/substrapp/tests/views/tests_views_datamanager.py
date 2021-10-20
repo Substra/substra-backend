@@ -83,6 +83,8 @@ class DataManagerViewTests(APITestCase):
             self.assertEqual(len(r['results']), 1)
 
     def test_datamanager_retrieve(self):
+        expected = copy.deepcopy(datamanager[0])
+
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                '../../../../fixtures/chunantes/datamanagers/datamanager0/opener.py'), 'rb') as f:
             opener_content = f.read()
@@ -97,9 +99,9 @@ class DataManagerViewTests(APITestCase):
                            side_effect=[opener_content, description_content]):
 
             response = self.client.get(f'{self.url}{datamanager[0]["key"]}/', **self.extra)
-            r = response.json()
+            actual = response.json()
 
-            self.assertEqual(r, datamanager[0])
+            self.assertEqual(actual, expected)
 
     def test_datamanager_retrieve_fail(self):
 

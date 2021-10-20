@@ -1,3 +1,4 @@
+import copy
 import os
 import shutil
 import logging
@@ -82,12 +83,13 @@ class ModelViewTests(APITestCase):
             self.assertEqual(len(r['results']), 1)
 
     def test_model_retrieve(self):
+        expected = copy.deepcopy(model[0])
         with mock.patch.object(OrchestratorClient, 'query_model', return_value=model[0]):
             url = reverse('substrapp:model-list')
             search_params = model[0]['key'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
-            self.assertEqual(r, model[0])
+            self.assertEqual(r, expected)
 
     def test_model_retrieve_fail(self):
         # Key < 32 chars
