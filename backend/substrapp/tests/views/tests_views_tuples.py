@@ -19,7 +19,7 @@ from substrapp.views import ComputeTaskViewSet
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..assets import traintuple, testtuple, metric
+from ..assets import traintuple, testtuple, metric, compositetraintuple, datamanager
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -75,8 +75,11 @@ class TraintupleViewTests(APITestCase):
 
         expected = copy.deepcopy(traintuple[0])
         expected['train']['models'] = None
+        expected['train']['data_manager'] = datamanager[0]
+        expected['parent_tasks'] = []
 
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=traintuple[0]), \
+                mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
@@ -169,8 +172,13 @@ class TesttupleViewTests(APITestCase):
 
         expected = copy.deepcopy(testtuple[0])
         expected['test']['perfs'] = {'key': 1}
+        expected['parent_tasks'] = [compositetraintuple[1]]
+        expected['test']['data_manager'] = datamanager[0]
+        expected['test']['metrics'] = [metric[0]]
 
-        with mock.patch.object(OrchestratorClient, 'query_task', return_value=testtuple[0]), \
+        with mock.patch.object(OrchestratorClient, 'query_task', side_effect=[testtuple[0], compositetraintuple[1]]), \
+                mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
+                mock.patch.object(OrchestratorClient, 'query_metric', return_value=metric[0]), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
                                   return_value=[{'metric_key': 'key', 'performance_value': 1}]):
             response = self.client.get(url + search_params, **self.extra)

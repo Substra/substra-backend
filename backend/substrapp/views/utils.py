@@ -298,17 +298,30 @@ def is_proxied_request(request) -> bool:
     return HTTP_HEADER_PROXY_ASSET in request.headers
 
 
-def add_task_extra_information(client, basename, data):
+def add_task_extra_information(client, basename, data, expand_relationships=False):
     # add model information on a training compute task or performance on a testing compute task
     if basename in ['traintuple', 'aggregatetuple', 'composite_traintuple']:
         if computetask_pb2.ComputeTaskStatus.Value(data['status']) == computetask_pb2.STATUS_DONE:
             data[TASK_FIELD[basename]]['models'] = client.get_computetask_output_models(data['key'])
-    elif basename in ['testtuple']:
+
+    # add performances for test tasks
+    if basename in ['testtuple']:
         if computetask_pb2.ComputeTaskStatus.Value(data['status']) == computetask_pb2.STATUS_DONE:
             performances = client.get_compute_task_performances(data['key'])
             performances = {performance['metric_key']: performance['performance_value']
                             for performance in performances}
             data[TASK_FIELD[basename]]['perfs'] = performances
+
+    if expand_relationships and basename in ['traintuple', 'testtuple', 'composite_traintuple']:
+        data_manager_key = data[TASK_FIELD[basename]]['data_manager_key']
+        data[TASK_FIELD[basename]]['data_manager'] = client.query_datamanager(data_manager_key)
+
+    if expand_relationships and basename == 'testtuple':
+        metric_keys = data[TASK_FIELD[basename]]['metric_keys']
+        data[TASK_FIELD[basename]]['metrics'] = [client.query_metric(metric_key) for metric_key in metric_keys]
+
+    if expand_relationships:
+        data['parent_tasks'] = [client.query_task(key) for key in data['parent_task_keys']]
 
     return data
 

@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`.
 - (BREAKING) Replace objective by metric
+- Insert full data manager, metrics and parent tasks objects in tuple responses for retrieve calls
 
 ### Fixed
 - Set the local folder dynamically instead of leaving it to connect-tools default.

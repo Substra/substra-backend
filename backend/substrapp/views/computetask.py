@@ -6,7 +6,9 @@ from django.urls import reverse
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 from substrapp import exceptions
+from substrapp.compute_tasks.context import TASK_DATA_FIELD
 from substrapp.orchestrator import get_orchestrator_client
+import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.error import OrcError
 from substrapp.serializers import (OrchestratorAggregateTaskSerializer,
                                    OrchestratorCompositeTrainTaskSerializer,
@@ -16,7 +18,6 @@ from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
 from libs.pagination import DefaultPageNumberPagination, PaginationMixin
 from substrapp.views.utils import (TASK_CATEGORY,
-                                   TASK_FIELD,
                                    add_task_extra_information,
                                    ValidationExceptionError,
                                    get_channel_name, to_string_uuid,
@@ -25,7 +26,8 @@ from substrapp.views.utils import (TASK_CATEGORY,
 logger = structlog.get_logger(__name__)
 
 
-def replace_storage_addresses(request, basename, task):
+def replace_storage_addresses(request, task):
+    # replace in common relationships
 
     if 'algo' in task:
         task['algo']['description']['storage_address'] = request.build_absolute_uri(
@@ -34,14 +36,34 @@ def replace_storage_addresses(request, basename, task):
             reverse('substrapp:algo-file', args=[task['algo']['key']])
         )
 
-    if basename == 'testtuple':
-        return
+    for parent_task in task.get('parent_tasks', []):
+        replace_storage_addresses(request, parent_task)
 
-    if 'models' in task[TASK_FIELD[basename]] and task[TASK_FIELD[basename]]['models']:
-        for model in task[TASK_FIELD[basename]]['models']:
-            if 'address' in model:
-                model['address']['storage_address'] = request.build_absolute_uri(
-                    reverse('substrapp:model-file', args=[model['key']]))
+    # replace in category-dependent relationships
+
+    category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
+    task_details = task[TASK_DATA_FIELD[category]]
+
+    if 'data_manager' in task_details:
+        data_manager = task_details['data_manager']
+        data_manager['description']['storage_address'] = request.build_absolute_uri(
+            reverse('substrapp:data_manager-description', args=[data_manager['key']]))
+        data_manager['opener']['storage_address'] = request.build_absolute_uri(
+            reverse('substrapp:data_manager-opener', args=[data_manager['key']])
+        )
+
+    models = task_details.get('models') or []  # field may be set to None
+    for model in models:
+        if 'address' in model:
+            model['address']['storage_address'] = request.build_absolute_uri(
+                reverse('substrapp:model-file', args=[model['key']]))
+
+    for metric in task_details.get('metrics', []):
+        metric['description']['storage_address'] = request.build_absolute_uri(
+            reverse('substrapp:metric-description', args=[metric['key']]))
+        metric['address']['storage_address'] = request.build_absolute_uri(
+            reverse('substrapp:metric-metrics', args=[metric['key']])
+        )
 
 
 class ComputeTaskViewSet(mixins.CreateModelMixin,
@@ -181,7 +203,7 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
                 return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         for task in data:
-            replace_storage_addresses(request, self.basename, task)
+            replace_storage_addresses(request, task)
 
         return self.paginate_response(data)
 
@@ -189,9 +211,9 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
         validated_key = validate_key(key)
         with get_orchestrator_client(get_channel_name(request)) as client:
             data = client.query_task(validated_key)
-            data = add_task_extra_information(client, self.basename, data)
+            data = add_task_extra_information(client, self.basename, data, expand_relationships=True)
 
-        replace_storage_addresses(request, self.basename, data)
+        replace_storage_addresses(request, data)
 
         return data
 

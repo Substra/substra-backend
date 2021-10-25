@@ -5936,8 +5936,8 @@ testtuple = [
                 "ab014b2a-0e8d-4db7-9e18-1abbb47a6b1a",
                 "aa3f6bb8-94f7-46e8-9a19-695de78570d5"
             ],
-            "metric_key": "ed9e010b-e0ac-4e0a-8941-ae71bed90f48",
-            "perf": 1.0
+            "metric_keys": ["ed9e010b-e0ac-4e0a-8941-ae71bed90f48"],
+            "perfs": {"ed9e010b-e0ac-4e0a-8941-ae71bed90f48": 1.0}
         }
     },
     {
@@ -5990,8 +5990,8 @@ testtuple = [
                 "3b512fd7-ee3d-46bb-bdcc-dd226d199b0a",
                 "1e01bd68-64ad-4555-8faf-e7880bcfd492"
             ],
-            "metric_key": "c453198d-b769-4e12-861c-912f624faab7",
-            "perf": 1.0
+            "metric_keys": ["c453198d-b769-4e12-861c-912f624faab7"],
+            "perfs": {"c453198d-b769-4e12-861c-912f624faab7": 1.0}
         }
     },
     {
@@ -6043,8 +6043,8 @@ testtuple = [
             "data_sample_keys": [
                 "92a54dd4-5706-436d-a84a-6fdfc4d93751"
             ],
-            "metric_key": "300a9739-4408-4ca9-b56f-dcef0108cfb7",
-            "perf": 2.0
+            "metric_keys": ["300a9739-4408-4ca9-b56f-dcef0108cfb7"],
+            "perfs": {"300a9739-4408-4ca9-b56f-dcef0108cfb7": 2.0}
         }
     },
     {
@@ -6096,8 +6096,8 @@ testtuple = [
             "data_sample_keys": [
                 "8d6bae6c-f00d-4bf4-9afc-0c0996c1e2a5"
             ],
-            "metric_key": "64544496-7e26-4722-8da1-e98ed0571952",
-            "perf": 2.0
+            "metric_keys": ["64544496-7e26-4722-8da1-e98ed0571952"],
+            "perfs": {"64544496-7e26-4722-8da1-e98ed0571952": 2.0}
         }
     },
     {
@@ -6149,8 +6149,8 @@ testtuple = [
             "data_sample_keys": [
                 "8d6bae6c-f00d-4bf4-9afc-0c0996c1e2a5"
             ],
-            "metric_key": "64544496-7e26-4722-8da1-e98ed0571952",
-            "perf": 32.0
+            "metric_keys": ["64544496-7e26-4722-8da1-e98ed0571952"],
+            "perfs": {"64544496-7e26-4722-8da1-e98ed0571952": 32.0}
         }
     },
     {
@@ -6202,8 +6202,8 @@ testtuple = [
             "data_sample_keys": [
                 "52bd2714-5116-4d46-9cf8-71dd069654ab"
             ],
-            "metric_key": "9ee8b5f3-8fe8-4c38-8449-579fa7093026",
-            "perf": 2.0
+            "metric_keys": ["9ee8b5f3-8fe8-4c38-8449-579fa7093026"],
+            "perfs": {"9ee8b5f3-8fe8-4c38-8449-579fa7093026": 2.0}
         }
     },
     {
@@ -6255,8 +6255,8 @@ testtuple = [
             "data_sample_keys": [
                 "8d9b3efb-e1e9-4533-bdd9-ca7282588fd6"
             ],
-            "metric_key": "64544496-7e26-4722-8da1-e98ed0571952",
-            "perf": 2.0
+            "metric_keys": ["64544496-7e26-4722-8da1-e98ed0571952"],
+            "perfs": {"64544496-7e26-4722-8da1-e98ed0571952": 2.0}
         }
     },
     {
@@ -6308,8 +6308,8 @@ testtuple = [
             "data_sample_keys": [
                 "92a54dd4-5706-436d-a84a-6fdfc4d93751"
             ],
-            "metric_key": "300a9739-4408-4ca9-b56f-dcef0108cfb7",
-            "perf": 32.0
+            "metric_keys": ["300a9739-4408-4ca9-b56f-dcef0108cfb7"],
+            "perfs": {"300a9739-4408-4ca9-b56f-dcef0108cfb7": 32.0}
         }
     },
     {
@@ -6361,8 +6361,8 @@ testtuple = [
             "data_sample_keys": [
                 "78018e46-35c0-4b85-a4cd-ca84209ef1bf"
             ],
-            "metric_key": "2547ea38-2f32-410b-834c-b237a8673fdd",
-            "perf": 32.0
+            "metric_keys": ["2547ea38-2f32-410b-834c-b237a8673fdd"],
+            "perfs": {"2547ea38-2f32-410b-834c-b237a8673fdd": 32.0}
         }
     },
     {
@@ -6414,8 +6414,8 @@ testtuple = [
             "data_sample_keys": [
                 "92a54dd4-5706-436d-a84a-6fdfc4d93751"
             ],
-            "metric_key": "2547ea38-2f32-410b-834c-b237a8673fdd",
-            "perf": 8.0
+            "metric_keys": ["2547ea38-2f32-410b-834c-b237a8673fdd"],
+            "perfs": {"2547ea38-2f32-410b-834c-b237a8673fdd": 8.0}
         }
     }
 ]

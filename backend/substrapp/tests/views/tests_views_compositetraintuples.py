@@ -17,7 +17,7 @@ from substrapp.views import ComputeTaskViewSet
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..assets import compositetraintuple, metric
+from ..assets import compositetraintuple, metric, datamanager
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -70,8 +70,11 @@ class CompositeTraintupleViewTests(APITestCase):
     def test_compositetraintuple_retrieve(self):
         expected = copy.deepcopy(compositetraintuple[0])
         expected['composite']['models'] = None
+        expected['composite']['data_manager'] = datamanager[0]
+        expected['parent_tasks'] = []
 
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=compositetraintuple[0]), \
+             mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
              mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
             search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
             response = self.client.get(self.url + search_params, **self.extra)
