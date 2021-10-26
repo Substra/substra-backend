@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.5
+### Changed
+
+- rename celery specific env variable
+
 ## 12.0.4
 ### Changed
 

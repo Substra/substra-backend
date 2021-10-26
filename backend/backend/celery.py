@@ -68,7 +68,7 @@ def setup_periodic_tasks(sender, **kwargs):
     from substrapp.tasks.tasks_docker_registry import docker_registry_garbage_collector_task
     from substrapp.tasks.tasks_docker_registry import clean_old_images_task
 
-    period = int(os.environ.get('SCHEDULE_TASK_PERIOD', 3 * 3600))
+    period = int(settings.CELERYBEAT_SCHEDULE_TASK_PERIOD)
 
     for channel_name in settings.LEDGER_CHANNELS.keys():
         sender.add_periodic_task(period, prepare_training_task.s(), queue='scheduler', args=[channel_name],
@@ -82,7 +82,7 @@ def setup_periodic_tasks(sender, **kwargs):
 
     from users.tasks import flush_expired_tokens
 
-    period = int(os.environ.get('FLUSH_EXPIRED_TOKENS_TASK_PERIOD', 24 * 3600))
+    period = int(settings.CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD)
     sender.add_periodic_task(period, flush_expired_tokens.s(), queue='scheduler',
                              name='flush expired tokens')
 
@@ -90,7 +90,7 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(1800, docker_registry_garbage_collector_task.s(), queue='scheduler',
                              name='garbage collect docker registry')
 
-    max_images_ttl = int(os.environ.get('MAXIMUM_IMAGES_TTL', 7 * 24 * 3600))
+    max_images_ttl = int(settings.CELERYBEAT_MAXIMUM_IMAGES_TTL)
     sender.add_periodic_task(3600, clean_old_images_task.s(), queue='scheduler', args=[max_images_ttl],
                              name='remove old images from docker registry')
 

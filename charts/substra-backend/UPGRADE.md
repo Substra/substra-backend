@@ -1,5 +1,11 @@
 ## unreleased
 
+## 12.0.5
+
+- rename `SCHEDULE_TASK_PERIOD` to `CELERYBEAT_SCHEDULE_TASK_PERIOD`
+- rename `FLUSH_EXPIRED_TOKENS_TASK_PERIOD` to `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD`
+- rename `MAXIMUM_IMAGES_TTL`to `CELERYBEAT_MAXIMUM_IMAGES_TTL`
+
 ## 12.0.0
 - Note that the objectives volume is renamed metrics
 
