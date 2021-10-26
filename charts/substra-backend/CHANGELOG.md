@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.0.4
+### Changed
+
+- Kaniko prepopulate job can use `dstImage` to configure the repo name in the local private registry
+
 ## 12.0.3
 ### Changed
 

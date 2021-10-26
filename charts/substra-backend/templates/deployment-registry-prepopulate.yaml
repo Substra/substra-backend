@@ -28,7 +28,11 @@ spec:
       - name: kaniko
         image: {{ $.Values.backend.kaniko.image }}
         args: ["--context=/docker-context",
+                {{- if .dstImage }}
+                "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}",
+                {{- else }}
                 "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .image }}",
+                {{ end }}
                 "--insecure",
                 "--verbosity=debug"]
         volumeMounts:

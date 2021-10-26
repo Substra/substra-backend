@@ -13,6 +13,7 @@ registry:
   pullDomain: 127.0.0.1
   prepopulate:
     - image: gcr.io/connect-314908/connect-tools:0.9.0-minimal
+      dstImage: owkin/connect-tools:0.9.0-minimal
       dockerConfigSecretName: "docker-config"
 
 celeryworker:
@@ -27,6 +28,7 @@ backend:
   commonHostDomain: node-1.com
   kaniko:
     dockerConfigSecretName: "docker-config"
+    mirror: true
     cache:
       warmer:
         images:

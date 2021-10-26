@@ -173,6 +173,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `registry.pullDomain` | The domain to pull docker images from. If `registry.local` is false, set this value to your docker registry `<host>:<port>`. If `registry.local` is true, then set this value to  `127.0.0.1`. If `registry.local` is true and `docker-registry.service.nodePort` is set to an arbitrary port number, then set to `127.0.0.1:<nodePort>` | `127.0.0.1` |
 | `registry.prepopulate[]` | A list of docker images to prepopulate the local docker registry with | `[]` |
 | `registry.prepopulate[].image` | A docker image | (undefined) |
+| `registry.prepopulate[].dstImage` | Docker destination image name | (undefined) |
 | `registry.prepopulate[].sourceRegistry` | The URL of a docker registry to pull the image from (leave blank for Docker Hub) | (undefined) |
 | `registry.prepopulate[].dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | (undefined) |
 | `psp.create` | If true, create a Pod Security Policy | `True` |
