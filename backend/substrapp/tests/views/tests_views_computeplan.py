@@ -159,6 +159,21 @@ class ComputePlanViewTests(APITestCase):
     #         self.assertEqual(r, cp)
 
     def test_can_see_traintuple(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         cp = computeplan[0]
         compute_plan_key = cp['key']
         url = reverse('substrapp:compute_plan_traintuple-list', args=[compute_plan_key])
@@ -166,7 +181,8 @@ class ComputePlanViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
                 mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[traintuple[0], traintuple[1]]), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
 
             response = self.client.get(url, **self.extra)
 
@@ -175,6 +191,21 @@ class ComputePlanViewTests(APITestCase):
         # # maybe add a test without ?page_size=<int> and add a forbidden response
 
     def test_can_filter_tuples(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         cp = computeplan[0]
         url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
         target_tag = 'foo'
@@ -182,7 +213,8 @@ class ComputePlanViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
                 mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

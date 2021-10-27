@@ -323,6 +323,25 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
     if expand_relationships:
         data['parent_tasks'] = [client.query_task(key) for key in data['parent_task_keys']]
 
+    # fetch task start and end dates from its events
+    events = client.query_events(asset_key=data['key'])
+    data['start_date'] = None
+    data['end_date'] = None
+    for event in events:
+        event_status = event.get('metadata', {}).get('status')
+        if not event_status:
+            continue
+
+        event_value = computetask_pb2.ComputeTaskStatus.Value(event_status)
+        if event_value == computetask_pb2.STATUS_DOING:
+            data['start_date'] = event['timestamp']
+        elif event_value in (computetask_pb2.STATUS_DONE, computetask_pb2.STATUS_FAILED):
+            data['end_date'] = event['timestamp']
+
+        if data['start_date'] and data['end_date']:
+            # both fields have been filled, stop processing events
+            break
+
     return data
 
 

@@ -70,6 +70,21 @@ class TraintupleViewTests(APITestCase):
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_traintuple_retrieve(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:traintuple-list')
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
@@ -80,7 +95,9 @@ class TraintupleViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=traintuple[0]), \
                 mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
@@ -108,24 +125,56 @@ class TraintupleViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_traintuple_list_filter_tag(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:traintuple-list')
         target_tag = 'foo'
         search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
             self.assertEqual(len(r['results']), 2)
 
     def test_traintuple_list_filter_compute_plan_key(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:traintuple-list')
         compute_plan_key = get_compute_plan_key(traintuple)
         search_params = f'?search=traintuple%253Acompute_plan_key%253A{compute_plan_key}'
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r['results']), 1)
@@ -167,6 +216,21 @@ class TesttupleViewTests(APITestCase):
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_testtuple_retrieve(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:testtuple-list')
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
@@ -180,10 +244,15 @@ class TesttupleViewTests(APITestCase):
                 mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
                 mock.patch.object(OrchestratorClient, 'query_metric', return_value=metric[0]), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
-                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
+
+            # make sure the event are actually processed into start/end date
+            self.assertEqual(actual["start_date"], query_events_mock[0]["timestamp"])
+            self.assertEqual(actual["end_date"], query_events_mock[1]["timestamp"])
 
     def test_testtuple_retrieve_fail(self):
 
@@ -208,11 +277,27 @@ class TesttupleViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_testtuple_list_filter_tag(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:testtuple-list')
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
-                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             search_params = '?search=testtuple%253Atag%253Abar'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
@@ -230,10 +315,26 @@ class TesttupleViewTests(APITestCase):
         ("two_element_per_page_page_two", 2, 2, 2, 4)
     ])
     def test_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
@@ -248,11 +349,27 @@ class TesttupleViewTests(APITestCase):
         ("two_element_per_page_page_two", 2, 2, 2, 4)
     ])
     def test_testtuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:testtuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=testtuple), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
-                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]):
+                                  return_value=[{'metric_key': 'key', 'performance_value': 1}]), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

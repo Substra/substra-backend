@@ -73,9 +73,31 @@ class CompositeTraintupleViewTests(APITestCase):
         expected['composite']['data_manager'] = datamanager[0]
         expected['parent_tasks'] = []
 
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_TODO",
+                },
+                "timestamp": "2021-10-12T09:27:07.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         with mock.patch.object(OrchestratorClient, 'query_task', return_value=compositetraintuple[0]), \
-             mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
-             mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+            mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
+            mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
             response = self.client.get(self.url + search_params, **self.extra)
             actual = response.json()
@@ -101,10 +123,27 @@ class CompositeTraintupleViewTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetraintuple_list_filter_tag(self):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             search_params = '?search=composite_traintuple%253Atag%253Asubstra'
             response = self.client.get(self.url + search_params, **self.extra)
+
             r = response.json()
 
             self.assertEqual(len(r['results']), 1)
@@ -115,10 +154,26 @@ class CompositeTraintupleViewTests(APITestCase):
         ("two_element_per_page_page_three", 2, 3, 4, 6)
     ])
     def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        query_events_mock = [
+            {
+                "metadata": {
+                    "status": "STATUS_DOING",
+                },
+                "timestamp": "2021-10-12T09:28:06.400636400Z",
+            },
+            {
+                "metadata": {
+                    "status": "STATUS_DONE",
+                },
+                "timestamp": "2021-10-12T09:30:04.319449500Z",
+            }
+        ]
+
         url = reverse('substrapp:composite_traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None):
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
+                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
