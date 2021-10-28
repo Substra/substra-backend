@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (BREAKING) Replace objective by metric (#313)
 - (BREAKING) Multiple metrics and performances per test task (#320)
 - Insert full data manager, metrics and parent tasks objects in tuple responses for retrieve calls
+- Validate orchestrator connection on readiness and liveness api checks
 
 ### Fixed
 - Set the local folder dynamically instead of leaving it to connect-tools default.

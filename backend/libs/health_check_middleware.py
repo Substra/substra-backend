@@ -20,6 +20,7 @@ class HealthCheckMiddleware(object):
         """
         Returns that the server is alive.
         """
+        validate_connections()
         validate_channels()
         return HttpResponse("OK")
 
@@ -27,17 +28,30 @@ class HealthCheckMiddleware(object):
         """
         Returns that the server is alive.
         """
+        validate_connections()
         validate_channels()
         return HttpResponse("OK")
 
 
-def validate_channels():
+def validate_connections():
     # Check orchetrator connection for each channel
     for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
         with get_orchestrator_client(channel_name) as client:
+            client.query_version()
+
+
+def validate_channels():
+    # Check channel restrictions
+    for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
+        with get_orchestrator_client(channel_name) as client:
+            nodes = [node['id'] for node in client.query_nodes()]
+
             # throw an Execption if the solo channel has more than 1 member
             if channel_name.startswith('solo-') or channel_settings['restricted']:
-                nodes = [node['id'] for node in client.query_nodes()]
                 if (len(nodes) > 1):
                     raise Exception(f'Restricted channel {channel_name} should have at most 1 member, but has '
                                     f'{len(nodes)}')
+
+            # throw an Execption if the node is not in the list
+            if settings.LEDGER_MSP_ID not in nodes:
+                raise Exception(f'Node {settings.LEDGER_MSP_ID} is not registered in channel "{channel_name}"')
