@@ -10,7 +10,7 @@ data:
     [uwsgi]
     module                        = backend.wsgi
     env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
-    static-map                    = /static=/usr/src/app/backend/statics
+    static-map                    = /{{ trimAll "/" .Values.backend.subpath }}{{ if .Values.backend.subpath }}/{{ end }}static=/usr/src/app/backend/statics
 
     master                        = 1
     processes                     = {{ .Values.backend.uwsgiProcesses }}

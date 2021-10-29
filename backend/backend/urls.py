@@ -60,3 +60,6 @@ if BrowsableAPIRenderer in api_settings.DEFAULT_RENDERER_CLASSES:
     urlpatterns += [url(r'^api-auth/', include('rest_framework.urls'))]
 
 urlpatterns += [url(r'^info/', info_view)]
+
+if settings.SUBPATH:
+    urlpatterns = [url(fr'^{settings.SUBPATH}', include(urlpatterns))]

@@ -25,6 +25,7 @@ The following table lists the configurable parameters of the substra-backend cha
 | `backend.defaultDomain` | The hostname and port corresponding to the backend. This domain will be referenced in the "storage_address" of the ledger assets. | `localhost` |
 | `backend.uwsgiProcesses` | Number of uswgi processes | `20` |
 | `backend.uwsgiThreads` | Number of uwsgi threads per process | `2` |
+| `backend.subpath` | serve the API behind given subpath | `''` |
 | `backend.gzipModels` | Enable models compression before transmission | `False` |
 | `backend.kaniko.dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | `""` |
 | `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |

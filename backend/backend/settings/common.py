@@ -64,6 +64,10 @@ except IOError:
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+SUBPATH = ''
+if os.environ.get('SUBPATH'):
+    SUBPATH = os.environ.get('SUBPATH').strip('/') + '/'
+
 ALLOWED_HOSTS = ['127.0.0.1', '::1', 'localhost'] + json.loads(os.environ.get('ALLOWED_HOSTS', "[]"))
 if os.environ.get('HOST_IP'):
     ALLOWED_HOSTS.append(os.environ.get('HOST_IP'))
@@ -211,10 +215,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
-STATIC_URL = '/static/'
+STATIC_URL = f'/{SUBPATH}static/'
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias')
-MEDIA_URL = '/media/'
+MEDIA_URL = f'/{SUBPATH}media/'
 
 SITE_ID = 1
 

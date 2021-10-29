@@ -17,7 +17,6 @@ SECURE_HSTS_SECONDS = int(os.environ.get('SECURE_HSTS_SECONDS', 365 * 24 * 3600)
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
-STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
 
 # Database
@@ -80,4 +79,3 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-

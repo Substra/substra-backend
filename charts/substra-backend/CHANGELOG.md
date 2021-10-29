@@ -1,8 +1,11 @@
 # Changelog
 
+## 12.1.0
+### Added
+- Optional `backend.subpath` setting to serve the API under a subpath
+
 ## 12.0.5
 ### Changed
-
 - rename celery specific env variable
 
 ## 12.0.4

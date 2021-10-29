@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Possibility to deploy deploy multiple workers on different kubernetes nodes in order to use compute resources in parallel. See [charts CHANGELOG.md](./charts/substra-backend/CHANGELOG.md#6.0.0) for more details.
 - post_delete signal upon model deletion to remove the model from Minio storage.
 - Add task extra information related to start_date and end_date.
+- serve API behind subpath with `SUBPATH` env var (#386)
 
 ### Changed
 - Task data are now mounted on `/substra_internal` instead of `/sandbox`.
