@@ -63,10 +63,10 @@ outgoingNodes:
 
 users:
   - name: "node-2"
-    secret: "p@$swr0d45"
+    secret: "p@sswr0d45"
     channel: "mychannel"
   - name: "node-2-yourchannel"
-    secret: "p@$swr0d45"
+    secret: "p@sswr0d45"
     channel: "yourchannel"
 
 extraEnv:

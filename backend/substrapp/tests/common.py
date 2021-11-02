@@ -29,7 +29,7 @@ class AuthenticatedClient(APIClient):
 
         # create user
         username = 'substra'
-        password = 'p@$swr0d44'
+        password = 'p@sswr0d44'
         user, created = User.objects.get_or_create(username=username)
         if created:
             user.set_password(password)

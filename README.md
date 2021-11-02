@@ -91,7 +91,7 @@ On deployment, several user accounts are created (for [./values/backend-org-1.ya
 
 The sample credentials for org1 are:
 - user: `node-1`
-- pass: `p@$swr0d44`
+- pass: `p@sswr0d44`
 
 Provided you have correctly setup your [network configuration](https://doc.substra.ai/setup/local_install_skaffold.html#network), you can use them to access the exposed API at http://substra-backend.node-1.com/
 

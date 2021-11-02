@@ -5,7 +5,7 @@ from datetime import datetime
 
 URL = 'http://substra-backend.node-1.com'
 USERNAME = 'node-1'
-PASSWORD = 'p@$swr0d44'
+PASSWORD = 'p@sswr0d44'
 
 dir_path = os.path.dirname(__file__)
 assets_path = os.path.join(dir_path, 'assets.py')

@@ -28,7 +28,7 @@ class PasswordValidationTests(TestCase):
 
     def test_password_complexity(self):
         password_not_complex = "abc"
-        password_complex = "p@$swr0d44"
+        password_complex = "p@sswr0d44"
 
         # complex password OK
         try:
