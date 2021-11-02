@@ -24,6 +24,10 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
         - |
+          # Graceful shutdown on SIGTERM
+          # See https://veithen.io/2014/11/16/sigterm-propagation.html
+          trap 'exit 143' TERM
+
           while true; do
               ./manage.py migrate
 
@@ -42,7 +46,10 @@ spec:
                 ./manage.py create_outgoing_node $user_password
               done < /accounts/outgoing_nodes
 
-            sleep 60
+            # Graceful shutdown on SIGTERM
+            # See https://veithen.io/2014/11/16/sigterm-propagation.html
+            sleep 60 &
+            wait $!
 
           done
         resources:

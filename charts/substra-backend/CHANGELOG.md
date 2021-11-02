@@ -1,5 +1,10 @@
 # Changelog
 
+## 12.1.1
+### Fixed
+
+- Graceful shutdown of add-account-operator
+
 ## 12.1.0
 ### Added
 - Optional `backend.subpath` setting to serve the API under a subpath
