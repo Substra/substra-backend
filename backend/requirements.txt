@@ -26,6 +26,6 @@ minio==7.1.1
 watchdog==2.1.6
 argh==0.26.2
 # tests
-coverage==6.0.2
+coverage==6.1.1
 mock==4.0.3
 parameterized==0.8.1
