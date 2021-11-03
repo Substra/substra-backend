@@ -17,10 +17,17 @@ spec:
         {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-add-account
     spec:
+      automountServiceAccountToken: false
+      {{- if .Values.server.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.server.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
+      {{- end }}
       containers:
       - name: add-account
-        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
+        image: {{ include "common.images.name" .Values.server.image }}
+        imagePullPolicy: {{ .Values.server.image.pullPolicy }}
         command: ["/bin/bash", "-c"]
         args:
         - |
@@ -53,29 +60,24 @@ spec:
 
           done
         resources:
-            {{- toYaml .Values.resources | nindent 14 }}
+            {{- toYaml .Values.addAccountOperator.resources | nindent 14 }}
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-database
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-database
         env:
           - name: DJANGO_SETTINGS_MODULE
-            value: backend.settings.{{ .Values.backend.settings }}
-          - name: BACKEND_DB_NAME
-            value: {{ .Values.postgresql.postgresqlDatabase }}
-          - name: BACKEND_DB_USER
-            value: {{ .Values.postgresql.postgresqlUsername }}
-          - name: BACKEND_DB_PWD
-            value: {{ .Values.postgresql.postgresqlPassword }}
-          - name: DATABASE_HOST
-            value: {{ template  "postgresql.serviceName" . }}
-          - name: PYTHONUNBUFFERED
-            value: "1"
+            value: backend.settings.{{ .Values.settings }}
         volumeMounts:
           - mountPath: /accounts
             name: accounts
             readOnly: true
       initContainers:
       - name: wait-postgresql
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       volumes:
         - name: accounts
-          configMap:
-            name: {{ template "substra.fullname" . }}-add-account
+          secret:
+            secretName: {{ template "substra.fullname" . }}-add-account

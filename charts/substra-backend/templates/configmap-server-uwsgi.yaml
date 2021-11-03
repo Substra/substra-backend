@@ -9,12 +9,12 @@ data:
   uwsgi.ini: |
     [uwsgi]
     module                        = backend.wsgi
-    env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.backend.settings }}
-    static-map                    = /{{ trimAll "/" .Values.backend.subpath }}{{ if .Values.backend.subpath }}/{{ end }}static=/usr/src/app/backend/statics
+    env                           = DJANGO_SETTINGS_MODULE=backend.settings.server.{{ .Values.settings }}
+    static-map                    = /{{ trimAll "/" .Values.server.subpath }}{{ if .Values.server.subpath }}/{{ end }}static=/usr/src/app/backend/statics
 
     master                        = 1
-    processes                     = {{ .Values.backend.uwsgiProcesses }}
-    threads                       = {{ .Values.backend.uwsgiThreads }}
+    processes                     = {{ .Values.server.uwsgiProcesses }}
+    threads                       = {{ .Values.server.uwsgiThreads }}
 
     http-socket                   = :8000
 

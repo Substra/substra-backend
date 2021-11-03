@@ -1,6 +1,7 @@
 FROM python:3.9-slim AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
+ENV PYTHONUNBUFFERED=1
 RUN apt-get update && apt-get install gcc -y && apt-get clean
 
 RUN mkdir -p /usr/src/app

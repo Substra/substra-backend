@@ -16,3 +16,6 @@ docs: doc
 
 doc:
 	$(MAKE) -C docs
+
+chart-doc:
+	$(MAKE) -C charts doc

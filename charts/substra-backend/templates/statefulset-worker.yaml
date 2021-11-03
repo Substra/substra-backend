@@ -22,7 +22,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-worker
 spec:
-  replicas: {{ .Values.celeryworker.replicaCount }}
+  replicas: {{ .Values.worker.replicaCount }}
   serviceName: {{ template "substra.fullname" . }}-worker
   selector:
     matchLabels:
@@ -35,17 +35,19 @@ spec:
         app.kubernetes.io/name: {{ template "substra.name" . }}-worker
         app.kubernetes.io/component: substra-worker
     spec:
-      {{- if .Values.securityContext.enabled }}
+      {{- if .Values.worker.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
+        runAsUser: {{ .Values.worker.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.worker.podSecurityContext.runAsGroup }}
+        fsGroup: {{ .Values.worker.podSecurityContext.fsGroup }}
       {{- end }}
-      {{- with $.Values.celeryworker.image.pullSecrets }}
+      {{- with .Values.worker.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Values.celeryworker.rbac.enable }}
+      {{- if .Values.worker.rbac.enable }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker
       {{- end }}
       initContainers:
@@ -53,6 +55,8 @@ spec:
       - name: add-cert
         image: {{ .Values.privateCa.image.repository }}
         imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+        securityContext:
+          runAsUser: 0
         command: ['sh', '-c']
         args:
         - |
@@ -67,167 +71,95 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if and .Values.securityContext.enabled .Values.celeryworker.persistence.hostPath }}
-      - name: chown-pvc
-        image: alpine:latest
-        imagePullPolicy: IfNotPresent
-        command: ["sh", "-c"]
-        args:
-        - |
-          for dir in `ls -d /var/substra/medias/*`; do
-            chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
-          done
-        volumeMounts:
-          {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
-          - name: data-{{ $key }}
-            mountPath: /var/substra/medias/{{ $key }}
-          {{- end }}
-      {{- end }}
-      {{- if .Values.backend.kaniko.cache.warmer.images }}
+      {{- if .Values.kaniko.cache.warmer.cachedImages }}
       - name: kaniko-cache-warmer
-        image: {{ .Values.backend.kaniko.cache.warmer.image }}
+        image: {{ include "common.images.name" .Values.kaniko.cache.warmer.image }}
         args:
         - "--cache-dir=/cache"
-        {{- range .Values.backend.kaniko.cache.warmer.images }}
-        - "--image={{ .image }}"
+        {{- range .Values.kaniko.cache.warmer.cachedImages }}
+        - "--image={{ . }}"
         {{- end }}
         - "--verbosity=debug"
         volumeMounts:
           - name: docker-cache
             mountPath: /cache
             readOnly: False
-          {{- if .Values.backend.kaniko.dockerConfigSecretName }}
+          {{- if .Values.kaniko.dockerConfigSecretName }}
           - name: docker-config
             mountPath: /kaniko/.docker
           {{- end }}
       {{- end}}
       - name: wait-postgresql
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       - name: wait-minio
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       containers:
         - name: worker
-          image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
-          {{- if .Values.celeryworker.image.pullPolicy }}
-          imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
-          {{- end }}
-          {{- if .Values.securityContext.enabled }}
-          securityContext:
-            runAsUser: {{ .Values.securityContext.runAsUser }}
-            runAsGroup: {{ .Values.securityContext.runAsGroup }}
-          {{- end }}
+          image: {{ include "common.images.name" .Values.worker.image }}
+          imagePullPolicy: "{{ .Values.worker.image.pullPolicy }}"
           command: ["/bin/bash"]
-          {{- if eq .Values.backend.settings "prod" }}
-          args: ["-c", "celery -A backend worker -E -l info -Q {{ .Values.organization.name }}.worker,{{ .Values.organization.name }}.worker-${HOSTNAME##*-},{{ .Values.organization.name }}.broadcast,celery --hostname {{ .Values.organization.name }}.worker-${HOSTNAME##*-}"]
+          {{- if eq .Values.settings "prod" }}
+          args: ["-c", "celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.worker,{{ .Values.organizationName }}.worker-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.worker-${HOSTNAME##*-}"]
           {{ else }}
-          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organization.name }}.worker,{{ .Values.organization.name }}.worker-${HOSTNAME##*-},{{ .Values.organization.name }}.broadcast,celery --hostname {{ .Values.organization.name }}.worker-${HOSTNAME##*-}"]
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- celery -A backend worker -E -l info -Q {{ .Values.organizationName }}.worker,{{ .Values.organizationName }}.worker-${HOSTNAME##*-},{{ .Values.organizationName }}.broadcast,celery --hostname {{ .Values.organizationName }}.worker-${HOSTNAME##*-}"]
           {{ end }}
           envFrom:
             - configMapRef:
-                name: {{ include "substra.fullname" . }}-ledger
-            - configMapRef:
                 name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-registry
             - secretRef:
                 name: {{ include "substra.fullname" . }}-objectstore
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
           env:
             - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.celery.{{ .Values.backend.settings }}
-            - name: ORG_NAME
-              value: {{ .Values.organization.name }}
-            - name: BACKEND_DB_NAME
-              value: {{ .Values.postgresql.postgresqlDatabase }}
-            - name: BACKEND_DB_USER
-              value: {{ .Values.postgresql.postgresqlUsername }}
-            - name: BACKEND_DB_PWD
-              value: {{ .Values.postgresql.postgresqlPassword }}
-            - name: DATABASE_HOST
-              value: {{ template  "postgresql.serviceName" . }}
+              value: backend.settings.celery.{{ .Values.settings }}
             - name: DEFAULT_DOMAIN
-              value: "{{ .Values.backend.defaultDomain }}"
-            - name: CELERY_BROKER_URL
-              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-            - name: MEDIA_ROOT
-              value: /var/substra/medias/
-            - name: PYTHONUNBUFFERED
-              value: "1"
+              value: "{{ .Values.server.defaultDomain }}"
             - name: "CELERY_WORKER_CONCURRENCY"
-              value: {{ .Values.celeryworker.concurrency | quote }}
-            - name: WORKER_PVC_IS_HOSTPATH
-            {{- if .Values.celeryworker.persistence.hostPath }}
-              value: "true"
-            {{- else }}
-              value: "false"
-            {{- end }}
+              value: {{ .Values.worker.concurrency | quote }}
             - name: WORKER_PVC_DOCKER_CACHE
-            {{- if .Values.celeryworker.persistence.hostPath }}
-              value: {{ template "substra.fullname" $ }}-docker-cache
-            {{- else }}
               value: docker-cache
-            {{- end }}
             - name: WORKER_PVC_SUBTUPLE
-            {{- if .Values.celeryworker.persistence.hostPath }}
-              value: {{ template "substra.fullname" $ }}-subtuple
-            {{- else }}
               value: subtuple
-            {{- end }}
             {{- if .Values.privateCa.enabled }}
             - name: REQUESTS_CA_BUNDLE
               value: /etc/ssl/certs/ca-certificates.crt
             {{- end }}
-            {{- if .Values.registry.local }}
-            - name: REGISTRY
-              value: {{ .Release.Name }}-docker-registry:5000
-            {{ else }}
-            - name: REGISTRY
-              value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
-            {{ end }}
-            - name: REGISTRY_IS_LOCAL
-              value: "{{ $.Values.registry.local }}"
-            - name: REGISTRY_SERVICE_NAME
-              value: {{ .Release.Name }}-docker-registry
-            - name: REGISTRY_SCHEME
-              value: {{ .Values.registry.scheme}}
-            - name: REGISTRY_PULL_DOMAIN
-              value: {{ .Values.registry.pullDomain}}
             - name: NAMESPACE
-              value: {{ .Release.Namespace }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: RUN_AS_USER
-              value: {{ .Values.securityContext.runAsUser | quote}}
-            - name: RUN_AS_GROUP
-              value: {{ .Values.securityContext.runAsGroup | quote }}
-            - name: FS_GROUP
-              value: {{ .Values.securityContext.fsGroup | quote }}
-            - name: KANIKO_IMAGE
-              value: {{ .Values.backend.kaniko.image | quote }}
-            - name: KANIKO_MIRROR
-              value: {{ .Values.backend.kaniko.mirror | quote }}
             - name: KANIKO_DOCKER_CONFIG_SECRET_NAME
-              value: {{ .Values.backend.kaniko.dockerConfigSecretName | quote  }}
-            - name: COMPUTE_REGISTRY
-              value: {{ .Values.backend.compute.registry | quote }}
+              value: {{ .Values.kaniko.dockerConfigSecretName | quote  }}
             - name: COMPUTE_POD_MAX_STARTUP_WAIT_SECONDS
-              value: {{ .Values.backend.compute.podMaxStartupWaitSeconds | quote }}
-            - name: HTTP_CLIENT_TIMEOUT_SECONDS
-              value: {{ .Values.httpClient.timeoutSeconds | quote  }}
+              value: {{ .Values.worker.computePod.maxStartupWaitSeconds | quote }}
             - name: OBJECTSTORE_URL
               value: {{ .Release.Name }}-minio:9000
             - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
-              value: {{ .Values.celeryworker.persistence.servermedias.enableDatasampleStorage | quote }}
+              value: {{ .Values.DataSampleStorageInServerMedia | quote }}
           {{- with .Values.extraEnv }}
 {{ toYaml . | indent 12 }}
           {{- end }}
           volumeMounts:
-            {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
-            - name: {{ $key }}
-              mountPath: /var/substra/medias/{{ $key }}
-            {{- end }}
-            {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
+            - name: subtuple
+              mountPath: /var/substra/medias/subtuple
+            {{- if .Values.DataSampleStorageInServerMedia }}
             - name: data-servermedias
               mountPath: /var/substra/servermedias
             {{- end }}
@@ -244,16 +176,9 @@ spec:
             {{ end }}
             {{ end }}
           resources:
-            {{- toYaml .Values.celeryworker.resources | nindent 12 }}
+            {{- toYaml .Values.worker.resources | nindent 12 }}
       volumes:
-      {{- if .Values.celeryworker.persistence.hostPath }}
-      {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
-      - name: {{ $key }}
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-{{ $key }}
-      {{- end }}
-      {{- end }}
-      {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
+      {{- if .Values.DataSampleStorageInServerMedia  }}
       - name: data-servermedias
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-servermedias
@@ -265,29 +190,29 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      {{ if $.Values.orchestrator.tls.enabled }}
+      {{ if .Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert
         secret:
-          secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
-      {{ if $.Values.orchestrator.tls.mtls.enabled }}
+          secretName: {{ .Values.orchestrator.tls.cacert }}
+      {{ if .Values.orchestrator.tls.mtls.enabled }}
       - name: orchestrator-tls-client-pair
         secret:
-          secretName: {{ $.Values.orchestrator.tls.mtls.secrets.pair }}
+          secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-      {{- if .Values.backend.kaniko.dockerConfigSecretName }}
+      {{- if .Values.kaniko.dockerConfigSecretName }}
       - name: docker-config
         secret:
-          secretName: {{ .Values.backend.kaniko.dockerConfigSecretName }}
+          secretName: {{ .Values.kaniko.dockerConfigSecretName }}
           items:
           - key: .dockerconfigjson
             path: config.json
       {{- end }}
-    {{- with .Values.celeryworker.nodeSelector }}
+    {{- with .Values.worker.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- if .Values.celeryworker.persistence.servermedias.enableDatasampleStorage }}
+    {{- if .Values.DataSampleStorageInServerMedia}}
       affinity:
         podAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -299,39 +224,29 @@ spec:
                 - {{ template "substra.name" . }}-server
             topologyKey: kubernetes.io/hostname
     {{- else }}
-    {{- with .Values.celeryworker.affinity }}
+    {{- with .Values.worker.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
     {{- end }}
-    {{- with .Values.celeryworker.tolerations }}
+    {{- with .Values.worker.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-  {{- if not .Values.celeryworker.persistence.hostPath }}
   volumeClaimTemplates:
-  {{- range $key, $val := .Values.celeryworker.persistence.volumes }}
   - metadata:
-      name: {{ $key }}
+      name: subtuple
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      {{- if $.Values.celeryworker.persistence.storageClassName }}
-      storageClassName: {{ $.Values.celeryworker.persistence.storageClassName }}
-      {{- end }}
+      {{ include "common.storage.class" .Values.worker.persistence }}
       resources:
         requests:
-          storage: {{ .size }}
-  {{- end }}
-  {{- range $key, $val := .Values.backend.kaniko.persistence.volumes }}
+          storage: {{ .Values.worker.persistence.size }}
   - metadata:
-      name: {{ $key }}
+      name: docker-cache
     spec:
       accessModes: [ "ReadWriteOnce" ]
-      {{- if $.Values.backend.kaniko.persistence.storageClassName }}
-      storageClassName: {{ $.Values.backend.kaniko.persistence.storageClassName }}
-      {{- end }}
+      {{ include "common.storage.class" .Values.kaniko.cache.persistence }}
       resources:
         requests:
-          storage: {{ .size }}
-  {{- end }}
-  {{- end }}
+          storage: {{ .Values.kaniko.cache.persistence.size }}

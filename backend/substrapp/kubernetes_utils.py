@@ -1,5 +1,4 @@
 import kubernetes
-import os
 import structlog
 import time
 
@@ -11,9 +10,9 @@ logger = structlog.get_logger(__name__)
 
 NAMESPACE = settings.NAMESPACE
 HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
-RUN_AS_GROUP = os.getenv("RUN_AS_GROUP")
-RUN_AS_USER = os.getenv("RUN_AS_USER")
-FS_GROUP = os.getenv("FS_GROUP")
+RUN_AS_GROUP = settings.COMPUTE_POD_RUN_AS_GROUP
+RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
+FS_GROUP = settings.COMPUTE_POD_FS_GROUP
 
 
 def get_pod_security_context(enabled=True, root=False):

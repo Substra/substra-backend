@@ -8,10 +8,7 @@ metadata:
     "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": "hook-succeeded"
   labels:
-    "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-    app.kubernetes.io/name: {{ template "substra.name" . }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{ include "substra.labels" . | nindent 4 }}
 spec:
   ttlSecondsAfterFinished: 0
   parallelism: 1
@@ -20,16 +17,13 @@ spec:
   template:
     metadata:
       labels:
-        "helm.sh/chart": {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
-        app.kubernetes.io/name: {{ template "substra.name" . }}
-        app.kubernetes.io/managed-by: {{ .Release.Service }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{ include "substra.labels" . | nindent 8 }}
     spec:
       restartPolicy: Never
-      serviceAccountName: {{ .Values.hooks.serviceAccount.name }}
+      serviceAccountName: {{ .Values.hooks.serviceAccount }}
       containers:
         - name: kubectl
-          image: "{{ .Values.hooks.deleteComputePods.image.repository }}:{{ .Values.hooks.deleteComputePods.image.tag }}"
+          image: {{ include "common.images.name" .Values.hooks.deleteComputePods.image }}
           args:
             - delete
             - pods

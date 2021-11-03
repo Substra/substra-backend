@@ -4,10 +4,9 @@ metadata:
   name: {{ template "substra.fullname" . }}-server
   labels:
     {{ include "substra.labels" . | nindent 4 }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-server
 spec:
-  replicas: {{ .Values.backend.replicaCount }}
+  replicas: {{ .Values.server.replicaCount }}
   selector:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
@@ -15,32 +14,27 @@ spec:
   template:
     metadata:
       labels:
-        {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-server
+        {{ include "substra.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.securityContext.enabled }}
+      {{- if .Values.server.podSecurityContext.enabled }}
       securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
+        fsGroup: {{ .Values.server.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.server.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.server.podSecurityContext.runAsGroup }}
       {{- end }}
-      {{- with $.Values.backend.image.pullSecrets }}
+      {{- with .Values.server.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
       containers:
-      - name: {{ template "substra.name" . }}
-        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-        {{- if .Values.backend.image.pullPolicy }}
-        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
-        {{- end }}
-        {{- if .Values.securityContext.enabled }}
-        securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          runAsGroup: {{ .Values.securityContext.runAsGroup }}
-        {{- end }}
+      - name: server
+        image: {{ include "common.images.name" .Values.server.image }}
+        imagePullPolicy: "{{ .Values.server.image.pullPolicy }}"
         command: ["/bin/bash"]
-        {{- if eq .Values.backend.settings "prod" }}
+        {{- if eq .Values.settings "prod" }}
         args: ["-c", "uwsgi --ini uwsgi.ini"]
         {{- else }}
         args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini --honour-stdin"]
@@ -49,46 +43,16 @@ spec:
         {{- end }}
         envFrom:
           - configMapRef:
-              name: {{ include "substra.fullname" . }}-ledger
-          - configMapRef:
               name: {{ include "substra.fullname" . }}-orchestrator
           - secretRef:
               name: {{ include "substra.fullname" . }}-objectstore
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-settings
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-database
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-database
         env:
-          - name: ORG_NAME
-            value: {{ .Values.organization.name }}
-          - name: BACKEND_DB_NAME
-            value: {{ .Values.postgresql.postgresqlDatabase }}
-          - name: BACKEND_DB_USER
-            value: {{ .Values.postgresql.postgresqlUsername }}
-          - name: BACKEND_DB_PWD
-            value: {{ .Values.postgresql.postgresqlPassword }}
-          - name: DATABASE_HOST
-            value: {{ template  "postgresql.serviceName" . }}
-          - name: DEFAULT_DOMAIN
-            value: "{{ .Values.backend.defaultDomain }}"
-          - name: CELERY_BROKER_URL
-            value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-          - name: BACKEND_DEFAULT_PORT
-            value: {{ .Values.backend.service.port | quote}}
-          - name: MEDIA_ROOT
-            value: /var/substra/medias/
-          - name: PYTHONUNBUFFERED
-            value: "1"
-          - name: GZIP_MODELS
-            value: {{ .Values.backend.gzipModels | quote }}
-          - name: TOKEN_STRATEGY
-            value: {{ .Values.backend.tokenStrategy }}
-          - name: HTTP_CLIENT_TIMEOUT_SECONDS
-            value: {{ .Values.httpClient.timeoutSeconds | quote }}
-          - name: PAGINATION_MAX_PAGE_SIZE
-            value: {{ .Values.backend.pagination.maxPageSize | quote }}
-          - name: COMMON_HOST_DOMAIN
-            value: {{ .Values.backend.commonHostDomain | quote }}
-          {{- if .Values.backend.subpath }}
-          - name: SUBPATH
-            value: {{ .Values.backend.subpath | quote }}
-          {{- end }}
           - name: HOST_IP
             valueFrom:
               fieldRef:
@@ -97,26 +61,21 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: status.podIP
-          - name: ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS
-            value: {{ .Values.celeryworker.persistence.servermedias.enableDatasampleStorage | quote }}
           {{- if .Values.privateCa.enabled }}
           - name: REQUESTS_CA_BUNDLE
             value: /etc/ssl/certs/ca-certificates.crt
           {{- end }}
-          - name: OBJECTSTORE_URL
-            value: {{ .Release.Name }}-minio:9000
-        {{- with .Values.extraEnv }}
-{{ toYaml . | indent 10 }}
-        {{- end }}
         ports:
           - name: http
             containerPort: 8000
             protocol: TCP
         volumeMounts:
-          {{- range $key, $val := .Values.backend.persistence.volumes }}
-          - name: data-{{ $key }}
-            mountPath: /var/substra/medias/{{ $key }}
-          {{- end }}
+          - name: data-algos
+            mountPath: /var/substra/medias/algos
+          - name: data-datamanagers
+            mountPath: /var/substra/medias/datamanagers
+          - name: data-metrics
+            mountPath: /var/substra/medias/metrics
           - name: data-servermedias
             mountPath: /var/substra/servermedias
           - name: statics
@@ -129,10 +88,10 @@ spec:
           - mountPath: /etc/ssl/certs
             name: ssl-certs
           {{- end }}
-          {{ if $.Values.orchestrator.tls.enabled }}
+          {{ if .Values.orchestrator.tls.enabled }}
           - name: orchestrator-tls-cacert
             mountPath: /var/substra/orchestrator/tls/server
-          {{ if $.Values.orchestrator.tls.mtls.enabled }}
+          {{ if .Values.orchestrator.tls.mtls.enabled }}
           - name: orchestrator-tls-client-pair
             mountPath: /var/substra/orchestrator/tls/client
           {{ end }}
@@ -153,12 +112,14 @@ spec:
           timeoutSeconds: 2
           periodSeconds: 30
         resources:
-          {{- toYaml .Values.backend.resources | nindent 12 }}
+          {{- toYaml .Values.server.resources | nindent 12 }}
       initContainers:
       {{- if .Values.privateCa.enabled }}
       - name: add-cert
-        image: {{ .Values.privateCa.image.repository }}
+        image: {{ include "common.images.name" .Values.privateCa.image }}
         imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+        securityContext:
+          runAsUser: 0
         command: ['sh', '-c']
         args:
         - |
@@ -173,76 +134,49 @@ spec:
           - mountPath: /tmp/certs/
             name: ssl-certs
       {{- end }}
-      {{- if and .Values.securityContext.enabled .Values.backend.persistence.hostPath }}
-      - name: chown-pvc
-        image: alpine:latest
-        imagePullPolicy: IfNotPresent
-        command: ["sh", "-c"]
-        args:
-        - |
-          for dir in `ls -d /var/substra/medias/*`; do
-            chown -R {{ .Values.securityContext.runAsUser }}:{{ .Values.securityContext.runAsGroup }} $dir
-          done
-        volumeMounts:
-          {{- range $key, $val := .Values.backend.persistence.volumes }}
-          - name: data-{{ $key }}
-            mountPath: /var/substra/medias/{{ $key }}
-          {{- end }}
-      {{- end }}
       - name: wait-postgresql
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       - name: wait-minio
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ .Release.Name }}-minio:9000']
       - name: init-migrate
-        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        image: {{ include "common.images.name" .Values.server.image }}
         command: ['python', 'manage.py', 'migrate']
-        {{- if .Values.securityContext.enabled }}
-        securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          runAsGroup: {{ .Values.securityContext.runAsGroup }}
-        {{- end }}
         envFrom:
           - secretRef:
               name: {{ include "substra.fullname" . }}-objectstore
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-database
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-settings
+          - secretRef:
+              name: {{ include "substra.fullname" . }}-database
         env:
         - name: DJANGO_SETTINGS_MODULE
-          value: backend.settings.{{ .Values.backend.settings }}
-        - name: ORG_NAME
-          value: {{ .Values.organization.name }}
-        - name: BACKEND_DB_NAME
-          value: {{ .Values.postgresql.postgresqlDatabase }}
-        - name: BACKEND_DB_USER
-          value: {{ .Values.postgresql.postgresqlUsername }}
-        - name: BACKEND_DB_PWD
-          value: {{ .Values.postgresql.postgresqlPassword }}
-        - name: DATABASE_HOST
-          value: {{ template  "postgresql.serviceName" . }}
-        - name: OBJECTSTORE_URL
-          value: {{ .Release.Name }}-minio:9000
+          value: backend.settings.{{ .Values.settings }}
       - name: init-collectstatic
-        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+        image: {{ include "common.images.name" .Values.server.image }}
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
-        {{- if .Values.securityContext.enabled }}
-        securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          runAsGroup: {{ .Values.securityContext.runAsGroup }}
-        {{- end }}
+        envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-settings
         env:
           - name: DJANGO_SETTINGS_MODULE
-            value: backend.settings.prod
-          - name: ORG_NAME
-            value: {{ .Values.organization.name }}
+            value: backend.settings.{{ .Values.settings }}
         volumeMounts:
           - name: statics
             mountPath: /usr/src/app/backend/statics
       volumes:
-      {{- range $key, $val := .Values.backend.persistence.volumes }}
-      - name: data-{{ $key }}
+      - name: data-algos
         persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-{{ $key }}
-      {{- end }}
+          claimName: {{ include "substra.fullname" $ }}-algos
+      - name: data-datamanagers
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-datamanagers
+      - name: data-metrics
+        persistentVolumeClaim:
+          claimName: {{ include "substra.fullname" $ }}-metrics
       - name: data-servermedias
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-servermedias
@@ -258,25 +192,25 @@ spec:
         configMap:
           name: {{ .Values.privateCa.configMap.name }}
       {{- end }}
-      {{ if $.Values.orchestrator.tls.enabled }}
+      {{ if .Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert
         secret:
-          secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
-      {{ if $.Values.orchestrator.tls.mtls.enabled }}
+          secretName: {{ .Values.orchestrator.tls.cacert }}
+      {{ if .Values.orchestrator.tls.mtls.enabled }}
       - name: orchestrator-tls-client-pair
         secret:
-          secretName: {{ $.Values.orchestrator.tls.mtls.secrets.pair }}
+          secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
-    {{- with .Values.backend.nodeSelector }}
+    {{- with .Values.server.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.backend.affinity }}
+    {{- with .Values.server.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.backend.tolerations }}
+    {{- with .Values.server.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

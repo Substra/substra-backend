@@ -4,206 +4,243 @@ Substra Backend is a component of [Substra](https://github.com/SubstraFoundation
 
 ## Prerequisites
 
-- Kubernetes 1.14+
+- Kubernetes 1.19+
 - If you want to enable GPU support, install the nvidia device plugin for kubernetes: https://github.com/NVIDIA/k8s-device-plugin or https://github.com/NVIDIA/gpu-operator
 
 ## Changelog
 
 See [CHANGELOG.md](./CHANGELOG.md)
 
-## Configuration
+## Parameters
 
-The following table lists the configurable parameters of the substra-backend chart and default values.
+### Global Substra settings
 
-:warning: This list is a work in progress. Please refer to [values.yaml](./values.yaml) for full configuration options.
+| Name                             | Description                                                   | Value                |
+| -------------------------------- | ------------------------------------------------------------- | -------------------- |
+| `settings`                       | The settings to use for substra (`prod` or `dev`)             | `prod`               |
+| `config`                         | The configuration to use for substra                          | `{}`                 |
+| `organizationName`               | Current organization name                                     | `owkin`              |
+| `DataSampleStorageInServerMedia` |                                                               | `false`              |
+| `privateCa.enabled`              | Run the init container injecting the private CA certificate   | `false`              |
+| `privateCa.image.repository`     | Private CA injector image                                     | `alpine`             |
+| `privateCa.image.tag`            | Private CA injector tag                                       | `latest`             |
+| `privateCa.image.pullPolicy`     | Private CA injector pull policy                               | `IfNotPresent`       |
+| `privateCa.image.apkAdd`         | Install the update-ca-certificates package                    | `true`               |
+| `privateCa.configMap.name`       | Name of the _ConfigMap_ containing the private CA certificate | `substra-private-ca` |
+| `privateCa.configMap.data`       | Certificate to add in the _ConfigMap_                         | `nil`                |
+| `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                       | `private-ca.crt`     |
+| `psp.create`                     | Create a _Pod Security Policy_ in the cluster                 | `true`               |
 
-| Parameter                          | Description                                     | Default                                                    |
-| ---------------------------------- | ------------------------------------------------ | ---------------------------------------------------------- |
-| `backend.replicaCount` | Replica count for substra-backend server service | `1` |
-| `backend.settings` | The settings to use to deploy substra-backend, can be `prod` or `dev`| `prod` |
-| `backend.tokenStrategy` | Token strategy to use. If `unique`, a user may only have one active session at a time. With `reuse`, a user may open multiple concurrent sessions | `unique` |
-| `backend.defaultDomain` | The hostname and port corresponding to the backend. This domain will be referenced in the "storage_address" of the ledger assets. | `localhost` |
-| `backend.uwsgiProcesses` | Number of uswgi processes | `20` |
-| `backend.uwsgiThreads` | Number of uwsgi threads per process | `2` |
-| `backend.subpath` | serve the API behind given subpath | `''` |
-| `backend.gzipModels` | Enable models compression before transmission | `False` |
-| `backend.kaniko.dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | `""` |
-| `backend.kaniko.cache.warmer.image` | The docker image for the kaniko cache warmer | `gcr.io/kaniko-project/warmer:v1.0.0` |
-| `backend.kaniko.cache.warmer.images` | A list of docker images to warm up the kaniko local cache with | `[]` |
-| `backend.kaniko.cache.warmer.images[].image` | A docker image | (undefined) |
-| `backend.kaniko.image` | The docker image for kaniko builds | `gcr.io/kaniko-project/executor:v1.6.0` |
-| `backend.kaniko.mirror` | If true, pull base images from the local registry | `False` |
-| `backend.kaniko.persistence.storageClassName` | PVC Storage Class name for kaniko pods volumes | (undefined) |
-| `backend.kaniko.persistence.hostPath` | Host path for PVC Storage in case of local storage | (undefined) |
-| `backend.kaniko.persistence.volumes` | Volumes definition for kaniko pods storage | `subtuple` |
-| `backend.kaniko.persistence.volumes[].size` | kaniko pods volumes size | |
-| `backend.compute.registry` | Optionally, the URL of a registry to pull the kaniko image from (`backend.kaniko.image`). This image will be used to build client images (compute tasks) | `nil` |
-| `backend.compute.podStartupTimeoutSeconds` | The maximum time to wait for a compute pod to start in seconds | `300` |
-| `backend.image.repository` | `substra-backend` image repository | `substrafoundation/substra-backend` |
-| `backend.image.tag` | `substra-backend` image tag | `latest` |
-| `backend.image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `backend.image.pullSecrets` | Image pull secrets | `[]` |
-| `backend.service.type` | Kubernetes Service type | `ClusterIP` |
-| `backend.service.port` | substra-backend service port | `8000` |
-| `backend.service.loadBalancerSourceRanges` | CIDR range of IP addresses allowed to access the service, when the service is of type LoadBalancer | `[]` |
-| `backend.service.loadBalancerIP`  | LoadBalancerIP for the service | `nil` |
-| `backend.service.clusterIP` | ClusterIP for the service | `nil` |
-| `backend.service.externalIP` | ExternalIP for the service | `[]` |
-| `backend.service.labels` | Service labels | `{}` (evaluated as a template) |
-| `backend.service.annotations` | Service annotations | `{}` (evaluated as a template) |
-| `backend.ingress.enabled` | Enable ingress resource for Management console | `False` |
-| `backend.ingress.path` | Path for the default host | `/` |
-| `backend.ingress.pathType` | Ingress path type | `ImplementationSpecific` |
-| `backend.ingress.hostname` | Default host for the ingress | `chart-example.local` |
-| `backend.ingress.annotations` | Annotations for the ingress | `{}` |
-| `backend.ingress.extraHosts` | The list of additionnal hostnames to be covered by the ingress | `[]` |
-| `backend.ingress.extraTls` | The tls configuration for the ingress hostnames | `[]` |
-| `backend.ingress.ingressClassName` | IngressClass that will be used to implement the ingress | `nil` |
-| `backend.resources` | Resources configuration for the `substra-backend` container | `{}` |
-| `backend.grpc.keepalive.timeMs` | The number of milliseconds between each client GRPC keepalive ping | `120000` |
-| `backend.pagination.maxPageSize` | The maximum elements per page authorized | `100` |
-| `backend.commonHostDomain` | The common host under which both backend and frontend are served | `nil` |
-| `backend.persistence.storageClassName` | PVC Storage Class name for the server data volumes | (undefined) |
-| `backend.persistence.hostPath` | Host path for PVC Storage in case of local storage for the server data volumes | (undefined) |
-| `backend.persistence.servermedias.hostPath` | Host path for server medias, in case of local storage | (undefined) |
-| `backend.persistence.servermedias.size` |  PVC Storage Request for server medias volume | `10Gi` |
-| `backend.persistence.volumes` | Volume definitions for the server assets storage | `algos, ..., metrics` |
-| `backend.persistence.volumes[].size` | Server volume size | |
-| `outgoingNodes[]` | Outgoing nodes credentials for substra-backend node-to-node communication | `[]` |
-| `outgoingNodes[].name` | Outgoing node username | (undefined) |
-| `outgoingNodes[].secret` | Outgoing node password | (undefined) |
-| `incomingNodes[]` | Incoming nodes credentials for substra-backend node-to-node communication | `[]` |
-| `incomingNodes[].name` | Incoming node username | `[]` |
-| `incomingNodes[].secret` | Incoming nodes password | (undefined) |
-| `users` | A list of users who can log into the backend | (undefined) |
-| `users[].name` | The user login | (undefined) |
-| `users[].password` | The user password | (undefined) |
-| `users[].channel` | The user channel. This is the name of a Hyperledger Fabric channel (see [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s)). All operations by the user will be executed against this channel. | (undefined) |
-| `secrets.caCert` | Hyperledger Fabric Peer CA Cert  | `hlf-cacert` |
-| `secrets.user.cert` | Hyperledger Fabric Peer user certificate | `hlf-msp-cert-user` |
-| `secrets.user.key` | Hyperledger Fabric Peer user key | `hlf-msp-key-user` |
-| `secrets.peer.tls.client` | Hyperledger Fabric Peer TLS client key/cert | `hlf-tls-user` |
-| `secrets.peer.tls.server` | Hyperledger Fabric Peer TLS server key/cert | `hlf-tls-admin` |
-| `user.name` | Hyperledger Fabric Peer user name | `user` |
-| `organization.name` | Hyperledger Fabric Peer organization name | `substra` |
-| `peer.host` | The Hyperledger Fabric peer hostname | `healthchain-peer.owkin.com` |
-| `peer.port` | The Hyperledger Fabric peer port | `443` |
-| `peer.mspID` | The Hyperledger Fabric peer MSP ID | `OwkinPeerMSP` |
-| `peer.waitForEventTimeoutSeconds` | Time to wait for confirmation from the peers that the transaction has been committed successfully | `45` |
-| `peer.strategy.invoke` | Chaincode invocation endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `ALL` |
-| `peer.strategy.query` | Chaincode query endorsement strategy. Can be `SELF` or `ALL` (request endorsement from all peers) | `SELF` |
-| `channels` | A list of Hyperledger Fabric channels to connect to. See [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s). | `{ mychannel: { restricted: False, model_export_enabled: False, chaincode: { name: mycc, version: 1.0 } } }` |
-| `channels[].restricted` | If true, the channel must have at most 1 member, else the backend readiness/liveliness probes will fail. | (undefined) |
-| `channels[].model_export_enabled` | If True, allow logged-in users to download models trained on this node | (undefined) |
-| `channels[].chaincode.name` | The name of the chaincode instantiated on this channel. | (undefined) |
-| `channels[].chaincode.version` | The version of the chaincode instantiated on this channel. | (undefined) |
-| `postgresql` | PostgreSQL configuration. For more info, See [postgresql](https://github.com/bitnami/charts/tree/master/bitnami/postgresql) | |
-| `postgresql.enabled` | If true, enable PostgreSQL database | `true` |
-| `postgresql.postgresqlDatabase` | PostgreSQL database | `substra` |
-| `postgresql.postgresqlUsername` | PostgreSQL username | `postgres` |
-| `postgresql.postgresqlPassword` | PostgreSQL admin password  | `postgres` |
-| `postgresql.persistence.enabled` | Enable PostgreSQL persistence using PVC | `false` |
-| `rabbitmq` | RabbitMQ configuration. For more info, see [rabbitmq](https://github.com/bitnami/charts/tree/master/bitnami/rabbitmq) | |
-| `rabbitmq.enabled` | Enable RabbitMQ database | `true` |
-| `rabbitmq.auth.username` | RabbitMQ username | `rabbitmq` |
-| `rabbitmq.auth.password` | RabbitMQ admin password  | `rabbitmq` |
-| `rabbitmq.host` | RabbitMQ hostname | `nil` |
-| `rabbitmq.port` | RabbitMQ port | `5672` |
-| `rabbitmq.persistence.enabled` | Enable RabbitMQ persistence using PVC | `false` |
-| `docker-registry` | Docker Registry configuration. For more info, See [docker-registry](https://artifacthub.io/packages/helm/twuni/docker-registry) | |
-| `docker-registry.enabled` | If true, enable the local docker registry | `true` |
-| `docker-registry.storage` | Storage system to use | `filesystem` |
-| `docker-registry.persistence.enabled` | Enable Docker Registry persistence using PVC | `true` |
-| `docker-registry.persistence.size` | Amount of space to claim for PVC | `10Gi` |
-| `docker-registry.persistence.deleteEnabled` | Enable the deletion of image blobs and manifests by digest | `true` |
-| `docker-registry.service.type` | service type (If you use the local docker registry, you must use a `NodePort` to expose it kubernetes) | `NodePort` |
-| `docker-registry.service.nodePort` | if `docker-registry.service.type` is `NodePort` and this is non-empty, sets the node port of the service | (undefined)` |
-| `celerybeat.replicaCount` | Replica count for celerybeat service | `1` |
-| `celerybeat.expiredTokensFlushPeriod` | Flushing of expired tokens task period | `86400` |
-| `celerybeat.maximumImagesTTL` | Duration in seconds sent for image expiration (deleted from local registry) | `86400` |
-| `celerybeat.taskPeriod` | Celery beat task period | `10800` |
-| `celerybeat.image.repository` | `celerybeat` image repository | `substrafoundation/substra-backend` |
-| `celerybeat.image.tag` | `celerybeat` image tag | `latest` |
-| `celerybeat.image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `celerybeat.image.pullSecrets` | Image pull secrets | `[]` |
-| `celerybeat.resources` | Resources configuration for the `celerybeat` container | `{}` |
-| `celerybeat.nodeSelector` | Node labels for pod assignment | `{}` |
-| `celerybeat.tolerations` | Toleration labels for pod assignment | `[]` |
-| `celerybeat.affinity` | Affinity settings for pod assignment | `{}` |
-| `celeryscheduler.resources` | Resources configuration for the `celeryscheduler` container | `{}` |
-| `celeryscheduler.replicaCount` | Replica count for celeryworker service `celeryscheduler` service | 1 |
-| `celeryworker.replicaCount` | Replica count for celeryworker service | `1` |
-| `celeryworker.concurrency` | Celery worker concurrency  (max task to process in parallel) | `1` |
-| `celeryworker.image.repository` | `celeryworker` image repository | `substrafoundation/substra-backend` |
-| `celeryworker.image.tag` | `celeryworker` image tag | `latest` |
-| `celeryworker.image.pullPolicy` | Image pull policy | `IfNotPresent` |
-| `celeryworker.image.pullSecrets` | Image pull secrets | `[]` |
-| `celeryworker.resources` | Resources configuration for the `celeryworker` container | `{}` |
-| `celeryworker.nodeSelector` | Node labels for pod assignment | `{}` |
-| `celeryworker.tolerations` | Toleration labels for pod assignment | `[]` |
-| `celeryworker.affinity` | Affinity settings for pod assignment | `{}` |
-| `celeryworker.rbac.enable` | Enable rbac for the celery worker | `True` |
-| `celeryworker.persistence.servermedias.enableDatasampleStorage` |  when using "path" to upload datasamples, use the local file system, via server-media, instead of MinIO. Can be set to True only if the backend-server and the backend-worker pods are running on the same kubernetes node. See [datasample storage](#datasample-storage). | `False` |
-| `celeryworker.persistence.storageClassName` | PVC Storage Class name for worker volumes | (undefined) |
-| `celeryworker.persistence.hostPath` | Host path for PVC Storage in case of local storage | (undefined) |
-| `celeryworker.persistence.volumes` | Volumes definition for celeryworker storage | `subtuple` |
-| `celeryworker.persistence.volumes[].size` | Celeryworker volumes size | |
-| `events.nodeSelector` | Node labels for pod assignment | `{}` |
-| `events.tolerations` | Toleration labels for pod assignment | `[]` |
-| `events.affinity` | Affinity settings for pod assignment | `{}` |
-| `minio.enabled` | Enable the `objectstore` deployment/service | `True` |
-| `minio.accessKey.password` | Accesskey to the objectstore | `mino` |
-| `minio.accessKey.forcePassword` | Forces the use of `minio.accessKey.password`. Required for helm upgrade to work well ([see MinIO doc](https://github.com/bitnami/charts/blob/ba5e36845d00ccb7513d4f5ed7a3c70ce5a1529e/bitnami/minio/values.yaml#L103-L106)) | `mino` |
-| `minio.secretKey.password` | Secretkey to the objectstore | `minio1234` |
-| `minio.secretKey.forcePassword` | Forces the use of `minio.secretKey.password`. Required for helm upgrade to work well ([see MinIO doc](https://github.com/bitnami/charts/blob/ba5e36845d00ccb7513d4f5ed7a3c70ce5a1529e/bitnami/minio/values.yaml#L112-L115)) | `minio1234` |
-| `minio.forceNewKeys` | Force reconfiguring new keys whenever the credentials change (`minio.accessKey.password` and `minio.secretKey.password`)| true
-| `extraEnv[]` | Additional environment variables to add to substra-backend pods | `[]` |
-| `extraEnv[].name` | Environment variable name | (undefined) |
-| `extraEnv[].value` | Environment variable value | (undefined) |
-| `privateCa.enabled` | if true, use a private CA | `False` |
-| `privateCa.image.repository` | Image for the private CA | `alpine:latest` |
-| `privateCa.image.pullPolicy` | Image pull policy for the private CA | `IfNotPresent` |
-| `privateCa.image.apkAdd` | if true, enable apk add | `true` |
-| `privateCa.configMap.name` | The name of the ConfigMap containing the private CA certificate | `substra-private-ca` |
-| `privateCa.configMap.fileName` | The CA certificate filename within the ConfigMap | `private-ca.crt` |
-| `httpClient.timeoutSeconds` | The timeout in seconds for outgoing HTTP requests  | `30` |
-| `registry.local` | If you use an external docker-registry, must be set to false (host and port will be taken into account). See also: `docker-registry.enabled` | `true` |
-| `registry.host` | Hostname of the external docker-registry, if `local` is false | `127.0.0.1` |
-| `registry.port` | Port of the external docker-registry, if `local` is false | `32000` |
-| `registry.scheme` | Scheme to use to pull image | `http` |
-| `registry.pullDomain` | The domain to pull docker images from. If `registry.local` is false, set this value to your docker registry `<host>:<port>`. If `registry.local` is true, then set this value to  `127.0.0.1`. If `registry.local` is true and `docker-registry.service.nodePort` is set to an arbitrary port number, then set to `127.0.0.1:<nodePort>` | `127.0.0.1` |
-| `registry.prepopulate[]` | A list of docker images to prepopulate the local docker registry with | `[]` |
-| `registry.prepopulate[].image` | A docker image | (undefined) |
-| `registry.prepopulate[].dstImage` | Docker destination image name | (undefined) |
-| `registry.prepopulate[].sourceRegistry` | The URL of a docker registry to pull the image from (leave blank for Docker Hub) | (undefined) |
-| `registry.prepopulate[].dockerConfigSecretName` | Optionally, a docker config to use when pulling the docker image | (undefined) |
-| `psp.create` | If true, create a Pod Security Policy | `True` |
-| `securityContext.enabled` | If true, enable Pod Security Context | `True` |
-| `securityContext.fsGroup` | Pod Security Context filesystem group ID | `1001` |
-| `securityContext.runAsUser` | Pod Security Context user ID | `1001` |
-| `securityContext.runAsGroup` | Pod Security Context group ID | `1001` |
-| `hooks.deleteComputePods.enabled` | If true, enable the deletion job that removes deployed compute pods after the application is deleted | `False` |
-| `hooks.deleteWorkerPvc.enabled` | If true, enable the deletion job that removes the worker PVC after the application is deleted | `False` |
-| `orchestrator.host` | The orchestrator gRPC endpoint hostname | `owkin-orchestrator-org-1.org-1.svc.cluster.local` |
-| `orchestrator.port` | The orchestrator gRPC endpoint port | `9000` |
-| `orchestrator.tls.enabled` | If true, enable TLS for the orchestrator gRPC endpoint | `false` |
-| `orchestrator.tls.secrets.cacert` | A secret containing the orchestrator CA Certificate `ca.crt` | `orchestrator-tls-server-cacert` |
-| `orchestrator.tls.mtls.enabled` | If true, enable client verification for the orchestrator gRPC endpoint | `false` |
-| `orchestrator.tls.mtls.secrets.pair` | A secret containing the client certificate `tls.crt` and private key `tls.key` | `orchestrator-tls-client-pair` |
-| `orchestrator.rabbitmq.host` | The orchestrator RabbitMQ endpoint hostname | `owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local` |
-| `orchestrator.rabbitmq.port` | The orchestrator RabbitMQ endpoint port | `5672` |
-| `orchestrator.rabbitmq.auth.username` | The orchestrator RabbitMQ user name | `user` |
-| `orchestrator.rabbitmq.auth.password` | The orchestrator RabbitMQ password | `password` |
-| `orchestrator.rabbitmq.tls.enabled` | If true, enable TLS for the orchestrator RabbitMQ endpoint | `false` |
-| `orchestrator.rabbitmq.tls.port` | The orchestrator RabbitMQ endpoint TLS port | `5671` |
-| `orchestrator.rabbitmq.tls.secrets.pair` | A secret containing the client certificate `tls.crt` and private key `tls.key` | `orchestrator-tls-client-pair` |
+
+### Server settings
+
+| Name                                      | Description                                                                                                                                        | Value                            |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `server.replicaCount`                     | Number of server replicas                                                                                                                          | `1`                              |
+| `server.defaultDomain`                    | The hostname and port of the backend. This address will be used as the assets `storage_address` field                                              | `localhost`                      |
+| `server.subpath`                          | The subpath under which the API is served                                                                                                          | `""`                             |
+| `server.commonHostDomain`                 | The common host under which the backend and frontend are served                                                                                    | `""`                             |
+| `server.uwsgiProcesses`                   | The number of uwsgi processes                                                                                                                      | `20`                             |
+| `server.uwsgiThreads`                     | The numer of uwsgi threads                                                                                                                         | `2`                              |
+| `server.image.registry`                   | Substra backend server image registry                                                                                                              | `gcr.io`                         |
+| `server.image.repository`                 | Substra backend server image repository                                                                                                            | `connect-314908/connect-backend` |
+| `server.image.tag`                        | Substra backend server image tag                                                                                                                   | `0.4.0`                          |
+| `server.image.pullPolicy`                 | Substra backend server image pull policy                                                                                                           | `IfNotPresent`                   |
+| `server.image.pullSecrets`                | Specify image pull secrets                                                                                                                         | `[]`                             |
+| `server.podSecurityContext.enabled`       | Enable security context                                                                                                                            | `true`                           |
+| `server.podSecurityContext.runAsUser`     | User ID for the pod                                                                                                                                | `1001`                           |
+| `server.podSecurityContext.runAsGroup`    | Group ID for the pod                                                                                                                               | `1001`                           |
+| `server.podSecurityContext.fsGroup`       | FileSystem group ID for the pod                                                                                                                    | `1001`                           |
+| `server.service.type`                     | Kubernetes Service type                                                                                                                            | `ClusterIP`                      |
+| `server.service.port`                     | Server port                                                                                                                                        | `8000`                           |
+| `server.service.clusterIP`                | _ClusterIP_ or `None` for headless service                                                                                                         | `""`                             |
+| `server.service.loadBalancerIP`           | Load balancer IP if service type is `LoadBalancer`                                                                                                 | `""`                             |
+| `server.service.loadBalancerSourceRanges` | Addresses that are allowed when service is `LoadBalancer`                                                                                          | `[]`                             |
+| `server.service.nodePort`                 | Specify the `nodePort` value for the `LoadBalancer` and `NodePort` service types                                                                   | `""`                             |
+| `server.service.externalIPs`              | A list of IP addresses for which nodes in the cluster will also accept traffic for this service                                                    | `[]`                             |
+| `server.service.annotations`              | Additional annotations for the _Service_ resource.                                                                                                 | `{}`                             |
+| `server.ingress.enabled`                  | Deploy an ingress for the substra backend server                                                                                                   | `false`                          |
+| `server.ingress.hostname`                 | Default host for the ingress ressource                                                                                                             | `substra.backend.local`          |
+| `server.ingress.pathType`                 | Ingress path type                                                                                                                                  | `ImplementationSpecific`         |
+| `server.ingress.path`                     | Path for the default host                                                                                                                          | `/`                              |
+| `server.ingress.extraPaths`               | The list of extra paths to be created for the default host                                                                                         | `[]`                             |
+| `server.ingress.annotations`              | Additional annotations for the Ingress resource.                                                                                                   | `{}`                             |
+| `server.ingress.extraHosts`               | The list of additional hostnames to be covered with this ingress record                                                                            | `[]`                             |
+| `server.ingress.extraTls`                 | The tls configuration for hostnames to be coverred by the ingress                                                                                  | `[]`                             |
+| `server.ingress.ingressClassName`         | _IngressClass_ that will be used to implement the Ingress                                                                                          | `nil`                            |
+| `server.resources`                        | Server container resources requests and limits                                                                                                     | `{}`                             |
+| `server.persistence.storageClass`         | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
+| `server.persistence.servermedias.size`    | Servermedias volume size                                                                                                                           | `10Gi`                           |
+| `server.persistence.algos.size`           | _Algo_ files volume size                                                                                                                           | `10Gi`                           |
+| `server.persistence.datamanagers.size`    | _DataManager_ files volume size                                                                                                                    | `10Gi`                           |
+| `server.persistence.metrics.size`         | _Metrics_ files volume size                                                                                                                        | `10Gi`                           |
+
+
+### Substra worker settings
+
+| Name                                           | Description                                                                                                                                        | Value                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `worker.replicaCount`                          | Replica count for the worker service                                                                                                               | `1`                              |
+| `worker.concurrency`                           | Maximum amount of tasks to process in parallel                                                                                                     | `1`                              |
+| `worker.image.registry`                        | Substra backend worker image registry                                                                                                              | `gcr.io`                         |
+| `worker.image.repository`                      | Substra backend worker image repository                                                                                                            | `connect-314908/connect-backend` |
+| `worker.image.tag`                             | Substra backend worker image tag                                                                                                                   | `0.4.0`                          |
+| `worker.image.pullPolicy`                      | Substra backend worker image pull policy                                                                                                           | `IfNotPresent`                   |
+| `worker.image.pullSecrets`                     | Specify image pull secrets                                                                                                                         | `[]`                             |
+| `worker.podSecurityContext.enabled`            | Enable security context                                                                                                                            | `true`                           |
+| `worker.podSecurityContext.runAsUser`          | User ID for the pod                                                                                                                                | `1001`                           |
+| `worker.podSecurityContext.runAsGroup`         | Group ID for the pod                                                                                                                               | `1001`                           |
+| `worker.podSecurityContext.fsGroup`            | FileSystem group ID for the pod                                                                                                                    | `1001`                           |
+| `worker.resources`                             | Worker container resources requests and limits                                                                                                     | `{}`                             |
+| `worker.nodeSelector`                          | Node labels for pod assignment                                                                                                                     | `{}`                             |
+| `worker.tolerations`                           | Toleration labels for pod assignment                                                                                                               | `[]`                             |
+| `worker.affinity`                              | Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`                                                        | `{}`                             |
+| `worker.rbac.enable`                           | Create a role and service account for the worker                                                                                                   | `true`                           |
+| `worker.persistence.storageClass`              | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
+| `worker.persistence.size`                      | The size of the volume. The size of this volume should be sufficient to store many assets.                                                         | `10Gi`                           |
+| `worker.computePod.maxStartupWaitSeconds`      | Set the maximum amount of time we will wait for the compute pod to be ready                                                                        | `300`                            |
+| `worker.computePod.securityContext.fsGroup`    | Set the filesystem group for the Compute pod                                                                                                       | `1001`                           |
+| `worker.computePod.securityContext.runAsUser`  | Set the user for the Compute pod                                                                                                                   | `1001`                           |
+| `worker.computePod.securityContext.runAsGroup` | Set the group for the Compute pod                                                                                                                  | `1001`                           |
+
+
+### Substra periodic tasks worker settings
+
+| Name                                            | Description                                       | Value                            |
+| ----------------------------------------------- | ------------------------------------------------- | -------------------------------- |
+| `schedulerWorker.replicaCount`                  | Replica count for the periodic tasks worker       | `1`                              |
+| `schedulerWorker.image.registry`                | Substra backend tasks scheduler image registry    | `gcr.io`                         |
+| `schedulerWorker.image.repository`              | Substra backend tasks scheduler image repository  | `connect-314908/connect-backend` |
+| `schedulerWorker.image.tag`                     | Substra backend tasks scheduler image tag         | `0.4.0`                          |
+| `schedulerWorker.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`                   |
+| `schedulerWorker.image.pullSecrets`             | Specify image pull secrets                        | `[]`                             |
+| `schedulerWorker.nodeSelector`                  | Node labels for pod assignment                    | `{}`                             |
+| `schedulerWorker.tolerations`                   | Toleration labels for pod assignment              | `[]`                             |
+| `schedulerWorker.affinity`                      | Affinity settings for pod assignment              | `{}`                             |
+| `schedulerWorker.resources`                     | Scheduler container resources requests and limits | `{}`                             |
+| `schedulerWorker.podSecurityContext.enabled`    | Enable security context                           | `true`                           |
+| `schedulerWorker.podSecurityContext.runAsUser`  | User ID for the pod                               | `1001`                           |
+| `schedulerWorker.podSecurityContext.runAsGroup` | Group ID for the pod                              | `1001`                           |
+| `schedulerWorker.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                   | `1001`                           |
+
+
+### Celery task scheduler settings
+
+| Name                                      | Description                                       | Value                            |
+| ----------------------------------------- | ------------------------------------------------- | -------------------------------- |
+| `scheduler.replicaCount`                  | Replica count for the scheduler server            | `1`                              |
+| `scheduler.image.registry`                | Subsra backend tasks scheduler image registry     | `gcr.io`                         |
+| `scheduler.image.repository`              | Substra backend tasks scheduler image repository  | `connect-314908/connect-backend` |
+| `scheduler.image.tag`                     | Substra backend tasks scheduler image tag         | `0.4.0`                          |
+| `scheduler.image.pullPolicy`              | Substra backend task scheduler image pull policy  | `IfNotPresent`                   |
+| `scheduler.image.pullSecrets`             | Specify image pull secrets                        | `[]`                             |
+| `scheduler.resources`                     | Scheduler container resources requests and limits | `{}`                             |
+| `scheduler.nodeSelector`                  | Node labels for pod assignment                    | `{}`                             |
+| `scheduler.tolerations`                   | Toleration labels for pod assignment              | `[]`                             |
+| `scheduler.affinity`                      | Affinity settings for pod assignment              | `{}`                             |
+| `scheduler.podSecurityContext.enabled`    | Enable security context                           | `true`                           |
+| `scheduler.podSecurityContext.runAsUser`  | User ID for the pod                               | `1001`                           |
+| `scheduler.podSecurityContext.runAsGroup` | Group ID for the pod                              | `1001`                           |
+| `scheduler.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                   | `1001`                           |
+
+
+### Substra container registry settings
+
+| Name                            | Description                                                                                     | Value       |
+| ------------------------------- | ----------------------------------------------------------------------------------------------- | ----------- |
+| `containerRegistry.local`       | Whether the registry is exposed as a _nodePort_ and located in the same _Namespace_ as Substra. | `true`      |
+| `containerRegistry.host`        | Hostname of the container registry                                                              | `127.0.0.1` |
+| `containerRegistry.port`        | Port of the container registry                                                                  | `32000`     |
+| `containerRegistry.scheme`      | Communication scheme of the container registry                                                  | `http`      |
+| `containerRegistry.pullDomain`  | Hostname from which the cluster should pull container images                                    | `127.0.0.1` |
+| `containerRegistry.prepopulate` | Images to add to the container registry                                                         | `[]`        |
+
+
+### Event app settings
+
+| Name                                   | Description                          | Value                            |
+| -------------------------------------- | ------------------------------------ | -------------------------------- |
+| `events.image.registry`                | Substra event app image registry     | `gcr.io`                         |
+| `events.image.repository`              | Substra event app image repository   | `connect-314908/connect-backend` |
+| `events.image.tag`                     | Substra event app image tag          | `0.4.0`                          |
+| `events.image.pullPolicy`              | Substra event app image pull policy  | `IfNotPresent`                   |
+| `events.image.pullSecrets`             | Specify image pull secrets           | `[]`                             |
+| `events.podSecurityContext.enabled`    | Enable security context              | `true`                           |
+| `events.podSecurityContext.runAsUser`  | User ID for the pod                  | `1001`                           |
+| `events.podSecurityContext.runAsGroup` | Group ID for the pod                 | `1001`                           |
+| `events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod      | `1001`                           |
+| `events.nodeSelector`                  | Node labels for pod assignment       | `{}`                             |
+| `events.tolerations`                   | Toleration labels for pod assignment | `[]`                             |
+| `events.affinity`                      | Affinity settings for pod assignment | `{}`                             |
+
+
+### Orchestrator settings
+
+| Name                                                      | Description                                                                                                            | Value                       |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------- |
+| `orchestrator.host`                                       | The orchestrator gRPC endpoint                                                                                         | `orchestrator.local`        |
+| `orchestrator.port`                                       | The orchestrator gRPC port                                                                                             | `9000`                      |
+| `orchestrator.tls.enabled`                                | Enable TLS for the gRPC endpoint                                                                                       | `false`                     |
+| `orchestrator.tls.cacert`                                 | A configmap containing the orchestrator CA certificate. Use this if your orchestrator uses a private CA.               | `nil`                       |
+| `orchestrator.tls.mtls.enabled`                           | Enable client verification for the orchestrator gRPC endpoint                                                          | `false`                     |
+| `orchestrator.tls.mtls.clientCertificate`                 | A secret containing the client certificate `tls.crt` and private key `tls.key`                                         | `nil`                       |
+| `orchestrator.rabbitmq.host`                              | The orchestrator RabbitMQ endpoint hostname                                                                            | `events.orchestrator.local` |
+| `orchestrator.rabbitmq.port`                              | The orchestrator RabbitMQ port                                                                                         | `5672`                      |
+| `orchestrator.rabbitmq.auth.username`                     | The orchestrator RabbitMQ username                                                                                     | `user`                      |
+| `orchestrator.rabbitmq.auth.password`                     | The orchestrator RabbitMQ password                                                                                     | `password`                  |
+| `orchestrator.rabbitmq.tls.enabled`                       | Enable TLS for the orchestrator RabbitMQ endpoint                                                                      | `false`                     |
+| `orchestrator.rabbitmq.tls.clientCertificate`             | A secret containing the client certificate `tls.crt` and private key `tls.key`                                         | `nil`                       |
+| `orchestrator.mspID`                                      | current node name on the Orchestrator                                                                                  | `OwkinPeerMSP`              |
+| `orchestrator.channels[0].mychannel.restricted`           | Make this channel restricted to a single node. The server will fail if there is more than one instance in this channel | `false`                     |
+| `orchestrator.channels[0].mychannel.model_export_enabled` | Allow logged-in users to download models trained on this node                                                          | `false`                     |
+| `orchestrator.channels[0].mychannel.chaincode.name`       | The name of the chaincode instantiated on this channel                                                                 | `mycc`                      |
+
+
+### Kaniko settings
+
+| Name                                    | Description                                                                                                                                        | Value                     |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------- |
+| `kaniko.image.registry`                 | Kaniko image registry                                                                                                                              | `gcr.io`                  |
+| `kaniko.image.repository`               | Kaniko image repository                                                                                                                            | `kaniko-project/executor` |
+| `kaniko.image.tag`                      | Kaniko image tag                                                                                                                                   | `v1.6.0`                  |
+| `kaniko.mirror`                         | If set to `true` pull base images from the local registry.                                                                                         | `false`                   |
+| `kaniko.dockerConfigSecretName`         | A Docker config to use for pulling base images                                                                                                     | `nil`                     |
+| `kaniko.cache.warmer.image.registry`    | Kaniko cache warmer registry                                                                                                                       | `gcr.io`                  |
+| `kaniko.cache.warmer.image.repository`  | Kaniko cache warmer repository                                                                                                                     | `kaniko-project/warmer`   |
+| `kaniko.cache.warmer.image.tag`         | Kaniko cache warmer image tag                                                                                                                      | `v1.6.0`                  |
+| `kaniko.cache.warmer.cachedImages`      | A list of docker images to warmup the Kaniko cache                                                                                                 | `[]`                      |
+| `kaniko.cache.persistence.storageClass` | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                      |
+| `kaniko.cache.persistence.size`         | The size of the volume.                                                                                                                            | `10Gi`                    |
+
+
+### Account operator settings
+
+| Name                               | Description                                                                | Value |
+| ---------------------------------- | -------------------------------------------------------------------------- | ----- |
+| `addAccountOperator.resources`     | add-account-operator resources requests and limits                         | `{}`  |
+| `addAccountOperator.outgoingNodes` | Outgoind nodes credentials for substra backend node-to-node communications | `[]`  |
+| `addAccountOperator.incomingNodes` | Incoming nodes credentials for substra backend node-to-node communications | `[]`  |
+| `addAccountOperator.users`         | A list of users who can log into the substra backend server                | `[]`  |
+
+
+### Helm hooks
+
+| Name                                       | Description                                                                 | Value             |
+| ------------------------------------------ | --------------------------------------------------------------------------- | ----------------- |
+| `hooks.serviceAccount`                     | Service account to use for the helm hooks                                   | `""`              |
+| `hooks.deleteWorkerPvc.enabled`            | Enable the deletion of deployed compute pods after the application deletion | `false`           |
+| `hooks.deleteWorkerPvc.image.repository`   | Image repository for the hook image                                         | `bitnami/kubectl` |
+| `hooks.deleteWorkerPvc.image.tag`          | Image tag for the hook image                                                | `latest`          |
+| `hooks.deleteComputePods.enabled`          | Enable the deletion of the worker PVCs after the application deletion       | `false`           |
+| `hooks.deleteComputePods.image.repository` | Image repository for the hook image                                         | `bitnami/kubectl` |
+| `hooks.deleteComputePods.image.tag`        | Image tag for the hook image                                                | `latest`          |
+
 
 ## Usage
 
 ### Basic example
 
 For a simple example, see the [skaffold.yaml](../../skaffold.yaml) file.
-
 
 ### Kaniko builder and private registry
 

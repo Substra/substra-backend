@@ -1,0 +1,114 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "substra.fullname" . }}-scheduler-worker
+  labels:
+    {{ include "substra.labels" . | nindent 4 }}
+    app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler-worker
+spec:
+  replicas: {{ .Values.schedulerWorker.replicaCount }}
+  selector:
+    matchLabels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler-worker
+        {{ include "substra.selectorLabels" . | nindent 8}}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler-worker
+        {{ include "substra.labels" . | nindent 8 }}
+    spec:
+      {{- if .Values.schedulerWorker.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.schedulerWorker.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.schedulerWorker.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.schedulerWorker.podSecurityContext.runAsGroup }}
+      {{- end }}
+      {{- with .Values.schedulerWorker.image.pullSecrets }}
+      imagePullSecrets:
+      {{- range . }}
+        - name: {{ . }}
+      {{- end }}
+      {{- end }}
+      {{- if .Values.worker.rbac.enable }}
+      serviceAccountName: {{ template "substra.fullname" . }}-worker
+      {{- end }}
+      containers:
+        - name: scheduler-worker
+          image: {{ include "common.images.name" .Values.schedulerWorker.image }}
+          imagePullPolicy: {{ .Values.schedulerWorker.image.pullPolicy }}
+          command: ["/bin/bash"]
+          args: ["-c", "celery -A backend worker -l info -n {{ .Values.organizationName }} -Q {{ .Values.organizationName }},scheduler,celery --hostname {{ .Values.organizationName }}.scheduler"]
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-registry
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.celery.{{ .Values.settings }}
+          volumeMounts:
+            {{- if .Values.privateCa.enabled }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
+            {{- end }}
+          resources:
+            {{- toYaml .Values.schedulerWorker.resources | nindent 12 }}
+      initContainers:
+      {{- if .Values.privateCa.enabled }}
+      - name: add-cert
+        image: {{ include "common.images.name" .Values.privateCa.image }}
+        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+        securityContext:
+          runAsUser: 0
+        command: ['sh', '-c']
+        args:
+        - |
+          {{- if .Values.privateCa.image.apkAdd }}
+          apk add --update ca-certificates openssl
+          {{- end }}
+          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+        volumeMounts:
+          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+            name: private-ca
+            subPath: {{ .Values.privateCa.configMap.fileName }}
+          - mountPath: /tmp/certs/
+            name: ssl-certs
+      {{- end }}
+      volumes:
+      {{- if .Values.privateCa.enabled }}
+      - name: ssl-certs
+        emptyDir: {}
+      - name: private-ca
+        configMap:
+          name: {{ .Values.privateCa.configMap.name }}
+      {{- end }}
+    {{- with .Values.schedulerWorker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.schedulerWorker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.schedulerWorker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}

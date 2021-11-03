@@ -20,7 +20,6 @@ NAMESPACE = settings.NAMESPACE
 KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
-COMPUTE_REGISTRY = settings.TASK["COMPUTE_REGISTRY"]
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
 
 
@@ -88,7 +87,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
 
     container = kubernetes.client.V1Container(
         name=pod_name,
-        image=image if not COMPUTE_REGISTRY else f"{COMPUTE_REGISTRY}/{image}",
+        image=image,
         command=command,
         args=args,
         volume_mounts=[

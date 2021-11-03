@@ -1,179 +1,542 @@
-backend:
+## @section Global Substra settings
+## @param settings The settings to use for substra (`prod` or `dev`)
+##
+settings: prod
+## @param config The configuration to use for substra
+##
+config: {}
+## @param organizationName Current organization name
+##
+organizationName: owkin
+## @param DataSampleStorageInServerMedia
+##
+DataSampleStorageInServerMedia: false
+
+
+privateCa:
+  ## @param privateCa.enabled Run the init container injecting the private CA certificate
+  ##
+  enabled: false
+  ## @param privateCa.image.repository Private CA injector image
+  ## @param privateCa.image.tag Private CA injector tag
+  ## @param privateCa.image.pullPolicy Private CA injector pull policy
+  ## @param privateCa.image.apkAdd Install the update-ca-certificates package
+  ##
+  image:
+    repository: alpine
+    tag: latest
+    pullPolicy: IfNotPresent
+    apkAdd: true
+  ## @param privateCa.configMap.name Name of the _ConfigMap_ containing the private CA certificate
+  ## @param privateCa.configMap.data Certificate to add in the _ConfigMap_
+  ## @param privateCa.configMap.fileName Certificate filename in the _ConfigMap_
+  configMap:
+    name: substra-private-ca
+    data:
+    fileName: private-ca.crt
+
+## @param psp.create Create a _Pod Security Policy_ in the cluster
+##
+psp:
+  create: true
+
+## @section Server settings
+## @param server.replicaCount Number of server replicas
+## @param server.defaultDomain The hostname and port of the backend. This address will be used as the assets `storage_address` field
+## @param server.subpath The subpath under which the API is served
+## @param server.commonHostDomain The common host under which the backend and frontend are served
+## @param server.uwsgiProcesses The number of uwsgi processes
+## @param server.uwsgiThreads The numer of uwsgi threads
+##
+server:
   replicaCount: 1
-  settings: prod
-  tokenStrategy: 'unique'  # 'reuse'
   defaultDomain: localhost
+  subpath: ""
+  commonHostDomain: ""
   uwsgiProcesses: 20
   uwsgiThreads: 2
-  gzipModels: false
-  # commonHostDomain: 'yourdomain.tld'
-  subpath: ''
 
-  pagination:
-    maxPageSize: 100
-
-  kaniko:
-    image: gcr.io/kaniko-project/executor:v1.6.0
-    mirror: false  # If true, kaniko will pull base images from the local registry
-    dockerConfigSecretName: ""  # Name of the secret to mount in kaniko pod to be able to fetch from private registry
-    cache:
-      warmer:
-        image: gcr.io/kaniko-project/warmer:v1.6.0
-        images: []
-          # - image: gcr.io/connect-314908/connect-tools:0.8.0-minimal
-    persistence:
-      # storageClassName: ""
-      # hostPath: "/substra"
-      volumes:
-        docker-cache:
-          size: "10Gi"
-
-  compute:
-    registry: null  # Pull compute tasks images (image builder, cleanup, ...) from a custom registry
-    # Increase this value if the pods take too much time to start; it can happen when compute docker
-    # image size is a few gigabytes and depending on the deployment environment
-    podStartupTimeoutSeconds: 300
-
+  ## Substra backend image version
+  ## @param server.image.registry Substra backend server image registry
+  ## @param server.image.repository Substra backend server image repository
+  ## @param server.image.tag Substra backend server image tag
+  ## @param server.image.pullPolicy Substra backend server image pull policy
+  ## @param server.image.pullSecrets Specify image pull secrets
+  ##
   image:
-    repository: gcr.io/connect-314908/connect-backend
-    tag: orc-rc8
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.4.0
     pullPolicy: IfNotPresent
+    ## Optionally specify an array of imagePullSecrets.
+    ## Secrets must be created manually in the namespace.
+    ##
     pullSecrets: []
 
+  ## @param server.podSecurityContext.enabled Enable security context
+  ## @param server.podSecurityContext.runAsUser User ID for the pod
+  ## @param server.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param server.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+
   service:
+    ## @param server.service.type Kubernetes Service type
+    ##
     type: ClusterIP
+    ## @param server.service.port Server port
+    ##
     port: 8000
-    annotations: {}
-    labels: {}
+    ## @param server.service.clusterIP _ClusterIP_ or `None` for headless service
+    ## e.g:
+    ## clusterIP: None
+    ##
     clusterIP: ""
-    externalIPs: []
+    ## @param server.service.loadBalancerIP Load balancer IP if service type is `LoadBalancer`
+    ##
     loadBalancerIP: ""
+    ## @param server.service.loadBalancerSourceRanges Addresses that are allowed when service is `LoadBalancer`
+    ## e.g:
+    ## - 10.1O.10.0/24
+    ##
     loadBalancerSourceRanges: []
-    # nodePort: 30000
+    ## @param server.service.nodePort Specify the `nodePort` value for the `LoadBalancer` and `NodePort` service types
+    ##
+    nodePort: ""
+    ## @param server.service.externalIPs A list of IP addresses for which nodes in the cluster will also accept traffic for this service
+    ##
+    externalIPs: []
+    ## @param server.service.annotations Additional annotations for the _Service_ resource.
+    ##
+    annotations: {}
 
   ingress:
-    # Enable ingress ressource for the connect API
+    ## @param server.ingress.enabled Deploy an ingress for the substra backend server
+    ##
     enabled: false
 
-    # Path for the default host
-    path: /
+    ## @param server.ingress.hostname Default host for the ingress ressource
+    ##
+    hostname: substra.backend.local
 
-    # The list of extra paths to be created for the default host
-    # e.g:
-    # extraPaths:
-    #   - path: /
-    #     pathType: ImplementationSpecific
-    #     backend:
-    #       service:
-    #         name: substra-backend-svc
-    #         port:
-    #           name: http
-    extraPaths: []
-
-    # Ingress path type
+    ## @param server.ingress.pathType Ingress path type
+    ##
     pathType: ImplementationSpecific
 
-    # Default host for the ingress
-    hostname: chart-example.local
+    ## @param server.ingress.path Path for the default host
+    ##
+    path: /
 
+    ## @param server.ingress.extraPaths The list of extra paths to be created for the default host
+    ## e.g:
+    ## extraPaths:
+    ##   - path: /
+    ##     pathType: ImplementationSpecific
+    ##     backend:
+    ##       service:
+    ##         name: substra-backend-svc
+    ##         port:
+    ##           name: http
+    ##
+    extraPaths: []
+
+    ## @param server.ingress.annotations Additional annotations for the Ingress resource.
+    ##
     annotations: {}
 
-    # The list of additional hostnames to be covered with this ingress record
-    # e.g:
-    # extraHosts:
-    #   - name: chart-example.local
-    #     path: /
-    #     pathType: ImplementationSpecific
+    ## @param server.ingress.extraHosts The list of additional hostnames to be covered with this ingress record
+    ## e.g:
+    ## extraHosts:
+    ##   - name: chart-example.local
+    ##     path: /
+    ##     pathType: ImplementationSpecific
+    ##
     extraHosts: []
 
-    # The tls configuration for hostnames to be coverred by the ingress
-    # e.g:
-    # extraTls:
-    #   - hosts:
-    #       - chart-example.local
-    #     secretName: connect-tls
+    ## @param server.ingress.extraTls The tls configuration for hostnames to be coverred by the ingress
+    ## e.g:
+    ## extraTls:
+    ##   - hosts:
+    ##       - chart-example.local
+    ##     secretName: substra-tls
+    ##
     extraTls: []
 
-    # IngressClass that will be used to implement the Ingress
-    # This is required if you have more than one default ingress class in your cluster
+    ## @param server.ingress.ingressClassName _IngressClass_ that will be used to implement the Ingress
+    ##
     ingressClassName:
 
+  ## @param server.resources Server container resources requests and limits
+  ## e.g:
+  ## resources:
+  ##   limits:
+  ##     cpu: 100m
+  ##     memory: 128Mi
+  ##   requests:
+  ##     cpu: 100m
+  ##     memory: 128Mi
+  ##
   resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  grpc:
-    keepalive:
-      timeMs: 120000
 
   persistence:
-    # storageClassName: ""
-    # hostPath: "/substra"
+    ## @param server.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
+    ##
+    storageClass: ""
+    ## @param server.persistence.servermedias.size Servermedias volume size
+    ##
     servermedias:
       size: 10Gi
-      # hostPath: /host/servermedias
-    volumes:
-      algos:
-        size: "10Gi"
-      datamanagers:
-        size: "10Gi"
-      metrics:
-        size: "10Gi"
+    ## @param server.persistence.algos.size _Algo_ files volume size
+    ##
+    algos:
+      size: 10Gi
+    ## @param server.persistence.datamanagers.size _DataManager_ files volume size
+    ##
+    datamanagers:
+      size: 10Gi
+    ## @param server.persistence.metrics.size _Metrics_ files volume size
+    ##
+    metrics:
+      size: 10Gi
 
-outgoingNodes: []
-  # - name: nodeId
-  #   secret: nodeSecret
-incomingNodes: []
-  # - name: nodeId
-  #   secret: nodeSecret
+## @section Substra worker settings
+##
+worker:
+  ## @param worker.replicaCount Replica count for the worker service
+  ##
+  replicaCount: 1
+  ## @param worker.concurrency Maximum amount of tasks to process in parallel
+  ##
+  concurrency: 1
+  ## @param worker.image.registry Substra backend worker image registry
+  ## @param worker.image.repository Substra backend worker image repository
+  ## @param worker.image.tag Substra backend worker image tag
+  ## @param worker.image.pullPolicy Substra backend worker image pull policy
+  ## @param worker.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## @param worker.podSecurityContext.enabled Enable security context
+  ## @param worker.podSecurityContext.runAsUser User ID for the pod
+  ## @param worker.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param worker.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  ## @param worker.resources Worker container resources requests and limits
+  ##
+  resources: {}
+  ## @param worker.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: {}
+  ## @param worker.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: []
+  ## @param worker.affinity Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`
+  ##
+  affinity: {}
+  ## @param worker.rbac.enable Create a role and service account for the worker
+  ##
+  rbac:
+    enable: true
+  ## @param worker.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
+  ## @param worker.persistence.size The size of the volume. The size of this volume should be sufficient to store many assets.
+  ##
+  persistence:
+    storageClass: ""
+    size: 10Gi
+  computePod:
+    ## @param worker.computePod.maxStartupWaitSeconds Set the maximum amount of time we will wait for the compute pod to be ready
+    maxStartupWaitSeconds: 300
+    ## @param worker.computePod.securityContext.fsGroup Set the filesystem group for the Compute pod
+    ## @param worker.computePod.securityContext.runAsUser Set the user for the Compute pod
+    ## @param worker.computePod.securityContext.runAsGroup Set the group for the Compute pod
+    ##
+    securityContext:
+      fsGroup: 1001
+      runAsUser: 1001
+      runAsGroup: 1001
 
-users: []
-  # - name: username
-  #   secret: password
-  #   channel: mychannel
+## @section Substra periodic tasks worker settings
+##
+schedulerWorker:
+  ## @param schedulerWorker.replicaCount Replica count for the periodic tasks worker
+  ##
+  replicaCount: 1
+  ## @param schedulerWorker.image.registry Substra backend tasks scheduler image registry
+  ## @param schedulerWorker.image.repository Substra backend tasks scheduler image repository
+  ## @param schedulerWorker.image.tag Substra backend tasks scheduler image tag
+  ## @param schedulerWorker.image.pullPolicy Substra backend task scheduler image pull policy
+  ## @param schedulerWorker.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## @param schedulerWorker.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: {}
+  ## @param schedulerWorker.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: []
+  ## @param schedulerWorker.affinity Affinity settings for pod assignment
+  ##
+  affinity: {}
+  ## @param schedulerWorker.resources Scheduler container resources requests and limits
+  ##
+  resources: {}
+  ## @param schedulerWorker.podSecurityContext.enabled Enable security context
+  ## @param schedulerWorker.podSecurityContext.runAsUser User ID for the pod
+  ## @param schedulerWorker.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param schedulerWorker.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
 
-organization:
-  name: substra
 
-user:
-  name: user
+## @section Celery task scheduler settings
+scheduler:
+  ## @param scheduler.replicaCount Replica count for the scheduler server
+  ##
+  replicaCount: 1
+  ## @param scheduler.image.registry Subsra backend tasks scheduler image registry
+  ## @param scheduler.image.repository Substra backend tasks scheduler image repository
+  ## @param scheduler.image.tag Substra backend tasks scheduler image tag
+  ## @param scheduler.image.pullPolicy Substra backend task scheduler image pull policy
+  ## @param scheduler.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## @param scheduler.resources Scheduler container resources requests and limits
+  ##
+  resources: {}
+  ## @param scheduler.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: {}
+  ## @param scheduler.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: []
+  ## @param scheduler.affinity Affinity settings for pod assignment
+  ##
+  affinity: {}
+  ## @param scheduler.podSecurityContext.enabled Enable security context
+  ## @param scheduler.podSecurityContext.runAsUser User ID for the pod
+  ## @param scheduler.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param scheduler.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
 
-peer:
-  mspID: OwkinPeerMSP
+## @section Substra container registry settings
+##
+containerRegistry:
+  ## @param containerRegistry.local Whether the registry is exposed as a _nodePort_ and located in the same _Namespace_ as Substra.
+  ##
+  local: true
+  ## @param containerRegistry.host Hostname of the container registry
+  ##
+  host: 127.0.0.1
+  ## @param containerRegistry.port Port of the container registry
+  ##
+  port: 32000
+  ## @param containerRegistry.scheme Communication scheme of the container registry
+  ##
+  scheme: http
+  ## @param containerRegistry.pullDomain Hostname from which the cluster should pull container images
+  ##
+  pullDomain: 127.0.0.1
+  ## @param containerRegistry.prepopulate Images to add to the container registry
+  ## e.g:
+  ## - image: owkin/connect-tools:0.7.0
+  ##   sourceRegistry: gcr.io
+  ##   dstImage: test/connect-tools
+  ##   dockerConfigSecretName: docker-config
+  ##
+  prepopulate: []
 
+## @section Event app settings
+##
+events:
+  ## @param events.image.registry Substra event app image registry
+  ## @param events.image.repository Substra event app image repository
+  ## @param events.image.tag Substra event app image tag
+  ## @param events.image.pullPolicy Substra event app image pull policy
+  ## @param events.image.pullSecrets Specify image pull secrets
+  ##
+  image:
+    registry: gcr.io
+    repository: connect-314908/connect-backend
+    tag: 0.4.0
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  ## @param events.podSecurityContext.enabled Enable security context
+  ## @param events.podSecurityContext.runAsUser User ID for the pod
+  ## @param events.podSecurityContext.runAsGroup Group ID for the pod
+  ## @param events.podSecurityContext.fsGroup FileSystem group ID for the pod
+  ##
+  podSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsGroup: 1001
+    fsGroup: 1001
+  ## @param events.nodeSelector Node labels for pod assignment
+  ##
+  nodeSelector: {}
+  ## @param events.tolerations Toleration labels for pod assignment
+  ##
+  tolerations: []
+  ## @param events.affinity Affinity settings for pod assignment
+  ##
+  affinity: {}
+
+## @section Orchestrator settings
+##
 orchestrator:
-  host: owkin-orchestrator-org-1.org-1.svc.cluster.local
+  ## @param orchestrator.host The orchestrator gRPC endpoint
+  ##
+  host: orchestrator.local
+  ## @param orchestrator.port The orchestrator gRPC port
+  ##
   port: 9000
   tls:
+    ## @param orchestrator.tls.enabled Enable TLS for the gRPC endpoint
+    ##
     enabled: false
+    ## @param orchestrator.tls.cacert A configmap containing the orchestrator CA certificate. Use this if your orchestrator uses a private CA.
+    ##
+    cacert:
     mtls:
+      ## @param orchestrator.tls.mtls.enabled Enable client verification for the orchestrator gRPC endpoint
+      ##
       enabled: false
+      ## @param orchestrator.tls.mtls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
+      ##
+      clientCertificate:
   rabbitmq:
-    host: owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local
+    ## @param orchestrator.rabbitmq.host The orchestrator RabbitMQ endpoint hostname
+    ##
+    host: events.orchestrator.local
+    ## @param orchestrator.rabbitmq.port The orchestrator RabbitMQ port
+    ##
     port: 5672
+    ## @param orchestrator.rabbitmq.auth.username The orchestrator RabbitMQ username
+    ## @param orchestrator.rabbitmq.auth.password The orchestrator RabbitMQ password
+    ##
     auth:
       username: user
       password: password
     tls:
+      ## @param orchestrator.rabbitmq.tls.enabled Enable TLS for the orchestrator RabbitMQ endpoint
+      ##
       enabled: false
-      port: 5671
+      ## @param orchestrator.rabbitmq.tls.clientCertificate A secret containing the client certificate `tls.crt` and private key `tls.key`
+      ##
+      clientCertificate:
+  ## @param orchestrator.mspID current node name on the Orchestrator
+  ##
+  mspID: OwkinPeerMSP
 
-channels:
-  - mychannel:
-      restricted: false
-      model_export_enabled: false
-      chaincode:
-        name: mycc
-        version: "1.0"
+  channels:
+    ## @param orchestrator.channels[0].mychannel.restricted Make this channel restricted to a single node. The server will fail if there is more than one instance in this channel
+    ## @param orchestrator.channels[0].mychannel.model_export_enabled Allow logged-in users to download models trained on this node
+    ## @param orchestrator.channels[0].mychannel.chaincode.name The name of the chaincode instantiated on this channel
+    ##
+    - mychannel:
+        restricted: false
+        model_export_enabled: false
+        chaincode:
+          name: mycc
 
+## @section Kaniko settings
+##
+kaniko:
+  ## @param kaniko.image.registry Kaniko image registry
+  ## @param kaniko.image.repository Kaniko image repository
+  ## @param kaniko.image.tag Kaniko image tag
+  ##
+  image:
+    registry: gcr.io
+    repository: kaniko-project/executor
+    tag: v1.6.0
+  ## @param kaniko.mirror If set to `true` pull base images from the local registry.
+  ##
+  mirror: false
+  ## @param kaniko.dockerConfigSecretName A Docker config to use for pulling base images
+  ##
+  dockerConfigSecretName:
+  cache:
+    warmer:
+      ## @param kaniko.cache.warmer.image.registry Kaniko cache warmer registry
+      ## @param kaniko.cache.warmer.image.repository Kaniko cache warmer repository
+      ## @param kaniko.cache.warmer.image.tag Kaniko cache warmer image tag
+      ##
+      image:
+        registry: gcr.io
+        repository: kaniko-project/warmer
+        tag: v1.6.0
+      ## @param kaniko.cache.warmer.cachedImages A list of docker images to warmup the Kaniko cache
+      ## e.g:
+      ## - gcr.io/connect-314908/connect-tools:0.9.0-minimal
+      ##
+      cachedImages: []
+    ## @param kaniko.cache.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
+    ## @param kaniko.cache.persistence.size The size of the volume.
+    ##
+    persistence:
+      storageClass: ""
+      size: 10Gi
+
+## @section Account operator settings
+##
+addAccountOperator:
+  ## @param addAccountOperator.resources add-account-operator resources requests and limits
+  ##
+  resources: {}
+  ## @param addAccountOperator.outgoingNodes Outgoind nodes credentials for substra backend node-to-node communications
+  ## e.g:
+  ## - name: nodeId
+  ##   secret: nodeSecret
+  ##
+  outgoingNodes: []
+  ## @param addAccountOperator.incomingNodes Incoming nodes credentials for substra backend node-to-node communications
+  ## e.g:
+  ## - name: nodeId
+  ##   secret: nodeSecret
+  ##
+  incomingNodes: []
+  ## @param addAccountOperator.users A list of users who can log into the substra backend server
+  ## e.g:
+  ## - name: username
+  ##   secret: password
+  ##   channel: mychannel
+  ##
+  users: []
+
+## @skip postgresql
+##
 postgresql:
   enabled: true
   postgresqlDatabase: substra
@@ -182,6 +545,8 @@ postgresql:
   persistence:
     enabled: false
 
+## @skip rabbitmq
+##
 rabbitmq:
   enabled: true
   auth:
@@ -190,8 +555,9 @@ rabbitmq:
   persistence:
     enabled: false
   port: 5672
-  # host: rabbitmq.local
 
+## @skip docker-registry
+##
 docker-registry:
   enabled: true
   storage: filesystem
@@ -202,167 +568,40 @@ docker-registry:
   service:
     type: NodePort
 
-celerybeat:
-  replicaCount: 1
-  expiredTokensFlushPeriod: 86400
-  maximumImagesTTL: 604800
-  taskPeriod: 10800
-  image:
-    repository: substrafoundation/substra-backend
-    tag: latest
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
-celeryscheduler:
-  replicaCount: 1
-  resources: {}
-
-celeryworker:
-  replicaCount: 1
-  concurrency: 1  # Max number of tasks to process in parallel
-  image:
-    repository: substrafoundation/substra-backend
-    tag: latest
-    pullPolicy: IfNotPresent
-    pullSecrets: []
-
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
-  rbac:
-    # Add ServiceAccount for celeryworker
-    enable: True
-
-  persistence:
-    # storageClassName: ""
-    # hostPath: "/substra"
-    servermedias:
-      enableDatasampleStorage: False  # when using "path" to upload datasamples, the datasample will be stored in servermedia instead of MinIO. Can be put to True only if running on one kubernetes node.
-    volumes:
-      subtuple:
-        # subtuple size should be *at least* equal to the combined size of the following PVCs:
-        # datasamples, models, metrics, datamanagers, algos, compositealgos, and aggregatealgos.
-        size: "10Gi"
-
-events:
-  resources: {}
-    # We usually recommend not to specify default resources and to leave this as a conscious
-    # choice for the user. This also increases chances charts run on environments with little
-    # resources, such as Minikube. If you do want to specify resources, uncomment the following
-    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-    # limits:
-    #   cpu: 100m
-    #   memory: 128Mi
-    # requests:
-    #   cpu: 100m
-    #   memory: 128Mi
-
-  nodeSelector: {}
-
-  tolerations: []
-
-  affinity: {}
-
+## @skip minio
+##
 minio:
   enabled: true
   accessKey:
     password: minio
-    forcePassword: true   # required for helm upgrade to work well (https://github.com/bitnami/charts/blob/master/bitnami/minio/values.yaml#L95)
+    ## required for helm upgrade to work well (https://github.com/bitnami/charts/blob/1d7e62b47f525fca5ecdc2f34a4e9fa69f1532f5/bitnami/minio/values.yaml#L106)
+    forcePassword: true
   secretKey:
     password: minio1234
-    forcePassword: true   # required for helm upgrade to work well (https://github.com/bitnami/charts/blob/master/bitnami/minio/values.yaml#L104)
-  forceNewKeys: true      # required to take into account new access and secret keys
+    ## required for helm upgrade to work well (https://github.com/bitnami/charts/blob/1d7e62b47f525fca5ecdc2f34a4e9fa69f1532f5/bitnami/minio/values.yaml#L115)
+    forcePassword: true
+  ## required to take into account new access and secret keys
+  forceNewKeys: true
 
-extraEnv:
-  - name: TASK_CACHE_DOCKER_IMAGES
-    value: 'True'
-  # - name: ENV_VARIABLE
-  #   value: false
-
-privateCa:
-  enabled: false
-  image:
-    repository: alpine:latest
-    pullPolicy: IfNotPresent
-    apkAdd: true
-  configMap:
-    name: substra-private-ca
-#    data: nil
-    fileName: private-ca.crt
-
-
-httpClient:
-  timeoutSeconds: 30
-
-
-registry:
-  local: true    # false if you use external docker-registry (host and port will be taken into account)
-  host: 127.0.0.1
-  port: 32000
-  scheme: http
-  pullDomain: 127.0.0.1
-
-  ## Local registry pre-populate
-  prepopulate: []
-    # - image: substrafoundation/substra-tools:0.7.0
-    #   dstImage: substrafoundation/substra-tools:0.7.0
-    #   sourceRegistry: xxx.dkr.ecr.eu-west-1.amazonaws.com
-    #   dockerConfigSecretName: docker-config
-
-## Pod Security Policy
-## ref: https://kubernetes.io/docs/concepts/policy/pod-security-policy/
-psp:
-  create: True
-
-## Pod Security Context
-## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/
-securityContext:
-  enabled: True
-  fsGroup: 1001
-  runAsUser: 1001
-  runAsGroup: 1001
-
+## @section Helm hooks
+##
 hooks:
-  serviceAccount:
-    name: ""
+  ## @param hooks.serviceAccount Service account to use for the helm hooks
+  ##
+  serviceAccount: ""
+  ## @param hooks.deleteWorkerPvc.enabled Enable the deletion of deployed compute pods after the application deletion
+  ## @param hooks.deleteWorkerPvc.image.repository Image repository for the hook image
+  ## @param hooks.deleteWorkerPvc.image.tag Image tag for the hook image
+  ##
   deleteWorkerPvc:
     enabled: False
     image:
       repository: bitnami/kubectl
       tag: latest
+  ## @param hooks.deleteComputePods.enabled Enable the deletion of the worker PVCs after the application deletion
+  ## @param hooks.deleteComputePods.image.repository Image repository for the hook image
+  ## @param hooks.deleteComputePods.image.tag Image tag for the hook image
+  ##
   deleteComputePods:
     enabled: False
     image:

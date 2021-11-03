@@ -1,3 +1,13 @@
+settings: dev
+config:
+  TOKEN_STRATEGY: "reuse"
+  CORS_ORIGIN_WHITELIST: '["http://substra-frontend.node-1.com", "http://substra-frontend.node-1.com:3000", "http://substra-frontend.node-1.com:3001"]'
+  CORS_ALLOW_CREDENTIALS: "true"
+  ALLOWED_HOSTS: '[".node-1.com", ".org-1", ".org-1.svc.cluster.local"]'
+  DEFAULT_THROTTLE_RATES: "120"
+  TASK_CACHE_DOCKER_IMAGES: "False"
+organizationName: MyOrg1
+
 rabbitmq:
   auth:
     erlangCookie: rabbitmqErlangCookie
@@ -7,32 +17,24 @@ docker-registry:
   service:
     type: NodePort
 
-registry:
+containerRegistry:
   local: true
   scheme: http
   pullDomain: 127.0.0.1
   prepopulate:
-    - image: gcr.io/connect-314908/connect-tools:0.9.0-minimal
+    - image: connect-314908/connect-tools:0.9.0-minimal
+      sourceRegistry: gcr.io
       dstImage: owkin/connect-tools:0.9.0-minimal
       dockerConfigSecretName: "docker-config"
 
-celeryworker:
+worker:
   concurrency: 3
   rbac:
     enable: true
 
-backend:
-  settings: dev
-  tokenStrategy: 'reuse'
+server:
   defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000
   commonHostDomain: node-1.com
-  kaniko:
-    dockerConfigSecretName: "docker-config"
-    mirror: true
-    cache:
-      warmer:
-        images:
-          - image: gcr.io/connect-314908/connect-tools:0.9.0-minimal
   ingress:
     enabled: true
     hostname: "substra-backend.node-1.com"
@@ -44,62 +46,33 @@ backend:
       nginx.ingress.kubernetes.io/proxy-read-timeout: '120'
       nginx.ingress.kubernetes.io/proxy-next-upstream: 'error timeout http_502'
       nginx.ingress.kubernetes.io/proxy-next-upstream-tries: '3'
-  persistence:
-    servermedias:
-      hostPath: /tmp/org-1/
 
-organization:
-  name: MyOrg1
+kaniko:
+  dockerConfigSecretName: "docker-config"
+  mirror: true
+  cache:
+    warmer:
+      cachedImages:
+        - gcr.io/connect-314908/connect-tools:0.9.0-minimal
 
-peer:
-  mspID: MyOrg1MSP
+addAccountOperator:
+  incomingNodes:
+    - { name: MyOrg1MSP, secret: selfSecret1 }
+    - { name: MyOrg2MSP, secret: nodeSecret1w2 }
+  outgoingNodes:
+    - { name: MyOrg1MSP, secret: selfSecret1 }
+    - { name: MyOrg2MSP, secret: nodeSecret2w1 }
 
-incomingNodes:
-  - { name: MyOrg1MSP, secret: selfSecret1 }
-  - { name: MyOrg2MSP, secret: nodeSecret1w2 }
-
-outgoingNodes:
-  - { name: MyOrg1MSP, secret: selfSecret1 }
-  - { name: MyOrg2MSP, secret: nodeSecret2w1 }
-
-users:
-  - name: "node-1"
-    secret: "p@sswr0d44"
-    channel: "mychannel"
-  - name: "node-1-yourchannel"
-    secret: "p@sswr0d44"
-    channel: "yourchannel"
-
-extraEnv:
-  # Should be a json list
-  - name: CORS_ORIGIN_WHITELIST
-    value: '["http://substra-frontend.node-1.com", "http://substra-frontend.node-1.com:3000", "http://substra-frontend.node-1.com:3001"]'
-  - name: CORS_ALLOW_CREDENTIALS
-    value: "true"
-  - name: ALLOWED_HOSTS
-    value: '[".node-1.com", ".org-1", ".org-1.svc.cluster.local"]'
-  - name: DEFAULT_THROTTLE_RATES
-    value: '120'
-  - name: TASK_CACHE_DOCKER_IMAGES
-    value: 'False'
-
-channels:
-  - mychannel:
-      restricted: false
-      model_export_enabled: true
-      chaincode:
-        name: mycc
-        version: "1.0"
-  - yourchannel:
-      restricted: false
-      model_export_enabled: true
-      chaincode:
-        name: yourcc
-        version: "1.0"
+  users:
+    - name: "node-1"
+      secret: "p@sswr0d44"
+      channel: "mychannel"
+    - name: "node-1-yourchannel"
+      secret: "p@sswr0d44"
+      channel: "yourchannel"
 
 hooks:
-  serviceAccount:
-    name: substra-backend-delete-hook
+  serviceAccount: substra-backend-delete-hook
   deleteComputePods:
     enabled: True
   deleteWorkerPvc:
@@ -116,18 +89,28 @@ orchestrator:
   port: 9000
   tls:
     enabled: true
-    secrets:
-      cacert: orchestrator-tls-cacert
+    cacert: orchestrator-tls-cacert
     mtls:
       enabled: true
-      secrets:
-        pair: orchestrator-tls-client-pair
+      clientCertificate: orchestrator-tls-client-pair
   rabbitmq:
     host: owkin-orchestrator-org-1-rabbitmq.org-1.svc.cluster.local
+    port: 5671
     auth:
       username: MyOrg1MSP
       password: password1
     tls:
       enabled: true
-      secrets:
-        pair: orchestrator-tls-client-pair
+      clientCertificate: orchestrator-tls-client-pair
+  mspID: MyOrg1MSP
+  channels:
+    - mychannel:
+        restricted: false
+        model_export_enabled: true
+        chaincode:
+          name: mycc
+    - yourchannel:
+        restricted: false
+        model_export_enabled: true
+        chaincode:
+          name: yourcc

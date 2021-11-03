@@ -1,11 +1,16 @@
 ## unreleased
 
-## 12.0.5
+## 13.0.0
 
-- rename `SCHEDULE_TASK_PERIOD` to `CELERYBEAT_SCHEDULE_TASK_PERIOD`
-- rename `FLUSH_EXPIRED_TOKENS_TASK_PERIOD` to `CELERYBEAT_FLUSH_EXPIRED_TOKENS_TASK_PERIOD`
-- rename `MAXIMUM_IMAGES_TTL`to `CELERYBEAT_MAXIMUM_IMAGES_TTL`
+Almost all the sections in the values files were re-done.
+We would suggest starting from a clean sheet. If you still want to migrate, here is some key values you could update.
 
+- `backend` is now `server`
+- `celeryworker` is now `worker`
+- `scheduler` is now `schedulerWorker`
+- `celerybeat` is now `scheduler`
+
+All the application configuration that was created using multiple values is now set under a unique key `config`. You can see more about the removed keys in the `CHANGELOG.md` file.
 ## 12.0.0
 - Note that the objectives volume is renamed metrics
 

@@ -110,3 +110,46 @@ Usage:
         {{- tpl (.value | toYaml) .context }}
     {{- end }}
 {{- end -}}
+
+{{/*
+Return the proper image name
+{{ include "common.images.name" .Values.path.to.the.image }}
+*/}}
+{{- define "common.images.name" -}}
+{{- if .registry -}}
+{{- printf "%s/%s:%s" .registry .repository .tag -}}
+{{- else -}}
+{{- printf "%s:%s" .repository .tag -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Return the proper Storage Class
+{{ include "common.storage.class" .Values.path.to.the.persistence}}
+*/}}
+{{- define "common.storage.class" -}}
+{{- $storageClass := .storageClass -}}
+{{- if $storageClass -}}
+    {{- if (eq "-" $storageClass) -}}
+        {{- printf "storageClassName: \"\"" -}}
+    {{- else -}}
+        {{- printf "storageClassName: %s" $storageClass -}}
+    {{- end -}}
+{{- end -}}
+{{- end -}}
+
+
+{{/*
+Return the user list
+{{ include "common.users" .Values.path.to.the.users }}
+*/}}
+{{- define "common.users" -}}
+{{- range . }}
+{{- if .channel }}
+    {{- printf "%s %s %s\n" .name .secret .channel }}
+{{- else }}
+    {{- printf "%s %s\n" .name .secret }}
+{{- end }}
+{{- end }}
+{{- end -}}

@@ -6,7 +6,7 @@ metadata:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
 spec:
-  replicas: {{ .Values.celeryscheduler.replicaCount }}
+  replicas: {{ .Values.scheduler.replicaCount }}
   selector:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
@@ -14,135 +14,84 @@ spec:
   template:
     metadata:
       labels:
-        {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-scheduler
+        {{ include "substra.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.securityContext.enabled }}
-      securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-      {{- end }}
-      {{- with $.Values.backend.image.pullSecrets }}
+      {{- with .Values.scheduler.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Values.celeryworker.rbac.enable }}
-      serviceAccountName: {{ template "substra.fullname" . }}-worker
-      {{- end }}
-      initContainers:
-      {{- if .Values.privateCa.enabled }}
-      - name: add-cert
-        image: {{ .Values.privateCa.image.repository }}
-        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
-        command: ['sh', '-c']
-        args:
-        - |
-          {{- if .Values.privateCa.image.apkAdd }}
-          apk add --update ca-certificates openssl
-          {{- end }}
-          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
-        volumeMounts:
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-            name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
-          - mountPath: /tmp/certs/
-            name: ssl-certs
+      {{- if .Values.scheduler.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.scheduler.podSecurityContext.fsGroup }}
+        runAsGroup: {{ .Values.scheduler.podSecurityContext.runAsGroup }}
+        runAsUser: {{ .Values.scheduler.podSecurityContext.runAsUser }}
       {{- end }}
       containers:
         - name: scheduler
-          image: "{{ .Values.celeryworker.image.repository }}:{{ .Values.celeryworker.image.tag }}"
-          {{- if .Values.celeryworker.image.pullPolicy }}
-          imagePullPolicy: "{{ .Values.celeryworker.image.pullPolicy }}"
-          {{- end }}
-          {{- if .Values.securityContext.enabled }}
-          securityContext:
-            runAsUser: {{ .Values.securityContext.runAsUser }}
-            runAsGroup: {{ .Values.securityContext.runAsGroup }}
-          {{- end }}
+          image: {{ include "common.images.name" .Values.scheduler.image }}
+          imagePullPolicy: {{ .Values.scheduler.image.pullPolicy }}
           command: ["/bin/bash"]
-          args: ["-c", "celery -A backend worker -l info -n {{ .Values.organization.name }} -Q {{ .Values.organization.name }},scheduler,celery --hostname {{ .Values.organization.name }}.scheduler"]
+          args: ["-c", "celery -A backend beat -l debug"]
           envFrom:
             - configMapRef:
-                name: {{ include "substra.fullname" . }}-ledger
-            - configMapRef:
                 name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-registry
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
           env:
-            - name: DJANGO_SETTINGS_MODULE
-              value: backend.settings.celery.{{ .Values.backend.settings }}
-            - name: ORG_NAME
-              value: {{ .Values.organization.name }}
-            - name: BACKEND_DB_NAME
-              value: {{ .Values.postgresql.postgresqlDatabase }}
-            - name: BACKEND_DB_USER
-              value: {{ .Values.postgresql.postgresqlUsername }}
-            - name: BACKEND_DB_PWD
-              value: {{ .Values.postgresql.postgresqlPassword }}
-            - name: DATABASE_HOST
-              value: {{ template  "postgresql.serviceName" . }}
-            - name: CELERY_BROKER_URL
-              value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-            - name: PYTHONUNBUFFERED
-              value: "1"
-            {{- if .Values.registry.local }}
-            - name: REGISTRY
-              value: {{ .Release.Name }}-docker-registry:5000
-            {{ else }}
-            - name: REGISTRY
-              value: {{ .Values.registry.host}}:{{ .Values.registry.port}}
-            {{ end }}
-            - name: REGISTRY_IS_LOCAL
-              value: "{{ $.Values.registry.local }}"
-            - name: REGISTRY_SERVICE_NAME
-              value: {{ .Release.Name }}-docker-registry
-            - name: REGISTRY_SCHEME
-              value: {{ .Values.registry.scheme}}
-            - name: REGISTRY_PULL_DOMAIN
-              value: {{ .Values.registry.pullDomain}}
             - name: NAMESPACE
-              value: {{ .Release.Namespace }}
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: NODE_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-            - name: RUN_AS_USER
-              value: {{ .Values.securityContext.runAsUser | quote}}
-            - name: RUN_AS_GROUP
-              value: {{ .Values.securityContext.runAsGroup | quote }}
-            - name: FS_GROUP
-              value: {{ .Values.securityContext.fsGroup | quote }}
-            - name: KANIKO_IMAGE
-              value: {{ .Values.backend.kaniko.image | quote }}
-            - name: KANIKO_MIRROR
-              value: {{ .Values.backend.kaniko.mirror | quote }}
-            - name: COMPUTE_REGISTRY
-              value: {{ .Values.backend.compute.registry | quote }}
-            - name: HTTP_CLIENT_TIMEOUT_SECONDS
-              value: {{ .Values.httpClient.timeoutSeconds | quote  }}
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.celery.{{ .Values.settings }}
           volumeMounts:
-            {{- if .Values.privateCa.enabled }}
-            - mountPath: /etc/ssl/certs
-              name: ssl-certs
-            {{- end }}
+            {{ if .Values.orchestrator.tls.enabled }}
+            - name: orchestrator-tls-cacert
+              mountPath: /var/substra/orchestrator/tls/server
+            {{ if .Values.orchestrator.tls.mtls.enabled }}
+            - name: orchestrator-tls-client-pair
+              mountPath: /var/substra/orchestrator/tls/client
+            {{ end }}
+            {{ end }}
           resources:
-            {{- toYaml .Values.celeryscheduler.resources | nindent 12 }}
+            {{- toYaml .Values.scheduler.resources | nindent 12 }}
       volumes:
-      {{- if .Values.privateCa.enabled }}
-      - name: ssl-certs
-        emptyDir: {}
-      - name: private-ca
-        configMap:
-          name: {{ .Values.privateCa.configMap.name }}
-      {{- end }}
-    {{- with .Values.celeryworker.nodeSelector }}
+      {{ if.Values.orchestrator.tls.enabled }}
+      - name: orchestrator-tls-cacert
+        secret:
+          secretName: {{ $.Values.orchestrator.tls.cacert }}
+      {{ if .Values.orchestrator.tls.mtls.enabled }}
+      - name: orchestrator-tls-client-pair
+        secret:
+          secretName: {{ .Values.orchestrator.tls.mtls.clientCertificate }}
+      {{ end }}
+      {{ end }}
+    {{- with .Values.scheduler.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.celeryworker.affinity }}
+    {{- with .Values.scheduler.affinity }}
       affinity:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- with .Values.celeryworker.tolerations }}
+    {{- with .Values.scheduler.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}

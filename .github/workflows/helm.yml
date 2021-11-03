@@ -44,12 +44,39 @@ jobs:
             echo "Validation failed, you should upgrade the chart version in Chart.yaml"
             exit 1
           fi
-
+  generate-chart-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bitnami-labs/readme-generator-for-helm
+        uses: actions/checkout@v2
+        with:
+          repository: 'bitnami-labs/readme-generator-for-helm'
+          ref: '3300343a6cd1c9cd86d13b04d8c85a7415cb849e' # There is no release on the repo so we target an arbitrary commit
+          path: readme-generator-for-helm
+      - name: Install readme-generator-for-helm dependencies
+        run: cd readme-generator-for-helm && npm install
+      - uses: actions/checkout@v2
+        with:
+          path: backend
+      - name: Execute readme-generator-for-helm
+        run: readme-generator-for-helm/bin/index.js -r backend/charts/substra-backend/README.md -v backend/charts/substra-backend/values.yaml
+      - name: Check diff
+        run: |
+          cd backend/
+          if [ -z "$(git status --porcelain)" ]; then
+            exit 0
+          else
+            echo "There should be no change generated, please run 'make chart-doc' to update the chart README.md"
+            git diff
+            exit 1
+          fi
   publish:
     name: Publish
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
-    needs: test
+    needs:
+      - test
+      - generate-chart-readme
     steps:
       - uses: actions/checkout@v2
       - uses: azure/setup-helm@v1

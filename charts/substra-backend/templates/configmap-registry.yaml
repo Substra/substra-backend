@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-registry
+  labels:
+  {{- include "substra.labels" . | nindent 4 }}
+data:
+  {{- if .Values.containerRegistry.local }}
+  REGISTRY_IS_LOCAL: "{{ .Values.containerRegistry.local }}"
+  REGISTRY: {{ .Release.Name }}-docker-registry:5000
+  REGISTRY_SERVICE_NAME: {{ .Release.Name }}-docker-registry
+  {{- else }}
+  REGISTRY: {{ .Values.containerRegistry.host}}:{{ .Values.containerRegistry.port}}
+  {{- end }}
+  REGISTRY_SCHEME: {{ .Values.containerRegistry.scheme}}
+  REGISTRY_PULL_DOMAIN: {{ .Values.containerRegistry.pullDomain}}

@@ -1,4 +1,4 @@
-{{- if .Values.celeryworker.rbac.enable }}
+{{- if .Values.worker.rbac.enable }}
 ---
 apiVersion: v1
 kind: ServiceAccount

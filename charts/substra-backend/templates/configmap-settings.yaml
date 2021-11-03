@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "substra.fullname" . }}-settings
+  labels:
+  {{- include "substra.labels" . | nindent 4 }}
+data:
+  ORG_NAME: {{ .Values.organizationName | quote }}
+  MEDIA_ROOT: /var/substra/medias/
+  DEFAULT_DOMAIN: {{ .Values.server.defaultDomain | quote }}
+  COMMON_HOST_DOMAIN: {{ .Values.server.commonHostDomain | quote }}
+
+  COMPUTE_POD_RUN_AS_USER: {{ .Values.worker.computePod.securityContext.runAsUser | quote}}
+  COMPUTE_POD_RUN_AS_GROUP: {{ .Values.worker.computePod.securityContext.runAsGroup | quote }}
+  COMPUTE_POD_FS_GROUP: {{ .Values.worker.computePod.securityContext.fsGroup | quote }}
+
+  KANIKO_IMAGE: {{ include "common.images.name" .Values.kaniko.image }}
+  KANIKO_MIRROR: {{ .Values.kaniko.mirror | quote }}
+
+  OBJECTSTORE_URL: {{ .Release.Name }}-minio:9000
+
+  WORKER_REPLICA_SET_NAME: {{ template "substra.fullname" . }}-worker
+  ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS: {{ .Values.DataSampleStorageInServerMedia | quote }}
+
+  {{- range $key, $value := default dict .Values.config }}
+  {{ $key }}: {{ $value | quote }}
+  {{- end }}

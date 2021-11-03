@@ -9,6 +9,8 @@ from substrapp.storages.minio import MinioStorage
 
 DEBUG = True
 
+STATIC_ROOT = os.path.join(BASE_DIR, 'statics')
+
 # Enable Browsable API
 REST_FRAMEWORK['DEFAULT_RENDERER_CLASSES'] += (
     'rest_framework.renderers.BrowsableAPIRenderer',

@@ -1,4 +1,28 @@
 # Changelog
+## 13.0.0
+
+### Added
+
+- `config` key used to set config environment variables for the backend
+- `events.image` values to set the event app container image independently
+
+### Removed
+- `gzipModels` value is removed as the default value is already the application default value
+- `pagination.maxPageSize` value is removed as the default value is already the application default value
+- `BACKEND_DEFAULT_PORT` env variable from the server and events deployment as the default value is the only possible value
+- `backend.tokenStrategy` value is removed as the default value is already the application default value
+- `peer.mspID` is moved to `orchestrator.mspID` as there is no notion of Hyperledger peer anymore
+- `celerybeat.taskPeriod` value is removed as the default value is already the application default value
+- `celerybeat.expiredTokensFlushPeriod` value is removed as the default value is already the application default value
+- `celerybeat.maximumImagesTTL` value is removed as the default value is already the application default value
+- `httpClient.timeoutSeconds` value is removed as the default value is already the application default value
+- `backend.compute.registry` value is removed we will use the same registry as the one in `backend.kaniko.image.registry`
+- Support for hostpath volumes directly in the chart
+
+### Changed
+
+- Almost all the keys in the Values files were renamed to better fit their actual purposes
+- Event app update strategy changed from `Recreate` to default (`RollingUpdate`)
 
 ## 12.1.1
 ### Fixed

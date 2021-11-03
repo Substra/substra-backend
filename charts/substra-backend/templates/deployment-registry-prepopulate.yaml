@@ -1,5 +1,5 @@
-{{ if .Values.registry.local }}
-{{ range $index, $item :=  .Values.registry.prepopulate }}
+{{ if .Values.containerRegistry.local }}
+{{ range $index, $item :=  .Values.containerRegistry.prepopulate }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -23,10 +23,10 @@ spec:
     spec:
       initContainers:
       - name: wait-registry
-        image: jwilder/dockerize
+        image: jwilder/dockerize:0.6.1
         command: ['dockerize', '-wait', 'tcp://{{ $.Release.Name }}-docker-registry:5000']
       - name: kaniko
-        image: {{ $.Values.backend.kaniko.image }}
+        image: {{ include "common.images.name" $.Values.kaniko.image }}
         args: ["--context=/docker-context",
                 {{- if .dstImage }}
                 "--destination={{ $.Release.Name }}-docker-registry:5000/{{ .dstImage }}",

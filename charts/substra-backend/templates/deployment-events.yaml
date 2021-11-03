@@ -7,8 +7,6 @@ metadata:
     app.kubernetes.io/name: {{ template "substra.name" . }}-events
 spec:
   replicas: 1
-  strategy:
-    type: Recreate
   selector:
     matchLabels:
         app.kubernetes.io/name: {{ template "substra.name" . }}-events
@@ -16,116 +14,100 @@ spec:
   template:
     metadata:
       labels:
-        {{ include "substra.labels" . | nindent 8 }}
         app.kubernetes.io/name: {{ template "substra.name" . }}-events
+        {{ include "substra.labels" . | nindent 8 }}
     spec:
-      {{- if .Values.securityContext.enabled }}
-      securityContext:
-        fsGroup: {{ .Values.securityContext.fsGroup }}
-      {{- end }}
-      {{- with $.Values.backend.image.pullSecrets }}
+      {{- with .Values.events.image.pullSecrets }}
       imagePullSecrets:
       {{- range . }}
         - name: {{ . }}
       {{- end }}
       {{- end }}
+      {{- if .Values.events.podSecurityContext.enabled }}
+      securityContext:
+        fsGroup: {{ .Values.events.podSecurityContext.fsGroup }}
+        runAsUser: {{ .Values.events.podSecurityContext.runAsUser }}
+        runAsGroup: {{ .Values.events.podSecurityContext.runAsGroup }}
+      {{- end }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker
       containers:
-      - name: {{ template "substra.name" . }}
-        image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-        {{- if .Values.backend.image.pullPolicy }}
-        imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
-        {{- end }}
-        {{- if .Values.securityContext.enabled }}
-        securityContext:
-          runAsUser: {{ .Values.securityContext.runAsUser }}
-          runAsGroup: {{ .Values.securityContext.runAsGroup }}
-        {{- end }}
-        command: ["/bin/bash"]
-        {{- if eq .Values.backend.settings "prod" }}
-        args: ["-c", "uwsgi --ini uwsgi.ini"]
-        {{- else }}
-        args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
-        {{- end }}
-        envFrom:
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-ledger
-          - configMapRef:
-              name: {{ include "substra.fullname" . }}-orchestrator
-        env:
-          - name: DJANGO_SETTINGS_MODULE
-            value: backend.settings.events.{{ .Values.backend.settings }}
-          # it's safe to allow async django db calls as the event app only reads
-          - name: DJANGO_ALLOW_ASYNC_UNSAFE
-            value: "true"
-          - name: ORG_NAME
-            value: {{ .Values.organization.name }}
-          - name: BACKEND_DB_NAME
-            value: {{ .Values.postgresql.postgresqlDatabase }}
-          - name: BACKEND_DB_USER
-            value: {{ .Values.postgresql.postgresqlUsername }}
-          - name: BACKEND_DB_PWD
-            value: {{ .Values.postgresql.postgresqlPassword }}
-          - name: DATABASE_HOST
-            value: {{ template  "postgresql.serviceName" . }}
-          - name: DEFAULT_DOMAIN
-            value: "{{ .Values.backend.defaultDomain }}"
-          - name: CELERY_BROKER_URL
-            value: "amqp://{{ .Values.rabbitmq.auth.username }}:{{ .Values.rabbitmq.auth.password }}@{{ default (include  "rabbitmq.serviceName" .) .Values.rabbitmq.host }}:{{ .Values.rabbitmq.port }}//"
-          - name: BACKEND_DEFAULT_PORT
-            value: {{ .Values.backend.service.port | quote}}
-          - name: PYTHONUNBUFFERED
-            value: "1"
-          - name: WORKER_REPLICA_SET_NAME
-            value: {{ template "substra.fullname" . }}-worker
-          - name: NAMESPACE
-            value: {{ .Release.Namespace }}
-        {{- with .Values.extraEnv }}
-{{ toYaml . | indent 10 }}
-        {{- end }}
-        volumeMounts:
-          - name: uwsgi
-            mountPath: /usr/src/app/uwsgi.ini
-            subPath: uwsgi.ini
-            readOnly: true
-          {{- if .Values.privateCa.enabled }}
-          - mountPath: /etc/ssl/certs
-            name: ssl-certs
+        - name: event-app
+          image: {{ include "common.images.name" .Values.events.image }}
+          imagePullPolicy: {{ .Values.events.image.pullPolicy }}
+          command: ["/bin/bash"]
+          {{- if eq .Values.settings "prod" }}
+          args: ["-c", "uwsgi --ini uwsgi.ini"]
+          {{- else }}
+          args: ["-c", "watchmedo auto-restart --directory=./ --pattern=*.py --recursive -- uwsgi --ini uwsgi.ini"]
           {{- end }}
-          {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}
-          - name: orchestrator-rabbitmq-tls-client-pair
-            mountPath: /var/substra/orchestrator_rabbitmq/tls/client
-          {{ end }}
-          {{ if $.Values.orchestrator.tls.enabled }}
-          - name: orchestrator-tls-cacert
-            mountPath: /var/substra/orchestrator/tls/server
-          {{ if $.Values.orchestrator.tls.mtls.enabled }}
-          - name: orchestrator-tls-client-pair
-            mountPath: /var/substra/orchestrator/tls/client
-          {{ end }}
-          {{ end }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-rabbitmq
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                  fieldRef:
+                    fieldPath: metadata.namespace
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.events.{{ .Values.settings }}
+            # it's safe to allow async django db calls as the event app only reads
+            - name: DJANGO_ALLOW_ASYNC_UNSAFE
+              value: "true"
+          volumeMounts:
+            - name: uwsgi
+              mountPath: /usr/src/app/uwsgi.ini
+              subPath: uwsgi.ini
+              readOnly: true
+            {{- if .Values.privateCa.enabled }}
+            - mountPath: /etc/ssl/certs
+              name: ssl-certs
+            {{- end }}
+            {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}
+            - name: orchestrator-rabbitmq-tls-client-pair
+              mountPath: /var/substra/orchestrator_rabbitmq/tls/client
+            {{ end }}
+            {{ if $.Values.orchestrator.tls.enabled }}
+            - name: orchestrator-tls-cacert
+              mountPath: /var/substra/orchestrator/tls/server
+            {{ if $.Values.orchestrator.tls.mtls.enabled }}
+            - name: orchestrator-tls-client-pair
+              mountPath: /var/substra/orchestrator/tls/client
+            {{ end }}
+            {{ end }}
       initContainers:
-      {{- if .Values.privateCa.enabled }}
-      - name: add-cert
-        image: {{ .Values.privateCa.image.repository }}
-        imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
-        command: ['sh', '-c']
-        args:
-        - |
-          {{- if .Values.privateCa.image.apkAdd }}
-          apk add --update ca-certificates openssl
-          {{- end }}
-          update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
-        volumeMounts:
-          - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
-            name: private-ca
-            subPath: {{ .Values.privateCa.configMap.fileName }}
-          - mountPath: /tmp/certs/
-            name: ssl-certs
-      {{- end }}
-      - name: wait-postgresql
-        image: jwilder/dockerize
-        command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+        {{- if .Values.privateCa.enabled }}
+        - name: add-cert
+          image: {{ include "common.images.name" .Values.privateCa.image }}
+          imagePullPolicy: {{ .Values.privateCa.image.pullPolicy }}
+          securityContext:
+            runAsUser: 0
+          command: ['sh', '-c']
+          args:
+          - |
+            {{- if .Values.privateCa.image.apkAdd }}
+            apk add --update ca-certificates openssl
+            {{- end }}
+            update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
+          volumeMounts:
+            - mountPath: /usr/local/share/ca-certificates/{{ .Values.privateCa.configMap.fileName }}
+              name: private-ca
+              subPath: {{ .Values.privateCa.configMap.fileName }}
+            - mountPath: /tmp/certs/
+              name: ssl-certs
+        {{- end }}
+        - name: wait-postgresql
+          image: jwilder/dockerize:0.6.1
+          command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
       volumes:
       - name: uwsgi
         configMap:
@@ -140,17 +122,17 @@ spec:
       {{ if $.Values.orchestrator.tls.enabled }}
       - name: orchestrator-tls-cacert
         secret:
-          secretName: {{ $.Values.orchestrator.tls.secrets.cacert }}
+          secretName: {{ $.Values.orchestrator.tls.cacert }}
       {{ if $.Values.orchestrator.tls.mtls.enabled }}
       - name: orchestrator-tls-client-pair
         secret:
-          secretName: {{ $.Values.orchestrator.tls.mtls.secrets.pair }}
+          secretName: {{ $.Values.orchestrator.tls.mtls.clientCertificate }}
       {{ end }}
       {{ end }}
       {{ if $.Values.orchestrator.rabbitmq.tls.enabled }}
       - name: orchestrator-rabbitmq-tls-client-pair
         secret:
-          secretName: {{ $.Values.orchestrator.rabbitmq.tls.secrets.pair }}
+          secretName: {{ $.Values.orchestrator.rabbitmq.tls.clientCertificate }}
       {{ end }}
     {{- with .Values.events.nodeSelector }}
       nodeSelector:

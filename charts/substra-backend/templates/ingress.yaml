@@ -1,4 +1,4 @@
-{{- if .Values.backend.ingress.enabled -}}
+{{- if .Values.server.ingress.enabled -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -6,30 +6,30 @@ metadata:
   labels:
     {{ include "substra.labels" . | nindent 4 }}
   annotations:
-    {{- if .Values.backend.ingress.annotations -}}
-    {{- include "common.tplvalues.render" (dict "value" .Values.backend.ingress.annotations "context" $ ) | nindent 4 }}
+    {{- if .Values.server.ingress.annotations -}}
+    {{- include "common.tplvalues.render" (dict "value" .Values.server.ingress.annotations "context" $ ) | nindent 4 }}
     {{- end }}
 spec:
-  {{- if .Values.backend.ingress.ingressClassName }}
-  ingressClassName: {{ .Values.backend.ingressClassName | quote }}
+  {{- if .Values.server.ingress.ingressClassName }}
+  ingressClassName: {{ .Values.server.ingressClassName | quote }}
   {{- end }}
   rules:
-    {{- if .Values.backend.ingress.hostname }}
-    - host: {{ include "common.tplvalues.render" ( dict "value" .Values.backend.ingress.hostname "context" $ ) }}
+    {{- if .Values.server.ingress.hostname }}
+    - host: {{ include "common.tplvalues.render" ( dict "value" .Values.server.ingress.hostname "context" $ ) }}
       http:
         paths:
-          {{- if .Values.backend.ingress.extraPaths }}
-          {{- toYaml .Values.backend.ingress.extraPaths | nindent 10 }}
+          {{- if .Values.server.ingress.extraPaths }}
+          {{- toYaml .Values.server.ingress.extraPaths | nindent 10 }}
           {{- end }}
-          - path: {{ .Values.backend.ingress.path }}
-            pathType: {{ .Values.backend.ingress.pathType }}
+          - path: {{ .Values.server.ingress.path }}
+            pathType: {{ .Values.server.ingress.pathType }}
             backend:
               service:
                 name: {{ template "substra.server.fullname" . }}
                 port:
                   name: http
     {{- end }}
-    {{- range .Values.backend.ingress.extraHosts }}
+    {{- range .Values.server.ingress.extraHosts }}
     - host: {{ include "common.tplvalues.render" ( dict "value" .name "context" $ ) }}
       http:
         paths:
@@ -41,8 +41,8 @@ spec:
                 port:
                   name: http
     {{- end }}
-  {{- if .Values.backend.ingress.extraTls }}
+  {{- if .Values.server.ingress.extraTls }}
   tls:
-    {{- include "common.tplvalues.render" (dict "value" .Values.backend.ingress.extraTls "context" $) | nindent 4 }}
+    {{- include "common.tplvalues.render" (dict "value" .Values.server.ingress.extraTls "context" $) | nindent 4 }}
   {{- end }}
 {{- end }}

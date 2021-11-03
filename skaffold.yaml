@@ -43,11 +43,14 @@ deploy:
         valuesFiles: [ examples/values/backend-org-1.yaml ]
         setValues: { _: _ } # to support profiles
         imageStrategy:
-          helm: {}
+          helm:
+            explicitRegistry: true
         values:
-          backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/substra-backend
-          celeryworker.image: substrafoundation/substra-backend
+          server.image: substrafoundation/substra-backend
+          scheduler.image: substrafoundation/substra-backend
+          worker.image: substrafoundation/substra-backend
+          schedulerWorker.image: substrafoundation/substra-backend
+          events.image: substrafoundation/substra-backend
 
       - name: backend-org-2
         chartPath: charts/substra-backend
@@ -55,11 +58,14 @@ deploy:
         valuesFiles: [ examples/values/backend-org-2.yaml ]
         setValues: { _: _ } # to support profiles
         imageStrategy:
-          helm: {}
+          helm:
+            explicitRegistry: true
         values:
-          backend.image: substrafoundation/substra-backend
-          celerybeat.image: substrafoundation/substra-backend
-          celeryworker.image: substrafoundation/substra-backend
+          server.image: substrafoundation/substra-backend
+          scheduler.image: substrafoundation/substra-backend
+          worker.image: substrafoundation/substra-backend
+          schedulerWorker.image: substrafoundation/substra-backend
+          events.image: substrafoundation/substra-backend
         skipBuildDependencies: true # deps already built by other org-1 release
 
     flags:
