@@ -17,8 +17,9 @@ from substrapp.views import ComputeTaskViewSet
 from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
-from ..assets import compositetraintuple, metric, datamanager
 from ..common import AuthenticatedClient
+from .. import common
+from .. import assets
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -68,37 +69,25 @@ class CompositeTraintupleViewTests(APITestCase):
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_compositetraintuple_retrieve(self):
-        expected = copy.deepcopy(compositetraintuple[0])
-        expected['composite']['models'] = None
-        expected['composite']['data_manager'] = datamanager[0]
-        expected['parent_tasks'] = []
+        composite_task = assets.get_composite_task()
 
-        query_events_mock = [
-            {
-                "metadata": {
-                    "status": "STATUS_TODO",
-                },
-                "timestamp": "2021-10-12T09:27:07.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DOING",
-                },
-                "timestamp": "2021-10-12T09:28:06.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DONE",
-                },
-                "timestamp": "2021-10-12T09:30:04.319449500Z",
-            }
+        parent_tasks = [
+            t
+            for t in (assets.get_train_tasks() + assets.get_composite_tasks())
+            if t['key'] in composite_task['parent_task_keys']
         ]
+        data_manager = common.query_data_manager(composite_task['composite']['data_manager_key'])
 
-        with mock.patch.object(OrchestratorClient, 'query_task', return_value=compositetraintuple[0]), \
-            mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=datamanager[0]), \
-            mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
-            search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
+        expected = composite_task
+        expected['composite']['models'] = []
+        expected['composite']['data_manager'] = copy.deepcopy(data_manager)
+        expected['parent_tasks'] = copy.deepcopy(parent_tasks)
+
+        with mock.patch.object(OrchestratorClient, 'query_task', side_effect=common.query_task), \
+                mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=data_manager), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=[]), \
+                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+            search_params = f"{composite_task['key']}/"
             response = self.client.get(self.url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
@@ -118,29 +107,19 @@ class CompositeTraintupleViewTests(APITestCase):
         error.details = 'out of range test'
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        metric = assets.get_metric()
+
         with mock.patch.object(OrchestratorClient, 'query_task', side_effect=error):
-            response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_compositetraintuple_list_filter_tag(self):
-        query_events_mock = [
-            {
-                "metadata": {
-                    "status": "STATUS_DOING",
-                },
-                "timestamp": "2021-10-12T09:28:06.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DONE",
-                },
-                "timestamp": "2021-10-12T09:30:04.319449500Z",
-            }
-        ]
 
-        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
+        composite_tasks = assets.get_composite_tasks()
+
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=composite_tasks), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=[]), \
+                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
             search_params = '?search=composite_traintuple%253Atag%253Asubstra'
             response = self.client.get(self.url + search_params, **self.extra)
 
@@ -154,30 +133,18 @@ class CompositeTraintupleViewTests(APITestCase):
         ("two_element_per_page_page_three", 2, 3, 4, 6)
     ])
     def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
-        query_events_mock = [
-            {
-                "metadata": {
-                    "status": "STATUS_DOING",
-                },
-                "timestamp": "2021-10-12T09:28:06.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DONE",
-                },
-                "timestamp": "2021-10-12T09:30:04.319449500Z",
-            }
-        ]
+        composite_tasks = assets.get_composite_tasks()
 
         url = reverse('substrapp:composite_traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=compositetraintuple), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_composite_tasks()), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models',
+                                  side_effect=common.get_task_output_models), \
+                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
         self.assertContains(response, 'next', 1)
         self.assertContains(response, 'previous', 1)
         self.assertContains(response, 'results', 1)
-        self.assertEqual(r['results'], compositetraintuple[index_down:index_up])
+        self.assertEqual(r['results'], composite_tasks[index_down:index_up])

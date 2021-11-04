@@ -324,7 +324,7 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
         data['parent_tasks'] = [client.query_task(key) for key in data['parent_task_keys']]
 
     # fetch task start and end dates from its events
-    events = client.query_events(asset_key=data['key'])
+    events = client.query_events(data['key'])
     data['start_date'] = None
     data['end_date'] = None
     for event in events:

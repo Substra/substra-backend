@@ -16,7 +16,8 @@ from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputePlanViewSet
 
 from ..common import AuthenticatedClient
-from ..assets import computeplan, traintuple
+from .. import common
+from .. import assets
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 
@@ -79,18 +80,21 @@ class ComputePlanViewTests(APITestCase):
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_computeplan_list_success(self):
-        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=computeplan):
+        cps = assets.get_compute_plans()
+        cps_response = copy.deepcopy(cps)
+        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=cps_response):
             response = self.client.get(self.url, **self.extra)
             r = response.json()
-            self.assertEqual(r['results'], computeplan)
+            self.assertEqual(r['results'], cps)
 
     def test_computeplan_retrieve(self):
-        expected = copy.deepcopy(computeplan[0])
-        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=computeplan[0]):
-            url = reverse('substrapp:compute_plan-detail', args=[computeplan[0]['key']])
+        cp = assets.get_compute_plan()
+        cp_response = copy.deepcopy(cp)
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response):
+            url = reverse('substrapp:compute_plan-detail', args=[cp['key']])
             response = self.client.get(url, **self.extra)
             actual = response.json()
-            self.assertEqual(actual, expected)
+            self.assertEqual(actual, cp)
 
     def test_computeplan_retrieve_fail(self):
         # Key < 32 chars
@@ -107,12 +111,14 @@ class ComputePlanViewTests(APITestCase):
         error.details = 'out of range test'
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        cp = assets.get_compute_plan()
+
         with mock.patch.object(OrchestratorClient, 'query_compute_plan', side_effect=error):
-            response = self.client.get(f'{self.url}{computeplan[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{cp["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_computeplan_cancel(self):
-        cp = computeplan[0]
+        cp = assets.get_compute_plan()
         key = cp['key']
         with mock.patch.object(OrchestratorClient, 'cancel_compute_plan'), \
                 mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp):
@@ -148,73 +154,41 @@ class ComputePlanViewTests(APITestCase):
 
         self.assertEqual(len(tasks[dummy_key]["parent_task_keys"]), 2)
 
-    # def test_computeplan_update(self):
-    #     cp = computeplan[0]
-    #     compute_plan_key = cp['key']
-    #     url = reverse('substrapp:compute_plan-update-ledger', args=[compute_plan_key])
-
-    #     with mock.patch('substrapp.ledger.assets.update_computeplan', return_value=cp):
-    #         response = self.client.post(url, **self.extra)
-    #         r = response.json()
-    #         self.assertEqual(r, cp)
-
     def test_can_see_traintuple(self):
-        query_events_mock = [
-            {
-                "metadata": {
-                    "status": "STATUS_DOING",
-                },
-                "timestamp": "2021-10-12T09:28:06.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DONE",
-                },
-                "timestamp": "2021-10-12T09:30:04.319449500Z",
-            }
-        ]
 
-        cp = computeplan[0]
-        compute_plan_key = cp['key']
-        url = reverse('substrapp:compute_plan_traintuple-list', args=[compute_plan_key])
+        cp = assets.get_compute_plan()
+        cp_response = copy.deepcopy(cp)
+        tasks = assets.get_train_tasks()[0:2]
+        tasks_response = copy.deepcopy(tasks)
+
+        url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
         url = f"{url}?page_size=2"
 
-        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
-                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=[traintuple[0], traintuple[1]]), \
-                mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response), \
+                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks_response), \
+                mock.patch.object(OrchestratorClient, 'get_computetask_output_models',
+                                  side_effect=common.get_task_output_models), \
+                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
 
             response = self.client.get(url, **self.extra)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()['results'], traintuple[0:2])
+        self.assertEqual(response.json()['results'], tasks[0:2])
         # # maybe add a test without ?page_size=<int> and add a forbidden response
 
     def test_can_filter_tuples(self):
-        query_events_mock = [
-            {
-                "metadata": {
-                    "status": "STATUS_DOING",
-                },
-                "timestamp": "2021-10-12T09:28:06.400636400Z",
-            },
-            {
-                "metadata": {
-                    "status": "STATUS_DONE",
-                },
-                "timestamp": "2021-10-12T09:30:04.319449500Z",
-            }
-        ]
 
-        cp = computeplan[0]
+        cp = assets.get_compute_plan()
+        cp_response = copy.deepcopy(cp)
+
         url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
         target_tag = 'foo'
         search_params = '?page_size=10&page=1&search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
 
-        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp), \
-                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=traintuple), \
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response), \
+                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_train_tasks()), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', return_value=query_events_mock):
+                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

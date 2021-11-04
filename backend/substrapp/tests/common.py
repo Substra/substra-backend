@@ -1,5 +1,6 @@
 from http.cookies import SimpleCookie
 from io import StringIO, BytesIO
+from typing import List
 import os
 import base64
 
@@ -7,6 +8,7 @@ from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.test import APIClient
 
+from . import assets
 
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
@@ -301,3 +303,52 @@ def encode_filter(params):
     # We need to quote the params string because the filter function
     # in the backend use the same  ':' url separator for key:value filtering object
     return urllib.parse.quote(params)
+
+
+def get_all_tasks() -> List:
+    return assets.get_train_tasks() + assets.get_composite_tasks() + assets.get_test_tasks()
+
+
+def get_task_events(task_key: str) -> List:
+    for task in get_all_tasks():
+        if task["key"] == task_key:
+            return [
+                {
+                    "metadata": {"status": "STATUS_DOING"},
+                    "timestamp": task["start_date"],
+                },
+                {
+                    "metadata": {"status": "STATUS_DONE"},
+                    "timestamp": task["end_date"],
+                },
+            ]
+
+
+def get_task_output_models(task_key: str) -> List:
+    for task in get_all_tasks():
+        if task["key"] == task_key:
+            return task.get('train', task.get('composite', {})).get('models')
+
+
+def get_task_performances(task_key: str) -> List:
+    for task in get_all_tasks():
+        if task['key'] == task_key and task['test']['perfs']:
+            return [
+                {
+                    'metric_key': perf_key,
+                    'performance_value': perf_value
+                }
+                for (perf_key, perf_value) in task['test']['perfs'].items()
+            ]
+
+
+def query_task(task_key: str) -> List:
+    for task in get_all_tasks():
+        if task['key'] == task_key:
+            return task
+
+
+def query_data_manager(data_manager_key: str):
+    for data_manager in assets.get_data_managers():
+        if data_manager['key'] == data_manager_key:
+            return data_manager

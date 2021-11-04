@@ -22,7 +22,7 @@ from substrapp.models import DataManager
 from substrapp.utils import get_dir_hash
 
 from ..common import get_sample_datamanager, FakeFilterDataManager, AuthenticatedClient
-from ..assets import datamanager
+from .. import assets
 
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -77,7 +77,7 @@ class DataSampleViewTests(APITestCase):
             path_leaf(data_path1): open(data_path1, 'rb'),
             path_leaf(data_path2): open(data_path2, 'rb'),
             'json': json.dumps({
-                'data_manager_keys': [datamanager[0]['key']],
+                'data_manager_keys': [assets.get_data_manager()['key']],
                 'test_only': False
             })
         }
@@ -105,7 +105,7 @@ class DataSampleViewTests(APITestCase):
         data = {
             'file': open(data_path, 'rb'),
             'json': json.dumps({
-                'data_manager_keys': [datamanager[0]['key']],
+                'data_manager_keys': [assets.get_data_manager()['key']],
                 'test_only': False
             })
         }
@@ -132,7 +132,7 @@ class DataSampleViewTests(APITestCase):
 
         data = {
             'path': parent_path,
-            'data_manager_keys': [datamanager[0]['key']],
+            'data_manager_keys': [assets.get_data_manager()['key']],
             'test_only': False,
             'multiple': True,
         }
@@ -158,7 +158,7 @@ class DataSampleViewTests(APITestCase):
 
         data = {
             'path': target_path,
-            'data_manager_keys': [datamanager[0]['key']],
+            'data_manager_keys': [assets.get_data_manager()['key']],
             'test_only': False
         }
         with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)), \

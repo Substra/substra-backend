@@ -21,7 +21,7 @@ from orchestrator.client import OrchestratorClient
 from grpc import RpcError, StatusCode
 
 from ..common import get_sample_model, AuthenticatedClient
-from ..assets import metric, model
+from .. import assets
 
 
 MEDIA_ROOT = "/tmp/unittests_views/"
@@ -68,25 +68,29 @@ class ModelViewTests(APITestCase):
             self.assertEqual(r, {'count': 0, 'next': None, 'previous': None, 'results': []})
 
     def test_model_list_filter_fail(self):
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
+        models = assets.get_models()
+        with mock.patch.object(OrchestratorClient, 'query_models', return_value=models):
             search_params = '?search=modeERRORl'
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
             self.assertIn('Malformed search filters', r['message'])
 
     def test_model_list_filter_key(self):
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
-            key = model[1]['key']
+        models = assets.get_models()
+        o_models = copy.deepcopy(models)
+        with mock.patch.object(OrchestratorClient, 'query_models', return_value=o_models):
+            key = models[1]['key']
             search_params = f'?search=model%253Akey%253A{key}'
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r['results']), 1)
 
     def test_model_retrieve(self):
-        expected = copy.deepcopy(model[0])
-        with mock.patch.object(OrchestratorClient, 'query_model', return_value=model[0]):
+        model = assets.get_model()
+        expected = copy.deepcopy(model)
+        with mock.patch.object(OrchestratorClient, 'query_model', return_value=model):
             url = reverse('substrapp:model-list')
-            search_params = model[0]['key'] + '/'
+            search_params = model['key'] + '/'
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(r, expected)
@@ -106,8 +110,10 @@ class ModelViewTests(APITestCase):
         error.details = 'out of range test'
         error.code = lambda: StatusCode.OUT_OF_RANGE
 
+        metric = assets.get_metric()
+
         with mock.patch.object(OrchestratorClient, 'query_model', side_effect=error):
-            response = self.client.get(f'{self.url}{metric[0]["key"]}/', **self.extra)
+            response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_model_download_by_node_for_worker(self):
@@ -218,13 +224,15 @@ class ModelViewTests(APITestCase):
         ("two_element_per_page_page_two", 2, 2, 2, 4)
     ])
     def test_model_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
+        models = assets.get_models()
+        o_models = copy.deepcopy(models)
         url = reverse('substrapp:model-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch.object(OrchestratorClient, 'query_models', return_value=model):
+        with mock.patch.object(OrchestratorClient, 'query_models', return_value=o_models):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
         self.assertContains(response, 'next', 1)
         self.assertContains(response, 'previous', 1)
         self.assertContains(response, 'results', 1)
-        self.assertEqual(r['results'], model[index_down:index_up])
+        self.assertEqual(r['results'], models[index_down:index_up])

@@ -2,6 +2,7 @@ import os
 import json
 import substra
 from datetime import datetime
+import textwrap
 
 URL = 'http://substra-backend.node-1.com'
 USERNAME = 'node-1'
@@ -19,14 +20,6 @@ class DateEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def json_dumps(assets):
-    return json.dumps(
-        [a.dict() for a in assets],
-        cls=DateEncoder,
-        indent=4
-    )
-
-
 def main():
 
     client = substra.Client(url=URL, insecure=False)
@@ -34,25 +27,25 @@ def main():
 
     assets = {}
 
-    assets['metric'] = json_dumps(client.list_metric())
-    assets['datamanager'] = json_dumps(client.list_dataset())
-    assets['algo'] = json_dumps(client.list_algo())
-    assets['traintuple'] = json_dumps(client.list_traintuple())
+    assets['metrics'] = client.list_metric()
+    assets['data_managers'] = client.list_dataset()
+    assets['algos'] = client.list_algo()
+    assets['train_tasks'] = client.list_traintuple()
 
     # Add tag for unit tests
     tt = client.list_testtuple()
     tt[0].tag = 'bar'
     tt[1].tag = 'foo'
-    assets['testtuple'] = json_dumps(tt)
+    assets['test_tasks'] = tt
 
-    assets['computeplan'] = json_dumps(client.list_compute_plan())
+    assets['compute_plans'] = client.list_compute_plan()
 
     # Add tag for unit tests
     ct = client.list_composite_traintuple()
     ct[0].tag = 'substra'
-    assets['compositetraintuple'] = json_dumps(ct)
+    assets['composite_tasks'] = ct
 
-    assets['model'] = json_dumps(client._backend.list(substra.sdk.schemas.Type.Model))
+    assets['models'] = client._backend.list(substra.sdk.schemas.Type.Model)
 
     with open(assets_path, 'w') as f:
         f.write('"""\nWARNING\n=======\n\nDO NOT MANUALLY EDIT THIS FILE!\n\n'
@@ -62,11 +55,17 @@ def main():
                 '2. run computation on it (with e2e tests for instance)\n'
                 '3. run substrapp/tests/generate_assets.py\n"""\n\n')
         for k, v in assets.items():
+            v = json.dumps([asset.dict() for asset in v], cls=DateEncoder, indent=4)
             v = v.replace(URL, 'http://testserver')
             v = v.replace('true', 'True')
             v = v.replace('false', 'False')
             v = v.replace('null', 'None')
-            f.write(f'{k} = {v}')
+            v = textwrap.indent(v, 4 * ' ').lstrip(" ")
+            f.write(f'def get_{k}():\n')
+            f.write(f'    return {v}\n')
+            f.write('\n\n')
+            f.write(f'def get_{k[:-1]}():\n')
+            f.write(f'    return get_{k}()[0]\n')
             f.write('\n\n')
 
 

@@ -44,7 +44,7 @@ def replace_storage_addresses(request, task):
     category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
     task_details = task[TASK_DATA_FIELD[category]]
 
-    if 'data_manager' in task_details:
+    if 'data_manager' in task_details and task_details['data_manager']:
         data_manager = task_details['data_manager']
         data_manager['description']['storage_address'] = request.build_absolute_uri(
             reverse('substrapp:data_manager-description', args=[data_manager['key']]))
@@ -54,7 +54,7 @@ def replace_storage_addresses(request, task):
 
     models = task_details.get('models') or []  # field may be set to None
     for model in models:
-        if 'address' in model:
+        if 'address' in model and model['address']:
             model['address']['storage_address'] = request.build_absolute_uri(
                 reverse('substrapp:model-file', args=[model['key']]))
 
