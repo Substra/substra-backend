@@ -74,9 +74,7 @@ deploy:
     manifests:
       - examples/values/serviceAccounts/serviceAccount-org-1.yaml
       - examples/values/serviceAccounts/serviceAccount-org-2.yaml
-      - examples/secrets/configmap-orchestrator-tls-org-1-cacert.yaml
       - examples/secrets/secret-orchestrator-tls-org-1-client-pair.yaml
-      - examples/secrets/configmap-orchestrator-tls-org-2-cacert.yaml
       - examples/secrets/secret-orchestrator-tls-org-2-client-pair.yaml
 
 profiles:
@@ -98,9 +96,7 @@ profiles:
       - op: remove
         path: /deploy/helm/releases/1
       - op: remove
-        path: /deploy/kubectl/manifests/5
-      - op: remove
-        path: /deploy/kubectl/manifests/4
+        path: /deploy/kubectl/manifests/3
       - op: remove
         path: /deploy/kubectl/manifests/1
   - name: distributed

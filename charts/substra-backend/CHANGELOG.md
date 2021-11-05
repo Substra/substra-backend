@@ -1,4 +1,10 @@
 # Changelog
+
+## 13.0.1
+
+### Changed
+- The orchestrator cacert is a _ConfigMap_ instead of a _Secret_
+
 ## 13.0.0
 
 ### Added
