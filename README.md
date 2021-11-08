@@ -43,7 +43,7 @@ To run the worker and the server on two different nodes (requires the nodes to b
 
 Deploy the backend with:
     - `skaffold run -p add-worker-server-node-selectors` to run 1 server pod and 1 worker pod on 2 separate kubernetes nodes. The nodes need to be labelled (see `add-worker-server-node-selectors.yaml`)
-    - `skaffold run -p spread-workers` to spread the workers across the `x` different nodes.
+    - `skaffold run -p spread-workers` to spread the workers across the `x` different nodes.
 
 You can draw from this documentation to set up the config according to your needs: number of kubernetes nodes, number of worker replicas, way to spread workers across the kubernetes nodes.
 
