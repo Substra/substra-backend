@@ -36,6 +36,9 @@ def create_compute_plan(request, data):
     return serializer.create(get_channel_name(request), serializer.validated_data)
 
 
+BASENAME_PREFIX = 'compute_plan_'
+
+
 class ComputePlanViewSet(mixins.CreateModelMixin,
                          PaginationMixin,
                          GenericViewSet):
@@ -352,21 +355,18 @@ class GenericSubassetViewset(PaginationMixin,
     def get_queryset(self):
         return []
 
-    def list(self, request, compute_plan_pk, basename):
+    def list(self, request, compute_plan_pk):
         if not self.is_page_size_param_present():
             # We choose to force the page_size parameter in these views in order to limit the number of queries
             # to the chaincode
             return Response(status=status.HTTP_400_BAD_REQUEST, data='page_size param is required')
 
         validated_key = validate_key(compute_plan_pk)
+        truncated_basename = self.basename.removeprefix(BASENAME_PREFIX)
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_tasks(
-                    category=TASK_CATEGORY[basename],
-                    compute_plan_key=validated_key)
-                for datum in data:
-                    datum = add_task_extra_information(client, basename, datum)
+                data = self._fetch_data(client, validated_key, truncated_basename)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
@@ -377,7 +377,7 @@ class GenericSubassetViewset(PaginationMixin,
         if query_params is not None:
             try:
                 data = filter_list(
-                    object_type=basename,
+                    object_type=truncated_basename,
                     data=data,
                     query_params=query_params)
             except OrcError as rpc_error:
@@ -391,9 +391,19 @@ class GenericSubassetViewset(PaginationMixin,
 
 class CPTaskViewSet(GenericSubassetViewset):
 
-    def list(self, request, compute_plan_pk):
+    def _fetch_data(self, client, compute_plan_pk, truncated_basename):
+        category = TASK_CATEGORY[truncated_basename]
+        data = client.query_tasks(category=category, compute_plan_key=compute_plan_pk)
 
-        return super().list(
-            request=request,
-            compute_plan_pk=compute_plan_pk,
-            basename=self.basename.removeprefix("compute_plan_"))
+        for datum in data:
+            datum = add_task_extra_information(client, truncated_basename, datum)
+        return data
+
+
+class CPAlgoViewSet(GenericSubassetViewset):
+    # return all algos related to a specific CP
+    def _fetch_data(self, client, compute_plan_pk, truncated_basename):
+        validated_key = validate_key(compute_plan_pk)
+        data = client.query_algos(compute_plan_key=validated_key)
+
+        return data

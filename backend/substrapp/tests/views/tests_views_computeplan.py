@@ -193,3 +193,23 @@ class ComputePlanViewTests(APITestCase):
             r = response.json()
 
             self.assertEqual(len(r['results']), 2)
+
+    def test_can_see_algos(self):
+        cp = assets.get_compute_plan()
+        cp_response = copy.deepcopy(cp)
+        compute_plan_key = cp_response['key']
+        algos = assets.get_algos()
+        algos_response = copy.deepcopy(algos)
+
+        url = reverse('substrapp:compute_plan_algo-list', args=[compute_plan_key])
+        url = f"{url}?page_size=2"
+
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response), \
+                mock.patch.object(OrchestratorClient,
+                                  'query_algos',
+                                  return_value=[algos_response[0], algos_response[1]]):
+
+            response = self.client.get(url, **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.json()['results'], algos_response[0:2])

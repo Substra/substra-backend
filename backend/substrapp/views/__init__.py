@@ -6,7 +6,7 @@ from .metric import MetricViewSet, MetricPermissionViewSet
 from .model import ModelViewSet, ModelPermissionViewSet
 from .algo import AlgoViewSet, AlgoPermissionViewSet
 from .computetask import ComputeTaskViewSet
-from .computeplan import ComputePlanViewSet, CPTaskViewSet
+from .computeplan import ComputePlanViewSet, CPTaskViewSet, CPAlgoViewSet
 
 __all__ = [
     'DataSampleViewSet',
@@ -21,4 +21,5 @@ __all__ = [
     'ComputeTaskViewSet',
     'ComputePlanViewSet',
     'CPTaskViewSet',
+    'CPAlgoViewSet',
 ]
