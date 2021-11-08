@@ -23,7 +23,7 @@ privateCa:
   ## @param privateCa.image.apkAdd Install the update-ca-certificates package
   ##
   image:
-    repository: alpine
+    repository: ubuntu
     tag: latest
     pullPolicy: IfNotPresent
     apkAdd: true

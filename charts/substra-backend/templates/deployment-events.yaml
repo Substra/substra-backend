@@ -95,7 +95,8 @@ spec:
           args:
           - |
             {{- if .Values.privateCa.image.apkAdd }}
-            apk add --update ca-certificates openssl
+            apt update
+            apt install -y ca-certificates openssl
             {{- end }}
             update-ca-certificates && cp /etc/ssl/certs/* /tmp/certs/
           volumeMounts:

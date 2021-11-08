@@ -22,7 +22,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `organizationName`               | Current organization name                                     | `owkin`              |
 | `DataSampleStorageInServerMedia` |                                                               | `false`              |
 | `privateCa.enabled`              | Run the init container injecting the private CA certificate   | `false`              |
-| `privateCa.image.repository`     | Private CA injector image                                     | `alpine`             |
+| `privateCa.image.repository`     | Private CA injector image                                     | `ubuntu`             |
 | `privateCa.image.tag`            | Private CA injector tag                                       | `latest`             |
 | `privateCa.image.pullPolicy`     | Private CA injector pull policy                               | `IfNotPresent`       |
 | `privateCa.image.apkAdd`         | Install the update-ca-certificates package                    | `true`               |

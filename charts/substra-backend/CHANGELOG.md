@@ -1,5 +1,11 @@
 # Changelog
 
+## 13.0.2
+
+## Changed
+
+- replace `alpine` by `ubuntu` as privateCA init container image
+
 ## 13.0.1
 
 ### Changed
