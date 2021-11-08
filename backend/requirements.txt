@@ -29,3 +29,4 @@ argh==0.26.2
 coverage==6.1.1
 mock==4.0.3
 parameterized==0.8.1
+django-prometheus==2.1.0

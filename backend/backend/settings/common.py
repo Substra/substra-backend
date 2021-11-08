@@ -289,6 +289,17 @@ COMPUTE_POD_RUN_AS_USER = os.environ.get("COMPUTE_POD_RUN_AS_USER")
 COMPUTE_POD_RUN_AS_GROUP = os.environ.get("COMPUTE_POD_RUN_AS_GROUP")
 COMPUTE_POD_FS_GROUP = os.environ.get("COMPUTE_POD_FS_GROUP")
 
+# Prometheus configuration
+ENABLE_METRICS = to_bool(os.environ.get("ENABLE_METRICS", False))
+# Keeping migrations enabled leads to issues with collectsatic
+PROMETHEUS_EXPORT_MIGRATIONS = False
+if ENABLE_METRICS:
+    INSTALLED_APS = INSTALLED_APPS.append("django_prometheus")
+    MIDDLEWARE = (['django_prometheus.middleware.PrometheusBeforeMiddleware'] +
+                 MIDDLEWARE +
+                 ['django_prometheus.middleware.PrometheusAfterMiddleware'])
+
+
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24 * 60)))

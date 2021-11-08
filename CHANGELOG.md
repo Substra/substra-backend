@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Metrics support for the Django app behind the flag `ENABLE_METRICS`
+
 ### Changed
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
 - Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER`.
