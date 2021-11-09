@@ -294,7 +294,7 @@ ENABLE_METRICS = to_bool(os.environ.get("ENABLE_METRICS", False))
 # Keeping migrations enabled leads to issues with collectsatic
 PROMETHEUS_EXPORT_MIGRATIONS = False
 if ENABLE_METRICS:
-    INSTALLED_APS = INSTALLED_APPS.append("django_prometheus")
+    INSTALLED_APPS.append("django_prometheus")
     MIDDLEWARE = (['django_prometheus.middleware.PrometheusBeforeMiddleware'] +
                  MIDDLEWARE +
                  ['django_prometheus.middleware.PrometheusAfterMiddleware'])
