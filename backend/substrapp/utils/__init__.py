@@ -9,6 +9,7 @@ import json
 import functools
 import requests
 import tarfile
+import tarsafe
 import zipfile
 import time
 
@@ -17,6 +18,7 @@ from django.conf import settings
 from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from substrapp.exceptions import NodeError
+from substrapp.utils.safezip import ZipFile
 
 logger = structlog.get_logger(__name__)
 
@@ -102,50 +104,13 @@ def raise_if_path_traversal(requested_paths, to_directory):
             raise Exception(f'Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.')
 
 
-class ZipFile(zipfile.ZipFile):
-    """Override Zipfile to ensure unix file permissions are preserved.
-
-    This is due to a python bug:
-    https://bugs.python.org/issue15795
-
-    Workaround from:
-    https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
-    """
-
-    def extract(self, member, path=None, pwd=None):
-        if not isinstance(member, zipfile.ZipInfo):
-            member = self.getinfo(member)
-
-        if path is None:
-            path = os.getcwd()
-
-        ret_val = self._extract_member(member, path, pwd)
-        attr = member.external_attr >> 16
-        os.chmod(ret_val, attr)
-        return ret_val
-
-
 def uncompress_path(archive_path, to_directory):
-
     if zipfile.is_zipfile(archive_path):
-
         with ZipFile(archive_path, 'r') as zf:
-
-            # Check no path traversal
-            filenames = [os.path.join(to_directory, filename)
-                         for filename in zf.namelist()]
-            raise_if_path_traversal(filenames, to_directory)
-
             zf.extractall(to_directory)
 
     elif tarfile.is_tarfile(archive_path):
-        with tarfile.open(archive_path, 'r:*') as tf:
-
-            # Check no path traversal
-            filenames = [os.path.join(to_directory, filename)
-                         for filename in tf.getnames()]
-            raise_if_path_traversal(filenames, to_directory)
-
+        with tarsafe.open(archive_path, 'r:*') as tf:
             tf.extractall(to_directory)
     else:
         raise Exception('Archive must be zip or tar.gz')
@@ -154,22 +119,10 @@ def uncompress_path(archive_path, to_directory):
 def uncompress_content(archive_content, to_directory):
     if zipfile.is_zipfile(io.BytesIO(archive_content)):
         with ZipFile(io.BytesIO(archive_content)) as zf:
-
-            # Check no path traversal
-            filenames = [os.path.join(to_directory, filename)
-                         for filename in zf.namelist()]
-            raise_if_path_traversal(filenames, to_directory)
-
             zf.extractall(to_directory)
     else:
         try:
-            with tarfile.open(fileobj=io.BytesIO(archive_content)) as tf:
-
-                # Check no path traversal
-                filenames = [os.path.join(to_directory, filename)
-                             for filename in tf.getnames()]
-                raise_if_path_traversal(filenames, to_directory)
-
+            with tarsafe.open(fileobj=io.BytesIO(archive_content)) as tf:
                 tf.extractall(to_directory)
         except tarfile.TarError:
             raise Exception('Archive must be zip or tar.*')
