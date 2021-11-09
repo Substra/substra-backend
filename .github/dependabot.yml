@@ -11,7 +11,17 @@ updates:
     schedule:
       interval: "monthly"
 
+  - package-ecosystem: "pip"
+    directory: "/metrics-exporter"
+    schedule:
+      interval: "monthly"
+
   - package-ecosystem: "docker"
     directory: "/docker/substra-backend"
+    schedule:
+      interval: "monthly"
+
+  - package-ecosystem: "docker"
+    directory: "/docker/metrics-exporter"
     schedule:
       interval: "monthly"
