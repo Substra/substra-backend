@@ -81,10 +81,10 @@ profiles:
   - name: prod
     patches:
       - op: add
-        path: /deploy/helm/releases/0/setValues/backend.settings
+        path: /deploy/helm/releases/0/setValues/settings
         value: prod
       - op: add
-        path: /deploy/helm/releases/1/setValues/backend.settings
+        path: /deploy/helm/releases/1/setValues/settings
         value: prod
   - name: nodeps
     patches:
