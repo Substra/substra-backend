@@ -294,6 +294,10 @@ ENABLE_METRICS = to_bool(os.environ.get("ENABLE_METRICS", False))
 # Keeping migrations enabled leads to issues with collectsatic
 PROMETHEUS_EXPORT_MIGRATIONS = False
 if ENABLE_METRICS:
+    # Enable tasks related events so that tasks can be monitored
+    CELERY_WORKER_SEND_TASK_EVENTS = True
+    CELERY_TASK_SEND_SENT_EVENT = True
+
     INSTALLED_APPS.append("django_prometheus")
     MIDDLEWARE = (['django_prometheus.middleware.PrometheusBeforeMiddleware'] +
                  MIDDLEWARE +
