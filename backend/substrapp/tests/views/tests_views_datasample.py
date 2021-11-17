@@ -171,6 +171,25 @@ class DataSampleViewTests(APITestCase):
         self.assertIsNotNone(response.data[0]['key'])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
+    def test_file_size_limit(self):
+        data_path = os.path.join(FIXTURE_PATH, 'datasample1/0024700.zip')
+
+        data = {
+            'file': open(data_path, 'rb'),
+            'json': json.dumps({
+                'data_manager_keys': [assets.get_data_manager()['key']],
+                'test_only': False
+            })
+        }
+
+        with mock.patch.object(DataManager.objects, 'filter', return_value=FakeFilterDataManager(1)):
+            response = self.client.post(self.url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('File too large', response.data['message'])
+        data['file'].close()
+
     def test_datasamples_list(self):
         url = reverse('substrapp:data_sample-list')
         with mock.patch.object(OrchestratorClient, 'query_datasamples',

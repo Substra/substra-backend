@@ -306,6 +306,9 @@ if ENABLE_METRICS:
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
 
+# Uploaded file max size, in bytes
+DATA_UPLOAD_MAX_SIZE = int(os.environ.get('DATA_UPLOAD_MAX_SIZE', 1024 * 1024 * 1024))
+
 EXPIRY_TOKEN_LIFETIME = timedelta(minutes=int(os.environ.get('EXPIRY_TOKEN_LIFETIME', 24 * 60)))
 TOKEN_STRATEGY = os.environ.get('TOKEN_STRATEGY', 'unique')
 

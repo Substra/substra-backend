@@ -223,3 +223,31 @@ class AlgoViewTests(APITestCase):
         self.assertContains(response, 'previous', 1)
         self.assertContains(response, 'results', 1)
         self.assertEqual(r['results'], algos[index_down:index_up])
+
+    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
+    def test_file_size_limit(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        algo_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/algo.tar.gz')
+        description_path = os.path.join(dir_path, '../../../../fixtures/chunantes/algos/algo3/description.md')
+
+        data = {
+            'json': json.dumps({
+                'name': 'Logistic regression',
+                'metric_key': 'some key',
+                'category': 'ALGO_SIMPLE',
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            }),
+            'file': open(algo_path, 'rb'),
+            'description': open(description_path, 'rb'),
+        }
+
+        response = self.client.post(self.url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("File too large", response.data['message'][0]['file'])
+
+        data['description'].close()
+        data['file'].close()

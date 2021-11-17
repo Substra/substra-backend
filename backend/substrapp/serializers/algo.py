@@ -7,13 +7,13 @@ from substrapp.models import Algo
 
 from django.conf import settings
 from substrapp.utils import get_hash
-from substrapp.serializers.utils import FileValidator, PermissionsSerializer
+from substrapp.serializers.utils import FileValidator, FileSizeValidator, PermissionsSerializer
 
 from substrapp.orchestrator import get_orchestrator_client
 
 
 class AlgoSerializer(DynamicFieldsModelSerializer):
-    file = serializers.FileField(validators=[FileValidator()])
+    file = serializers.FileField(validators=[FileValidator(), FileSizeValidator()])
 
     class Meta:
         model = Algo

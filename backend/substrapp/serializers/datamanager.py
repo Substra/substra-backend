@@ -4,6 +4,7 @@ from rest_framework.reverse import reverse
 
 from libs.serializers import DynamicFieldsModelSerializer
 from substrapp.models import DataManager
+from substrapp.serializers.utils import FileSizeValidator
 
 from django.conf import settings
 from substrapp.utils import get_hash
@@ -13,6 +14,8 @@ from substrapp.orchestrator import get_orchestrator_client
 
 
 class DataManagerSerializer(DynamicFieldsModelSerializer):
+    data_opener = serializers.FileField(validators=[FileSizeValidator()])
+    description = serializers.FileField(validators=[FileSizeValidator()])
 
     class Meta:
         model = DataManager

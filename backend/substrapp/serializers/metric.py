@@ -7,13 +7,13 @@ from substrapp.models import Metric
 
 from django.conf import settings
 from substrapp.utils import get_hash
-from substrapp.serializers.utils import FileValidator, PermissionsSerializer
+from substrapp.serializers.utils import FileValidator, FileSizeValidator, PermissionsSerializer
 
 from substrapp.orchestrator import get_orchestrator_client
 
 
 class MetricSerializer(DynamicFieldsModelSerializer):
-    address = serializers.FileField(validators=[FileValidator()])
+    address = serializers.FileField(validators=[FileValidator(), FileSizeValidator()])
 
     class Meta:
         model = Metric

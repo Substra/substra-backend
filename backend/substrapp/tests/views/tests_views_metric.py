@@ -231,3 +231,31 @@ class MetricViewTests(APITestCase):
             self.assertContains(response, 'previous', 1)
             self.assertContains(response, 'results', 1)
             self.assertEqual(r['results'], metrics[index_down:index_up])
+
+    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
+    def test_file_size_limit(self):
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        metric_path = os.path.join(dir_path, '../../../../fixtures/owkin/metrics/metric0/')
+        description_path = os.path.join(metric_path, 'description.md')
+        metrics_path = os.path.join(MEDIA_ROOT, 'metrics.zip')
+        zip_folder(metric_path, metrics_path)
+
+        data = {
+            'json': json.dumps({
+                'name': 'Simplified skin lesion classification',
+                'permissions': {
+                    'public': True,
+                    'authorized_ids': [],
+                },
+            }),
+            'description': open(description_path, 'rb'),
+            'file': open(metrics_path, 'rb'),
+        }
+
+        response = self.client.post(self.url, data=data, format='multipart', **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("File too large", response.data['message'][0]['address'])
+
+        data['description'].close()
+        data['file'].close()

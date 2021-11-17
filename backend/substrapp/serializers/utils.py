@@ -3,6 +3,7 @@ import zipfile
 
 from rest_framework import serializers
 
+from django.conf import settings
 from django.core.exceptions import ValidationError
 
 from django.utils.deconstruct import deconstructible
@@ -59,6 +60,13 @@ class FileValidator(object):
                     archive.close()
                 else:
                     raise ValidationError(self.error_messages['open'])
+
+
+class FileSizeValidator(object):
+    """Validate that file does not exceed maximum allowed size"""
+    def __call__(self, value):
+        if value.size > settings.DATA_UPLOAD_MAX_SIZE:
+            raise ValidationError('File too large')
 
 
 class PermissionsSerializer(serializers.Serializer):

@@ -1,13 +1,13 @@
-
 from rest_framework import serializers
 from substrapp.models import DataSample
+from substrapp.serializers.utils import FileSizeValidator
 
 from substrapp.orchestrator import get_orchestrator_client
 
 
 class DataSampleSerializer(serializers.ModelSerializer):
     # write_only because sensitive data should never be served by the API.
-    file = serializers.FileField(write_only=True, required=False)
+    file = serializers.FileField(write_only=True, required=False, validators=[FileSizeValidator()])
     # servermedias
     path = serializers.CharField(max_length=8192, required=False)
 
