@@ -9,7 +9,7 @@ from django.db import connection
 Originally code was taken from http://djangosnippets.org/snippets/290/
 But I was made some improvements like:
 - print URL from what queries was
-- don't show queries from static URLs (MEDIA_URL and STATIC_URL, also for /favicon.ico).
+- don't show queries from static URLs (STATIC_URL, also for /favicon.ico).
 - If DEBUG is False tell to django to not use this middleware
 - Remove guessing of terminal width (This breaks the rendered SQL)
 """
@@ -33,8 +33,7 @@ class SQLPrintingMiddleware:
 
         if (len(connection.queries) == 0 or
                 request.path_info.startswith('/favicon.ico') or
-                request.path_info.startswith(settings.STATIC_URL) or
-                request.path_info.startswith(settings.MEDIA_URL)):
+                request.path_info.startswith(settings.STATIC_URL)):
             return response
 
         indentation = 2

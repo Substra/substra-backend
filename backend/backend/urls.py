@@ -40,7 +40,6 @@ urlpatterns = [
         url(r'^api-token-auth/', obtain_auth_token)  # for expiry token authent
     ])),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT) \
-  + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT) \
   + [  # OpenAPI spec and UI
       path("schema/", SpectacularAPIView.as_view(), name="schema"),
       path(

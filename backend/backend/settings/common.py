@@ -238,7 +238,6 @@ USE_TZ = True
 STATIC_URL = f'/{SUBPATH}static/'
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'medias')
-MEDIA_URL = f'/{SUBPATH}media/'
 
 SITE_ID = 1
 

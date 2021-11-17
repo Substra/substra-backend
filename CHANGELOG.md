@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
 - Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER`.
 - Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP`.
+- Do not openly expose media directory
 
 ### Removed
 - `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE`.
