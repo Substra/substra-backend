@@ -34,6 +34,7 @@ TRUE_VALUES = {
 def to_bool(value):
     return value in TRUE_VALUES
 
+
 def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
     """Builds a rabbitmq connection string
 
@@ -299,8 +300,8 @@ if ENABLE_METRICS:
 
     INSTALLED_APPS.append("django_prometheus")
     MIDDLEWARE = (['django_prometheus.middleware.PrometheusBeforeMiddleware'] +
-                 MIDDLEWARE +
-                 ['django_prometheus.middleware.PrometheusAfterMiddleware'])
+                  MIDDLEWARE +
+                  ['django_prometheus.middleware.PrometheusAfterMiddleware'])
 
 
 DATA_UPLOAD_MAX_NUMBER_FIELDS = 10000
@@ -375,10 +376,15 @@ LOGGING = {
             'handlers': ['console'],
             'propagate': True,
         },
-        'kubernetes.client.rest': { # This is too verbose in debug level
+        'kubernetes.client.rest': {  # This is too verbose in debug level
             'level': 'INFO' if DEBUG else 'WARNING',
             'handlers': ['console'],
             'propagate': False,
+        },
+        'amqp.connection.Connection.heartbeat_tick': {  # This is too verbose in debug level
+            'level': 'INFO',
+            'handlers': ['console'],
+            'propagate': True,
         },
     }
 }
