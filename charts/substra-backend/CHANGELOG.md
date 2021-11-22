@@ -1,8 +1,14 @@
 # Changelog
 
+
+## 13.0.3
+
+### Removed
+- Authorization to access the `node` api with the worker _ServiceAccount_
+
 ## 13.0.2
 
-## Changed
+### Changed
 
 - replace `alpine` by `ubuntu` as privateCA init container image
 

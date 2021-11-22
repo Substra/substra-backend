@@ -4,16 +4,14 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ template "substra.fullname" . }}-worker
-  namespace: {{ .Release.Namespace }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
 ---
-kind: ClusterRole
+kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "substra.fullname" . }}-worker
-  namespace: {{ .Release.Namespace }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
@@ -28,9 +26,6 @@ rules:
     resources: ["jobs"]
     verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
   - apiGroups: [""]
-    resources: ["nodes"]
-    verbs: ["get", "list", "watch"]
-  - apiGroups: [""]
     resources: ["services"]
     verbs: ["get"]
   - apiGroups: ["apps"]
@@ -44,20 +39,18 @@ rules:
       - {{ template "substra.fullname" . }}-psp
   {{- end }}
 ---
-kind: ClusterRoleBinding
+kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
   name: {{ template "substra.fullname" . }}-worker
-  namespace: {{ .Release.Namespace }}
   labels:
     {{ include "substra.labels" . | nindent 4 }}
     app.kubernetes.io/name: {{ template "substra.name" . }}
 subjects:
   - kind: ServiceAccount
     name: {{ template "substra.fullname" . }}-worker
-    namespace: {{ .Release.Namespace }}
 roleRef:
-  kind: ClusterRole
+  kind: Role
   name: {{ template "substra.fullname" . }}-worker
   apiGroup: rbac.authorization.k8s.io
 {{- end }}
