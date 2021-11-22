@@ -1,6 +1,7 @@
 import os
 import uuid
 
+from django.conf import settings
 from django.http import FileResponse
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -79,6 +80,13 @@ class CustomFileResponse(FileResponse):
 
 def node_has_process_permission(asset):
     """Check if current node can process input asset."""
+
+    if settings.ISOLATED:
+        # In isolated frontend there is no access to data
+        # (only non sensitive metadata from orchestrator is exported)
+        # So by returning always False here, backend will not try to retrieve data
+        return False
+
     permission = asset["permissions"]["process"]
     return permission["public"] or get_owner() in permission["authorized_ids"]
 

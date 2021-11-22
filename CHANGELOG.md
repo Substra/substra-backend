@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Metrics support for the Django app behind the flag `ENABLE_METRICS`
 - Limit file size upload to `DATA_UPLOAD_MAX_SIZE`
+- Setting to run in "isolated" mode (when there is no backend data, only orchestrator data)
 
 ### Changed
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.

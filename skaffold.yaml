@@ -131,3 +131,11 @@ profiles:
       - op: replace
         path: /deploy/helm/releases/1/valuesFiles
         value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-node-selectors.yaml ]
+  - name: isolated
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/setValues/config.ISOLATED
+        value: "True"
+      - op: add
+        path: /deploy/helm/releases/1/setValues/config.ISOLATED
+        value: "True"

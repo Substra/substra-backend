@@ -413,3 +413,5 @@ structlog.configure(
 )
 
 COMMON_HOST_DOMAIN = os.environ.get('COMMON_HOST_DOMAIN')
+
+ISOLATED = to_bool(os.environ.get('ISOLATED'))
