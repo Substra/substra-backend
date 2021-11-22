@@ -1,7 +1,7 @@
 aio-pika==6.8.0
 Django==2.2.24  # https://github.com/owkin/connect-backend/issues/121
 django-structlog==2.1.*
-celery==5.1.2
+celery==5.2.0
 checksumdir==1.2.0
 cryptography==35.0.0
 django-cors-headers==3.10.0
