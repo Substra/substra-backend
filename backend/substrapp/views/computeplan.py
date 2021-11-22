@@ -366,34 +366,32 @@ class GenericSubassetViewset(PaginationMixin,
 
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                data = self._fetch_data(client, validated_key, truncated_basename)
+                search_params = request.query_params.get('search')
+                data = self._fetch_data(client, validated_key, truncated_basename, search_params)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
             return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        query_params = request.query_params.get('search')
-        if query_params is not None:
-            try:
-                data = filter_list(
-                    object_type=truncated_basename,
-                    data=data,
-                    query_params=query_params)
-            except OrcError as rpc_error:
-                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
         return self.paginate_response(data)
+
+    def _filter_data(self, data, search_params, truncated_basename):
+        if search_params is None:
+            return data
+        return filter_list(
+            object_type=truncated_basename,
+            data=data,
+            query_params=search_params,
+        )
 
 
 class CPTaskViewSet(GenericSubassetViewset):
 
-    def _fetch_data(self, client, compute_plan_pk, truncated_basename):
+    def _fetch_data(self, client, compute_plan_pk, truncated_basename, search_params):
         category = TASK_CATEGORY[truncated_basename]
         data = client.query_tasks(category=category, compute_plan_key=compute_plan_pk)
+        data = self._filter_data(data, search_params, truncated_basename)
 
         for datum in data:
             datum = add_task_extra_information(client, truncated_basename, datum)
@@ -402,8 +400,9 @@ class CPTaskViewSet(GenericSubassetViewset):
 
 class CPAlgoViewSet(GenericSubassetViewset):
     # return all algos related to a specific CP
-    def _fetch_data(self, client, compute_plan_pk, truncated_basename):
+    def _fetch_data(self, client, compute_plan_pk, truncated_basename, search_params):
         validated_key = validate_key(compute_plan_pk)
         data = client.query_algos(compute_plan_key=validated_key)
+        data = self._filter_data(data, search_params, truncated_basename)
 
         return data

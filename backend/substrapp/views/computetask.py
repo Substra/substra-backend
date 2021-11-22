@@ -181,8 +181,6 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_tasks(category=TASK_CATEGORY[self.basename])
-                for datum in data:
-                    datum = add_task_extra_information(client, self.basename, datum)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
@@ -196,6 +194,9 @@ class ComputeTaskViewSet(mixins.CreateModelMixin,
                     object_type=self.basename,
                     data=data,
                     query_params=query_params)
+                with get_orchestrator_client(get_channel_name(request)) as client:
+                    for datum in data:
+                        datum = add_task_extra_information(client, self.basename, datum)
             except OrcError as rpc_error:
                 return Response({'message': rpc_error.details}, status=rpc_error.http_status())
             except Exception as e:
