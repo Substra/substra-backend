@@ -3,10 +3,12 @@ import time
 import structlog
 from prometheus_client import CollectorRegistry, multiprocess
 
-from settings import LOG_LEVEL
+from metrics_exporter import settings
 
 structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(LOG_LEVEL))
+    wrapper_class=structlog.make_filtering_bound_logger(
+        logging.getLevelName(settings.LOG_LEVEL)
+    )
 )
 logger = structlog.get_logger()
 
@@ -37,7 +39,6 @@ class Exporter:
         multiprocess.MultiProcessCollector(self.registry, path)
 
     def wait(self) -> None:
-        """wait for metrics infinitely
-        """
+        """wait for metrics infinitely"""
         while True:
             time.sleep(3600)

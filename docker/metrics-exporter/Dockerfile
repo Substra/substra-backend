@@ -12,8 +12,10 @@ ARG GROUP_ID=1001
 COPY ./metrics-exporter/requirements.txt /usr/src/app/.
 RUN pip3 install --upgrade pip && pip3 install --prefix /usr/local -r requirements.txt
 
-COPY ./metrics-exporter/* /usr/src/app/
+COPY ./metrics-exporter/ /usr/src/app/
 
 RUN chown -R ${USER_ID}:${GROUP_ID} /usr/src/app
+
+ENV PYTHONPATH=/usr/src/app/
 
 USER ${USER_ID}:${GROUP_ID}
