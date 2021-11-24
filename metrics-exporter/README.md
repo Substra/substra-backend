@@ -24,8 +24,13 @@ $ PYTHONPATH=. python metrics_exporter/server.py
 ## Settings
 These settings can be set through env variables.
 
-| Env variable               | Description                                      |
-| ---                        | ---                                              |
-| `PROMETHEUS_MULTIPROC_DIR` | Directory in which the app will look for metrics |
-| `PORT`                     | Port on which the server is exposed              |
-| `LOG_LEVEL`                | Control the amount of log output                 |
+| Env variable                | Description                                      |
+| ---                         | ---                                              |
+| `PROMETHEUS_MULTIPROC_DIR`  | Directory in which the app will look for metrics |
+| `PORT`                      | Port on which the server is exposed              |
+| `LOG_LEVEL`                 | Control the amount of log output                 |
+| `CELERY_MONITORING_ENABLED` | Enable monitoring of celery events               |
+| `CELERY_BROKER_USER`        | User used to access the Celery RabbitMQ          |
+| `CELERY_BROKER_PASSWORD`    | Password used to access the Celery RabbitMQ      |
+| `CELERY_BROKER_HOST`        | RabbitMQ hostname                                |
+| `CELERY_BROKER_PORT`        | Port on which RabbitMQ is exposed                |
