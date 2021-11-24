@@ -121,6 +121,7 @@ def create_pod(
         volumes=volumes,
         security_context=get_pod_security_context(),
         termination_grace_period_seconds=0,
+        automount_service_account_token=False,
     )
 
     pod = kubernetes.client.V1Pod(api_version="v1", kind="Pod", metadata=metadata, spec=spec)
