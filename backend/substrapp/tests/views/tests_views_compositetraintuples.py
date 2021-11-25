@@ -83,10 +83,12 @@ class CompositeTraintupleViewTests(APITestCase):
         expected['composite']['data_manager'] = copy.deepcopy(data_manager)
         expected['parent_tasks'] = copy.deepcopy(parent_tasks)
 
+        filtered_events = [iter([event]) for event in common.get_task_events(composite_task['key'])]
+
         with mock.patch.object(OrchestratorClient, 'query_task', side_effect=common.query_task), \
                 mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=data_manager), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=[]), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator', side_effect=filtered_events):
             search_params = f"{composite_task['key']}/"
             response = self.client.get(self.url + search_params, **self.extra)
             actual = response.json()
@@ -116,10 +118,13 @@ class CompositeTraintupleViewTests(APITestCase):
     def test_compositetraintuple_list_filter_tag(self):
 
         composite_tasks = assets.get_composite_tasks()
+        filtered_events = [iter([event]) for ct in composite_tasks for event in common.get_task_events(ct['key'])]
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=composite_tasks), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=[]), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
+
             search_params = '?search=composite_traintuple%253Atag%253Asubstra'
             response = self.client.get(self.url + search_params, **self.extra)
 
@@ -134,13 +139,15 @@ class CompositeTraintupleViewTests(APITestCase):
     ])
     def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         composite_tasks = assets.get_composite_tasks()
+        filtered_events = [iter([event]) for ct in composite_tasks for event in common.get_task_events(ct['key'])]
 
         url = reverse('substrapp:composite_traintuple-list')
         url = f"{url}?page_size={page_size}&page={page_number}"
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_composite_tasks()), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models',
                                   side_effect=common.get_task_output_models), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

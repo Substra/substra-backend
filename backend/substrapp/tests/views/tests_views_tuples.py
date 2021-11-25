@@ -75,6 +75,7 @@ class TraintupleViewTests(APITestCase):
         search_params = 'c164f4c7-14a7-8c7e-2ba2-016de231cdd4/'
 
         task = assets.get_train_task()
+        filtered_events = [iter([event]) for event in common.get_task_events(task['key'])]
 
         data_manager = assets.get_data_manager()
 
@@ -87,7 +88,7 @@ class TraintupleViewTests(APITestCase):
                 mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=data_manager), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator', side_effect=filtered_events):
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
@@ -121,9 +122,13 @@ class TraintupleViewTests(APITestCase):
         target_tag = 'foo'
         search_params = '?search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
 
-        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_train_tasks()), \
+        tasks = assets.get_train_tasks()
+        filtered_events = [iter([event]) for t in tasks for event in common.get_task_events(t['key'])]
+
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 
@@ -132,13 +137,16 @@ class TraintupleViewTests(APITestCase):
     def test_traintuple_list_filter_compute_plan_key(self):
 
         tasks = assets.get_train_tasks()
+        filtered_events = [iter([event]) for t in tasks for event in common.get_task_events(t['key'])]
         url = reverse('substrapp:traintuple-list')
         compute_plan_key = get_compute_plan_key(tasks)
         search_params = f'?search=traintuple%253Acompute_plan_key%253A{compute_plan_key}'
 
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
+
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
             self.assertEqual(len(r['results']), 1)
@@ -188,6 +196,9 @@ class TesttupleViewTests(APITestCase):
             for t in (assets.get_train_tasks() + assets.get_composite_tasks())
             if t['key'] in test_task['parent_task_keys']
         ]
+        filtered_events = [iter([event]) for t in [test_task] + parent_tasks
+                           for event in common.get_task_events(t['key'])]
+
         data_manager = common.query_data_manager(test_task['test']['data_manager_key'])
         metrics = [m for m in assets.get_metrics() if m['key'] in test_task['test']['metric_keys']]
         metric = metrics[0]
@@ -209,7 +220,7 @@ class TesttupleViewTests(APITestCase):
                 mock.patch.object(OrchestratorClient, 'query_datamanager', return_value=data_manager), \
                 mock.patch.object(OrchestratorClient, 'query_metric', return_value=metric), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances', return_value=performances), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator', side_effect=filtered_events):
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
@@ -241,20 +252,28 @@ class TesttupleViewTests(APITestCase):
     def test_testtuple_list_filter_tag(self):
         url = reverse('substrapp:testtuple-list')
 
-        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_test_tasks()), \
+        tasks = assets.get_test_tasks()
+        filtered_events = [iter([event]) for t in tasks for event in common.get_task_events(t['key'])]
+
+        with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
-                                  side_effect=common.get_task_performances), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
-            search_params = '?search=testtuple%253Atag%253Abar'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(len(r['results']), 1)
+                                  side_effect=common.get_task_performances):
 
-            search_params = '?search=testtuple%253Atag%253Afoo'
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
+            with mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                   side_effect=filtered_events):
+                search_params = '?search=testtuple%253Atag%253Abar'
+                response = self.client.get(url + search_params, **self.extra)
+                r = response.json()
 
-            self.assertEqual(len(r['results']), 1)
+                self.assertEqual(len(r['results']), 1)
+
+            with mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                   side_effect=filtered_events):
+                search_params = '?search=testtuple%253Atag%253Afoo'
+                response = self.client.get(url + search_params, **self.extra)
+                r = response.json()
+
+                self.assertEqual(len(r['results']), 1)
 
     @parameterized.expand([
         ("one_page_test", 9, 1, 0, 9),
@@ -263,6 +282,8 @@ class TesttupleViewTests(APITestCase):
     ])
     def test_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         train_tasks = assets.get_train_tasks()
+        filtered_events = [iter([event]) for t in train_tasks for event in common.get_task_events(t['key'])]
+
         expected = copy.deepcopy(train_tasks)
 
         url = reverse('substrapp:traintuple-list')
@@ -271,7 +292,8 @@ class TesttupleViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=train_tasks), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models',
                                   side_effect=common.get_task_output_models), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)
@@ -287,6 +309,8 @@ class TesttupleViewTests(APITestCase):
     ])
     def test_testtuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         test_tasks = assets.get_test_tasks()
+        filtered_events = [iter([event]) for t in test_tasks for event in common.get_task_events(t['key'])]
+
         expected = copy.deepcopy(test_tasks)
 
         url = reverse('substrapp:testtuple-list')
@@ -295,7 +319,8 @@ class TesttupleViewTests(APITestCase):
         with mock.patch.object(OrchestratorClient, 'query_tasks', return_value=test_tasks), \
                 mock.patch.object(OrchestratorClient, 'get_compute_task_performances',
                                   side_effect=common.get_task_performances), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, 'count', 1)

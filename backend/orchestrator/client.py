@@ -411,51 +411,11 @@ class OrchestratorClient:
         return data
 
     @grpc_retry
-    def _add_compute_plan_failed_task(self, data):
-        """Private method to add the first failed task information to a compute plan data.
-        It helps the final user to find which task failed the compute plan.
-        """
-
-        if computeplan_pb2.ComputePlanStatus.Value(data["status"]) == computeplan_pb2.PLAN_STATUS_FAILED:
-            # Add failed task if any
-            failed_tasks = self.query_tasks(status=computetask_pb2.STATUS_FAILED, compute_plan_key=data['key'])
-
-            # Fetch event timestamp of failure to sort failed tasks in order to get the first failed task
-            if len(failed_tasks):
-                failed_timestamps = []
-                for failed_task in failed_tasks:
-                    failed_events = self.query_events(
-                        asset_key=failed_task["key"],
-                        event_kind=event_pb2.EVENT_ASSET_UPDATED,
-                    )
-                    for failed_event in failed_events:
-                        if failed_event["metadata"]["status"] == "STATUS_FAILED":
-                            failed_timestamps.append(failed_event["timestamp"])
-
-                if len(failed_timestamps) == len(failed_tasks):
-                    failed_tasks = zip(failed_timestamps, failed_tasks)
-                    # The lambda expr is used to avoid an exception on dict sorting when timestamps are equal
-                    failed_tasks = [
-                        x for _, x in sorted(failed_tasks, key=lambda tup: tup[0])
-                    ]
-
-                data['failed_task'] = {}
-                data['failed_task']['key'] = failed_tasks[0]['key']
-                data['failed_task']['category'] = failed_tasks[0]['category']
-        else:
-            data['failed_task'] = None
-
-        return data
-
-    @grpc_retry
     def query_compute_plan(self, key):
         data = self._computeplan_client.GetPlan(
             computeplan_pb2.GetComputePlanParam(key=key), metadata=self._metadata
         )
-        data = MessageToDict(data, **CONVERT_SETTINGS)
-        data = self._add_compute_plan_failed_task(data)
-
-        return data
+        return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def cancel_compute_plan(self, key):
@@ -479,9 +439,6 @@ class OrchestratorClient:
             data = MessageToDict(data, **CONVERT_SETTINGS)
             plans = data.get("plans", [])
             page_token = data.get("next_page_token")
-
-            for plan in plans:
-                plan = self._add_compute_plan_failed_task(plan)
 
             res.extend(plans)
             if page_token == "" or not plans:
@@ -579,14 +536,12 @@ class OrchestratorClient:
 
         return res
 
-    @grpc_retry
     def is_task_doing(self, key):
         task = self.query_task(key)
         return (
             computetask_pb2.ComputeTaskStatus.Value(task["status"]) == computetask_pb2.STATUS_DOING
         )
 
-    @grpc_retry
     def is_task_in_final_state(self, key):
         task = self.query_task(key)
         return computetask_pb2.ComputeTaskStatus.Value(task["status"]) in [
@@ -602,32 +557,71 @@ class OrchestratorClient:
             computeplan_pb2.ComputePlanStatus.Value(cp["status"]) == computeplan_pb2.PLAN_STATUS_DOING
         )
 
-    @grpc_retry
     def query_events(
         self,
         asset_key="",
         asset_kind=common_pb2.ASSET_UNKNOWN,
         event_kind=event_pb2.EVENT_UNKNOWN,
+        sort=common_pb2.ASCENDING,
+        metadata=None,
+        page_size=None
     ):
-        event_filter = event_pb2.EventQueryFilter(
-            asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind
+        """ return a list with all events instead of a generator
+        """
+        return list(
+            self.query_events_generator(
+                asset_key=asset_key,
+                asset_kind=asset_kind,
+                event_kind=event_kind,
+                sort=sort,
+                metadata=metadata,
+                page_size=page_size
+            )
         )
 
-        res = []
+    @grpc_retry
+    def query_events_generator(
+        self,
+        asset_key="",
+        asset_kind=common_pb2.ASSET_UNKNOWN,
+        event_kind=event_pb2.EVENT_UNKNOWN,
+        sort=common_pb2.ASCENDING,
+        metadata=None,
+        page_size=1,
+    ):
+        """This function returns all events as a generator.
+        Until page_token is null or no more events are fetched, a loop call will get page_size events
+        which are yield one by one
+        """
+        event_filter = event_pb2.EventQueryFilter(
+            asset_key=asset_key,
+            asset_kind=asset_kind,
+            event_kind=event_kind,
+            metadata=metadata
+        )
+
         page_token = ""
+
         while True:
             data = self._event_client.QueryEvents(
-                event_pb2.QueryEventsParam(filter=event_filter, page_token=page_token),
+                event_pb2.QueryEventsParam(
+                    filter=event_filter,
+                    page_token=page_token,
+                    page_size=page_size,
+                    sort=sort
+                ),
                 metadata=self._metadata,
             )
-            data = MessageToDict(data, **CONVERT_SETTINGS)
-            events = data.get("events", [])
-            page_token = data.get("next_page_token")
-            res.extend(events)
-            if page_token == "" or not events:
-                break
 
-        return res
+            data = MessageToDict(data, **CONVERT_SETTINGS)
+            page_token = data.get("next_page_token")
+            events = data.get("events", [])
+
+            for event in events:
+                yield event
+
+            if page_token == "" or not events:
+                return
 
     def query_version(
         self,

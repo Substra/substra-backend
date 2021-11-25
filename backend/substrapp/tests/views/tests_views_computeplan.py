@@ -82,7 +82,10 @@ class ComputePlanViewTests(APITestCase):
     def test_computeplan_list_success(self):
         cps = assets.get_compute_plans()
         cps_response = copy.deepcopy(cps)
-        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=cps_response):
+
+        with mock.patch.object(OrchestratorClient, 'query_compute_plans', return_value=cps_response), \
+                mock.patch('substrapp.views.computeplan.add_cp_extra_information',
+                           side_effect=cps_response):
             response = self.client.get(self.url, **self.extra)
             r = response.json()
             self.assertEqual(r['results'], cps)
@@ -90,7 +93,9 @@ class ComputePlanViewTests(APITestCase):
     def test_computeplan_retrieve(self):
         cp = assets.get_compute_plan()
         cp_response = copy.deepcopy(cp)
-        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response):
+        with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response), \
+                mock.patch('substrapp.views.computeplan.add_cp_extra_information',
+                           return_value=cp_response):
             url = reverse('substrapp:compute_plan-detail', args=[cp['key']])
             response = self.client.get(url, **self.extra)
             actual = response.json()
@@ -160,6 +165,7 @@ class ComputePlanViewTests(APITestCase):
         cp_response = copy.deepcopy(cp)
         tasks = assets.get_train_tasks()[0:2]
         tasks_response = copy.deepcopy(tasks)
+        filtered_events = [iter([event]) for tr in tasks_response for event in common.get_task_events(tr['key'])]
 
         url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
         url = f"{url}?page_size=2"
@@ -168,7 +174,8 @@ class ComputePlanViewTests(APITestCase):
                 mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks_response), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models',
                                   side_effect=common.get_task_output_models), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
 
             response = self.client.get(url, **self.extra)
 
@@ -180,15 +187,18 @@ class ComputePlanViewTests(APITestCase):
 
         cp = assets.get_compute_plan()
         cp_response = copy.deepcopy(cp)
+        tasks_response = assets.get_train_tasks()
+        filtered_events = [iter([event]) for tr in tasks_response for event in common.get_task_events(tr['key'])]
 
         url = reverse('substrapp:compute_plan_traintuple-list', args=[cp['key']])
         target_tag = 'foo'
         search_params = '?page_size=10&page=1&search=traintuple%253Atag%253A' + urllib.parse.quote_plus(target_tag)
 
         with mock.patch.object(OrchestratorClient, 'query_compute_plan', return_value=cp_response), \
-                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=assets.get_train_tasks()), \
+                mock.patch.object(OrchestratorClient, 'query_tasks', return_value=tasks_response), \
                 mock.patch.object(OrchestratorClient, 'get_computetask_output_models', return_value=None), \
-                mock.patch.object(OrchestratorClient, 'query_events', side_effect=common.get_task_events):
+                mock.patch.object(OrchestratorClient, 'query_events_generator',
+                                  side_effect=filtered_events):
             response = self.client.get(url + search_params, **self.extra)
             r = response.json()
 

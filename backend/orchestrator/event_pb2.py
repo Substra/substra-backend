@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0b\x65vent.proto\x12\x0corchestrator\x1a\x0c\x63ommon.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x02\n\x05\x45vent\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\tasset_key\x18\x02 \x01(\t\x12+\n\nasset_kind\x18\x03 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12+\n\nevent_kind\x18\x04 \x01(\x0e\x32\x17.orchestrator.EventKind\x12\x0f\n\x07\x63hannel\x18\x05 \x01(\t\x12-\n\ttimestamp\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x33\n\x08metadata\x18\x12 \x03(\x0b\x32!.orchestrator.Event.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"i\n\x10QueryEventsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12.\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1e.orchestrator.EventQueryFilter\"\x7f\n\x10\x45ventQueryFilter\x12\x11\n\tasset_key\x18\x01 \x01(\t\x12+\n\nasset_kind\x18\x02 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12+\n\nevent_kind\x18\x03 \x01(\x0e\x32\x17.orchestrator.EventKind\"S\n\x13QueryEventsResponse\x12#\n\x06\x65vents\x18\x01 \x03(\x0b\x32\x13.orchestrator.Event\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t*j\n\tEventKind\x12\x11\n\rEVENT_UNKNOWN\x10\x00\x12\x17\n\x13\x45VENT_ASSET_CREATED\x10\x01\x12\x17\n\x13\x45VENT_ASSET_UPDATED\x10\x02\x12\x18\n\x14\x45VENT_ASSET_DISABLED\x10\x03\x32`\n\x0c\x45ventService\x12P\n\x0bQueryEvents\x12\x1e.orchestrator.QueryEventsParam\x1a!.orchestrator.QueryEventsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x0b\x65vent.proto\x12\x0corchestrator\x1a\x0c\x63ommon.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xa6\x02\n\x05\x45vent\x12\n\n\x02id\x18\x01 \x01(\t\x12\x11\n\tasset_key\x18\x02 \x01(\t\x12+\n\nasset_kind\x18\x03 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12+\n\nevent_kind\x18\x04 \x01(\x0e\x32\x17.orchestrator.EventKind\x12\x0f\n\x07\x63hannel\x18\x05 \x01(\t\x12-\n\ttimestamp\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x33\n\x08metadata\x18\x12 \x03(\x0b\x32!.orchestrator.Event.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\x90\x01\n\x10QueryEventsParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\x12.\n\x06\x66ilter\x18\x03 \x01(\x0b\x32\x1e.orchestrator.EventQueryFilter\x12%\n\x04sort\x18\x04 \x01(\x0e\x32\x17.orchestrator.SortOrder\"\xf0\x01\n\x10\x45ventQueryFilter\x12\x11\n\tasset_key\x18\x01 \x01(\t\x12+\n\nasset_kind\x18\x02 \x01(\x0e\x32\x17.orchestrator.AssetKind\x12+\n\nevent_kind\x18\x03 \x01(\x0e\x32\x17.orchestrator.EventKind\x12>\n\x08metadata\x18\x04 \x03(\x0b\x32,.orchestrator.EventQueryFilter.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"S\n\x13QueryEventsResponse\x12#\n\x06\x65vents\x18\x01 \x03(\x0b\x32\x13.orchestrator.Event\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t*j\n\tEventKind\x12\x11\n\rEVENT_UNKNOWN\x10\x00\x12\x17\n\x13\x45VENT_ASSET_CREATED\x10\x01\x12\x17\n\x13\x45VENT_ASSET_UPDATED\x10\x02\x12\x18\n\x14\x45VENT_ASSET_DISABLED\x10\x03\x32`\n\x0c\x45ventService\x12P\n\x0bQueryEvents\x12\x1e.orchestrator.QueryEventsParam\x1a!.orchestrator.QueryEventsResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[common__pb2.DESCRIPTOR,google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -56,8 +56,8 @@ _EVENTKIND = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=694,
-  serialized_end=800,
+  serialized_start=848,
+  serialized_end=954,
 )
 _sym_db.RegisterEnumDescriptor(_EVENTKIND)
 
@@ -210,6 +210,13 @@ _QUERYEVENTSPARAM = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='sort', full_name='orchestrator.QueryEventsParam.sort', index=3,
+      number=4, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -222,10 +229,48 @@ _QUERYEVENTSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=373,
-  serialized_end=478,
+  serialized_start=374,
+  serialized_end=518,
 )
 
+
+_EVENTQUERYFILTER_METADATAENTRY = _descriptor.Descriptor(
+  name='MetadataEntry',
+  full_name='orchestrator.EventQueryFilter.MetadataEntry',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='orchestrator.EventQueryFilter.MetadataEntry.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='orchestrator.EventQueryFilter.MetadataEntry.value', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=b'8\001',
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=324,
+  serialized_end=371,
+)
 
 _EVENTQUERYFILTER = _descriptor.Descriptor(
   name='EventQueryFilter',
@@ -256,10 +301,17 @@ _EVENTQUERYFILTER = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metadata', full_name='orchestrator.EventQueryFilter.metadata', index=3,
+      number=4, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
-  nested_types=[],
+  nested_types=[_EVENTQUERYFILTER_METADATAENTRY, ],
   enum_types=[
   ],
   serialized_options=None,
@@ -268,8 +320,8 @@ _EVENTQUERYFILTER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=480,
-  serialized_end=607,
+  serialized_start=521,
+  serialized_end=761,
 )
 
 
@@ -307,8 +359,8 @@ _QUERYEVENTSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=609,
-  serialized_end=692,
+  serialized_start=763,
+  serialized_end=846,
 )
 
 _EVENT_METADATAENTRY.containing_type = _EVENT
@@ -317,8 +369,11 @@ _EVENT.fields_by_name['event_kind'].enum_type = _EVENTKIND
 _EVENT.fields_by_name['timestamp'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _EVENT.fields_by_name['metadata'].message_type = _EVENT_METADATAENTRY
 _QUERYEVENTSPARAM.fields_by_name['filter'].message_type = _EVENTQUERYFILTER
+_QUERYEVENTSPARAM.fields_by_name['sort'].enum_type = common__pb2._SORTORDER
+_EVENTQUERYFILTER_METADATAENTRY.containing_type = _EVENTQUERYFILTER
 _EVENTQUERYFILTER.fields_by_name['asset_kind'].enum_type = common__pb2._ASSETKIND
 _EVENTQUERYFILTER.fields_by_name['event_kind'].enum_type = _EVENTKIND
+_EVENTQUERYFILTER.fields_by_name['metadata'].message_type = _EVENTQUERYFILTER_METADATAENTRY
 _QUERYEVENTSRESPONSE.fields_by_name['events'].message_type = _EVENT
 DESCRIPTOR.message_types_by_name['Event'] = _EVENT
 DESCRIPTOR.message_types_by_name['QueryEventsParam'] = _QUERYEVENTSPARAM
@@ -350,11 +405,19 @@ QueryEventsParam = _reflection.GeneratedProtocolMessageType('QueryEventsParam', 
 _sym_db.RegisterMessage(QueryEventsParam)
 
 EventQueryFilter = _reflection.GeneratedProtocolMessageType('EventQueryFilter', (_message.Message,), {
+
+  'MetadataEntry' : _reflection.GeneratedProtocolMessageType('MetadataEntry', (_message.Message,), {
+    'DESCRIPTOR' : _EVENTQUERYFILTER_METADATAENTRY,
+    '__module__' : 'event_pb2'
+    # @@protoc_insertion_point(class_scope:orchestrator.EventQueryFilter.MetadataEntry)
+    })
+  ,
   'DESCRIPTOR' : _EVENTQUERYFILTER,
   '__module__' : 'event_pb2'
   # @@protoc_insertion_point(class_scope:orchestrator.EventQueryFilter)
   })
 _sym_db.RegisterMessage(EventQueryFilter)
+_sym_db.RegisterMessage(EventQueryFilter.MetadataEntry)
 
 QueryEventsResponse = _reflection.GeneratedProtocolMessageType('QueryEventsResponse', (_message.Message,), {
   'DESCRIPTOR' : _QUERYEVENTSRESPONSE,
@@ -366,6 +429,7 @@ _sym_db.RegisterMessage(QueryEventsResponse)
 
 DESCRIPTOR._options = None
 _EVENT_METADATAENTRY._options = None
+_EVENTQUERYFILTER_METADATAENTRY._options = None
 
 _EVENTSERVICE = _descriptor.ServiceDescriptor(
   name='EventService',
@@ -374,8 +438,8 @@ _EVENTSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=802,
-  serialized_end=898,
+  serialized_start=956,
+  serialized_end=1052,
   methods=[
   _descriptor.MethodDescriptor(
     name='QueryEvents',

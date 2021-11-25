@@ -1,5 +1,6 @@
 import os
 import uuid
+import datetime
 
 from django.conf import settings
 from django.http import FileResponse
@@ -20,6 +21,9 @@ from wsgiref.util import is_hop_by_hop
 
 from substrapp.exceptions import AssetPermissionError, NodeError, BadRequestError
 import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.event_pb2 as event_pb2
+import orchestrator.common_pb2 as common_pb2
 import orchestrator.model_pb2 as model_pb2
 from orchestrator.error import OrcError
 from substrapp.orchestrator import get_orchestrator_client
@@ -307,14 +311,17 @@ def is_proxied_request(request) -> bool:
 
 
 def add_task_extra_information(client, basename, data, expand_relationships=False):
+
+    task_status = computetask_pb2.ComputeTaskStatus.Value(data['status'])
+
     # add model information on a training compute task or performance on a testing compute task
     if basename in ['traintuple', 'aggregatetuple', 'composite_traintuple']:
-        if computetask_pb2.ComputeTaskStatus.Value(data['status']) == computetask_pb2.STATUS_DONE:
+        if task_status == computetask_pb2.STATUS_DONE:
             data[TASK_FIELD[basename]]['models'] = client.get_computetask_output_models(data['key'])
 
     # add performances for test tasks
     if basename in ['testtuple']:
-        if computetask_pb2.ComputeTaskStatus.Value(data['status']) == computetask_pb2.STATUS_DONE:
+        if task_status == computetask_pb2.STATUS_DONE:
             performances = client.get_compute_task_performances(data['key'])
             performances = {performance['metric_key']: performance['performance_value']
                             for performance in performances}
@@ -332,23 +339,30 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
         data['parent_tasks'] = [client.query_task(key) for key in data['parent_task_keys']]
 
     # fetch task start and end dates from its events
-    events = client.query_events(data['key'])
-    data['start_date'] = None
-    data['end_date'] = None
-    for event in events:
-        event_status = event.get('metadata', {}).get('status')
-        if not event_status:
-            continue
+    first_event = next(
+        client.query_events_generator(
+            event_kind=event_pb2.EVENT_ASSET_UPDATED,
+            asset_key=data['key'],
+            metadata={'status': 'STATUS_DOING'}
+        ),
+        None
+    )
+    data['start_date'] = first_event['timestamp'] if first_event else None
 
-        event_value = computetask_pb2.ComputeTaskStatus.Value(event_status)
-        if event_value == computetask_pb2.STATUS_DOING:
-            data['start_date'] = event['timestamp']
-        elif event_value in (computetask_pb2.STATUS_DONE, computetask_pb2.STATUS_FAILED):
-            data['end_date'] = event['timestamp']
-
-        if data['start_date'] and data['end_date']:
-            # both fields have been filled, stop processing events
-            break
+    if task_status in [computetask_pb2.STATUS_FAILED,
+                       computetask_pb2.STATUS_CANCELED,
+                       computetask_pb2.STATUS_DONE]:
+        last_event = next(
+            client.query_events_generator(
+                event_kind=event_pb2.EVENT_ASSET_UPDATED,
+                asset_key=data['key'],
+                sort=common_pb2.DESCENDING
+            ),
+            None
+        )
+    else:
+        last_event = None
+    data['end_date'] = last_event['timestamp'] if last_event else None
 
     return data
 
@@ -364,3 +378,100 @@ def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:
         str: UUID of form '412511b1-f9f5-49cc-a4bb-4f1640c877f6'
     """
     return str(uuid.UUID(str_or_hex_uuid))
+
+
+def add_cp_extra_information(client, data):
+    data = add_compute_plan_failed_task(client, data)
+    data = add_compute_plan_duration_or_eta(client, data)
+
+    return data
+
+
+def add_compute_plan_failed_task(client, data):
+    """Add the first failed task information to a compute plan data.
+    It helps the final user to find which task failed the compute plan.
+    """
+
+    if computeplan_pb2.ComputePlanStatus.Value(data["status"]) == computeplan_pb2.PLAN_STATUS_FAILED:
+
+        first_failed_task = next(
+            client.query_events_generator(
+                event_kind=event_pb2.EVENT_ASSET_UPDATED,
+                metadata={"status": "STATUS_FAILED", "compute_plan_key": data["key"]}
+            ),
+            None
+        )
+
+        failed_task = client.query_task(key=first_failed_task["asset_key"])
+
+        data["failed_task"] = {}
+        data["failed_task"]["key"] = failed_task["key"]
+        data["failed_task"]["category"] = failed_task["category"]
+    else:
+        data["failed_task"] = None
+
+    return data
+
+
+def add_compute_plan_duration_or_eta(client, data):
+    """Add the duration and the estimated time of arrival or end date to a compute plan data.
+    """
+
+    current_date = datetime.datetime.now()
+    compute_plan_status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
+
+    start_date = None
+    data["start_date"] = None
+    end_date = None
+    data["end_date"] = None
+    data["estimated_end_date"] = None
+    data["duration"] = None
+
+    first_event = next(
+        client.query_events_generator(
+            event_kind=event_pb2.EVENT_ASSET_UPDATED,
+            metadata={"status": "STATUS_DOING", "compute_plan_key": data["key"]}
+        ),
+        None
+    )
+
+    last_event = next(
+        client.query_events_generator(
+            event_kind=event_pb2.EVENT_ASSET_UPDATED,
+            metadata={"compute_plan_key": data["key"]},
+            sort=common_pb2.DESCENDING
+        ),
+        None
+    )
+
+    if compute_plan_status in [computeplan_pb2.PLAN_STATUS_DOING,
+                               computeplan_pb2.PLAN_STATUS_FAILED,
+                               computeplan_pb2.PLAN_STATUS_CANCELED,
+                               computeplan_pb2.PLAN_STATUS_DONE] and first_event:
+        data["start_date"] = first_event["timestamp"]
+        if data["start_date"]:
+            start_date = datetime.datetime.strptime(first_event["timestamp"].split('+')[0].strip("Z")[:-3],
+                                                    "%Y-%m-%dT%H:%M:%S.%f")
+
+    # duration and estimated_end_date
+    if compute_plan_status == computeplan_pb2.PLAN_STATUS_DOING:
+        if data["done_count"] and start_date is not None:
+            remaining_tasks_count = data["task_count"] - data["done_count"]
+            current_duration = current_date - start_date
+            time_per_task = current_duration / data["done_count"]
+            estimated_duration = remaining_tasks_count * time_per_task
+            data["duration"] = int(current_duration.total_seconds())
+            data["estimated_end_date"] = (current_date + estimated_duration).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    if compute_plan_status in [computeplan_pb2.PLAN_STATUS_FAILED,
+                               computeplan_pb2.PLAN_STATUS_CANCELED,
+                               computeplan_pb2.PLAN_STATUS_DONE] and last_event:
+
+        data["end_date"] = last_event["timestamp"]
+        data["estimated_end_date"] = data["end_date"]
+        if data["end_date"]:
+            end_date = datetime.datetime.strptime(last_event["timestamp"].split('+')[0].strip("Z")[:-3],
+                                                  "%Y-%m-%dT%H:%M:%S.%f")
+            data["duration"] = int((end_date - start_date).total_seconds())
+
+    return data

@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0c\x63ommon.proto\x12\x0corchestrator\"8\n\x0b\x41\x64\x64ressable\x12\x10\n\x08\x63hecksum\x18\x01 \x01(\t\x12\x17\n\x0fstorage_address\x18\x02 \x01(\t\"d\n\x0bPermissions\x12)\n\x07process\x18\x01 \x01(\x0b\x32\x18.orchestrator.Permission\x12*\n\x08\x64ownload\x18\x02 \x01(\x0b\x32\x18.orchestrator.Permission\"4\n\nPermission\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t\"8\n\x0eNewPermissions\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t*\xd7\x01\n\tAssetKind\x12\x11\n\rASSET_UNKNOWN\x10\x00\x12\x0e\n\nASSET_NODE\x10\x01\x12\x10\n\x0c\x41SSET_METRIC\x10\x02\x12\x15\n\x11\x41SSET_DATA_SAMPLE\x10\x03\x12\x16\n\x12\x41SSET_DATA_MANAGER\x10\x04\x12\x0e\n\nASSET_ALGO\x10\x05\x12\x16\n\x12\x41SSET_COMPUTE_TASK\x10\x06\x12\x16\n\x12\x41SSET_COMPUTE_PLAN\x10\x07\x12\x0f\n\x0b\x41SSET_MODEL\x10\x08\x12\x15\n\x11\x41SSET_PERFORMANCE\x10\t**\n\tSortOrder\x12\r\n\tASCENDING\x10\x00\x12\x0e\n\nDESCENDING\x10\x01\x42)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x0c\x63ommon.proto\x12\x0corchestrator\"8\n\x0b\x41\x64\x64ressable\x12\x10\n\x08\x63hecksum\x18\x01 \x01(\t\x12\x17\n\x0fstorage_address\x18\x02 \x01(\t\"d\n\x0bPermissions\x12)\n\x07process\x18\x01 \x01(\x0b\x32\x18.orchestrator.Permission\x12*\n\x08\x64ownload\x18\x02 \x01(\x0b\x32\x18.orchestrator.Permission\"4\n\nPermission\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t\"8\n\x0eNewPermissions\x12\x0e\n\x06public\x18\x01 \x01(\x08\x12\x16\n\x0e\x61uthorized_ids\x18\x02 \x03(\t*\xd7\x01\n\tAssetKind\x12\x11\n\rASSET_UNKNOWN\x10\x00\x12\x0e\n\nASSET_NODE\x10\x01\x12\x10\n\x0c\x41SSET_METRIC\x10\x02\x12\x15\n\x11\x41SSET_DATA_SAMPLE\x10\x03\x12\x16\n\x12\x41SSET_DATA_MANAGER\x10\x04\x12\x0e\n\nASSET_ALGO\x10\x05\x12\x16\n\x12\x41SSET_COMPUTE_TASK\x10\x06\x12\x16\n\x12\x41SSET_COMPUTE_PLAN\x10\x07\x12\x0f\n\x0b\x41SSET_MODEL\x10\x08\x12\x15\n\x11\x41SSET_PERFORMANCE\x10\t*;\n\tSortOrder\x12\x0f\n\x0bUNSPECIFIED\x10\x00\x12\r\n\tASCENDING\x10\x01\x12\x0e\n\nDESCENDING\x10\x02\x42)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
 )
 
 _ASSETKIND = _descriptor.EnumDescriptor(
@@ -97,12 +97,17 @@ _SORTORDER = _descriptor.EnumDescriptor(
   create_key=_descriptor._internal_create_key,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='ASCENDING', index=0, number=0,
+      name='UNSPECIFIED', index=0, number=0,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
     _descriptor.EnumValueDescriptor(
-      name='DESCENDING', index=1, number=1,
+      name='ASCENDING', index=1, number=1,
+      serialized_options=None,
+      type=None,
+      create_key=_descriptor._internal_create_key),
+    _descriptor.EnumValueDescriptor(
+      name='DESCENDING', index=2, number=2,
       serialized_options=None,
       type=None,
       create_key=_descriptor._internal_create_key),
@@ -110,7 +115,7 @@ _SORTORDER = _descriptor.EnumDescriptor(
   containing_type=None,
   serialized_options=None,
   serialized_start=520,
-  serialized_end=562,
+  serialized_end=579,
 )
 _sym_db.RegisterEnumDescriptor(_SORTORDER)
 
@@ -125,8 +130,9 @@ ASSET_COMPUTE_TASK = 6
 ASSET_COMPUTE_PLAN = 7
 ASSET_MODEL = 8
 ASSET_PERFORMANCE = 9
-ASCENDING = 0
-DESCENDING = 1
+UNSPECIFIED = 0
+ASCENDING = 1
+DESCENDING = 2
 
 
 

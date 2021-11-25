@@ -19,7 +19,8 @@ from substrapp.views.utils import (
     ValidationExceptionError,
     get_channel_name,
     to_string_uuid,
-    validate_key)
+    validate_key,
+    add_cp_extra_information)
 from substrapp.views.utils import TASK_CATEGORY, add_task_extra_information
 from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
@@ -255,6 +256,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_compute_plan(validated_key)
+                data = add_cp_extra_information(client, data)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
@@ -269,6 +271,8 @@ class ComputePlanViewSet(mixins.CreateModelMixin,
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_compute_plans()
+                for datum in data:
+                    datum = add_cp_extra_information(client, datum)
         except OrcError as rpc_error:
             return Response({'message': rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
