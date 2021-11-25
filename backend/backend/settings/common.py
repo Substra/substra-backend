@@ -288,6 +288,7 @@ REGISTRY_SERVICE_NAME = os.environ.get('REGISTRY_SERVICE_NAME')
 COMPUTE_POD_RUN_AS_USER = os.environ.get("COMPUTE_POD_RUN_AS_USER")
 COMPUTE_POD_RUN_AS_GROUP = os.environ.get("COMPUTE_POD_RUN_AS_GROUP")
 COMPUTE_POD_FS_GROUP = os.environ.get("COMPUTE_POD_FS_GROUP")
+COMPUTE_POD_GKE_GPUS_LIMITS = int(os.environ.get("COMPUTE_POD_GKE_GPUS_LIMITS", 0))
 
 # Prometheus configuration
 ENABLE_METRICS = to_bool(os.environ.get("ENABLE_METRICS", False))
