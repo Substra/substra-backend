@@ -9,7 +9,6 @@ import json
 import functools
 import requests
 import tarfile
-import tarsafe
 import zipfile
 import time
 
@@ -19,6 +18,7 @@ from rest_framework import status
 from requests.auth import HTTPBasicAuth
 from substrapp.exceptions import NodeError
 from substrapp.utils.safezip import ZipFile
+from substrapp.utils import tarsafe
 
 logger = structlog.get_logger(__name__)
 

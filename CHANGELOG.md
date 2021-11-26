@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE`.
 
 ### Fixed
-- Properly prevent path traversal for archives containing symbolic links
+- Properly prevent path traversal in archives and don't allow symbolic links
 
 ## [0.5.0] 2021-11-02
 
