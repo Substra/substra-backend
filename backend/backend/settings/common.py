@@ -341,7 +341,7 @@ LOGGING = {
     'formatters': {
         "key_value": {
             "()": structlog.stdlib.ProcessorFormatter,
-            "processor": structlog.processors.KeyValueRenderer(key_order=['timestamp', 'level', 'logger', 'event']),
+            "processor": structlog.processors.JSONRenderer(),
             "foreign_pre_chain": pre_chain,
         },
     },

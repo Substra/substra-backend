@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP`.
 - Do not openly expose media directory
 - Do not mount the serviceAccount token on the compute pod
+- Switch log format to JSON
 
 ### Removed
 - `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE`.
