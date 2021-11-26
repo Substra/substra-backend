@@ -199,7 +199,7 @@ def delete_pod(k8s_client, name: str) -> None:
         return
 
     # we retrieve the latest pod list version to retrieve only the latest events when watching for pod deletion
-    pod_list_ressource_version = k8s_client.list_namespaced_pod(namespace=NAMESPACE).metadata.resource_version
+    pod_list_resource_version = k8s_client.list_namespaced_pod(namespace=NAMESPACE).metadata.resource_version
 
     k8s_client.delete_namespaced_pod(
         name=name,
@@ -212,7 +212,7 @@ def delete_pod(k8s_client, name: str) -> None:
     for event in watch.stream(
         func=k8s_client.list_namespaced_pod,
         namespace=NAMESPACE,
-        resource_version=pod_list_ressource_version
+        resource_version=pod_list_resource_version
     ):
         if event['type'] == 'DELETED' and event['object'].metadata.name == name:
             watch.stop()
@@ -272,5 +272,3 @@ def get_volume(
     for volume in pod.spec.volumes:
         if volume.name == volume_name:
             return volume
-
-    return None

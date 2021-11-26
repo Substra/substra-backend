@@ -29,7 +29,7 @@ logger = structlog.get_logger(__name__)
 # The asset buffer keeps a copy of assets (data samples, openers, models).
 #
 # The asset buffer allows efficient reuse of assets resources: the assets are initially copied/downloaded to the asset
-# buffer *only once*. Then the assets are made available to consumers (comupute tasks) using the `link` command
+# buffer *only once*. Then the assets are made available to consumers (compute tasks) using the `link` command
 # (hardlink), which is very fast. As a result, an asset is copied/downloaded *at most once*.
 #
 ###########

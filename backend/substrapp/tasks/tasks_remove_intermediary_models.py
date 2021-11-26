@@ -38,7 +38,7 @@ def remove_intermediary_models_from_db(channel_name: str, model_keys: List[str])
 
 # This task is routed to run on the broadcast exchange
 # Each worker is listening to the broadcast queue. All running worker will perform this task.
-# Mutliple tasks with the same task_id are created in the db
+# Multiple tasks with the same task_id are created in the db
 # With ignore_result set to true, we ignore the result of the task as the different task state
 # result might be conflicting.
 # See https://docs.celeryproject.org/en/stable/userguide/routing.html#Broadcast&Results

@@ -67,7 +67,7 @@ def queue_prepare_task(channel_name, task):
         return
 
     if _task_not_runnable(channel_name, task["category"], key):
-        # Avoid creating celery task if the compute task is no with STATUS_TODO
+        # Avoid creating celery task if the compute task is not with STATUS_TODO
         return
 
     # get mapping cp to worker or create a new one

@@ -8,7 +8,7 @@ class CustomSessionAuthentication(SessionAuthentication):
 
     def authenticate(self, request):
         """
-        Returns a `User` if the request session currently has a logged in user.
+        Returns a `User` if the request session currently has a logged-in user.
         Otherwise returns `None`.
         """
 

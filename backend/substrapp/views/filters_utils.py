@@ -83,7 +83,7 @@ def filter_list(object_type, data, query_params):
                     f'Malformed search filters: the filter {filter_key} should'
                     f'be the same as the object type {object_type}')
 
-            # Will be appended in object_list after been filtered
+            # Will be appended in object_list after being filtered
             filtered_list = data
             # Filter by own asset
             for attribute, val in subfilters.items():

@@ -169,7 +169,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
     #   Prevent resource starvation: if two compute tasks from the same compute plan ran at the same time, they would
     #   compete for GPU/CPU/memory resources, and potentially fail.
     #
-    # - *Adapt to task dir contraints*.
+    # - *Adapt to task dir constraints*.
     #   The compute pod contains only one "task directory", which contains the working data for the current compute
     #   task. Running two compute tasks as part of the same compute plan concurrently would mean that the "task
     #   directory" would be used by two consumers. However, the "task directory" is designed to be used by a single

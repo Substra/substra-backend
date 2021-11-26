@@ -8,7 +8,7 @@ from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
 
-# Chainkeys are used as part of secure aggreagation (separate component, absent from this repo)
+# Chainkeys are used as part of secure aggregation (separate component, absent from this repo)
 
 
 def prepare_chainkeys_dir(chainkeys_dir: str, compute_plan_tag: str) -> None:

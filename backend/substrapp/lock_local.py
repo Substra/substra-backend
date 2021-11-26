@@ -17,7 +17,7 @@ def lock_resource(resource_type: str, unique_identifier: str, ttl: int, delay: i
     """
     Acquire a lock on a resource.
 
-    This function uses a file-based lock, so it will work within a container, but not accross containers.
+    This function uses a file-based lock, so it will work within a container, but not across containers.
     For cross-container lock, we would need a database-based lock (Redis supports distributed locks with TTLs)
 
     Ensures the lock is kept for AT MOST `timeout` seconds, referred to as the lock TTL.
