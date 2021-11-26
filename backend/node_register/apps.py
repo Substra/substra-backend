@@ -24,7 +24,7 @@ def _register_node(channel_name):
                 if code == StatusCode.ALREADY_EXISTS:
                     break
                 time.sleep(1)
-                logger.info('Retry registring the node on the orchestrator', exc_info=rpc_error)
+                logger.info('Retry registering the node on the orchestrator', exc_info=rpc_error)
             else:
                 log.info('Node registered on the orchestrator')
                 break
