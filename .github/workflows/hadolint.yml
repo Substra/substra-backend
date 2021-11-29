@@ -1,0 +1,26 @@
+name: Hadolint
+
+on:
+  push:
+    branches:
+      - "master"
+  pull_request:
+    branches:
+      - "**"
+    paths:
+      - "docker/**"
+
+jobs:
+  lint:
+    name: Lint Dockerfile
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dockerfile:
+          - docker/metrics-exporter/Dockerfile
+          - docker/substra-backend/Dockerfile
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hadolint/hadolint-action@v1.6.0
+        with:
+          dockerfile: ${{ matrix.dockerfile }}

@@ -2,13 +2,17 @@ FROM python:3.9-slim AS build
 
 ENV GRPC_POLL_STRATEGY=epoll1
 ENV PYTHONUNBUFFERED=1
-RUN apt-get update && apt-get install gcc -y && apt-get clean
 
-RUN mkdir -p /usr/src/app
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential=12.9 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /usr/src/app
 
 COPY ./backend/requirements.txt /usr/src/app/.
-RUN pip3 install --upgrade pip && pip3 install --prefix /usr/local -r requirements.txt
+RUN pip3 install --upgrade --no-cache-dir pip==21.3.1 \
+    && pip3 install --prefix /usr/local --no-cache-dir -r requirements.txt
 
 COPY ./backend/manage.py /usr/src/app/manage.py
 COPY ./backend/libs /usr/src/app/libs
@@ -34,10 +38,8 @@ COPY --from=build /usr/local/bin/ /usr/local/bin/
 COPY --from=build /usr/src/app /usr/src/app
 
 WORKDIR /usr/src/app
-RUN chown -R ${USER_ID}:${GROUP_ID} /usr/src/app
 
-RUN mkdir -p /var/substra/
-RUN mkdir -p /tmp/django_cache
-RUN chown -R ${USER_ID}:${GROUP_ID} /var/substra/ /tmp/django_cache
+RUN mkdir -p /var/substra/ /tmp/django_cache \
+  && chown -R ${USER_ID}:${GROUP_ID} /usr/src/app /var/substra/ /tmp/django_cache
 
 USER ${USER_ID}:${GROUP_ID}
