@@ -1,6 +1,11 @@
 # Changelog
 
 
+## 13.0.4
+
+### Changed
+- Bump postgresql dependency from 10.3.6 to 10.13.0
+
 ## 13.0.3
 
 ### Removed

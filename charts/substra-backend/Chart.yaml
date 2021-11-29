@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://substra.org/
-version: 13.0.3
+version: 13.0.4
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
 type: application
@@ -19,7 +19,7 @@ dependencies:
     version: 8.16.2
   - name: postgresql
     repository:  https://charts.bitnami.com/bitnami
-    version: 10.3.6
+    version: 10.13.8
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
