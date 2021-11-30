@@ -141,22 +141,20 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 @timeit
 def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]) -> int:
     """Execute a command on a compute pod"""
-
-    log = logger.bind(
-        plan_key=ctx.compute_plan_key,
-        task_key=ctx.task_key,
+    logger.debug(
+        "Running command",
+        command=exec_command,
         eval=compute_pod.is_testtuple_eval,
         attempt=ctx.attempt
     )
-
-    log.debug("Running command", command=exec_command)
 
     resp = stream(
         k8s_client.connect_get_namespaced_pod_exec,
         compute_pod.name,
         NAMESPACE,
-        # use shell + redirection to ensure stdout/stderr are retrieved in order. Without this, if the program
-        # outputs to both stdout and stderr at around the same time, we lose the order of messages.
+        # use shell + redirection to ensure stdout/stderr are retrieved in order. Without this,
+        # if the program outputs to both stdout and stderr at around the same time,
+        # we lose the order of messages.
         command=["/bin/sh", "-c", " ".join(exec_command + ["2>&1"])],
         stderr=True,
         stdin=False,
@@ -167,7 +165,7 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
 
     def print_log(lines):
         for line in filter(None, lines.split("\n")):
-            log.info(line)
+            logger.info(line, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
 
     while resp.is_open():
         resp.update(timeout=1)

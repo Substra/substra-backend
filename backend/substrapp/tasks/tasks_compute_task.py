@@ -105,7 +105,6 @@ class ComputeTask(Task):
         type_exc = type(exc)
         type_value = str(type_exc).split("'")[1]
         logger.error("Failed compute task",
-                     task_key=task["key"],
                      task_category=task["category"],
                      error_code=error_code,
                      exc_type=type_value,
@@ -144,6 +143,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
     # In case of retries: only execute the compute task if it is not in a final state
 
     task_key = task["key"]
+    logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key)
 
     with get_orchestrator_client(channel_name) as client:
         should_not_run = client.is_task_in_final_state(task_key)
@@ -153,7 +153,6 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
         )
 
     logger.info("Computing task",
-                task_key=task_key,
                 task_category=computetask_pb2.ComputeTaskCategory.Name(task_category),
                 task=task,
                 )
@@ -254,5 +253,5 @@ def _prepare_chainkeys(compute_plan_dir: str, compute_plan_tag: str):
 def _transfer_model_to_bucket(ctx: Context) -> None:
     """Export model to S3 bucket if the task has appropriate tag"""
     if ctx.task["tag"] and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
-        logger.info("Task eligible to bucket export", task_key=ctx.task_key)
+        logger.info("Task eligible to bucket export")
         transfer_to_bucket(ctx)
