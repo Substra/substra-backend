@@ -1,11 +1,10 @@
 """Opener of the simplified ISIC 2018 dataset (other opener)"""
-import os
 import csv
+import os
+
 import numpy as np
-from PIL import Image
-
 import substratools as tools
-
+from PIL import Image
 
 PREFIX_X = "IMG_"
 SUFFIX_X = ".jpg"
@@ -33,9 +32,7 @@ def _get_paths(folders):
     """return list of features and label files given a folder location (with
     the same order)"""
     # get list of features files and create associated list of label files
-    X_files = [os.path.join(folder, f) for folder in folders
-               for f in os.listdir(os.path.join(folder))
-               if '.jpg' in f]
+    X_files = [os.path.join(folder, f) for folder in folders for f in os.listdir(os.path.join(folder)) if ".jpg" in f]
     y_files = [f.replace(PREFIX_X, PREFIX_Y).replace(SUFFIX_X, SUFFIX_Y) for f in X_files]
 
     # check label files exist
@@ -48,11 +45,10 @@ def _get_paths(folders):
 
 
 class MyOpener(tools.Opener):
-
     def get_X(self, folders):
-        print('Finding features files...')
+        print("Finding features files...")
         X_paths, _ = _get_paths(folders)
-        print('Loading features...')
+        print("Loading features...")
         X = []
         for path in X_paths:
             image = Image.open(path)
@@ -60,23 +56,23 @@ class MyOpener(tools.Opener):
         return np.array(X)
 
     def get_y(self, folders):
-        print('Finding label files...')
+        print("Finding label files...")
         _, y_paths = _get_paths(folders)
-        print('Loading labels...')
+        print("Loading labels...")
         y = []
         for path in y_paths:
             with open(path) as f:
-                str_y = f.readline().split(',')
+                str_y = f.readline().split(",")
             y.append([float(yy) for yy in str_y])
         return np.array(y, dtype=np.float)
 
     def fake_X(self):
         """Make and return the ISIC like features data as np arrays."""
-        return np.random.randint(low=0, high=256, size=(n_sample, SIZE_X, SIZE_Y, SIZE_Z)).astype('uint8')
+        return np.random.randint(low=0, high=256, size=(n_sample, SIZE_X, SIZE_Y, SIZE_Z)).astype("uint8")
 
     def fake_y(self):
         """Make and return the ISIC like labels as np arrays."""
-        return np.eye(CLASSES)[np.arange(n_sample) % CLASSES].astype('uint8')
+        return np.eye(CLASSES)[np.arange(n_sample) % CLASSES].astype("uint8")
 
     def save_predictions(self, y_pred, path):
         """Save prediction in path

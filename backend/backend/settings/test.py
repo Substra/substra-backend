@@ -1,13 +1,14 @@
+import logging
+import tempfile
+
 from .common import *
 from .deps.cors import *
 from .deps.restframework import *
-import tempfile
 
-import logging
 logging.disable(logging.CRITICAL)
 
-ORG_NAME = 'OrgTestSuite'
-DEFAULT_DOMAIN = 'http://testserver'
+ORG_NAME = "OrgTestSuite"
+DEFAULT_DOMAIN = "http://testserver"
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()  # overridden in individual tests
 
@@ -22,4 +23,4 @@ ORCHESTRATOR_RABBITMQ_AUTH_USER = "user"
 ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD = "password"
 ORCHESTRATOR_RABBITMQ_TLS_ENABLED = False
 
-LEDGER_MSP_ID = 'testOrgMSP'
+LEDGER_MSP_ID = "testOrgMSP"

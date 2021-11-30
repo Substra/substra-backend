@@ -1,1 +1,1 @@
-default_app_config = 'node.apps.NodeConfig'
+default_app_config = "node.apps.NodeConfig"

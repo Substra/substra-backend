@@ -1,5 +1,6 @@
-from orchestrator.client import OrchestratorClient
 from django.conf import settings
+
+from orchestrator.client import OrchestratorClient
 
 
 def get_orchestrator_client(channel_name):
@@ -20,6 +21,4 @@ def get_orchestrator_client(channel_name):
     mspid = settings.LEDGER_MSP_ID
     chaincode = settings.LEDGER_CHANNELS[channel_name]["chaincode"]["name"]
 
-    return OrchestratorClient(
-        host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=None
-    )
+    return OrchestratorClient(host, channel_name, mspid, chaincode, cacert, client_key, client_cert, opts=None)

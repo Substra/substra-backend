@@ -1,6 +1,7 @@
 import tempfile
-import structlog
 from functools import wraps
+
+import structlog
 from django.conf import settings
 from django.middleware.gzip import GZipMiddleware
 from django.urls.base import reverse
@@ -9,16 +10,19 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
-from substrapp import exceptions
+from libs.pagination import DefaultPageNumberPagination
+from libs.pagination import PaginationMixin
 from node.authentication import NodeUser
-from substrapp.models import Model
-from substrapp.views.utils import (validate_key, get_remote_asset, PermissionMixin, get_channel_name,
-                                   AssetPermissionError)
-from substrapp.views.filters_utils import filter_list
-from libs.pagination import DefaultPageNumberPagination, PaginationMixin
-
-from substrapp.orchestrator import get_orchestrator_client
 from orchestrator.error import OrcError
+from substrapp import exceptions
+from substrapp.models import Model
+from substrapp.orchestrator import get_orchestrator_client
+from substrapp.views.filters_utils import filter_list
+from substrapp.views.utils import AssetPermissionError
+from substrapp.views.utils import PermissionMixin
+from substrapp.views.utils import get_channel_name
+from substrapp.views.utils import get_remote_asset
+from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
 
@@ -26,29 +30,24 @@ logger = structlog.get_logger(__name__)
 def replace_storage_addresses(request, model):
     # Here we might need to check if there is a storage address, might not be the case with
     # delete_intermediary_model
-    if 'address' in model and model['address']:
-        model['address']['storage_address'] = request.build_absolute_uri(
-            reverse('substrapp:model-file', args=[model['key']])
+    if "address" in model and model["address"]:
+        model["address"]["storage_address"] = request.build_absolute_uri(
+            reverse("substrapp:model-file", args=[model["key"]])
         )
 
 
-class ModelViewSet(PaginationMixin,
-                   GenericViewSet):
+class ModelViewSet(PaginationMixin, GenericViewSet):
     queryset = Model.objects.all()
     pagination_class = DefaultPageNumberPagination
 
     def create_or_update_model(self, channel_name, traintuple, key):
         if traintuple["out_model"] is None:
-            raise Exception(
-                f"This traintuple related to this model key {key} does not have a out_model"
-            )
+            raise Exception(f"This traintuple related to this model key {key} does not have a out_model")
 
         # get model from remote node
         url = traintuple["out_model"]["storage_address"]
 
-        content = get_remote_asset(
-            channel_name, url, traintuple["creator"], traintuple["key"]
-        )
+        content = get_remote_asset(channel_name, url, traintuple["creator"], traintuple["key"])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
@@ -75,12 +74,12 @@ class ModelViewSet(PaginationMixin,
         try:
             data = self._retrieve(request, key)
         except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except exceptions.BadRequestError:
             raise
         except Exception as e:
             logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Response(data, status=status.HTTP_200_OK)
 
@@ -89,12 +88,12 @@ class ModelViewSet(PaginationMixin,
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_models()
         except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-        query_params = request.query_params.get('search')
+        query_params = request.query_params.get("search")
         if query_params is not None:
             try:
                 data = filter_list(
@@ -103,10 +102,10 @@ class ModelViewSet(PaginationMixin,
                     query_params=query_params,
                 )
             except OrcError as rpc_error:
-                return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
             except Exception as e:
                 logger.exception(e)
-                return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         for model in data:
             replace_storage_addresses(request, model)
@@ -131,9 +130,7 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
 
     queryset = Model.objects.all()
 
-    def check_access(
-        self, channel_name: str, user, asset, is_proxied_request: bool
-    ) -> None:
+    def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Return true if API consumer is allowed to access the model.
 
         :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
@@ -157,17 +154,13 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
     def _check_export_enabled(channel_name):
         channel = settings.LEDGER_CHANNELS[channel_name]
         if not channel.get("model_export_enabled", False):
-            raise AssetPermissionError(
-                f"Disabled: model_export_enabled is disabled on {settings.LEDGER_MSP_ID}"
-            )
+            raise AssetPermissionError(f"Disabled: model_export_enabled is disabled on {settings.LEDGER_MSP_ID}")
 
     @staticmethod
     def _check_permission(permission_type, asset, node_id):
         permissions = asset["permissions"][permission_type]
         if not permissions["public"] and node_id not in permissions["authorized_ids"]:
-            raise AssetPermissionError(
-                f'{node_id} doesn\'t have permission to download model {asset["key"]}'
-            )
+            raise AssetPermissionError(f'{node_id} doesn\'t have permission to download model {asset["key"]}')
 
     @gzip_action
     @action(detail=True)

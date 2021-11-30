@@ -1,6 +1,10 @@
 import os
+
 from django.conf import settings
-from substrapp.compute_tasks.directories import Directories, SANDBOX_DIR, TaskDirName
+
+from substrapp.compute_tasks.directories import SANDBOX_DIR
+from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import TaskDirName
 
 
 def get_volumes(dirs: Directories, is_testtuple_eval: bool):

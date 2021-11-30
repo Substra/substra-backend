@@ -12,49 +12,45 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-import structlog
 import json
 import os
 from os import path
-from django.conf import settings
-import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.orchestrator import get_orchestrator_client
-from substrapp.compute_tasks.command import Filenames
-from substrapp.compute_tasks.context import Context
-from substrapp.lock_local import lock_resource
-from substrapp.utils import list_dir
-from substrapp.compute_tasks.directories import (
-    Directories,
-    CPDirName,
-    TaskDirName,
-    init_compute_plan_dirs,
-    init_task_dirs,
-    teardown_task_dirs,
-    restore_dir,
-    commit_dir,
-)
-from substrapp.compute_tasks.asset_buffer import (
-    init_asset_buffer,
-    add_algo_to_buffer,
-    add_metrics_to_buffer,
-    add_task_assets_to_buffer,
-    add_assets_to_taskdir,
-)
-from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
-from substrapp.compute_tasks.save_models import save_models
-from substrapp.compute_tasks.image_builder import build_images
-from substrapp.compute_tasks.execute import execute_compute_task
-from substrapp.compute_tasks.exception_handler import compute_error_code
-from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
-from substrapp.compute_tasks.transfer_bucket import (
-    TAG_VALUE_FOR_TRANSFER_BUCKET,
-    transfer_to_bucket,
-)
-from celery import Task
-from backend.celery import app
 
+import structlog
+from celery import Task
+from django.conf import settings
+
+import orchestrator.computetask_pb2 as computetask_pb2
+from backend.celery import app
+from substrapp.compute_tasks.asset_buffer import add_algo_to_buffer
+from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
+from substrapp.compute_tasks.asset_buffer import add_metrics_to_buffer
+from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
+from substrapp.compute_tasks.asset_buffer import init_asset_buffer
+from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
+from substrapp.compute_tasks.command import Filenames
+from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
+from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.directories import CPDirName
+from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.compute_tasks.directories import commit_dir
+from substrapp.compute_tasks.directories import init_compute_plan_dirs
+from substrapp.compute_tasks.directories import init_task_dirs
+from substrapp.compute_tasks.directories import restore_dir
+from substrapp.compute_tasks.directories import teardown_task_dirs
+from substrapp.compute_tasks.exception_handler import compute_error_code
+from substrapp.compute_tasks.execute import execute_compute_task
+from substrapp.compute_tasks.image_builder import build_images
+from substrapp.compute_tasks.save_models import save_models
+from substrapp.compute_tasks.transfer_bucket import TAG_VALUE_FOR_TRANSFER_BUCKET
+from substrapp.compute_tasks.transfer_bucket import transfer_to_bucket
+from substrapp.lock_local import lock_resource
+from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
 
@@ -78,20 +74,21 @@ class ComputeTask(Task):
         with get_orchestrator_client(channel_name) as client:
             category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
             if category == computetask_pb2.TASK_TEST:
-                for metric_key, perf in retval['result']['performances'].items():
-                    client.register_performance({'compute_task_key': task['key'],
-                                                 'metric_key': metric_key,
-                                                 'performance_value': float(perf)})
+                for metric_key, perf in retval["result"]["performances"].items():
+                    client.register_performance(
+                        {"compute_task_key": task["key"], "metric_key": metric_key, "performance_value": float(perf)}
+                    )
 
     def on_retry(self, exc, task_id, args, kwargs, einfo):
         _, task = self.split_args(args)
         # delete compute pod to reset hardware ressources
-        delete_compute_plan_pods(task['compute_plan_key'])
-        logger.info("Retrying task",
-                    celery_task_id=task_id,
-                    attempt=(self.request.retries + 2),
-                    max_attempts=(CELERY_TASK_MAX_RETRIES + 1),
-                    )
+        delete_compute_plan_pods(task["compute_plan_key"])
+        logger.info(
+            "Retrying task",
+            celery_task_id=task_id,
+            attempt=(self.request.retries + 2),
+            max_attempts=(CELERY_TASK_MAX_RETRIES + 1),
+        )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         from django.db import close_old_connections
@@ -104,11 +101,12 @@ class ComputeTask(Task):
         # container log
         type_exc = type(exc)
         type_value = str(type_exc).split("'")[1]
-        logger.error("Failed compute task",
-                     task_category=task["category"],
-                     error_code=error_code,
-                     exc_type=type_value,
-                     )
+        logger.error(
+            "Failed compute task",
+            task_category=task["category"],
+            error_code=error_code,
+            exc_type=type_value,
+        )
         with get_orchestrator_client(channel_name) as client:
             client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_code)
 
@@ -129,7 +127,7 @@ class ComputeTask(Task):
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def compute_task(self, channel_name: str, task, compute_plan_key):
-    task_category = computetask_pb2.ComputeTaskCategory.Value(task['category'])
+    task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
 
     try:
         worker = self.request.hostname.split("@")[1]
@@ -148,14 +146,13 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
     with get_orchestrator_client(channel_name) as client:
         should_not_run = client.is_task_in_final_state(task_key)
     if should_not_run:
-        raise Exception(
-            f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore."
-        )
+        raise Exception(f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore.")
 
-    logger.info("Computing task",
-                task_category=computetask_pb2.ComputeTaskCategory.Name(task_category),
-                task=task,
-                )
+    logger.info(
+        "Computing task",
+        task_category=computetask_pb2.ComputeTaskCategory.Name(task_category),
+        task=task,
+    )
     ctx = None
     dirs = None
 
@@ -202,7 +199,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
                 if ctx.has_chainkeys:
                     _prepare_chainkeys(ctx.directories.compute_plan_dir, ctx.compute_plan_tag)
                     restore_dir(dirs, CPDirName.Chainkeys, TaskDirName.Chainkeys)
-            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)   # testtuple "predict" may need local dir
+            restore_dir(dirs, CPDirName.Local, TaskDirName.Local)  # testtuple "predict" may need local dir
 
             logger.debug("Task directory", directory=list_dir(dirs.task_dir))
 
@@ -240,8 +237,9 @@ def compute_task(self, channel_name: str, task, compute_plan_key):
 
 
 def _get_perf(dirs: Directories, metric_key: str) -> object:
-    with open(path.join(dirs.task_dir, TaskDirName.Perf,
-                        "-".join([metric_key, Filenames.Performance])), "r") as perf_file:
+    with open(
+        path.join(dirs.task_dir, TaskDirName.Perf, "-".join([metric_key, Filenames.Performance])), "r"
+    ) as perf_file:
         return json.load(perf_file)["all"]
 
 

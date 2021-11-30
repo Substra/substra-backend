@@ -1,8 +1,10 @@
-import structlog
 from typing import List
+
+import structlog
+
 from backend.celery import app
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.compute_tasks.asset_buffer import delete_models_from_buffer
+from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
 
@@ -10,6 +12,7 @@ logger = structlog.get_logger(__name__)
 def queue_remove_intermediary_models_from_db(channel_name, model_keys):
     # the task can run on any worker
     from substrapp.task_routing import get_generic_worker_queue
+
     worker_queue = get_generic_worker_queue()
 
     remove_intermediary_models_from_db.apply_async((channel_name, model_keys), queue=worker_queue)

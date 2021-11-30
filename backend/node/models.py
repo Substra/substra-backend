@@ -1,7 +1,8 @@
-from django.contrib.auth.hashers import make_password, check_password
-from django.db import models
-
 import secrets
+
+from django.contrib.auth.hashers import check_password
+from django.contrib.auth.hashers import make_password
+from django.db import models
 
 
 class Node(models.Model):
@@ -21,11 +22,13 @@ class Node(models.Model):
         Return a boolean of whether the raw_password was correct. Handles
         hashing formats behind the scenes.
         """
+
         def setter(raw_secret):
             self.set_password(raw_secret)
             # Password hash upgrades shouldn't be considered password changes.
             self._secret = None
             self.save(update_fields=["secret"])
+
         return check_password(raw_secret, self.secret, setter)
 
     class Meta:

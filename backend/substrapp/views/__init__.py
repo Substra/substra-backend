@@ -1,25 +1,31 @@
 # encoding: utf-8
 
-from .datasample import DataSampleViewSet
-from .datamanager import DataManagerViewSet, DataManagerPermissionViewSet
-from .metric import MetricViewSet, MetricPermissionViewSet
-from .model import ModelViewSet, ModelPermissionViewSet
-from .algo import AlgoViewSet, AlgoPermissionViewSet
+from .algo import AlgoPermissionViewSet
+from .algo import AlgoViewSet
+from .computeplan import ComputePlanViewSet
+from .computeplan import CPAlgoViewSet
+from .computeplan import CPTaskViewSet
 from .computetask import ComputeTaskViewSet
-from .computeplan import ComputePlanViewSet, CPTaskViewSet, CPAlgoViewSet
+from .datamanager import DataManagerPermissionViewSet
+from .datamanager import DataManagerViewSet
+from .datasample import DataSampleViewSet
+from .metric import MetricPermissionViewSet
+from .metric import MetricViewSet
+from .model import ModelPermissionViewSet
+from .model import ModelViewSet
 
 __all__ = [
-    'DataSampleViewSet',
-    'DataManagerViewSet',
-    'DataManagerPermissionViewSet',
-    'MetricViewSet',
-    'MetricPermissionViewSet',
-    'ModelViewSet',
-    'ModelPermissionViewSet',
-    'AlgoViewSet',
-    'AlgoPermissionViewSet',
-    'ComputeTaskViewSet',
-    'ComputePlanViewSet',
-    'CPTaskViewSet',
-    'CPAlgoViewSet',
+    "DataSampleViewSet",
+    "DataManagerViewSet",
+    "DataManagerPermissionViewSet",
+    "MetricViewSet",
+    "MetricPermissionViewSet",
+    "ModelViewSet",
+    "ModelPermissionViewSet",
+    "AlgoViewSet",
+    "AlgoPermissionViewSet",
+    "ComputeTaskViewSet",
+    "ComputePlanViewSet",
+    "CPTaskViewSet",
+    "CPAlgoViewSet",
 ]

@@ -1,5 +1,7 @@
 from backend.celery import app
-from substrapp.docker_registry import fetch_old_algo_image_names, run_garbage_collector, delete_container_image
+from substrapp.docker_registry import delete_container_image
+from substrapp.docker_registry import fetch_old_algo_image_names
+from substrapp.docker_registry import run_garbage_collector
 
 
 @app.task(ignore_result=True)

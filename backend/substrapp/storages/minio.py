@@ -1,10 +1,10 @@
 import structlog
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from minio import Minio
 from minio.error import S3Error
-from django.conf import settings
 
 logger = structlog.get_logger(__name__)
 

@@ -1,10 +1,12 @@
+import uuid
+
 from django.db import models
 from django.db.models import Q
-import uuid
 
 
 class ComputePlanWorkerMapping(models.Model):
     """A mapping between a compute plan and a celery worker"""
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     creation_date = models.DateTimeField(auto_now_add=True)
     compute_plan_key = models.UUIDField()

@@ -1,13 +1,11 @@
+from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-
-from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.state import api_settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-
     def validate(self, attrs):
         super().validate(attrs)
         refresh = self.get_token(self.user)
@@ -16,13 +14,12 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class CustomTokenRefreshSerializer(serializers.Serializer):
-
     def validate(self, attrs):
 
-        if 'refresh' not in self.context['request'].COOKIES:
-            raise ValidationError('refresh cookie is not present')
+        if "refresh" not in self.context["request"].COOKIES:
+            raise ValidationError("refresh cookie is not present")
 
-        refresh_cookie = self.context['request'].COOKIES['refresh']
+        refresh_cookie = self.context["request"].COOKIES["refresh"]
 
         refresh = RefreshToken(refresh_cookie)
 

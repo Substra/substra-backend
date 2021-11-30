@@ -1,6 +1,5 @@
-import structlog
-
 import rest_framework as drf
+import structlog
 
 logger = structlog.get_logger(__name__)
 
@@ -18,6 +17,7 @@ def api_exception_handler(exc, context):
 
 class _ApiError(Exception):
     """Base error response returned by API."""
+
     status = drf.status.HTTP_500_INTERNAL_SERVER_ERROR
     message = "Internal server error."
 
@@ -25,7 +25,7 @@ class _ApiError(Exception):
         message = message or self.message
 
         self.error = data or {}
-        self.error['message'] = message
+        self.error["message"] = message
 
         super().__init__(message)
 
@@ -57,21 +57,25 @@ class PodTimeoutError(Exception):
 
 class NodeError(Exception):
     """An error occurred during the download of an asset from a node"""
+
     pass
 
 
 class BuildError(Exception):
     """An error occurred during the build of a container image"""
+
     pass
 
 
 class TaskNotFoundError(Exception):
     """A celery task was not found"""
+
     pass
 
 
 class ServerMediasNoSubdirError(Exception):
     """A supplied servermedias path didn't contain the expected subdir"""
+
     pass
 
 

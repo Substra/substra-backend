@@ -1,22 +1,24 @@
+import os
 import tempfile
 import uuid
+
 import mock
-import os
-from grpc import RpcError, StatusCode
-import orchestrator.model_pb2 as model_pb2
-from rest_framework.test import APITestCase
-from parameterized import parameterized
-from substrapp.compute_tasks.save_models import _save_model
-from substrapp.compute_tasks.command import Filenames
-from orchestrator.client import OrchestratorClient
 from django.test import override_settings
+from grpc import RpcError
+from grpc import StatusCode
+from parameterized import parameterized
+from rest_framework.test import APITestCase
+
+import orchestrator.model_pb2 as model_pb2
+from orchestrator.client import OrchestratorClient
+from substrapp.compute_tasks.command import Filenames
+from substrapp.compute_tasks.save_models import _save_model
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}}
+    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
 )
 class SaveModelTests(APITestCase):
     @parameterized.expand([("without_exception", False), ("with_exception", True)])
@@ -34,7 +36,7 @@ class SaveModelTests(APITestCase):
             f.write("model content")
 
         error = RpcError()
-        error.details = 'orchestrator unavailable'
+        error.details = "orchestrator unavailable"
         error.code = lambda: StatusCode.UNAVAILABLE
 
         with mock.patch.object(OrchestratorClient, "register_model") as mregister_model:

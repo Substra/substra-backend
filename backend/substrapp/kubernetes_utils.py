@@ -1,10 +1,14 @@
-import kubernetes
-import structlog
 import time
 
+import kubernetes
+import structlog
 from django.conf import settings
+
+from substrapp.exceptions import PodDeletedError
+from substrapp.exceptions import PodError
+from substrapp.exceptions import PodReadinessTimeoutError
+from substrapp.exceptions import PodTimeoutError
 from substrapp.utils import timeit
-from substrapp.exceptions import PodError, PodTimeoutError, PodDeletedError, PodReadinessTimeoutError
 
 logger = structlog.get_logger(__name__)
 
@@ -69,7 +73,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
 
             if api_response.status.phase != pod_status:
                 pod_status = api_response.status.phase
-                log.info('Status for pod', status=api_response.status.phase)
+                log.info("Status for pod", status=api_response.status.phase)
 
             # Handle pod error not linked with containers
             if api_response.status.phase == "Failed" or (
@@ -81,7 +85,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                 else:
                     error = f"Pod phase : {api_response.status.phase}"
 
-                log.error('Status for pod', status=api_response.status.phase.lower())
+                log.error("Status for pod", status=api_response.status.phase.lower())
                 finished = True
                 continue
 
@@ -104,7 +108,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                                 error = "InitContainer: " + _get_pod_error(state.waiting)
                                 attempt += 1
                                 log.error(
-                                    'InitContainer waiting status',
+                                    "InitContainer waiting status",
                                     attempt=attempt,
                                     max_attempts=max_attempts,
                                     state=state.waiting.message,
@@ -130,7 +134,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
                                 error = _get_pod_error(state.waiting)
                                 attempt += 1
                                 log.error(
-                                    'Container waiting status',
+                                    "Container waiting status",
                                     attempt=attempt,
                                     max_attempts=max_attempts,
                                     state=state.waiting.message,
@@ -141,7 +145,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):
 
         except Exception as e:
             attempt += 1
-            log.error('Could not get pod status', exc_info=e, attempt=attempt, max_attempts=max_attempts)
+            log.error("Could not get pod status", exc_info=e, attempt=attempt, max_attempts=max_attempts)
 
     if error is not None:
         raise PodError(f"Pod {name} terminated with error: {error}")
@@ -210,11 +214,9 @@ def delete_pod(k8s_client, name: str) -> None:
     # watch for pod deletion
     watch = kubernetes.watch.Watch()
     for event in watch.stream(
-        func=k8s_client.list_namespaced_pod,
-        namespace=NAMESPACE,
-        resource_version=pod_list_resource_version
+        func=k8s_client.list_namespaced_pod, namespace=NAMESPACE, resource_version=pod_list_resource_version
     ):
-        if event['type'] == 'DELETED' and event['object'].metadata.name == name:
+        if event["type"] == "DELETED" and event["object"].metadata.name == name:
             watch.stop()
 
     logger.info("Deleted pod", namespace=NAMESPACE, name=name)
@@ -263,9 +265,10 @@ def get_worker_replica_set_scale() -> int:
 
 
 def get_volume(
-        k8s_client: kubernetes.client.CoreV1Api,
-        pod_name: str,
-        volume_name: str,) -> kubernetes.client.V1Volume:
+    k8s_client: kubernetes.client.CoreV1Api,
+    pod_name: str,
+    volume_name: str,
+) -> kubernetes.client.V1Volume:
 
     pod = k8s_client.read_namespaced_pod(name=pod_name, namespace=NAMESPACE)
 

@@ -1,9 +1,12 @@
 import os
-import structlog
 import shutil
-from django.conf import settings
-from substrapp.utils import remove_directory_contents, delete_dir
 from shutil import copytree
+
+import structlog
+from django.conf import settings
+
+from substrapp.utils import delete_dir
+from substrapp.utils import remove_directory_contents
 
 logger = structlog.get_logger(__name__)
 

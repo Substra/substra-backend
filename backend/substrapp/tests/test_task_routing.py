@@ -1,12 +1,13 @@
-from parameterized import parameterized
-import mock
 import uuid
 
+import mock
 from django.db.utils import IntegrityError
 from django.test import TestCase
+from parameterized import parameterized
 
-from substrapp.task_routing import _get_workers_with_fewest_running_cps, release_worker
 from substrapp.models.computeplan_worker_mapping import ComputePlanWorkerMapping
+from substrapp.task_routing import _get_workers_with_fewest_running_cps
+from substrapp.task_routing import release_worker
 
 
 class ComputePlanWorkerMappingAttachAndReleaseTests(TestCase):
@@ -21,10 +22,7 @@ class ComputePlanWorkerMappingAttachAndReleaseTests(TestCase):
 
     @staticmethod
     def _attach_cp_to_worker(compute_plan_key, worker_index):
-        return ComputePlanWorkerMapping.objects.create(
-            compute_plan_key=compute_plan_key,
-            worker_index=worker_index
-        )
+        return ComputePlanWorkerMapping.objects.create(compute_plan_key=compute_plan_key, worker_index=worker_index)
 
     def test_cp_not_attached_to_two_workers_at_the_same_time(self):
         with self.assertRaises(IntegrityError):
@@ -105,7 +103,7 @@ class TaskRoutingTests(TestCase):
         for mapping in all_mappings:
             mapping.save()
 
-        with mock.patch('substrapp.task_routing.get_worker_replica_set_scale') as m_replica_scale:
+        with mock.patch("substrapp.task_routing.get_worker_replica_set_scale") as m_replica_scale:
             m_replica_scale.return_value = num_workers
             actual = _get_workers_with_fewest_running_cps()
             self.assertEqual(sorted(actual), expected)

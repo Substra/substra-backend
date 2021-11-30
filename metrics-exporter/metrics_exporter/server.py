@@ -1,15 +1,14 @@
 import logging
-import structlog
+
 import celery
 import prometheus_client
-from metrics_exporter import settings, exporter
+import structlog
+
+from metrics_exporter import exporter
+from metrics_exporter import settings
 
 # Logger configuration
-structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(
-        logging.getLevelName(settings.LOG_LEVEL)
-    )
-)
+structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(settings.LOG_LEVEL)))
 logger = structlog.get_logger()
 
 

@@ -8,7 +8,6 @@ from tempfile import gettempdir
 import structlog
 from django.conf import settings
 
-
 logger = structlog.get_logger(__name__)
 
 
@@ -50,10 +49,13 @@ def with_profile(filename):
     ...     pass
 
     """
+
     def decorator(function):
         @wraps(function)
         def wrapper(*args, **kwargs):
             with profile(filename):
                 return function(*args, **kwargs)
+
         return wrapper
+
     return decorator

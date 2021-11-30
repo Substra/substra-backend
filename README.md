@@ -108,6 +108,18 @@ git checkout $SUBSTRA_BACKEND_VERSION
 skaffold deploy --images substrafoundation/substra-backend:$SUBSTRA_BACKEND_VERSION
 ```
 
+## Code formatting
+
+You can opt into auto-formatting of code on pre-commit using [Black](https://github.com/psf/black).
+
+This relies on hooks managed by [pre-commit](https://pre-commit.com/), which you can set up as follows.
+
+Install [pre-commit](https://pre-commit.com/), then run:
+
+```sh
+pre-commit install
+```
+
 ## Companion repositories
 
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):

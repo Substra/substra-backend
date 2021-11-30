@@ -1,54 +1,54 @@
+import datetime
 import os
 import uuid
-import datetime
+from wsgiref.util import is_hop_by_hop
 
 from django.conf import settings
 from django.http import FileResponse
+from requests.auth import HTTPBasicAuth
+from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from node.authentication import NodeUser
-from substrapp.utils import get_remote_file, get_owner, get_remote_file_content
-from node.models import OutgoingNode
-from substrapp.storages.minio import MinioStorage
-
-
-from rest_framework import status
-from requests.auth import HTTPBasicAuth
-from wsgiref.util import is_hop_by_hop
-
-from substrapp.exceptions import AssetPermissionError, NodeError, BadRequestError
-import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.event_pb2 as event_pb2
 import orchestrator.common_pb2 as common_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
+from node.authentication import NodeUser
+from node.models import OutgoingNode
 from orchestrator.error import OrcError
+from substrapp.exceptions import AssetPermissionError
+from substrapp.exceptions import BadRequestError
+from substrapp.exceptions import NodeError
 from substrapp.orchestrator import get_orchestrator_client
-
+from substrapp.storages.minio import MinioStorage
+from substrapp.utils import get_owner
+from substrapp.utils import get_remote_file
+from substrapp.utils import get_remote_file_content
 
 TASK_CATEGORY = {
-    'unknown': computetask_pb2.TASK_UNKNOWN,
-    'traintuple': computetask_pb2.TASK_TRAIN,
-    'testtuple': computetask_pb2.TASK_TEST,
-    'aggregatetuple': computetask_pb2.TASK_AGGREGATE,
-    'composite_traintuple': computetask_pb2.TASK_COMPOSITE
+    "unknown": computetask_pb2.TASK_UNKNOWN,
+    "traintuple": computetask_pb2.TASK_TRAIN,
+    "testtuple": computetask_pb2.TASK_TEST,
+    "aggregatetuple": computetask_pb2.TASK_AGGREGATE,
+    "composite_traintuple": computetask_pb2.TASK_COMPOSITE,
 }
 
 TASK_FIELD = {
-    'traintuple': 'train',
-    'testtuple': 'test',
-    'aggregatetuple': 'aggregate',
-    'composite_traintuple': 'composite'
+    "traintuple": "train",
+    "testtuple": "test",
+    "aggregatetuple": "aggregate",
+    "composite_traintuple": "composite",
 }
 
 
 MODEL_CATEGORY = {
-    'unknown': model_pb2.MODEL_UNKNOWN,
-    'simple': model_pb2.MODEL_SIMPLE,
-    'head': model_pb2.MODEL_HEAD,
+    "unknown": model_pb2.MODEL_UNKNOWN,
+    "simple": model_pb2.MODEL_SIMPLE,
+    "head": model_pb2.MODEL_HEAD,
 }
 
 
@@ -59,9 +59,7 @@ def authenticate_outgoing_request(outgoing_node_id):
     try:
         outgoing = OutgoingNode.objects.get(node_id=outgoing_node_id)
     except OutgoingNode.DoesNotExist:
-        raise NodeError(
-            f"Unauthorized to call remote node with node_id: {outgoing_node_id}"
-        )
+        raise NodeError(f"Unauthorized to call remote node with node_id: {outgoing_node_id}")
 
     # to authenticate to remote node we use the current node id
     # with the associated outgoing secret.
@@ -96,14 +94,10 @@ def node_has_process_permission(asset):
 
 
 class PermissionMixin(object):
-    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [
-        BasicAuthentication
-    ]
+    authentication_classes = api_settings.DEFAULT_AUTHENTICATION_CLASSES + [BasicAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def check_access(
-        self, channel_name: str, user, asset, is_proxied_request: bool
-    ) -> None:
+    def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Returns true if API consumer is allowed to access data.
 
         :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
@@ -137,9 +131,7 @@ class PermissionMixin(object):
         """
         return asset.get(ledger_field, {}).get("storage_address")
 
-    def download_file(
-        self, request, query_method, django_field, orchestrator_field=None
-    ):
+    def download_file(self, request, query_method, django_field, orchestrator_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         channel_name = get_channel_name(request)
@@ -150,14 +142,10 @@ class PermissionMixin(object):
             with get_orchestrator_client(get_channel_name(request)) as client:
                 asset = getattr(client, query_method)(validated_key)
         except OrcError as rpc_error:
-            return Response(
-                {"message": rpc_error.details}, status=rpc_error.http_status()
-            )
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
 
         try:
-            self.check_access(
-                channel_name, request.user, asset, is_proxied_request(request)
-            )
+            self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except AssetPermissionError as e:
             return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
@@ -174,9 +162,7 @@ class PermissionMixin(object):
 
         return response
 
-    def download_local_file(
-        self, request, query_method, django_field, orchestrator_field=None
-    ):
+    def download_local_file(self, request, query_method, django_field, orchestrator_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
@@ -186,9 +172,7 @@ class PermissionMixin(object):
             with get_orchestrator_client(get_channel_name(request)) as client:
                 asset = getattr(client, query_method)(validated_key)
         except OrcError as rpc_error:
-            return Response(
-                {"message": rpc_error.details}, status=rpc_error.http_status()
-            )
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
 
         try:
             self.check_access(
@@ -210,11 +194,11 @@ class PermissionMixin(object):
         data = getattr(obj, django_field)
         filename = None
 
-        if hasattr(obj, 'file') and isinstance(obj.file.storage, MinioStorage):
+        if hasattr(obj, "file") and isinstance(obj.file.storage, MinioStorage):
             filename = str(obj.key)
         else:
             filename = os.path.basename(data.path)
-            data = open(data.path, 'rb')
+            data = open(data.path, "rb")
 
         response = CustomFileResponse(
             data,
@@ -237,9 +221,7 @@ class PermissionMixin(object):
 
         if not r.ok:
             return Response(
-                {
-                    "message": f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'
-                },
+                {"message": f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'},
                 status=r.status_code,
             )
 
@@ -278,9 +260,7 @@ def validate_key(key) -> str:
 
 def validate_sort(sort):
     if sort not in ["asc", "desc"]:
-        raise BadRequestError(
-            f"Invalid sort value (must be either 'desc' or 'asc'): {sort}"
-        )
+        raise BadRequestError(f"Invalid sort value (must be either 'desc' or 'asc'): {sort}")
 
 
 class ValidationExceptionError(Exception):
@@ -312,57 +292,50 @@ def is_proxied_request(request) -> bool:
 
 def add_task_extra_information(client, basename, data, expand_relationships=False):
 
-    task_status = computetask_pb2.ComputeTaskStatus.Value(data['status'])
+    task_status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
 
     # add model information on a training compute task or performance on a testing compute task
-    if basename in ['traintuple', 'aggregatetuple', 'composite_traintuple']:
+    if basename in ["traintuple", "aggregatetuple", "composite_traintuple"]:
         if task_status == computetask_pb2.STATUS_DONE:
-            data[TASK_FIELD[basename]]['models'] = client.get_computetask_output_models(data['key'])
+            data[TASK_FIELD[basename]]["models"] = client.get_computetask_output_models(data["key"])
 
     # add performances for test tasks
-    if basename in ['testtuple']:
+    if basename in ["testtuple"]:
         if task_status == computetask_pb2.STATUS_DONE:
-            performances = client.get_compute_task_performances(data['key'])
-            performances = {performance['metric_key']: performance['performance_value']
-                            for performance in performances}
-            data[TASK_FIELD[basename]]['perfs'] = performances
+            performances = client.get_compute_task_performances(data["key"])
+            performances = {performance["metric_key"]: performance["performance_value"] for performance in performances}
+            data[TASK_FIELD[basename]]["perfs"] = performances
 
-    if expand_relationships and basename in ['traintuple', 'testtuple', 'composite_traintuple']:
-        data_manager_key = data[TASK_FIELD[basename]]['data_manager_key']
-        data[TASK_FIELD[basename]]['data_manager'] = client.query_datamanager(data_manager_key)
+    if expand_relationships and basename in ["traintuple", "testtuple", "composite_traintuple"]:
+        data_manager_key = data[TASK_FIELD[basename]]["data_manager_key"]
+        data[TASK_FIELD[basename]]["data_manager"] = client.query_datamanager(data_manager_key)
 
-    if expand_relationships and basename == 'testtuple':
-        metric_keys = data[TASK_FIELD[basename]]['metric_keys']
-        data[TASK_FIELD[basename]]['metrics'] = [client.query_metric(metric_key) for metric_key in metric_keys]
+    if expand_relationships and basename == "testtuple":
+        metric_keys = data[TASK_FIELD[basename]]["metric_keys"]
+        data[TASK_FIELD[basename]]["metrics"] = [client.query_metric(metric_key) for metric_key in metric_keys]
 
     if expand_relationships:
-        data['parent_tasks'] = [client.query_task(key) for key in data['parent_task_keys']]
+        data["parent_tasks"] = [client.query_task(key) for key in data["parent_task_keys"]]
 
     # fetch task start and end dates from its events
     first_event = next(
         client.query_events_generator(
-            event_kind=event_pb2.EVENT_ASSET_UPDATED,
-            asset_key=data['key'],
-            metadata={'status': 'STATUS_DOING'}
+            event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], metadata={"status": "STATUS_DOING"}
         ),
-        None
+        None,
     )
-    data['start_date'] = first_event['timestamp'] if first_event else None
+    data["start_date"] = first_event["timestamp"] if first_event else None
 
-    if task_status in [computetask_pb2.STATUS_FAILED,
-                       computetask_pb2.STATUS_CANCELED,
-                       computetask_pb2.STATUS_DONE]:
+    if task_status in [computetask_pb2.STATUS_FAILED, computetask_pb2.STATUS_CANCELED, computetask_pb2.STATUS_DONE]:
         last_event = next(
             client.query_events_generator(
-                event_kind=event_pb2.EVENT_ASSET_UPDATED,
-                asset_key=data['key'],
-                sort=common_pb2.DESCENDING
+                event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], sort=common_pb2.DESCENDING
             ),
-            None
+            None,
         )
     else:
         last_event = None
-    data['end_date'] = last_event['timestamp'] if last_event else None
+    data["end_date"] = last_event["timestamp"] if last_event else None
 
     return data
 
@@ -397,9 +370,9 @@ def add_compute_plan_failed_task(client, data):
         first_failed_task = next(
             client.query_events_generator(
                 event_kind=event_pb2.EVENT_ASSET_UPDATED,
-                metadata={"status": "STATUS_FAILED", "compute_plan_key": data["key"]}
+                metadata={"status": "STATUS_FAILED", "compute_plan_key": data["key"]},
             ),
-            None
+            None,
         )
 
         failed_task = client.query_task(key=first_failed_task["asset_key"])
@@ -414,8 +387,7 @@ def add_compute_plan_failed_task(client, data):
 
 
 def add_compute_plan_duration_or_eta(client, data):
-    """Add the duration and the estimated time of arrival or end date to a compute plan data.
-    """
+    """Add the duration and the estimated time of arrival or end date to a compute plan data."""
 
     current_date = datetime.datetime.now()
     compute_plan_status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
@@ -430,28 +402,35 @@ def add_compute_plan_duration_or_eta(client, data):
     first_event = next(
         client.query_events_generator(
             event_kind=event_pb2.EVENT_ASSET_UPDATED,
-            metadata={"status": "STATUS_DOING", "compute_plan_key": data["key"]}
+            metadata={"status": "STATUS_DOING", "compute_plan_key": data["key"]},
         ),
-        None
+        None,
     )
 
     last_event = next(
         client.query_events_generator(
             event_kind=event_pb2.EVENT_ASSET_UPDATED,
             metadata={"compute_plan_key": data["key"]},
-            sort=common_pb2.DESCENDING
+            sort=common_pb2.DESCENDING,
         ),
-        None
+        None,
     )
 
-    if compute_plan_status in [computeplan_pb2.PLAN_STATUS_DOING,
-                               computeplan_pb2.PLAN_STATUS_FAILED,
-                               computeplan_pb2.PLAN_STATUS_CANCELED,
-                               computeplan_pb2.PLAN_STATUS_DONE] and first_event:
+    if (
+        compute_plan_status
+        in [
+            computeplan_pb2.PLAN_STATUS_DOING,
+            computeplan_pb2.PLAN_STATUS_FAILED,
+            computeplan_pb2.PLAN_STATUS_CANCELED,
+            computeplan_pb2.PLAN_STATUS_DONE,
+        ]
+        and first_event
+    ):
         data["start_date"] = first_event["timestamp"]
         if data["start_date"]:
-            start_date = datetime.datetime.strptime(first_event["timestamp"].split('+')[0].strip("Z")[:-3],
-                                                    "%Y-%m-%dT%H:%M:%S.%f")
+            start_date = datetime.datetime.strptime(
+                first_event["timestamp"].split("+")[0].strip("Z")[:-3], "%Y-%m-%dT%H:%M:%S.%f"
+            )
 
     # duration and estimated_end_date
     if compute_plan_status == computeplan_pb2.PLAN_STATUS_DOING:
@@ -463,15 +442,18 @@ def add_compute_plan_duration_or_eta(client, data):
             data["duration"] = int(current_duration.total_seconds())
             data["estimated_end_date"] = (current_date + estimated_duration).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-    if compute_plan_status in [computeplan_pb2.PLAN_STATUS_FAILED,
-                               computeplan_pb2.PLAN_STATUS_CANCELED,
-                               computeplan_pb2.PLAN_STATUS_DONE] and last_event:
+    if (
+        compute_plan_status
+        in [computeplan_pb2.PLAN_STATUS_FAILED, computeplan_pb2.PLAN_STATUS_CANCELED, computeplan_pb2.PLAN_STATUS_DONE]
+        and last_event
+    ):
 
         data["end_date"] = last_event["timestamp"]
         data["estimated_end_date"] = data["end_date"]
         if data["end_date"]:
-            end_date = datetime.datetime.strptime(last_event["timestamp"].split('+')[0].strip("Z")[:-3],
-                                                  "%Y-%m-%dT%H:%M:%S.%f")
+            end_date = datetime.datetime.strptime(
+                last_event["timestamp"].split("+")[0].strip("Z")[:-3], "%Y-%m-%dT%H:%M:%S.%f"
+            )
             data["duration"] = int((end_date - start_date).total_seconds())
 
     return data

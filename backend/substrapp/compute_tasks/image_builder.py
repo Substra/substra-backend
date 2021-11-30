@@ -1,16 +1,24 @@
-import kubernetes
 import os
+
+import kubernetes
 import structlog
 from django.conf import settings
-from substrapp.utils import timeit
-from substrapp.compute_tasks.compute_pod import Label
-from substrapp.kubernetes_utils import get_pod_logs, get_security_context, pod_exists, watch_pod, delete_pod
-from substrapp.docker_registry import container_image_exists, USER_IMAGE_REPOSITORY
-from substrapp.lock_local import lock_resource
-from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name, get_docker_cache_pvc_name
-from substrapp.exceptions import BuildError
+
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks.compute_pod import Label
+from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
+from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
+from substrapp.docker_registry import USER_IMAGE_REPOSITORY
+from substrapp.docker_registry import container_image_exists
+from substrapp.exceptions import BuildError
+from substrapp.kubernetes_utils import delete_pod
+from substrapp.kubernetes_utils import get_pod_logs
+from substrapp.kubernetes_utils import get_security_context
+from substrapp.kubernetes_utils import pod_exists
+from substrapp.kubernetes_utils import watch_pod
+from substrapp.lock_local import lock_resource
+from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
 
@@ -119,7 +127,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):
                     label_selector=kubernetes.client.V1LabelSelector(
                         match_expressions=[
                             kubernetes.client.V1LabelSelectorRequirement(
-                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv('HOSTNAME')]
+                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv("HOSTNAME")]
                             )
                         ]
                     ),

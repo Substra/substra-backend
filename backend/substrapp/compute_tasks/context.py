@@ -1,11 +1,14 @@
 import os
-from typing import Dict, List
-from substrapp.compute_tasks.compute_pod import ComputePod
-from substrapp.compute_tasks.directories import AssetBufferDirName, Directories
-from substrapp.orchestrator import get_orchestrator_client
-import orchestrator.computetask_pb2 as computetask_pb2
+from typing import Dict
+from typing import List
+
 from django.conf import settings
 
+import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks.compute_pod import ComputePod
+from substrapp.compute_tasks.directories import AssetBufferDirName
+from substrapp.compute_tasks.directories import Directories
+from substrapp.orchestrator import get_orchestrator_client
 
 TASK_DATA_FIELD = {
     computetask_pb2.TASK_TRAIN: "train",
@@ -89,8 +92,7 @@ class Context:
             algo = client.query_algo(task["algo"]["key"])
 
             if task_category == computetask_pb2.TASK_TEST:
-                metrics = {metric_key: client.query_metric(metric_key)
-                           for metric_key in task_data["metric_keys"]}
+                metrics = {metric_key: client.query_metric(metric_key) for metric_key in task_data["metric_keys"]}
 
             if task_category in [computetask_pb2.TASK_COMPOSITE, computetask_pb2.TASK_TRAIN, computetask_pb2.TASK_TEST]:
                 data_manager = client.query_datamanager(task_data["data_manager_key"])
@@ -220,8 +222,10 @@ class Context:
 
     @property
     def metrics_docker_context_dirs(self) -> Dict:
-        return {metric_key: os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, metric_key)
-                for metric_key in self.metric_keys}
+        return {
+            metric_key: os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, metric_key)
+            for metric_key in self.metric_keys
+        }
 
     def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = None) -> ComputePod:
         return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else None)

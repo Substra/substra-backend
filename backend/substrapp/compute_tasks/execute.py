@@ -7,24 +7,35 @@ In these functions, we:
 - Execute the command in the compute pod
 """
 
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
 
-import structlog
-import kubernetes
 from typing import List
+
+import kubernetes
+import structlog
 from django.conf import settings
 from kubernetes.stream import stream
-from substrapp.utils import timeit
-from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.command import get_exec_command
-from substrapp.compute_tasks.environment import get_environment
-from substrapp.compute_tasks.volumes import get_volumes, get_worker_subtuple_pvc_name
-from substrapp.exceptions import PodError, PodReadinessTimeoutError, PodTimeoutError
-from substrapp.kubernetes_utils import delete_pod, wait_for_pod_readiness, pod_exists_by_label_selector, get_volume
-from substrapp.docker_registry import get_container_image_name
-from substrapp.compute_tasks.compute_pod import ComputePod, Label, create_pod
+
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks.command import get_exec_command
+from substrapp.compute_tasks.compute_pod import ComputePod
+from substrapp.compute_tasks.compute_pod import Label
+from substrapp.compute_tasks.compute_pod import create_pod
+from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.environment import get_environment
+from substrapp.compute_tasks.volumes import get_volumes
+from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
+from substrapp.docker_registry import get_container_image_name
+from substrapp.exceptions import PodError
+from substrapp.exceptions import PodReadinessTimeoutError
+from substrapp.exceptions import PodTimeoutError
+from substrapp.kubernetes_utils import delete_pod
+from substrapp.kubernetes_utils import get_volume
+from substrapp.kubernetes_utils import pod_exists_by_label_selector
+from substrapp.kubernetes_utils import wait_for_pod_readiness
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
 
@@ -85,8 +96,9 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
                 )
 
             create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
-            wait_for_pod_readiness(k8s_client, f"{Label.PodName}={pod_name}",
-                                   settings.TASK["COMPUTE_POD_STARTUP_TIMEOUT_SECONDS"])
+            wait_for_pod_readiness(
+                k8s_client, f"{Label.PodName}={pod_name}", settings.TASK["COMPUTE_POD_STARTUP_TIMEOUT_SECONDS"]
+            )
         else:
             logger.info("Reusing pod", pod=pod_name)
 
@@ -141,12 +153,7 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 @timeit
 def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]) -> int:
     """Execute a command on a compute pod"""
-    logger.debug(
-        "Running command",
-        command=exec_command,
-        eval=compute_pod.is_testtuple_eval,
-        attempt=ctx.attempt
-    )
+    logger.debug("Running command", command=exec_command, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
 
     resp = stream(
         k8s_client.connect_get_namespaced_pod_exec,

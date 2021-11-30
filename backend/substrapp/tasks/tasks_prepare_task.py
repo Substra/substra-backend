@@ -1,26 +1,27 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+from typing import Dict
 
 import structlog
-from typing import Dict
-from celery.result import AsyncResult
 from celery.exceptions import Ignore
-from substrapp.tasks.tasks_compute_task import compute_task
-from backend.celery import app
-from substrapp.utils import (
-    get_owner,
-)
-from substrapp.orchestrator import get_orchestrator_client
+from celery.result import AsyncResult
+
 import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.exceptions import TaskNotFoundError
+from backend.celery import app
 from orchestrator.error import OrcError
+from substrapp.exceptions import TaskNotFoundError
+from substrapp.orchestrator import get_orchestrator_client
+from substrapp.tasks.tasks_compute_task import compute_task
+from substrapp.utils import get_owner
 
 logger = structlog.get_logger(__name__)
 
 TUPLE_COMMANDS = {
-    computetask_pb2.TASK_TRAIN: 'train',
-    computetask_pb2.TASK_TEST: 'predict',
-    computetask_pb2.TASK_COMPOSITE: 'train',
-    computetask_pb2.TASK_AGGREGATE: 'aggregate',
+    computetask_pb2.TASK_TRAIN: "train",
+    computetask_pb2.TASK_TEST: "predict",
+    computetask_pb2.TASK_COMPOSITE: "train",
+    computetask_pb2.TASK_AGGREGATE: "aggregate",
 }
 
 
@@ -46,11 +47,7 @@ def prepare_aggregate_task(channel_name):
 
 def prepare_tasks(channel_name: str, task_category: str) -> None:
     with get_orchestrator_client(channel_name) as client:
-        tasks = client.query_tasks(
-            worker=get_owner(),
-            status=computetask_pb2.STATUS_TODO,
-            category=task_category
-        )
+        tasks = client.query_tasks(worker=get_owner(), status=computetask_pb2.STATUS_TODO, category=task_category)
 
     for task in tasks:
         queue_prepare_task(channel_name, task)
@@ -63,7 +60,10 @@ def queue_prepare_task(channel_name, task):
 
     # Verify that celery task does not already exist
     if AsyncResult(key).state != "PENDING":
-        logger.info('skipping this task because it already exists', task_key=key,)
+        logger.info(
+            "skipping this task because it already exists",
+            task_key=key,
+        )
         return
 
     if _task_not_runnable(channel_name, task["category"], key):
@@ -72,17 +72,18 @@ def queue_prepare_task(channel_name, task):
 
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task["compute_plan_key"])
-    logger.info(f'Assigned CP to worker queue {worker_queue}',
-                plan=task["compute_plan_key"],
-                worker_queue=worker_queue,
-                )
+    logger.info(
+        f"Assigned CP to worker queue {worker_queue}",
+        plan=task["compute_plan_key"],
+        worker_queue=worker_queue,
+    )
     prepare_task.apply_async((channel_name, task), task_id=key, queue=worker_queue)
 
 
 @app.task(bind=True, ignore_result=False)
 def prepare_task(self, channel_name: str, task: Dict) -> None:
     # Keep execution flow in the current queue
-    queue = self.request.delivery_info['routing_key']
+    queue = self.request.delivery_info["routing_key"]
     compute_plan_key = task["compute_plan_key"]
 
     if _task_not_runnable(channel_name, task["category"], task["key"]):
@@ -92,16 +93,19 @@ def prepare_task(self, channel_name: str, task: Dict) -> None:
 
     try:
         with get_orchestrator_client(channel_name) as client:
-            logger.info("Updating task status to STATUS_DOING", task_key=task['key'])
+            logger.info("Updating task status to STATUS_DOING", task_key=task["key"])
             client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_DOING, log="")
     except OrcError as rpc_error:
         logger.exception(
-            f'failed to update task status to DOING, {rpc_error.details}',
-            task_key=task["key"],)
+            f"failed to update task status to DOING, {rpc_error.details}",
+            task_key=task["key"],
+        )
         raise Ignore()
     except Exception as e:
         logger.exception(
-            f'failed to update task status to DOING, {e}', task_key=task["key"],)
+            f"failed to update task status to DOING, {e}",
+            task_key=task["key"],
+        )
         raise Ignore()
 
     compute_task.apply_async((channel_name, task, compute_plan_key), queue=queue)
@@ -121,12 +125,13 @@ def _task_not_runnable(channel_name, task_category, task_key):
         # in the ledger local db
         return False
 
-    if computetask_pb2.ComputeTaskStatus.Value(task['status']) != computetask_pb2.STATUS_TODO:
+    if computetask_pb2.ComputeTaskStatus.Value(task["status"]) != computetask_pb2.STATUS_TODO:
         logger.info(
             'Skipping task, not in "STATUS_TODO" state',
             task_key=task_key,
             task_category=task_category,
-            status=task["status"],)
+            status=task["status"],
+        )
         return True
 
     return False

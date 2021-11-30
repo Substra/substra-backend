@@ -1,8 +1,7 @@
+import inspect
+import json
 import os
 import uuid
-import json
-import inspect
-
 
 LANGUAGES = {"ShellScript": "00", "Python": "01"}
 
@@ -71,15 +70,16 @@ def generate_exceptions_map(append=True):
 
     os.environ["DJANGO_SETTINGS_MODULE"] = "backend.settings.prod"
 
-    import requests.exceptions
-    import celery.exceptions
     import tarfile
+
+    import celery.exceptions
     import django.core.exceptions
+    import django.db
+    import django.db.transaction
+    import django.http
     import django.urls
     import django.utils
-    import django.db
-    import django.http
-    import django.db.transaction
+    import requests.exceptions
     import rest_framework.exceptions
 
     # Modules to inspect

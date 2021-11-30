@@ -1,0 +1,14 @@
+repos:
+  - repo: https://github.com/ambv/black
+    rev: 21.11b1
+    hooks:
+      - id: black
+        language_version: python3.9
+        files: "(backend|metrics_exporter|fixtures)\\/.+\\.py"
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+      - id: isort
+        args: [--settings-path=pyproject.toml]
+        files: "(backend|metrics_exporter|fixtures)\\/.+\\.py"

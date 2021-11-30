@@ -1,14 +1,14 @@
-import mock
+import tempfile
 
+import mock
 from django.test import override_settings
+from grpc import RpcError
+from grpc import StatusCode
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.tasks.tasks_compute_task import compute_task
-import tempfile
 from orchestrator.client import OrchestratorClient
-from grpc import RpcError, StatusCode
-
+from substrapp.tasks.tasks_compute_task import compute_task
 
 CHANNEL = "mychannel"
 
@@ -33,11 +33,14 @@ class ComputeTaskTests(APITestCase):
             "category": "TASK_TRAIN",
             "compute_plan_key": "some compute plan key",
             "in_models": None,
-            "algo": {"key": "algo key",
-                     "algorithm": {
-                        "checksum": "aa8d43bf6e3341b0034a2e396451ab731ccca95a4c1d4f65a4fcd30f9081ec7d",
-                        "storage_address": "http://testserver/algo/17f98afc-2b82-4ce9-b232-1a471633d020/file/"}},
-            "train": {"data_manager_key": "some data manager key"}
+            "algo": {
+                "key": "algo key",
+                "algorithm": {
+                    "checksum": "aa8d43bf6e3341b0034a2e396451ab731ccca95a4c1d4f65a4fcd30f9081ec7d",
+                    "storage_address": "http://testserver/algo/17f98afc-2b82-4ce9-b232-1a471633d020/file/",
+                },
+            },
+            "train": {"data_manager_key": "some data manager key"},
         }
 
         with mock.patch(
@@ -67,7 +70,8 @@ class ComputeTaskTests(APITestCase):
         ) as mregister_performance, mock.patch.object(
             OrchestratorClient, "is_task_in_final_state", return_value=False
         ) as mis_task_in_final_state, mock.patch.object(
-            OrchestratorClient, "query_compute_plan", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_compute_plan", return_value={}
+        ), mock.patch.object(
             OrchestratorClient, "get_computetask_input_models"
         ), mock.patch.object(
             OrchestratorClient, "query_algo"
@@ -91,7 +95,7 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(mis_task_in_final_state.call_count, 1)
 
             error = RpcError()
-            error.details = 'OE0000'
+            error.details = "OE0000"
             error.code = lambda: StatusCode.NOT_FOUND
 
             mregister_performance.side_effect = error

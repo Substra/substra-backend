@@ -1,22 +1,25 @@
 import os
-import mock
 import tempfile
 import uuid
+
+import mock
 from django.test import override_settings
-from rest_framework.test import APITestCase
 from parameterized import parameterized
-from substrapp.compute_tasks.directories import CPDirName, TaskDirName
-from substrapp.tasks.tasks_compute_task import compute_task
+from rest_framework.test import APITestCase
+
 import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.client import OrchestratorClient
-
+from substrapp.compute_tasks.directories import CPDirName
+from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.tasks.tasks_compute_task import compute_task
 
 MEDIA_ROOT = tempfile.mkdtemp()
 CHANNEL = "mychannel"
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT,
-                   LEDGER_CHANNELS={CHANNEL: {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
+@override_settings(
+    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={CHANNEL: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+)
 class LocalFolderTests(APITestCase):
     @parameterized.expand([("without_exception", False), ("with_exception", True)])
     def test_local_folder(self, _, compute_job_raises):
@@ -35,7 +38,7 @@ class LocalFolderTests(APITestCase):
             "compute_plan_key": compute_plan_key,
             "rank": 1,
             "algo": {"key": "some key", "checksum": "some checksum"},
-            "category": computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN)
+            "category": computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TRAIN),
         }
 
         class FakeDirectories:

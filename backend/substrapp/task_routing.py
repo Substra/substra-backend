@@ -1,11 +1,12 @@
 from typing import List
-from django.utils import timezone
+
 from django.conf import settings
 from django.db import transaction
 from django.db.models import Count
-from substrapp.models.computeplan_worker_mapping import ComputePlanWorkerMapping
-from substrapp.kubernetes_utils import get_worker_replica_set_scale
+from django.utils import timezone
 
+from substrapp.kubernetes_utils import get_worker_replica_set_scale
+from substrapp.models.computeplan_worker_mapping import ComputePlanWorkerMapping
 
 """
 Mapping compute plans to workers makes sure that the tasks that have to be executed by
@@ -96,9 +97,7 @@ def _acquire_worker_index(compute_plan_key: str) -> int:
     worker_index = sorted(eligible_workers_indexes)[0]
 
     # save into the mapping the selected worker
-    ComputePlanWorkerMapping(
-        compute_plan_key=compute_plan_key, worker_index=worker_index
-    ).save()
+    ComputePlanWorkerMapping(compute_plan_key=compute_plan_key, worker_index=worker_index).save()
 
     return worker_index
 

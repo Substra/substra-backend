@@ -1,12 +1,14 @@
+import datetime
+import json
+from typing import Dict
+from typing import List
+
 import kubernetes
 import requests
 import structlog
-import datetime
-import json
-from typing import List, Dict
-from substrapp.kubernetes_utils import get_pod_by_label_selector
-
 from django.conf import settings
+
+from substrapp.kubernetes_utils import get_pod_by_label_selector
 
 logger = structlog.get_logger(__name__)
 
@@ -129,7 +131,7 @@ def fetch_old_algo_image_names(max_duration: int) -> List[str]:
         for image in images["tags"]:
             response = requests.get(
                 f"{REGISTRY_SCHEME}://{REGISTRY}/v2/{USER_IMAGE_REPOSITORY}/manifests/{image}",
-                timeout=HTTP_CLIENT_TIMEOUT_SECONDS
+                timeout=HTTP_CLIENT_TIMEOUT_SECONDS,
             )
 
             response.raise_for_status()

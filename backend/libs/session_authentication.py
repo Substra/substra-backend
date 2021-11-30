@@ -13,7 +13,7 @@ class CustomSessionAuthentication(SessionAuthentication):
         """
 
         # bypass for login with jwt
-        if request.resolver_match.url_name == 'user-login':
+        if request.resolver_match.url_name == "user-login":
             return None
 
         return super(CustomSessionAuthentication, self).authenticate(request)

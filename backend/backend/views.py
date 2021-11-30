@@ -1,18 +1,17 @@
-from rest_framework.authtoken.views import ObtainAuthToken
-from rest_framework.throttling import AnonRateThrottle
-
+from django.conf import settings
 from rest_framework.authtoken.models import Token
-from rest_framework.response import Response
+from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
-
-from libs.expiry_token_authentication import token_expire_handler, expires_at
-from libs.user_login_throttle import UserLoginThrottle
-
+from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
-from substrapp.views.utils import get_channel_name
+
+from libs.expiry_token_authentication import expires_at
+from libs.expiry_token_authentication import token_expire_handler
+from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
-from django.conf import settings
+from substrapp.views.utils import get_channel_name
 
 
 class ExpiryObtainAuthToken(ObtainAuthToken):
@@ -20,9 +19,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
     throttle_classes = [AnonRateThrottle, UserLoginThrottle]
 
     def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.serializer_class(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
@@ -45,9 +42,9 @@ class Info(APIView):
 
     def get(self, request, *args, **kwargs):
         res = {
-            'host': settings.DEFAULT_DOMAIN,
-            'node_id': get_owner(),
-            'config': {},
+            "host": settings.DEFAULT_DOMAIN,
+            "node_id": get_owner(),
+            "config": {},
         }
 
         if request.user.is_authenticated:
@@ -57,10 +54,10 @@ class Info(APIView):
             with get_orchestrator_client(channel_name) as client:
                 orchestrator_versions = client.query_version()
 
-            res['channel'] = channel_name
-            res['version'] = settings.BACKEND_VERSION
-            res['orchestrator_version'] = orchestrator_versions.get("orchestrator")
-            res['config']['model_export_enabled'] = channel['model_export_enabled']
+            res["channel"] = channel_name
+            res["version"] = settings.BACKEND_VERSION
+            res["orchestrator_version"] = orchestrator_versions.get("orchestrator")
+            res["config"]["model_export_enabled"] = channel["model_export_enabled"]
 
             if orchestrator_versions.get("chaincode"):
                 res["chaincode_version"] = orchestrator_versions.get("chaincode")

@@ -2,9 +2,8 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 
 
 class SecureJWTAuthentication(JWTAuthentication):
-
     def authenticate(self, request):
-        if request.resolver_match.url_name in ('user-login', 'api-root'):
+        if request.resolver_match.url_name in ("user-login", "api-root"):
             return None
 
         header = self.get_header(request)
@@ -17,7 +16,7 @@ class SecureJWTAuthentication(JWTAuthentication):
 
         # reconstruct token from httpOnly cookie signature
         try:
-            signature = request.COOKIES['signature']
+            signature = request.COOKIES["signature"]
         except Exception:
             return None
         else:

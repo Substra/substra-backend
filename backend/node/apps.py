@@ -3,7 +3,7 @@ from django.db.models.signals import pre_save
 
 
 class NodeConfig(AppConfig):
-    name = 'node'
+    name = "node"
 
     def ready(self):
         from node.models import IncomingNode

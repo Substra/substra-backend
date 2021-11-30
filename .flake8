@@ -1,11 +1,19 @@
 [flake8]
 max-line-length = 120
-ignore = E402, W504, F403, F405
-exclude = backend/substrapp/migrations/*,
-          backend/substrapp/tests/assets.py,
-          backend/backend/settings/*,
-          backend/node/migrations/*,
-          backend/medias/*,
-          backend/orchestrator/*_pb2.py,
-          backend/orchestrator/*_grpc.py,
-          .env, .venv
+extend-ignore =
+    # E203 must be disabled for Flake8 to work with Black.
+    # See https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#id1
+    E203,
+    E402,
+    F403,
+    F405
+exclude =
+    backend/substrapp/migrations/*,
+    backend/substrapp/tests/assets.py,
+    backend/backend/settings/*,
+    backend/node/migrations/*,
+    backend/medias/*,
+    backend/orchestrator/*_pb2.py,
+    backend/orchestrator/*_grpc.py,
+    .env,
+    .venv

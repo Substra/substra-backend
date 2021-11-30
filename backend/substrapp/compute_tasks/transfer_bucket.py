@@ -1,13 +1,14 @@
 import os
-import structlog
-import boto3
 import tarfile
 import tempfile
-from substrapp.utils import timeit
-from substrapp.utils import do_not_raise
+
+import boto3
+import structlog
+
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import TaskDirName
-
+from substrapp.utils import do_not_raise
+from substrapp.utils import timeit
 
 TAG_VALUE_FOR_TRANSFER_BUCKET = "transferBucket"
 TRANSFER_BUCKET_TESTTUPLE_TAG = "TESTTUPLE_TAG"
@@ -26,11 +27,12 @@ logger = structlog.get_logger(__name__)
 def transfer_to_bucket(ctx: Context) -> None:
     if not ACCESS_KEY or not SECRET_KEY or not BUCKET_NAME:
         redacted_secret_key = "*" * len(SECRET_KEY) if SECRET_KEY else None
-        logger.error("S3 settings for bucket transfer are not set",
-                     ACCESS_KEY=ACCESS_KEY,
-                     SECRET_KEY=redacted_secret_key,
-                     BUCKET_NAME=BUCKET_NAME,
-                     )
+        logger.error(
+            "S3 settings for bucket transfer are not set",
+            ACCESS_KEY=ACCESS_KEY,
+            SECRET_KEY=redacted_secret_key,
+            BUCKET_NAME=BUCKET_NAME,
+        )
         return
 
     paths = [
@@ -55,6 +57,4 @@ def transfer_to_bucket(ctx: Context) -> None:
             region_name=S3_REGION_NAME,
         )
 
-        s3.upload_file(
-            tar_path, BUCKET_NAME, f"{S3_PREFIX}/{tar_name}" if S3_PREFIX else tar_name
-        )
+        s3.upload_file(tar_path, BUCKET_NAME, f"{S3_PREFIX}/{tar_name}" if S3_PREFIX else tar_name)

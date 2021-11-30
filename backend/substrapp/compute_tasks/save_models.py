@@ -1,16 +1,19 @@
 import os
+from typing import Any
+from typing import Tuple
+
 from django.conf import settings
-from typing import Any, Tuple
-from substrapp.utils import timeit
 from django.urls import reverse
-from substrapp.compute_tasks.command import Filenames
-from substrapp.compute_tasks.asset_buffer import add_model_from_path
-from substrapp.compute_tasks.context import Context
-from substrapp.utils import get_hash
+
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
+from substrapp.compute_tasks.asset_buffer import add_model_from_path
+from substrapp.compute_tasks.command import Filenames
+from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_hash
+from substrapp.utils import timeit
 
 
 def save_models(ctx: Context) -> object:

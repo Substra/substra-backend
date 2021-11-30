@@ -1,31 +1,34 @@
-import uuid
 import os
 import shutil
-import mock
 import tempfile
+import uuid
+from abc import ABCMeta
+from abc import abstractmethod
 from collections import ChainMap
-from abc import ABCMeta, abstractmethod
 
-from django.test import override_settings
+import mock
 from django.core.files import File
+from django.test import override_settings
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
-from ..common import FakeModel, FakeDataSample
-from substrapp.utils import get_dir_hash, get_hash
-from substrapp.compute_tasks.directories import AssetBufferDirName, init_task_dirs
-from substrapp.compute_tasks.command import Filenames
-from substrapp.compute_tasks.asset_buffer import (
-    _add_datasamples_to_buffer,
-    _add_opener_to_buffer,
-    _add_model_to_buffer,
-    _add_assets_to_taskdir,
-    _download_algo,
-    _download_metric,
-)
-from substrapp.compute_tasks.directories import TaskDirName
-from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
+from substrapp.compute_tasks.asset_buffer import _add_datasamples_to_buffer
+from substrapp.compute_tasks.asset_buffer import _add_model_to_buffer
+from substrapp.compute_tasks.asset_buffer import _add_opener_to_buffer
+from substrapp.compute_tasks.asset_buffer import _download_algo
+from substrapp.compute_tasks.asset_buffer import _download_metric
+from substrapp.compute_tasks.asset_buffer import init_asset_buffer
+from substrapp.compute_tasks.command import Filenames
+from substrapp.compute_tasks.directories import AssetBufferDirName
+from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.compute_tasks.directories import init_task_dirs
+from substrapp.utils import get_dir_hash
+from substrapp.utils import get_hash
+
+from ..common import FakeDataSample
+from ..common import FakeModel
 
 ASSET_BUFFER_DIR = tempfile.mkdtemp()
 ASSET_BUFFER_DIR_1 = tempfile.mkdtemp()
@@ -120,9 +123,11 @@ class TestDataSampleSavedByFile(TestDataSample):
         self._archive_path = shutil.make_archive(archive_dir, "tar", root_dir=uncompressed_dir)
 
 
-@override_settings(ASSET_BUFFER_DIR=ASSET_BUFFER_DIR,
-                   MEDIA_ROOT=tempfile.mkdtemp(),
-                   LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
+@override_settings(
+    ASSET_BUFFER_DIR=ASSET_BUFFER_DIR,
+    MEDIA_ROOT=tempfile.mkdtemp(),
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+)
 class AssetBufferTests(APITestCase):
     def setUp(self):
         self._setup_directories()
@@ -194,12 +199,18 @@ class AssetBufferTests(APITestCase):
             channel_name = CHANNEL
             compute_plan_key = "some compute plan key"
             task_category = computetask_pb2.TASK_TRAIN
-            metrics = {self.metric_key: {'key': self.metric_key,
-                                         'owner': 'test',
-                                         'address': {'storage_address': 'test', 'checksum': 'check'}}}
-            algo = {'key': str(uuid.uuid4()),
-                    'owner': 'test',
-                    'algorithm': {'storage_address': 'test', 'checksum': 'check'}}
+            metrics = {
+                self.metric_key: {
+                    "key": self.metric_key,
+                    "owner": "test",
+                    "address": {"storage_address": "test", "checksum": "check"},
+                }
+            }
+            algo = {
+                "key": str(uuid.uuid4()),
+                "owner": "test",
+                "algorithm": {"storage_address": "test", "checksum": "check"},
+            }
 
         self.ctx = FakeContext()
 
@@ -309,8 +320,7 @@ class AssetBufferTests(APITestCase):
             node_id = "node 1"
             storage_address = "some storage address"
 
-            model['address'] = {"storage_address": storage_address,
-                                "checksum": self.model_checksum}
+            model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
             with mock.patch(
                 "substrapp.compute_tasks.asset_buffer.get_and_put_asset_content"

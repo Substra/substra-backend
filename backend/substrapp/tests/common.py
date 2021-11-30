@@ -1,55 +1,51 @@
-from http.cookies import SimpleCookie
-from io import StringIO, BytesIO
-from typing import List
-import os
 import base64
+import os
+import urllib
+from http.cookies import SimpleCookie
+from io import BytesIO
+from io import StringIO
+from typing import List
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from rest_framework.test import APIClient
 
-from . import assets
-
 # This function helper generate a basic authentication header with given credentials
 # Given username and password it returns "Basic GENERATED_TOKEN"
 from users.serializers import CustomTokenObtainPairSerializer
 
-import urllib
+from . import assets
 
 
 def generate_basic_auth_header(username, password):
-    return 'Basic ' + base64.b64encode(f'{username}:{password}'.encode()).decode()
+    return "Basic " + base64.b64encode(f"{username}:{password}".encode()).decode()
 
 
 def generate_jwt_auth_header(jwt):
-    return 'JWT ' + jwt
+    return "JWT " + jwt
 
 
 class AuthenticatedClient(APIClient):
-
     def request(self, **kwargs):
 
         # create user
-        username = 'substra'
-        password = 'p@sswr0d44'
+        username = "substra"
+        password = "p@sswr0d44"
         user, created = User.objects.get_or_create(username=username)
         if created:
             user.set_password(password)
             user.save()
         # simulate login
-        serializer = CustomTokenObtainPairSerializer(data={
-            'username': username,
-            'password': password
-        })
+        serializer = CustomTokenObtainPairSerializer(data={"username": username, "password": password})
 
         serializer.is_valid()
         data = serializer.validated_data
         access_token = str(data.access_token)
 
         # simulate right httpOnly cookie and Authorization jwt
-        jwt_auth_header = generate_jwt_auth_header('.'.join(access_token.split('.')[0:2]))
+        jwt_auth_header = generate_jwt_auth_header(".".join(access_token.split(".")[0:2]))
         self.credentials(HTTP_AUTHORIZATION=jwt_auth_header)
-        self.cookies = SimpleCookie({'signature': access_token.split('.')[2]})
+        self.cookies = SimpleCookie({"signature": access_token.split(".")[2]})
 
         return super().request(**kwargs)
 
@@ -65,7 +61,7 @@ def get_temporary_text_file(contents, filename):
     """
     f = StringIO()
     flength = f.write(contents)
-    text_file = InMemoryUploadedFile(f, None, filename, 'text', flength, None)
+    text_file = InMemoryUploadedFile(f, None, filename, "text", flength, None)
     # Setting the file to its start
     text_file.seek(0)
     return text_file
@@ -80,12 +76,10 @@ def get_sample_metric():
     description = get_temporary_text_file(description_content, description_filename)
 
     metrics_filename = "metrics.zip"
-    f = BytesIO(b'')
-    with open(os.path.join(dir_path,
-                           '../../../fixtures/chunantes/metrics/metric0/metrics.zip'), 'rb') as zip_file:
+    f = BytesIO(b"")
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/metrics/metric0/metrics.zip"), "rb") as zip_file:
         flength = f.write(zip_file.read())
-    metrics = InMemoryUploadedFile(f, None, metrics_filename,
-                                   'application/zip', flength, None)
+    metrics = InMemoryUploadedFile(f, None, metrics_filename, "application/zip", flength, None)
     metrics.seek(0)
 
     return description, description_filename, metrics, metrics_filename
@@ -124,12 +118,11 @@ def get_sample_datamanager2():
 def get_sample_zip_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
-    f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../../fixtures/owkin/datasamples/datasample4/0024900.zip'), 'rb') as zip_file:
+    f = BytesIO(b"foo")
+    with open(os.path.join(dir_path, "../../../fixtures/owkin/datasamples/datasample4/0024900.zip"), "rb") as zip_file:
         flength = f.write(zip_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/zip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -138,12 +131,11 @@ def get_sample_zip_data_sample():
 def get_sample_zip_data_sample_2():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
-    f = BytesIO(b'foo')
-    with open(os.path.join(dir_path, '../../../fixtures/owkin/datasamples/test/0024901.zip'), 'rb') as zip_file:
+    f = BytesIO(b"foo")
+    with open(os.path.join(dir_path, "../../../fixtures/owkin/datasamples/test/0024901.zip"), "rb") as zip_file:
         flength = f.write(zip_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename,
-                                'application/zip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -153,11 +145,12 @@ def get_sample_tar_data_sample():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(
-            dir_path, '../../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz'), 'rb') as tar_file:
+    with open(
+        os.path.join(dir_path, "../../../fixtures/owkin/datasamples/datasample4/0024900.tar.gz"), "rb"
+    ) as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename, 'application/zip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -167,10 +160,10 @@ def get_sample_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.tar.gz"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/algo.tar.gz'), 'rb') as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/algo.tar.gz"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename, 'application/tar+gzip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/tar+gzip", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -180,10 +173,10 @@ def get_sample_algo_zip():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.zip"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo0/algo.zip'), 'rb') as tar_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo0/algo.zip"), "rb") as tar_file:
         flength = f.write(tar_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename, 'application/zip', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/zip", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -193,10 +186,10 @@ def get_description_algo():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     file_filename = "file.md"
     f = BytesIO()
-    with open(os.path.join(dir_path, '../../../fixtures/chunantes/algos/algo3/description.md'), 'rb') as desc_file:
+    with open(os.path.join(dir_path, "../../../fixtures/chunantes/algos/algo3/description.md"), "rb") as desc_file:
         flength = f.write(desc_file.read())
 
-    file = InMemoryUploadedFile(f, None, file_filename, 'application/text', flength, None)
+    file = InMemoryUploadedFile(f, None, file_filename, "application/text", flength, None)
     file.seek(0)
 
     return file, file_filename
@@ -211,58 +204,58 @@ def get_sample_model():
 
 
 DEFAULT_PERMISSIONS = {
-    'process': {
-        'public': True,
-        'authorized_ids': [],
+    "process": {
+        "public": True,
+        "authorized_ids": [],
     }
 }
 
 DEFAULT_STORAGE_ADDRESS = {
-    'checksum': 'f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2',
-    'storage_address': 'http://fake_address.com',
+    "checksum": "f2ca1bb6c7e907d06dafe4687e579fce76b37e4e93b7605022da52e6ccc26fd2",
+    "storage_address": "http://fake_address.com",
 }
 
 
 def get_sample_algo_metadata():
     return {
-        'owner': 'foo',
-        'permissions': DEFAULT_PERMISSIONS,
-        'description': DEFAULT_STORAGE_ADDRESS,
-        'algorithm': DEFAULT_STORAGE_ADDRESS,
+        "owner": "foo",
+        "permissions": DEFAULT_PERMISSIONS,
+        "description": DEFAULT_STORAGE_ADDRESS,
+        "algorithm": DEFAULT_STORAGE_ADDRESS,
     }
 
 
 def get_sample_metric_metadata():
     return {
-        'owner': 'foo',
-        'permissions': DEFAULT_PERMISSIONS,
-        'description': DEFAULT_STORAGE_ADDRESS,
-        'address': DEFAULT_STORAGE_ADDRESS,
+        "owner": "foo",
+        "permissions": DEFAULT_PERMISSIONS,
+        "description": DEFAULT_STORAGE_ADDRESS,
+        "address": DEFAULT_STORAGE_ADDRESS,
     }
 
 
 def get_sample_datamanager_metadata():
     return {
-        'owner': 'foo',
-        'permissions': DEFAULT_PERMISSIONS,
-        'description': DEFAULT_STORAGE_ADDRESS,
-        'opener': DEFAULT_STORAGE_ADDRESS,
+        "owner": "foo",
+        "permissions": DEFAULT_PERMISSIONS,
+        "description": DEFAULT_STORAGE_ADDRESS,
+        "opener": DEFAULT_STORAGE_ADDRESS,
     }
 
 
 class FakeMetrics(object):
-    def __init__(self, filepath='path'):
+    def __init__(self, filepath="path"):
         self.path = filepath
 
     def save(self, p, f):
         return
 
     def read(self, *args, **kwargs):
-        return b'foo'
+        return b"foo"
 
 
 class FakeMetric(object):
-    def __init__(self, filepath='path'):
+    def __init__(self, filepath="path"):
         self.file = FakeMetrics(filepath)
 
 
@@ -327,28 +320,25 @@ def get_task_events(task_key: str) -> List:
 def get_task_output_models(task_key: str) -> List:
     for task in get_all_tasks():
         if task["key"] == task_key:
-            return task.get('train', task.get('composite', {})).get('models')
+            return task.get("train", task.get("composite", {})).get("models")
 
 
 def get_task_performances(task_key: str) -> List:
     for task in get_all_tasks():
-        if task['key'] == task_key and task['test']['perfs']:
+        if task["key"] == task_key and task["test"]["perfs"]:
             return [
-                {
-                    'metric_key': perf_key,
-                    'performance_value': perf_value
-                }
-                for (perf_key, perf_value) in task['test']['perfs'].items()
+                {"metric_key": perf_key, "performance_value": perf_value}
+                for (perf_key, perf_value) in task["test"]["perfs"].items()
             ]
 
 
 def query_task(task_key: str) -> List:
     for task in get_all_tasks():
-        if task['key'] == task_key:
+        if task["key"] == task_key:
             return task
 
 
 def query_data_manager(data_manager_key: str):
     for data_manager in assets.get_data_managers():
-        if data_manager['key'] == data_manager_key:
+        if data_manager["key"] == data_manager_key:
             return data_manager

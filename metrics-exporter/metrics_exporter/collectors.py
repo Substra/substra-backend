@@ -1,26 +1,25 @@
 import enum
 import logging
-from typing import Callable, Dict, List
+from typing import Callable
+from typing import Dict
+from typing import List
 
 import structlog
 from celery.events import state as celery_state
-from prometheus_client import metrics, metrics_core
+from prometheus_client import metrics
+from prometheus_client import metrics_core
 
 from metrics_exporter import settings
 
 State = celery_state.State
 
-structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(
-        logging.getLevelName(settings.LOG_LEVEL)
-    )
-)
+structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(settings.LOG_LEVEL)))
 logger = structlog.get_logger()
 
 
 class MetricsNames(enum.Enum):
-    """An enum of metrics names used in CeleryCollector
-    """
+    """An enum of metrics names used in CeleryCollector"""
+
     CELERY_WORKER_UP = 1
     CELERY_TASKS_ACTIVE = 2
 
@@ -63,13 +62,9 @@ class CeleryCollector:
             hostname=worker.hostname,
             active=worker.active,
         )
-        self._metrics[MetricsNames.CELERY_WORKER_UP].labels(worker.hostname).set(
-            1 if worker.alive else 0
-        )
+        self._metrics[MetricsNames.CELERY_WORKER_UP].labels(worker.hostname).set(1 if worker.alive else 0)
         # Here worker.active can be None for the first heartbeat
-        self._metrics[MetricsNames.CELERY_TASKS_ACTIVE].labels(worker.hostname).set(
-            worker.active or 0
-        )
+        self._metrics[MetricsNames.CELERY_TASKS_ACTIVE].labels(worker.hostname).set(worker.active or 0)
 
     @property
     def handlers(self) -> Dict[str, Callable]:

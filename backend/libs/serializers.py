@@ -1,6 +1,8 @@
 # encoding: utf-8
 
-from __future__ import unicode_literals, absolute_import
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 from rest_framework import serializers
 
 
@@ -12,7 +14,7 @@ class DynamicFieldsModelSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         # Don't pass the 'fields' arg up to the superclass
-        fields = kwargs.pop('fields', None)
+        fields = kwargs.pop("fields", None)
 
         # Instantiate the superclass normally
         super(DynamicFieldsModelSerializer, self).__init__(*args, **kwargs)

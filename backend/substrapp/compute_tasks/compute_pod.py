@@ -1,9 +1,12 @@
+import os
+
 import kubernetes
 import structlog
-import os
 from django.conf import settings
-from substrapp.kubernetes_utils import get_pod_security_context, get_security_context
+
 from substrapp.kubernetes_utils import delete_pod
+from substrapp.kubernetes_utils import get_pod_security_context
+from substrapp.kubernetes_utils import get_security_context
 
 NAMESPACE = settings.NAMESPACE
 logger = structlog.get_logger(__name__)
@@ -88,9 +91,9 @@ def create_pod(
 
     container_optional_kwargs = {}
     if settings.COMPUTE_POD_GKE_GPUS_LIMITS > 0:
-        container_optional_kwargs['resources'] =  \
-            kubernetes.client.V1ResourceRequirements(
-                limits={"nvidia.com/gpu": str(settings.COMPUTE_POD_GKE_GPUS_LIMITS)})
+        container_optional_kwargs["resources"] = kubernetes.client.V1ResourceRequirements(
+            limits={"nvidia.com/gpu": str(settings.COMPUTE_POD_GKE_GPUS_LIMITS)}
+        )
 
     container_compute = kubernetes.client.V1Container(
         name=name,
@@ -111,7 +114,7 @@ def create_pod(
                     label_selector=kubernetes.client.V1LabelSelector(
                         match_expressions=[
                             kubernetes.client.V1LabelSelectorRequirement(
-                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv('HOSTNAME')]
+                                key="statefulset.kubernetes.io/pod-name", operator="In", values=[os.getenv("HOSTNAME")]
                             )
                         ]
                     ),

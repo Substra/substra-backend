@@ -12,6 +12,7 @@ class ZipFile(zipfile.ZipFile):
     Workaround from:
     https://stackoverflow.com/questions/39296101/python-zipfile-removes-execute-permissions-from-binaries
     """
+
     def extract(self, member, path=None, pwd=None):
         if not isinstance(member, zipfile.ZipInfo):
             member = self.getinfo(member)

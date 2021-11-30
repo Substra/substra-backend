@@ -1,9 +1,11 @@
+import json
+import os
 from base64 import b64decode
 from os import path
+
 import kubernetes
-import os
 import structlog
-import json
+
 from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
@@ -14,8 +16,7 @@ logger = structlog.get_logger(__name__)
 def prepare_chainkeys_dir(chainkeys_dir: str, compute_plan_tag: str) -> None:
     if os.path.exists(chainkeys_dir) and os.listdir(chainkeys_dir):
         logger.debug(
-            "Chainkeys: The folder exists and is non-empty: chainkeys have already been populated.",
-            dir=chainkeys_dir
+            "Chainkeys: The folder exists and is non-empty: chainkeys have already been populated.", dir=chainkeys_dir
         )
         return
 

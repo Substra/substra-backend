@@ -1,31 +1,40 @@
-import structlog
 import os
 import shutil
-from typing import Tuple, List, Union, BinaryIO
-import zipfile
 import tarfile
 import tempfile
-
-from rest_framework import serializers, status, mixins
+import zipfile
 from tarfile import TarFile
+from typing import BinaryIO
+from typing import List
+from typing import Tuple
+from typing import Union
+
+import structlog
 from django.conf import settings
 from django.core.files import File
+from rest_framework import mixins
+from rest_framework import serializers
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
-from substrapp.exceptions import ServerMediasNoSubdirError
-from substrapp.utils import ZipFile, get_dir_hash, raise_if_path_traversal
 
-from substrapp.models import DataSample, DataManager
-from substrapp.serializers import (DataSampleSerializer,
-                                   OrchestratorDataSampleSerializer,
-                                   OrchestratorDataSampleUpdateSerializer)
-from substrapp.views.utils import ValidationExceptionError, get_channel_name
-from libs.pagination import DefaultPageNumberPagination, PaginationMixin
-
-from substrapp.orchestrator import get_orchestrator_client
+from libs.pagination import DefaultPageNumberPagination
+from libs.pagination import PaginationMixin
 from orchestrator.error import OrcError
+from substrapp.exceptions import ServerMediasNoSubdirError
+from substrapp.models import DataManager
+from substrapp.models import DataSample
+from substrapp.orchestrator import get_orchestrator_client
+from substrapp.serializers import DataSampleSerializer
+from substrapp.serializers import OrchestratorDataSampleSerializer
+from substrapp.serializers import OrchestratorDataSampleUpdateSerializer
+from substrapp.utils import ZipFile
+from substrapp.utils import get_dir_hash
+from substrapp.utils import raise_if_path_traversal
+from substrapp.views.utils import ValidationExceptionError
+from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
 
@@ -40,12 +49,12 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         try:
             data = self._create(request)
         except ValidationExceptionError as e:
-            return Response({'message': e.data, 'key': e.key}, status=e.st)
+            return Response({"message": e.data, "key": e.key}, status=e.st)
         except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             headers = self.get_success_headers(data)
             return Response(data, status=status.HTTP_201_CREATED, headers=headers)
@@ -62,13 +71,11 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         # serialized data for orchestrator db
         orchestrator_serializer = OrchestratorDataSampleSerializer(
             data={
-                'test_only': request.data.get('test_only', False),
-                'data_manager_keys': request.data.get('data_manager_keys') or [],
-                'instances': instances
+                "test_only": request.data.get("test_only", False),
+                "data_manager_keys": request.data.get("data_manager_keys") or [],
+                "instances": instances,
             },
-            context={
-                'request': request
-            }
+            context={"request": request},
         )
 
         if not orchestrator_serializer.is_valid():
@@ -79,8 +86,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         # create on orchestrator db
         try:
             orchestrator_result = orchestrator_serializer.create(
-                get_channel_name(request),
-                orchestrator_serializer.validated_data
+                get_channel_name(request), orchestrator_serializer.validated_data
             )
         except Exception:
             for instance in instances:
@@ -91,9 +97,9 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         for instance in instances:
             serializer = self.get_serializer(instance)
             if (
-                "key" in orchestrator_result and
-                orchestrator_result["validated"] and
-                serializer.data["key"] in orchestrator_result["key"]
+                "key" in orchestrator_result
+                and orchestrator_result["validated"]
+                and serializer.data["key"] in orchestrator_result["key"]
             ):
                 serializer.data["validated"] = True
             data.append(serializer.data)
@@ -173,22 +179,22 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             checksum = get_dir_hash(path)
 
             if settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:  # save path
-                yield {'path': path, 'checksum': checksum}
+                yield {"path": path, "checksum": checksum}
 
             else:  # upload to MinIO
                 with tempfile.TemporaryDirectory() as archive_tmp_path:
                     archive = shutil.make_archive(archive_tmp_path, "tar", root_dir=path)
-                yield {'file': File(open(archive, "rb")), 'checksum': checksum}
+                yield {"file": File(open(archive, "rb")), "checksum": checksum}
 
     def list(self, request, *args, **kwargs):
         try:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_datasamples()
         except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return self.paginate_response(data)
 
@@ -197,24 +203,18 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
         # serialized data for orchestrator db
         orchestrator_serializer = OrchestratorDataSampleUpdateSerializer(
-            data=dict(request.data),
-            context={
-                'request': request
-            }
+            data=dict(request.data), context={"request": request}
         )
         orchestrator_serializer.is_valid(raise_exception=True)
 
         # create on orchestrator db
         try:
-            data = orchestrator_serializer.create(
-                get_channel_name(request),
-                orchestrator_serializer.validated_data
-            )
+            data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
         except OrcError as rpc_error:
-            return Response({'message': rpc_error.details}, status=rpc_error.http_status())
+            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
             logger.exception(e)
-            return Response({'message': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(data, status=status.HTTP_200_OK)
 

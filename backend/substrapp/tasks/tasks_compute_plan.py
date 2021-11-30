@@ -1,16 +1,21 @@
-from __future__ import absolute_import, unicode_literals
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
 import structlog
 from django.conf import settings
-from backend.celery import app
-from substrapp.compute_tasks.context import get_image_tag, METRICS_IMAGE_PREFIX, ALGO_IMAGE_PREFIX
-from substrapp.compute_tasks.directories import Directories, teardown_compute_plan_dir
-from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
-from substrapp.compute_tasks.lock import get_compute_plan_lock
-from substrapp.orchestrator import get_orchestrator_client
-import orchestrator.computetask_pb2 as computetask_pb2
-from substrapp.docker_registry import delete_container_image
-from substrapp.task_routing import release_worker
 
+import orchestrator.computetask_pb2 as computetask_pb2
+from backend.celery import app
+from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
+from substrapp.compute_tasks.context import ALGO_IMAGE_PREFIX
+from substrapp.compute_tasks.context import METRICS_IMAGE_PREFIX
+from substrapp.compute_tasks.context import get_image_tag
+from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import teardown_compute_plan_dir
+from substrapp.compute_tasks.lock import get_compute_plan_lock
+from substrapp.docker_registry import delete_container_image
+from substrapp.orchestrator import get_orchestrator_client
+from substrapp.task_routing import release_worker
 
 logger = structlog.get_logger(__name__)
 
@@ -22,6 +27,7 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_pla
         return
 
     from substrapp.task_routing import get_existing_worker_queue
+
     worker_queue = get_existing_worker_queue(compute_plan_key)
 
     if worker_queue is None:
@@ -59,9 +65,7 @@ def delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan):
         with get_orchestrator_client(channel_name) as client:
             is_cp_running = client.is_compute_plan_doing(compute_plan_key)
         if is_cp_running:
-            raise Exception(
-                f"Skipping teardown of CP {compute_plan_key}: CP is still running."
-            )
+            raise Exception(f"Skipping teardown of CP {compute_plan_key}: CP is still running.")
 
         release_worker(compute_plan_key)
         # Teardown

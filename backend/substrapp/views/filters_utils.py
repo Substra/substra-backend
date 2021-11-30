@@ -1,23 +1,24 @@
-import structlog
 import itertools
-
 from urllib.parse import unquote
+
+import structlog
+
 from substrapp import exceptions
 
 logger = structlog.get_logger(__name__)
 
 
 FILTER_QUERIES = {
-    'dataset': 'query_datamanagers',
-    'algo': 'query_algos',
-    'metric': 'query_metrics',
-    'model': 'query_models',
+    "dataset": "query_datamanagers",
+    "algo": "query_algos",
+    "metric": "query_metrics",
+    "model": "query_models",
 }
 
 
 def get_filters(query_params):
     filters = []
-    groups = query_params.split('-OR-')
+    groups = query_params.split("-OR-")
 
     for idx, group in enumerate(groups):
 
@@ -25,23 +26,19 @@ def get_filters(query_params):
         filters.append({})
 
         # get number of subfilters and decode them
-        subfilters = [unquote(x) for x in group.split(',')]
+        subfilters = [unquote(x) for x in group.split(",")]
 
         for subfilter in subfilters:
-            el = subfilter.split(':')
+            el = subfilter.split(":")
             # get parent
             parent = el[0]
             subparent = el[1]
             value = el[2]
 
-            filter = {
-                subparent: [unquote(value)]
-            }
+            filter = {subparent: [unquote(value)]}
 
             if not len(filters[idx]):  # create and add it
-                filters[idx] = {
-                    parent: filter
-                }
+                filters[idx] = {parent: filter}
             else:  # add it
                 if parent in filters[idx]:  # add
                     if el[1] in filters[idx][parent]:  # concat in subparent
@@ -64,13 +61,13 @@ def flatten_without_duplicates(list_of_list):
 
 def filter_list(object_type, data, query_params):
     """
-        filter object type by its parameters
+    filter object type by its parameters
     """
     try:
         filters = get_filters(query_params)
     except Exception:
         # TODO add better filters parsing to avoid this catch all
-        message = f'Malformed search filters: invalid syntax: {query_params}'
+        message = f"Malformed search filters: invalid syntax: {query_params}"
         logger.exception(message)
         raise exceptions.BadRequestError(message)
 
@@ -80,8 +77,9 @@ def filter_list(object_type, data, query_params):
         for filter_key, subfilters in user_filter.items():
             if not filter_key == object_type:
                 raise exceptions.BadRequestError(
-                    f'Malformed search filters: the filter {filter_key} should'
-                    f'be the same as the object type {object_type}')
+                    f"Malformed search filters: the filter {filter_key} should"
+                    f"be the same as the object type {object_type}"
+                )
 
             # Will be appended in object_list after being filtered
             filtered_list = data

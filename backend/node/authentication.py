@@ -10,7 +10,7 @@ class NodeUser(User):
 
 # TODO: should be removed when node to node authent will be done via certificates
 class NodeBackend:
-    """Authenticate node """
+    """Authenticate node"""
 
     def authenticate(self, request, username=None, password=None):
         """Check the username/password and return a user."""

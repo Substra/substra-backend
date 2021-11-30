@@ -1,15 +1,14 @@
 import logging
 import time
+
 import structlog
-from prometheus_client import CollectorRegistry, multiprocess
+from prometheus_client import CollectorRegistry
+from prometheus_client import multiprocess
 
-from metrics_exporter import settings, collectors
+from metrics_exporter import collectors
+from metrics_exporter import settings
 
-structlog.configure(
-    wrapper_class=structlog.make_filtering_bound_logger(
-        logging.getLevelName(settings.LOG_LEVEL)
-    )
-)
+structlog.configure(wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(settings.LOG_LEVEL)))
 logger = structlog.get_logger()
 
 
@@ -50,9 +49,7 @@ class Exporter:
         logger.info("Adding a celery collector")
         self._celery_app = app
         self._celery_state = app.events.State()
-        self._celery_collector = collectors.CeleryCollector(
-            self.registry, self._celery_state
-        )
+        self._celery_collector = collectors.CeleryCollector(self.registry, self._celery_state)
 
     def wait(self) -> None:
         """wait for metrics infinitely"""
@@ -64,9 +61,7 @@ class Exporter:
                     raise SystemExit from exc
         else:
             conn = self._celery_app.connection_for_read()
-            recv = self._celery_app.events.Receiver(
-                conn, handlers=self._celery_collector.handlers
-            )
+            recv = self._celery_app.events.Receiver(conn, handlers=self._celery_collector.handlers)
             try:
                 recv.capture(limit=None)
             except KeyboardInterrupt as exc:

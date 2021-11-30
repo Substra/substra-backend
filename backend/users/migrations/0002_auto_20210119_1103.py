@@ -6,17 +6,16 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('users', '0001_initial'),
+        ("users", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='channel',
+            name="channel",
             options={},
         ),
         migrations.AlterModelManagers(
-            name='channel',
-            managers=[
-            ],
+            name="channel",
+            managers=[],
         ),
     ]

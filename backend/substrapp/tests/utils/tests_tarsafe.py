@@ -1,7 +1,9 @@
 import os
 import tarfile
 import tempfile
+
 from django.test import TestCase
+
 from substrapp.utils import tarsafe
 
 

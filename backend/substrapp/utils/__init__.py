@@ -1,34 +1,36 @@
-import io
-import hashlib
-import structlog
-import os
-import tempfile
-from os.path import isfile, isdir
-import shutil
-import json
 import functools
-import requests
+import hashlib
+import io
+import json
+import os
+import shutil
 import tarfile
-import zipfile
+import tempfile
 import time
+import zipfile
+from os.path import isdir
+from os.path import isfile
 
+import requests
+import structlog
 from checksumdir import dirhash
 from django.conf import settings
-from rest_framework import status
 from requests.auth import HTTPBasicAuth
+from rest_framework import status
+
 from substrapp.exceptions import NodeError
-from substrapp.utils.safezip import ZipFile
 from substrapp.utils import tarsafe
+from substrapp.utils.safezip import ZipFile
 
 logger = structlog.get_logger(__name__)
 
-HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, 'HTTP_CLIENT_TIMEOUT_SECONDS')
+HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
 
 
 def get_dir_hash(directory):
     if not os.listdir(directory):
         raise Exception(f"Cannot compute hash of folder {directory}: folder is empty.")
-    return dirhash(directory, 'sha256')
+    return dirhash(directory, "sha256")
 
 
 def get_archive_hash(archive_object):
@@ -50,12 +52,12 @@ def get_hash(file, key=None):
 
     if isinstance(file, (str, bytes, os.PathLike)):
         if isfile(file):
-            with open(file, 'rb') as f:
+            with open(file, "rb") as f:
                 data = f.read()
         elif isdir(file):
             return get_dir_hash(file)
         else:
-            return ''
+            return ""
     else:
         openedfile = file.open()
         data = openedfile.read()
@@ -87,33 +89,30 @@ def raise_if_path_traversal(requested_paths, to_directory):
 
     # Get real path and ensure there is a suffix /
     # at the end of the path
-    safe_directory = os.path.join(
-        os.path.realpath(to_directory),
-        ''
-    )
+    safe_directory = os.path.join(os.path.realpath(to_directory), "")
 
     if not isinstance(requested_paths, list):
-        raise TypeError(f'requested_paths argument should be a list not a {type(requested_paths)}')
+        raise TypeError(f"requested_paths argument should be a list not a {type(requested_paths)}")
 
     for requested_path in requested_paths:
         real_requested_path = os.path.realpath(requested_path)
         common_prefix = os.path.commonprefix([real_requested_path, safe_directory])
-        is_valid = common_prefix == safe_directory or real_requested_path + '/' == safe_directory
+        is_valid = common_prefix == safe_directory or real_requested_path + "/" == safe_directory
 
         if not is_valid:
-            raise Exception(f'Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.')
+            raise Exception(f"Path Traversal Error : {requested_path} (real : {real_requested_path}) is not safe.")
 
 
 def uncompress_path(archive_path, to_directory):
     if zipfile.is_zipfile(archive_path):
-        with ZipFile(archive_path, 'r') as zf:
+        with ZipFile(archive_path, "r") as zf:
             zf.extractall(to_directory)
 
     elif tarfile.is_tarfile(archive_path):
-        with tarsafe.open(archive_path, 'r:*') as tf:
+        with tarsafe.open(archive_path, "r:*") as tf:
             tf.extractall(to_directory)
     else:
-        raise Exception('Archive must be zip or tar.gz')
+        raise Exception("Archive must be zip or tar.gz")
 
 
 def uncompress_content(archive_content, to_directory):
@@ -125,39 +124,32 @@ def uncompress_content(archive_content, to_directory):
             with tarsafe.open(fileobj=io.BytesIO(archive_content)) as tf:
                 tf.extractall(to_directory)
         except tarfile.TarError:
-            raise Exception('Archive must be zip or tar.*')
+            raise Exception("Archive must be zip or tar.*")
 
 
 def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
 
-    headers = {
-        'Accept': 'application/json;version=0.0',
-        'Substra-Channel-Name': channel_name
-    }
-    headers.update(kwargs.get('headers', {}))
+    headers = {"Accept": "application/json;version=0.0", "Substra-Channel-Name": channel_name}
+    headers.update(kwargs.get("headers", {}))
 
-    kwargs.update({
-        'headers': headers,
-        'auth': auth,
-        'timeout': HTTP_CLIENT_TIMEOUT_SECONDS
-    })
+    kwargs.update({"headers": headers, "auth": auth, "timeout": HTTP_CLIENT_TIMEOUT_SECONDS})
 
     if settings.DEBUG:
-        kwargs['verify'] = False
+        kwargs["verify"] = False
 
     try:
-        if kwargs.get('stream', False) and content_dst_path is not None:
+        if kwargs.get("stream", False) and content_dst_path is not None:
             chunk_size = 1024 * 1024
 
             with requests.get(url, **kwargs) as response:
                 response.raise_for_status()
 
-                with open(content_dst_path, 'wb') as fp:
+                with open(content_dst_path, "wb") as fp:
                     fp.writelines(response.iter_content(chunk_size))
         else:
             response = requests.get(url, **kwargs)
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-        raise NodeError(f'Failed to fetch {url}') from e
+        raise NodeError(f"Failed to fetch {url}") from e
 
     return response
 
@@ -167,8 +159,8 @@ def get_remote_file_content(channel_name, url, auth, content_checksum, salt=None
     response = get_remote_file(channel_name, url, auth)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error('failed to fetch content', url=url, status=response.status_code, text=response.text)
-        raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+        logger.error("failed to fetch content", url=url, status=response.status_code, text=response.text)
+        raise NodeError(f"Url: {url} returned status code: {response.status_code}")
 
     computed_checksum = compute_hash(response.content, key=salt)
     if computed_checksum != content_checksum:
@@ -181,8 +173,8 @@ def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, c
     response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
 
     if response.status_code != status.HTTP_200_OK:
-        logger.error('failed to fetch content', url=url, status=response.status_code, text=response.text)
-        raise NodeError(f'Url: {url} returned status code: {response.status_code}')
+        logger.error("failed to fetch content", url=url, status=response.status_code, text=response.text)
+        raise NodeError(f"Url: {url} returned status code: {response.status_code}")
 
     computed_checksum = get_hash(content_dst_path, key=hash_key)
     if computed_checksum != content_checksum:
@@ -203,15 +195,15 @@ def timeit(function):
 
         log = logger.bind(
             function=function.__name__,
-            duration=f'{elaps:.2f}ms',
+            duration=f"{elaps:.2f}ms",
         )
 
         if exception is None:
-            log.info('(profiler) function succeeded')
+            log.info("(profiler) function succeeded")
         else:
             # Intentionally use logger.info (and not logger.error)
             # Leave the responsibility of logging errors to the function caller.
-            log.info('(profiler) function returned an error')
+            log.info("(profiler) function returned an error")
 
         if exception is not None:
             raise exception

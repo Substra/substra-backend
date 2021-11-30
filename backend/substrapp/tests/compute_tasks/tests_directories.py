@@ -3,16 +3,14 @@ import tempfile
 
 from django.test import override_settings
 from rest_framework.test import APITestCase
-from substrapp.compute_tasks.directories import (
-    CPDirName,
-    TaskDirName,
-    init_task_dirs,
-    teardown_task_dirs,
-    init_compute_plan_dirs,
-    teardown_compute_plan_dir,
-    Directories,
-)
 
+from substrapp.compute_tasks.directories import CPDirName
+from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.compute_tasks.directories import init_compute_plan_dirs
+from substrapp.compute_tasks.directories import init_task_dirs
+from substrapp.compute_tasks.directories import teardown_compute_plan_dir
+from substrapp.compute_tasks.directories import teardown_task_dirs
 
 SUBTUPLE_DIR = tempfile.mkdtemp()
 

@@ -1,18 +1,18 @@
 import functools
 import os
 import tempfile
-
-from django.test import override_settings
-
 import uuid
+
 import mock
 import requests
+from django.test import override_settings
 from requests.auth import HTTPBasicAuth
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-from substrapp.views.utils import PermissionMixin, AssetPermissionError
 from orchestrator.client import OrchestratorClient
+from substrapp.views.utils import AssetPermissionError
+from substrapp.views.utils import PermissionMixin
 
 
 class MockRequest:
@@ -26,9 +26,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
         def wrapper(self):
             orchestrator_value = {
                 "owner": "owner-foo",
-                "file_property"
-                if same_file_property
-                else "orchestrator_file_property": {"storage_address": "foo"},
+                "file_property" if same_file_property else "orchestrator_file_property": {"storage_address": "foo"},
             }
 
             with mock.patch.object(
@@ -52,9 +50,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
                 if has_access:
                     permission_mixin.check_access = mock.MagicMock()
                 else:
-                    permission_mixin.check_access = mock.MagicMock(
-                        side_effect=AssetPermissionError()
-                    )
+                    permission_mixin.check_access = mock.MagicMock(side_effect=AssetPermissionError())
                 permission_mixin.lookup_url_kwarg = "foo"
                 permission_mixin.kwargs = {"foo": str(uuid.uuid4())}
                 permission_mixin.ledger_query_call = "foo"
@@ -82,9 +78,7 @@ def with_requests_mock(allowed):
             requests_response = requests.Response()
             if allowed:
                 requests_response.raw = tmp_file
-                requests_response.headers[
-                    "Content-Disposition"
-                ] = f'attachment; filename="{filename}"'
+                requests_response.headers["Content-Disposition"] = f'attachment; filename="{filename}"'
                 requests_response.status_code = status.HTTP_200_OK
             else:
                 requests_response._content = b'{"message": "nope"}'
@@ -95,9 +89,7 @@ def with_requests_mock(allowed):
             with mock.patch(
                 "substrapp.views.utils.authenticate_outgoing_request",
                 return_value=HTTPBasicAuth("foo", "bar"),
-            ), mock.patch(
-                "substrapp.utils.requests.get", return_value=requests_response
-            ):
+            ), mock.patch("substrapp.utils.requests.get", return_value=requests_response):
                 f(*args, **kwargs)
 
         return wrapper
@@ -105,64 +97,42 @@ def with_requests_mock(allowed):
     return inner
 
 
-@override_settings(LEDGER_CHANNELS={'mychannel': {'chaincode': {'name': 'mycc'}, 'model_export_enabled': True}})
+@override_settings(LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
 class PermissionMixinDownloadFileTests(APITestCase):
     @with_permission_mixin(remote=False, same_file_property=False, has_access=True)
-    def test_download_file_local_allowed(
-        self, permission_mixin, content, filename, **kwargs
-    ):
-        res = permission_mixin.download_file(
-            MockRequest(), "query_algo", "file_property", "orchestrator_file_property"
-        )
+    def test_download_file_local_allowed(self, permission_mixin, content, filename, **kwargs):
+        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
         res_content = b"".join(list(res.streaming_content))
         self.assertEqual(res_content, content)
-        self.assertEqual(
-            res["Content-Disposition"], f'attachment; filename="{filename}"'
-        )
+        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertTrue(permission_mixin.get_object.called)
 
     @with_permission_mixin(remote=False, same_file_property=True, has_access=False)
     def test_download_file_local_denied(self, permission_mixin, **kwargs):
-        res = permission_mixin.download_file(
-            MockRequest(), "query_algo", "file_property"
-        )
+        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property")
         self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
 
     @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
     @with_requests_mock(allowed=True)
-    def test_download_file_remote_allowed(
-        self, permission_mixin, content, filename, **kwargs
-    ):
-        res = permission_mixin.download_file(
-            MockRequest(), "query_algo", "file_property", "orchestrator_file_property"
-        )
+    def test_download_file_remote_allowed(self, permission_mixin, content, filename, **kwargs):
+        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
         res_content = b"".join(list(res.streaming_content))
         self.assertEqual(res_content, content)
-        self.assertEqual(
-            res["Content-Disposition"], f'attachment; filename="{filename}"'
-        )
+        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)
 
     @with_permission_mixin(remote=True, same_file_property=False, has_access=True)
     @with_requests_mock(allowed=False)
     def test_download_file_remote_denied(self, permission_mixin, **kwargs):
-        res = permission_mixin.download_file(
-            MockRequest(), "query_algo", "file_property", "orchestrator_file_property"
-        )
+        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property", "orchestrator_file_property")
         self.assertEqual(res.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertFalse(permission_mixin.get_object.called)
 
     @with_permission_mixin(remote=True, same_file_property=True, has_access=True)
     @with_requests_mock(allowed=True)
-    def test_download_file_remote_same_file_property(
-        self, permission_mixin, content, filename, **kwargs
-    ):
-        res = permission_mixin.download_file(
-            MockRequest(), "query_algo", "file_property"
-        )
+    def test_download_file_remote_same_file_property(self, permission_mixin, content, filename, **kwargs):
+        res = permission_mixin.download_file(MockRequest(), "query_algo", "file_property")
         res_content = b"".join(list(res.streaming_content))
         self.assertEqual(res_content, content)
-        self.assertEqual(
-            res["Content-Disposition"], f'attachment; filename="{filename}"'
-        )
+        self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)

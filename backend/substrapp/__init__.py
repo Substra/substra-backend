@@ -1,1 +1,1 @@
-default_app_config = 'substrapp.apps.SubstrappConfig'
+default_app_config = "substrapp.apps.SubstrappConfig"

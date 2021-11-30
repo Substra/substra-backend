@@ -1,36 +1,36 @@
-import grpc
-
-import structlog
-import orchestrator.node_pb2 as node_pb2
-import orchestrator.algo_pb2 as algo_pb2
-import orchestrator.metric_pb2 as metric_pb2
-import orchestrator.datasample_pb2 as datasample_pb2
-import orchestrator.datamanager_pb2 as datamanager_pb2
-import orchestrator.dataset_pb2 as dataset_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.model_pb2 as model_pb2
-import orchestrator.performance_pb2 as performance_pb2
-import orchestrator.common_pb2 as common_pb2
-import orchestrator.event_pb2 as event_pb2
-import orchestrator.info_pb2 as info_pb2
-from orchestrator.error import OrcError
-from orchestrator.node_pb2_grpc import NodeServiceStub
-from orchestrator.algo_pb2_grpc import AlgoServiceStub
-from orchestrator.metric_pb2_grpc import MetricServiceStub
-from orchestrator.datasample_pb2_grpc import DataSampleServiceStub
-from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
-from orchestrator.dataset_pb2_grpc import DatasetServiceStub
-from orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
-from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
-from orchestrator.model_pb2_grpc import ModelServiceStub
-from orchestrator.performance_pb2_grpc import PerformanceServiceStub
-from orchestrator.event_pb2_grpc import EventServiceStub
-from orchestrator.info_pb2_grpc import InfoServiceStub
-from google.protobuf.json_format import MessageToDict
-
 import time
 from functools import wraps
+
+import grpc
+import structlog
+from google.protobuf.json_format import MessageToDict
+
+import orchestrator.algo_pb2 as algo_pb2
+import orchestrator.common_pb2 as common_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.datamanager_pb2 as datamanager_pb2
+import orchestrator.datasample_pb2 as datasample_pb2
+import orchestrator.dataset_pb2 as dataset_pb2
+import orchestrator.event_pb2 as event_pb2
+import orchestrator.info_pb2 as info_pb2
+import orchestrator.metric_pb2 as metric_pb2
+import orchestrator.model_pb2 as model_pb2
+import orchestrator.node_pb2 as node_pb2
+import orchestrator.performance_pb2 as performance_pb2
+from orchestrator.algo_pb2_grpc import AlgoServiceStub
+from orchestrator.computeplan_pb2_grpc import ComputePlanServiceStub
+from orchestrator.computetask_pb2_grpc import ComputeTaskServiceStub
+from orchestrator.datamanager_pb2_grpc import DataManagerServiceStub
+from orchestrator.datasample_pb2_grpc import DataSampleServiceStub
+from orchestrator.dataset_pb2_grpc import DatasetServiceStub
+from orchestrator.error import OrcError
+from orchestrator.event_pb2_grpc import EventServiceStub
+from orchestrator.info_pb2_grpc import InfoServiceStub
+from orchestrator.metric_pb2_grpc import MetricServiceStub
+from orchestrator.model_pb2_grpc import ModelServiceStub
+from orchestrator.node_pb2_grpc import NodeServiceStub
+from orchestrator.performance_pb2_grpc import PerformanceServiceStub
 
 logger = structlog.get_logger(__name__)
 
@@ -72,7 +72,7 @@ def grpc_retry(func):
                         function=func,
                         attempt=(attempt + 1),
                         max_attempts=times,
-                        delay=f"{sleep_duration}s"
+                        delay=f"{sleep_duration}s",
                     )
 
                     time.sleep(sleep_duration)
@@ -139,9 +139,7 @@ class OrchestratorClient:
             self._channel = grpc.insecure_channel(target, opts)
         else:
             if client_cert and client_key:
-                creds = grpc.ssl_channel_credentials(
-                    root_cert, private_key=client_key, certificate_chain=client_cert
-                )
+                creds = grpc.ssl_channel_credentials(root_cert, private_key=client_key, certificate_chain=client_cert)
             else:
                 creds = grpc.ssl_channel_credentials(root_cert)
 
@@ -168,37 +166,27 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_node(self):
-        data = self._node_client.RegisterNode(
-            node_pb2.RegisterNodeParam(), metadata=self._metadata
-        )
+        data = self._node_client.RegisterNode(node_pb2.RegisterNodeParam(), metadata=self._metadata)
         MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def query_nodes(self):
-        data = self._node_client.GetAllNodes(
-            node_pb2.GetAllNodesParam(), metadata=self._metadata
-        )
+        data = self._node_client.GetAllNodes(node_pb2.GetAllNodesParam(), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS).get("nodes", [])
 
     @grpc_retry
     def register_algo(self, args):
-        data = self._algo_client.RegisterAlgo(
-            algo_pb2.NewAlgo(**args), metadata=self._metadata
-        )
+        data = self._algo_client.RegisterAlgo(algo_pb2.NewAlgo(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def query_algo(self, key):
-        data = self._algo_client.GetAlgo(
-            algo_pb2.GetAlgoParam(key=key), metadata=self._metadata
-        )
+        data = self._algo_client.GetAlgo(algo_pb2.GetAlgoParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def query_algos(self, category=algo_pb2.ALGO_UNKNOWN, compute_plan_key=None):
-        algo_filter = algo_pb2.AlgoQueryFilter(
-            category=category, compute_plan_key=compute_plan_key
-        )
+        algo_filter = algo_pb2.AlgoQueryFilter(category=category, compute_plan_key=compute_plan_key)
         res = []
         page_token = ""
         while True:
@@ -216,16 +204,12 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_metric(self, args):
-        data = self._metric_client.RegisterMetric(
-            metric_pb2.NewMetric(**args), metadata=self._metadata
-        )
+        data = self._metric_client.RegisterMetric(metric_pb2.NewMetric(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def query_metric(self, key):
-        data = self._metric_client.GetMetric(
-            metric_pb2.GetMetricParam(key=key), metadata=self._metadata
-        )
+        data = self._metric_client.GetMetric(metric_pb2.GetMetricParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
@@ -302,9 +286,7 @@ class OrchestratorClient:
 
     @grpc_retry
     def query_dataset(self, key):
-        data = self._dataset_client.GetDataset(
-            dataset_pb2.GetDatasetParam(key=key), metadata=self._metadata
-        )
+        data = self._dataset_client.GetDataset(dataset_pb2.GetDatasetParam(key=key), metadata=self._metadata)
         data = MessageToDict(data, **CONVERT_SETTINGS)
 
         # process dataset result to have data_manager attibutes at
@@ -340,9 +322,7 @@ class OrchestratorClient:
     @grpc_retry
     def update_task_status(self, compute_task_key, action, log=""):
         data = self._computetask_client.ApplyTaskAction(
-            computetask_pb2.ApplyTaskActionParam(
-                compute_task_key=compute_task_key, action=action, log=log
-            ),
+            computetask_pb2.ApplyTaskActionParam(compute_task_key=compute_task_key, action=action, log=log),
             metadata=self._metadata,
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
@@ -366,9 +346,7 @@ class OrchestratorClient:
         page_token = ""
         while True:
             data = self._computetask_client.QueryTasks(
-                computetask_pb2.QueryTasksParam(
-                    filter=task_filter, page_token=page_token
-                ),
+                computetask_pb2.QueryTasksParam(filter=task_filter, page_token=page_token),
                 metadata=self._metadata,
             )
             data = MessageToDict(data, **CONVERT_SETTINGS)
@@ -388,9 +366,7 @@ class OrchestratorClient:
 
     @grpc_retry
     def query_task(self, key):
-        data = self._computetask_client.GetTask(
-            computetask_pb2.GetTaskParam(key=key), metadata=self._metadata
-        )
+        data = self._computetask_client.GetTask(computetask_pb2.GetTaskParam(key=key), metadata=self._metadata)
         data = MessageToDict(data, **CONVERT_SETTINGS)
 
         # handle tag
@@ -403,26 +379,20 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_compute_plan(self, args):
-        data = self._computeplan_client.RegisterPlan(
-            computeplan_pb2.NewComputePlan(**args), metadata=self._metadata
-        )
+        data = self._computeplan_client.RegisterPlan(computeplan_pb2.NewComputePlan(**args), metadata=self._metadata)
         data = MessageToDict(data, **CONVERT_SETTINGS)
 
         return data
 
     @grpc_retry
     def query_compute_plan(self, key):
-        data = self._computeplan_client.GetPlan(
-            computeplan_pb2.GetComputePlanParam(key=key), metadata=self._metadata
-        )
+        data = self._computeplan_client.GetPlan(computeplan_pb2.GetComputePlanParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
     def cancel_compute_plan(self, key):
         data = self._computeplan_client.ApplyPlanAction(
-            computeplan_pb2.ApplyPlanActionParam(
-                key=key, action=computeplan_pb2.PLAN_ACTION_CANCELED
-            ),
+            computeplan_pb2.ApplyPlanActionParam(key=key, action=computeplan_pb2.PLAN_ACTION_CANCELED),
             metadata=self._metadata,
         )
         return MessageToDict(data, **CONVERT_SETTINGS)
@@ -447,9 +417,7 @@ class OrchestratorClient:
 
     @grpc_retry
     def query_model(self, key):
-        data = self._model_client.GetModel(
-            model_pb2.GetModelParam(key=key), metadata=self._metadata
-        )
+        data = self._model_client.GetModel(model_pb2.GetModelParam(key=key), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
@@ -488,9 +456,7 @@ class OrchestratorClient:
 
     @grpc_retry
     def register_model(self, args):
-        data = self._model_client.RegisterModel(
-            model_pb2.NewModel(**args), metadata=self._metadata
-        )
+        data = self._model_client.RegisterModel(model_pb2.NewModel(**args), metadata=self._metadata)
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
@@ -538,24 +504,20 @@ class OrchestratorClient:
 
     def is_task_doing(self, key):
         task = self.query_task(key)
-        return (
-            computetask_pb2.ComputeTaskStatus.Value(task["status"]) == computetask_pb2.STATUS_DOING
-        )
+        return computetask_pb2.ComputeTaskStatus.Value(task["status"]) == computetask_pb2.STATUS_DOING
 
     def is_task_in_final_state(self, key):
         task = self.query_task(key)
         return computetask_pb2.ComputeTaskStatus.Value(task["status"]) in [
             computetask_pb2.STATUS_CANCELED,
             computetask_pb2.STATUS_DONE,
-            computetask_pb2.STATUS_FAILED
+            computetask_pb2.STATUS_FAILED,
         ]
 
     @grpc_retry
     def is_compute_plan_doing(self, key):
         cp = self.query_compute_plan(key)
-        return (
-            computeplan_pb2.ComputePlanStatus.Value(cp["status"]) == computeplan_pb2.PLAN_STATUS_DOING
-        )
+        return computeplan_pb2.ComputePlanStatus.Value(cp["status"]) == computeplan_pb2.PLAN_STATUS_DOING
 
     def query_events(
         self,
@@ -564,10 +526,9 @@ class OrchestratorClient:
         event_kind=event_pb2.EVENT_UNKNOWN,
         sort=common_pb2.ASCENDING,
         metadata=None,
-        page_size=None
+        page_size=None,
     ):
-        """ return a list with all events instead of a generator
-        """
+        """return a list with all events instead of a generator"""
         return list(
             self.query_events_generator(
                 asset_key=asset_key,
@@ -575,7 +536,7 @@ class OrchestratorClient:
                 event_kind=event_kind,
                 sort=sort,
                 metadata=metadata,
-                page_size=page_size
+                page_size=page_size,
             )
         )
 
@@ -594,22 +555,14 @@ class OrchestratorClient:
         which are yield one by one
         """
         event_filter = event_pb2.EventQueryFilter(
-            asset_key=asset_key,
-            asset_kind=asset_kind,
-            event_kind=event_kind,
-            metadata=metadata
+            asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind, metadata=metadata
         )
 
         page_token = ""
 
         while True:
             data = self._event_client.QueryEvents(
-                event_pb2.QueryEventsParam(
-                    filter=event_filter,
-                    page_token=page_token,
-                    page_size=page_size,
-                    sort=sort
-                ),
+                event_pb2.QueryEventsParam(filter=event_filter, page_token=page_token, page_size=page_size, sort=sort),
                 metadata=self._metadata,
             )
 

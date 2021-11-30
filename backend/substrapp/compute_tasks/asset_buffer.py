@@ -1,24 +1,25 @@
 import os
-import structlog
 import shutil
-from django.conf import settings
-from typing import List, Dict
+from typing import Dict
+from typing import List
+
+import structlog
 from billiard import Process
-from substrapp.compute_tasks.directories import Directories, TaskDirName, AssetBufferDirName
+from django.conf import settings
+
+from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
-from substrapp.compute_tasks.command import (
-    Filenames,
-)
-from substrapp.utils import (
-    get_dir_hash,
-    get_hash,
-    get_and_put_asset_content,
-    get_owner,
-    timeit,
-    uncompress_content,
-    get_asset_content,
-)
+from substrapp.compute_tasks.directories import AssetBufferDirName
+from substrapp.compute_tasks.directories import Directories
+from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.orchestrator import get_orchestrator_client
+from substrapp.utils import get_and_put_asset_content
+from substrapp.utils import get_asset_content
+from substrapp.utils import get_dir_hash
+from substrapp.utils import get_hash
+from substrapp.utils import get_owner
+from substrapp.utils import timeit
+from substrapp.utils import uncompress_content
 
 logger = structlog.get_logger(__name__)
 
@@ -234,7 +235,7 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
     db.close_old_connections()
     if exceptions:
         # avoid partial model download
-        delete_models_from_buffer([model['key'] for model in models])
+        delete_models_from_buffer([model["key"] for model in models])
         raise Exception(exceptions)
 
 

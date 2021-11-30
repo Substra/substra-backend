@@ -1,14 +1,17 @@
-from django.db import models
 import uuid
+
+from django.db import models
+
 from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return 'datamanagers/{0}/{1}'.format(instance.key, filename)
+    return "datamanagers/{0}/{1}".format(instance.key, filename)
 
 
 class DataManager(models.Model):
     """Storage DataManager table"""
+
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=True, max_length=100)
     data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100

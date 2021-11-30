@@ -7,11 +7,12 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return 'models/{0}/{1}'.format(instance.key, filename)
+    return "models/{0}/{1}".format(instance.key, filename)
 
 
 class Model(models.Model):
     """Storage Data table"""
+
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     validated = models.BooleanField(default=False)
     file = models.FileField(
@@ -28,4 +29,4 @@ class Model(models.Model):
         super(Model, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'Model with key {self.key} with validated {self.validated}'
+        return f"Model with key {self.key} with validated {self.validated}"
