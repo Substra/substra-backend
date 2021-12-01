@@ -7,10 +7,6 @@ on:
   pull_request:
     branches:
       - "**"
-    paths:
-      - "backend/**"
-      - "metrics-exporter/**"
-      - "fixtures/**"
 
 jobs:
   lint_and_tests:
