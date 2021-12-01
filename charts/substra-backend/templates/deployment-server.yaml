@@ -96,21 +96,28 @@ spec:
             mountPath: /var/substra/orchestrator/tls/client
           {{ end }}
           {{ end }}
+        {{- if .Values.server.livenessProbe.enabled }}
         livenessProbe:
           httpGet:
-            path: /liveness
+            path: {{ .Values.server.livenessProbe.path }}
             port: http
-          initialDelaySeconds: 60
-          timeoutSeconds: 5
-          periodSeconds: 45
-          failureThreshold: 6
+          initialDelaySeconds: {{ .Values.server.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.server.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.server.livenessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.server.livenessProbe.successThreshold }}
+          failureThreshold: {{ .Values.server.livenessProbe.failureThreshold }}
+        {{- end }}
+        {{- if .Values.server.readinessProbe.enabled }}
         readinessProbe:
           httpGet:
-            path: /readiness
+            path: {{ .Values.server.readinessProbe.path }}
             port: http
-          initialDelaySeconds: 5
-          timeoutSeconds: 2
-          periodSeconds: 30
+          initialDelaySeconds: {{ .Values.server.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.server.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.server.readinessProbe.timeoutSeconds }}
+          successThreshold: {{ .Values.server.readinessProbe.successThreshold }}
+          failureThreshold: {{ .Values.server.readinessProbe.failureThreshold }}
+        {{- end }}
         resources:
           {{- toYaml .Values.server.resources | nindent 12 }}
       initContainers:

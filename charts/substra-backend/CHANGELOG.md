@@ -1,5 +1,9 @@
 # Changelog
 
+## 13.0.5
+
+### Added
+- Make server readiness/liveness probe settings configurable
 
 ## 13.0.4
 
