@@ -6,25 +6,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] 2021-12-01
+
 ### Added
 - Metrics support for the Django app behind the flag `ENABLE_METRICS`
-- Limit file size upload to `DATA_UPLOAD_MAX_SIZE`
-- Setting to run in "isolated" mode (when there is no backend data, only orchestrator data)
-- Add `COMPUTE_POD_GKE_GPUS_LIMITS` setting to enable usage of GPU by the compute pod on GKE
+- Limit file size upload to `DATA_UPLOAD_MAX_SIZE` (#450)
+- Setting to run in "isolated" mode (when there is no backend data, only orchestrator data) (#392)
+- Add `COMPUTE_POD_GKE_GPUS_LIMITS` setting to enable usage of GPU by the compute pod on GKE (#460)
+- Add new route to list all algos of a compute plan (#393)
+- Add cp start date, end date and duration (#402)
 
 ### Changed
-- Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
-- Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER`.
-- Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP`.
-- Do not openly expose media directory
-- Do not mount the serviceAccount token on the compute pod
-- Switch log format to JSON
+- Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP` (#350)
+- Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER` (#350)
+- Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP` (#350)
+- Do not openly expose media directory (#432)
+- Do not mount the serviceAccount token on the compute pod (#461)
+- Switch log format to JSON (#464)
 
 ### Removed
-- `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE`.
+- `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE` (#350)
 
 ### Fixed
-- Properly prevent path traversal in archives and don't allow symbolic links
+- Properly prevent path traversal in archives and don't allow symbolic links (#465)
 
 ## [0.5.0] 2021-11-02
 
@@ -32,20 +36,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for filters on compute plan sub routes
 - `COMMON_HOST_DOMAIN` variable env now required to set domain property of JWT cookies
 - Models and Datasamples are now stored in MinIO (they were previously stored on the filesystem)
-- Possibility to deploy deploy multiple workers on different kubernetes nodes in order to use compute resources in parallel. See [charts CHANGELOG.md](./charts/substra-backend/CHANGELOG.md#6.0.0) for more details.
-- post_delete signal upon model deletion to remove the model from Minio storage.
-- Add task extra information related to start_date and end_date.
+- Possibility to deploy deploy multiple workers on different kubernetes nodes in order to use compute resources in parallel. See [charts CHANGELOG.md](./charts/substra-backend/CHANGELOG.md#6.0.0) for more details
+- post_delete signal upon model deletion to remove the model from Minio storage
+- Add task extra information related to start_date and end_date
 - serve API behind subpath with `SUBPATH` env var (#386)
 
 ### Changed
-- Task data are now mounted on `/substra_internal` instead of `/sandbox`.
+- Task data are now mounted on `/substra_internal` instead of `/sandbox`
 - (BREAKING) Replace objective by metric (#313)
 - (BREAKING) Multiple metrics and performances per test task (#320)
 - Insert full data manager, metrics and parent tasks objects in tuple responses for retrieve calls
 - Validate orchestrator connection on readiness and liveness api checks
 
 ### Fixed
-- Set the local folder dynamically instead of leaving it to connect-tools default.
+- Set the local folder dynamically instead of leaving it to connect-tools default
 - Fix trailing comma that turned versions at /info into lists
 - Accept `UUID.hex` UUID as asset keys
 - Trying to download a disabled model will now result in a consistent http 410 error code instead of an http 500 or http 404 error code
