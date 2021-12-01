@@ -20,6 +20,7 @@ from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ValidationExceptionError
+from substrapp.views.utils import add_compute_plan_duration_or_eta
 from substrapp.views.utils import add_cp_extra_information
 from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
@@ -251,7 +252,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             with get_orchestrator_client(get_channel_name(request)) as client:
                 data = client.query_compute_plans()
                 for datum in data:
-                    datum = add_cp_extra_information(client, datum)
+                    datum = add_compute_plan_duration_or_eta(client, datum)
         except OrcError as rpc_error:
             return Response({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:

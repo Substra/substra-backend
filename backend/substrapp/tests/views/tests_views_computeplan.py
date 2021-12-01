@@ -87,7 +87,7 @@ class ComputePlanViewTests(APITestCase):
         cps_response = copy.deepcopy(cps)
 
         with mock.patch.object(OrchestratorClient, "query_compute_plans", return_value=cps_response), mock.patch(
-            "substrapp.views.computeplan.add_cp_extra_information", side_effect=cps_response
+            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=cps_response
         ):
             response = self.client.get(self.url, **self.extra)
             r = response.json()
