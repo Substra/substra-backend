@@ -12,8 +12,11 @@ LOCK_FILE_PREFIX = "lock_"
 LOCK_FILE_PREFIX_UNLINK = "unlink_lock_"
 
 
-@contextlib.contextmanager
-def lock_resource(resource_type: str, unique_identifier: str, ttl: int, delay: int = 0.02, timeout: int = 10):
+# TODO: 'lock_resource' is too complex, consider refactoring
+@contextlib.contextmanager  # noqa: C901
+def lock_resource(  # noqa: C901
+    resource_type: str, unique_identifier: str, ttl: int, delay: int = 0.02, timeout: int = 10
+):
     """
     Acquire a lock on a resource.
 

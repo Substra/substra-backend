@@ -4,11 +4,23 @@ repos:
     hooks:
       - id: black
         language_version: python3.9
-        files: "(backend|metrics_exporter|fixtures)\\/.+\\.py"
+        files: (backend|metrics_exporter|fixtures)/.+\.py
 
   - repo: https://github.com/pycqa/isort
     rev: 5.10.1
     hooks:
       - id: isort
         args: [--settings-path=pyproject.toml]
-        files: "(backend|metrics_exporter|fixtures)\\/.+\\.py"
+        files: (backend|metrics_exporter|fixtures)/.+\.py
+
+  - repo: https://github.com/pycqa/flake8
+    rev: 4.0.1
+    hooks:
+      - id: flake8
+        files: (backend|metrics_exporter|fixtures)/.+\.py
+        # Checked-in Python files will be passed as positional arguments. Flake8 will always lint explicitly passed
+        # arguments (the exclude section in Flake8 config file has no effect). Hence, we use pre-commit’s exclude
+        # to exclude files.
+        exclude: backend/orchestrator/.+_pb2(_grpc)?\.py|backend/substrapp/tests/assets\.py
+        additional_dependencies:
+          - pep8-naming

@@ -1,5 +1,8 @@
 [tool.black]
-force-exclude = '''backend/orchestrator/.+_pb2(_grpc)?\.py'''
+force-exclude = '''
+  backend/orchestrator/.+_pb2(_grpc)?\.py
+| backend/substrapp/tests/assets\.py
+'''
 line-length = 120
 target-version = ['py39']
 

@@ -52,7 +52,8 @@ def get_security_context(enabled=True, root=False, privileged=False, add_capabil
         )
 
 
-def watch_pod(k8s_client, name: str, watch_init_container=False):
+# TODO: 'watch_pod' is too complex, consider refactoring
+def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
     finished = False
     attempt = 0
     max_attempts = 5 + (5 if watch_init_container else 0)

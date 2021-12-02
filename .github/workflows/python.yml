@@ -40,8 +40,7 @@ jobs:
           isort --check $SRC_DIRS
       - name: Lint
         run: |
-          # TODO: run Flake8 on fixtures as well
-          flake8 backend metrics-exporter
+          flake8 $SRC_DIRS
       - name: Test
         run: |
           cd backend/

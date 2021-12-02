@@ -116,7 +116,8 @@ class ComputeTask(Task):
         return channel_name, task
 
 
-@app.task(
+# TODO: 'compute_task' is too complex, consider refactoring
+@app.task(  # noqa: C901
     bind=True,
     acks_late=True,
     reject_on_worker_lost=True,
@@ -126,7 +127,7 @@ class ComputeTask(Task):
 # Ack late and reject on worker lost allows use to
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
-def compute_task(self, channel_name: str, task, compute_plan_key):
+def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
 
     try:

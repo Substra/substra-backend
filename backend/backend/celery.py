@@ -15,7 +15,7 @@ from kombu.common import Broadcast
 # set the default Django settings module for the 'celery' program.
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings.prod")
 
-from django.conf import settings
+from django.conf import settings  # noqa: E402
 
 app = Celery("backend")
 

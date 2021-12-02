@@ -23,7 +23,7 @@ REST_FRAMEWORK["DEFAULT_AUTHENTICATION_CLASSES"] += [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get(f"BACKEND_DB_NAME", f"backend_{ORG_NAME}"),
+        "NAME": os.environ.get("BACKEND_DB_NAME", f"backend_{ORG_NAME}"),
         "USER": os.environ.get("BACKEND_DB_USER", "backend"),
         "PASSWORD": os.environ.get("BACKEND_DB_PWD", "backend"),
         "HOST": os.environ.get("DATABASE_HOST", "localhost"),

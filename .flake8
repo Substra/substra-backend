@@ -1,19 +1,24 @@
 [flake8]
+max-complexity = 10
 max-line-length = 120
 extend-ignore =
     # E203 must be disabled for Flake8 to work with Black.
     # See https://black.readthedocs.io/en/stable/guides/using_black_with_other_tools.html#id1
-    E203,
-    E402,
-    F403,
-    F405
+    E203
 exclude =
-    backend/substrapp/migrations/*,
+    .git,
+    __pycache__,
+    .env,
+    .venv,
     backend/substrapp/tests/assets.py,
-    backend/backend/settings/*,
-    backend/node/migrations/*,
-    backend/medias/*,
     backend/orchestrator/*_pb2.py,
     backend/orchestrator/*_grpc.py,
-    .env,
-    .venv
+per-file-ignores =
+    # F401: module imported but unused
+    # F403: 'from module import *' used; unable to detect undefined names
+    # F405: name may be undefined, or defined from star imports: module
+    backend/backend/settings/*:F401,F403,F405
+
+    # N802: function name should be lowercase
+    # N806: variable in function should be lowercase
+    fixtures/**:N802,N806

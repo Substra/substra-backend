@@ -89,7 +89,8 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     def get_queryset(self):
         return []
 
-    def commit(self, request):
+    # TODO: 'commit' is too complex, consider refactoring
+    def commit(self, request):  # noqa: C901
         data = {
             "key": uuid.uuid4(),
             "category": TASK_CATEGORY[self.basename],

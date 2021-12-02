@@ -48,7 +48,8 @@ def build_container_image(path, tag, ctx):
     _build_container_image(path, tag, ctx.compute_plan_key, ctx.task_key, ctx.attempt)
 
 
-def _build_container_image(path, tag, cp_key, task_key, attempt):
+# TODO: '_build_container_image' is too complex, consider refactoring
+def _build_container_image(path, tag, cp_key, task_key, attempt):  # noqa: C901
 
     _assert_dockerfile(path)
 

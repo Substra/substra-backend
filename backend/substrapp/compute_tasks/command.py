@@ -70,8 +70,8 @@ def _get_command_from_dockerfile(dockerfile_dir: str) -> List[str]:
     raise Exception("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
-def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:
-
+# TODO: '_get_args' is too complex, consider refactoring
+def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:  # noqa: C901
     task = ctx.task
     task_category = ctx.task_category
     task_data = ctx.task_data
