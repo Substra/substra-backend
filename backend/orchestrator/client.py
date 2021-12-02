@@ -398,12 +398,13 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def query_compute_plans(self):
+    def query_compute_plans(self, owner=None):
+        plan_filter = computeplan_pb2.PlanQueryFilter(owner=owner)
         res = []
         page_token = ""
         while True:
             data = self._computeplan_client.QueryPlans(
-                computeplan_pb2.QueryPlansParam(page_token=page_token),
+                computeplan_pb2.QueryPlansParam(filter=plan_filter, page_token=page_token),
                 metadata=self._metadata,
             )
             data = MessageToDict(data, **CONVERT_SETTINGS)
