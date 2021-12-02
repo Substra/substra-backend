@@ -8,7 +8,7 @@ config: {}
 ## @param organizationName Current organization name
 ##
 organizationName: owkin
-## @param DataSampleStorageInServerMedia
+## @param DataSampleStorageInServerMedia If set to true, Datasamples which are registered by a "path" are kept on the "servermedias" volume. If set to `false` (default value), the datasample will be duplicated to MinIO.
 ##
 DataSampleStorageInServerMedia: false
 
@@ -190,6 +190,9 @@ server:
     ##
     servermedias:
       size: 10Gi
+      ## @param server.persistence.servermedias.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
+      ##
+      storageClass: ""
     ## @param server.persistence.algos.size _Algo_ files volume size
     ##
     algos:

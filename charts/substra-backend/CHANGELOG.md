@@ -1,5 +1,12 @@
 # Changelog
 
+## 13.0.6
+
+## Added
+
+- `SERVERMEDIAS_ROOT` configmap setting
+- update servermedias PVC attributes
+
 ## 13.0.5
 
 ### Added

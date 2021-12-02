@@ -41,6 +41,7 @@ MODEL_BUCKET_NAME = "substra-model"
 MODEL_STORAGE = MinioStorage(MODEL_BUCKET_NAME)
 
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", f"/substra/medias/{ORG_NAME}")
+SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", f"/substra/servermedias/{ORG_NAME}")
 
 SUBTUPLE_DIR = os.path.join(MEDIA_ROOT, "subtuple")
 ASSET_BUFFER_DIR = os.path.join(SUBTUPLE_DIR, "asset_buffer")

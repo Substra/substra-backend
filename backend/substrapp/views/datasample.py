@@ -243,6 +243,10 @@ def _get_servermedias_subpaths(paths, raise_no_subdir=False):
 
 
 def _validate_servermedias_path(path):
+    if os.path.islink(path):
+        raise serializers.ValidationError(f"Invalid path, {path} should not use symlink")
+    if not os.path.abspath(path).startswith(settings.SERVERMEDIAS_ROOT):
+        raise serializers.ValidationError(f"Invalid path, should be a subdir of servermedias {path}")
     if not os.path.exists(path):
         raise serializers.ValidationError(f"Invalid path, not found: {path}")
     if not os.path.isdir(path):

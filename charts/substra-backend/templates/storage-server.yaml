@@ -52,4 +52,4 @@ spec:
   resources:
     requests:
       storage: {{ .Values.server.persistence.servermedias.size | quote }}
-  {{ include "common.storage.class" .Values.server.persistence }}
+  {{ include "common.storage.class" .Values.server.persistence.servermedias }}

@@ -31,6 +31,8 @@ from ..common import get_sample_zip_data_sample
 from ..common import get_sample_zip_data_sample_2
 
 MEDIA_ROOT = tempfile.mkdtemp()
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+FIXTURE_PATH = os.path.abspath(os.path.join(DIR_PATH, "../../../../fixtures/owkin"))
 
 
 @override_settings(
@@ -112,10 +114,9 @@ class DataSampleQueryTests(APITestCase):
             self.assertIsNotNone(response.json()[0]["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    @override_settings(SERVERMEDIAS_ROOT=FIXTURE_PATH)
     def _test_add_datasample_from_path_sync_ok(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        path = os.path.join(dir_path, "../../../../fixtures/owkin/datasamples/test/0024900")
-
+        path = os.path.join(FIXTURE_PATH, "datasamples/test/0024900")
         self.add_default_data_manager()
 
         data = {
@@ -190,10 +191,10 @@ class DataSampleQueryTests(APITestCase):
         # test upload file to minio from provided path
         self._test_add_datasample_from_path_sync_ok()
 
+    @override_settings(SERVERMEDIAS_ROOT=FIXTURE_PATH)
     def test_bulk_add_data_sample_from_path_sync_ok(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        path1 = os.path.join(dir_path, "../../../../fixtures/owkin/datasamples/test/0024900")
-        path2 = os.path.join(dir_path, "../../../../fixtures/owkin/datasamples/test/0024901")
+        path1 = os.path.join(FIXTURE_PATH, "datasamples/test/0024900")
+        path2 = os.path.join(FIXTURE_PATH, "datasamples/test/0024901")
 
         self.add_default_data_manager()
 
@@ -257,6 +258,81 @@ class DataSampleQueryTests(APITestCase):
             self.assertIsNotNone(r[0]["key"])
             self.assertIsNotNone(r[1]["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_validate_servermedias_path(self):
+        with override_settings(SERVERMEDIAS_ROOT=FIXTURE_PATH):
+            # provided path is not a directory
+            path = os.path.join(FIXTURE_PATH, "datasamples/test/0024900/IMG_0024900.jpg")
+            data = {
+                "json": json.dumps(
+                    {
+                        "path": path,
+                        "data_manager_keys": [self.data_manager_key1],
+                        "test_only": True,
+                    }
+                ),
+            }
+            extra = {
+                "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
+                "HTTP_ACCEPT": "application/json;version=0.0",
+            }
+            response = self.client.post(self.url, data, format="multipart", **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            # provided path is not a subpath of servermedias
+            path = os.path.join(FIXTURE_PATH, "../chunantes/datasamples/datasample0")
+            data = {
+                "json": json.dumps(
+                    {
+                        "path": path,
+                        "data_manager_keys": [self.data_manager_key1],
+                        "test_only": True,
+                    }
+                ),
+            }
+            extra = {
+                "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
+                "HTTP_ACCEPT": "application/json;version=0.0",
+            }
+            response = self.client.post(self.url, data, format="multipart", **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # provided path is an empty dir
+        with tempfile.TemporaryDirectory() as tmp_path, override_settings(SERVERMEDIAS_ROOT=tmp_path):
+            data = {
+                "json": json.dumps(
+                    {
+                        "path": tmp_path,
+                        "data_manager_keys": [self.data_manager_key1],
+                        "test_only": True,
+                    }
+                ),
+            }
+            extra = {
+                "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
+                "HTTP_ACCEPT": "application/json;version=0.0",
+            }
+            response = self.client.post(self.url, data, format="multipart", **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+            # provided path is a symlink
+            path = os.path.join(tmp_path, "symlink")
+            os.symlink(os.path.join(FIXTURE_PATH, "datasamples/test/0024900"), path)
+            data = {
+                "json": json.dumps(
+                    {
+                        "path": path,
+                        "data_manager_keys": [self.data_manager_key1],
+                        "test_only": True,
+                    }
+                ),
+            }
+            extra = {
+                "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
+                "HTTP_ACCEPT": "application/json;version=0.0",
+            }
+            response = self.client.post(self.url, data, format="multipart", **extra)
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_add_data_sample_ko(self):
         # missing datamanager

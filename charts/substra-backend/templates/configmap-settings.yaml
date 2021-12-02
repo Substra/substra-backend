@@ -7,6 +7,7 @@ metadata:
 data:
   ORG_NAME: {{ .Values.organizationName | quote }}
   MEDIA_ROOT: /var/substra/medias/
+  SERVERMEDIAS_ROOT: /var/substra/servermedias/
   DEFAULT_DOMAIN: {{ .Values.server.defaultDomain | quote }}
   COMMON_HOST_DOMAIN: {{ .Values.server.commonHostDomain | quote }}
 

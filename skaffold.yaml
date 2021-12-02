@@ -127,6 +127,20 @@ profiles:
       - op: add
         path: /deploy/helm/releases/1/setValues/postgresql.persistence.enabled
         value: true
+  - name: servermedias
+    patches:
+      - op: add
+        path: /deploy/helm/releases/0/setValues/DataSampleStorageInServerMedia
+        value: true
+      - op: add
+        path: /deploy/helm/releases/0/setValues/server.persistence.servermedias.storageClass
+        value: "manual"
+      - op: add
+        path: /deploy/helm/releases/1/setValues/DataSampleStorageInServerMedia
+        value: true
+      - op: add
+        path: /deploy/helm/releases/1/setValues/server.persistence.servermedias.storageClass
+        value: "manual"
   - name: spread-workers
     patches:
       - op: replace

@@ -23,7 +23,7 @@ from ..common import get_sample_datamanager
 
 MEDIA_ROOT = "/tmp/unittests_views/"
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
-FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datasamples")
+FIXTURE_PATH = os.path.abspath(os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datasamples"))
 
 
 def _get_archive_checksum(path):
@@ -113,6 +113,7 @@ class DataSampleViewTests(APITestCase):
 
         data["file"].close()
 
+    @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
     def test_data_create_parent_path(self):
         source_path = os.path.join(FIXTURE_PATH, "datasample1/0024700.zip")
         parent_path = os.path.join(MEDIA_ROOT, "data_samples")
@@ -137,6 +138,7 @@ class DataSampleViewTests(APITestCase):
         self.assertIsNotNone(response.data[0]["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
+    @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
     def test_data_create_path(self):
         url = reverse("substrapp:data_sample-list")
 

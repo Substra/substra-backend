@@ -15,79 +15,80 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Global Substra settings
 
-| Name                             | Description                                                   | Value                |
-| -------------------------------- | ------------------------------------------------------------- | -------------------- |
-| `settings`                       | The settings to use for substra (`prod` or `dev`)             | `prod`               |
-| `config`                         | The configuration to use for substra                          | `{}`                 |
-| `organizationName`               | Current organization name                                     | `owkin`              |
-| `DataSampleStorageInServerMedia` |                                                               | `false`              |
-| `privateCa.enabled`              | Run the init container injecting the private CA certificate   | `false`              |
-| `privateCa.image.repository`     | Private CA injector image                                     | `ubuntu`             |
-| `privateCa.image.tag`            | Private CA injector tag                                       | `latest`             |
-| `privateCa.image.pullPolicy`     | Private CA injector pull policy                               | `IfNotPresent`       |
-| `privateCa.image.apkAdd`         | Install the update-ca-certificates package                    | `true`               |
-| `privateCa.configMap.name`       | Name of the _ConfigMap_ containing the private CA certificate | `substra-private-ca` |
-| `privateCa.configMap.data`       | Certificate to add in the _ConfigMap_                         | `nil`                |
-| `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                       | `private-ca.crt`     |
-| `psp.create`                     | Create a _Pod Security Policy_ in the cluster                 | `true`               |
+| Name                             | Description                                                                                                                                                                        | Value                |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `settings`                       | The settings to use for substra (`prod` or `dev`)                                                                                                                                  | `prod`               |
+| `config`                         | The configuration to use for substra                                                                                                                                               | `{}`                 |
+| `organizationName`               | Current organization name                                                                                                                                                          | `owkin`              |
+| `DataSampleStorageInServerMedia` | If set to true, Datasamples which are registered by a "path" are kept on the "servermedias" volume. If set to `false` (default value), the datasample will be duplicated to MinIO. | `false`              |
+| `privateCa.enabled`              | Run the init container injecting the private CA certificate                                                                                                                        | `false`              |
+| `privateCa.image.repository`     | Private CA injector image                                                                                                                                                          | `ubuntu`             |
+| `privateCa.image.tag`            | Private CA injector tag                                                                                                                                                            | `latest`             |
+| `privateCa.image.pullPolicy`     | Private CA injector pull policy                                                                                                                                                    | `IfNotPresent`       |
+| `privateCa.image.apkAdd`         | Install the update-ca-certificates package                                                                                                                                         | `true`               |
+| `privateCa.configMap.name`       | Name of the _ConfigMap_ containing the private CA certificate                                                                                                                      | `substra-private-ca` |
+| `privateCa.configMap.data`       | Certificate to add in the _ConfigMap_                                                                                                                                              | `nil`                |
+| `privateCa.configMap.fileName`   | Certificate filename in the _ConfigMap_                                                                                                                                            | `private-ca.crt`     |
+| `psp.create`                     | Create a _Pod Security Policy_ in the cluster                                                                                                                                      | `true`               |
 
 
 ### Server settings
 
-| Name                                        | Description                                                                                                                                        | Value                            |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
-| `server.replicaCount`                       | Number of server replicas                                                                                                                          | `1`                              |
-| `server.defaultDomain`                      | The hostname and port of the backend. This address will be used as the assets `storage_address` field                                              | `localhost`                      |
-| `server.subpath`                            | The subpath under which the API is served                                                                                                          | `""`                             |
-| `server.commonHostDomain`                   | The common host under which the backend and frontend are served                                                                                    | `""`                             |
-| `server.uwsgiProcesses`                     | The number of uwsgi processes                                                                                                                      | `20`                             |
-| `server.uwsgiThreads`                       | The numer of uwsgi threads                                                                                                                         | `2`                              |
-| `server.image.registry`                     | Substra backend server image registry                                                                                                              | `gcr.io`                         |
-| `server.image.repository`                   | Substra backend server image repository                                                                                                            | `connect-314908/connect-backend` |
-| `server.image.tag`                          | Substra backend server image tag                                                                                                                   | `0.4.0`                          |
-| `server.image.pullPolicy`                   | Substra backend server image pull policy                                                                                                           | `IfNotPresent`                   |
-| `server.image.pullSecrets`                  | Specify image pull secrets                                                                                                                         | `[]`                             |
-| `server.podSecurityContext.enabled`         | Enable security context                                                                                                                            | `true`                           |
-| `server.podSecurityContext.runAsUser`       | User ID for the pod                                                                                                                                | `1001`                           |
-| `server.podSecurityContext.runAsGroup`      | Group ID for the pod                                                                                                                               | `1001`                           |
-| `server.podSecurityContext.fsGroup`         | FileSystem group ID for the pod                                                                                                                    | `1001`                           |
-| `server.service.type`                       | Kubernetes Service type                                                                                                                            | `ClusterIP`                      |
-| `server.service.port`                       | Server port                                                                                                                                        | `8000`                           |
-| `server.service.clusterIP`                  | _ClusterIP_ or `None` for headless service                                                                                                         | `""`                             |
-| `server.service.loadBalancerIP`             | Load balancer IP if service type is `LoadBalancer`                                                                                                 | `""`                             |
-| `server.service.loadBalancerSourceRanges`   | Addresses that are allowed when service is `LoadBalancer`                                                                                          | `[]`                             |
-| `server.service.nodePort`                   | Specify the `nodePort` value for the `LoadBalancer` and `NodePort` service types                                                                   | `""`                             |
-| `server.service.externalIPs`                | A list of IP addresses for which nodes in the cluster will also accept traffic for this service                                                    | `[]`                             |
-| `server.service.annotations`                | Additional annotations for the _Service_ resource.                                                                                                 | `{}`                             |
-| `server.ingress.enabled`                    | Deploy an ingress for the substra backend server                                                                                                   | `false`                          |
-| `server.ingress.hostname`                   | Default host for the ingress ressource                                                                                                             | `substra.backend.local`          |
-| `server.ingress.pathType`                   | Ingress path type                                                                                                                                  | `ImplementationSpecific`         |
-| `server.ingress.path`                       | Path for the default host                                                                                                                          | `/`                              |
-| `server.ingress.extraPaths`                 | The list of extra paths to be created for the default host                                                                                         | `[]`                             |
-| `server.ingress.annotations`                | Additional annotations for the Ingress resource.                                                                                                   | `{}`                             |
-| `server.ingress.extraHosts`                 | The list of additional hostnames to be covered with this ingress record                                                                            | `[]`                             |
-| `server.ingress.extraTls`                   | The tls configuration for hostnames to be coverred by the ingress                                                                                  | `[]`                             |
-| `server.ingress.ingressClassName`           | _IngressClass_ that will be used to implement the Ingress                                                                                          | `nil`                            |
-| `server.resources`                          | Server container resources requests and limits                                                                                                     | `{}`                             |
-| `server.persistence.storageClass`           | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
-| `server.persistence.servermedias.size`      | Servermedias volume size                                                                                                                           | `10Gi`                           |
-| `server.persistence.algos.size`             | _Algo_ files volume size                                                                                                                           | `10Gi`                           |
-| `server.persistence.datamanagers.size`      | _DataManager_ files volume size                                                                                                                    | `10Gi`                           |
-| `server.persistence.metrics.size`           | _Metrics_ files volume size                                                                                                                        | `10Gi`                           |
-| `server.livenessProbe.enabled`              | Enable livenessProbe                                                                                                                               | `true`                           |
-| `server.livenessProbe.path`                 | Path of the HTTP service for checking the healthy state                                                                                            | `/liveness`                      |
-| `server.livenessProbe.initialDelaySeconds`  | Initial delay seconds for livenessProbe                                                                                                            | `60`                             |
-| `server.livenessProbe.periodSeconds`        | Period seconds for livenessProbe                                                                                                                   | `45`                             |
-| `server.livenessProbe.timeoutSeconds`       | Timeout seconds for livenessProbe                                                                                                                  | `5`                              |
-| `server.livenessProbe.failureThreshold`     | Failure threshold for livenessProbe                                                                                                                | `6`                              |
-| `server.livenessProbe.successThreshold`     | Success threshold for livenessProbe                                                                                                                | `1`                              |
-| `server.readinessProbe.enabled`             | Enable readinessProbe                                                                                                                              | `true`                           |
-| `server.readinessProbe.path`                | Path of the HTTP service for checking the healthy state                                                                                            | `/readiness`                     |
-| `server.readinessProbe.initialDelaySeconds` | Initial delay seconds for readinessProbe                                                                                                           | `5`                              |
-| `server.readinessProbe.periodSeconds`       | Period seconds for readinessProbe                                                                                                                  | `30`                             |
-| `server.readinessProbe.timeoutSeconds`      | Timeout seconds for readinessProbe                                                                                                                 | `2`                              |
-| `server.readinessProbe.failureThreshold`    | Failure threshold for readinessProbe                                                                                                               | `3`                              |
-| `server.readinessProbe.successThreshold`    | Success threshold for readinessProbe                                                                                                               | `1`                              |
+| Name                                           | Description                                                                                                                                        | Value                            |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `server.replicaCount`                          | Number of server replicas                                                                                                                          | `1`                              |
+| `server.defaultDomain`                         | The hostname and port of the backend. This address will be used as the assets `storage_address` field                                              | `localhost`                      |
+| `server.subpath`                               | The subpath under which the API is served                                                                                                          | `""`                             |
+| `server.commonHostDomain`                      | The common host under which the backend and frontend are served                                                                                    | `""`                             |
+| `server.uwsgiProcesses`                        | The number of uwsgi processes                                                                                                                      | `20`                             |
+| `server.uwsgiThreads`                          | The numer of uwsgi threads                                                                                                                         | `2`                              |
+| `server.image.registry`                        | Substra backend server image registry                                                                                                              | `gcr.io`                         |
+| `server.image.repository`                      | Substra backend server image repository                                                                                                            | `connect-314908/connect-backend` |
+| `server.image.tag`                             | Substra backend server image tag                                                                                                                   | `0.4.0`                          |
+| `server.image.pullPolicy`                      | Substra backend server image pull policy                                                                                                           | `IfNotPresent`                   |
+| `server.image.pullSecrets`                     | Specify image pull secrets                                                                                                                         | `[]`                             |
+| `server.podSecurityContext.enabled`            | Enable security context                                                                                                                            | `true`                           |
+| `server.podSecurityContext.runAsUser`          | User ID for the pod                                                                                                                                | `1001`                           |
+| `server.podSecurityContext.runAsGroup`         | Group ID for the pod                                                                                                                               | `1001`                           |
+| `server.podSecurityContext.fsGroup`            | FileSystem group ID for the pod                                                                                                                    | `1001`                           |
+| `server.service.type`                          | Kubernetes Service type                                                                                                                            | `ClusterIP`                      |
+| `server.service.port`                          | Server port                                                                                                                                        | `8000`                           |
+| `server.service.clusterIP`                     | _ClusterIP_ or `None` for headless service                                                                                                         | `""`                             |
+| `server.service.loadBalancerIP`                | Load balancer IP if service type is `LoadBalancer`                                                                                                 | `""`                             |
+| `server.service.loadBalancerSourceRanges`      | Addresses that are allowed when service is `LoadBalancer`                                                                                          | `[]`                             |
+| `server.service.nodePort`                      | Specify the `nodePort` value for the `LoadBalancer` and `NodePort` service types                                                                   | `""`                             |
+| `server.service.externalIPs`                   | A list of IP addresses for which nodes in the cluster will also accept traffic for this service                                                    | `[]`                             |
+| `server.service.annotations`                   | Additional annotations for the _Service_ resource.                                                                                                 | `{}`                             |
+| `server.ingress.enabled`                       | Deploy an ingress for the substra backend server                                                                                                   | `false`                          |
+| `server.ingress.hostname`                      | Default host for the ingress ressource                                                                                                             | `substra.backend.local`          |
+| `server.ingress.pathType`                      | Ingress path type                                                                                                                                  | `ImplementationSpecific`         |
+| `server.ingress.path`                          | Path for the default host                                                                                                                          | `/`                              |
+| `server.ingress.extraPaths`                    | The list of extra paths to be created for the default host                                                                                         | `[]`                             |
+| `server.ingress.annotations`                   | Additional annotations for the Ingress resource.                                                                                                   | `{}`                             |
+| `server.ingress.extraHosts`                    | The list of additional hostnames to be covered with this ingress record                                                                            | `[]`                             |
+| `server.ingress.extraTls`                      | The tls configuration for hostnames to be coverred by the ingress                                                                                  | `[]`                             |
+| `server.ingress.ingressClassName`              | _IngressClass_ that will be used to implement the Ingress                                                                                          | `nil`                            |
+| `server.resources`                             | Server container resources requests and limits                                                                                                     | `{}`                             |
+| `server.persistence.storageClass`              | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
+| `server.persistence.servermedias.size`         | Servermedias volume size                                                                                                                           | `10Gi`                           |
+| `server.persistence.servermedias.storageClass` | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
+| `server.persistence.algos.size`                | _Algo_ files volume size                                                                                                                           | `10Gi`                           |
+| `server.persistence.datamanagers.size`         | _DataManager_ files volume size                                                                                                                    | `10Gi`                           |
+| `server.persistence.metrics.size`              | _Metrics_ files volume size                                                                                                                        | `10Gi`                           |
+| `server.livenessProbe.enabled`                 | Enable livenessProbe                                                                                                                               | `true`                           |
+| `server.livenessProbe.path`                    | Path of the HTTP service for checking the healthy state                                                                                            | `/liveness`                      |
+| `server.livenessProbe.initialDelaySeconds`     | Initial delay seconds for livenessProbe                                                                                                            | `60`                             |
+| `server.livenessProbe.periodSeconds`           | Period seconds for livenessProbe                                                                                                                   | `45`                             |
+| `server.livenessProbe.timeoutSeconds`          | Timeout seconds for livenessProbe                                                                                                                  | `5`                              |
+| `server.livenessProbe.failureThreshold`        | Failure threshold for livenessProbe                                                                                                                | `6`                              |
+| `server.livenessProbe.successThreshold`        | Success threshold for livenessProbe                                                                                                                | `1`                              |
+| `server.readinessProbe.enabled`                | Enable readinessProbe                                                                                                                              | `true`                           |
+| `server.readinessProbe.path`                   | Path of the HTTP service for checking the healthy state                                                                                            | `/readiness`                     |
+| `server.readinessProbe.initialDelaySeconds`    | Initial delay seconds for readinessProbe                                                                                                           | `5`                              |
+| `server.readinessProbe.periodSeconds`          | Period seconds for readinessProbe                                                                                                                  | `30`                             |
+| `server.readinessProbe.timeoutSeconds`         | Timeout seconds for readinessProbe                                                                                                                 | `2`                              |
+| `server.readinessProbe.failureThreshold`       | Failure threshold for readinessProbe                                                                                                               | `3`                              |
+| `server.readinessProbe.successThreshold`       | Success threshold for readinessProbe                                                                                                               | `1`                              |
 
 
 ### Substra worker settings
@@ -275,16 +276,39 @@ Where `docker-config` is the name of the docker config secret which needs to be 
 
 ### Data sample storage {#datasample-storage}
 
-By default (`celeryworker.persistence.servermedias.enableDatasampleStorage` set to `False`), all the datasamples are stored in MinIO.
+By default (`DataSampleStorageInServerMedia` set to `False`), all the datasamples are stored in MinIO.
 
-_In a context where there is only one kubernetes node only_: it is possible to set `celeryworker.persistence.servermedias.enableDatasampleStorage` to `true`. In this case, the datasamples that are registered by a "path" are kept on the "servermedias" volume. If set to `false` (default value), the datasample will be duplicated to MinIO.
+_In a context where there is only one kubernetes node only_: it is possible to set `DataSampleStorageInServerMedia` to `true`. In this case, the datasamples that are registered by a "path" are kept on the "servermedias" volume. If set to `false` (default value), the datasample will be duplicated to MinIO.
 
 Activating this option prevents the datasamples from being duplicated in the servermedia and MinIO.
 
 It is recommended to activate this option for environments that have limited storage available.
 
-Note that if `celeryworker.persistence.servermedias.enableDatasampleStorage` is set to `true`, scaling is not supported: it will not be possible to increase the number of kubernetes nodes, nor of workers without re-registering all the datasamples. This even if `celeryworker.persistence.servermedias.enableDatasampleStorage` is set back to `false`.
+Note that if `DataSampleStorageInServerMedia` is set to `true`, scaling is not supported: it will not be possible to increase the number of kubernetes nodes, nor of workers without re-registering all the datasamples. This even if `DataSampleStorageInServerMedia` is set back to `false`.
 
 Also note that registering datasamples by sending a file will work in the same way independently from this option: in either cases the file will be uploaded to MinIO.
 
 For additional information: [here](https://github.com/Substra/substra/blob/master/references/sdk.md#add_data_sample) is the documentation of Substra SDK for registering datasamples.
+
+
+You will also have to create manually a PersistentVolume for each organization
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-local-servermedias
+  labels:
+    app.kubernetes.io/instance: backend-{{ Release.Name }}
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Gi ## Should be equal or bigger than .Values.server.persistence.servermedias.size
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/PATH/TO/YOUR/LOCAL_STORAGE"
+
+
+```
+
