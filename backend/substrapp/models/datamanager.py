@@ -6,7 +6,7 @@ from substrapp.utils import get_hash
 
 
 def upload_to(instance, filename):
-    return "datamanagers/{0}/{1}".format(instance.key, filename)
+    return f"datamanagers/{instance.key}/{filename}"
 
 
 class DataManager(models.Model):
@@ -19,11 +19,11 @@ class DataManager(models.Model):
     validated = models.BooleanField(default=False, blank=True)
     checksum = models.CharField(max_length=64, blank=True)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Use hash of description file as checksum"""
         if not self.checksum and self.data_opener:
             self.checksum = get_hash(self.data_opener)
-        super(DataManager, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"DataManager with key {self.key} with name {self.name}"

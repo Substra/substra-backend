@@ -1,8 +1,3 @@
-# encoding: utf-8
-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
@@ -20,8 +15,8 @@ class PaginationMixin:
         data_for_one_page = self.paginate_queryset(data)
         if data_for_one_page is None:
             raise Exception(
-                "Failed to build a chunk of data for 1 page.\
- Hint: PaginationMixin is expected to be used in conjunction with DefaultPageNumberPagination"
+                "Failed to build a chunk of data for 1 page. "
+                "Hint: PaginationMixin is expected to be used in conjunction with DefaultPageNumberPagination"
             )
 
         return self.get_paginated_response(data_for_one_page)

@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from .algo import AlgoPermissionViewSet
 from .algo import AlgoViewSet
 from .computeplan import ComputePlanViewSet

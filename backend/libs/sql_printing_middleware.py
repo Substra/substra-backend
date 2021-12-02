@@ -1,5 +1,3 @@
-# encoding: utf-8
-
 from django.conf import settings
 from django.core.exceptions import MiddlewareNotUsed
 from django.db import connection

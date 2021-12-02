@@ -4,7 +4,7 @@ from secrets import choice
 
 
 def gen_secret_key(r):
-    return "".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for i in range(r)])
+    return "".join([choice("abcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*(-_=+)") for _ in range(r)])
 
 
 def write_secret_key(path):

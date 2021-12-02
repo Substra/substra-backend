@@ -1,4 +1,5 @@
 from typing import List
+from typing import Optional
 
 from django.conf import settings
 from django.db import transaction
@@ -46,7 +47,7 @@ def get_worker_queue(compute_plan_key: str) -> str:
     return _get_worker_queue(worker_index)
 
 
-def get_existing_worker_queue(compute_plan_key: str) -> int:
+def get_existing_worker_queue(compute_plan_key: str) -> Optional[int]:
     """
     Return the name of a worker queue mapped to this compute plan, if it exists.
 

@@ -12,9 +12,6 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 import json
 import os
 from os import path

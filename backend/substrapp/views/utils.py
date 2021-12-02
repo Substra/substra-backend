@@ -75,7 +75,7 @@ def get_remote_asset(channel_name, url, node_id, content_checksum, salt=None):
 
 class CustomFileResponse(FileResponse):
     def set_headers(self, filelike):
-        super(CustomFileResponse, self).set_headers(filelike)
+        super().set_headers(filelike)
 
         self["Access-Control-Expose-Headers"] = "Content-Disposition"
 
@@ -103,7 +103,7 @@ class PermissionMixin(object):
         :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
         :raises: AssetPermissionError
         """
-        if user.is_anonymous:  # safeguard, should never happened
+        if user.is_anonymous:  # safeguard, should never happen
             raise AssetPermissionError()
 
         if type(user) is NodeUser:  # for node

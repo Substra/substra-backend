@@ -16,7 +16,7 @@ class MinioStorage(Storage):
 
     def __init__(self, bucket, *args, **kwargs):
         self.bucket = bucket
-        return super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     @property
     def client(self):

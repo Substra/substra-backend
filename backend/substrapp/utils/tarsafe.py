@@ -35,18 +35,15 @@ class TarSafe(tarfile.TarFile):
         """
         Runs all necessary checks for the safety of a tarfile.
         """
-        try:
-            for tarinfo in self.__iter__():
-                if self._is_traversal_attempt(tarinfo=tarinfo):
-                    raise TarSafeError(f"Attempted directory traversal for member: {tarinfo.name}")
-                if tarinfo.issym():
-                    raise TarSafeError(f"Unsupported symlink for member: {tarinfo.linkname}")
-                if self._is_unsafe_link(tarinfo=tarinfo):
-                    raise TarSafeError(f"Attempted directory traversal via link for member: {tarinfo.linkname}")
-                if self._is_device(tarinfo=tarinfo):
-                    raise TarSafeError("tarfile returns true for isblk() or ischr()")
-        except Exception:
-            raise
+        for tarinfo in self.__iter__():
+            if self._is_traversal_attempt(tarinfo=tarinfo):
+                raise TarSafeError(f"Attempted directory traversal for member: {tarinfo.name}")
+            if tarinfo.issym():
+                raise TarSafeError(f"Unsupported symlink for member: {tarinfo.linkname}")
+            if self._is_unsafe_link(tarinfo=tarinfo):
+                raise TarSafeError(f"Attempted directory traversal via link for member: {tarinfo.linkname}")
+            if self._is_device(tarinfo=tarinfo):
+                raise TarSafeError("tarfile returns true for isblk() or ischr()")
 
     def _is_traversal_attempt(self, tarinfo):
         if not os.path.abspath(os.path.join(self.directory, tarinfo.name)).startswith(self.directory):

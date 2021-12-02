@@ -33,9 +33,9 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
     # fetch secrets and write them to disk
     try:
         secrets = k8s_client.list_namespaced_secret(secret_namespace, label_selector=label_selector)
-    except kubernetes.client.rest.ApiException as e:
+    except kubernetes.client.rest.ApiException:
         logger.error("failed to fetch namespaced secrets", namespace=secret_namespace, selector=label_selector)
-        raise e
+        raise
 
     secrets = secrets.to_dict()["items"]
     if not secrets:
@@ -69,9 +69,9 @@ def _prepare_chainkeys(compute_plan_tag: str, chainkeys_dir: str) -> None:
                     ),
                 ),
             )
-        except kubernetes.client.rest.ApiException as e:
+        except kubernetes.client.rest.ApiException:
             logger.error("failed to remove secrets from namespace", namespace=secret_namespace)
-            raise e
+            raise
     else:
         logger.info(f"{len(secrets)} secrets have been removed")
 

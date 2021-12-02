@@ -16,9 +16,9 @@ if os.path.exists(EXCEPTION_PATH):
         EXCEPTIONS_MAP = json.load(open(EXCEPTION_PATH))
     except Exception:
         # The json may be corrupted
-        EXCEPTIONS_MAP = dict()
+        EXCEPTIONS_MAP = {}
 else:
-    EXCEPTIONS_MAP = dict()
+    EXCEPTIONS_MAP = {}
 
 
 def get_exception_code(exception_type):
@@ -124,7 +124,7 @@ def generate_exceptions_map(append=True):
 
     else:
         # Generate the json exceptions
-        json_exceptions = dict()
+        json_exceptions = {}
         for code_exception, exception_name in enumerate(exceptions_classes, start=1):
             json_exceptions[exception_name] = f"{code_exception:04d}"
 

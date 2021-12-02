@@ -12,11 +12,11 @@ from substrapp.utils import raise_if_path_traversal
 @deconstructible
 class FileValidator(object):
     error_messages = {
-        "open": ("Cannot handle this file object."),
-        "compressed": ("Ensure this file is an archive (zip or tar.* compressed file)."),
-        "docker": ("Ensure your archive contains a Dockerfile."),
-        "file": ("Ensure your archive contains at least one python file."),
-        "traversal": ("Ensure your archive does not contain traversal filenames (e.g. filename with `..` inside)"),
+        "open": "Cannot handle this file object.",
+        "compressed": "Ensure this file is an archive (zip or tar.* compressed file).",
+        "docker": "Ensure your archive contains a Dockerfile.",
+        "file": "Ensure your archive contains at least one python file.",
+        "traversal": "Ensure your archive does not contain traversal filenames (e.g. filename with `..` inside)",
     }
 
     def validate_archive(self, files):

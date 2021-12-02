@@ -4,7 +4,7 @@ from django.conf import settings
 from django.db import models
 
 
-def upload_to(instance, filename):
+def upload_to(instance, filename) -> str:
     return str(instance.key)
 
 
@@ -21,5 +21,5 @@ class DataSample(models.Model):
     # servermedias use path instead of file
     path = models.FilePathField(max_length=500, blank=True, null=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"DataSample with key {self.key} with validated {self.validated}"

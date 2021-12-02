@@ -5,8 +5,8 @@ from django.db import models
 from substrapp.utils import get_hash
 
 
-def upload_to(instance, filename):
-    return "algos/{0}/{1}".format(instance.key, filename)
+def upload_to(instance, filename) -> str:
+    return f"algos/{instance.key}/{filename}"
 
 
 class Algo(models.Model):
@@ -18,11 +18,11 @@ class Algo(models.Model):
     validated = models.BooleanField(default=False)
     checksum = models.CharField(max_length=64, blank=True)
 
-    def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs) -> None:
         """Use hash of file as checksum"""
         if not self.checksum and self.file:
             self.checksum = get_hash(self.file)
-        super(Algo, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Algo with key {self.key} with validated {self.validated}"

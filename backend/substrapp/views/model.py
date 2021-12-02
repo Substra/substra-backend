@@ -133,8 +133,11 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
     def check_access(self, channel_name: str, user, asset, is_proxied_request: bool) -> None:
         """Return true if API consumer is allowed to access the model.
 
-        :param is_proxied_request: True if the API consumer is another backend-server proxying a user request
-        :raises: AssetPermissionError
+        Args:
+            is_proxied_request: True if the API consumer is another backend-server proxying a user request
+
+        Raises:
+            AssetPermissionError
         """
         if user.is_anonymous:
             raise AssetPermissionError()

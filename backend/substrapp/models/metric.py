@@ -6,8 +6,8 @@ from libs.timestamp_model import TimeStamped
 from substrapp.utils import get_hash
 
 
-def upload_to(instance, filename):
-    return "metrics/{0}/{1}".format(instance.key, filename)
+def upload_to(instance, filename) -> str:
+    return f"metrics/{instance.key}/{filename}"
 
 
 class Metric(TimeStamped):
@@ -23,7 +23,7 @@ class Metric(TimeStamped):
         """Use hash of description file as checksum"""
         if not self.checksum and self.description:
             self.checksum = get_hash(self.description)
-        super(Metric, self).save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Metric with key {self.key} with validated {self.validated}"

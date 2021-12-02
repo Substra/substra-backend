@@ -7,9 +7,6 @@ In these functions, we:
 - Execute the command in the compute pod
 """
 
-from __future__ import absolute_import
-from __future__ import unicode_literals
-
 from typing import List
 
 import kubernetes

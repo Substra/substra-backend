@@ -85,8 +85,8 @@ def _save_model(channel_name: str, category: int, src_path: str, task_key: str) 
                     },
                 }
             )
-    except Exception as e:
+    except Exception:
         instance.delete()
-        raise e
+        raise
 
     return instance, storage_address
