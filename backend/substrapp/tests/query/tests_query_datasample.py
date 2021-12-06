@@ -4,9 +4,9 @@ import shutil
 import tempfile
 import uuid
 import zipfile
+from unittest import mock
 from unittest.mock import MagicMock
 
-import mock
 from django.core.files import File
 from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import override_settings

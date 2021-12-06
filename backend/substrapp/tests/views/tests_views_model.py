@@ -2,8 +2,8 @@ import copy
 import logging
 import os
 import shutil
+from unittest import mock
 
-import mock
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse

@@ -1,6 +1,6 @@
 import uuid
+from unittest import mock
 
-import mock
 from django.db.utils import IntegrityError
 from django.test import TestCase
 from parameterized import parameterized

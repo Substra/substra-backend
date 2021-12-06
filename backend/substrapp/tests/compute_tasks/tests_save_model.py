@@ -1,8 +1,8 @@
 import os
 import tempfile
 import uuid
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from grpc import RpcError
 from grpc import StatusCode

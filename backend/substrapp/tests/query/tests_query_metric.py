@@ -2,8 +2,8 @@ import json
 import os
 import shutil
 import tempfile
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from django.urls import reverse
 from grpc import StatusCode

@@ -1,8 +1,8 @@
 import os
 import tempfile
 import zipfile
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase

@@ -3,8 +3,8 @@ import json
 import logging
 import os
 import shutil
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from django.urls import reverse
 from grpc import RpcError

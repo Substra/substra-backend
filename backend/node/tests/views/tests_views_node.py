@@ -1,7 +1,7 @@
 import logging
 import os
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework.test import APITestCase

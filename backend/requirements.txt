@@ -27,6 +27,5 @@ watchdog==2.1.5  # 2.1.6 seems buggy with their new decorator
 argh==0.26.2
 # tests
 coverage==6.1.1
-mock==4.0.3
 parameterized==0.8.1
 django-prometheus==2.1.0

@@ -5,8 +5,8 @@ import uuid
 from abc import ABCMeta
 from abc import abstractmethod
 from collections import ChainMap
+from unittest import mock
 
-import mock
 from django.core.files import File
 from django.test import override_settings
 from parameterized import parameterized

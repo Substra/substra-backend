@@ -1,4 +1,5 @@
-import mock
+from unittest import mock
+
 from celery.exceptions import Ignore
 from django.test import override_settings
 from rest_framework.test import APITestCase

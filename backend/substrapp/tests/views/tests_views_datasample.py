@@ -4,8 +4,8 @@ import ntpath
 import os
 import shutil
 import tempfile
+from unittest import mock
 
-import mock
 from django.test import override_settings
 from django.urls import reverse
 from rest_framework import status

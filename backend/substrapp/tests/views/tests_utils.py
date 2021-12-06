@@ -2,8 +2,8 @@ import functools
 import os
 import tempfile
 import uuid
+from unittest import mock
 
-import mock
 import requests
 from django.test import override_settings
 from requests.auth import HTTPBasicAuth

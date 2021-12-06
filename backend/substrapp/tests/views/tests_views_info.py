@@ -1,4 +1,5 @@
-import mock
+from unittest import mock
+
 from django.test.utils import override_settings
 from rest_framework import status
 from rest_framework.test import APIClient
