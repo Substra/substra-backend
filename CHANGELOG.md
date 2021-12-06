@@ -17,14 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add cp start date, end date and duration (#402)
 
 ### Changed
-<<<<<<< HEAD
-- Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP` (#350)
-- Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER` (#350)
-- Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP` (#350)
-- Do not openly expose media directory (#432)
-- Do not mount the serviceAccount token on the compute pod (#461)
-- Switch log format to JSON (#464)
-=======
+
 - Datasample upload by path is possible only from the servermedias volumes
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
 - Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER`.
@@ -32,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Do not openly expose media directory
 - Do not mount the serviceAccount token on the compute pod
 - Switch log format to JSON
->>>>>>> 8e2f7dab (fix: upload datasample by path only from servermedias)
 
 ### Removed
 - `COMPUTE_REGISTRY` setting, you should provide the whole kaniko image name in `KANIKO_IMAGE` (#350)
