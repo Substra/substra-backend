@@ -60,7 +60,7 @@ This will also gives you access to the [celery CLI](https://docs.celeryproject.o
 
 Make sure you have the requirements installed:
 ```sh
-pip install -r backend/requirements.txt
+pip install -r backend/dev-requirements.txt
 ```
 
 Then launch unit tests:
