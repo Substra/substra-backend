@@ -1,9 +1,7 @@
 -r requirements.txt
-argh==0.26.2
 black==21.11b1
 coverage==6.1.1
 flake8==4.0.1
 isort==5.10.1
 parameterized==0.8.1
 pep8-naming==0.12.0
-watchdog==2.1.5  # 2.1.6 seems buggy with their new decorator
