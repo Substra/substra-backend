@@ -1,6 +1,7 @@
 import copy
 import os
 import shutil
+import tempfile
 import urllib
 import uuid
 from unittest import mock
@@ -19,12 +20,13 @@ from .. import assets
 from .. import common
 from ..common import AuthenticatedClient
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # APITestCase
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class ComputePlanViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -32,7 +34,6 @@ class ComputePlanViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.url = reverse("substrapp:compute_plan-list")

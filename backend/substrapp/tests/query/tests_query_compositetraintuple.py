@@ -21,8 +21,8 @@ from ..common import AuthenticatedClient
 from ..common import get_sample_metric
 from ..common import get_sample_model
 
-MEDIA_ROOT = tempfile.mkdtemp()
 TEST_ORG = "MyTestOrg"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
@@ -36,7 +36,6 @@ class CompositeTraintupleQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         (
             self.metric_description,
             self.metric_description_filename,

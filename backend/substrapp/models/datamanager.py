@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 from substrapp.utils import get_hash
@@ -14,8 +15,12 @@ class DataManager(models.Model):
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(blank=True, max_length=100)
-    data_opener = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
-    description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    data_opener = models.FileField(
+        storage=settings.DATAMANAGER_STORAGE, max_length=500, upload_to=upload_to
+    )  # path max length to 500 instead of default 100
+    description = models.FileField(
+        storage=settings.DATAMANAGER_STORAGE, max_length=500, upload_to=upload_to
+    )  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False, blank=True)
     checksum = models.CharField(max_length=64, blank=True)
 

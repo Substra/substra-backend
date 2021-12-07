@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import shutil
+import tempfile
 from unittest import mock
 
 from django.test import override_settings
@@ -19,10 +20,10 @@ from ..common import AuthenticatedClient
 from ..common import encode_filter
 from ..common import get_sample_datamanager
 
-MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
 MODEL_KEY = "some-key"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # APITestCase
@@ -37,7 +38,6 @@ class DataManagerViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.url = reverse("substrapp:data_manager-list")
         (
             self.data_description,
@@ -54,7 +54,6 @@ class DataManagerViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_datamanager_list_empty(self):

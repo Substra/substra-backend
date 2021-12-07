@@ -16,13 +16,13 @@ from .common import FakeRequest
 from .common import get_sample_algo
 
 CHANNEL = "mychannel"
-MEDIA_ROOT = tempfile.mkdtemp()
+SUBTUPLE_DIR = tempfile.mkdtemp()
 
 
-@override_settings(MEDIA_ROOT=MEDIA_ROOT)
+@override_settings(SUBTUPLE_DIR=SUBTUPLE_DIR)
 class UtilsTests(APITestCase):
     def setUp(self):
-        self.subtuple_path = MEDIA_ROOT
+        self.subtuple_path = SUBTUPLE_DIR
         self.algo, self.algo_filename = get_sample_algo()
 
     def test_get_remote_file_content(self):

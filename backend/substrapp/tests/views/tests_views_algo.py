@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import shutil
+import tempfile
 from unittest import mock
 
 from django.test import override_settings
@@ -20,12 +21,13 @@ from ..common import AuthenticatedClient
 from ..common import encode_filter
 from ..common import get_sample_algo
 
-MEDIA_ROOT = "/tmp/unittests_views/"
-
-
+MEDIA_ROOT = tempfile.mkdtemp()
 # APITestCase
+
+
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AlgoViewTests(APITestCase):
     client_class = AuthenticatedClient

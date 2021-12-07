@@ -51,7 +51,6 @@ MODEL_CATEGORY = {
     "head": model_pb2.MODEL_HEAD,
 }
 
-
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
 
 
@@ -194,7 +193,7 @@ class PermissionMixin(object):
         data = getattr(obj, django_field)
         filename = None
 
-        if hasattr(obj, "file") and isinstance(obj.file.storage, MinioStorage):
+        if isinstance(data.storage, MinioStorage):
             filename = str(obj.key)
         else:
             filename = os.path.basename(data.path)

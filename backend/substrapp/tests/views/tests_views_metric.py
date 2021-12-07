@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import shutil
+import tempfile
 import zipfile
 from unittest import mock
 
@@ -21,7 +22,7 @@ from ..common import AuthenticatedClient
 from ..common import encode_filter
 from ..common import get_sample_metric
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 CHANNEL = "mychannel"
 
 
@@ -37,7 +38,8 @@ def zip_folder(path, destination):
 
 # APITestCase
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 @override_settings(DEFAULT_DOMAIN="https://localhost")
 class MetricViewTests(APITestCase):

@@ -70,12 +70,6 @@ spec:
             containerPort: 8000
             protocol: TCP
         volumeMounts:
-          - name: data-algos
-            mountPath: /var/substra/medias/algos
-          - name: data-datamanagers
-            mountPath: /var/substra/medias/datamanagers
-          - name: data-metrics
-            mountPath: /var/substra/medias/metrics
           - name: data-servermedias
             mountPath: /var/substra/servermedias
           - name: statics
@@ -176,15 +170,6 @@ spec:
           - name: statics
             mountPath: /usr/src/app/backend/statics
       volumes:
-      - name: data-algos
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-algos
-      - name: data-datamanagers
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-datamanagers
-      - name: data-metrics
-        persistentVolumeClaim:
-          claimName: {{ include "substra.fullname" $ }}-metrics
       - name: data-servermedias
         persistentVolumeClaim:
           claimName: {{ include "substra.fullname" $ }}-servermedias

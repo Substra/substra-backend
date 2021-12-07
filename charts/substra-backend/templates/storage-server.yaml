@@ -1,48 +1,6 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  labels:
-    {{ include "substra.labels" $ | nindent 4 }}
-  name: {{ template "substra.fullname" $ }}-algos
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.server.persistence.algos.size | quote }}
-  {{ include "common.storage.class" .Values.server.persistence }}
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  labels:
-    {{ include "substra.labels" $ | nindent 4 }}
-  name: {{ template "substra.fullname" $ }}-datamanagers
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.server.persistence.datamanagers.size | quote }}
-  {{ include "common.storage.class" .Values.server.persistence }}
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  labels:
-    {{ include "substra.labels" $ | nindent 4 }}
-  name: {{ template "substra.fullname" $ }}-metrics
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: {{ .Values.server.persistence.metrics.size | quote }}
-  {{ include "common.storage.class" .Values.server.persistence }}
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
   name: {{ template "substra.fullname" $ }}-servermedias
   labels:
   {{ include "substra.labels" $ | nindent 4 }}

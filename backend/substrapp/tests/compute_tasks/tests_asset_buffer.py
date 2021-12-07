@@ -125,7 +125,6 @@ class TestDataSampleSavedByFile(TestDataSample):
 
 @override_settings(
     ASSET_BUFFER_DIR=ASSET_BUFFER_DIR,
-    MEDIA_ROOT=tempfile.mkdtemp(),
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AssetBufferTests(APITestCase):

@@ -1,5 +1,6 @@
 import uuid
 
+from django.conf import settings
 from django.db import models
 
 from substrapp.utils import get_hash
@@ -13,8 +14,12 @@ class Algo(models.Model):
     """Storage Data table"""
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    file = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
-    description = models.FileField(upload_to=upload_to, max_length=500)  # path max length to 500 instead of default 100
+    file = models.FileField(
+        storage=settings.ALGO_STORAGE, max_length=500, upload_to=upload_to
+    )  # path max length to 500 instead of default 100
+    description = models.FileField(
+        storage=settings.ALGO_STORAGE, upload_to=upload_to, max_length=500
+    )  # path max length to 500 instead of default 100
     validated = models.BooleanField(default=False)
     checksum = models.CharField(max_length=64, blank=True)
 

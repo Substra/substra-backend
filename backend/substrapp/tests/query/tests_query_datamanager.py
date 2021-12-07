@@ -26,7 +26,8 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 @override_settings(DEFAULT_DOMAIN="http://testserver")
 class DataManagerQueryTests(APITestCase):
@@ -35,7 +36,6 @@ class DataManagerQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         (
             self.data_description,
             self.data_description_filename,

@@ -14,7 +14,6 @@ CHANNEL = "mychannel"
 
 
 @override_settings(
-    MEDIA_ROOT=tempfile.mkdtemp(),
     SUBTUPLE_DIR=tempfile.mkdtemp(),
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )

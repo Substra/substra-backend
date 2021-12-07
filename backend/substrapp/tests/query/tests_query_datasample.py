@@ -30,13 +30,14 @@ from ..common import get_sample_tar_data_sample
 from ..common import get_sample_zip_data_sample
 from ..common import get_sample_zip_data_sample_2
 
-MEDIA_ROOT = tempfile.mkdtemp()
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 FIXTURE_PATH = os.path.abspath(os.path.join(DIR_PATH, "../../../../fixtures/owkin"))
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 @override_settings(DEFAULT_DOMAIN="http://testserver")
 class DataSampleQueryTests(APITestCase):
@@ -48,7 +49,6 @@ class DataSampleQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.script, self.script_filename = get_sample_script()
         self.data_file, self.data_file_filename = get_sample_zip_data_sample()
         self.data_file_2, self.data_file_filename_2 = get_sample_zip_data_sample_2()

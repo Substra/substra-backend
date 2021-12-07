@@ -39,6 +39,14 @@ MODEL_STORAGE = MinioStorage(MODEL_BUCKET_NAME)
 
 MEDIA_ROOT = os.environ.get("MEDIA_ROOT", os.path.join(PROJECT_ROOT, f"medias/{ORG_NAME}"))
 SERVERMEDIAS_ROOT = os.environ.get("SERVERMEDIAS_ROOT", os.path.join(PROJECT_ROOT, f"servermedias/{ORG_NAME}"))
+ALGO_BUCKET_NAME = "substra-algo"
+ALGO_STORAGE = MinioStorage(ALGO_BUCKET_NAME)
+
+METRICS_BUCKET_NAME = "substra-metrics"
+METRICS_STORAGE = MinioStorage(METRICS_BUCKET_NAME)
+
+DATAMANAGER_BUCKET_NAME = "substra-datamanager"
+DATAMANAGER_STORAGE = MinioStorage(DATAMANAGER_BUCKET_NAME)
 
 SUBTUPLE_DIR = os.path.join(MEDIA_ROOT, "subtuple")
 ASSET_BUFFER_DIR = os.path.join(SUBTUPLE_DIR, "asset_buffer")

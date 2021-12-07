@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Datasample upload by path is possible only from the servermedias volumes
+- algo, metrics and datamanager are stored in Minio instead of the medias volume
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.
 - Rename `RUN_AS_USER` setting to `COMPUTE_POD_RUN_AS_USER`.
 - Rename `FS_GROUP` setting to `COMPUTE_POD_FS_GROUP`.

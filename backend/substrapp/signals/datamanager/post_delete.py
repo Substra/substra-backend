@@ -1,13 +1,4 @@
-import shutil
-from os import path
-
-from django.conf import settings
-
-
 def datamanager_post_delete(sender, instance, **kwargs):
-    instance.data_opener.delete(False)
-    instance.description.delete(False)
-
-    directory = path.join(getattr(settings, "MEDIA_ROOT"), "datamanagers/{0}".format(instance.key))
-    if path.exists(directory):
-        shutil.rmtree(directory)
+    # delete folder and files from MinioStorage
+    instance.data_opener.storage.delete(str(instance.data_opener.name))
+    instance.description.storage.delete(str(instance.description.name))

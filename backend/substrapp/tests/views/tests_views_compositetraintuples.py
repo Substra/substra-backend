@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import shutil
+import tempfile
 from unittest import mock
 
 from django.test import override_settings
@@ -19,7 +20,7 @@ from .. import assets
 from .. import common
 from ..common import AuthenticatedClient
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 def get_compute_plan_key(assets):
@@ -32,7 +33,8 @@ def get_compute_plan_key(assets):
 
 # APITestCase
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class CompositeTraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -40,7 +42,6 @@ class CompositeTraintupleViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.url = reverse("substrapp:composite_traintuple-list")
@@ -51,7 +52,6 @@ class CompositeTraintupleViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_compositetraintuple_queryset(self):

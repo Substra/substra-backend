@@ -1,5 +1,6 @@
 import os
 import shutil
+import tempfile
 from unittest import mock
 
 from django.contrib.auth.models import User
@@ -18,18 +19,17 @@ from ..common import get_description_algo
 from ..common import get_sample_algo
 from ..common import get_sample_algo_metadata
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AuthenticationTests(APITestCase):
     def setUp(self):
-
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         # create algo instance which file download is protected

@@ -190,22 +190,6 @@ server:
     ##
     servermedias:
       size: 10Gi
-      ## @param server.persistence.servermedias.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
-      ##
-      storageClass: ""
-    ## @param server.persistence.algos.size _Algo_ files volume size
-    ##
-    algos:
-      size: 10Gi
-    ## @param server.persistence.datamanagers.size _DataManager_ files volume size
-    ##
-    datamanagers:
-      size: 10Gi
-    ## @param server.persistence.metrics.size _Metrics_ files volume size
-    ##
-    metrics:
-      size: 10Gi
-
   ## server containers' liveness probe
   ## ref: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
   ## @param server.livenessProbe.enabled Enable livenessProbe

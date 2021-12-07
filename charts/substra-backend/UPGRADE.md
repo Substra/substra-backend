@@ -1,5 +1,12 @@
 ## unreleased
 
+## 14.0.0
+
+See [CHANGELOG.md](./CHANGELOG.md#14.0.0).
+Metrics, datamanagers and algos are now stored in Minio.
+Minio persistent size should be increased to support the additional storage from the previous metrics, datamanagers and algos volumes.
+After upgrading from 13.x.x to 14.0.0 the assets will need to be reuploaded into the plateform.
+
 ## 13.0.0
 
 Almost all the sections in the values files were re-done.

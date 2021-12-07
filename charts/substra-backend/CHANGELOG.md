@@ -1,5 +1,19 @@
 # Changelog
 
+## 14.0.0
+
+Moved algos, datamanagers, and metrics from PVCs to MinIO
+
+### Removed
+- `data-algos` volume from the deployment-server
+- `data-datamanagers` volume from the deployment-server
+- `data-metrics` volume from the deployment-server
+- `algo`, `datamanager` and `metrics` pvc removed
+- `MEDIA_ROOT` configmap setting
+
+## Added
+- `SUBTUPLE_DIR` configmap setting
+
 ## 13.0.6
 
 ## Added

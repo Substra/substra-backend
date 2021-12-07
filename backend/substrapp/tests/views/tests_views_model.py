@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import shutil
+import tempfile
 from unittest import mock
 
 from django.contrib.auth.models import User
@@ -22,10 +23,10 @@ from .. import assets
 from ..common import AuthenticatedClient
 from ..common import get_sample_model
 
-MEDIA_ROOT = "/tmp/unittests_views/"
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
 MODEL_KEY = "some-key"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 # APITestCase
@@ -40,7 +41,6 @@ class ModelViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.model, self.model_filename = get_sample_model()
 
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
@@ -55,7 +55,6 @@ class ModelViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_model_list_empty(self):

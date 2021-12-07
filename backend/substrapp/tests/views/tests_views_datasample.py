@@ -21,7 +21,7 @@ from ..common import AuthenticatedClient
 from ..common import FakeFilterDataManager
 from ..common import get_sample_datamanager
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 FIXTURE_PATH = os.path.abspath(os.path.join(DIR_PATH, "../../../../fixtures/chunantes/datasamples"))
 
@@ -34,7 +34,8 @@ def _get_archive_checksum(path):
 
 # APITestCase
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 @override_settings(DEFAULT_DOMAIN="https://localhost")
 class DataSampleViewTests(APITestCase):
@@ -43,7 +44,6 @@ class DataSampleViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.url = reverse("substrapp:data_sample-list")
 
         (
@@ -61,7 +61,6 @@ class DataSampleViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_data_create_bulk(self):
@@ -141,7 +140,6 @@ class DataSampleViewTests(APITestCase):
     @override_settings(SERVERMEDIAS_ROOT=MEDIA_ROOT)
     def test_data_create_path(self):
         url = reverse("substrapp:data_sample-list")
-
         source_path = os.path.join(FIXTURE_PATH, "datasample1/0024700.zip")
         target_path = os.path.join(MEDIA_ROOT, "0024700")
         shutil.unpack_archive(source_path, target_path)

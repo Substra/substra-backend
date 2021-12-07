@@ -27,7 +27,6 @@ class SQLPrintingMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-
         if (
             len(connection.queries) == 0
             or request.path_info.startswith("/favicon.ico")

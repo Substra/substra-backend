@@ -26,7 +26,8 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class AlgoQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -35,7 +36,6 @@ class AlgoQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.url = reverse("substrapp:algo-list")
         self.algo, self.algo_filename = get_sample_algo()
         self.algo_zip, self.algo_filename_zip = get_sample_algo_zip()
@@ -90,7 +90,6 @@ class AlgoQueryTests(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_add_algo_ko(self):
-
         extra = {
             "HTTP_SUBSTRA_CHANNEL_NAME": "mychannel",
             "HTTP_ACCEPT": "application/json;version=0.0",

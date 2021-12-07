@@ -13,13 +13,10 @@ from substrapp.compute_tasks.directories import CPDirName
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.tasks.tasks_compute_task import compute_task
 
-MEDIA_ROOT = tempfile.mkdtemp()
 CHANNEL = "mychannel"
 
 
-@override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={CHANNEL: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
-)
+@override_settings(LEDGER_CHANNELS={CHANNEL: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
 class LocalFolderTests(APITestCase):
     @parameterized.expand([("without_exception", False), ("with_exception", True)])
     def test_local_folder(self, _, compute_job_raises):

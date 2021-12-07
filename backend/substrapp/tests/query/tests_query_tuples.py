@@ -20,7 +20,8 @@ MEDIA_ROOT = tempfile.mkdtemp()
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TraintupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -28,7 +29,6 @@ class TraintupleQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         (
             self.metric_description,
             self.metric_description_filename,
@@ -97,7 +97,8 @@ class TraintupleQueryTests(APITestCase):
 
 
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TesttupleQueryTests(APITestCase):
     client_class = AuthenticatedClient
@@ -105,7 +106,6 @@ class TesttupleQueryTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         (
             self.metric_description,
             self.metric_description_filename,

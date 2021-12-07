@@ -170,6 +170,9 @@ DATABASES = {
 
 DATASAMPLE_STORAGE = FileSystemStorage()
 MODEL_STORAGE = FileSystemStorage()
+ALGO_STORAGE = FileSystemStorage()
+DATAMANAGER_STORAGE = FileSystemStorage()
+METRICS_STORAGE = FileSystemStorage()
 
 OBJECTSTORE_URL = os.environ.get("OBJECTSTORE_URL")
 OBJECTSTORE_ACCESSKEY = os.environ.get("OBJECTSTORE_ACCESSKEY")
@@ -224,9 +227,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.0/howto/static-files/
 
 STATIC_URL = f"/{SUBPATH}static/"
-
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, "medias")
-
 SITE_ID = 1
 
 TASK = {

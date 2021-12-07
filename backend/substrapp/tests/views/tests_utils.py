@@ -5,6 +5,7 @@ import uuid
 from unittest import mock
 
 import requests
+from django.core.files.storage import FileSystemStorage
 from django.test import override_settings
 from requests.auth import HTTPBasicAuth
 from rest_framework import status
@@ -41,6 +42,7 @@ def with_permission_mixin(remote, same_file_property, has_access):
 
                 class TestFieldFile:
                     path = tmp_file.name
+                    storage = FileSystemStorage()
 
                 class TestModel:
                     file_property = TestFieldFile()

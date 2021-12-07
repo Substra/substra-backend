@@ -2,6 +2,7 @@ import copy
 import logging
 import os
 import shutil
+import tempfile
 import urllib
 from unittest import mock
 
@@ -20,7 +21,7 @@ from .. import assets
 from .. import common
 from ..common import AuthenticatedClient
 
-MEDIA_ROOT = "/tmp/unittests_views/"
+MEDIA_ROOT = tempfile.mkdtemp()
 
 
 def get_compute_plan_key(assets):
@@ -32,8 +33,11 @@ def get_compute_plan_key(assets):
 
 
 # APITestCase
+
+
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TraintupleViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -41,7 +45,6 @@ class TraintupleViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.logger = logging.getLogger("django.request")
@@ -50,7 +53,6 @@ class TraintupleViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_traintuple_queryset(self):
@@ -149,7 +151,8 @@ class TraintupleViewTests(APITestCase):
 
 # APITestCase
 @override_settings(
-    MEDIA_ROOT=MEDIA_ROOT, LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}}
+    MEDIA_ROOT=MEDIA_ROOT,
+    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
 )
 class TesttupleViewTests(APITestCase):
     client_class = AuthenticatedClient
@@ -157,7 +160,6 @@ class TesttupleViewTests(APITestCase):
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.logger = logging.getLogger("django.request")
@@ -166,7 +168,6 @@ class TesttupleViewTests(APITestCase):
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
-
         self.logger.setLevel(self.previous_level)
 
     def test_testtuple_queryset(self):
