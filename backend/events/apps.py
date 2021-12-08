@@ -121,15 +121,19 @@ def on_model_event(payload):
 
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process(requeue=True):
-        payload = json.loads(message.body)
-        logger.debug("Received payload", payload=payload)
-        asset_kind = common_pb2.AssetKind.Value(payload["asset_kind"])
-        if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
-            on_computetask_event(payload)
-        elif asset_kind == common_pb2.ASSET_MODEL:
-            on_model_event(payload)
-        else:
-            logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
+        try:
+            payload = json.loads(message.body)
+            logger.debug("Received payload", payload=payload)
+            asset_kind = common_pb2.AssetKind.Value(payload["asset_kind"])
+            if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
+                on_computetask_event(payload)
+            elif asset_kind == common_pb2.ASSET_MODEL:
+                on_model_event(payload)
+            else:
+                logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
+        except Exception as e:
+            logger.exception("Error processing message", e=e)
+            raise
 
 
 async def consume(loop):
