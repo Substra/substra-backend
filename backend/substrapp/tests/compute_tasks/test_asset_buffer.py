@@ -38,7 +38,7 @@ CHANNEL = "mychannel"
 NUM_DATA_SAMPLES = 2 * 3  # half will be registered via a path in the db, the other half by a file
 
 
-class TestDataSample(metaclass=ABCMeta):
+class MockDataSample(metaclass=ABCMeta):
     key: uuid.uuid4
     filename: str
     contents: str
@@ -61,7 +61,7 @@ class TestDataSample(metaclass=ABCMeta):
         raise NotImplementedError
 
 
-class TestDataSampleSavedByPath(TestDataSample):
+class MockDataSampleSavedByPath(MockDataSample):
     _dir: str
     _path: str
 
@@ -87,7 +87,7 @@ class TestDataSampleSavedByPath(TestDataSample):
             f.write(self.contents)
 
 
-class TestDataSampleSavedByFile(TestDataSample):
+class MockDataSampleSavedByFile(MockDataSample):
     _archive_path: str
 
     @classmethod
@@ -168,13 +168,13 @@ class AssetBufferTests(APITestCase):
         # half are registered in the db by a path
         self.data_samples_saved_as_path = {}
         for i in range(NUM_DATA_SAMPLES // 2):
-            data_sample = TestDataSampleSavedByPath.create(i)
+            data_sample = MockDataSampleSavedByPath.create(i)
             self.data_samples_saved_as_path[data_sample.key] = data_sample
 
         # half are registered in the db by a file
         self.data_samples_saved_as_file = {}
         for i in range(int(NUM_DATA_SAMPLES / 2)):
-            data_sample = TestDataSampleSavedByFile.create(i)
+            data_sample = MockDataSampleSavedByFile.create(i)
             self.data_samples_saved_as_file[data_sample.key] = data_sample
 
         self.data_samples = dict(ChainMap(self.data_samples_saved_as_path, self.data_samples_saved_as_file))
