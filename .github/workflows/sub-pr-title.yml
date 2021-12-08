@@ -1,0 +1,20 @@
+name: "Sub PR title"
+
+on:
+  pull_request:
+    branches:
+      - '**'
+      - '!master'
+    types:
+      - opened
+      - edited
+      - synchronize
+
+jobs:
+  sub_pr_title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: deepakputhraya/action-pr-title@master
+        with:
+          allowed_prefixes: '[sub]'
+          prefix_case_sensitive: false
