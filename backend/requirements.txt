@@ -1,27 +1,27 @@
 aio-pika==6.8.0
 Django==2.2.24  # https://github.com/owkin/connect-backend/issues/121
-django-structlog==2.1.*
-celery==5.2.0
+django-structlog==2.2.0
+celery==5.2.1
 checksumdir==1.2.0
-cryptography==35.0.0
-django-cors-headers==3.10.0
+cryptography==36.0.0
+django-cors-headers==3.10.1
 django-celery-results==2.2.0
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.1
-drf-spectacular==0.20.2
+drf-spectacular==0.21.0
 drf-nested-routers==0.93.4
-pyjwt==2.1.0
-ipython==7.29.0
+pyjwt==2.3.0
+ipython==7.30.1
 ipython-genutils==0.2.0
-kubernetes==19.15.0
+kubernetes==20.13.0
 psycopg2-binary==2.8.6  # psycopg 2.9+ is not compatible with Django <3.2
 requests>=2.20.0
 uwsgi==2.0.20
 zxcvbn==4.4.28
-boto3==1.20.6
-grpcio==1.41.1
-grpcio-tools==1.41.1
-minio==7.1.1
+boto3==1.20.21
+grpcio==1.42.0
+grpcio-tools==1.42.0
+minio==7.1.2
 django-prometheus==2.1.0
 # Dependencies used in local dev mode
 argh==0.26.2
