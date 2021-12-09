@@ -24,3 +24,14 @@ ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD = "password"
 ORCHESTRATOR_RABBITMQ_TLS_ENABLED = False
 
 LEDGER_MSP_ID = "testOrgMSP"
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ.get("BACKEND_DB_NAME", "substra"),
+        "USER": os.environ.get("BACKEND_DB_USER", "postgres"),
+        "PASSWORD": os.environ.get("BACKEND_DB_PWD", "postgres"),
+        "HOST": os.environ.get("BACKEND_DB_HOST", "localhost"),
+        "PORT": os.environ.get("BACKEND_DB_PORT", 5432),
+    }
+}

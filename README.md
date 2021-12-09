@@ -58,6 +58,24 @@ This will also gives you access to the [celery CLI](https://docs.celeryproject.o
 
 ## Execute unit tests
 
+Unit tests require to have a running postgres instance.
+
+If it is not already running, you could start a new DB, using the command below. It is recommanded to use the same version as the one defined in the charts.
+
+```sh
+make db-test
+```
+
+Alternatively, you could also set the environment variables defined in `backend.settings.test` to provide any DB info.
+
+```sh
+export BACKEND_DB_NAME=<db_name> \
+    BACKEND_DB_USER=<db_user> \
+    BACKEND_DB_PWD=<db_password> \
+    BACKEND_DB_HOST=<db_host> \
+    BACKEND_DB_PORT=<db_port>
+```
+
 Make sure you have the requirements installed:
 ```sh
 pip install -r backend/dev-requirements.txt

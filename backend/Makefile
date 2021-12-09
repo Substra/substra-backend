@@ -8,6 +8,14 @@ ifeq ($(UNAME_S),Darwin)
 	SED_BINARY = gsed
 endif
 
+.PHONY: db-test
+db-test:
+	docker run --name postgres --rm \
+		-e POSTGRES_DB=substra \
+		-e POSTGRES_USER=postgres \
+		-e POSTGRES_PASSWORD=postgres \
+		-p 5432:5432 -d postgres:11
+
 .PHONY: test
 test:
 	DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
