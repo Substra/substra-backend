@@ -22,9 +22,7 @@ from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
-from substrapp.compute_tasks.asset_buffer import add_algo_to_buffer
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
-from substrapp.compute_tasks.asset_buffer import add_metrics_to_buffer
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
@@ -188,9 +186,6 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
             init_asset_buffer()
             init_compute_plan_dirs(dirs)
             init_task_dirs(dirs)
-            add_algo_to_buffer(ctx)
-            if ctx.task_category == computetask_pb2.TASK_TEST:
-                add_metrics_to_buffer(ctx)
             add_task_assets_to_buffer(ctx)
             add_assets_to_taskdir(ctx)
             if task_category != computetask_pb2.TASK_TEST:

@@ -12,6 +12,7 @@ from substrapp.compute_tasks.directories import SANDBOX_DIR
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.compute_tasks.transfer_bucket import TAG_VALUE_FOR_TRANSFER_BUCKET
 from substrapp.compute_tasks.transfer_bucket import TRANSFER_BUCKET_TESTTUPLE_TAG
+from substrapp.models.image_entrypoint import ImageEntrypoint
 
 logger = structlog.get_logger(__name__)
 
@@ -36,11 +37,12 @@ TASK_COMMANDS = {
 def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> List[str]:
 
     if is_testtuple_eval:
-        docker_context_dir = ctx.metrics_docker_context_dirs[metric_key]
+        entrypoint = ImageEntrypoint.objects.get(asset_key=metric_key)
     else:
-        docker_context_dir = ctx.algo_docker_context_dir
+        entrypoint = ImageEntrypoint.objects.get(asset_key=ctx.algo_key)
 
-    command = _get_command_from_dockerfile(docker_context_dir)
+    command = json.loads(entrypoint.entrypoint_json)
+
     if command[0].startswith("python"):
         command.insert(1, "-u")  # unbuffered. Allows streaming the logs in real-time.
 
@@ -48,26 +50,6 @@ def get_exec_command(ctx: Context, is_testtuple_eval: bool, metric_key: str = No
     args = _get_args(ctx, is_testtuple_eval, metric_key)
 
     return env + command + args
-
-
-def _get_command_from_dockerfile(dockerfile_dir: str) -> List[str]:
-    """
-    Extract command from ENTRYPOINT in the Dockerfile.
-
-    This is necessary because the user algo can have arbitrary names, ie; "myalgo.py".
-
-    Example:
-        ENTRYPOINT ["python3", "myalgo.py"]
-    """
-    dockerfile_path = f"{dockerfile_dir}/Dockerfile"
-
-    with open(dockerfile_path, "r") as file:
-        dockerfile = file.read()
-        for line in dockerfile.split("\n"):
-            if line.startswith("ENTRYPOINT"):
-                return json.loads(line[len("ENTRYPOINT") :])
-
-    raise Exception("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
 # TODO: '_get_args' is too complex, consider refactoring

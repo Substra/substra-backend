@@ -62,8 +62,6 @@ class LocalFolderTests(APITestCase):
         with mock.patch.object(OrchestratorClient, "is_task_in_final_state") as mis_task_in_final_state, mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ) as mfrom_task, mock.patch("substrapp.tasks.tasks_compute_task.init_asset_buffer"), mock.patch(
-            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
-        ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"

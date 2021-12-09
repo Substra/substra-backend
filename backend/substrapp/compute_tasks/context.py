@@ -1,4 +1,3 @@
-import os
 from typing import Dict
 from typing import List
 
@@ -6,7 +5,6 @@ from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks.compute_pod import ComputePod
-from substrapp.compute_tasks.directories import AssetBufferDirName
 from substrapp.compute_tasks.directories import Directories
 from substrapp.orchestrator import get_orchestrator_client
 
@@ -215,17 +213,6 @@ class Context:
             slugs = metric_keys
 
         return {slug: get_image_tag(METRICS_IMAGE_PREFIX, slug) for slug in slugs}
-
-    @property
-    def algo_docker_context_dir(self) -> str:
-        return os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Algos, self.algo_key)
-
-    @property
-    def metrics_docker_context_dirs(self) -> Dict:
-        return {
-            metric_key: os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Metrics, metric_key)
-            for metric_key in self.metric_keys
-        }
 
     def get_compute_pod(self, is_testtuple_eval: bool, metric_key: str = None) -> ComputePod:
         return ComputePod(self.compute_plan_key, self.algo_key, metric_key if is_testtuple_eval else None)

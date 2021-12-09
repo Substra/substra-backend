@@ -6,7 +6,7 @@
 
 "Compute Tasks" consist of a user-defined Algorithm, as well as input Models and Datasamples.
 
-"Asset" is a generic term which refers to Models, Data Samples, Data Managers and Algos.
+"Asset" is a generic term which refers to Models, Data Samples, and Data Managers.
 
 ## Goals
 

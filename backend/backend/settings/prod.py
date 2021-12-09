@@ -52,6 +52,7 @@ DATAMANAGER_BUCKET_NAME = "substra-datamanager"
 DATAMANAGER_STORAGE = MinioStorage(DATAMANAGER_BUCKET_NAME)
 
 SUBTUPLE_DIR = os.path.join(MEDIA_ROOT, "subtuple")
+SUBTUPLE_TMP_DIR = os.path.join(SUBTUPLE_DIR, "tmp")
 ASSET_BUFFER_DIR = os.path.join(SUBTUPLE_DIR, "asset_buffer")
 
 SITE_HOST = os.environ.get("SITE_HOST", f"substra-backend.{ORG_NAME}.xyz")

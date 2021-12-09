@@ -17,8 +17,6 @@ from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import _add_datasamples_to_buffer
 from substrapp.compute_tasks.asset_buffer import _add_model_to_buffer
 from substrapp.compute_tasks.asset_buffer import _add_opener_to_buffer
-from substrapp.compute_tasks.asset_buffer import _download_algo
-from substrapp.compute_tasks.asset_buffer import _download_metric
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.directories import AssetBufferDirName
@@ -374,24 +372,3 @@ class AssetBufferTests(APITestCase):
         with open(dest) as f:
             contents = f.read()
             self.assertEqual(contents, self.model_contents)
-
-    def test_download_algo(self):
-
-        algo_content = b"123"
-
-        with mock.patch("substrapp.compute_tasks.asset_buffer.get_asset_content") as mget_asset_content:
-            mget_asset_content.return_value = algo_content
-
-            data = _download_algo(self.ctx)
-            self.assertEqual(algo_content, data)
-
-    def test_download_metric(self):
-
-        metrics_content = b"123"
-        with mock.patch("substrapp.compute_tasks.asset_buffer.get_asset_content") as mget_asset_content:
-
-            mget_asset_content.return_value = metrics_content
-
-            metric = _download_metric(self.ctx, self.metric_key)
-            self.assertTrue(isinstance(metric, bytes))
-            self.assertEqual(metric, metrics_content)

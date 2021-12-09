@@ -1,4 +1,7 @@
+import json
 import os
+from tempfile import TemporaryDirectory
+from typing import List
 
 import kubernetes
 import structlog
@@ -18,7 +21,10 @@ from substrapp.kubernetes_utils import get_security_context
 from substrapp.kubernetes_utils import pod_exists
 from substrapp.kubernetes_utils import watch_pod
 from substrapp.lock_local import lock_resource
+from substrapp.models.image_entrypoint import ImageEntrypoint
+from substrapp.utils import get_asset_content
 from substrapp.utils import timeit
+from substrapp.utils import uncompress_content
 
 logger = structlog.get_logger(__name__)
 
@@ -29,27 +35,104 @@ KANIKO_MIRROR = settings.TASK["KANIKO_MIRROR"]
 KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
+SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
 
 
 def build_images(ctx: Context) -> None:
-    build_container_image(ctx.algo_docker_context_dir, ctx.algo_image_tag, ctx)
+    # Algo
+    if container_image_exists(ctx.algo_image_tag):
+        logger.info("Reusing existing image", image=ctx.algo_image_tag)
+    else:
+        _build_asset_image(
+            ctx,
+            ctx.algo_image_tag,
+            ctx.algo_key,
+            ctx.algo["algorithm"]["storage_address"],
+            ctx.algo["owner"],
+            ctx.algo["algorithm"]["checksum"],
+        )
+    # Metrics
     if ctx.task_category == computetask_pb2.TASK_TEST:
-        for metric_key, metrics_image_tag in ctx.metrics_image_tags.items():
-            build_container_image(ctx.metrics_docker_context_dirs[metric_key], metrics_image_tag, ctx)
+        for metric_key, metric_image_tag in ctx.metrics_image_tags.items():
+            if container_image_exists(metric_image_tag):
+                logger.info("Reusing existing image", image=metric_image_tag)
+            else:
+                _build_asset_image(
+                    ctx,
+                    metric_image_tag,
+                    metric_key,
+                    ctx.metrics[metric_key]["address"]["storage_address"],
+                    ctx.metrics[metric_key]["owner"],
+                    ctx.metrics[metric_key]["address"]["checksum"],
+                )
 
 
-@timeit
-def build_container_image(path, tag, ctx):
+def _build_asset_image(
+    ctx: Context,
+    image_tag: str,
+    asset_key: str,
+    asset_storage_address: str,
+    asset_owner: str,
+    asset_checksum: str,
+) -> None:
+    """
+    Build an asset's container image. Perform multiple steps:
+    1. Download the asset (algo or metric) using the provided asset storage_address/owner. Verify its checksum and
+       uncompress the data to a temporary folder.
+    2. Extract the ENTRYPOINT from the Dockerfile and save it to the DB.
+    3. Build the container image using Kaniko.
+    """
 
-    if container_image_exists(tag):
-        logger.info("Reusing existing image", image=tag)
-        return
+    os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
 
-    _build_container_image(path, tag, ctx.compute_plan_key, ctx.task_key, ctx.attempt)
+    with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
+        # Download source
+        content = get_asset_content(
+            ctx.channel_name,
+            asset_storage_address,
+            asset_owner,
+            asset_checksum,
+        )
+        uncompress_content(content, tmp_dir)
+
+        # Extract ENTRYPOINT from Dockerfile
+        entrypoint = _get_entrypoint_from_dockerfile(tmp_dir)
+
+        # Build image
+        _build_container_image(tmp_dir, image_tag, ctx)
+
+        # Save entrypoint to DB if the image build was successful
+        ImageEntrypoint.objects.get_or_create(asset_key=asset_key, entrypoint_json=json.dumps(entrypoint))
+
+
+def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:
+    """
+    Get entrypoint from ENTRYPOINT in the Dockerfile.
+
+    This is necessary because the user algo can have arbitrary names, ie; "myalgo.py".
+
+    Example:
+        ENTRYPOINT ["python3", "myalgo.py"]
+    """
+    dockerfile_path = f"{dockerfile_dir}/Dockerfile"
+
+    with open(dockerfile_path, "r") as file:
+        for line in file:
+            if line.startswith("ENTRYPOINT"):
+                res = json.loads(line[len("ENTRYPOINT") :])
+                if not isinstance(res, list):
+                    raise NotImplementedError(
+                        "Invalid ENTRYPOINT in algo/metric Dockerfile. You must use the exec form in your Dockerfile. "
+                        "See https://docs.docker.com/engine/reference/builder/#entrypoint"
+                    )
+                return res
+
+    raise Exception("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
 # TODO: '_build_container_image' is too complex, consider refactoring
-def _build_container_image(path, tag, cp_key, task_key, attempt):  # noqa: C901
+@timeit
+def _build_container_image(path: str, tag: str, ctx: Context) -> None:  # noqa: C901
 
     _assert_dockerfile(path)
 
@@ -211,7 +294,7 @@ def _build_container_image(path, tag, cp_key, task_key, attempt):  # noqa: C901
             raise BuildError(f"Kaniko build failed, error: {e}")
     finally:
         if create_pod:
-            log_prefix = f"[{cp_key[:8]}-{task_key[:8]}-b-{attempt}]"
+            log_prefix = f"[{ctx.compute_plan_key[:8]}-{ctx.task_key[:8]}-b-{ctx.attempt}]"
             _container_format_log(pod_name, get_pod_logs(k8s_client, name=pod_name, container=pod_name), log_prefix)
             delete_pod(k8s_client, pod_name)
 

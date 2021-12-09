@@ -16,9 +16,7 @@ SANDBOX_DIR = "/substra_internal"
 # /var/medias/substra/subtuple     <- SUBTUPLE_DIR
 #
 # └── asset_buffer                 <- ASSET_BUFFER_DIR
-#     ├── algos
 #     ├── data_samples
-#     ├── metrics
 #     ├── models
 #     └── openers
 #
@@ -38,13 +36,11 @@ SANDBOX_DIR = "/substra_internal"
 
 
 class AssetBufferDirName:
-    Algos = "algos"
     Datasamples = "data_samples"
-    Metrics = "metrics"
     Models = "models"
     Openers = "openers"
 
-    All = [Algos, Datasamples, Metrics, Models, Openers]
+    All = [Datasamples, Models, Openers]
 
 
 class CPDirName:

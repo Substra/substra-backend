@@ -14,11 +14,9 @@ from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_and_put_asset_content
-from substrapp.utils import get_asset_content
 from substrapp.utils import get_dir_hash
 from substrapp.utils import get_hash
 from substrapp.utils import get_owner
-from substrapp.utils import timeit
 from substrapp.utils import uncompress_content
 
 logger = structlog.get_logger(__name__)
@@ -55,39 +53,6 @@ def init_asset_buffer() -> None:
     os.makedirs(settings.ASSET_BUFFER_DIR, exist_ok=True)
     for folder_name in AssetBufferDirName.All:
         os.makedirs(os.path.join(settings.ASSET_BUFFER_DIR, folder_name), exist_ok=True)
-
-
-@timeit
-def add_algo_to_buffer(ctx: Context) -> None:
-    """
-    Download the algo to the asset buffer.
-
-    If the algo is already present in the asset buffer, skip the download.
-    """
-    dst = ctx.algo_docker_context_dir
-
-    if os.path.exists(dst):
-        # algo already exists
-        return
-
-    content = _download_algo(ctx)
-    uncompress_content(content, dst)
-
-
-@timeit
-def add_metrics_to_buffer(ctx: Context) -> None:
-    """
-    Download the metrics to the asset buffer.
-
-    If the metrics is already present in the asset buffer, skip the download.
-    """
-    for metric_key, dst in ctx.metrics_docker_context_dirs.items():
-        if os.path.exists(dst):
-            # metrics already exists
-            continue
-
-        metrics_content = _download_metric(ctx, metric_key)
-        uncompress_content(metrics_content, dst)
 
 
 def add_task_assets_to_buffer(ctx: Context) -> None:
@@ -291,24 +256,6 @@ def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List
             shutil.copytree(src, dst, copy_function=os.link)
         else:
             os.link(src, dst)
-
-
-def _download_algo(ctx: Context) -> bytes:
-    return get_asset_content(
-        ctx.channel_name,
-        ctx.algo["algorithm"]["storage_address"],
-        ctx.algo["owner"],
-        ctx.algo["algorithm"]["checksum"],
-    )
-
-
-def _download_metric(ctx: Context, metric_key) -> bytes:
-    return get_asset_content(
-        ctx.channel_name,
-        ctx.metrics[metric_key]["address"]["storage_address"],
-        ctx.metrics[metric_key]["owner"],
-        ctx.metrics[metric_key]["address"]["checksum"],
-    )
 
 
 def _log_added(path: str) -> None:

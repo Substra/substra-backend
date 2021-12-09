@@ -47,8 +47,6 @@ class ComputeTaskTests(APITestCase):
         ) as minit_compute_plan_dirs, mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
         ) as minit_task_dirs, mock.patch(
-            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
-        ) as madd_algo_to_buffer, mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ) as madd_task_assets_to_buffer, mock.patch(
             "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
@@ -82,7 +80,6 @@ class ComputeTaskTests(APITestCase):
 
             self.assertEqual(minit_compute_plan_dirs.call_count, 1)
             self.assertEqual(minit_task_dirs.call_count, 1)
-            self.assertEqual(madd_algo_to_buffer.call_count, 1)
             self.assertEqual(madd_task_assets_to_buffer.call_count, 1)
             self.assertEqual(madd_assets_to_taskdir.call_count, 1)
             self.assertEqual(mrestore_dir.call_count, 1)
@@ -119,8 +116,6 @@ class ComputeTaskTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ), mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"
-        ), mock.patch(
-            "substrapp.tasks.tasks_compute_task.add_algo_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
