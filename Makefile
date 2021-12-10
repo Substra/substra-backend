@@ -8,10 +8,6 @@ test:
 coverage:
 	$(MAKE) -C backend coverage
 
-.PHONY: exception_map
-exception_map:
-	$(MAKE) -C backend exception_map
-
 docs: doc
 
 doc:

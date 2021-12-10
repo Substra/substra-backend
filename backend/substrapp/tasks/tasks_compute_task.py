@@ -37,7 +37,6 @@ from substrapp.compute_tasks.directories import init_compute_plan_dirs
 from substrapp.compute_tasks.directories import init_task_dirs
 from substrapp.compute_tasks.directories import restore_dir
 from substrapp.compute_tasks.directories import teardown_task_dirs
-from substrapp.compute_tasks.exception_handler import compute_error_code
 from substrapp.compute_tasks.execute import execute_compute_task
 from substrapp.compute_tasks.image_builder import build_images
 from substrapp.compute_tasks.save_models import save_models
@@ -91,19 +90,8 @@ class ComputeTask(Task):
         close_old_connections()
         channel_name, task = self.split_args(args)
 
-        error_code = compute_error_code(exc)
-        # Do not show traceback if it's a container error as we already see them in
-        # container log
-        type_exc = type(exc)
-        type_value = str(type_exc).split("'")[1]
-        logger.error(
-            "Failed compute task",
-            task_category=task["category"],
-            error_code=error_code,
-            exc_type=type_value,
-        )
         with get_orchestrator_client(channel_name) as client:
-            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_code)
+            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED)
 
     def split_args(self, celery_args):
         channel_name = celery_args[0]
