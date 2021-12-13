@@ -19,7 +19,6 @@ import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
 from node.authentication import NodeUser
 from node.models import OutgoingNode
-from orchestrator.error import OrcError
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
 from substrapp.exceptions import NodeError
@@ -137,11 +136,8 @@ class PermissionMixin(object):
 
         validated_key = validate_key(key)
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                asset = getattr(client, query_method)(validated_key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            asset = getattr(client, query_method)(validated_key)
 
         try:
             self.check_access(channel_name, request.user, asset, is_proxied_request(request))
@@ -167,11 +163,8 @@ class PermissionMixin(object):
 
         validated_key = validate_key(key)
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                asset = getattr(client, query_method)(validated_key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            asset = getattr(client, query_method)(validated_key)
 
         try:
             self.check_access(

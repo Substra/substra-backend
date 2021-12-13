@@ -12,8 +12,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
-from substrapp import exceptions
 from substrapp.models import DataManager
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
@@ -99,19 +97,9 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             return self.commit(serializer, request)
 
     def create(self, request, *args, **kwargs):
-
-        try:
-            data = self._create(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = self._create(request)
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def create_or_update_datamanager(self, channel_name, datamanager, key):
 
@@ -172,38 +160,16 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
-        try:
-            data = self._retrieve(request, key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except exceptions.BadRequestError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+        data = self._retrieve(request, key)
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_datamanagers()
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_datamanagers()
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            try:
-                data = filter_list(object_type="dataset", data=data, query_params=query_params)
-            except OrcError as rpc_error:
-                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = filter_list(object_type="dataset", data=data, query_params=query_params)
 
         for data_manager in data:
             replace_storage_addresses(request, data_manager)

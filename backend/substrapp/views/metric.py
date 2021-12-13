@@ -12,8 +12,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
-from substrapp import exceptions
 from substrapp.models import Metric
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import MetricSerializer
@@ -93,19 +91,9 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
             return self.commit(serializer, request)
 
     def create(self, request, *args, **kwargs):
-
-        try:
-            data = self._create(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = self._create(request)
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def create_or_update_metric_description(self, channel_name, metric, key):
         # We need to have, at least, metric description for the frontend
@@ -130,9 +118,9 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         with get_orchestrator_client(get_channel_name(request)) as client:
             data = client.query_metric(validated_key)
 
-        # verify if objectve description exists for the frontend view
+        # verify if objective description exists for the frontend view
         # if not fetch it if it's possible
-        # do not fetch  objectve description if node has not process permission
+        # do not fetch objective description if node has no process permission
         if node_has_process_permission(data):
             try:
                 instance = self.get_object()
@@ -155,37 +143,16 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
-        try:
-            data = self._retrieve(request, key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except exceptions.BadRequestError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+        data = self._retrieve(request, key)
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_metrics()
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_metrics()
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            try:
-                data = filter_list(object_type="metric", data=data, query_params=query_params)
-            except OrcError as rpc_error:
-                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = filter_list(object_type="metric", data=data, query_params=query_params)
 
         for metric in data:
             replace_storage_addresses(request, metric)

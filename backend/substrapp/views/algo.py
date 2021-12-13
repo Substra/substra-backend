@@ -13,8 +13,6 @@ from rest_framework.viewsets import GenericViewSet
 import orchestrator.algo_pb2 as algo_pb2
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
-from substrapp import exceptions
 from substrapp.models import Algo
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
@@ -101,18 +99,9 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
             return self.commit(serializer, request)
 
     def create(self, request, *args, **kwargs):
-        try:
-            data = self._create(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = self._create(request)
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def create_or_update_algo_description(self, channel_name, algo, key):
         # We need to have, at least, algo description for the frontend
@@ -162,39 +151,17 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
-        try:
-            data = self._retrieve(request, key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except exceptions.BadRequestError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+        data = self._retrieve(request, key)
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_algos()
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_algos()
 
         query_params = request.query_params.get("search")
 
         if query_params is not None:
-            try:
-                data = filter_list(object_type="algo", data=data, query_params=query_params)
-            except OrcError as rpc_error:
-                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = filter_list(object_type="algo", data=data, query_params=query_params)
 
         for algo in data:
             replace_storage_addresses(request, algo)

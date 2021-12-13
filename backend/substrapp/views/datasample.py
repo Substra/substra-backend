@@ -22,7 +22,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
+from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager
 from substrapp.models import DataSample
@@ -33,7 +33,6 @@ from substrapp.serializers import OrchestratorDataSampleUpdateSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
-from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -45,19 +44,16 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
     pagination_class = DefaultPageNumberPagination
 
     def create(self, request, *args, **kwargs):
-
         try:
             data = self._create(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
+        # FIXME: `serializers.ValidationError` are automatically handled by DRF and should
+        #  not be caught to return a response. The following code only exists to preserve
+        #  a previously established API contract.
+        except serializers.ValidationError as e:
             return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _create(self, request):
         data_manager_keys = request.data.get("data_manager_keys") or []
@@ -108,15 +104,21 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
     def _db_create(self, data):
         serializer = self.get_serializer(data=data)
         serializer.is_valid(raise_exception=True)
-        return serializer.save()
+
+        # FIXME: This try/except block is only here to ensure
+        #  a previously established API contract is respected.
+        try:
+            return serializer.save()
+        except Exception as e:
+            raise exceptions.BadRequestError(str(e))
 
     @staticmethod
     def check_datamanagers(data_manager_keys):
         if not data_manager_keys:
-            raise Exception("missing or empty field 'data_manager_keys'")
+            raise exceptions.BadRequestError("missing or empty field 'data_manager_keys'")
         datamanager_count = DataManager.objects.filter(key__in=data_manager_keys).count()
         if datamanager_count != len(data_manager_keys):
-            raise Exception(
+            raise exceptions.BadRequestError(
                 "One or more datamanager keys provided do not exist in local database. "
                 f"Please create them before. DataManager keys: {data_manager_keys}"
             )
@@ -187,20 +189,13 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
                 yield {"file": File(open(archive, "rb")), "checksum": checksum}
 
     def list(self, request, *args, **kwargs):
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_datasamples()
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_datasamples()
 
         return self.paginate_response(data)
 
     @action(methods=["post"], detail=False)
     def bulk_update(self, request):
-
         # serialized data for orchestrator db
         orchestrator_serializer = OrchestratorDataSampleUpdateSerializer(
             data=dict(request.data), context={"request": request}
@@ -208,14 +203,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         orchestrator_serializer.is_valid(raise_exception=True)
 
         # create on orchestrator db
-        try:
-            data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-
+        data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
         return Response(data, status=status.HTTP_200_OK)
 
 

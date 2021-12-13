@@ -1,21 +1,7 @@
 import rest_framework as drf
-import structlog
-
-logger = structlog.get_logger(__name__)
 
 
-def api_exception_handler(exc, context):
-    """API Exception handler."""
-    if isinstance(exc, _ApiError):
-        # emits a warning for all requests returning an API error response
-        logger.warning("exception", class_name=exc.__class__.__name__, exception=exc)
-        response = exc.response()
-    else:
-        response = drf.views.exception_handler(exc, context)
-    return response
-
-
-class _ApiError(Exception):
+class ApiError(Exception):
     """Base error response returned by API."""
 
     status = drf.status.HTTP_500_INTERNAL_SERVER_ERROR
@@ -34,7 +20,7 @@ class _ApiError(Exception):
         return drf.response.Response(self.error, status=self.status)
 
 
-class BadRequestError(_ApiError):
+class BadRequestError(ApiError):
     status = drf.status.HTTP_400_BAD_REQUEST
     message = "Bad request."
 

@@ -8,21 +8,21 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
-from grpc import RpcError
 from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.error
 from orchestrator.client import OrchestratorClient
 
 from .. import assets
 from ..common import AuthenticatedClient
 from ..common import encode_filter
 from ..common import get_sample_algo
+from ..common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
-# APITestCase
 
 
 @override_settings(
@@ -67,6 +67,14 @@ class AlgoViewTests(APITestCase):
             search_params = "?search=algERRORo"
             response = self.client.get(self.url + search_params, **self.extra)
             self.assertIn("Malformed search filters", response.json()["message"])
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.algo.get_channel_name", side_effect=Exception("Unexpected error"))
+    def test_algo_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        get_channel_name.assert_called_once()
 
     def test_algo_list_filter_name(self):
         algos = assets.get_algos()
@@ -117,13 +125,21 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = RpcError()
+        error = orchestrator.error.OrcError()
         error.details = "out of range test"
-        error.code = lambda: StatusCode.OUT_OF_RANGE
+        error.code = StatusCode.OUT_OF_RANGE
 
         with mock.patch.object(OrchestratorClient, "query_algo", side_effect=error):
             response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.algo.AlgoViewSet._retrieve", side_effect=Exception("Unexpected error"))
+    def test_algo_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
+        response = self.client.get(self.url + "123/")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _retrieve.assert_called_once()
 
     def test_algo_create(self):
         dir_path = os.path.dirname(os.path.realpath(__file__))
@@ -153,6 +169,14 @@ class AlgoViewTests(APITestCase):
 
         data["description"].close()
         data["file"].close()
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.algo.AlgoViewSet._create", side_effect=Exception("Unexpected error"))
+    def test_algo_create_fail_internal_server_error(self, _create: mock.Mock):
+        response = self.client.post(self.url, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _create.assert_called_once()
 
     def test_algo_list_storage_addresses_update(self):
         # mock content

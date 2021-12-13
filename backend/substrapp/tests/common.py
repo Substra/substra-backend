@@ -5,6 +5,7 @@ from http.cookies import SimpleCookie
 from io import BytesIO
 from io import StringIO
 from typing import List
+from unittest import mock
 
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import InMemoryUploadedFile
@@ -342,3 +343,15 @@ def query_data_manager(data_manager_key: str):
     for data_manager in assets.get_data_managers():
         if data_manager["key"] == data_manager_key:
             return data_manager
+
+
+def internal_server_error_on_exception():
+    """Decorator factory to make the Django test client respond with '500 Internal Server Error'
+    when an unhandled exception occurs.
+
+    Once we update to Django 3, we can use the `raise_request_exception` parameter
+    of the test client: https://docs.djangoproject.com/en/3.2/topics/testing/tools/#making-requests.
+
+    Adapted from https://stackoverflow.com/a/62720158.
+    """
+    return mock.patch("django.test.client.Client.store_exc_info", mock.Mock())

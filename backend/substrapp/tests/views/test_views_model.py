@@ -8,12 +8,12 @@ from unittest import mock
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse
-from grpc import RpcError
 from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.error
 from node.authentication import NodeUser
 from orchestrator.client import OrchestratorClient
 from substrapp.views.model import ModelPermissionViewSet
@@ -22,6 +22,7 @@ from substrapp.views.utils import AssetPermissionError
 from .. import assets
 from ..common import AuthenticatedClient
 from ..common import get_sample_model
+from ..common import internal_server_error_on_exception
 
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
@@ -29,7 +30,6 @@ MODEL_KEY = "some-key"
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
-# APITestCase
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
@@ -81,6 +81,14 @@ class ModelViewTests(APITestCase):
             r = response.json()
             self.assertEqual(len(r["results"]), 1)
 
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.model.get_channel_name", side_effect=Exception("Unexpected error"))
+    def test_model_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
+        response = self.client.get(self.url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        get_channel_name.assert_called_once()
+
     def test_model_retrieve(self):
         model = assets.get_model()
         expected = copy.deepcopy(model)
@@ -102,15 +110,23 @@ class ModelViewTests(APITestCase):
         response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = RpcError()
+        error = orchestrator.error.OrcError
         error.details = "out of range test"
-        error.code = lambda: StatusCode.OUT_OF_RANGE
+        error.code = StatusCode.OUT_OF_RANGE
 
         metric = assets.get_metric()
 
         with mock.patch.object(OrchestratorClient, "query_model", side_effect=error):
             response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.model.ModelViewSet._retrieve", side_effect=Exception("Unexpected error"))
+    def test_model_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
+        response = self.client.get(self.url + "123/")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _retrieve.assert_called_once()
 
     def test_model_download_by_node_for_worker(self):
         """ "Simple node-to-node download, e.g. worker downloads in-model"""

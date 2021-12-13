@@ -8,18 +8,19 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
-from grpc import RpcError
 from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.error
 from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputeTaskViewSet
 
 from .. import assets
 from .. import common
 from ..common import AuthenticatedClient
+from ..common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -30,9 +31,6 @@ def get_compute_plan_key(assets):
         if compute_plan_key:
             return compute_plan_key
     raise Exception("Could not find a compute plan key")
-
-
-# APITestCase
 
 
 @override_settings(
@@ -54,6 +52,15 @@ class TraintupleViewTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
+
+    @internal_server_error_on_exception()
+    @mock.patch.object(ComputeTaskViewSet, "commit", side_effect=Exception("Unexpected error"))
+    def test_traintuple_create_fail_internal_server_error(self, commit: mock.Mock):
+        url = reverse("substrapp:traintuple-list")
+        response = self.client.post(url, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        commit.assert_called_once()
 
     def test_traintuple_queryset(self):
         traintuple_view = ComputeTaskViewSet()
@@ -106,15 +113,24 @@ class TraintupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = RpcError()
+        error = orchestrator.error.OrcError()
         error.details = "out of range test"
-        error.code = lambda: StatusCode.OUT_OF_RANGE
+        error.code = StatusCode.OUT_OF_RANGE
 
         metric = assets.get_metric()
 
         with mock.patch.object(OrchestratorClient, "query_task", side_effect=error):
             response = self.client.get(f'{url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @internal_server_error_on_exception()
+    @mock.patch.object(ComputeTaskViewSet, "_retrieve", side_effect=Exception("Unexpected error"))
+    def test_testtuple_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
+        url = reverse("substrapp:traintuple-detail", kwargs={"pk": 123})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _retrieve.assert_called_once()
 
     def test_traintuple_list_filter_tag(self):
         url = reverse("substrapp:traintuple-list")
@@ -148,8 +164,16 @@ class TraintupleViewTests(APITestCase):
             r = response.json()
             self.assertEqual(len(r["results"]), 1)
 
+    @internal_server_error_on_exception()
+    @mock.patch.object(ComputeTaskViewSet, "_retrieve", side_effect=Exception("Unexpected error"))
+    def test_traintuple_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
+        url = reverse("substrapp:traintuple-detail", args={"pk": 123})
+        response = self.client.get(url)
 
-# APITestCase
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _retrieve.assert_called_once()
+
+
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
@@ -169,6 +193,15 @@ class TesttupleViewTests(APITestCase):
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
+
+    @internal_server_error_on_exception()
+    @mock.patch.object(ComputeTaskViewSet, "commit", side_effect=Exception("Unexpected error"))
+    def test_testtuple_create_fail_internal_server_error(self, commit: mock.Mock):
+        url = reverse("substrapp:testtuple-list")
+        response = self.client.post(url, data={}, format="json")
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        commit.assert_called_once()
 
     def test_testtuple_queryset(self):
         testtuple_view = ComputeTaskViewSet()
@@ -235,15 +268,24 @@ class TesttupleViewTests(APITestCase):
         response = self.client.get(url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = RpcError()
+        error = orchestrator.error.OrcError()
         error.details = "out of range test"
-        error.code = lambda: StatusCode.OUT_OF_RANGE
+        error.code = StatusCode.OUT_OF_RANGE
 
         metric = assets.get_metric()
 
         with mock.patch.object(OrchestratorClient, "query_task", side_effect=error):
             response = self.client.get(f'{url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    @internal_server_error_on_exception()
+    @mock.patch.object(ComputeTaskViewSet, "_retrieve", side_effect=Exception("Unexpected error"))
+    def test_testtuple_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
+        url = reverse("substrapp:testtuple-detail", kwargs={"pk": 123})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        _retrieve.assert_called_once()
 
     def test_testtuple_list_filter_tag(self):
         url = reverse("substrapp:testtuple-list")
@@ -322,3 +364,12 @@ class TesttupleViewTests(APITestCase):
         self.assertContains(response, "previous", 1)
         self.assertContains(response, "results", 1)
         self.assertEqual(r["results"], expected[index_down:index_up])
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.computetask.get_channel_name", side_effect=Exception("Unexpected error"))
+    def test_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
+        url = reverse("substrapp:testtuple-list")
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        get_channel_name.assert_called_once()

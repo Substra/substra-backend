@@ -7,12 +7,12 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
-from grpc import RpcError
 from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.error
 from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputeTaskViewSet
 
@@ -31,7 +31,6 @@ def get_compute_plan_key(assets):
     raise Exception("Could not find a compute plan key")
 
 
-# APITestCase
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
     LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
@@ -102,9 +101,9 @@ class CompositeTraintupleViewTests(APITestCase):
         response = self.client.get(self.url + search_params, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = RpcError()
+        error = orchestrator.error.OrcError()
         error.details = "out of range test"
-        error.code = lambda: StatusCode.OUT_OF_RANGE
+        error.code = StatusCode.OUT_OF_RANGE
 
         metric = assets.get_metric()
 

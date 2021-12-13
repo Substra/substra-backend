@@ -10,8 +10,6 @@ from rest_framework.viewsets import GenericViewSet
 import orchestrator.computetask_pb2 as computetask_pb2
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
-from substrapp import exceptions
 from substrapp.compute_tasks.context import TASK_DATA_FIELD
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
@@ -163,41 +161,20 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         return merged_data
 
     def create(self, request, *args, **kwargs):
-        try:
-            data = self.commit(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = self.commit(request)
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request, *args, **kwargs):
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_tasks(category=TASK_CATEGORY[self.basename])
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_tasks(category=TASK_CATEGORY[self.basename])
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            try:
-                data = filter_list(object_type=self.basename, data=data, query_params=query_params)
-                with get_orchestrator_client(get_channel_name(request)) as client:
-                    for datum in data:
-                        datum = add_task_extra_information(client, self.basename, datum)
-            except OrcError as rpc_error:
-                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = filter_list(object_type=self.basename, data=data, query_params=query_params)
+            with get_orchestrator_client(get_channel_name(request)) as client:
+                for datum in data:
+                    datum = add_task_extra_information(client, self.basename, datum)
 
         for task in data:
             replace_storage_addresses(request, task)
@@ -218,14 +195,5 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
 
-        try:
-            data = self._retrieve(request, key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except exceptions.BadRequestError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+        data = self._retrieve(request, key)
+        return Response(data, status=status.HTTP_200_OK)

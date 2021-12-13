@@ -9,8 +9,6 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
-from orchestrator.error import OrcError
-from substrapp import exceptions
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
@@ -215,59 +213,31 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         return cp
 
     def create(self, request, *args, **kwargs):
-        try:
-            data = self.commit(request)
-        except ValidationExceptionError as e:
-            return Response({"message": e.data, "key": e.key}, status=e.st)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            headers = self.get_success_headers(data)
-            return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = self.commit(request)
+        headers = self.get_success_headers(data)
+        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         validated_key = validate_key(key)
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_compute_plan(validated_key)
-                data = add_cp_extra_information(client, data)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except exceptions.BadRequestError:
-            raise
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response(data, status=status.HTTP_200_OK)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_compute_plan(validated_key)
+            data = add_cp_extra_information(client, data)
+
+        return Response(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                data = client.query_compute_plans()
-                for datum in data:
-                    datum = add_compute_plan_duration_or_eta(client, datum)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            data = client.query_compute_plans()
+            for datum in data:
+                datum = add_compute_plan_duration_or_eta(client, datum)
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            try:
-                data = filter_list(object_type="compute_plan", data=data, query_params=query_params)
-            except OrcError as rpc_error:
-                return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-            except Exception as e:
-                logger.exception(e)
-                return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            data = filter_list(object_type="compute_plan", data=data, query_params=query_params)
+
         return self.paginate_response(data)
 
     @action(detail=True, methods=["POST"])
@@ -276,15 +246,10 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         key = self.kwargs[lookup_url_kwarg]
         validated_key = validate_key(key)
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                client.cancel_compute_plan(key)
-                compute_plan = client.query_compute_plan(validated_key)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.cancel_compute_plan(key)
+            compute_plan = client.query_compute_plan(validated_key)
+
         return Response(compute_plan, status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=True)
@@ -314,16 +279,10 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             + list(validated_testtuples.values())
         )
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                client.register_tasks({"tasks": tasks})
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        else:
-            return Response({}, status=status.HTTP_200_OK)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            client.register_tasks({"tasks": tasks})
+
+        return Response({}, status=status.HTTP_200_OK)
 
 
 class GenericSubassetViewset(PaginationMixin, GenericViewSet):
@@ -342,15 +301,9 @@ class GenericSubassetViewset(PaginationMixin, GenericViewSet):
         validated_key = validate_key(compute_plan_pk)
         truncated_basename = self.basename.removeprefix(BASENAME_PREFIX)
 
-        try:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                search_params = request.query_params.get("search")
-                data = self._fetch_data(client, validated_key, truncated_basename, search_params)
-        except OrcError as rpc_error:
-            return Response({"message": rpc_error.details}, status=rpc_error.http_status())
-        except Exception as e:
-            logger.exception(e)
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            search_params = request.query_params.get("search")
+            data = self._fetch_data(client, validated_key, truncated_basename, search_params)
 
         return self.paginate_response(data)
 
