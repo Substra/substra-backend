@@ -8,13 +8,13 @@ import structlog
 from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.volumes import get_docker_cache_pvc_name
 from substrapp.compute_tasks.volumes import get_worker_subtuple_pvc_name
 from substrapp.docker_registry import USER_IMAGE_REPOSITORY
 from substrapp.docker_registry import container_image_exists
-from substrapp.exceptions import BuildError
 from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_pod_logs
 from substrapp.kubernetes_utils import get_security_context
@@ -290,8 +290,7 @@ def _build_container_image(path: str, tag: str, ctx: Context) -> None:  # noqa: 
         # In case of concurrent build, it may fail
         # check if image exists
         if not container_image_exists(tag):
-            logger.error("Kaniko build failed", exc_info=e)
-            raise BuildError(f"Kaniko build failed, error: {e}")
+            raise compute_task_errors.BuildError from e
     finally:
         if create_pod:
             log_prefix = f"[{ctx.compute_plan_key[:8]}-{ctx.task_key[:8]}-b-{ctx.attempt}]"

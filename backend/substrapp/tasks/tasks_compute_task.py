@@ -22,6 +22,7 @@ from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
@@ -90,8 +91,9 @@ class ComputeTask(Task):
         close_old_connections()
         channel_name, task = self.split_args(args)
 
+        error_type = compute_task_errors.get_error_type(exc)
         with get_orchestrator_client(channel_name) as client:
-            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED)
+            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_type)
 
     def split_args(self, celery_args):
         channel_name = celery_args[0]

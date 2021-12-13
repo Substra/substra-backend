@@ -15,6 +15,7 @@ from django.conf import settings
 from kubernetes.stream import stream
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
@@ -104,9 +105,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
         if not settings.WORKER_PVC_IS_HOSTPATH:
             _check_compute_pod_and_worker_share_same_subtuple(k8s_client, pod_name)  # can raise
 
-        returncode = _exec(k8s_client, ctx, compute_pod, exec_command)
-        if returncode != 0:
-            raise Exception(f"Error running compute task. Compute task process exited with code {returncode}")
+        _exec(k8s_client, ctx, compute_pod, exec_command)
 
     except (PodError, PodTimeoutError) as e:
         logger.error(e)
@@ -148,7 +147,7 @@ def _check_compute_pod_and_worker_share_same_subtuple(k8s_client: kubernetes.cli
 
 
 @timeit
-def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]) -> int:
+def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[str]):
     """Execute a command on a compute pod"""
     logger.debug("Running command", command=exec_command, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
 
@@ -177,4 +176,8 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
             print_log(resp.read_stdout())
 
     resp.close()
-    return resp.returncode
+
+    if resp.returncode != 0:
+        raise compute_task_errors.ExecutionError(
+            f"Error running compute task. Compute task process exited with code {resp.returncode}"
+        )

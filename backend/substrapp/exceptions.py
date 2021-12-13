@@ -45,10 +45,6 @@ class NodeError(Exception):
     """An error occurred during the download of an asset from a node"""
 
 
-class BuildError(Exception):
-    """An error occurred during the build of a container image"""
-
-
 class TaskNotFoundError(Exception):
     """A celery task was not found"""
 
