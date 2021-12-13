@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Properly prevent path traversal in archives and don't allow symbolic links (#465)
+- Inject task extra information even if there are no query params (#536)
 
 ## [0.5.0] 2021-11-02
 

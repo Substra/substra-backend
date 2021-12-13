@@ -172,9 +172,10 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         query_params = request.query_params.get("search")
         if query_params is not None:
             data = filter_list(object_type=self.basename, data=data, query_params=query_params)
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                for datum in data:
-                    datum = add_task_extra_information(client, self.basename, datum)
+
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            for datum in data:
+                datum = add_task_extra_information(client, self.basename, datum)
 
         for task in data:
             replace_storage_addresses(request, task)
