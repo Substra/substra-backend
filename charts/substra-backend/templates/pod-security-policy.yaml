@@ -1,4 +1,5 @@
-{{- if .Values.psp.create }}
+{{- $pspAvailable := (semverCompare "<1.25-0" .Capabilities.KubeVersion.Version) -}}
+{{- if and $pspAvailable .Values.psp.create }}
 apiVersion: {{ include "podsecuritypolicy.apiVersion" .}}
 kind: PodSecurityPolicy
 metadata:

@@ -1,5 +1,10 @@
 # Changelog
 
+## 14.0.1
+
+### Fixed
+- Do not create a _PodSecurityPolicy_ if kube version `>=1.25` and add a warning to the README
+
 ## 14.0.0
 
 Moved algos, datamanagers, and metrics from PVCs to MinIO

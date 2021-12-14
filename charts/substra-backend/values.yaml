@@ -35,7 +35,7 @@ privateCa:
     data:
     fileName: private-ca.crt
 
-## @param psp.create Create a _Pod Security Policy_ in the cluster
+## @param psp.create Create a _Pod Security Policy_ in the cluster. WARNING: PodSecurityPolicy is deprecated in Kubernetes 1.21 or later and unavailable in Kubernetes 1.25 or later
 ##
 psp:
   create: true

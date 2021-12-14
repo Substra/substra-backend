@@ -30,7 +30,7 @@ We truncate at 56 chars because some Kubernetes name fields are limited to 63 ch
 Return the appropriate apiVersion for PodSecurityPolicy.
 */}}
 {{- define "podsecuritypolicy.apiVersion" -}}
-{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.GitVersion -}}
+{{- if semverCompare ">=1.14-0" .Capabilities.KubeVersion.Version -}}
 {{- print "policy/v1beta1" -}}
 {{- else -}}
 {{- print "extensions/v1beta1" -}}
