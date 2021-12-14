@@ -50,7 +50,7 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()
         tmp_model.write(content)
-        instance, created = Model.objects.update_or_create(key=key, validated=True)
+        instance, created = Model.objects.update_or_create(key=key)
         instance.file.save("model", tmp_model)
 
         return instance

@@ -21,7 +21,6 @@ class DataManager(models.Model):
     description = models.FileField(
         storage=settings.DATAMANAGER_STORAGE, max_length=500, upload_to=upload_to
     )  # path max length to 500 instead of default 100
-    validated = models.BooleanField(default=False, blank=True)
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs) -> None:
@@ -31,4 +30,4 @@ class DataManager(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"DataManager with key {self.key} with name {self.name}"
+        return f"DataManager with key {self.key}"

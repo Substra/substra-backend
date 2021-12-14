@@ -81,25 +81,12 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
         # create on orchestrator db
         try:
-            orchestrator_result = orchestrator_serializer.create(
-                get_channel_name(request), orchestrator_serializer.validated_data
-            )
+            orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
         except Exception:
             for instance in instances:
                 instance.delete()
             raise
-
-        data = []
-        for instance in instances:
-            serializer = self.get_serializer(instance)
-            if (
-                "key" in orchestrator_result
-                and orchestrator_result["validated"]
-                and serializer.data["key"] in orchestrator_result["key"]
-            ):
-                serializer.data["validated"] = True
-            data.append(serializer.data)
-        return data
+        return [self.get_serializer(instance).data for instance in instances]
 
     def _db_create(self, data):
         serializer = self.get_serializer(data=data)

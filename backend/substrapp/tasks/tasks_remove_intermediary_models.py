@@ -26,7 +26,7 @@ def remove_intermediary_models_from_db(channel_name: str, model_keys: List[str])
     """
     from substrapp.models import Model
 
-    models = Model.objects.filter(key__in=model_keys, validated=True)
+    models = Model.objects.filter(key__in=model_keys)
     filtered_model_keys = [str(model.key) for model in models]
     models.delete()
 

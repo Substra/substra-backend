@@ -113,7 +113,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ok(self):
         checksum = compute_hash(self.model.read(), key="key_traintuple")
-        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum)
         model = {
             "key": "some key",
             "address": DEFAULT_STORAGE_ADDRESS,
@@ -136,7 +136,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ko_user(self):
         checksum = compute_hash(self.model.read(), key="key_traintuple")
-        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum)
         model = {
             "key": "some key",
             "address": DEFAULT_STORAGE_ADDRESS,
@@ -160,7 +160,7 @@ class CompositeTraintupleQueryTests(APITestCase):
 
     def test_get_head_model_ko_wrong_node(self):
         checksum = compute_hash(self.model.read(), key="key_traintuple")
-        head_model = Model.objects.create(file=self.model, checksum=checksum, validated=True)
+        head_model = Model.objects.create(file=self.model, checksum=checksum)
         model = {
             "key": "some key",
             "owner": TEST_ORG,

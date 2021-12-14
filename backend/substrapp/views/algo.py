@@ -115,7 +115,7 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         description_file = tempfile.TemporaryFile()
         description_file.write(content)
 
-        instance, created = Algo.objects.update_or_create(key=key, validated=True)
+        instance, created = Algo.objects.update_or_create(key=key)
         instance.description.save("description.md", description_file)
 
         return instance

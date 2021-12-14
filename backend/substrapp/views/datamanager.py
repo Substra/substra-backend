@@ -103,7 +103,7 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
 
     def create_or_update_datamanager(self, channel_name, datamanager, key):
 
-        instance, created = DataManager.objects.update_or_create(key=key, name=datamanager["name"], validated=True)
+        instance, created = DataManager.objects.update_or_create(key=key, name=datamanager["name"])
 
         if not instance.data_opener:
             content = get_remote_asset(

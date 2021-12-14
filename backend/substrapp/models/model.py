@@ -14,7 +14,6 @@ class Model(models.Model):
     """Storage Data table"""
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    validated = models.BooleanField(default=False)
     file = models.FileField(
         storage=settings.MODEL_STORAGE,
         upload_to=upload_to,
@@ -29,4 +28,4 @@ class Model(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Model with key {self.key} with validated {self.validated}"
+        return f"Model with key {self.key}"

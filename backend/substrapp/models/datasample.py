@@ -12,7 +12,6 @@ class DataSample(models.Model):
     """Storage Data table"""
 
     key = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    validated = models.BooleanField(default=False)
     checksum = models.CharField(max_length=64)
 
     file = models.FileField(
@@ -22,4 +21,4 @@ class DataSample(models.Model):
     path = models.FilePathField(max_length=500, blank=True, null=True)
 
     def __str__(self) -> str:
-        return f"DataSample with key {self.key} with validated {self.validated}"
+        return f"DataSample with key {self.key}"

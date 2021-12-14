@@ -20,7 +20,6 @@ class Algo(models.Model):
     description = models.FileField(
         storage=settings.ALGO_STORAGE, upload_to=upload_to, max_length=500
     )  # path max length to 500 instead of default 100
-    validated = models.BooleanField(default=False)
     checksum = models.CharField(max_length=64, blank=True)
 
     def save(self, *args, **kwargs) -> None:
@@ -30,4 +29,4 @@ class Algo(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Algo with key {self.key} with validated {self.validated}"
+        return f"Algo with key {self.key}"

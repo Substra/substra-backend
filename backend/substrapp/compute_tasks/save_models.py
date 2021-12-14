@@ -65,7 +65,7 @@ def _save_model(channel_name: str, category: int, src_path: str, task_key: str) 
     from substrapp.models import Model
 
     checksum = get_hash(src_path, task_key)
-    instance = Model.objects.create(checksum=checksum, validated=True)
+    instance = Model.objects.create(checksum=checksum)
 
     with open(src_path, "rb") as f:
         instance.file.save("model", f)

@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - When executing compute tasks, store Algos and Metrics in temporary folders instead of the Asset Buffer
 - On compute task failure, send the type of the error that occurred to the orchestrator
+- Remove validated field on Datasample, Algo, Metrics, Model and Datamanager models (#544)
 
 ## [0.6.0] 2021-12-01
 
