@@ -1,6 +1,7 @@
 import json
-import os
+import pathlib
 import tempfile
+import unittest
 import uuid
 from unittest import mock
 
@@ -9,6 +10,7 @@ from parameterized import parameterized
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.image_builder import _build_asset_image
 from substrapp.compute_tasks.image_builder import _get_entrypoint_from_dockerfile
 from substrapp.compute_tasks.image_builder import build_images
@@ -20,17 +22,34 @@ ENTRYPOINT ["python3", "myalgo.py"]
 """
 
 
-class ImageBuilderTests(APITestCase):
+class GetEntrypointFromDockerfileTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        self.tmp_dir = pathlib.Path(self._tmp_dir.name)
+        self.dockerfile_path = self.tmp_dir / "Dockerfile"
+
+    def tearDown(self):
+        self._tmp_dir.cleanup()
+
     def test_get_entrypoint_from_dockerfile(self):
+        self.dockerfile_path.write_text(DOCKERFILE)
+        res = _get_entrypoint_from_dockerfile(self.tmp_dir)
+        self.assertEqual(res, ["python3", "myalgo.py"])
 
-        with tempfile.TemporaryDirectory() as tmpdir:
+    @parameterized.expand(
+        [
+            ("INVALID DOCKERFILE", "^Invalid Dockerfile: Cannot find ENTRYPOINT$"),
+            ("FROM scratch\nENTRYPOINT invalid_entrypoint_form", "^Invalid ENTRYPOINT.+"),
+        ],
+    )
+    def test_get_entrypoint_from_dockerfile_raise(self, dockerfile: str, exc_regex: str):
+        self.dockerfile_path.write_text(dockerfile)
 
-            with open(os.path.join(tmpdir, "Dockerfile"), "w") as f:
-                f.write(DOCKERFILE)
+        with self.assertRaisesRegex(compute_task_errors.BuildError, exc_regex):
+            _get_entrypoint_from_dockerfile(self.tmp_dir)
 
-            res = _get_entrypoint_from_dockerfile(tmpdir)
-            self.assertEqual(res, ["python3", "myalgo.py"])
 
+class ImageBuilderTests(APITestCase):
     @parameterized.expand([("train_task", computetask_pb2.TASK_TRAIN), ("test_task", computetask_pb2.TASK_TEST)])
     def test_build_images(self, _, task_category_):
 

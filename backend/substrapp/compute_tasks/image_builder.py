@@ -119,15 +119,19 @@ def _get_entrypoint_from_dockerfile(dockerfile_dir: str) -> List[str]:
     with open(dockerfile_path, "r") as file:
         for line in file:
             if line.startswith("ENTRYPOINT"):
-                res = json.loads(line[len("ENTRYPOINT") :])
+                try:
+                    res = json.loads(line[len("ENTRYPOINT") :])
+                except json.JSONDecodeError:
+                    res = None
+
                 if not isinstance(res, list):
-                    raise NotImplementedError(
+                    raise compute_task_errors.BuildError(
                         "Invalid ENTRYPOINT in algo/metric Dockerfile. You must use the exec form in your Dockerfile. "
                         "See https://docs.docker.com/engine/reference/builder/#entrypoint"
                     )
                 return res
 
-    raise Exception("Invalid Dockerfile: Cannot find ENTRYPOINT")
+    raise compute_task_errors.BuildError("Invalid Dockerfile: Cannot find ENTRYPOINT")
 
 
 # TODO: '_build_container_image' is too complex, consider refactoring
