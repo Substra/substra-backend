@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Memory leak in MinIO client
+- Missing timeout on event app orchestrator RabbitMQ connection
 
 ### Changed
 - When executing compute tasks, store Algos and Metrics in temporary folders instead of the Asset Buffer

@@ -16,6 +16,8 @@ import orchestrator.event_pb2 as event_pb2
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 
+ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT = 30
+
 logger = structlog.get_logger("events")
 
 
@@ -163,6 +165,7 @@ async def consume(loop):
         ssl=settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED,
         ssl_options=ssl_options,
         loop=loop,
+        timeout=ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT,
     )
 
     log.info("Connected to orchestrator RabbitMQ")
