@@ -193,17 +193,17 @@ def timeit(function):
 
         elaps = (time.time() - ts) * 1000
 
-        log = logger.bind(
-            function=function.__name__,
-            duration=f"{elaps:.2f}ms",
-        )
+        log_data = {
+            "function": function.__name__,
+            "duration": f"{elaps:.2f}ms",
+        }
 
         if exception is None:
-            log.info("(profiler) function succeeded")
+            logger.info("(profiler) function succeeded", **log_data)
         else:
             # Intentionally use logger.info (and not logger.error)
             # Leave the responsibility of logging errors to the function caller.
-            log.info("(profiler) function returned an error")
+            logger.info("(profiler) function returned an error", **log_data)
 
         if exception is not None:
             raise exception
