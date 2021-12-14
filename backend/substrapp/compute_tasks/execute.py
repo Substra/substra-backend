@@ -177,7 +177,10 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
 
     resp.close()
 
-    if resp.returncode != 0:
+    # resp.returncode must only be called once, see https://github.com/kubernetes-client/python-base/issues/271
+    returncode = resp.returncode
+
+    if returncode != 0:
         raise compute_task_errors.ExecutionError(
-            f"Error running compute task. Compute task process exited with code {resp.returncode}"
+            f"Error running compute task. Compute task process exited with code {returncode}"
         )
