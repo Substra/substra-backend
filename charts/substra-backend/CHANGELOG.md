@@ -1,5 +1,11 @@
 # Changelog
 
+## 14.0.2
+
+### Added
+- `wait-init-migrations configmap` with `wait-init-migrations.sh` to check that there are no pending migration to run.
+- `wait-init-migrations init container` in the event app deployment.
+
 ## 14.0.1
 
 ### Fixed

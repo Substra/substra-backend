@@ -109,10 +109,30 @@ spec:
         - name: wait-postgresql
           image: jwilder/dockerize:0.6.1
           command: ['dockerize', '-wait', 'tcp://{{ template  "postgresql.serviceName" . }}:5432']
+        - name: wait-init-migrations
+          image: {{ include "common.images.name" .Values.events.image }}
+          command: ['bash', '/usr/src/app/wait-init-migration.sh']
+          volumeMounts:
+            - name: volume-wait-init-migrations
+              mountPath: /usr/src/app/wait-init-migration.sh
+              subPath: wait-init-migration.sh
+          envFrom:
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-database
+            - configMapRef:
+                name: {{ include "substra.fullname" . }}-settings
+            - secretRef:
+                name: {{ include "substra.fullname" . }}-database
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: backend.settings.{{ .Values.settings }}
       volumes:
       - name: uwsgi
         configMap:
           name: {{ include "substra.fullname" . }}-events-uwsgi
+      - name: volume-wait-init-migrations
+        configMap:
+          name: {{ include "substra.fullname" . }}-wait-init-migrations
       {{- if .Values.privateCa.enabled }}
       - name: ssl-certs
         emptyDir: {}
