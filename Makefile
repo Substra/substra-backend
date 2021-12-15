@@ -4,6 +4,10 @@
 test:
 	$(MAKE) -C backend test
 
+.PHONY: db-test
+db-test:
+	$(MAKE) -C backend db-test
+
 .PHONY: coverage
 coverage:
 	$(MAKE) -C backend coverage
