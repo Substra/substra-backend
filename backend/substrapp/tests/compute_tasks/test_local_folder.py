@@ -8,7 +8,6 @@ from parameterized import parameterized
 from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
-from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.directories import CPDirName
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.tasks.tasks_compute_task import compute_task
@@ -59,7 +58,7 @@ class LocalFolderTests(APITestCase):
         with open(os.path.join(local_folder_committed, file), "w") as x:
             x.write(initial_value)
 
-        with mock.patch.object(OrchestratorClient, "is_task_in_final_state") as mis_task_in_final_state, mock.patch(
+        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable") as mis_task_runnable, mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ) as mfrom_task, mock.patch("substrapp.tasks.tasks_compute_task.init_asset_buffer"), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
@@ -75,7 +74,7 @@ class LocalFolderTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ):
 
-            mis_task_in_final_state.return_value = False
+            mis_task_runnable.return_value = True
             mfrom_task.return_value = FakeContext
 
             # The function `execute_compute_task` will:

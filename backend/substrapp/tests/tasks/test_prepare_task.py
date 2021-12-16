@@ -42,11 +42,14 @@ class PrepareTaskTests(APITestCase):
             "celery.app.task.Task.request", new_callable=mock.PropertyMock
         ) as mrequest, mock.patch(
             "celery.worker.request.Request.delivery_info", new_callable=mock.PropertyMock
-        ) as mdeliveryinfo, mock.patch.object(
+        ) as mdeliveryinfo, mock.patch(
+            "substrapp.tasks.tasks_prepare_task._is_task_runnable"
+        ) as m_is_task_runnable, mock.patch.object(
             OrchestratorClient, "update_task_status"
         ) as mtask_status:
             mrequest.return_value = mdeliveryinfo
             mdeliveryinfo.return_value = {"routing_key": "routing_key"}
+            m_is_task_runnable.return_value = True
             mtask_status.side_effect = Exception("orchestrator error")
             with self.assertRaises(Ignore):
                 prepare_task(CHANNEL, self.task)
@@ -60,8 +63,13 @@ class PrepareTaskTests(APITestCase):
             "celery.worker.request.Request.delivery_info", new_callable=mock.PropertyMock
         ) as mdeliveryinfo, mock.patch.object(
             OrchestratorClient, "update_task_status"
-        ):
+        ), mock.patch(
+            "substrapp.tasks.tasks_prepare_task._is_task_runnable"
+        ) as m_is_task_runnable:
             mrequest.return_value = mdeliveryinfo
             mdeliveryinfo.return_value = {"routing_key": "routing_key"}
             mapply_async.return_value = "compute_task"
+            m_is_task_runnable.return_value = True
             prepare_task(CHANNEL, self.task)
+
+            m_is_task_runnable.assert_called_once_with(CHANNEL, self.task["key"])

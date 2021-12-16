@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Memory leak in MinIO client
+- Zombie compute pods (pods which are never deleted) in edge cases
 - Missing timeout on event app orchestrator RabbitMQ connection
 
 ### Changed

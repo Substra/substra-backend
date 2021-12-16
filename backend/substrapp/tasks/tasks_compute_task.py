@@ -29,6 +29,7 @@ from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
+from substrapp.compute_tasks.compute_task import is_task_runnable
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import CPDirName
 from substrapp.compute_tasks.directories import Directories
@@ -129,9 +130,8 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     task_key = task["key"]
     logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key)
 
-    with get_orchestrator_client(channel_name) as client:
-        should_not_run = client.is_task_in_final_state(task_key)
-    if should_not_run:
+    # We use allow_doing=True to allow celery retries.
+    if not is_task_runnable(channel_name, task_key, allow_doing=True):
         raise Exception(f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore.")
 
     logger.info(

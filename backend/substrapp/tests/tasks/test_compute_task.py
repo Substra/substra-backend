@@ -64,9 +64,9 @@ class ComputeTaskTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ) as mteardown_task_dirs, mock.patch.object(
             OrchestratorClient, "register_performance"
-        ) as mregister_performance, mock.patch.object(
-            OrchestratorClient, "is_task_in_final_state", return_value=False
-        ) as mis_task_in_final_state, mock.patch.object(
+        ) as mregister_performance, mock.patch(
+            "substrapp.tasks.tasks_compute_task.is_task_runnable"
+        ) as mis_task_runnable, mock.patch.object(
             OrchestratorClient, "query_compute_plan", return_value={}
         ), mock.patch.object(
             OrchestratorClient, "get_computetask_input_models"
@@ -88,7 +88,7 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(msave_models.call_count, 1)
             self.assertEqual(mcommit_dir.call_count, 1)
             self.assertEqual(mteardown_task_dirs.call_count, 1)
-            self.assertEqual(mis_task_in_final_state.call_count, 1)
+            self.assertEqual(mis_task_runnable.call_count, 1)
 
             error = RpcError()
             error.details = "OE0000"
@@ -112,7 +112,7 @@ class ComputeTaskTests(APITestCase):
             "category": computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST),
         }
 
-        with mock.patch.object(OrchestratorClient, "is_task_in_final_state", return_value=False), mock.patch(
+        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable", return_value=True), mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ), mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"

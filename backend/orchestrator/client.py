@@ -503,18 +503,6 @@ class OrchestratorClient:
 
         return res
 
-    def is_task_doing(self, key):
-        task = self.query_task(key)
-        return computetask_pb2.ComputeTaskStatus.Value(task["status"]) == computetask_pb2.STATUS_DOING
-
-    def is_task_in_final_state(self, key):
-        task = self.query_task(key)
-        return computetask_pb2.ComputeTaskStatus.Value(task["status"]) in [
-            computetask_pb2.STATUS_CANCELED,
-            computetask_pb2.STATUS_DONE,
-            computetask_pb2.STATUS_FAILED,
-        ]
-
     @grpc_retry
     def is_compute_plan_doing(self, key):
         cp = self.query_compute_plan(key)

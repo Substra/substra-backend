@@ -7,6 +7,7 @@ from celery.result import AsyncResult
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from orchestrator.error import OrcError
+from substrapp.compute_tasks.compute_task import is_task_runnable_preloaded
 from substrapp.exceptions import TaskNotFoundError
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_task import compute_task
@@ -63,7 +64,7 @@ def queue_prepare_task(channel_name, task):
         )
         return
 
-    if _task_not_runnable(channel_name, task["category"], key):
+    if not _is_task_runnable(channel_name, key):
         # Avoid creating celery task if the compute task is not with STATUS_TODO
         return
 
@@ -83,8 +84,8 @@ def prepare_task(self, channel_name: str, task: Dict) -> None:
     queue = self.request.delivery_info["routing_key"]
     compute_plan_key = task["compute_plan_key"]
 
-    if _task_not_runnable(channel_name, task["category"], task["key"]):
-        # Check that the compute task to process is in STATUS_TODO
+    if not _is_task_runnable(channel_name, task["key"]):
+        # Check that the compute task to process is still in STATUS_TODO
         # There can be some time elapsed between the celery task creation and the time the worker pick up the task
         return
 
@@ -108,7 +109,7 @@ def prepare_task(self, channel_name: str, task: Dict) -> None:
     compute_task.apply_async((channel_name, task, compute_plan_key), queue=queue)
 
 
-def _task_not_runnable(channel_name, task_category, task_key):
+def _is_task_runnable(channel_name: str, task_key: str) -> bool:
     # Early return if task status is not todo
     # Can happen if we re-process all events (backend-server restart)
     # We need to fetch the task again to get the last
@@ -120,15 +121,6 @@ def _task_not_runnable(channel_name, task_category, task_key):
         # use the provided task if the previous call fail
         # It can happen for new task that are not already
         # in the ledger local db
-        return False
-
-    if computetask_pb2.ComputeTaskStatus.Value(task["status"]) != computetask_pb2.STATUS_TODO:
-        logger.info(
-            'Skipping task, not in "STATUS_TODO" state',
-            task_key=task_key,
-            task_category=task_category,
-            status=task["status"],
-        )
         return True
 
-    return False
+    return is_task_runnable_preloaded(channel_name, task)
