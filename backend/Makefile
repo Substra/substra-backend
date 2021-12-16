@@ -18,7 +18,7 @@ db-test:
 
 .PHONY: test
 test:
-	DJANGO_SETTINGS_MODULE=backend.settings.test coverage run manage.py test
+	pytest --cov-report=
 
 .PHONY: coverage
 coverage: test

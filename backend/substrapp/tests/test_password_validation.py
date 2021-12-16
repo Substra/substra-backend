@@ -21,7 +21,7 @@ class PasswordValidationTests(TestCase):
             self.fail("Password validation should succeed when the password is not too long.")
 
         # too long password NOT OK
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValidationError,
             "This password is too long. It must contain a maximum of 64 characters.",
             self.max_len_validator.validate,
@@ -39,7 +39,7 @@ class PasswordValidationTests(TestCase):
             self.fail("Password validation should succeed when the password is complex enough.")
 
         # easy-to-guess password NOT OK
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             ValidationError,
             "This password is not complex enough.*",
             self.complexity_validator.validate,

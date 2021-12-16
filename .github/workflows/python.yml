@@ -63,4 +63,4 @@ jobs:
       - name: Test
         run: |
           cd backend/
-          coverage run manage.py test
+          pytest

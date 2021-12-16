@@ -13,3 +13,54 @@ line_length = 120
 profile = "black"
 skip_glob = ["backend/orchestrator/*_pb2.py", "backend/orchestrator/*_pb2_grpc.py"]
 src_paths = ["backend", "metrics-exporter/metrics_exporter"]
+
+[tool.pytest.ini_options]
+testpaths = ["backend"]
+DJANGO_SETTINGS_MODULE = "backend.settings.test"
+addopts = "-n auto --cov=. --cov-config=../pyproject.toml"
+filterwarnings = [
+    # TODO: turns all warnings into errors
+    # "error",
+]
+
+[tool.coverage.run]
+branch = true
+omit = [
+    "manage.py",
+    "backend/**",
+    "*/tests/**",
+    "*/migrations/*",
+    "orchestrator/*_pb2.py",
+    "orchestrator/*_pb2_grpc.py"
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    # Have to re-enable the standard pragma
+    "pragma: no cover",
+
+    # Don't complain about missing debug-only code:
+    "def __repr__",
+    'if self\.debug',
+
+    # Don't complain if tests don't hit defensive assertion code:
+    "raise AssertionError",
+    "raise NotImplementedError",
+
+    # Don't complain if non-runnable code isn't run:
+    "if 0:",
+    "if __name__ == .__main__.:",
+
+    # Don't complain about abstract methods, they aren't run:
+    '@(abc\.)?abstractmethod',
+
+    # Don't complain if no gpu during test
+    "if gpu_set",
+    "if __gpu_list",
+    "if cls.__gpu_sets",
+    "if 'environment' in job_args",
+
+    # Ignore functions,
+    "def prepare_training_task",
+    "def prepare_testing_task"
+]
