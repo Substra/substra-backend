@@ -26,6 +26,22 @@ class ComputeTaskErrorType(enum.Enum):
     EXECUTION_ERROR = enum.auto()
     INTERNAL_ERROR = enum.auto()
 
+    @classmethod
+    def from_str(cls, value: str) -> "ComputeTaskErrorType":
+        """Convert a string into a `ComputeTaskErrorType`. If the string passed as argument
+        does not correspond to an enum element, the value `INTERNAL_ERROR` is returned.
+
+        Args:
+            value: The string to parse.
+
+        Returns:
+            A `ComputeTaskErrorType` element.
+        """
+        try:
+            return cls(value)
+        except ValueError:
+            return cls.INTERNAL_ERROR
+
 
 class _ComputeTaskError(RuntimeError, abc.ABC):
     """Base class for the exceptions that can be raised in a compute task to be advertised to the user."""

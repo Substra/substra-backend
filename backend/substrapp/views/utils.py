@@ -2,6 +2,7 @@ import datetime
 import os
 import uuid
 from typing import Callable
+from typing import Optional
 from wsgiref.util import is_hop_by_hop
 
 from django.conf import settings
@@ -20,6 +21,7 @@ import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
 from node.authentication import NodeUser
 from node.models import OutgoingNode
+from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
 from substrapp.exceptions import NodeError
@@ -311,26 +313,33 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
         data["parent_tasks"] = [client.query_task(key) for key in data["parent_task_keys"]]
 
     # fetch task start and end dates from its events
-    first_event = next(
-        client.query_events_generator(
-            event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], metadata={"status": "STATUS_DOING"}
-        ),
-        None,
+    first_event = client.query_single_event(
+        event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], metadata={"status": "STATUS_DOING"}
     )
+
     data["start_date"] = first_event["timestamp"] if first_event else None
 
     if task_status in [computetask_pb2.STATUS_FAILED, computetask_pb2.STATUS_CANCELED, computetask_pb2.STATUS_DONE]:
-        last_event = next(
-            client.query_events_generator(
-                event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], sort=common_pb2.DESCENDING
-            ),
-            None,
+        last_event = client.query_single_event(
+            event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], sort=common_pb2.DESCENDING
         )
     else:
         last_event = None
+
     data["end_date"] = last_event["timestamp"] if last_event else None
+    data["error_type"] = _get_error_type(last_event) if last_event else None
 
     return data
+
+
+def _get_error_type(last_event) -> Optional[str]:
+    # Since STATUS_FAILED is a final status, in case of failure
+    # the last event will always be the event dispatched to transition to STATUS_FAILED
+    if last_event["metadata"].get("status") == "STATUS_FAILED":
+        reason = last_event["metadata"]["reason"]
+        return compute_task_errors.ComputeTaskErrorType.from_str(reason).value
+
+    return None
 
 
 def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:

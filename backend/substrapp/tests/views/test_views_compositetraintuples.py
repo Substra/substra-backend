@@ -77,6 +77,8 @@ class CompositeTraintupleViewTests(APITestCase):
         expected["composite"]["models"] = []
         expected["composite"]["data_manager"] = copy.deepcopy(data_manager)
         expected["parent_tasks"] = copy.deepcopy(parent_tasks)
+        error_type = "INTERNAL_ERROR"
+        expected["error_type"] = error_type
 
         filtered_events = [iter([event]) for event in common.get_task_events(composite_task["key"])]
 
@@ -84,10 +86,15 @@ class CompositeTraintupleViewTests(APITestCase):
             OrchestratorClient, "query_datamanager", return_value=data_manager
         ), mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=[]), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=error_type
+        ) as mocked_get_error_type:
+
             search_params = f"{composite_task['key']}/"
             response = self.client.get(self.url + search_params, **self.extra)
             actual = response.json()
+
+            mocked_get_error_type.assert_called_once()
             self.assertEqual(actual, expected)
 
     def test_compositetraintuple_retrieve_fail(self):
@@ -118,14 +125,17 @@ class CompositeTraintupleViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=composite_tasks), mock.patch.object(
             OrchestratorClient, "get_computetask_output_models", return_value=[]
-        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
+        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
 
             search_params = "?search=composite_traintuple%253Atag%253Asubstra"
             response = self.client.get(self.url + search_params, **self.extra)
 
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
             r = response.json()
-
             self.assertEqual(len(r["results"]), 1)
+            mocked_get_error_type.assert_called_once()
 
     @parameterized.expand(
         [
@@ -136,6 +146,9 @@ class CompositeTraintupleViewTests(APITestCase):
     )
     def test_composite_traintuple_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
         composite_tasks = assets.get_composite_tasks()
+        for task in composite_tasks:
+            task["error_type"] = None
+
         filtered_events = [iter([event]) for ct in composite_tasks for event in common.get_task_events(ct["key"])]
 
         url = reverse("substrapp:composite_traintuple-list")
@@ -146,7 +159,9 @@ class CompositeTraintupleViewTests(APITestCase):
             OrchestratorClient, "get_computetask_output_models", side_effect=common.get_task_output_models
         ), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, "count", 1)
@@ -154,3 +169,4 @@ class CompositeTraintupleViewTests(APITestCase):
         self.assertContains(response, "previous", 1)
         self.assertContains(response, "results", 1)
         self.assertEqual(r["results"], composite_tasks[index_down:index_up])
+        mocked_get_error_type.assert_called()

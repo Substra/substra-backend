@@ -213,12 +213,17 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             OrchestratorClient, "get_computetask_output_models", side_effect=common.get_task_output_models
         ), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
 
             response = self.client.get(url, **self.extra)
+            self.assertEqual(mocked_get_error_type.call_count, 2)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["results"], tasks[0:2])
+
+        expected = [{**t, "error_type": None} for t in tasks[0:2]]
+        self.assertEqual(response.json()["results"], expected)
         # # maybe add a test without ?page_size=<int> and add a forbidden response
 
     def test_can_filter_tuples(self):
@@ -236,11 +241,16 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             OrchestratorClient, "query_tasks", return_value=tasks_response
         ), mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
 
+            response = self.client.get(url + search_params, **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+            r = response.json()
             self.assertEqual(len(r["results"]), 2)
+            self.assertEqual(mocked_get_error_type.call_count, 2)
 
     def test_can_see_algos(self):
         cp = assets.get_compute_plan()

@@ -87,6 +87,7 @@ class TraintupleViewTests(APITestCase):
         expected["train"]["models"] = None
         expected["train"]["data_manager"] = data_manager
         expected["parent_tasks"] = []
+        expected["error_type"] = None
 
         with mock.patch.object(OrchestratorClient, "query_task", return_value=task), mock.patch.object(
             OrchestratorClient, "query_datamanager", return_value=data_manager
@@ -94,10 +95,15 @@ class TraintupleViewTests(APITestCase):
             OrchestratorClient, "get_computetask_output_models", return_value=None
         ), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
+
             response = self.client.get(url + search_params, **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
             actual = response.json()
             self.assertEqual(actual, expected)
+            mocked_get_error_type.assert_called_once()
 
     def test_traintuple_retrieve_fail(self):
 
@@ -142,11 +148,15 @@ class TraintupleViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=tasks), mock.patch.object(
             OrchestratorClient, "get_computetask_output_models", return_value=None
-        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
+        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
             response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+            r = response.json()
             self.assertEqual(len(r["results"]), 2)
+            self.assertEqual(mocked_get_error_type.call_count, 2)
 
     def test_traintuple_list_filter_compute_plan_key(self):
 
@@ -158,11 +168,16 @@ class TraintupleViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=tasks), mock.patch.object(
             OrchestratorClient, "get_computetask_output_models", return_value=None
-        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
+        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
 
             response = self.client.get(url + search_params, **self.extra)
+            self.assertEqual(response.status_code, status.HTTP_200_OK)
+
             r = response.json()
             self.assertEqual(len(r["results"]), 1)
+            mocked_get_error_type.assert_called_once()
 
     @internal_server_error_on_exception()
     @mock.patch.object(ComputeTaskViewSet, "_retrieve", side_effect=Exception("Unexpected error"))
@@ -242,6 +257,7 @@ class TesttupleViewTests(APITestCase):
         expected["test"]["perfs"] = {
             performance["metric_key"]: performance["performance_value"] for performance in performances
         }
+        expected["error_type"] = None
 
         with mock.patch.object(OrchestratorClient, "query_task", side_effect=common.query_task), mock.patch.object(
             OrchestratorClient, "query_datamanager", return_value=data_manager
@@ -249,10 +265,13 @@ class TesttupleViewTests(APITestCase):
             OrchestratorClient, "get_compute_task_performances", return_value=performances
         ), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ):
+        ), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
             response = self.client.get(url + search_params, **self.extra)
             actual = response.json()
             self.assertEqual(actual, expected)
+            mocked_get_error_type.assert_called_once()
 
     def test_testtuple_retrieve_fail(self):
 
@@ -295,21 +314,25 @@ class TesttupleViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=tasks), mock.patch.object(
             OrchestratorClient, "get_compute_task_performances", side_effect=common.get_task_performances
-        ):
+        ), mock.patch("substrapp.views.utils._get_error_type", return_value=None) as mocked_get_error_type:
 
             with mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
                 search_params = "?search=testtuple%253Atag%253Abar"
                 response = self.client.get(url + search_params, **self.extra)
-                r = response.json()
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+                r = response.json()
                 self.assertEqual(len(r["results"]), 1)
 
             with mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
                 search_params = "?search=testtuple%253Atag%253Afoo"
                 response = self.client.get(url + search_params, **self.extra)
-                r = response.json()
+                self.assertEqual(response.status_code, status.HTTP_200_OK)
 
+                r = response.json()
                 self.assertEqual(len(r["results"]), 1)
+
+            mocked_get_error_type.assert_called_once()
 
     @parameterized.expand(
         [
@@ -323,13 +346,17 @@ class TesttupleViewTests(APITestCase):
         filtered_events = [iter([event]) for t in train_tasks for event in common.get_task_events(t["key"])]
 
         expected = copy.deepcopy(train_tasks)
+        for task in expected:
+            task["error_type"] = None
 
         url = reverse("substrapp:traintuple-list")
         url = f"{url}?page_size={page_size}&page={page_number}"
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=train_tasks), mock.patch.object(
             OrchestratorClient, "get_computetask_output_models", side_effect=common.get_task_output_models
-        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
+        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, "count", 1)
@@ -337,6 +364,7 @@ class TesttupleViewTests(APITestCase):
         self.assertContains(response, "previous", 1)
         self.assertContains(response, "results", 1)
         self.assertEqual(r["results"], expected[index_down:index_up])
+        mocked_get_error_type.assert_called()
 
     @parameterized.expand(
         [
@@ -350,13 +378,17 @@ class TesttupleViewTests(APITestCase):
         filtered_events = [iter([event]) for t in test_tasks for event in common.get_task_events(t["key"])]
 
         expected = copy.deepcopy(test_tasks)
+        for task in expected:
+            task["error_type"] = None
 
         url = reverse("substrapp:testtuple-list")
         url = f"{url}?page_size={page_size}&page={page_number}"
 
         with mock.patch.object(OrchestratorClient, "query_tasks", return_value=test_tasks), mock.patch.object(
             OrchestratorClient, "get_compute_task_performances", side_effect=common.get_task_performances
-        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events):
+        ), mock.patch.object(OrchestratorClient, "query_events_generator", side_effect=filtered_events), mock.patch(
+            "substrapp.views.utils._get_error_type", return_value=None
+        ) as mocked_get_error_type:
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, "count", 1)
@@ -364,6 +396,7 @@ class TesttupleViewTests(APITestCase):
         self.assertContains(response, "previous", 1)
         self.assertContains(response, "results", 1)
         self.assertEqual(r["results"], expected[index_down:index_up])
+        mocked_get_error_type.assert_called()
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.computetask.get_channel_name", side_effect=Exception("Unexpected error"))

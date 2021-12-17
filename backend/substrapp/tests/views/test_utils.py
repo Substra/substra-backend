@@ -1,6 +1,7 @@
 import functools
 import os
 import tempfile
+import unittest
 import uuid
 from unittest import mock
 
@@ -12,6 +13,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 from orchestrator.client import OrchestratorClient
+from substrapp.views import utils
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import if_true
@@ -139,6 +141,26 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res_content, content)
         self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)
+
+
+class GetErrorTypeTests(unittest.TestCase):
+    def test_get_error_type_task_has_failed(self):
+        reason = "INTERNAL_ERROR"
+        last_event = {"metadata": {"status": "STATUS_FAILED", "reason": reason}}
+        error_type = utils._get_error_type(last_event)
+        self.assertEqual(error_type, reason)
+
+    def test_fetch_error_type_task_has_not_failed(self):
+        last_event = {"metadata": {}}
+        error_type = utils._get_error_type(last_event)
+        self.assertEqual(error_type, None)
+
+    def test_fetch_error_type_unknown_error_type(self):
+        reason = "Some unknown internal error containing sensitive information"
+        last_event = {"metadata": {"status": "STATUS_FAILED", "reason": reason}}
+        error_type = utils._get_error_type(last_event)
+
+        self.assertEqual(error_type, "INTERNAL_ERROR")
 
 
 def test_if_true():

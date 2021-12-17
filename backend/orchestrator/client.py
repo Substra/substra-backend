@@ -565,6 +565,19 @@ class OrchestratorClient:
             if page_token == "" or not events:
                 return
 
+    def query_single_event(
+        self,
+        asset_key="",
+        asset_kind=common_pb2.ASSET_UNKNOWN,
+        event_kind=event_pb2.EVENT_UNKNOWN,
+        sort=common_pb2.ASCENDING,
+        metadata=None,
+    ):
+        event_generator = self.query_events_generator(
+            asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind, sort=sort, metadata=metadata, page_size=1
+        )
+        return next(event_generator, None)
+
     def query_version(
         self,
     ):
