@@ -12,11 +12,11 @@ from typing import Union
 import structlog
 from django.conf import settings
 from django.core.files import File
+from django.db import transaction
 from rest_framework import mixins
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -55,6 +55,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         headers = self.get_success_headers(data)
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
+    @transaction.atomic
     def _create(self, request):
         data_manager_keys = request.data.get("data_manager_keys") or []
         self.check_datamanagers(data_manager_keys)
@@ -74,18 +75,10 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             context={"request": request},
         )
 
-        if not orchestrator_serializer.is_valid():
-            for instance in instances:
-                instance.delete()
-            raise ValidationError(orchestrator_serializer.errors)
+        orchestrator_serializer.is_valid(raise_exception=True)
 
         # create on orchestrator db
-        try:
-            orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except Exception:
-            for instance in instances:
-                instance.delete()
-            raise
+        orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
         return [self.get_serializer(instance).data for instance in instances]
 
     def _db_create(self, data):

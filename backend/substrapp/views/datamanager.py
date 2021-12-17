@@ -1,12 +1,12 @@
 import tempfile
 
 import structlog
+from django.db import transaction
 from django.http import Http404
 from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
@@ -57,22 +57,17 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             },
             context={"request": request},
         )
-        if not orchestrator_serializer.is_valid():
-            instance.delete()
-            raise ValidationError(orchestrator_serializer.errors)
+        orchestrator_serializer.is_valid(raise_exception=True)
 
         # create on orchestrator db
-        try:
-            data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except Exception:
-            instance.delete()
-            raise
+        data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
 
         merged_data = dict(serializer.data)
         merged_data.update(data)
 
         return merged_data
 
+    @transaction.atomic
     def _create(self, request):
         data_opener = request.data.get("data_opener")
         try:
