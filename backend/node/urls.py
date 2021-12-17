@@ -2,8 +2,8 @@
 node URL
 """
 
-from django.conf.urls import include
-from django.conf.urls import url
+from django.urls import include
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from node.views import NodeViewSet
@@ -14,5 +14,5 @@ router = DefaultRouter()
 router.register(r"node", NodeViewSet, basename="node")
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
+    path("", include(router.urls)),
 ]

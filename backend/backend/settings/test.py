@@ -29,7 +29,7 @@ LEDGER_MSP_ID = "testOrgMSP"
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("BACKEND_DB_NAME", "substra"),
         "USER": os.environ.get("BACKEND_DB_USER", "postgres"),
         "PASSWORD": os.environ.get("BACKEND_DB_PWD", "postgres"),

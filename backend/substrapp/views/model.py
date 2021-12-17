@@ -1,10 +1,9 @@
 import tempfile
-from functools import wraps
 
 import structlog
 from django.conf import settings
-from django.middleware.gzip import GZipMiddleware
 from django.urls.base import reverse
+from django.views.decorators import gzip
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -20,6 +19,7 @@ from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import get_remote_asset
+from substrapp.views.utils import if_true
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -90,19 +90,6 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
         return self.paginate_response(data)
 
 
-def gzip_action(func):
-    gz = GZipMiddleware()
-
-    @wraps(func)
-    def wrapper(self, request, *args, **kwargs):
-        resp = func(self, request, *args, **kwargs)
-        return gz.process_response(request, resp)
-
-    if getattr(settings, "GZIP_MODELS"):
-        return wrapper
-    return func
-
-
 class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
 
     queryset = Model.objects.all()
@@ -142,7 +129,7 @@ class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
         if not permissions["public"] and node_id not in permissions["authorized_ids"]:
             raise AssetPermissionError(f'{node_id} doesn\'t have permission to download model {asset["key"]}')
 
-    @gzip_action
+    @if_true(gzip.gzip_page, settings.GZIP_MODELS)
     @action(detail=True)
     def file(self, request, *args, **kwargs):
         return self.download_file(

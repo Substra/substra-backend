@@ -14,7 +14,6 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
-from django.conf.urls import url
 from django.conf.urls.static import static
 from django.urls import include
 from django.urls import path
@@ -33,14 +32,14 @@ from users.urls import router as user_router
 
 urlpatterns = (
     [
-        url(
-            r"^",
+        path(
+            r"",
             include(
                 [
-                    url(r"^", include((router.urls + compute_plan_router.urls, "substrapp"))),
-                    url(r"^", include((node_router.urls, "node"))),
-                    url(r"^", include((user_router.urls, "user"))),  # for secure jwt authent
-                    url(r"^api-token-auth/", obtain_auth_token),  # for expiry token authent
+                    path("", include((router.urls + compute_plan_router.urls, "substrapp"))),
+                    path("", include((node_router.urls, "node"))),
+                    path("", include((user_router.urls, "user"))),  # for secure jwt authent
+                    path("api-token-auth/", obtain_auth_token),  # for expiry token authent
                 ]
             ),
         ),
@@ -63,9 +62,9 @@ urlpatterns = (
 
 # only allow session authentication is the browsable API is enabled
 if BrowsableAPIRenderer in api_settings.DEFAULT_RENDERER_CLASSES:
-    urlpatterns += [url(r"^api-auth/", include("rest_framework.urls"))]
+    urlpatterns += [path("api-auth/", include("rest_framework.urls"))]
 
-urlpatterns += [url(r"^info/", info_view)]
+urlpatterns += [path("info/", info_view)]
 
 if settings.SUBPATH:
-    urlpatterns = [url(fr"^{settings.SUBPATH}", include(urlpatterns))]
+    urlpatterns = [path(f"{settings.SUBPATH}", include(urlpatterns))]

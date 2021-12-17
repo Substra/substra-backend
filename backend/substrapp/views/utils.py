@@ -1,6 +1,7 @@
 import datetime
 import os
 import uuid
+from typing import Callable
 from wsgiref.util import is_hop_by_hop
 
 from django.conf import settings
@@ -449,3 +450,19 @@ def add_compute_plan_duration_or_eta(client, data):
             data["duration"] = int((end_date - start_date).total_seconds())
 
     return data
+
+
+def if_true(decorator: Callable, condition: bool):
+    """Decorates a function only if the condition is true
+
+    Args:
+        decorator (Callable): The decorator function to apply
+        condition (bool): If true the decorator is applied, else we just run the decorated function
+    """
+
+    def wrapper(func):
+        if not condition:
+            return func
+        return decorator(func)
+
+    return wrapper

@@ -14,6 +14,7 @@ from rest_framework.test import APITestCase
 from orchestrator.client import OrchestratorClient
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
+from substrapp.views.utils import if_true
 
 
 class MockRequest:
@@ -138,3 +139,25 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res_content, content)
         self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)
+
+
+def test_if_true():
+    def double(func):
+        @functools.wraps(func)
+        def wrapper_func(*args, **kwargs):
+            return func(*args, **kwargs) * 2
+
+        return wrapper_func
+
+    @if_true(double, False)
+    def not_decorated_func(x):
+        return x
+
+    @if_true(double, True)
+    def decorated_func(x):
+        return x
+
+    assert not_decorated_func(1) == 1
+    assert decorated_func(1) == 2
+    assert not_decorated_func.__name__ == "not_decorated_func"
+    assert decorated_func.__name__ == "decorated_func"

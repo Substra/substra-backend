@@ -2,8 +2,8 @@
 substrapp URL
 """
 
-from django.conf.urls import include
-from django.conf.urls import url
+from django.urls import include
+from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
@@ -39,6 +39,6 @@ compute_plan_router.register(r"algos", views.CPAlgoViewSet, basename=f"{BASENAME
 
 
 urlpatterns = [
-    url(r"^", include(router.urls)),
-    url(r"^", include(compute_plan_router.urls)),
+    path("", include(router.urls)),
+    path("", include(compute_plan_router.urls)),
 ]

@@ -1,5 +1,5 @@
 aio-pika==6.8.0
-Django==2.2.24  # https://github.com/owkin/connect-backend/issues/121
+Django==4.0
 django-structlog==2.2.0
 celery==5.2.1
 checksumdir==1.2.0
@@ -14,7 +14,7 @@ pyjwt==2.3.0
 ipython==7.30.1
 ipython-genutils==0.2.0
 kubernetes==20.13.0
-psycopg2-binary==2.8.6  # psycopg 2.9+ is not compatible with Django <3.2
+psycopg2-binary==2.9.2
 requests>=2.20.0
 uwsgi==2.0.20
 zxcvbn==4.4.28
