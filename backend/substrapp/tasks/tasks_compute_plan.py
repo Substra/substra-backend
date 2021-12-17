@@ -28,18 +28,17 @@ def queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_pla
     worker_queue = get_existing_worker_queue(compute_plan_key)
 
     if worker_queue is None:
-        # the compute plan is not mapped to any worker.
-        # so no compute pod should be running.
-        logger.warning(
-            "Compute plan is finished but no action will be performed to delete the"
-            "compute pods and teardown the compute plan dirs because the compute plan"
-            "is not mapped to any worker. Here are ideas for investigations: This may"
-            "be due to the fact that this compute plan did not have any task ran on"
-            "this organisation, or to the fact that the pods and directories were"
-            "removed by a parallel process.",
-            plan=compute_plan_key,
+        # Since we receive events for all compute tasks, including tasks that belong to compute plans which are
+        # entirely executed in other organizations, there's no way to know if:
+        # - this is expected behavior (there's no task for this CP on this org), or
+        # - this is unexpected behavior (the mapping should have been created but never was)
+        logger.debug(
+            "The compute plan is finished but no action will be performed to delete the compute pods and teardown "
+            "the compute plan dirs because the compute plan is not mapped to any worker. This is expected behavior "
+            "in some cases, including: - This CP has no compute task ran on this organisation - Another process/task "
+            "already called this function for the same compute plan.",
+            compute_plan_key=compute_plan_key,
         )
-
         return
 
     delete_cp_pod_and_dirs_and_optionally_images.apply_async((channel_name, compute_plan), queue=worker_queue)
