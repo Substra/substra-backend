@@ -12,7 +12,6 @@ from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.test import override_settings
 from django.urls import reverse
 from grpc import StatusCode
-from rest_framework import serializers
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -627,9 +626,12 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
+        mocked_OrchestratorDataSampleSerializer = MagicMock()  # noqa: N806
+        mocked_OrchestratorDataSampleSerializer.is_valid.return_value = False
+        mocked_OrchestratorDataSampleSerializer.errors = "Failed"
         with mock.patch.object(zipfile, "is_zipfile", return_value=True), mock.patch(
-            "substrapp.views.datasample.OrchestratorDataSampleSerializer.is_valid",
-            side_effect=serializers.ValidationError("Failed"),
+            "substrapp.views.datasample.OrchestratorDataSampleSerializer",
+            return_value=mocked_OrchestratorDataSampleSerializer,
         ):
 
             response = self.client.post(self.url, data, format="multipart", **extra)
