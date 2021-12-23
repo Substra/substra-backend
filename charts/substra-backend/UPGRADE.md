@@ -1,5 +1,9 @@
 ## unreleased
 
+## 15.0.0
+
+Apply changes from [minio 8](https://github.com/bitnami/charts/tree/master/bitnami/minio#to-800) and [minio 9](https://github.com/bitnami/charts/tree/master/bitnami/minio#to-900).
+
 ## 14.0.0
 
 See [CHANGELOG.md](./CHANGELOG.md#14.0.0).

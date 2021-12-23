@@ -1,7 +1,7 @@
 apiVersion: v2
 name: substra-backend
 home: https://substra.org/
-version: 14.0.2
+version: 15.0.0
 kubeVersion: ">= 1.19.0-0"
 description: Main package for Substra
 type: application
@@ -16,10 +16,10 @@ dependencies:
   - name: rabbitmq
     repository: https://charts.bitnami.com/bitnami
     condition: rabbitmq.enabled
-    version: 8.16.2
+    version: 8.24.12
   - name: postgresql
     repository:  https://charts.bitnami.com/bitnami
-    version: 10.13.8
+    version: 10.13.14
     condition: postgresql.enabled
   - name: docker-registry
     repository: https://helm.twun.io
@@ -27,5 +27,5 @@ dependencies:
     condition: docker-registry.enabled
   - name: minio
     repository: https://charts.bitnami.com/bitnami
-    version: 7.1.10
+    version: 9.2.5
     condition: minio.enabled

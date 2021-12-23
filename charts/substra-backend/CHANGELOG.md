@@ -1,5 +1,12 @@
 # Changelog
 
+## 15.0.0
+
+### Changed
+- update minio to latest version
+- update postgresql to latest version
+- update rabbitmq to latest version
+
 ## 14.0.2
 
 ### Added
