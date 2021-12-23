@@ -12,6 +12,7 @@ from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import AssetBufferDirName
 from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_and_put_asset_content
 from substrapp.utils import get_dir_hash
@@ -48,6 +49,8 @@ logger = structlog.get_logger(__name__)
 #   task starts with an empty environment, and cannot access the previous task's assets. Note that clearing the
 #   current task directory means deleting the hardlinks. The assets in the buffer remain untouched.
 
+LOCK_FETCH_ASSET_TTL = 60 * 60  # 1 hour
+
 
 def init_asset_buffer() -> None:
     os.makedirs(settings.ASSET_BUFFER_DIR, exist_ok=True)
@@ -60,17 +63,26 @@ def add_task_assets_to_buffer(ctx: Context) -> None:
     Copy/Download assets (data samples, openers, models) to the asset buffer.
 
     Assets which are already present in the asset buffer are not copied/downloaded again.
+
+    Each file download is protected with a lock to ensure there is no concurrent access
+    to a single asset (see issue #570). This is needed as multiple Compute Plans may depend
+    on the same input assets.
     """
+
     # Data samples
     if ctx.data_sample_keys:
-        _add_datasamples_to_buffer(ctx.data_sample_keys)
+        for data_sample_key in ctx.data_sample_keys:
+            with lock_resource("data_sample", data_sample_key, ttl=LOCK_FETCH_ASSET_TTL):
+                _add_datasample_to_buffer(data_sample_key)
 
     # Openers
     if ctx.data_manager:
-        _add_opener_to_buffer(ctx.channel_name, ctx.data_manager)
+        with lock_resource("opener", ctx.data_manager["key"], ttl=LOCK_FETCH_ASSET_TTL):
+            _add_opener_to_buffer(ctx.channel_name, ctx.data_manager)
 
     # In-models
     if ctx.in_models:
+        # As models are downloaded in subprocesses, the lock is done in the subprocess directly
         _add_models_to_buffer(ctx.channel_name, ctx.in_models)
 
 
@@ -108,43 +120,41 @@ def delete_models_from_buffer(model_keys: List[str]) -> None:
             os.remove(model_path)
 
 
-def _add_datasamples_to_buffer(data_sample_keys: List[str]) -> None:
-    """Copy data samples to the asset buffer"""
+def _add_datasample_to_buffer(data_sample_key: str) -> None:
+    """Copy data sample to the asset buffer"""
     from substrapp.models import DataSample
 
-    for key in data_sample_keys:
+    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Datasamples, data_sample_key)
 
-        dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Datasamples, key)
+    if os.path.exists(dst):
+        # asset already exists
+        return
 
-        if os.path.exists(dst):
-            # asset already exists
-            continue
+    data_sample = DataSample.objects.get(key=data_sample_key)
 
-        data_sample = DataSample.objects.get(key=key)
+    if data_sample.file:
+        # add from storage
+        content = data_sample.file.read()
+        uncompress_content(content, dst)
+    elif not settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:
+        # the `datasample.path` field is filled but Server Media is not available.
+        # it is not possible to retrieve datasamples
+        raise Exception(f"Server Media usage is disabled, Data Sample ({data_sample_key}) cannot be retrieved")
+    else:
+        # add from servermedias
+        if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
+            raise Exception(f"Data Sample ({data_sample.path}) is missing in local storage")
+        if not os.listdir(data_sample.path):
+            raise Exception(f"Data Sample ({data_sample.path}) is empty in local storage")
+        shutil.copytree(data_sample.path, dst)
 
-        if data_sample.file:
-            # add from storage
-            content = data_sample.file.read()
-            uncompress_content(content, dst)
-        elif not settings.ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS:
-            # the `datasample.path` field is filled but Server Media is not available.
-            # it is not possible to retrieve datasamples
-            raise Exception(f"Server Media usage is disabled, Data Sample ({key}) cannot be retrieved")
-        else:
-            # add from servermedias
-            if not os.path.exists(data_sample.path) or not os.path.isdir(data_sample.path):
-                raise Exception(f"Data Sample ({data_sample.path}) is missing in local storage")
-            if not os.listdir(data_sample.path):
-                raise Exception(f"Data Sample ({data_sample.path}) is empty in local storage")
-            shutil.copytree(data_sample.path, dst)
+    # verify checksum
+    checksum = get_dir_hash(dst)
+    if checksum != data_sample.checksum:
+        shutil.rmtree(os.path.dirname(dst))
+        raise Exception(f"Data Sample ({data_sample_key}) checksum in tuple is not the same as in local db")
 
-        # verify checksum
-        checksum = get_dir_hash(dst)
-        if checksum != data_sample.checksum:
-            shutil.rmtree(os.path.dirname(dst))
-            raise Exception(f"Data Sample ({key}) checksum in tuple is not the same as in local db")
-
-        _log_added(dst)
+    _log_added(dst)
 
 
 def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
@@ -153,7 +163,7 @@ def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
     dir = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager["key"])
     dst = os.path.join(dir, Filenames.Opener)
 
-    if os.path.exists(dir):
+    if os.path.exists(dst):
         # asset already exists
         return
 
@@ -187,7 +197,7 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
         with get_orchestrator_client(channel_name) as client:
             parent_task = client.query_task(model["compute_task_key"])
         args = (channel_name, model, parent_task["worker"])
-        proc = Process(target=_add_model_to_buffer, args=args)
+        proc = Process(target=_add_model_to_buffer_with_lock, args=args)
         procs.append((proc, args))
         proc.start()
 
@@ -236,6 +246,11 @@ def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
             raise Exception("Model checksum in Subtuple is not the same as in local db")
 
     _log_added(dst)
+
+
+def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, node_id: str) -> None:
+    with lock_resource("model", model["key"], ttl=LOCK_FETCH_ASSET_TTL):
+        return _add_model_to_buffer(channel_name, model, node_id)
 
 
 def _add_assets_to_taskdir(dirs: Directories, b_dir: str, t_dir: str, keys: List[str]):

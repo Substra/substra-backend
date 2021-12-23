@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Memory leak in MinIO client
 - Zombie compute pods (pods which are never deleted) in edge cases
 - Missing timeout on event app orchestrator RabbitMQ connection
+- Fixed task failure due to concurrent download of input assets (#571)
 
 ### Changed
 - When executing compute tasks, store Algos and Metrics in temporary folders instead of the Asset Buffer

@@ -14,7 +14,7 @@ from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from substrapp.compute_tasks.asset_buffer import _add_assets_to_taskdir
-from substrapp.compute_tasks.asset_buffer import _add_datasamples_to_buffer
+from substrapp.compute_tasks.asset_buffer import _add_datasample_to_buffer
 from substrapp.compute_tasks.asset_buffer import _add_model_to_buffer
 from substrapp.compute_tasks.asset_buffer import _add_opener_to_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
@@ -238,7 +238,7 @@ class AssetBufferTests(APITestCase):
         ASSET_BUFFER_DIR=ASSET_BUFFER_DIR_2,
         ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True,
     )
-    def test_add_datasamples_to_buffer(self):
+    def test_add_datasample_to_buffer(self):
 
         init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
@@ -246,14 +246,14 @@ class AssetBufferTests(APITestCase):
 
             # Test 1: DB is empty
             with self.assertRaises(Exception):
-                _add_datasamples_to_buffer([self.data_samples.keys()[0]])
+                _add_datasample_to_buffer(self.data_samples.keys()[0])
 
             # Test 2: OK
             mget.side_effect = lambda key: self.data_samples[key].to_fake_data_sample()
 
             # Add one of the data samples twice, to check that scenario
-            _add_datasamples_to_buffer(list(self.data_samples.keys())[:2])  # add samples 0 and 1
-            _add_datasamples_to_buffer(list(self.data_samples.keys())[1:])  # add samples 1 and the following ones
+            for key in self.data_samples.keys():
+                _add_datasample_to_buffer(key)
 
             for i in range(NUM_DATA_SAMPLES):
                 data_sample = data_samples[i]
@@ -261,13 +261,13 @@ class AssetBufferTests(APITestCase):
                 with open(os.path.join(dest, data_sample.filename)) as f:
                     contents = f.read()
                     self.assertEqual(contents, data_sample.contents)
-                shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasamples_to_buffer will be a noop
+                shutil.rmtree(dest)  # delete folder, otherwise next call to _add_datasample_to_buffer will be a noop
 
             # Test 3: File corrupted
             data_samples[0].falsify_content("corrupted")
 
             with self.assertRaises(Exception):
-                _add_datasamples_to_buffer([data_samples[0].key])
+                _add_datasample_to_buffer(data_samples[0].key)
 
     @parameterized.expand(
         [
@@ -337,7 +337,8 @@ class AssetBufferTests(APITestCase):
         init_asset_buffer()
         with mock.patch("substrapp.models.DataSample.objects.get") as mget:
             mget.side_effect = lambda key: self.data_samples[key].to_fake_data_sample()
-            _add_datasamples_to_buffer(self.data_samples.keys())
+            for key in self.data_samples.keys():
+                _add_datasample_to_buffer(key)
 
         # load from buffer into task dir
         _add_assets_to_taskdir(
