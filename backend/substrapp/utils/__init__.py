@@ -5,7 +5,6 @@ import json
 import os
 import shutil
 import tarfile
-import tempfile
 import time
 import zipfile
 from os.path import isdir
@@ -31,19 +30,6 @@ def get_dir_hash(directory):
     if not os.listdir(directory):
         raise Exception(f"Cannot compute hash of folder {directory}: folder is empty.")
     return dirhash(directory, "sha256")
-
-
-def get_archive_hash(archive_object):
-    with tempfile.TemporaryDirectory() as temp_dir:
-        try:
-            content = archive_object.read()
-            archive_object.seek(0)
-            uncompress_content(content, temp_dir)
-        except Exception as e:
-            logger.error(e)
-            raise e
-        else:
-            return get_dir_hash(temp_dir)
 
 
 def get_hash(file, key=None):
