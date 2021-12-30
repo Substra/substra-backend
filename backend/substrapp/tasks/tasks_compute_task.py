@@ -199,7 +199,8 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
 
                 _transfer_model_to_bucket(ctx)
             else:
-                result["result"] = save_models(ctx)
+                logger.info("Saving models and local folder")
+                save_models(ctx)
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
                 if ctx.has_chainkeys:
                     commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
@@ -215,7 +216,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
             # Teardown
             teardown_task_dirs(dirs)
 
-    logger.info("Compute task finished", result=result["result"])
+    logger.info("Compute task finished")
     return result
 
 

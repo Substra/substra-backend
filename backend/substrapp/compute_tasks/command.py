@@ -20,7 +20,6 @@ logger = structlog.get_logger(__name__)
 class Filenames:
     OutModel = "out-model"
     OutHeadModel = "out-head-model"
-    OutTrunkModel = "out-trunk-model"
     Opener = "__init__.py"
     Predictions = "pred.json"
     Performance = "perf.json"
@@ -116,7 +115,7 @@ def _get_args(ctx: Context, is_testtuple_eval: bool, metric_key: str = None) -> 
         ]
         command += ["--output-models-path", out_models_dir]
         command += ["--output-head-model-filename", Filenames.OutHeadModel]
-        command += ["--output-trunk-model-filename", Filenames.OutTrunkModel]
+        command += ["--output-trunk-model-filename", Filenames.OutModel]
         command += ["--compute-plan-path", local_folder]
 
     elif task_category == computetask_pb2.TASK_AGGREGATE:
