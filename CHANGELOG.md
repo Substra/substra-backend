@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- Preserve order of parent tasks when registering a new task (#583)
 - Memory leak in MinIO client
 - Zombie compute pods (pods which are never deleted) in edge cases
 - Missing timeout on event app orchestrator RabbitMQ connection

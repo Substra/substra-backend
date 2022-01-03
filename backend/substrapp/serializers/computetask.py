@@ -26,13 +26,16 @@ class GenericComputeTaskSerializer(serializers.Serializer):
 
         metadata["__tag__"] = tag
 
+        # Deduplicate parent tasks, but avoid using a set to preserve parents order
+        dedup_parents = list(dict.fromkeys([str(key) for key in validated_data.get("parent_task_keys", [])]))
+
         args = {
             "key": str(validated_data.get("key")),
             "category": validated_data.get("category"),
             "algo_key": str(validated_data.get("algo_key")),
             "compute_plan_key": str(validated_data.get("compute_plan_key")),
             "metadata": metadata,
-            "parent_task_keys": list(set([str(p) for p in validated_data.get("parent_task_keys", [])])),
+            "parent_task_keys": dedup_parents,
         }
 
         return args
