@@ -60,11 +60,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
     error = None
     watch_container = not watch_init_container
 
-    log = logger.bind(
-        pod_name=name,
-    )
-
-    log.info("Waiting for pod")
+    logger.info("Waiting for pod", pod_name=name)
 
     pod_status = None
 
@@ -74,7 +70,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
 
             if api_response.status.phase != pod_status:
                 pod_status = api_response.status.phase
-                log.info("Status for pod", status=api_response.status.phase)
+                logger.info("Status for pod", pod_name=name, status=api_response.status.phase)
 
             # Handle pod error not linked with containers
             if api_response.status.phase == "Failed" or (
@@ -86,7 +82,7 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
                 else:
                     error = f"Pod phase : {api_response.status.phase}"
 
-                log.error("Status for pod", status=api_response.status.phase.lower())
+                logger.error("Status for pod", pod_name=name, status=api_response.status.phase.lower())
                 finished = True
                 continue
 
@@ -108,8 +104,9 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
                             ]:
                                 error = "InitContainer: " + _get_pod_error(state.waiting)
                                 attempt += 1
-                                log.error(
+                                logger.error(
                                     "InitContainer waiting status",
+                                    pod_name=name,
                                     attempt=attempt,
                                     max_attempts=max_attempts,
                                     state=state.waiting.message,
@@ -134,8 +131,9 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
                             ]:
                                 error = _get_pod_error(state.waiting)
                                 attempt += 1
-                                log.error(
+                                logger.error(
                                     "Container waiting status",
+                                    pod_name=name,
                                     attempt=attempt,
                                     max_attempts=max_attempts,
                                     state=state.waiting.message,
@@ -146,7 +144,9 @@ def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
 
         except Exception as e:
             attempt += 1
-            log.error("Could not get pod status", exc_info=e, attempt=attempt, max_attempts=max_attempts)
+            logger.error(
+                "Could not get pod status", pod_name=name, exc_info=e, attempt=attempt, max_attempts=max_attempts
+            )
 
     if error is not None:
         raise PodError(f"Pod {name} terminated with error: {error}")
