@@ -10,20 +10,14 @@ import zipfile
 from os.path import isdir
 from os.path import isfile
 
-import requests
 import structlog
 from checksumdir import dirhash
 from django.conf import settings
-from requests.auth import HTTPBasicAuth
-from rest_framework import status
 
-from substrapp.exceptions import NodeError
 from substrapp.utils import tarsafe
 from substrapp.utils.safezip import ZipFile
 
 logger = structlog.get_logger(__name__)
-
-HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
 
 
 def get_dir_hash(directory):
@@ -113,60 +107,6 @@ def uncompress_content(archive_content, to_directory):
             raise Exception("Archive must be zip or tar.*")
 
 
-def get_remote_file(channel_name, url, auth, content_dst_path=None, **kwargs):
-
-    headers = {"Accept": "application/json;version=0.0", "Substra-Channel-Name": channel_name}
-    headers.update(kwargs.get("headers", {}))
-
-    kwargs.update({"headers": headers, "auth": auth, "timeout": HTTP_CLIENT_TIMEOUT_SECONDS})
-
-    if settings.DEBUG:
-        kwargs["verify"] = False
-
-    try:
-        if kwargs.get("stream", False) and content_dst_path is not None:
-            chunk_size = 1024 * 1024
-
-            with requests.get(url, **kwargs) as response:
-                response.raise_for_status()
-
-                with open(content_dst_path, "wb") as fp:
-                    fp.writelines(response.iter_content(chunk_size))
-        else:
-            response = requests.get(url, **kwargs)
-    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-        raise NodeError(f"Failed to fetch {url}") from e
-
-    return response
-
-
-def get_remote_file_content(channel_name, url, auth, content_checksum, salt=None):
-
-    response = get_remote_file(channel_name, url, auth)
-
-    if response.status_code != status.HTTP_200_OK:
-        logger.error("failed to fetch content", url=url, status=response.status_code, text=response.text)
-        raise NodeError(f"Url: {url} returned status code: {response.status_code}")
-
-    computed_checksum = compute_hash(response.content, key=salt)
-    if computed_checksum != content_checksum:
-        raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
-    return response.content
-
-
-def get_and_put_remote_file_content(channel_name, url, auth, content_checksum, content_dst_path, hash_key):
-
-    response = get_remote_file(channel_name, url, auth, content_dst_path, stream=True)
-
-    if response.status_code != status.HTTP_200_OK:
-        logger.error("failed to fetch content", url=url, status=response.status_code, text=response.text)
-        raise NodeError(f"Url: {url} returned status code: {response.status_code}")
-
-    computed_checksum = get_hash(content_dst_path, key=hash_key)
-    if computed_checksum != content_checksum:
-        raise NodeError(f"url {url}: checksum doesn't match {content_checksum} vs {computed_checksum}")
-
-
 def timeit(function):
     def timed(*args, **kw):
         ts = time.time()
@@ -208,41 +148,6 @@ def delete_dir(path: str) -> None:
     finally:
         if os.path.exists(path):
             logger.info("Failed to delete directory", path=path)
-
-
-def get_asset_content(channel_name, url, node_id, content_checksum, salt=None):
-    return get_remote_file_content(channel_name, url, _authenticate_worker(node_id), content_checksum, salt=salt)
-
-
-def get_and_put_asset_content(channel_name, url, node_id, content_checksum, content_dst_path, hash_key):
-    return get_and_put_remote_file_content(
-        channel_name,
-        url,
-        _authenticate_worker(node_id),
-        content_checksum,
-        content_dst_path=content_dst_path,
-        hash_key=hash_key,
-    )
-
-
-def _authenticate_worker(node_id):
-    from node.models import OutgoingNode
-
-    owner = get_owner()
-
-    try:
-        outgoing = OutgoingNode.objects.get(node_id=node_id)
-    except OutgoingNode.DoesNotExist:
-        raise NodeError(f"Unauthorized to call node_id: {node_id}")
-
-    if node_id != outgoing.node_id:
-        # Ensure the response is valid. This is a safety net for the case when the DB connection is shared
-        # across processes running in parallel.
-        raise NodeError(f"Wrong response: Request {node_id} - Get {outgoing.node_id}")
-
-    auth = HTTPBasicAuth(owner, outgoing.secret)
-
-    return auth
 
 
 def do_not_raise(fn):

@@ -12,6 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from substrapp.clients import node as node_client
 from substrapp.models import DataManager
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
@@ -21,7 +22,6 @@ from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import get_remote_asset
 from substrapp.views.utils import node_has_process_permission
 from substrapp.views.utils import validate_key
 
@@ -106,10 +106,10 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         instance, created = DataManager.objects.update_or_create(key=key, name=datamanager["name"])
 
         if not instance.data_opener:
-            content = get_remote_asset(
+            content = node_client.get(
                 channel_name=channel_name,
-                url=datamanager["opener"]["storage_address"],
                 node_id=datamanager["owner"],
+                url=datamanager["opener"]["storage_address"],
                 content_checksum=datamanager["opener"]["checksum"],
             )
             opener_file = tempfile.TemporaryFile()
@@ -117,10 +117,10 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             instance.data_opener.save("opener.py", opener_file)
 
         if not instance.description:
-            content = get_remote_asset(
+            content = node_client.get(
                 channel_name=channel_name,
-                url=datamanager["description"]["storage_address"],
                 node_id=datamanager["owner"],
+                url=datamanager["description"]["storage_address"],
                 content_checksum=datamanager["description"]["checksum"],
             )
             description_file = tempfile.TemporaryFile()

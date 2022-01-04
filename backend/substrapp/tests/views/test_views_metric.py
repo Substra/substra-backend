@@ -120,7 +120,7 @@ class MetricViewTests(APITestCase):
             content = f.read()
 
         with mock.patch.object(OrchestratorClient, "query_metric", return_value=metric), mock.patch(
-            "substrapp.views.metric.get_remote_asset", return_value=content
+            "substrapp.views.metric.node_client.get", return_value=content
         ):
             response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
             self.assertEqual(response.json(), expected)
@@ -203,7 +203,7 @@ class MetricViewTests(APITestCase):
                 )
 
         with mock.patch.object(OrchestratorClient, "query_metrics", return_value=o_metrics), mock.patch(
-            "substrapp.views.metric.get_remote_asset", return_value=b"dummy binary content"
+            "substrapp.views.metric.node_client.get", return_value=b"dummy binary content"
         ):
             response = self.client.get(self.url, **self.extra)
             self.assertEqual(len(response.data["results"]), len(metrics))
@@ -222,7 +222,7 @@ class MetricViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_metric", return_value=o_metric), mock.patch(
             "substrapp.views.metric.node_has_process_permission", return_value=True
-        ), mock.patch("substrapp.views.metric.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.metric.node_client.get", return_value=b"dummy binary content"):
             response = self.client.get(url, **self.extra)
             for field in ("description", "address"):
                 self.assertEqual(response.data[field]["storage_address"], metric[field]["storage_address"])
@@ -238,7 +238,7 @@ class MetricViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_metric", return_value=o_metric), mock.patch(
             "substrapp.views.metric.node_has_process_permission", return_value=False
-        ), mock.patch("substrapp.views.metric.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.metric.node_client.get", return_value=b"dummy binary content"):
             response = self.client.get(url, **self.extra)
             for field in ("description", "address"):
                 self.assertEqual(response.data[field]["storage_address"], metric[field]["storage_address"])

@@ -12,13 +12,13 @@ from rest_framework.viewsets import GenericViewSet
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
 from node.authentication import NodeUser
+from substrapp.clients import node as node_client
 from substrapp.models import Model
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import get_remote_asset
 from substrapp.views.utils import if_true
 from substrapp.views.utils import validate_key
 
@@ -45,7 +45,7 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
         # get model from remote node
         url = traintuple["out_model"]["storage_address"]
 
-        content = get_remote_asset(channel_name, url, traintuple["creator"], traintuple["key"])
+        content = node_client.get(channel_name, traintuple["creator"], url, traintuple["key"])
 
         # write model in local db for later use
         tmp_model = tempfile.TemporaryFile()

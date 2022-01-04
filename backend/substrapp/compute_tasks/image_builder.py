@@ -8,6 +8,7 @@ import structlog
 from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.clients import node as node_client
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.context import Context
@@ -22,7 +23,6 @@ from substrapp.kubernetes_utils import pod_exists
 from substrapp.kubernetes_utils import watch_pod
 from substrapp.lock_local import lock_resource
 from substrapp.models.image_entrypoint import ImageEntrypoint
-from substrapp.utils import get_asset_content
 from substrapp.utils import timeit
 from substrapp.utils import uncompress_content
 
@@ -87,12 +87,7 @@ def _build_asset_image(
 
     with TemporaryDirectory(dir=SUBTUPLE_TMP_DIR) as tmp_dir:
         # Download source
-        content = get_asset_content(
-            ctx.channel_name,
-            asset_storage_address,
-            asset_owner,
-            asset_checksum,
-        )
+        content = node_client.get(ctx.channel_name, asset_owner, asset_storage_address, asset_checksum)
         uncompress_content(content, tmp_dir)
 
         # Extract ENTRYPOINT from Dockerfile

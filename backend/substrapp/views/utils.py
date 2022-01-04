@@ -7,7 +7,6 @@ from wsgiref.util import is_hop_by_hop
 
 from django.conf import settings
 from django.http import FileResponse
-from requests.auth import HTTPBasicAuth
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -20,16 +19,13 @@ import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
 from node.authentication import NodeUser
-from node.models import OutgoingNode
+from substrapp.clients import node as node_client
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
-from substrapp.exceptions import NodeError
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.storages.minio import MinioStorage
 from substrapp.utils import get_owner
-from substrapp.utils import get_remote_file
-from substrapp.utils import get_remote_file_content
 
 TASK_CATEGORY = {
     "unknown": computetask_pb2.TASK_UNKNOWN,
@@ -54,24 +50,6 @@ MODEL_CATEGORY = {
 }
 
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
-
-
-def authenticate_outgoing_request(outgoing_node_id):
-    try:
-        outgoing = OutgoingNode.objects.get(node_id=outgoing_node_id)
-    except OutgoingNode.DoesNotExist:
-        raise NodeError(f"Unauthorized to call remote node with node_id: {outgoing_node_id}")
-
-    # to authenticate to remote node we use the current node id
-    # with the associated outgoing secret.
-    current_node_id = get_owner()
-
-    return HTTPBasicAuth(current_node_id, outgoing.secret)
-
-
-def get_remote_asset(channel_name, url, node_id, content_checksum, salt=None):
-    auth = authenticate_outgoing_request(node_id)
-    return get_remote_file_content(channel_name, url, auth, content_checksum, salt=salt)
 
 
 class CustomFileResponse(FileResponse):
@@ -203,33 +181,23 @@ class PermissionMixin(object):
         return response
 
     def _download_remote_file(self, channel_name, storage_address, asset):
-        node_id = asset["owner"]
-        auth = authenticate_outgoing_request(node_id)
-
-        r = get_remote_file(
+        proxy_response = node_client.http_get(
             channel_name,
+            asset["owner"],
             storage_address,
-            auth,
             stream=True,
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
         )
-
-        if not r.ok:
-            return Response(
-                {"message": f'Cannot proxify asset from node {asset["owner"]}: {str(r.text)}'},
-                status=r.status_code,
-            )
-
         response = CustomFileResponse(
-            streaming_content=(chunk for chunk in r.iter_content(512 * 1024)),
-            status=r.status_code,
+            streaming_content=(chunk for chunk in proxy_response.iter_content(512 * 1024)),
+            status=proxy_response.status_code,
         )
 
-        for header in r.headers:
+        for header in proxy_response.headers:
             # We don't use hop_by_hop headers since they are incompatible
             # with WSGI
             if not is_hop_by_hop(header):
-                response[header] = r.headers.get(header)
+                response[header] = proxy_response.headers.get(header)
 
         return response
 

@@ -128,7 +128,7 @@ class DataManagerViewTests(APITestCase):
             description_content = f.read()
 
         with mock.patch.object(OrchestratorClient, "query_dataset", return_value=data_manager), mock.patch(
-            "substrapp.views.datamanager.get_remote_asset", side_effect=[opener_content, description_content]
+            "substrapp.views.datamanager.node_client.get", side_effect=[opener_content, description_content]
         ):
 
             response = self.client.get(f'{self.url}{data_manager["key"]}/', **self.extra)
@@ -177,7 +177,7 @@ class DataManagerViewTests(APITestCase):
                     "http://testserver", "http://remotetestserver"
                 )
         with mock.patch.object(OrchestratorClient, "query_datamanagers", return_value=o_dms), mock.patch(
-            "substrapp.views.algo.get_remote_asset", return_value=b"dummy binary content"
+            "substrapp.views.algo.node_client.get", return_value=b"dummy binary content"
         ):
             response = self.client.get(self.url, **self.extra)
             self.assertEqual(response.data["count"], len(data_managers))
@@ -198,7 +198,7 @@ class DataManagerViewTests(APITestCase):
             )
         with mock.patch.object(OrchestratorClient, "query_dataset", return_value=o_dm), mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=True
-        ), mock.patch("substrapp.views.datamanager.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"dummy binary content"):
 
             response = self.client.get(url, **self.extra)
             for field in ("description", "opener"):
@@ -214,7 +214,7 @@ class DataManagerViewTests(APITestCase):
             )
         with mock.patch.object(OrchestratorClient, "query_dataset", return_value=o_dm), mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=False
-        ), mock.patch("substrapp.views.datamanager.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.datamanager.node_client.get", return_value=b"dummy binary content"):
 
             response = self.client.get(url, **self.extra)
             for field in ("description", "opener"):

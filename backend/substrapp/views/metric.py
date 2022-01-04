@@ -12,6 +12,7 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from substrapp.clients import node as node_client
 from substrapp.models import Metric
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import MetricSerializer
@@ -21,7 +22,6 @@ from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import get_remote_asset
 from substrapp.views.utils import node_has_process_permission
 from substrapp.views.utils import validate_key
 
@@ -97,10 +97,10 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
 
     def create_or_update_metric_description(self, channel_name, metric, key):
         # We need to have, at least, metric description for the frontend
-        content = get_remote_asset(
+        content = node_client.get(
             channel_name=channel_name,
-            url=metric["description"]["storage_address"],
             node_id=metric["owner"],
+            url=metric["description"]["storage_address"],
             content_checksum=metric["description"]["checksum"],
         )
 

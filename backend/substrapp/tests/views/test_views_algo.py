@@ -106,7 +106,7 @@ class AlgoViewTests(APITestCase):
             content = f.read()
 
         with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
-            "substrapp.views.algo.get_remote_asset", return_value=content
+            "substrapp.views.algo.node_client.get", return_value=content
         ):
 
             response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
@@ -188,7 +188,7 @@ class AlgoViewTests(APITestCase):
                     "http://testserver", "http://remotetestserver"
                 )
         with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos_response), mock.patch(
-            "substrapp.views.algo.get_remote_asset", return_value=b"dummy binary content"
+            "substrapp.views.algo.node_client.get", return_value=b"dummy binary content"
         ):
             response = self.client.get(self.url, **self.extra)
             self.assertEqual(response.data["count"], len(algos))
@@ -206,7 +206,7 @@ class AlgoViewTests(APITestCase):
             )
         with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=True
-        ), mock.patch("substrapp.views.algo.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
 
             response = self.client.get(url, **self.extra)
             for field in ("description", "algorithm"):
@@ -223,7 +223,7 @@ class AlgoViewTests(APITestCase):
             )
         with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=False
-        ), mock.patch("substrapp.views.algo.get_remote_asset", return_value=b"dummy binary content"):
+        ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
 
             res = self.client.get(url, **self.extra)
             for field in ("description", "algorithm"):

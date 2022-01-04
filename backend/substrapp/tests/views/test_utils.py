@@ -8,7 +8,6 @@ from unittest import mock
 import requests
 from django.core.files.storage import FileSystemStorage
 from django.test import override_settings
-from requests.auth import HTTPBasicAuth
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -90,11 +89,7 @@ def with_requests_mock(allowed):
                 requests_response.status_code = status.HTTP_401_UNAUTHORIZED
 
             kwargs["requests_response"] = requests_response
-
-            with mock.patch(
-                "substrapp.views.utils.authenticate_outgoing_request",
-                return_value=HTTPBasicAuth("foo", "bar"),
-            ), mock.patch("substrapp.utils.requests.get", return_value=requests_response):
+            with mock.patch("substrapp.views.utils.node_client.http_get", return_value=requests_response):
                 f(*args, **kwargs)
 
         return wrapper

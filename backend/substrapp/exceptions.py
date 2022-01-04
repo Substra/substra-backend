@@ -45,6 +45,10 @@ class NodeError(Exception):
     """An error occurred during the download of an asset from a node"""
 
 
+class IntegrityError(Exception):
+    """An asset downloaded from a node has an invalid checksum"""
+
+
 class TaskNotFoundError(Exception):
     """A celery task was not found"""
 

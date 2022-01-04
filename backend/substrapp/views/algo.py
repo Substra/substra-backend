@@ -13,6 +13,7 @@ from rest_framework.viewsets import GenericViewSet
 import orchestrator.algo_pb2 as algo_pb2
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from substrapp.clients import node as node_client
 from substrapp.models import Algo
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import AlgoSerializer
@@ -22,7 +23,6 @@ from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
-from substrapp.views.utils import get_remote_asset
 from substrapp.views.utils import node_has_process_permission
 from substrapp.views.utils import validate_key
 
@@ -105,10 +105,10 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
 
     def create_or_update_algo_description(self, channel_name, algo, key):
         # We need to have, at least, algo description for the frontend
-        content = get_remote_asset(
+        content = node_client.get(
             channel_name=channel_name,
-            url=algo["description"]["storage_address"],
             node_id=algo["owner"],
+            url=algo["description"]["storage_address"],
             content_checksum=algo["description"]["checksum"],
         )
 

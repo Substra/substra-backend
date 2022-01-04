@@ -7,6 +7,7 @@ import structlog
 from billiard import Process
 from django.conf import settings
 
+from substrapp.clients import node as node_client
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import AssetBufferDirName
@@ -14,7 +15,6 @@ from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import TaskDirName
 from substrapp.lock_local import lock_resource
 from substrapp.orchestrator import get_orchestrator_client
-from substrapp.utils import get_and_put_asset_content
 from substrapp.utils import get_dir_hash
 from substrapp.utils import get_hash
 from substrapp.utils import get_owner
@@ -169,14 +169,8 @@ def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
 
     os.mkdir(dir)
 
-    get_and_put_asset_content(
-        channel_name,
-        data_manager["opener"]["storage_address"],
-        get_owner(),
-        data_manager["opener"]["checksum"],
-        dst,
-        hash_key=None,
-    )
+    opener = data_manager["opener"]
+    node_client.download(channel_name, get_owner(), opener["storage_address"], dst, opener["checksum"])
 
     _log_added(dst)
 
@@ -225,13 +219,13 @@ def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
 
     if "address" in model and "storage_address" in model["address"] and model["address"]["storage_address"]:
 
-        get_and_put_asset_content(
+        node_client.download(
             channel_name,
-            model["address"]["storage_address"],
             node_id,
-            model["address"]["checksum"],
+            model["address"]["storage_address"],
             dst,
-            model["compute_task_key"],
+            model["address"]["checksum"],
+            salt=model["compute_task_key"],
         )
 
     else:  # head model

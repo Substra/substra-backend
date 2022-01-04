@@ -222,16 +222,20 @@ class AssetBufferTests(APITestCase):
 
         dest = os.path.join(ASSET_BUFFER_DIR_1, AssetBufferDirName.Openers, self.data_manager_key, Filenames.Opener)
 
-        with mock.patch(
-            "substrapp.compute_tasks.asset_buffer.get_and_put_asset_content"
-        ) as mget_and_put_asset_content, mock.patch("substrapp.compute_tasks.asset_buffer.get_owner") as mget_owner:
+        with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload, mock.patch(
+            "substrapp.compute_tasks.asset_buffer.get_owner"
+        ) as mget_owner:
 
             mget_owner.return_value = node_id
 
             _add_opener_to_buffer(CHANNEL, self.data_manager)
 
-            mget_and_put_asset_content.assert_called_once_with(
-                CHANNEL, self.opener_storage_address, node_id, self.opener_checksum, dest, hash_key=None
+            mdownload.assert_called_once_with(
+                CHANNEL,
+                node_id,
+                self.opener_storage_address,
+                dest,
+                self.opener_checksum,
             )
 
     @override_settings(
@@ -319,14 +323,17 @@ class AssetBufferTests(APITestCase):
 
             model["address"] = {"storage_address": storage_address, "checksum": self.model_checksum}
 
-            with mock.patch(
-                "substrapp.compute_tasks.asset_buffer.get_and_put_asset_content"
-            ) as mget_and_put_asset_content:
+            with mock.patch("substrapp.compute_tasks.asset_buffer.node_client.download") as mdownload:
 
                 _add_model_to_buffer(CHANNEL, model, node_id)
 
-                mget_and_put_asset_content.assert_called_once_with(
-                    CHANNEL, storage_address, node_id, self.model_checksum, dest, self.model_compute_task_key
+                mdownload.assert_called_once_with(
+                    CHANNEL,
+                    node_id,
+                    storage_address,
+                    dest,
+                    self.model_checksum,
+                    salt=self.model_compute_task_key,
                 )
 
     @override_settings(ENABLE_DATASAMPLE_STORAGE_IN_SERVERMEDIAS=True)

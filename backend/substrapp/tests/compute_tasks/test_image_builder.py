@@ -154,7 +154,7 @@ class ImageBuilderTests(APITestCase):
 
         with (
             mock.patch("substrapp.compute_tasks.image_builder.TemporaryDirectory") as mtemporary_directory,
-            mock.patch("substrapp.compute_tasks.image_builder.get_asset_content") as m_get_asset_content,
+            mock.patch("substrapp.compute_tasks.image_builder.node_client.get") as m_get_asset_content,
             mock.patch("substrapp.compute_tasks.image_builder.uncompress_content") as muncompress_content,
             mock.patch(
                 "substrapp.compute_tasks.image_builder._get_entrypoint_from_dockerfile"
@@ -169,7 +169,7 @@ class ImageBuilderTests(APITestCase):
 
             _build_asset_image(ctx, image_tag, asset_key, storage_address, owner, checksum)
 
-            m_get_asset_content.assert_called_once_with(channel_name_, storage_address, owner, checksum)
+            m_get_asset_content.assert_called_once_with(channel_name_, owner, storage_address, checksum)
             muncompress_content.assert_called_once_with(asset_content, tmp_dir)
             m_get_entrypoint_from_dockerfile.assert_called_once_with(tmp_dir)
             m_build_container_image.assert_called_once_with(tmp_dir, image_tag, ctx)
