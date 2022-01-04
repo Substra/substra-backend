@@ -173,6 +173,7 @@ MODEL_STORAGE = FileSystemStorage()
 ALGO_STORAGE = FileSystemStorage()
 DATAMANAGER_STORAGE = FileSystemStorage()
 METRICS_STORAGE = FileSystemStorage()
+COMPUTE_TASK_LOGS_STORAGE = FileSystemStorage()
 
 OBJECTSTORE_URL = os.environ.get("OBJECTSTORE_URL")
 OBJECTSTORE_ACCESSKEY = os.environ.get("OBJECTSTORE_ACCESSKEY")

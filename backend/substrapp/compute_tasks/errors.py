@@ -2,6 +2,7 @@
 
 import abc
 import enum
+from typing import BinaryIO
 
 
 class ComputeTaskErrorType(enum.Enum):
@@ -59,6 +60,10 @@ class ExecutionError(_ComputeTaskError):
     """An error occurred during the execution of a command in a container image."""
 
     error_type = ComputeTaskErrorType.EXECUTION_ERROR
+
+    def __init__(self, logs: BinaryIO, *args, **kwargs):
+        self.logs = logs
+        super().__init__(*args, **kwargs)
 
 
 def get_error_type(exc: Exception) -> str:

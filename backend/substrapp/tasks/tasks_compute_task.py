@@ -15,13 +15,17 @@ We also handle the retry logic here.
 import json
 import os
 from os import path
+from typing import Optional
 
 import structlog
 from celery import Task
 from django.conf import settings
+from django.core import files
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
+from substrapp import models
+from substrapp import utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
@@ -90,11 +94,29 @@ class ComputeTask(Task):
         from django.db import close_old_connections
 
         close_old_connections()
-        channel_name, task = self.split_args(args)
 
+        channel_name, task = self.split_args(args)
+        compute_task_key = task["key"]
+
+        failure_report = _store_failure(exc, compute_task_key)
         error_type = compute_task_errors.get_error_type(exc)
+
         with get_orchestrator_client(channel_name) as client:
-            client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_FAILED, log=error_type)
+            client.update_task_status(compute_task_key, computetask_pb2.TASK_ACTION_FAILED, log=error_type)
+
+            # Only execution errors lead to the creation of compute task failure report instances
+            # to store the execution logs. A failure report is only registered in the orchestrator
+            # when a corresponding compute task failure report exists in the database.
+            if failure_report:
+                client.register_failure_report(
+                    {
+                        "compute_task_key": compute_task_key,
+                        "logs_address": {
+                            "checksum": failure_report.logs_checksum,
+                            "storage_address": failure_report.logs_address,
+                        },
+                    }
+                )
 
     def split_args(self, celery_args):
         channel_name = celery_args[0]
@@ -237,3 +259,23 @@ def _transfer_model_to_bucket(ctx: Context) -> None:
     if ctx.task["tag"] and TAG_VALUE_FOR_TRANSFER_BUCKET in ctx.task["tag"]:
         logger.info("Task eligible to bucket export")
         transfer_to_bucket(ctx)
+
+
+def _store_failure(exc: Exception, compute_task_key: str) -> Optional[models.ComputeTaskFailureReport]:
+    """If the provided exception is an `ExecutionError`, store its logs in the Django storage and in the database.
+    Otherwise, do nothing.
+
+    Returns:
+        An instance of `models.ComputeTaskFailureReport` storing the data of the `ExecutionError` or None
+        if the provided exception is not an `ExecutionError`.
+    """
+
+    if not isinstance(exc, compute_task_errors.ExecutionError):
+        return None
+
+    file = files.File(exc.logs)
+    failure_report = models.ComputeTaskFailureReport(
+        compute_task_key=compute_task_key, logs_checksum=utils.get_hash(file)
+    )
+    failure_report.logs.save(name=compute_task_key, content=file, save=True)
+    return failure_report

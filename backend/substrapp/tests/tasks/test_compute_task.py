@@ -1,6 +1,9 @@
+import io
 import tempfile
+from typing import Type
 from unittest import mock
 
+import pytest
 from django.test import override_settings
 from grpc import RpcError
 from grpc import StatusCode
@@ -8,6 +11,8 @@ from rest_framework.test import APITestCase
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from orchestrator.client import OrchestratorClient
+from substrapp.compute_tasks import errors
+from substrapp.tasks import tasks_compute_task
 from substrapp.tasks.tasks_compute_task import compute_task
 
 CHANNEL = "mychannel"
@@ -142,3 +147,21 @@ class ComputeTaskTests(APITestCase):
                 compute_task(CHANNEL, task, None)
 
             self.assertEqual(mretry.call_count, 1)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("logs", [b"", b"Hello, World!"])
+def test_store_failure_execution_error(logs: bytes):
+    compute_task_key = "42ff54eb-f4de-43b2-a1a0-a9f4c5f4737f"
+    exc = errors.ExecutionError(logs=io.BytesIO(logs))
+
+    failure_report = tasks_compute_task._store_failure(exc, compute_task_key)
+    failure_report.refresh_from_db()
+
+    assert str(failure_report.compute_task_key) == compute_task_key
+    assert failure_report.logs.read() == logs
+
+
+@pytest.mark.parametrize("exc_class", [Exception, errors.BuildError])
+def test_store_failure_ignored_exception(exc_class: Type[Exception]):
+    assert tasks_compute_task._store_failure(exc_class(), "uuid") is None

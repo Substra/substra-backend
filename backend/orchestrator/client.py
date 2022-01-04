@@ -13,6 +13,7 @@ import orchestrator.datamanager_pb2 as datamanager_pb2
 import orchestrator.datasample_pb2 as datasample_pb2
 import orchestrator.dataset_pb2 as dataset_pb2
 import orchestrator.event_pb2 as event_pb2
+import orchestrator.failure_report_pb2 as failure_report_pb2
 import orchestrator.info_pb2 as info_pb2
 import orchestrator.metric_pb2 as metric_pb2
 import orchestrator.model_pb2 as model_pb2
@@ -26,6 +27,7 @@ from orchestrator.datasample_pb2_grpc import DataSampleServiceStub
 from orchestrator.dataset_pb2_grpc import DatasetServiceStub
 from orchestrator.error import OrcError
 from orchestrator.event_pb2_grpc import EventServiceStub
+from orchestrator.failure_report_pb2_grpc import FailureReportServiceStub
 from orchestrator.info_pb2_grpc import InfoServiceStub
 from orchestrator.metric_pb2_grpc import MetricServiceStub
 from orchestrator.model_pb2_grpc import ModelServiceStub
@@ -157,6 +159,7 @@ class OrchestratorClient:
         self._performance_client = PerformanceServiceStub(self._channel)
         self._event_client = EventServiceStub(self._channel)
         self._info_client = InfoServiceStub(self._channel)
+        self._failure_report_client = FailureReportServiceStub(self._channel)
 
         self._metadata = (
             ("mspid", mspid),
@@ -593,3 +596,17 @@ class OrchestratorClient:
 
     def __exit__(self, type, value, traceback):
         self._channel.close()
+
+    @grpc_retry
+    def register_failure_report(self, args):
+        data = self._failure_report_client.RegisterFailureReport(
+            failure_report_pb2.NewFailureReport(**args), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
+    def get_failure_report(self, args):
+        data = self._failure_report_client.GetFailureReport(
+            failure_report_pb2.GetFailureReportParam(**args), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)

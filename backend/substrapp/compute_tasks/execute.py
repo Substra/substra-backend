@@ -6,7 +6,7 @@ In these functions, we:
 - Create the compute pod, if necessary
 - Execute the command in the compute pod
 """
-
+import io
 from typing import List
 
 import kubernetes
@@ -169,10 +169,14 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
         for line in filter(None, lines.split("\n")):
             logger.info(line, eval=compute_pod.is_testtuple_eval, attempt=ctx.attempt)
 
+    container_logs = io.BytesIO()
+
     while resp.is_open():
         resp.update(timeout=1)
         if resp.peek_stdout():
-            print_log(resp.read_stdout())
+            read = resp.read_stdout()
+            print_log(read)
+            container_logs.write(read.encode())
 
     resp.close()
 
@@ -181,5 +185,5 @@ def _exec(k8s_client, ctx: Context, compute_pod: ComputePod, exec_command: List[
 
     if returncode != 0:
         raise compute_task_errors.ExecutionError(
-            f"Error running compute task. Compute task process exited with code {returncode}"
+            container_logs, f"Error running compute task. Compute task process exited with code {returncode}"
         )
