@@ -107,10 +107,10 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
 
         if not instance.data_opener:
             content = node_client.get(
-                channel_name=channel_name,
+                channel=channel_name,
                 node_id=datamanager["owner"],
                 url=datamanager["opener"]["storage_address"],
-                content_checksum=datamanager["opener"]["checksum"],
+                checksum=datamanager["opener"]["checksum"],
             )
             opener_file = tempfile.TemporaryFile()
             opener_file.write(content)
@@ -118,10 +118,10 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
 
         if not instance.description:
             content = node_client.get(
-                channel_name=channel_name,
+                channel=channel_name,
                 node_id=datamanager["owner"],
                 url=datamanager["description"]["storage_address"],
-                content_checksum=datamanager["description"]["checksum"],
+                checksum=datamanager["description"]["checksum"],
             )
             description_file = tempfile.TemporaryFile()
             description_file.write(content)

@@ -98,10 +98,10 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
     def create_or_update_metric_description(self, channel_name, metric, key):
         # We need to have, at least, metric description for the frontend
         content = node_client.get(
-            channel_name=channel_name,
+            channel=channel_name,
             node_id=metric["owner"],
             url=metric["description"]["storage_address"],
-            content_checksum=metric["description"]["checksum"],
+            checksum=metric["description"]["checksum"],
         )
 
         description_file = tempfile.TemporaryFile()

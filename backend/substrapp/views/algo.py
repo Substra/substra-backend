@@ -106,10 +106,10 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
     def create_or_update_algo_description(self, channel_name, algo, key):
         # We need to have, at least, algo description for the frontend
         content = node_client.get(
-            channel_name=channel_name,
+            channel=channel_name,
             node_id=algo["owner"],
             url=algo["description"]["storage_address"],
-            content_checksum=algo["description"]["checksum"],
+            checksum=algo["description"]["checksum"],
         )
 
         description_file = tempfile.TemporaryFile()
