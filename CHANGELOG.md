@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] 2022-01-05
+
 ### Fixed
 - Preserve order of parent tasks when registering a new task (#583)
 - Memory leak in MinIO client
