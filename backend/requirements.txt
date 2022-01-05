@@ -1,14 +1,14 @@
-aio-pika==6.8.0
+aio-pika==6.8.1
 Django==4.0
 django-structlog==2.2.0
-celery==5.2.1
+celery==5.2.3
 checksumdir==1.2.0
 cryptography==36.0.0
 django-cors-headers==3.10.1
 django-celery-results==2.2.0
 djangorestframework==3.12.4
 djangorestframework-simplejwt==4.7.1
-drf-spectacular==0.21.0
+drf-spectacular==0.21.1
 drf-nested-routers==0.93.4
 pyjwt==2.3.0
 ipython==7.30.1
@@ -19,10 +19,10 @@ requests>=2.20.0
 uwsgi==2.0.20
 zxcvbn==4.4.28
 boto3==1.20.22
-grpcio==1.42.0
-grpcio-tools==1.42.0
+grpcio==1.43.0
+grpcio-tools==1.43.0
 minio==7.1.2
-django-prometheus==2.1.0
+django-prometheus==2.2.0
 # Dependencies used in local dev mode
 argh==0.26.2
 watchdog==2.1.5  # 2.1.6 seems buggy with their new decorator
