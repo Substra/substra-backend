@@ -26,6 +26,7 @@ class OrchestratorDataManagerSerializer(serializers.Serializer):
     type = serializers.CharField(max_length=30)
     permissions = PermissionsSerializer()
     metadata = DictField(child=CharField(), required=False, allow_null=True)
+    logs_permission = PermissionsSerializer()
 
     def create(self, channel_name, validated_data):
         instance = self.initial_data.get("instance")
@@ -33,6 +34,7 @@ class OrchestratorDataManagerSerializer(serializers.Serializer):
         data_type = validated_data.get("type")
         permissions = validated_data.get("permissions")
         metadata = validated_data.get("metadata")
+        logs_permission = validated_data.get("logs_permission")
 
         current_site = settings.DEFAULT_DOMAIN
 
@@ -53,6 +55,10 @@ class OrchestratorDataManagerSerializer(serializers.Serializer):
                 "authorized_ids": permissions.get("authorized_ids"),
             },
             "metadata": metadata,
+            "logs_permission": {
+                "public": logs_permission.get("public"),
+                "authorized_ids": logs_permission.get("authorized_ids"),
+            },
         }
 
         with get_orchestrator_client(channel_name) as client:

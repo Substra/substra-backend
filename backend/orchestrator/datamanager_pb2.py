@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xef\x02\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xba\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\x98\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x11\x64\x61tamanager.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xa2\x03\n\x0b\x44\x61taManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12.\n\x0bpermissions\x18\x04 \x01(\x0b\x32\x19.orchestrator.Permissions\x12.\n\x0b\x64\x65scription\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x07 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x08 \x01(\t\x12\x31\n\rcreation_date\x18\t \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x31\n\x0flogs_permission\x18\n \x01(\x0b\x32\x18.orchestrator.Permission\x12\x39\n\x08metadata\x18\x10 \x03(\x0b\x32\'.orchestrator.DataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\xf1\x02\n\x0eNewDataManager\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x35\n\x0fnew_permissions\x18\x03 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12.\n\x0b\x64\x65scription\x18\x05 \x01(\x0b\x32\x19.orchestrator.Addressable\x12)\n\x06opener\x18\x06 \x01(\x0b\x32\x19.orchestrator.Addressable\x12\x0c\n\x04type\x18\x07 \x01(\t\x12\x35\n\x0flogs_permission\x18\x08 \x01(\x0b\x32\x1c.orchestrator.NewPermissions\x12<\n\x08metadata\x18\x10 \x03(\x0b\x32*.orchestrator.NewDataManager.MetadataEntry\x1a/\n\rMetadataEntry\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x38\x01\"\"\n\x13GetDataManagerParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"?\n\x16QueryDataManagersParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"f\n\x19QueryDataManagersResponse\x12\x30\n\rdata_managers\x18\x01 \x03(\x0b\x32\x19.orchestrator.DataManager\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\x98\x02\n\x12\x44\x61taManagerService\x12N\n\x13RegisterDataManager\x12\x1c.orchestrator.NewDataManager\x1a\x19.orchestrator.DataManager\x12N\n\x0eGetDataManager\x12!.orchestrator.GetDataManagerParam\x1a\x19.orchestrator.DataManager\x12\x62\n\x11QueryDataManagers\x12$.orchestrator.QueryDataManagersParam\x1a\'.orchestrator.QueryDataManagersResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
 
@@ -62,8 +62,8 @@ _DATAMANAGER_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=403,
-  serialized_end=450,
+  serialized_start=454,
+  serialized_end=501,
 )
 
 _DATAMANAGER = _descriptor.Descriptor(
@@ -131,7 +131,14 @@ _DATAMANAGER = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='metadata', full_name='orchestrator.DataManager.metadata', index=8,
+      name='logs_permission', full_name='orchestrator.DataManager.logs_permission', index=8,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metadata', full_name='orchestrator.DataManager.metadata', index=9,
       number=16, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -150,7 +157,7 @@ _DATAMANAGER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=83,
-  serialized_end=450,
+  serialized_end=501,
 )
 
 
@@ -188,8 +195,8 @@ _NEWDATAMANAGER_METADATAENTRY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=403,
-  serialized_end=450,
+  serialized_start=454,
+  serialized_end=501,
 )
 
 _NEWDATAMANAGER = _descriptor.Descriptor(
@@ -243,7 +250,14 @@ _NEWDATAMANAGER = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='metadata', full_name='orchestrator.NewDataManager.metadata', index=6,
+      name='logs_permission', full_name='orchestrator.NewDataManager.logs_permission', index=6,
+      number=8, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='metadata', full_name='orchestrator.NewDataManager.metadata', index=7,
       number=16, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
@@ -261,8 +275,8 @@ _NEWDATAMANAGER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=453,
-  serialized_end=767,
+  serialized_start=504,
+  serialized_end=873,
 )
 
 
@@ -293,8 +307,8 @@ _GETDATAMANAGERPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=769,
-  serialized_end=803,
+  serialized_start=875,
+  serialized_end=909,
 )
 
 
@@ -332,8 +346,8 @@ _QUERYDATAMANAGERSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=805,
-  serialized_end=868,
+  serialized_start=911,
+  serialized_end=974,
 )
 
 
@@ -371,8 +385,8 @@ _QUERYDATAMANAGERSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=870,
-  serialized_end=972,
+  serialized_start=976,
+  serialized_end=1078,
 )
 
 _DATAMANAGER_METADATAENTRY.containing_type = _DATAMANAGER
@@ -380,11 +394,13 @@ _DATAMANAGER.fields_by_name['permissions'].message_type = common__pb2._PERMISSIO
 _DATAMANAGER.fields_by_name['description'].message_type = common__pb2._ADDRESSABLE
 _DATAMANAGER.fields_by_name['opener'].message_type = common__pb2._ADDRESSABLE
 _DATAMANAGER.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_DATAMANAGER.fields_by_name['logs_permission'].message_type = common__pb2._PERMISSION
 _DATAMANAGER.fields_by_name['metadata'].message_type = _DATAMANAGER_METADATAENTRY
 _NEWDATAMANAGER_METADATAENTRY.containing_type = _NEWDATAMANAGER
 _NEWDATAMANAGER.fields_by_name['new_permissions'].message_type = common__pb2._NEWPERMISSIONS
 _NEWDATAMANAGER.fields_by_name['description'].message_type = common__pb2._ADDRESSABLE
 _NEWDATAMANAGER.fields_by_name['opener'].message_type = common__pb2._ADDRESSABLE
+_NEWDATAMANAGER.fields_by_name['logs_permission'].message_type = common__pb2._NEWPERMISSIONS
 _NEWDATAMANAGER.fields_by_name['metadata'].message_type = _NEWDATAMANAGER_METADATAENTRY
 _QUERYDATAMANAGERSRESPONSE.fields_by_name['data_managers'].message_type = _DATAMANAGER
 DESCRIPTOR.message_types_by_name['DataManager'] = _DATAMANAGER
@@ -457,8 +473,8 @@ _DATAMANAGERSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=975,
-  serialized_end=1255,
+  serialized_start=1081,
+  serialized_end=1361,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterDataManager',

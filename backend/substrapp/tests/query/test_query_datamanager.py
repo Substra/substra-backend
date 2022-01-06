@@ -64,6 +64,10 @@ class DataManagerQueryTests(APITestCase):
                 "authorized_ids": [],
             },
             "metric_key": None,
+            "logs_permission": {
+                "public": True,
+                "authorized_ids": [],
+            },
         }
 
         if with_test_metric:

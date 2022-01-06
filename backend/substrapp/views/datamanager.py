@@ -53,6 +53,7 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
                 "permissions": request.data.get("permissions"),
                 "type": request.data.get("type"),
                 "metadata": request.data.get("metadata"),
+                "logs_permission": request.data.get("logs_permission"),
                 "instance": instance,
             },
             context={"request": request},

@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- The datamanager asset now has a `logs_permission` field (#581)
+
 ## [0.7.0] 2022-01-05
 
 ### Fixed
