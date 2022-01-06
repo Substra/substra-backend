@@ -191,7 +191,7 @@ class OrchestratorClient:
     def query_algos(self, category=algo_pb2.ALGO_UNKNOWN, compute_plan_key=None):
         algo_filter = algo_pb2.AlgoQueryFilter(category=category, compute_plan_key=compute_plan_key)
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._algo_client.QueryAlgos(
                 algo_pb2.QueryAlgosParam(filter=algo_filter, page_token=page_token),
@@ -201,7 +201,7 @@ class OrchestratorClient:
             algos = data.get("Algos", [])
             page_token = data.get("next_page_token")
             res.extend(algos)
-            if page_token == "" or not algos:
+            if page_token == "" or not algos:  # nosec
                 break
         return res
 
@@ -218,7 +218,7 @@ class OrchestratorClient:
     @grpc_retry
     def query_metrics(self):
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._metric_client.QueryMetrics(
                 metric_pb2.QueryMetricsParam(page_token=page_token),
@@ -228,7 +228,7 @@ class OrchestratorClient:
             metrics = data.get("metrics", [])
             page_token = data.get("next_page_token")
             res.extend(metrics)
-            if page_token == "" or not metrics:
+            if page_token == "" or not metrics:  # nosec
                 break
         return res
 
@@ -249,7 +249,7 @@ class OrchestratorClient:
     @grpc_retry
     def query_datasamples(self):
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._datasample_client.QueryDataSamples(
                 datasample_pb2.QueryDataSamplesParam(page_token=page_token),
@@ -262,7 +262,7 @@ class OrchestratorClient:
             for sample in data_samples:
                 del sample["checksum"]
             res.extend(data_samples)
-            if page_token == "" or not data_samples:
+            if page_token == "" or not data_samples:  # nosec
                 break
         return res
 
@@ -301,7 +301,7 @@ class OrchestratorClient:
     @grpc_retry
     def query_datamanagers(self):
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._datamanager_client.QueryDataManagers(
                 datamanager_pb2.QueryDataManagersParam(page_token=page_token),
@@ -311,7 +311,7 @@ class OrchestratorClient:
             data_managers = data.get("data_managers", [])
             page_token = data.get("next_page_token")
             res.extend(data_managers)
-            if page_token == "" or not data_managers:
+            if page_token == "" or not data_managers:  # nosec
                 break
         return res
 
@@ -346,7 +346,7 @@ class OrchestratorClient:
         )
 
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._computetask_client.QueryTasks(
                 computetask_pb2.QueryTasksParam(filter=task_filter, page_token=page_token),
@@ -363,7 +363,7 @@ class OrchestratorClient:
                     del datum["metadata"]["__tag__"]
                 datum["tag"] = tag
             res.extend(tasks)
-            if page_token == "" or not tasks:
+            if page_token == "" or not tasks:  # nosec
                 break
         return res
 
@@ -404,7 +404,7 @@ class OrchestratorClient:
     def query_compute_plans(self, owner=None):
         plan_filter = computeplan_pb2.PlanQueryFilter(owner=owner)
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._computeplan_client.QueryPlans(
                 computeplan_pb2.QueryPlansParam(filter=plan_filter, page_token=page_token),
@@ -415,7 +415,7 @@ class OrchestratorClient:
             page_token = data.get("next_page_token")
 
             res.extend(plans)
-            if page_token == "" or not plans:
+            if page_token == "" or not plans:  # nosec
                 break
         return res
 
@@ -428,7 +428,7 @@ class OrchestratorClient:
     def query_models(self, category=algo_pb2.ALGO_UNKNOWN):
 
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._model_client.QueryModels(
                 model_pb2.QueryModelsParam(category=category, page_token=page_token),
@@ -438,7 +438,7 @@ class OrchestratorClient:
             models = data.get("models", [])
             page_token = data.get("next_page_token")
             res.extend(models)
-            if page_token == "" or not models:
+            if page_token == "" or not models:  # nosec
                 break
         return res
 
@@ -491,7 +491,7 @@ class OrchestratorClient:
         )
 
         res = []
-        page_token = ""
+        page_token = ""  # nosec
         while True:
             data = self._performance_client.QueryPerformances(
                 performance_pb2.QueryPerformancesParam(filter=performance_filter, page_token=page_token),
@@ -501,7 +501,7 @@ class OrchestratorClient:
             performances = data.get("Performances", [])
             page_token = data.get("next_page_token")
             res.extend(performances)
-            if page_token == "" or not performances:
+            if page_token == "" or not performances:  # nosec
                 break
 
         return res
@@ -550,7 +550,7 @@ class OrchestratorClient:
             asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind, metadata=metadata
         )
 
-        page_token = ""
+        page_token = ""  # nosec
 
         while True:
             data = self._event_client.QueryEvents(
@@ -565,7 +565,7 @@ class OrchestratorClient:
             for event in events:
                 yield event
 
-            if page_token == "" or not events:
+            if page_token == "" or not events:  # nosec
                 return
 
     def query_single_event(

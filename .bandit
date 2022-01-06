@@ -1,0 +1,4 @@
+[bandit]
+targets = backend,metrics-exporter/metrics_exporter
+recursive = true
+exclude = backend/**/tests/**

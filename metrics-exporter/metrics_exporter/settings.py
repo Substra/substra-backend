@@ -36,7 +36,7 @@ def build_broker_url(user: str, pasword: str, host: str, port: str) -> str:
 
 
 # App settings
-PROMETHEUS_MULTIPROC_DIR = os.environ.get("PROMETHEUS_MULTIPROC_DIR", "/tmp/")
+PROMETHEUS_MULTIPROC_DIR = os.environ.get("PROMETHEUS_MULTIPROC_DIR", "/tmp/")  # nosec
 PORT = int(os.environ.get("PORT", 8001))
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
 

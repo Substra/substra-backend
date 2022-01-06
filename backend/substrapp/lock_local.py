@@ -7,7 +7,7 @@ import structlog
 
 logger = structlog.get_logger(__name__)
 
-LOCK_FILE_FOLDER = "/tmp"
+LOCK_FILE_FOLDER = "/tmp"  # nosec
 LOCK_FILE_PREFIX = "lock_"
 LOCK_FILE_PREFIX_UNLINK = "unlink_lock_"
 
@@ -75,7 +75,7 @@ def lock_resource(  # noqa: C901
                 # ensure we only remove the file _we_ created, not a file created by another caller
                 if uuid == unique_id:
                     os.remove(lock_file)
-            except Exception:
+            except Exception:  # nosec
                 pass
 
     start = time.time()

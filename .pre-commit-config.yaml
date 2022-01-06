@@ -24,3 +24,9 @@ repos:
         exclude: backend/orchestrator/.+_pb2(_grpc)?\.py|backend/substrapp/tests/assets\.py
         additional_dependencies:
           - pep8-naming
+
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.1
+    hooks:
+      - id: bandit
+        args: [--ini=.bandit, -q]

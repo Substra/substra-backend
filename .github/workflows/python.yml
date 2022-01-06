@@ -60,6 +60,8 @@ jobs:
       - name: Lint
         run: |
           flake8 $SRC_DIRS
+      - name: Check security - Bandit
+        run: bandit --ini=.bandit
       - name: Test
         run: |
           cd backend/

@@ -182,7 +182,7 @@ OBJECTSTORE_SECRETKEY = os.environ.get("OBJECTSTORE_SECRETKEY")
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-        "LOCATION": "/tmp/django_cache",
+        "LOCATION": "/tmp/django_cache",  # nosec
     }
 }
 

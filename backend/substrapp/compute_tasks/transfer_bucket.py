@@ -41,7 +41,7 @@ def transfer_to_bucket(ctx: Context) -> None:
         os.path.join(ctx.directories.task_dir, TaskDirName.Export),
     ]
 
-    with tempfile.TemporaryDirectory(prefix="/tmp/") as tmpdir:
+    with tempfile.TemporaryDirectory(prefix="/tmp/") as tmpdir:  # nosec
 
         tar_name = f"{ctx.compute_plan_key}-{ctx.task['key']}.tar.gz"
         tar_path = os.path.join(tmpdir, tar_name)
