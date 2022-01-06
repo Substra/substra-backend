@@ -7,7 +7,6 @@ from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -19,6 +18,7 @@ from substrapp.serializers import DataManagerSerializer
 from substrapp.serializers import OrchestratorDataManagerSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import filter_list
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
@@ -100,7 +100,7 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     def create(self, request, *args, **kwargs):
         data = self._create(request)
         headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def create_or_update_datamanager(self, channel_name, datamanager, key):
 
@@ -162,7 +162,7 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         key = self.kwargs[lookup_url_kwarg]
 
         data = self._retrieve(request, key)
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         with get_orchestrator_client(get_channel_name(request)) as client:

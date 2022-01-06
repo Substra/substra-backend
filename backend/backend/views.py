@@ -2,7 +2,6 @@ from django.conf import settings
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
@@ -11,6 +10,7 @@ from libs.expiry_token_authentication import token_expire_handler
 from libs.user_login_throttle import UserLoginThrottle
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
 
@@ -34,7 +34,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
             Token.objects.filter(user=user).delete()
             token = Token.objects.create(user=user)
 
-        return Response({"token": token.key, "expires_at": expires_at(token)})
+        return ApiResponse({"token": token.key, "expires_at": expires_at(token)})
 
 
 class Info(APIView):
@@ -62,7 +62,7 @@ class Info(APIView):
             if orchestrator_versions.get("chaincode"):
                 res["chaincode_version"] = orchestrator_versions.get("chaincode")
 
-        return Response(res)
+        return ApiResponse(res)
 
 
 obtain_auth_token = ExpiryObtainAuthToken.as_view()

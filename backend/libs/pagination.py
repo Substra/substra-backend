@@ -1,6 +1,8 @@
 from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
+from substrapp.views.utils import ApiResponse
+
 REALLY_BIG_INT = 2 ** 32
 
 
@@ -18,8 +20,8 @@ class PaginationMixin:
                 "Failed to build a chunk of data for 1 page. "
                 "Hint: PaginationMixin is expected to be used in conjunction with DefaultPageNumberPagination"
             )
-
-        return self.get_paginated_response(data_for_one_page)
+        response = self.get_paginated_response(data_for_one_page)
+        return ApiResponse.add_content_disposition_header(response)
 
     def is_page_size_param_present(self):
         page_size = self.request.query_params.get(DefaultPageNumberPagination.page_size_query_param)

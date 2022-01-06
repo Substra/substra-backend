@@ -4,7 +4,6 @@ import structlog
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -17,6 +16,7 @@ from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import TASK_CATEGORY
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_compute_plan_duration_or_eta
 from substrapp.views.utils import add_cp_extra_information
@@ -215,7 +215,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     def create(self, request, *args, **kwargs):
         data = self.commit(request)
         headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -226,7 +226,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             data = client.query_compute_plan(validated_key)
             data = add_cp_extra_information(client, data)
 
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         with get_orchestrator_client(get_channel_name(request)) as client:
@@ -250,7 +250,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             client.cancel_compute_plan(key)
             compute_plan = client.query_compute_plan(validated_key)
 
-        return Response(compute_plan, status=status.HTTP_200_OK)
+        return ApiResponse(compute_plan, status=status.HTTP_200_OK)
 
     @action(methods=["post"], detail=True)
     def update_ledger(self, request, *args, **kwargs):
@@ -282,7 +282,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         with get_orchestrator_client(get_channel_name(request)) as client:
             client.register_tasks({"tasks": tasks})
 
-        return Response({}, status=status.HTTP_200_OK)
+        return ApiResponse({}, status=status.HTTP_200_OK)
 
 
 class GenericSubassetViewset(PaginationMixin, GenericViewSet):
@@ -296,7 +296,7 @@ class GenericSubassetViewset(PaginationMixin, GenericViewSet):
         if not self.is_page_size_param_present():
             # We choose to force the page_size parameter in these views in order to limit the number of queries
             # to the chaincode
-            return Response(status=status.HTTP_400_BAD_REQUEST, data="page_size param is required")
+            return ApiResponse(status=status.HTTP_400_BAD_REQUEST, data="page_size param is required")
 
         validated_key = validate_key(compute_plan_pk)
         truncated_basename = self.basename.removeprefix(BASENAME_PREFIX)

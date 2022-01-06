@@ -7,7 +7,6 @@ from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.algo_pb2 as algo_pb2
@@ -20,6 +19,7 @@ from substrapp.serializers import AlgoSerializer
 from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.utils import get_hash
 from substrapp.views.filters_utils import filter_list
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import get_channel_name
@@ -101,7 +101,7 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
     def create(self, request, *args, **kwargs):
         data = self._create(request)
         headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def create_or_update_algo_description(self, channel_name, algo, key):
         # We need to have, at least, algo description for the frontend
@@ -152,7 +152,7 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         key = self.kwargs[lookup_url_kwarg]
 
         data = self._retrieve(request, key)
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         with get_orchestrator_client(get_channel_name(request)) as client:

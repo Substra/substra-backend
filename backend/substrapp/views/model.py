@@ -6,7 +6,6 @@ from django.urls.base import reverse
 from django.views.decorators import gzip
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -16,6 +15,7 @@ from substrapp.clients import node as node_client
 from substrapp.models import Model
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views.filters_utils import filter_list
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import get_channel_name
@@ -70,7 +70,7 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
         key = self.kwargs[lookup_url_kwarg]
 
         data = self._retrieve(request, key)
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
         with get_orchestrator_client(get_channel_name(request)) as client:

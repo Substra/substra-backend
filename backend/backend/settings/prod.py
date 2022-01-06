@@ -88,3 +88,7 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+CONTENT_DISPOSITION_HEADER = {
+    "Content-Disposition": 'attachment; filename="API-response.json"',
+}

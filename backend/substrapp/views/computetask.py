@@ -4,7 +4,6 @@ import structlog
 from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -19,6 +18,7 @@ from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.computeplan import create_compute_plan
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import TASK_CATEGORY
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
@@ -163,7 +163,7 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     def create(self, request, *args, **kwargs):
         data = self.commit(request)
         headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def list(self, request, *args, **kwargs):
         with get_orchestrator_client(get_channel_name(request)) as client:
@@ -197,4 +197,4 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         key = self.kwargs[lookup_url_kwarg]
 
         data = self._retrieve(request, key)
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)

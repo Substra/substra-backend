@@ -17,7 +17,6 @@ from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.response import Response
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -33,6 +32,7 @@ from substrapp.serializers import OrchestratorDataSampleUpdateSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
+from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
 logger = structlog.get_logger(__name__)
@@ -50,10 +50,10 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         #  not be caught to return a response. The following code only exists to preserve
         #  a previously established API contract.
         except serializers.ValidationError as e:
-            return Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return ApiResponse({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
         headers = self.get_success_headers(data)
-        return Response(data, status=status.HTTP_201_CREATED, headers=headers)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _create(self, request):
         data_manager_keys = request.data.get("data_manager_keys") or []
@@ -191,7 +191,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
         # create on orchestrator db
         data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        return Response(data, status=status.HTTP_200_OK)
+        return ApiResponse(data, status=status.HTTP_200_OK)
 
 
 def _get_servermedias_subpaths(paths, raise_no_subdir=False):

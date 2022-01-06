@@ -52,6 +52,31 @@ MODEL_CATEGORY = {
 HTTP_HEADER_PROXY_ASSET = "Substra-Proxy-Asset"
 
 
+class ApiResponse(Response):
+    """The Content-Disposition header is used for downloads and web service responses
+    and indicates to the browser whether the provided file is to be displayed (inline)
+    or stored (attachment).
+    Some browsers display the file content in the browser if no Content-Disposition header
+    is set. Using Content-Disposition: attachment; filename="API-response.json" in production
+    is important because it signals the browser not to display the response in the browser.
+    """
+
+    def __init__(self, data=None, status=None, template_name=None, headers=None, exception=False, content_type=None):
+
+        if headers is not None:
+            if "Content-Disposition" not in headers:
+                headers = {**headers, **settings.CONTENT_DISPOSITION_HEADER}
+        else:
+            headers = settings.CONTENT_DISPOSITION_HEADER
+
+        super().__init__(data, status, template_name, headers, exception, content_type)
+
+    @staticmethod
+    def add_content_disposition_header(response):
+        response.headers = {**response.headers, **settings.CONTENT_DISPOSITION_HEADER}
+        return response
+
+
 class CustomFileResponse(FileResponse):
     def set_headers(self, filelike):
         super().set_headers(filelike)
@@ -123,13 +148,13 @@ class PermissionMixin(object):
         try:
             self.check_access(channel_name, request.user, asset, is_proxied_request(request))
         except AssetPermissionError as e:
-            return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
+            return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         if not orchestrator_field:
             orchestrator_field = django_field
         storage_address = self.get_storage_address(asset, orchestrator_field)
         if not storage_address:
-            return Response({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
+            return ApiResponse({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 
         if get_owner() == asset["owner"]:
             response = self.get_local_file_response(django_field)
@@ -155,7 +180,7 @@ class PermissionMixin(object):
                 is_proxied_request(request),
             )
         except AssetPermissionError as e:
-            return Response({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
+            return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
         if not orchestrator_field:
             orchestrator_field = django_field
