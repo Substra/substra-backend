@@ -60,7 +60,7 @@ orchestrator-grpc:	## Generate Python gRPC client files (ORCHESTRATOR_ROOT varia
 docs:  ## Generate documentation
 	$(MAKE) -C docs
 
-.PHONY: docs
+.PHONY: docs-charts
 docs-charts:  ## Generate Helm chart documentation
 	$(MAKE) -C charts doc
 
