@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 import os
@@ -6,26 +5,28 @@ import shutil
 import tempfile
 from unittest import mock
 
-from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
-from grpc import StatusCode
+from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.error
+import orchestrator.algo_pb2 as algo_pb2
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
+from orchestrator.error import StatusCode
 
 from .. import assets
 from ..common import AuthenticatedClient
-from ..common import encode_filter
-from ..common import get_sample_algo
 from ..common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
+
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/chunantes/algos/algo3")
 
 
 @override_settings(
@@ -35,40 +36,9 @@ MEDIA_ROOT = tempfile.mkdtemp()
 class AlgoViewTests(APITestCase):
     client_class = AuthenticatedClient
 
-    @staticmethod
-    def get_current_channel_name():
-        return [*settings.LEDGER_CHANNELS][0]
-
-    @staticmethod
-    def algo_data_with_channel(data):
-        channel_name = AlgoViewTests.get_current_channel_name()
-        data["channel"] = channel_name
-        return data
-
-    @staticmethod
-    def algos_data_with_channel(data):
-        channel_name = AlgoViewTests.get_current_channel_name()
-        for algo_data in data:
-            algo_data["channel"] = channel_name
-        return data
-
-    @staticmethod
-    def get_algo_mock(data):
-        serializer = AlgoRepSerializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        return AlgoRep(**serializer.validated_data)
-
-    @staticmethod
-    def get_algos_mock(data):
-        serializer = AlgoRepSerializer(data=data, many=True)
-        serializer.is_valid(raise_exception=True)
-        return [AlgoRep(**validated_data) for validated_data in serializer.validated_data]
-
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
-
-        self.algo, self.algo_filename = get_sample_algo()
 
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
         self.logger = logging.getLogger("django.request")
@@ -76,231 +46,102 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(logging.ERROR)
         self.url = reverse("substrapp:algo-list")
 
+        self.algos = assets.get_algos()
+        for algo in self.algos:
+            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
 
     def test_algo_list_empty(self):
-        with mock.patch("localrep.models.Algo.objects.all", return_value=[]):
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {"count": 0, "next": None, "previous": None, "results": []})
+        AlgoRep.objects.all().delete()
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_algo_list_success(self):
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        algos_response = copy.deepcopy(assets.get_algos())
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {"count": len(algos), "next": None, "previous": None, "results": algos_response})
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(
+            response.json(), {"count": len(self.algos), "next": None, "previous": None, "results": self.algos}
+        )
 
-    def test_algo_list_filter_fail(self):
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            search_params = "?search=algERRORo"
-            response = self.client.get(self.url + search_params, **self.extra)
-            self.assertIn("Malformed search filters", response.json()["message"])
+    def test_algo_list_wrong_channel(self):
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.algo.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_algo_list_fail_internal_server_error(self, m_get_channel_name: mock.Mock):
-        response = self.client.get(self.url)
-
+    @mock.patch("substrapp.views.algo.AlgoViewSet.list", side_effect=Exception("Unexpected error"))
+    def test_algo_list_fail(self, _):
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        m_get_channel_name.assert_called_once()
 
-    def test_algo_list_filter_name(self):
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        name_to_filter = encode_filter(algos[0]["name"])
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            search_params = f"?search=algo%253Aname%253A{name_to_filter}"
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
+    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
+    def test_algo_list_storage_addresses_update(self, _):
+        for algo in AlgoRep.objects.all():
+            algo.description_address.replace("http://testserver", "http://remotetestserver")
+            algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
+            algo.save()
 
-            self.assertEqual(len(r["results"]), 1)
-            self.assertEqual(r["count"], 1)
-
-    def test_algo_list_filter_dual(self):
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        algos_response = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            search_params = f'?search=algo%253Aname%253A{encode_filter(algos_response[2]["name"])}'
-            search_params += f'%2Calgo%253Aowner%253A{encode_filter(algos_response[2]["owner"])}'
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-
-            self.assertEqual(len(r["results"]), 1)
-
-    def test_algo_retrieve(self):
-        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
-        algo_response = copy.deepcopy(assets.get_algo())
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-
-        with open(os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo4/description.md"), "rb") as f:
-            content = f.read()
-
-        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
-            "substrapp.views.algo.node_client.get", return_value=content
-        ):
-            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
-            response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
-            self.assertEqual(response.json(), algo_response)
-
-    def test_algo_retrieve_fail(self):
-        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
-
-        # Key not enough chars
-        search_params = "12312323/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # Key not hexa
-        search_params = "X" * 32 + "/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        error = orchestrator.error.OrcError()
-        error.details = "out of range test"
-        error.code = StatusCode.OUT_OF_RANGE
-
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
-            m_algo.filter.return_value.get.side_effect = error
-            response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.algo.AlgoViewSet._retrieve", side_effect=Exception("Unexpected error"))
-    def test_algo_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
-        response = self.client.get(self.url + "123/")
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        _retrieve.assert_called_once()
-
-    def test_algo_create(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        algo_path = os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo3/algo.tar.gz")
-        description_path = os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo3/description.md")
-
-        data = {
-            "json": json.dumps(
-                {
-                    "name": "Logistic regression",
-                    "metric_key": "some key",
-                    "category": "ALGO_SIMPLE",
-                    "permissions": {
-                        "public": True,
-                        "authorized_ids": [],
-                    },
-                }
-            ),
-            "file": open(algo_path, "rb"),
-            "description": open(description_path, "rb"),
-        }
-
-        with mock.patch.object(OrchestratorClient, "register_algo", return_value=assets.get_algo()):
-            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        self.assertIsNotNone(response.data["key"])
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        data["description"].close()
-        data["file"].close()
-
-    @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.algo.AlgoViewSet._create", side_effect=Exception("Unexpected error"))
-    def test_algo_create_fail_internal_server_error(self, _create: mock.Mock):
-        response = self.client.post(self.url, data={}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        _create.assert_called_once()
-
-    def test_algo_list_storage_addresses_update(self):
-        # mock content
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        algos_response = copy.deepcopy(algos)
-        for o_algo in algos_response:
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.data["count"], len(self.algos))
+        for result, algo in zip(response.data["results"], self.algos):
             for field in ("description", "algorithm"):
-                o_algo[field]["storage_address"] = o_algo[field]["storage_address"].replace(
-                    "http://testserver", "http://remotetestserver"
-                )
+                self.assertEqual(result[field]["storage_address"], algo[field]["storage_address"])
 
-        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
-            "substrapp.views.algo.node_client.get", return_value=b"dummy binary content"
-        ):
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            response = self.client.get(self.url, **self.extra)
-            self.assertEqual(response.data["count"], len(algos))
-            for i, res_algo in enumerate(response.data["results"]):
-                for field in ("description", "algorithm"):
-                    self.assertEqual(res_algo[field]["storage_address"], algos[i][field]["storage_address"])
+    def test_algo_list_filter(self):
+        """Filter algo on name."""
+        name = self.algos[0]["name"]
+        params = urlencode({"search": f"algo:name:{name}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.algos[:1]})
 
-    def test_algo_retrieve_storage_addresses_update_with_cache(self):
-        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
-        algo_response = copy.deepcopy(assets.get_algo())
+    def test_algo_list_filter_and(self):
+        """Filter algo on name and owner."""
+        name, owner = self.algos[0]["name"], self.algos[0]["owner"]
+        params = urlencode({"search": f"algo:name:{name},algo:owner:{owner}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.algos[:1]})
 
-        url = reverse("substrapp:algo-detail", args=[algo["key"]])
-        for field in ("description", "algorithm"):
-            algo_response[field]["storage_address"] = algo_response[field]["storage_address"].replace(
-                "http://testserver", "http://remotetestserver"
-            )
+    def test_algo_list_filter_or(self):
+        """Filter algo on name_0 or name_1."""
+        name_0 = self.algos[0]["name"]
+        name_1 = self.algos[1]["name"]
+        params = urlencode({"search": f"algo:name:{name_0}-OR-algo:name:{name_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.algos[:2]})
 
-        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
-            "substrapp.views.algo.node_has_process_permission", return_value=True
-        ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
-            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
-            response = self.client.get(url, **self.extra)
-            for field in ("description", "algorithm"):
-                self.assertEqual(response.data[field]["storage_address"], algo[field]["storage_address"])
-
-    def test_algo_retrieve_storage_addresses_update_without_cache(self):
-        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
-        algo_response = copy.deepcopy(assets.get_algo())
-
-        url = reverse("substrapp:algo-detail", args=[algo["key"]])
-
-        for field in ("description", "algorithm"):
-            algo_response[field]["storage_address"] = algo_response[field]["storage_address"].replace(
-                "http://testserver", "http://remotetestserver"
-            )
-        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
-            "substrapp.views.algo.node_has_process_permission", return_value=False
-        ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
-            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
-            res = self.client.get(url, **self.extra)
-            for field in ("description", "algorithm"):
-                self.assertEqual(res.data[field]["storage_address"], algo[field]["storage_address"])
+    def test_algo_list_filter_or_and(self):
+        """Filter algo on (name_0 and owner_0) or (name_1 and owner_1)."""
+        name_0, owner_0 = self.algos[0]["name"], self.algos[0]["owner"]
+        name_1, owner_1 = self.algos[1]["name"], self.algos[1]["owner"]
+        params = urlencode(
+            {"search": f"algo:name:{name_0},algo:owner:{owner_0}-OR-algo:name:{name_1},algo:owner:{owner_1}"}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.algos[:2]})
 
     @parameterized.expand(
         [
-            ("one_page_test", 5, 1, 0, 5),
-            ("one_element_per_page_page_two", 1, 2, 1, 2),
-            ("two_element_per_page_page_three", 2, 3, 4, 6),
+            ("page_size_5_page_1", 5, 1),
+            ("page_size_1_page_2", 1, 2),
+            ("page_size_2_page_3", 2, 3),
         ]
     )
-    def test_algo_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
-        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
-        algos_response = copy.deepcopy(assets.get_algos())
-        url = reverse("substrapp:algo-list")
-        url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch("localrep.models.Algo.objects") as m_algo:
-            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
-            response = self.client.get(url, **self.extra)
+    def test_algo_list_pagination_success(self, _, page_size, page):
+        params = urlencode({"page_size": page_size, "page": page})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
-        self.assertContains(response, "count", 1)
-        self.assertContains(response, "next", 1)
-        self.assertContains(response, "previous", 1)
-        self.assertContains(response, "results", 1)
-        self.assertEqual(r["results"], algos_response[index_down:index_up])
+        self.assertEqual(r["count"], len(self.algos))
+        offset = (page - 1) * page_size
+        self.assertEqual(r["results"], self.algos[offset : offset + page_size])
 
     @override_settings(DATA_UPLOAD_MAX_SIZE=150)
     def test_file_size_limit(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        algo_path = os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo3/algo.tar.gz")
-        description_path = os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo3/description.md")
+        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
 
         data = {
             "json": json.dumps(
@@ -314,7 +155,7 @@ class AlgoViewTests(APITestCase):
                     },
                 }
             ),
-            "file": open(algo_path, "rb"),
+            "file": open(algorithm_path, "rb"),
             "description": open(description_path, "rb"),
         }
 
@@ -325,3 +166,119 @@ class AlgoViewTests(APITestCase):
 
         data["description"].close()
         data["file"].close()
+
+    def test_algo_create(self):
+        def mock_orc_response(data):
+            """Build orchestrator register response from request data."""
+            return {
+                "key": data["key"],
+                "name": data["name"],
+                "owner": data["new_permissions"]["authorized_ids"][0],
+                "permissions": {
+                    "process": data["new_permissions"],
+                    "download": data["new_permissions"],
+                },
+                "metadata": {},
+                "category": algo_pb2.AlgoCategory.Name(data["category"]),
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "description": data["description"],
+                "algorithm": data["algorithm"],
+            }
+
+        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
+        data = {
+            "json": json.dumps(
+                {
+                    "name": "Logistic regression",
+                    "metric_key": "some key",
+                    "category": "ALGO_SIMPLE",
+                    "permissions": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                }
+            ),
+            "file": open(algorithm_path, "rb"),
+            "description": open(description_path, "rb"),
+        }
+
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=mock_orc_response):
+            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+        self.assertIsNotNone(response.data["key"])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # algo created in local db
+        self.assertEqual(AlgoRep.objects.count(), len(self.algos) + 1)
+
+        data["file"].close()
+        data["description"].close()
+
+    @internal_server_error_on_exception()
+    def test_algo_create_fail_rollback(self):
+        class MockOrcError(OrcError):
+            code = StatusCode.ALREADY_EXISTS
+            details = "already exists"
+
+        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
+        data = {
+            "json": json.dumps(
+                {
+                    "name": "Logistic regression",
+                    "metric_key": "some key",
+                    "category": "ALGO_SIMPLE",
+                    "permissions": {
+                        "public": True,
+                        "authorized_ids": [],
+                    },
+                }
+            ),
+            "file": open(algorithm_path, "rb"),
+            "description": open(description_path, "rb"),
+        }
+
+        with mock.patch.object(OrchestratorClient, "register_algo", side_effect=MockOrcError()):
+            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+        # algo not created in local db
+        self.assertEqual(AlgoRep.objects.count(), len(self.algos))
+        # orc error code should be propagated
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.algo.AlgoViewSet.create", side_effect=Exception("Unexpected error"))
+    def test_algo_create_fail_internal_server_error(self, _):
+        response = self.client.post(self.url, data={}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
+    def test_algo_retrieve(self, _):
+        url = reverse("substrapp:algo-detail", args=[self.algos[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.json(), self.algos[0])
+
+    def test_algo_retrieve_wrong_channel(self):
+        url = reverse("substrapp:algo-detail", args=[self.algos[0]["key"]])
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(url, **extra)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @parameterized.expand([(True,), (False,)])
+    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
+    def test_algo_retrieve_storage_addresses_update(self, has_cache, _):
+        algo = AlgoRep.objects.get(key=self.algos[0]["key"])
+        algo.description_address.replace("http://testserver", "http://remotetestserver")
+        algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
+        algo.save()
+
+        url = reverse("substrapp:algo-detail", args=[self.algos[0]["key"]])
+        with mock.patch("substrapp.views.algo.node_has_process_permission", return_value=has_cache):
+            response = self.client.get(url, **self.extra)
+        for field in ("description", "algorithm"):
+            self.assertEqual(response.data[field]["storage_address"], self.algos[0][field]["storage_address"])
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.algo.AlgoViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    def test_algo_retrieve_fail(self, _):
+        url = reverse("substrapp:algo-detail", args=[self.algos[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
