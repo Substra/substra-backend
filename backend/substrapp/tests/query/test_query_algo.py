@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from unittest import mock
 
+from django.contrib.auth import get_user_model
 from django.test import override_settings
 from django.urls import reverse
 from grpc import StatusCode
@@ -14,7 +15,9 @@ from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.models import Algo
 from substrapp.serializers import OrchestratorAlgoSerializer
+from substrapp.tests import assets
 from substrapp.utils import compute_hash
+from users.models import Channel
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_algo
@@ -46,6 +49,9 @@ class AlgoQueryTests(APITestCase):
             self.data_data_opener,
             self.data_opener_filename,
         ) = get_sample_datamanager()
+
+        user = get_user_model().objects.create_user(username="user", password="password")
+        Channel.objects.create(user=user, name="mychannel")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -84,7 +90,7 @@ class AlgoQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_algo", return_value={"key": "some key"}):
+        with mock.patch.object(OrchestratorClient, "register_algo", return_value=assets.get_algo()):
             response = self.client.post(self.url, self.get_default_algo_data_zip(), format="multipart", **extra)
             self.assertIsNotNone(response.json()["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)

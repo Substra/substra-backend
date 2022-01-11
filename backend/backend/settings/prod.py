@@ -4,6 +4,7 @@ from substrapp.storages.minio import MinioStorage
 
 from .common import *
 from .deps.cors import *
+from .deps.ledger import *
 from .deps.org import *
 from .deps.restframework import *
 

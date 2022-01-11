@@ -8,11 +8,13 @@ import aio_pika
 import structlog
 from django.apps import AppConfig
 from django.conf import settings
+from django.db import close_old_connections
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
+from events import localsync
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import get_owner
 
@@ -121,21 +123,30 @@ def on_model_event(payload):
         remove_intermediary_models_from_buffer.apply_async([asset_key])
 
 
+def on_message_compute_engine(payload):
+    """Compute engine handler to consume event."""
+    asset_kind = common_pb2.AssetKind.Value(payload["asset_kind"])
+    if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
+        on_computetask_event(payload)
+    elif asset_kind == common_pb2.ASSET_MODEL:
+        on_model_event(payload)
+    else:
+        logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
+
+
 async def on_message(message: aio_pika.IncomingMessage):
     async with message.process(requeue=True):
         try:
             payload = json.loads(message.body)
             logger.debug("Received payload", payload=payload)
-            asset_kind = common_pb2.AssetKind.Value(payload["asset_kind"])
-            if asset_kind == common_pb2.ASSET_COMPUTE_TASK:
-                on_computetask_event(payload)
-            elif asset_kind == common_pb2.ASSET_MODEL:
-                on_model_event(payload)
-            else:
-                logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
+            localsync.sync_on_event_message(payload)
+            on_message_compute_engine(payload)
         except Exception as e:
             logger.exception("Error processing message", e=e)
             raise
+        finally:
+            # Django does not automatically close the DB connection when the async process ends
+            close_old_connections()
 
 
 async def consume(loop):
@@ -187,7 +198,7 @@ class EventsConfig(AppConfig):
 
     def ready(self):
         with get_event_loop() as loop:
-
+            localsync.resync()
             while True:
                 try:
                     connection = loop.run_until_complete(consume(loop))

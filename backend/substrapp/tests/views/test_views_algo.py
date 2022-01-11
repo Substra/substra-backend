@@ -6,6 +6,7 @@ import shutil
 import tempfile
 from unittest import mock
 
+from django.conf import settings
 from django.test import override_settings
 from django.urls import reverse
 from grpc import StatusCode
@@ -14,6 +15,8 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import orchestrator.error
+from localrep.models import Algo as AlgoRep
+from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from orchestrator.client import OrchestratorClient
 
 from .. import assets
@@ -32,6 +35,35 @@ MEDIA_ROOT = tempfile.mkdtemp()
 class AlgoViewTests(APITestCase):
     client_class = AuthenticatedClient
 
+    @staticmethod
+    def get_current_channel_name():
+        return [*settings.LEDGER_CHANNELS][0]
+
+    @staticmethod
+    def algo_data_with_channel(data):
+        channel_name = AlgoViewTests.get_current_channel_name()
+        data["channel"] = channel_name
+        return data
+
+    @staticmethod
+    def algos_data_with_channel(data):
+        channel_name = AlgoViewTests.get_current_channel_name()
+        for algo_data in data:
+            algo_data["channel"] = channel_name
+        return data
+
+    @staticmethod
+    def get_algo_mock(data):
+        serializer = AlgoRepSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        return AlgoRep(**serializer.validated_data)
+
+    @staticmethod
+    def get_algos_mock(data):
+        serializer = AlgoRepSerializer(data=data, many=True)
+        serializer.is_valid(raise_exception=True)
+        return [AlgoRep(**validated_data) for validated_data in serializer.validated_data]
+
     def setUp(self):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
@@ -49,37 +81,41 @@ class AlgoViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_algo_list_empty(self):
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=[]):
+        with mock.patch("localrep.models.Algo.objects.all", return_value=[]):
             response = self.client.get(self.url, **self.extra)
             r = response.json()
             self.assertEqual(r, {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_algo_list_success(self):
-        algos = assets.get_algos()
-        algos_response = copy.deepcopy(algos)
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos_response):
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
+        algos_response = copy.deepcopy(assets.get_algos())
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             response = self.client.get(self.url, **self.extra)
             r = response.json()
-            self.assertEqual(r, {"count": len(algos), "next": None, "previous": None, "results": algos})
+            self.assertEqual(r, {"count": len(algos), "next": None, "previous": None, "results": algos_response})
 
     def test_algo_list_filter_fail(self):
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=assets.get_algos()):
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             search_params = "?search=algERRORo"
             response = self.client.get(self.url + search_params, **self.extra)
             self.assertIn("Malformed search filters", response.json()["message"])
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.algo.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_algo_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
+    def test_algo_list_fail_internal_server_error(self, m_get_channel_name: mock.Mock):
         response = self.client.get(self.url)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        get_channel_name.assert_called_once()
+        m_get_channel_name.assert_called_once()
 
     def test_algo_list_filter_name(self):
-        algos = assets.get_algos()
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
         name_to_filter = encode_filter(algos[0]["name"])
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos):
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             search_params = f"?search=algo%253Aname%253A{name_to_filter}"
             response = self.client.get(self.url + search_params, **self.extra)
             r = response.json()
@@ -88,8 +124,10 @@ class AlgoViewTests(APITestCase):
             self.assertEqual(r["count"], 1)
 
     def test_algo_list_filter_dual(self):
-        algos_response = assets.get_algos()
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos_response):
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
+        algos_response = AlgoViewTests.algos_data_with_channel(assets.get_algos())
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             search_params = f'?search=algo%253Aname%253A{encode_filter(algos_response[2]["name"])}'
             search_params += f'%2Calgo%253Aowner%253A{encode_filter(algos_response[2]["owner"])}'
             response = self.client.get(self.url + search_params, **self.extra)
@@ -98,22 +136,22 @@ class AlgoViewTests(APITestCase):
             self.assertEqual(len(r["results"]), 1)
 
     def test_algo_retrieve(self):
-        algo = assets.get_algo()
+        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
+        algo_response = copy.deepcopy(assets.get_algo())
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        algo_response = copy.deepcopy(algo)
 
         with open(os.path.join(dir_path, "../../../../fixtures/chunantes/algos/algo4/description.md"), "rb") as f:
             content = f.read()
 
-        with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
+        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
             "substrapp.views.algo.node_client.get", return_value=content
         ):
-
+            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
             response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
             self.assertEqual(response.json(), algo_response)
 
     def test_algo_retrieve_fail(self):
-        algo = assets.get_algo()
+        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
 
         # Key not enough chars
         search_params = "12312323/"
@@ -129,7 +167,9 @@ class AlgoViewTests(APITestCase):
         error.details = "out of range test"
         error.code = StatusCode.OUT_OF_RANGE
 
-        with mock.patch.object(OrchestratorClient, "query_algo", side_effect=error):
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
+            m_algo.filter.return_value.get.side_effect = error
             response = self.client.get(f'{self.url}{algo["key"]}/', **self.extra)
             self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
@@ -162,7 +202,7 @@ class AlgoViewTests(APITestCase):
             "description": open(description_path, "rb"),
         }
 
-        with mock.patch.object(OrchestratorClient, "register_algo", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_algo", return_value=assets.get_algo()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
@@ -180,16 +220,18 @@ class AlgoViewTests(APITestCase):
 
     def test_algo_list_storage_addresses_update(self):
         # mock content
-        algos = assets.get_algos()
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
         algos_response = copy.deepcopy(algos)
         for o_algo in algos_response:
             for field in ("description", "algorithm"):
                 o_algo[field]["storage_address"] = o_algo[field]["storage_address"].replace(
                     "http://testserver", "http://remotetestserver"
                 )
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos_response), mock.patch(
+
+        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
             "substrapp.views.algo.node_client.get", return_value=b"dummy binary content"
         ):
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             response = self.client.get(self.url, **self.extra)
             self.assertEqual(response.data["count"], len(algos))
             for i, res_algo in enumerate(response.data["results"]):
@@ -197,34 +239,37 @@ class AlgoViewTests(APITestCase):
                     self.assertEqual(res_algo[field]["storage_address"], algos[i][field]["storage_address"])
 
     def test_algo_retrieve_storage_addresses_update_with_cache(self):
-        algo = assets.get_algo()
-        algo_response = copy.deepcopy(algo)
+        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
+        algo_response = copy.deepcopy(assets.get_algo())
+
         url = reverse("substrapp:algo-detail", args=[algo["key"]])
         for field in ("description", "algorithm"):
             algo_response[field]["storage_address"] = algo_response[field]["storage_address"].replace(
                 "http://testserver", "http://remotetestserver"
             )
-        with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
+
+        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=True
         ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
-
+            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
             response = self.client.get(url, **self.extra)
             for field in ("description", "algorithm"):
                 self.assertEqual(response.data[field]["storage_address"], algo[field]["storage_address"])
 
     def test_algo_retrieve_storage_addresses_update_without_cache(self):
-        algo = assets.get_algo()
-        algo_response = copy.deepcopy(algo)
+        algo = AlgoViewTests.algo_data_with_channel(assets.get_algo())
+        algo_response = copy.deepcopy(assets.get_algo())
+
         url = reverse("substrapp:algo-detail", args=[algo["key"]])
 
         for field in ("description", "algorithm"):
             algo_response[field]["storage_address"] = algo_response[field]["storage_address"].replace(
                 "http://testserver", "http://remotetestserver"
             )
-        with mock.patch.object(OrchestratorClient, "query_algo", return_value=algo_response), mock.patch(
+        with mock.patch("localrep.models.Algo.objects") as m_algo, mock.patch(
             "substrapp.views.algo.node_has_process_permission", return_value=False
         ), mock.patch("substrapp.views.algo.node_client.get", return_value=b"dummy binary content"):
-
+            m_algo.filter.return_value.get.return_value = self.get_algo_mock(algo)
             res = self.client.get(url, **self.extra)
             for field in ("description", "algorithm"):
                 self.assertEqual(res.data[field]["storage_address"], algo[field]["storage_address"])
@@ -237,18 +282,19 @@ class AlgoViewTests(APITestCase):
         ]
     )
     def test_algo_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
-        algos = assets.get_algos()
-        algos_response = copy.deepcopy(algos)
+        algos = AlgoViewTests.algos_data_with_channel(assets.get_algos())
+        algos_response = copy.deepcopy(assets.get_algos())
         url = reverse("substrapp:algo-list")
         url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos_response):
+        with mock.patch("localrep.models.Algo.objects") as m_algo:
+            m_algo.filter.return_value.order_by.return_value = self.get_algos_mock(algos)
             response = self.client.get(url, **self.extra)
         r = response.json()
         self.assertContains(response, "count", 1)
         self.assertContains(response, "next", 1)
         self.assertContains(response, "previous", 1)
         self.assertContains(response, "results", 1)
-        self.assertEqual(r["results"], algos[index_down:index_up])
+        self.assertEqual(r["results"], algos_response[index_down:index_up])
 
     @override_settings(DATA_UPLOAD_MAX_SIZE=150)
     def test_file_size_limit(self):

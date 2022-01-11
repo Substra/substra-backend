@@ -26,6 +26,7 @@ ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD = "password"  # nosec
 ORCHESTRATOR_RABBITMQ_TLS_ENABLED = False
 
 LEDGER_MSP_ID = "testOrgMSP"
+LEDGER_CHANNELS = {"mychannel": {"chaincode": {"name": "mycc"}}}
 
 DATABASES = {
     "default": {

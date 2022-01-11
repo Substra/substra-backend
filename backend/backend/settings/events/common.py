@@ -7,6 +7,8 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django_celery_results",
     "rest_framework",
+    "localrep",
     "events",
     "substrapp",
+    "users",
 ]

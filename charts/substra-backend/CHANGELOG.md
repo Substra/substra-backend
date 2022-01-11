@@ -1,5 +1,11 @@
 # Changelog
 
+### 15.0.1
+
+### Added
+- `configMapRef` `-orchestrator` to the `deployment-server` containers: `init-collect-static` and `init-migrate`
+- `configMapRef` `-orchestrator` to the `deployment-events` containers: `wait-init-migrations`
+
 ## 15.0.0
 
 ### Changed

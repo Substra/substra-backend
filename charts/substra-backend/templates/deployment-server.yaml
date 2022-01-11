@@ -146,6 +146,8 @@ spec:
         image: {{ include "common.images.name" .Values.server.image }}
         command: ['python', 'manage.py', 'migrate']
         envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
           - secretRef:
               name: {{ include "substra.fullname" . }}-objectstore
           - configMapRef:
@@ -161,6 +163,8 @@ spec:
         image: {{ include "common.images.name" .Values.server.image }}
         command: ['python', 'manage.py', 'collectstatic', '--noinput']
         envFrom:
+          - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
           - configMapRef:
               name: {{ include "substra.fullname" . }}-settings
         env:

@@ -63,6 +63,8 @@ spec:
             {{- toYaml .Values.addAccountOperator.resources | nindent 14 }}
         envFrom:
           - configMapRef:
+              name: {{ include "substra.fullname" . }}-orchestrator
+          - configMapRef:
               name: {{ include "substra.fullname" . }}-database
           - secretRef:
               name: {{ include "substra.fullname" . }}-database

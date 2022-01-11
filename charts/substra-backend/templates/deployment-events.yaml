@@ -118,6 +118,8 @@ spec:
               subPath: wait-init-migration.sh
           envFrom:
             - configMapRef:
+                name: {{ include "substra.fullname" . }}-orchestrator
+            - configMapRef:
                 name: {{ include "substra.fullname" . }}-database
             - configMapRef:
                 name: {{ include "substra.fullname" . }}-settings

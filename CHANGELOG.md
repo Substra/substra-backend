@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - The datamanager asset now has a `logs_permission` field (#581)
+- `localrep` app with `Event` and `Algo`: migration, model and serializer
+- `localsync` module in `events` app, using localrep models and serializers to load orchestrator response and save events and algos metadata in DB.
+- `resync` the local representation at the start of the event app
+- `sync_on_event_message` method to save in the local representation the algos and events when an event on the algo is received.
+
+### Changed
+- Update `substrapp` algo viewset:
+  - For `list` and `retrieve`, replace orchestrator query by `localrep` models queryset.
+  - For `create`, create `localrep` algo before synchronization to be able to instantly (locally) query a newly created algo.
 
 ## [0.7.0] 2022-01-05
 

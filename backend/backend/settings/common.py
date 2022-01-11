@@ -105,6 +105,7 @@ INSTALLED_APPS = [
     "substrapp",
     "node",
     "users",
+    "localrep",
     "drf_spectacular",
 ]
 
