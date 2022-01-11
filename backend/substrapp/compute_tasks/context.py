@@ -33,6 +33,7 @@ class Context:
     _task_key: str = None
     _compute_plan_key: str = None
     _compute_plan_tag: str = None
+    _compute_plan: Dict = None
     _in_models: List[Dict] = None
     _algo: Dict = None
     _metrics: Dict = None
@@ -47,6 +48,7 @@ class Context:
         task: Dict,
         task_category: int,
         task_key: str,
+        compute_plan: Dict,
         compute_plan_key: str,
         compute_plan_tag: str,
         in_models: List[Dict],
@@ -59,6 +61,7 @@ class Context:
     ):
         self._channel_name = channel_name
         self._task = task
+        self._compute_plan = compute_plan
         self._task_category = task_category
         self._task_key = task_key
         self._compute_plan_key = compute_plan_key
@@ -106,6 +109,7 @@ class Context:
             task,
             task_category,
             task_key,
+            compute_plan,
             compute_plan_key,
             compute_plan_tag,
             in_models,
@@ -132,6 +136,10 @@ class Context:
     @property
     def task_key(self) -> str:
         return self._task_key
+
+    @property
+    def task_rank(self) -> int:
+        return self.task["rank"]
 
     @property
     def compute_plan_key(self) -> str:
@@ -170,6 +178,10 @@ class Context:
     @property
     def algo(self) -> Dict:
         return self._algo
+
+    @property
+    def compute_plan(self) -> Dict:
+        return self._compute_plan
 
     @property
     def metrics(self) -> Dict:

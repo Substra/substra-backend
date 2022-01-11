@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - On compute task failure, send the type of the error that occurred to the orchestrator
 - Remove validated field on Datasample, Algo, Metrics, Model and Datamanager models (#544)
 - Update backend and metric export python dependencies
+- Reorganize and rename exported archives (#613)
 
 ## [0.6.0] 2021-12-01
 
