@@ -11,6 +11,7 @@ from .metric import MetricPermissionViewSet
 from .metric import MetricViewSet
 from .model import ModelPermissionViewSet
 from .model import ModelViewSet
+from .newsfeed import NewsFeedViewSet
 
 __all__ = [
     "DataSampleViewSet",
@@ -26,4 +27,5 @@ __all__ = [
     "ComputePlanViewSet",
     "CPTaskViewSet",
     "CPAlgoViewSet",
+    "NewsFeedViewSet",
 ]

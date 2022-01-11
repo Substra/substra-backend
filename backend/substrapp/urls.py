@@ -27,6 +27,7 @@ router.register(r"testtuple", views.ComputeTaskViewSet, basename="testtuple")
 router.register(r"aggregatetuple", views.ComputeTaskViewSet, basename="aggregatetuple")
 router.register(r"composite_traintuple", views.ComputeTaskViewSet, basename="composite_traintuple")
 router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_plan")
+router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
 compute_plan_router.register(r"traintuple", views.CPTaskViewSet, basename=f"{BASENAME_PREFIX}traintuple")
