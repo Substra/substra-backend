@@ -44,6 +44,7 @@ class Info(APIView):
         res = {
             "host": settings.DEFAULT_DOMAIN,
             "node_id": get_owner(),
+            "node_name": settings.ORG_NAME,
             "config": {},
         }
 
