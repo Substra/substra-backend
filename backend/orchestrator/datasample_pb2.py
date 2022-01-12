@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x10\x64\x61tasample.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9b\x01\n\nDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12\x11\n\ttest_only\x18\x04 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x05 \x01(\t\x12\x31\n\rcreation_date\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\\\n\rNewDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\x11\n\ttest_only\x18\x03 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x04 \x01(\t\"H\n\x18RegisterDataSamplesParam\x12,\n\x07samples\x18\x01 \x03(\x0b\x32\x1b.orchestrator.NewDataSample\"\x1d\n\x1bRegisterDataSamplesResponse\"A\n\x16UpdateDataSamplesParam\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\"\x1b\n\x19UpdateDataSamplesResponse\">\n\x15QueryDataSamplesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"c\n\x18QueryDataSamplesResponse\x12.\n\x0c\x64\x61ta_samples\x18\x01 \x03(\x0b\x32\x18.orchestrator.DataSample\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t2\xc2\x02\n\x11\x44\x61taSampleService\x12h\n\x13RegisterDataSamples\x12&.orchestrator.RegisterDataSamplesParam\x1a).orchestrator.RegisterDataSamplesResponse\x12\x62\n\x11UpdateDataSamples\x12$.orchestrator.UpdateDataSamplesParam\x1a\'.orchestrator.UpdateDataSamplesResponse\x12_\n\x10QueryDataSamples\x12#.orchestrator.QueryDataSamplesParam\x1a&.orchestrator.QueryDataSamplesResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x10\x64\x61tasample.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9b\x01\n\nDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12\x11\n\ttest_only\x18\x04 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x05 \x01(\t\x12\x31\n\rcreation_date\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\\\n\rNewDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\x11\n\ttest_only\x18\x03 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x04 \x01(\t\"H\n\x18RegisterDataSamplesParam\x12,\n\x07samples\x18\x01 \x03(\x0b\x32\x1b.orchestrator.NewDataSample\"\x1d\n\x1bRegisterDataSamplesResponse\"A\n\x16UpdateDataSamplesParam\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\"\x1b\n\x19UpdateDataSamplesResponse\">\n\x15QueryDataSamplesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"c\n\x18QueryDataSamplesResponse\x12.\n\x0c\x64\x61ta_samples\x18\x01 \x03(\x0b\x32\x18.orchestrator.DataSample\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"!\n\x12GetDataSampleParam\x12\x0b\n\x03key\x18\x01 \x01(\t2\x8f\x03\n\x11\x44\x61taSampleService\x12h\n\x13RegisterDataSamples\x12&.orchestrator.RegisterDataSamplesParam\x1a).orchestrator.RegisterDataSamplesResponse\x12\x62\n\x11UpdateDataSamples\x12$.orchestrator.UpdateDataSamplesParam\x1a\'.orchestrator.UpdateDataSamplesResponse\x12_\n\x10QueryDataSamples\x12#.orchestrator.QueryDataSamplesParam\x1a&.orchestrator.QueryDataSamplesResponse\x12K\n\rGetDataSample\x12 .orchestrator.GetDataSampleParam\x1a\x18.orchestrator.DataSampleB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -345,6 +345,38 @@ _QUERYDATASAMPLESRESPONSE = _descriptor.Descriptor(
   serialized_end=683,
 )
 
+
+_GETDATASAMPLEPARAM = _descriptor.Descriptor(
+  name='GetDataSampleParam',
+  full_name='orchestrator.GetDataSampleParam',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='key', full_name='orchestrator.GetDataSampleParam.key', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=685,
+  serialized_end=718,
+)
+
 _DATASAMPLE.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _REGISTERDATASAMPLESPARAM.fields_by_name['samples'].message_type = _NEWDATASAMPLE
 _QUERYDATASAMPLESRESPONSE.fields_by_name['data_samples'].message_type = _DATASAMPLE
@@ -356,6 +388,7 @@ DESCRIPTOR.message_types_by_name['UpdateDataSamplesParam'] = _UPDATEDATASAMPLESP
 DESCRIPTOR.message_types_by_name['UpdateDataSamplesResponse'] = _UPDATEDATASAMPLESRESPONSE
 DESCRIPTOR.message_types_by_name['QueryDataSamplesParam'] = _QUERYDATASAMPLESPARAM
 DESCRIPTOR.message_types_by_name['QueryDataSamplesResponse'] = _QUERYDATASAMPLESRESPONSE
+DESCRIPTOR.message_types_by_name['GetDataSampleParam'] = _GETDATASAMPLEPARAM
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 DataSample = _reflection.GeneratedProtocolMessageType('DataSample', (_message.Message,), {
@@ -414,6 +447,13 @@ QueryDataSamplesResponse = _reflection.GeneratedProtocolMessageType('QueryDataSa
   })
 _sym_db.RegisterMessage(QueryDataSamplesResponse)
 
+GetDataSampleParam = _reflection.GeneratedProtocolMessageType('GetDataSampleParam', (_message.Message,), {
+  'DESCRIPTOR' : _GETDATASAMPLEPARAM,
+  '__module__' : 'datasample_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.GetDataSampleParam)
+  })
+_sym_db.RegisterMessage(GetDataSampleParam)
+
 
 DESCRIPTOR._options = None
 
@@ -424,8 +464,8 @@ _DATASAMPLESERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=686,
-  serialized_end=1008,
+  serialized_start=721,
+  serialized_end=1120,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterDataSamples',
@@ -454,6 +494,16 @@ _DATASAMPLESERVICE = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_QUERYDATASAMPLESPARAM,
     output_type=_QUERYDATASAMPLESRESPONSE,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='GetDataSample',
+    full_name='orchestrator.DataSampleService.GetDataSample',
+    index=3,
+    containing_service=None,
+    input_type=_GETDATASAMPLEPARAM,
+    output_type=_DATASAMPLE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),

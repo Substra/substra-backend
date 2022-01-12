@@ -29,6 +29,11 @@ class DataSampleServiceStub(object):
                 request_serializer=datasample__pb2.QueryDataSamplesParam.SerializeToString,
                 response_deserializer=datasample__pb2.QueryDataSamplesResponse.FromString,
                 )
+        self.GetDataSample = channel.unary_unary(
+                '/orchestrator.DataSampleService/GetDataSample',
+                request_serializer=datasample__pb2.GetDataSampleParam.SerializeToString,
+                response_deserializer=datasample__pb2.DataSample.FromString,
+                )
 
 
 class DataSampleServiceServicer(object):
@@ -52,6 +57,12 @@ class DataSampleServiceServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetDataSample(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DataSampleServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -69,6 +80,11 @@ def add_DataSampleServiceServicer_to_server(servicer, server):
                     servicer.QueryDataSamples,
                     request_deserializer=datasample__pb2.QueryDataSamplesParam.FromString,
                     response_serializer=datasample__pb2.QueryDataSamplesResponse.SerializeToString,
+            ),
+            'GetDataSample': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDataSample,
+                    request_deserializer=datasample__pb2.GetDataSampleParam.FromString,
+                    response_serializer=datasample__pb2.DataSample.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -128,5 +144,22 @@ class DataSampleService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.DataSampleService/QueryDataSamples',
             datasample__pb2.QueryDataSamplesParam.SerializeToString,
             datasample__pb2.QueryDataSamplesResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GetDataSample(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.DataSampleService/GetDataSample',
+            datasample__pb2.GetDataSampleParam.SerializeToString,
+            datasample__pb2.DataSample.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

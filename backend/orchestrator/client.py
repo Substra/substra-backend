@@ -267,6 +267,13 @@ class OrchestratorClient:
         return res
 
     @grpc_retry
+    def query_datasample(self, key):
+        data = self._datasample_client.GetDataSample(
+            datasample_pb2.GetDataSampleParam(key=key), metadata=self._metadata
+        )
+        return MessageToDict(data, **CONVERT_SETTINGS)
+
+    @grpc_retry
     def register_datamanager(self, args):
         data = self._datamanager_client.RegisterDataManager(
             datamanager_pb2.NewDataManager(**args), metadata=self._metadata
