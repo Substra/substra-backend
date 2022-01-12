@@ -274,13 +274,6 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
-    def update_datamanager(self, args):
-        data = self._datamanager_client.UpdateDataManager(
-            datamanager_pb2.DataManagerUpdateParam(**args), metadata=self._metadata
-        )
-        return MessageToDict(data, **CONVERT_SETTINGS)
-
-    @grpc_retry
     def query_datamanager(self, key):
         data = self._datamanager_client.GetDataManager(
             datamanager_pb2.GetDataManagerParam(key=key), metadata=self._metadata
