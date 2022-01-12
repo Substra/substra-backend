@@ -2,6 +2,7 @@ import itertools
 from urllib.parse import unquote
 
 import structlog
+from django.db.models import Q
 
 from substrapp import exceptions
 
@@ -17,6 +18,43 @@ FILTER_QUERIES = {
 
 
 def get_filters(query_params):
+    """
+    Transform user request search param in filters.
+
+    >>> get_filters("algo:name:algo1")
+    [
+        {
+            "algo": {
+                "name": "algo1",
+            },
+        },
+    ]
+
+    >>> get_filters("algo:name:algo1,algo:owner:owner1")
+    [
+        {
+            "algo": {
+                "name": "algo1",
+                "owner": "owner1",
+            },
+        },
+    ]
+
+    >>> get_filters("algo:name:algo1-OR-algo:owner:owner1")
+    [
+        {
+            "algo": {
+                "name": "algo1",
+            },
+        },
+        {
+            "algo": {
+                "owner": "owner1",
+            },
+        },
+    ]
+
+    """
     filters = []
     groups = query_params.split("-OR-")
 
@@ -61,15 +99,12 @@ def flatten_without_duplicates(list_of_list):
 
 def filter_list(object_type, data, query_params):
     """
-    filter object type by its parameters
+    Filter django model instances by user request search param.
     """
     try:
         filters = get_filters(query_params)
     except Exception:
-        # TODO add better filters parsing to avoid this catch all
-        message = f"Malformed search filters: invalid syntax: {query_params}"
-        logger.exception(message)
-        raise exceptions.BadRequestError(message)
+        raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
 
     object_list = []
 
@@ -90,3 +125,48 @@ def filter_list(object_type, data, query_params):
             object_list.append(filtered_list)
 
     return flatten_without_duplicates(object_list)
+
+
+def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
+    """
+    Filter django model queryset by user request search param.
+    Provide a `mapping_callback` to customize filter key and/or values.
+
+    >>> filter_queryset("algo", Algo.objects, "algo:name:algo1")
+    Algo.objects.filter(Q(name="algo1"))
+
+    >>> filter_queryset("algo", Algo.objects, "algo:name:algo1,algo:owner:owner1")
+    Algo.objects.filter(Q(name="algo1") & Q(owner="owner1"))
+
+    >>> filter_queryset("algo", Algo.objects, "algo:name:algo1-OR-algo:owner:owner1")
+    Algo.objects.filter(Q(name="algo1") | Q(owner="owner1"))
+
+    >>> def map_category(key, values):
+    ...     if key == "category":
+    ...         values = [algo_pb2.AlgoCategory.Value(value) for value in values]
+    ...     return key, values
+
+    >>> filter_queryset("algo", Algo.objects, "algo:category:ALGO_SIMPLE", map_category)
+    Algo.objects.filter(Q(category=1))
+
+    """
+    try:
+        filters = get_filters(query_params)
+    except Exception:
+        raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
+
+    or_params = None
+    for or_filter in filters:
+        and_params = None
+        for key, values in or_filter[object_type].items():
+            if mapping_callback is not None:
+                key, values = mapping_callback(key, values)
+            # handle multi-values
+            if len(values) == 1:
+                param = Q(**{key: values[0]})
+            else:
+                param = Q(**{f"{key}__in": values})
+            and_params = param if and_params is None else and_params & param
+        or_params = and_params if or_params is None else or_params | and_params
+
+    return queryset.filter(or_params)

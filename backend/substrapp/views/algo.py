@@ -12,7 +12,6 @@ from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.algo_pb2 as algo_pb2
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
 from localrep.errors import AlreadyExistsError
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
@@ -21,7 +20,7 @@ from substrapp.models import Algo
 from substrapp.serializers import AlgoSerializer
 from substrapp.serializers import OrchestratorAlgoSerializer
 from substrapp.utils import get_hash
-from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
@@ -41,7 +40,7 @@ def replace_storage_addresses(request, algo):
     )
 
 
-class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
     pagination_class = DefaultPageNumberPagination
@@ -178,17 +177,21 @@ class AlgoViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = AlgoRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
-        data = AlgoRepSerializer(queryset, many=True).data
-
-        query_params = request.query_params.get("search")
-
+        query_params = self.request.query_params.get("search")
         if query_params is not None:
-            data = filter_list(object_type="algo", data=data, query_params=query_params)
 
+            def map_category(key, values):
+                if key == "category":
+                    values = [algo_pb2.AlgoCategory.Value(value) for value in values]
+                return key, values
+
+            queryset = filter_queryset("algo", queryset, query_params, mapping_callback=map_category)
+        queryset = self.paginate_queryset(queryset)
+
+        data = AlgoRepSerializer(queryset, many=True).data
         for algo in data:
             replace_storage_addresses(request, algo)
-
-        return self.paginate_response(data)
+        return self.get_paginated_response(data)
 
 
 class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):
