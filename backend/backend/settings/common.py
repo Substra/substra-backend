@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/2.0/ref/settings/
 
 import json
 import os
+import pathlib
 import sys
 from datetime import timedelta
 
@@ -68,7 +69,7 @@ SECRET_FILE = os.path.normpath(os.path.join(PROJECT_ROOT, "SECRET"))
 # a random SECRET_KEY and save it into our SECRET_FILE for future loading. If
 # everything fails, then just raise an exception.
 try:
-    SECRET_KEY = open(SECRET_FILE).read().strip()
+    SECRET_KEY = pathlib.Path(SECRET_FILE).read_text().strip()
 except IOError:
     try:
         SECRET_KEY = write_secret_key(SECRET_FILE)
