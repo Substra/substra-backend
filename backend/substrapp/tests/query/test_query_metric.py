@@ -15,6 +15,7 @@ from orchestrator.error import OrcError
 from substrapp.models import DataManager
 from substrapp.models import Metric
 from substrapp.serializers import OrchestratorMetricSerializer
+from substrapp.tests import assets
 
 from ..common import AuthenticatedClient
 from ..common import get_sample_datamanager
@@ -87,7 +88,7 @@ class MetricQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_metric", return_value={"key": "some key"}):
+        with mock.patch.object(OrchestratorClient, "register_metric", return_value=assets.get_metric()):
             response = self.client.post(self.url, data, format="multipart", **extra)
             self.assertIsNotNone(response.json()["key"])
             self.assertEqual(response.status_code, status.HTTP_201_CREATED)

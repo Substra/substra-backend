@@ -138,35 +138,6 @@ class AlgoViewTests(APITestCase):
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.algos[offset : offset + page_size])
 
-    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
-    def test_file_size_limit(self):
-        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
-        description_path = os.path.join(FIXTURE_PATH, "description.md")
-
-        data = {
-            "json": json.dumps(
-                {
-                    "name": "Logistic regression",
-                    "metric_key": "some key",
-                    "category": "ALGO_SIMPLE",
-                    "permissions": {
-                        "public": True,
-                        "authorized_ids": [],
-                    },
-                }
-            ),
-            "file": open(algorithm_path, "rb"),
-            "description": open(description_path, "rb"),
-        }
-
-        response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn("File too large", response.data["message"][0]["file"])
-
-        data["description"].close()
-        data["file"].close()
-
     def test_algo_create(self):
         def mock_orc_response(data):
             """Build orchestrator register response from request data."""
@@ -212,6 +183,35 @@ class AlgoViewTests(APITestCase):
 
         data["file"].close()
         data["description"].close()
+
+    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
+    def test_file_size_limit(self):
+        algorithm_path = os.path.join(FIXTURE_PATH, "algo.tar.gz")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
+
+        data = {
+            "json": json.dumps(
+                {
+                    "name": "Logistic regression",
+                    "metric_key": "some key",
+                    "category": "ALGO_SIMPLE",
+                    "permissions": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                }
+            ),
+            "file": open(algorithm_path, "rb"),
+            "description": open(description_path, "rb"),
+        }
+
+        response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn("File too large", response.data["message"][0]["file"])
+
+        data["description"].close()
+        data["file"].close()
 
     @internal_server_error_on_exception()
     def test_algo_create_fail_rollback(self):

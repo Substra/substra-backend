@@ -1,4 +1,3 @@
-import copy
 import json
 import logging
 import os
@@ -9,22 +8,26 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.http import urlencode
 from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.error
+from localrep.models import Metric as MetricRep
+from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
+from orchestrator.error import OrcError
 
 from .. import assets
 from ..common import AuthenticatedClient
-from ..common import encode_filter
-from ..common import get_sample_metric
 from ..common import internal_server_error_on_exception
 
 MEDIA_ROOT = tempfile.mkdtemp()
 CHANNEL = "mychannel"
+
+DIR_PATH = os.path.dirname(os.path.realpath(__file__))
+FIXTURE_PATH = os.path.join(DIR_PATH, "../../../../fixtures/owkin/metrics/metric0")
 
 
 def zip_folder(path, destination):
@@ -50,20 +53,17 @@ class MetricViewTests(APITestCase):
             os.makedirs(MEDIA_ROOT)
 
         self.url = reverse("substrapp:metric-list")
-        (
-            self.metric_description,
-            self.metric_description_filename,
-            self.metric_metrics,
-            self.metric_metrics_filename,
-        ) = get_sample_metric()
-
-        self.test_data_sample_keys = ["2d0f943a-a81a-9cb3-fe84-b162559ce6af", "533ee6e7-b9d8-b247-e7e8-53b24547f57e"]
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "mychannel", "HTTP_ACCEPT": "application/json;version=0.0"}
 
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
+
+        self.metrics = assets.get_metrics()
+        for metric in self.metrics:
+            serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -71,218 +71,139 @@ class MetricViewTests(APITestCase):
         self.logger.setLevel(self.previous_level)
 
     def test_metric_list_empty(self):
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=[]):
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {"count": 0, "next": None, "previous": None, "results": []})
+        MetricRep.objects.all().delete()
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_metric_list_success(self):
-        metrics = assets.get_metrics()
-        expected = copy.deepcopy(metrics)
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=metrics):
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r["results"], expected)
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(
+            response.json(), {"count": len(self.metrics), "next": None, "previous": None, "results": self.metrics}
+        )
+
+    def test_metric_list_wrong_channel(self):
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.metric.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_metric_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
-        response = self.client.get(self.url)
-
+    @mock.patch("substrapp.views.metric.MetricViewSet.list", side_effect=Exception("Unexpected error"))
+    def test_metric_list_fail_internal_server_error(self, _):
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        get_channel_name.assert_called_once()
 
-    def test_metric_list_filter_fail(self):
-        metrics = assets.get_metrics()
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=metrics):
-            search_params = "?search=challenERRORge"
-            response = self.client.get(self.url + search_params, **self.extra)
-            self.assertIn("Malformed search filters", response.json()["message"])
+    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
+    def test_metric_list_storage_addresses_update(self, _):
+        for metric in MetricRep.objects.all():
+            metric.description_address.replace("http://testserver", "http://remotetestserver")
+            metric.metric_address.replace("http://testserver", "http://remotetestserver")
+            metric.save()
 
-    def test_metric_list_filter_name(self):
-        metrics = assets.get_metrics()
-        name_to_filter = encode_filter(metrics[0]["name"])
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=metrics):
-            search_params = f"?search=metric%253Aname%253A{name_to_filter}"
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(len(r["results"]), 1)
-
-    def test_metric_retrieve(self):
-        metric = assets.get_metric()
-        expected = copy.deepcopy(metric)
-        with open(
-            os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "../../../../fixtures/owkin/metrics/metric0/description.md"
-            ),
-            "rb",
-        ) as f:
-            content = f.read()
-
-        with mock.patch.object(OrchestratorClient, "query_metric", return_value=metric), mock.patch(
-            "substrapp.views.metric.node_client.get", return_value=content
-        ):
-            response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
-            self.assertEqual(response.json(), expected)
-
-    def test_metric_retrieve_fail(self):
-        # Key < 32 chars
-        search_params = "12312323/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        # Key not hexa
-        search_params = "X" * 32 + "/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-        error = orchestrator.error.OrcError
-        error.details = "out of range test"
-        error.code = StatusCode.OUT_OF_RANGE
-
-        metric = assets.get_metric()
-
-        with mock.patch.object(OrchestratorClient, "query_metric", side_effect=error):
-            response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
-    @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.metric.MetricViewSet._retrieve", side_effect=Exception("Unexpected error"))
-    def test_metric_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
-        response = self.client.get(self.url + "123/")
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        _retrieve.assert_called_once()
-
-    def test_metric_create(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        metric_path = os.path.join(dir_path, "../../../../fixtures/owkin/metrics/metric0/")
-        description_path = os.path.join(metric_path, "description.md")
-        metrics_path = os.path.join(MEDIA_ROOT, "metrics.zip")
-        zip_folder(metric_path, metrics_path)
-
-        data = {
-            "json": json.dumps(
-                {
-                    "name": "Simplified skin lesion classification",
-                    "permissions": {
-                        "public": True,
-                        "authorized_ids": [],
-                    },
-                }
-            ),
-            "description": open(description_path, "rb"),
-            "file": open(metrics_path, "rb"),
-        }
-
-        with mock.patch.object(OrchestratorClient, "register_metric", return_value={}):
-            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        self.assertIsNotNone(response.data["key"])
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-
-        data["description"].close()
-        data["file"].close()
-
-    @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.metric.MetricViewSet._create", side_effect=Exception("Unexpected error"))
-    def test_metric_create_fail_internal_server_error(self, _create: mock.Mock):
-        response = self.client.post(self.url, data={}, format="json")
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        _create.assert_called_once()
-
-    def test_metric_list_storage_addresses_update(self):
-
-        # mock content
-        metrics = assets.get_metrics()
-        o_metrics = copy.deepcopy(metrics)
-        for obj in o_metrics:
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(len(response.data["results"]), len(self.metrics))
+        for result, metric in zip(response.data["results"], self.metrics):
             for field in ("description", "address"):
-                obj[field]["storage_address"] = obj[field]["storage_address"].replace(
-                    "http://testserver", "http://remotetestserver"
-                )
+                self.assertEqual(result[field]["storage_address"], metric[field]["storage_address"])
 
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=o_metrics), mock.patch(
-            "substrapp.views.metric.node_client.get", return_value=b"dummy binary content"
-        ):
-            response = self.client.get(self.url, **self.extra)
-            self.assertEqual(len(response.data["results"]), len(metrics))
-            for i, res_metric in enumerate(response.data["results"]):
-                for field in ("description", "address"):
-                    self.assertEqual(res_metric[field]["storage_address"], metrics[i][field]["storage_address"])
+    def test_metric_list_filter_and(self):
+        """Filter metric on name and owner."""
+        name, owner = self.metrics[0]["name"], self.metrics[0]["owner"]
+        params = urlencode({"search": f"metric:name:{name},metric:owner:{owner}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.metrics[:1]})
 
-    def test_metric_retrieve_storage_addresses_update_with_cache(self):
-        metric = assets.get_metric()
-        url = reverse("substrapp:metric-detail", args=[metric["key"]])
-        o_metric = copy.deepcopy(metric)
-        for field in ("description", "address"):
-            o_metric[field]["storage_address"] = o_metric[field]["storage_address"].replace(
-                "http://testserver", "http://remotetestserver"
-            )
+    def test_metric_list_filter_or(self):
+        """Filter metric on name_0 or name_1."""
+        name_0 = self.metrics[0]["name"]
+        name_1 = self.metrics[1]["name"]
+        params = urlencode({"search": f"metric:name:{name_0}-OR-metric:name:{name_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.metrics[:2]})
 
-        with mock.patch.object(OrchestratorClient, "query_metric", return_value=o_metric), mock.patch(
-            "substrapp.views.metric.node_has_process_permission", return_value=True
-        ), mock.patch("substrapp.views.metric.node_client.get", return_value=b"dummy binary content"):
-            response = self.client.get(url, **self.extra)
-            for field in ("description", "address"):
-                self.assertEqual(response.data[field]["storage_address"], metric[field]["storage_address"])
-
-    def test_metric_retrieve_storage_addresses_update_without_cache(self):
-        metric = assets.get_metric()
-        url = reverse("substrapp:metric-detail", args=[metric["key"]])
-        o_metric = copy.deepcopy(metric)
-        for field in ("description", "address"):
-            o_metric[field]["storage_address"] = o_metric[field]["storage_address"].replace(
-                "http://testserver", "http://remotetestserver"
-            )
-
-        with mock.patch.object(OrchestratorClient, "query_metric", return_value=o_metric), mock.patch(
-            "substrapp.views.metric.node_has_process_permission", return_value=False
-        ), mock.patch("substrapp.views.metric.node_client.get", return_value=b"dummy binary content"):
-            response = self.client.get(url, **self.extra)
-            for field in ("description", "address"):
-                self.assertEqual(response.data[field]["storage_address"], metric[field]["storage_address"])
+    def test_metric_list_filter_or_and(self):
+        """Filter metric on (name_0 and owner_0) or (name_1 and owner_1)."""
+        name_0, owner_0 = self.metrics[0]["name"], self.metrics[0]["owner"]
+        name_1, owner_1 = self.metrics[1]["name"], self.metrics[1]["owner"]
+        params = urlencode(
+            {"search": f"metric:name:{name_0},metric:owner:{owner_0}-OR-metric:name:{name_1},metric:owner:{owner_1}"}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.metrics[:2]})
 
     @parameterized.expand(
         [
-            ("one_page_test", 2, 1, 0, 2),
-            ("one_element_per_page_page_two", 1, 2, 1, 2),
+            ("page_size_5_page_1", 5, 1),
+            ("page_size_1_page_2", 1, 2),
+            ("page_size_2_page_3", 2, 3),
         ]
     )
-    def test_metric_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
-        metrics = assets.get_metrics()
-        expected = copy.deepcopy(metrics)
-        url = reverse("substrapp:metric-list")
-        url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch.object(OrchestratorClient, "query_metrics", return_value=expected):
-            response = self.client.get(url, **self.extra)
-            r = response.json()
-            self.assertContains(response, "count", 1)
-            self.assertContains(response, "next", 1)
-            self.assertContains(response, "previous", 1)
-            self.assertContains(response, "results", 1)
-            self.assertEqual(r["results"], metrics[index_down:index_up])
+    def test_metric_list_pagination_success(self, _, page_size, page):
+        params = urlencode({"page_size": page_size, "page": page})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        r = response.json()
+        self.assertEqual(r["count"], len(self.metrics))
+        offset = (page - 1) * page_size
+        self.assertEqual(r["results"], self.metrics[offset : offset + page_size])
 
-    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
-    def test_file_size_limit(self):
-        dir_path = os.path.dirname(os.path.realpath(__file__))
-        metric_path = os.path.join(dir_path, "../../../../fixtures/owkin/metrics/metric0/")
-        description_path = os.path.join(metric_path, "description.md")
-        metrics_path = os.path.join(MEDIA_ROOT, "metrics.zip")
-        zip_folder(metric_path, metrics_path)
+    def test_metric_create(self):
+        def mock_orc_response(data):
+            """Build orchestrator register response from request data."""
+            return {
+                "key": data["key"],
+                "name": data["name"],
+                "owner": data["new_permissions"]["authorized_ids"][0],
+                "permissions": {
+                    "process": data["new_permissions"],
+                    "download": data["new_permissions"],
+                },
+                "metadata": {},
+                "creation_date": "2021-11-04T13:54:09.882662Z",
+                "description": data["description"],
+                "address": data["address"],
+            }
 
+        metric_path = os.path.join(FIXTURE_PATH, "metrics.zip")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
         data = {
             "json": json.dumps(
                 {
                     "name": "Simplified skin lesion classification",
                     "permissions": {
                         "public": True,
-                        "authorized_ids": [],
+                        "authorized_ids": ["MyOrg1MSP"],
                     },
                 }
             ),
+            "file": open(metric_path, "rb"),
             "description": open(description_path, "rb"),
-            "file": open(metrics_path, "rb"),
+        }
+
+        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=mock_orc_response):
+            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+        self.assertIsNotNone(response.data["key"])
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        # metric created in local db
+        self.assertEqual(MetricRep.objects.count(), len(self.metrics) + 1)
+
+        data["file"].close()
+        data["description"].close()
+
+    @override_settings(DATA_UPLOAD_MAX_SIZE=150)
+    def test_file_size_limit(self):
+        metric_path = os.path.join(FIXTURE_PATH, "metrics.zip")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
+        data = {
+            "json": json.dumps(
+                {
+                    "name": "Simplified skin lesion classification",
+                    "permissions": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                }
+            ),
+            "file": open(metric_path, "rb"),
+            "description": open(description_path, "rb"),
         }
 
         response = self.client.post(self.url, data=data, format="multipart", **self.extra)
@@ -292,3 +213,71 @@ class MetricViewTests(APITestCase):
 
         data["description"].close()
         data["file"].close()
+
+    @internal_server_error_on_exception()
+    def test_metric_create_fail_rollback(self):
+        class MockOrcError(OrcError):
+            code = StatusCode.ALREADY_EXISTS
+            details = "already exists"
+
+        metric_path = os.path.join(FIXTURE_PATH, "metrics.zip")
+        description_path = os.path.join(FIXTURE_PATH, "description.md")
+        data = {
+            "json": json.dumps(
+                {
+                    "name": "Simplified skin lesion classification",
+                    "permissions": {
+                        "public": True,
+                        "authorized_ids": ["MyOrg1MSP"],
+                    },
+                }
+            ),
+            "file": open(metric_path, "rb"),
+            "description": open(description_path, "rb"),
+        }
+
+        with mock.patch.object(OrchestratorClient, "register_metric", side_effect=MockOrcError()):
+            response = self.client.post(self.url, data=data, format="multipart", **self.extra)
+        # metric not created in local db
+        self.assertEqual(MetricRep.objects.count(), len(self.metrics))
+        # orc error code should be propagated
+        self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.metric.MetricViewSet.create", side_effect=Exception("Unexpected error"))
+    def test_metric_create_fail_internal_server_error(self, _):
+        response = self.client.post(self.url, data={}, format="json")
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
+    def test_metric_retrieve(self, _):
+        url = reverse("substrapp:metric-detail", args=[self.metrics[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.json(), self.metrics[0])
+
+    def test_metric_retrieve_wrong_channel(self):
+        url = reverse("substrapp:metric-detail", args=[self.metrics[0]["key"]])
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(url, **extra)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    @parameterized.expand([(True,), (False,)])
+    @mock.patch("substrapp.views.metric.node_client.get", return_value=b"content")
+    def test_metric_retrieve_storage_addresses_update(self, has_cache, _):
+        metric = MetricRep.objects.get(key=self.metrics[0]["key"])
+        metric.description_address.replace("http://testserver", "http://remotetestserver")
+        metric.metric_address.replace("http://testserver", "http://remotetestserver")
+        metric.save()
+
+        url = reverse("substrapp:metric-detail", args=[self.metrics[0]["key"]])
+        with mock.patch("substrapp.views.metric.node_has_process_permission", return_value=has_cache):
+            response = self.client.get(url, **self.extra)
+        for field in ("description", "address"):
+            self.assertEqual(response.data[field]["storage_address"], self.metrics[0][field]["storage_address"])
+
+    @internal_server_error_on_exception()
+    @mock.patch("substrapp.views.metric.MetricViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    def test_metric_retrieve_fail(self, _):
+        url = reverse("substrapp:metric-detail", args=[self.metrics[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)

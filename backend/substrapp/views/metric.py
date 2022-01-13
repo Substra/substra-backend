@@ -6,18 +6,19 @@ from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
+from localrep.errors import AlreadyExistsError
+from localrep.models import Metric as MetricRep
+from localrep.serializers import MetricSerializer as MetricRepSerializer
 from substrapp.clients import node as node_client
 from substrapp.models import Metric
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import MetricSerializer
 from substrapp.serializers import OrchestratorMetricSerializer
 from substrapp.utils import get_hash
-from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
@@ -37,16 +38,13 @@ def replace_storage_addresses(request, metric):
     )
 
 
-class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = Metric.objects.all()
     serializer_class = MetricSerializer
     pagination_class = DefaultPageNumberPagination
 
-    def commit(self, serializer, request):
-        # create on db
-        instance = serializer.save()
-
-        # serialized data for orchestrator db
+    def _register_in_orchestrator(self, request, instance):
+        """Register metric in orchestrator."""
         orchestrator_serializer = OrchestratorMetricSerializer(
             data={
                 "name": request.data.get("name"),
@@ -56,30 +54,26 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
             },
             context={"request": request},
         )
-        if not orchestrator_serializer.is_valid():
-            instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise ValidationError(orchestrator_serializer.errors)
-
-        # create on orchestrator db
-        try:
-            data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except Exception:
-            instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise
-
-        merged_data = dict(serializer.data)
-        merged_data.update(data)
-
-        return merged_data
+        orchestrator_serializer.is_valid(raise_exception=True)
+        return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
 
     def _create(self, request):
+        """Create a new metric.
+
+        The workflow is composed of several steps:
+        - Save metric data (description and Dockerfile archive) in local database.
+          This is needed as we need the metric data addresses.
+        - Register metric in the orchestrator.
+        - Save metric metadata in local database.
+        """
+        # Step1: save metric data in local database
         description = request.data.get("description")
         try:
             checksum = get_hash(description)
         except Exception as e:
             raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(
+        serializer = MetricSerializer(
             data={"address": request.data.get("file"), "description": description, "checksum": checksum}
         )
 
@@ -87,8 +81,34 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
             serializer.is_valid(raise_exception=True)
         except Exception as e:
             raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
+
+        instance = serializer.save()
+
+        # Step2: register metric in orchestrator
+        try:
+            localrep_data = self._register_in_orchestrator(request, instance)
+        except Exception:
+            instance.delete()  # warning: post delete signals are not executed by django rollback
+            raise
+
+        # Step3: save metric metadata in local database
+        localrep_data["channel"] = get_channel_name(request)
+        localrep_serializer = MetricRepSerializer(data=localrep_data)
+        try:
+            localrep_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            # May happen if the events app already processed the event pushed by the orchestrator
+            metric = MetricRep.objects.get(key=localrep_data["key"])
+            data = MetricRepSerializer(metric).data
+        except Exception:
+            instance.delete()  # warning: post delete signals are not executed by django rollback
+            raise
         else:
-            return self.commit(serializer, request)
+            data = localrep_serializer.data
+
+        # Returns metric metadata from local database to ensure consistency between GET and CREATE views
+        data.update(serializer.data)
+        return data
 
     def create(self, request, *args, **kwargs):
         data = self._create(request)
@@ -114,13 +134,15 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
 
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
+        try:
+            metric = MetricRep.objects.filter(channel=get_channel_name(request)).get(key=validated_key)
+        except MetricRep.DoesNotExist:
+            raise NotFound
+        data = MetricRepSerializer(metric).data
 
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_metric(validated_key)
-
-        # verify if objective description exists for the frontend view
+        # verify if metric description exists for the frontend view
         # if not fetch it if it's possible
-        # do not fetch objective description if node has no process permission
+        # do not fetch metric description if node has no process permission
         if node_has_process_permission(data):
             try:
                 instance = self.get_object()
@@ -147,17 +169,18 @@ class MetricViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
         return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_metrics()
-
-        query_params = request.query_params.get("search")
+        queryset = MetricRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
+        query_params = self.request.query_params.get("search")
         if query_params is not None:
-            data = filter_list(object_type="metric", data=data, query_params=query_params)
+            queryset = filter_queryset("metric", queryset, query_params)
+        queryset = self.paginate_queryset(queryset)
+
+        data = MetricRepSerializer(queryset, many=True).data
 
         for metric in data:
             replace_storage_addresses(request, metric)
 
-        return self.paginate_response(data)
+        return self.get_paginated_response(data)
 
 
 class MetricPermissionViewSet(PermissionMixin, GenericViewSet):

@@ -6,6 +6,7 @@ from django.utils.dateparse import parse_datetime
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
+from localrep.errors import AlreadyExistsError
 from substrapp.orchestrator import get_orchestrator_client
 
 logger = structlog.get_logger(__name__)
@@ -13,7 +14,6 @@ logger = structlog.get_logger(__name__)
 
 def _save_event(event: dict):
     """Save processed event."""
-    from localrep.errors import AlreadyExistsError
     from localrep.serializers import EventSerializer
 
     logger.debug("Syncing event", data=event)
@@ -27,11 +27,9 @@ def _save_event(event: dict):
 
 def _algo_event(event: dict):
     """Process algo event to update local database."""
-    logger.debug("Syncing algo", asset_key=event["asset_key"], event_id=event["id"])
-
-    from localrep.errors import AlreadyExistsError
     from localrep.serializers import AlgoSerializer
-    from substrapp.orchestrator import get_orchestrator_client
+
+    logger.debug("Syncing algo", asset_key=event["asset_key"], event_id=event["id"])
 
     with get_orchestrator_client(event["channel"]) as client:
         data = client.query_algo(event["asset_key"])
@@ -43,6 +41,22 @@ def _algo_event(event: dict):
         logger.debug("Algo already exists", asset_key=event["asset_key"], event_id=event["id"])
 
 
+def _metric_event(event: dict):
+    """Process metric event to update local database."""
+    from localrep.serializers import MetricSerializer
+
+    logger.debug("Syncing metric", asset_key=event["asset_key"], event_id=event["id"])
+
+    with get_orchestrator_client(event["channel"]) as client:
+        data = client.query_metric(event["asset_key"])
+    data["channel"] = event["channel"]
+    serializer = MetricSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("Metric already exists", asset_key=event["asset_key"], event_id=event["id"])
+
+
 @transaction.atomic
 def sync_on_event_message(event: dict):
     """Handler to consume event.
@@ -52,6 +66,8 @@ def sync_on_event_message(event: dict):
 
     if asset_kind == common_pb2.ASSET_ALGO:
         _algo_event(event)
+    if asset_kind == common_pb2.ASSET_METRIC:
+        _metric_event(event)
     else:
         logger.debug("Nothing to sync", asset_kind=event["asset_kind"])
 
