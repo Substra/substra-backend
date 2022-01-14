@@ -36,6 +36,14 @@ lint:  ## Perform a static analysis of the code
 shell:	## Start a Python shell for the Django project
 	python backend/manage.py shell
 
+.PHONY: migrations
+migrations: ## Create missing Django migrations, if any. See also: check-migrations.
+	DJANGO_SETTINGS_MODULE=backend.settings.test python backend/manage.py makemigrations
+
+.PHONY: check-migrations
+check-migrations: ## Check whether there are missing Django migrations
+	DJANGO_SETTINGS_MODULE=backend.settings.test python backend/manage.py makemigrations --dry-run --check --no-input
+
 ### gRPC
 
 ORCHESTRATOR_ROOT?=../orchestrator
