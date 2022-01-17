@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.8.0] 2022-01-16
+
 ### Added
 - The datamanager asset now has a `logs_permission` field (#581)
 - `localrep` app with `Event` and `Algo`: migration, model and serializer
