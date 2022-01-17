@@ -17,23 +17,23 @@ class CategoryField(serializers.Field):
 
 
 class AlgoSerializer(serializers.ModelSerializer, SafeSerializerMixin):
-    category = CategoryField()
-    description = make_addressable_serializer("description")(source="*")
     algorithm = make_addressable_serializer("algorithm")(source="*")
-    permissions = PermissionsSerializer(source="*")
+    category = CategoryField()
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
+    description = make_addressable_serializer("description")(source="*")
+    permissions = PermissionsSerializer(source="*")
 
     class Meta:
         model = Algo
         fields = [
-            "key",
-            "name",
-            "category",
-            "owner",
-            "creation_date",
-            "metadata",
-            "description",
             "algorithm",
-            "permissions",
+            "category",
             "channel",
+            "creation_date",
+            "description",
+            "key",
+            "metadata",
+            "name",
+            "owner",
+            "permissions",
         ]

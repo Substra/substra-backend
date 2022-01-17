@@ -178,7 +178,7 @@ class AlgoViewTests(APITestCase):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # algo created in local db
+        # asset created in local db
         self.assertEqual(AlgoRep.objects.count(), len(self.algos) + 1)
 
         data["file"].close()
@@ -213,7 +213,6 @@ class AlgoViewTests(APITestCase):
         data["description"].close()
         data["file"].close()
 
-    @internal_server_error_on_exception()
     def test_algo_create_fail_rollback(self):
         class MockOrcError(OrcError):
             code = StatusCode.ALREADY_EXISTS
@@ -239,14 +238,14 @@ class AlgoViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_algo", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        # algo not created in local db
+        # asset not created in local db
         self.assertEqual(AlgoRep.objects.count(), len(self.algos))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.algo.AlgoViewSet.create", side_effect=Exception("Unexpected error"))
-    def test_algo_create_fail_internal_server_error(self, _):
+    def test_algo_create_fail(self, _):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 

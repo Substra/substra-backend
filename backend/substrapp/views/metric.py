@@ -61,12 +61,12 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
         """Create a new metric.
 
         The workflow is composed of several steps:
-        - Save metric data (description and Dockerfile archive) in local database.
-          This is needed as we need the metric data addresses.
-        - Register metric in the orchestrator.
-        - Save metric metadata in local database.
+        - Save files in local database to get the addresses.
+          This is needed as we need the addresses.
+        - Register asset in the orchestrator.
+        - Save metadata in local database.
         """
-        # Step1: save metric data in local database
+        # Step1: save files in local database
         description = request.data.get("description")
         try:
             checksum = get_hash(description)
@@ -84,14 +84,14 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         instance = serializer.save()
 
-        # Step2: register metric in orchestrator
+        # Step2: register asset in orchestrator
         try:
             localrep_data = self._register_in_orchestrator(request, instance)
         except Exception:
             instance.delete()  # warning: post delete signals are not executed by django rollback
             raise
 
-        # Step3: save metric metadata in local database
+        # Step3: save metadata in local database
         localrep_data["channel"] = get_channel_name(request)
         localrep_serializer = MetricRepSerializer(data=localrep_data)
         try:
@@ -170,13 +170,13 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = MetricRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
+
         query_params = self.request.query_params.get("search")
         if query_params is not None:
             queryset = filter_queryset("metric", queryset, query_params)
         queryset = self.paginate_queryset(queryset)
 
         data = MetricRepSerializer(queryset, many=True).data
-
         for metric in data:
             replace_storage_addresses(request, metric)
 

@@ -69,12 +69,11 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
         """Create a new algo.
 
         The workflow is composed of several steps:
-        - Save algo data (description and Dockerfile archive) in local database.
-          This is needed as we need the algo data addresses.
-        - Register algo in the orchestrator.
-        - Save algo metadata in local database.
+        - Save files in local database to get the addresses.
+        - Register asset in the orchestrator.
+        - Save metadata in local database.
         """
-        # Step1: save algo data in local database
+        # Step1: save files in local database
         file = request.data.get("file")
         try:
             checksum = get_hash(file)
@@ -92,14 +91,14 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         instance = serializer.save()
 
-        # Step2: register algo in orchestrator
+        # Step2: register asset in orchestrator
         try:
             localrep_data = self._register_in_orchestrator(request, instance)
         except Exception:
             instance.delete()  # warning: post delete signals are not executed by django rollback
             raise
 
-        # Step3: save algo metadata in local database
+        # Step3: save metadata in local database
         localrep_data["channel"] = get_channel_name(request)
         localrep_serializer = AlgoRepSerializer(data=localrep_data)
         try:
@@ -177,6 +176,7 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
 
     def list(self, request, *args, **kwargs):
         queryset = AlgoRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
+
         query_params = self.request.query_params.get("search")
         if query_params is not None:
 
@@ -191,6 +191,7 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
         data = AlgoRepSerializer(queryset, many=True).data
         for algo in data:
             replace_storage_addresses(request, algo)
+
         return self.get_paginated_response(data)
 
 

@@ -88,7 +88,7 @@ class MetricViewTests(APITestCase):
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.metric.MetricViewSet.list", side_effect=Exception("Unexpected error"))
-    def test_metric_list_fail_internal_server_error(self, _):
+    def test_metric_list_fail(self, _):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -182,7 +182,7 @@ class MetricViewTests(APITestCase):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
         self.assertIsNotNone(response.data["key"])
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        # metric created in local db
+        # asset created in local db
         self.assertEqual(MetricRep.objects.count(), len(self.metrics) + 1)
 
         data["file"].close()
@@ -214,7 +214,6 @@ class MetricViewTests(APITestCase):
         data["description"].close()
         data["file"].close()
 
-    @internal_server_error_on_exception()
     def test_metric_create_fail_rollback(self):
         class MockOrcError(OrcError):
             code = StatusCode.ALREADY_EXISTS
@@ -238,14 +237,14 @@ class MetricViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "register_metric", side_effect=MockOrcError()):
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
-        # metric not created in local db
+        # asset not created in local db
         self.assertEqual(MetricRep.objects.count(), len(self.metrics))
         # orc error code should be propagated
         self.assertEqual(response.status_code, status.HTTP_409_CONFLICT)
 
     @internal_server_error_on_exception()
     @mock.patch("substrapp.views.metric.MetricViewSet.create", side_effect=Exception("Unexpected error"))
-    def test_metric_create_fail_internal_server_error(self, _):
+    def test_metric_create_fail(self, _):
         response = self.client.post(self.url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
