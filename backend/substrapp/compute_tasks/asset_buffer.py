@@ -58,6 +58,21 @@ def init_asset_buffer() -> None:
         os.makedirs(os.path.join(settings.ASSET_BUFFER_DIR, folder_name), exist_ok=True)
 
 
+def clear_assets_buffer() -> None:
+    for folder_name in AssetBufferDirName.All:
+        folder = os.path.join(settings.ASSET_BUFFER_DIR, folder_name)
+        for filename in os.listdir(folder):
+            file_path = os.path.join(folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except (OSError, shutil.Error) as e:
+                # Intentionally don't raise. Keep on deleting from asset buffer.
+                logger.error("failed to delete asset from Asset Buffer", asset=file_path, error=e)
+
+
 def add_task_assets_to_buffer(ctx: Context) -> None:
     """
     Copy/Download assets (data samples, openers, models) to the asset buffer.

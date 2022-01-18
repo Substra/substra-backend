@@ -12,6 +12,7 @@ This file contains the main logic for executing a compute task:
 We also handle the retry logic here.
 """
 
+import errno
 import json
 import os
 from os import path
@@ -29,6 +30,7 @@ from substrapp import utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
+from substrapp.compute_tasks.asset_buffer import clear_assets_buffer
 from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.command import Filenames
@@ -198,7 +200,9 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
             init_asset_buffer()
             init_compute_plan_dirs(dirs)
             init_task_dirs(dirs)
-            add_task_assets_to_buffer(ctx)
+
+            with lock_resource("asset-buffer", "global", timeout=MAX_TASK_DURATION):
+                add_task_assets_to_buffer(ctx)
             add_assets_to_taskdir(ctx)
             if task_category != computetask_pb2.TASK_TEST:
                 if ctx.has_chainkeys:
@@ -226,7 +230,20 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 commit_dir(dirs, TaskDirName.Local, CPDirName.Local)
                 if ctx.has_chainkeys:
                     commit_dir(dirs, TaskDirName.Chainkeys, CPDirName.Chainkeys)
-
+        except (OSError, IOError) as e:
+            if e.errno == errno.ENOSPC:
+                # "No space left on device"
+                # clear asset buffer and retry the task
+                logger.info(
+                    "No space left on device, clearing up the asset buffer and retrying the task", task_key=task["key"]
+                )
+                with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
+                    clear_assets_buffer()
+                raise self.retry(
+                    exc=e,
+                    countdown=CELERY_TASK_RETRY_DELAY_SECONDS,
+                    max_retries=CELERY_TASK_MAX_RETRIES,
+                )
         except Exception as e:
             raise self.retry(
                 exc=e,

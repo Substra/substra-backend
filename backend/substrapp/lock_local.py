@@ -15,7 +15,7 @@ LOCK_FILE_PREFIX_UNLINK = "unlink_lock_"
 # TODO: 'lock_resource' is too complex, consider refactoring
 @contextlib.contextmanager  # noqa: C901
 def lock_resource(  # noqa: C901
-    resource_type: str, unique_identifier: str, ttl: int, delay: int = 0.02, timeout: int = 10
+    resource_type: str, unique_identifier: str, ttl: int = None, delay: int = 0.02, timeout: int = 10
 ):
     """
     Acquire a lock on a resource.
@@ -25,6 +25,8 @@ def lock_resource(  # noqa: C901
 
     Ensures the lock is kept for AT MOST `timeout` seconds, referred to as the lock TTL.
     If the lock TTL has expired, the lock file is deleted and the lock is released.
+
+    With the default value None, the TTL check is skipped
 
     If you're thinking of modifying this function, make sure you have time ahead of you -_-
     """
@@ -43,7 +45,8 @@ def lock_resource(  # noqa: C901
         try:
             fd = os.open(lock_file, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
         except FileExistsError:
-            check_lock_file_ttl()
+            if ttl is not None:
+                check_lock_file_ttl()
             return False
         else:
             os.write(fd, unique_id.encode())

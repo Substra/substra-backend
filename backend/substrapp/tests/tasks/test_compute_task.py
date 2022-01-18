@@ -1,3 +1,4 @@
+import errno
 import io
 import tempfile
 from typing import Type
@@ -95,6 +96,7 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(mteardown_task_dirs.call_count, 1)
             self.assertEqual(mis_task_runnable.call_count, 1)
 
+            # test RPC error
             error = RpcError()
             error.details = "OE0000"
             error.code = lambda: StatusCode.NOT_FOUND
@@ -108,8 +110,13 @@ class ComputeTaskTests(APITestCase):
                     compute_task(CHANNEL, task, None)
                 self.assertEqual(str(exc.exception), "Test")
 
-    def test_celery_retry(self):
+            # test not enough space on disk error
+            mexecute_compute_task.side_effect = OSError(errno.ENOSPC, "No space left on device")
+            with self.assertRaises(Exception) as exc:
+                compute_task(CHANNEL, task, None)
+                self.assertEqual(str(exc.exception), "No space left on device")
 
+    def test_celery_retry(self):
         task = {
             "key": "some key",
             "compute_plan_key": None,
@@ -139,14 +146,26 @@ class ComputeTaskTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.ComputeTask.retry"
-        ) as mretry:
+        ) as mretry, mock.patch(
+            "substrapp.tasks.tasks_compute_task.clear_assets_buffer"
+        ) as m_clear_assets_buffer:
 
-            mexecute_compute_task.side_effect = Exception("An exeption that should trigger retry mechanism")
+            # retry because of generic exception
+            mexecute_compute_task.side_effect = Exception("an exception that should trigger the retry mechanism")
 
             with self.assertRaises(Exception):
                 compute_task(CHANNEL, task, None)
 
             self.assertEqual(mretry.call_count, 1)
+
+            # retry because no space left on device error
+            mexecute_compute_task.side_effect = IOError(errno.ENOSPC, "no file left on device")
+
+            with self.assertRaises(Exception):
+                compute_task(CHANNEL, task, None)
+
+            self.assertEqual(mretry.call_count, 2)
+            self.assertEqual(m_clear_assets_buffer.call_count, 1)
 
 
 @pytest.mark.django_db
