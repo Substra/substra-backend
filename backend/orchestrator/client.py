@@ -4,6 +4,7 @@ from functools import wraps
 import grpc
 import structlog
 from google.protobuf.json_format import MessageToDict
+from google.protobuf.timestamp_pb2 import Timestamp
 
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.common_pb2 as common_pb2
@@ -518,6 +519,8 @@ class OrchestratorClient:
         event_kind=event_pb2.EVENT_UNKNOWN,
         sort=common_pb2.ASCENDING,
         metadata=None,
+        start=None,
+        end=None,
         page_size=None,
     ):
         """return a list with all events instead of a generator"""
@@ -528,6 +531,8 @@ class OrchestratorClient:
                 event_kind=event_kind,
                 sort=sort,
                 metadata=metadata,
+                start=start,
+                end=end,
                 page_size=page_size,
             )
         )
@@ -540,14 +545,34 @@ class OrchestratorClient:
         event_kind=event_pb2.EVENT_UNKNOWN,
         sort=common_pb2.ASCENDING,
         metadata=None,
+        start=None,
+        end=None,
         page_size=1,
     ):
         """This function returns all events as a generator.
         Until page_token is null or no more events are fetched, a loop call will get page_size events
         which are yield one by one
         """
+
+        # convert JsonStringDate into pb Timestamp
+        start_ts = None
+        end_ts = None
+
+        if start is not None:
+            start_ts = Timestamp()
+            start_ts.FromJsonString(start)
+
+        if end is not None:
+            end_ts = Timestamp()
+            end_ts.FromJsonString(end)
+
         event_filter = event_pb2.EventQueryFilter(
-            asset_key=asset_key, asset_kind=asset_kind, event_kind=event_kind, metadata=metadata
+            asset_key=asset_key,
+            asset_kind=asset_kind,
+            event_kind=event_kind,
+            metadata=metadata,
+            start=start_ts,
+            end=end_ts,
         )
 
         page_token = ""  # nosec
