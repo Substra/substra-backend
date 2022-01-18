@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - For `list` and `retrieve`, replace orchestrator query by `localrep` models queryset.
   - For `create`, create `localrep` algo before synchronization to be able to instantly (locally) query a newly created algo.
 
+### Fixed
+- News feed now handles incomplete event metadata (#652)
+
 ## [0.7.0] 2022-01-05
 ### Fixed
 - Preserve order of parent tasks when registering a new task (#583)

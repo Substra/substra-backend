@@ -62,10 +62,15 @@ class NewsFeedViewSet(GenericViewSet, PaginationMixin):
             }
 
         for event in task_events:
-            compute_task_status = event["metadata"]["status"]
+            compute_task_status = event["metadata"].get("status")
             if compute_task_status not in [TASK_STATUS_DOING, TASK_STATUS_DONE, TASK_STATUS_FAILED]:
                 continue  # Skip event
-            feed_item_key = FeedItemKey(event["metadata"]["compute_plan_key"], compute_task_status)
+
+            compute_plan_key = event["metadata"].get("compute_plan_key")
+            if not compute_plan_key:
+                continue
+
+            feed_item_key = FeedItemKey(compute_plan_key, compute_task_status)
 
             # There are multiple compute tasks for the same compute plan
             # but we only want one news item per status for each compute plan.
@@ -74,14 +79,11 @@ class NewsFeedViewSet(GenericViewSet, PaginationMixin):
                 continue  # Skip event
 
             # For event task doing, skip event if related compute plan is failed
-            if (
-                compute_task_status == TASK_STATUS_DOING
-                and (event["metadata"]["compute_plan_key"], TASK_STATUS_FAILED) in feed_items
-            ):
+            if compute_task_status == TASK_STATUS_DOING and (compute_plan_key, TASK_STATUS_FAILED) in feed_items:
                 continue
 
             with get_orchestrator_client(get_channel_name(request)) as client:
-                compute_plan = client.query_compute_plan(event["metadata"]["compute_plan_key"])
+                compute_plan = client.query_compute_plan(compute_plan_key)
             # Register the last done compute task event by checking compute plan status
             if compute_task_status == TASK_STATUS_DONE and compute_plan["status"] != PLAN_STATUS_DONE:
                 # next event
@@ -94,7 +96,7 @@ class NewsFeedViewSet(GenericViewSet, PaginationMixin):
             # No news found so create one
             feed_items[feed_item_key] = {
                 "asset_kind": ASSET_COMPUTE_PLAN,
-                "asset_key": event["metadata"]["compute_plan_key"],
+                "asset_key": compute_plan_key,
                 "status": compute_task_status,
                 "timestamp": event["timestamp"],
                 "detail": item_details,
