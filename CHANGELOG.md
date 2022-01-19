@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Changed the function used to monitor pod status
+
 ## [0.8.0] 2022-01-16
 
 ### Added
