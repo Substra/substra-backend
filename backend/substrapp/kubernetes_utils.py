@@ -1,6 +1,4 @@
-import enum
 import time
-from typing import Tuple
 
 import kubernetes
 import structlog
@@ -19,15 +17,6 @@ HTTP_CLIENT_TIMEOUT_SECONDS = getattr(settings, "HTTP_CLIENT_TIMEOUT_SECONDS")
 RUN_AS_GROUP = settings.COMPUTE_POD_RUN_AS_GROUP
 RUN_AS_USER = settings.COMPUTE_POD_RUN_AS_USER
 FS_GROUP = settings.COMPUTE_POD_FS_GROUP
-
-
-class ObjectState(enum.Enum):
-    PENDING = enum.auto()
-    WAITING = enum.auto()
-    RUNNING = enum.auto()
-    FAILED = enum.auto()
-    COMPLETED = enum.auto()
-    UNKNOWN = enum.auto()
 
 
 def get_pod_security_context(enabled=True, root=False):
@@ -63,151 +52,114 @@ def get_security_context(enabled=True, root=False, privileged=False, add_capabil
         )
 
 
-def watch_pod(k8s_client: kubernetes.client.CoreV1Api, name: str):
-    """Watch a Kubernetes pod status
-
-    It will observe all the containers inside the pod and return when the pod will
-    reach the Completed state. If the pod is pending indefinitely or fail, an exception will be raised.
-
-    Args:
-        k8s_client (kubernetes.client.CoreV1Api): Kubernetes API client
-        name (str): name of the pod to watch
-
-    Raises:
-        PodError: this exception is raised if the pod exits with an error
-        PodTimeoutError: this exception is raised if the pod does not reach the running state after some time
-    """
+# TODO: 'watch_pod' is too complex, consider refactoring
+def watch_pod(k8s_client, name: str, watch_init_container=False):  # noqa: C901
+    finished = False
     attempt = 0
-    max_attempts = 5
+    max_attempts = 5 + (5 if watch_init_container else 0)
+    error = None
+    watch_container = not watch_init_container
 
-    # This variable is used to track the current status through retries
-    previous_pod_status = None
+    logger.info("Waiting for pod", pod_name=name)
 
-    while attempt < max_attempts:
+    pod_status = None
+
+    while (not finished) and (attempt < max_attempts):
         try:
-            api_response: kubernetes.client.models.V1Pod = k8s_client.read_namespaced_pod_status(
-                name=name, namespace=NAMESPACE
+            api_response = k8s_client.read_namespaced_pod_status(name=name, namespace=NAMESPACE, pretty=True)
+
+            if api_response.status.phase != pod_status:
+                pod_status = api_response.status.phase
+                logger.info("Status for pod", pod_name=name, status=api_response.status.phase)
+
+            # Handle pod error not linked with containers
+            if api_response.status.phase == "Failed" or (
+                api_response.status.reason and "Evicted" in api_response.status.reason
+            ):
+
+                if api_response.status.reason:
+                    error = api_response.status.reason
+                else:
+                    error = f"Pod phase : {api_response.status.phase}"
+
+                logger.error("Status for pod", pod_name=name, status=api_response.status.phase.lower())
+                finished = True
+                continue
+
+            if watch_init_container:
+                if api_response.status.init_container_statuses:
+                    for init_container in api_response.status.init_container_statuses:
+                        state = init_container.state
+                        if state.terminated:
+                            # TODO: support multiple init containers
+                            if state.terminated.exit_code != 0:
+                                finished = True
+                                error = "InitContainer: " + _get_pod_error(state.terminated)
+                            else:
+                                watch_container = True  # Init container is ready
+                        else:
+                            if state.waiting and state.waiting.reason not in [
+                                "PodInitializing",
+                                "ContainerCreating",
+                            ]:
+                                error = "InitContainer: " + _get_pod_error(state.waiting)
+                                attempt += 1
+                                logger.error(
+                                    "InitContainer waiting status",
+                                    pod_name=name,
+                                    attempt=attempt,
+                                    max_attempts=max_attempts,
+                                    state=state.waiting.message,
+                                )
+
+            if watch_container:
+                if api_response.status.container_statuses:
+                    for container in api_response.status.container_statuses:
+                        state = container.state
+                        if state.terminated:
+                            finished = True
+                            error = None
+                            if state.terminated.exit_code != 0:
+                                error = _get_pod_error(state.terminated)
+
+                        else:
+                            # {"ContainerCreating", "CrashLoopBackOff", "CreateContainerConfigError",
+                            #  "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"}
+                            if state.waiting and state.waiting.reason not in [
+                                "PodInitializing",
+                                "ContainerCreating",
+                            ]:
+                                error = _get_pod_error(state.waiting)
+                                attempt += 1
+                                logger.error(
+                                    "Container waiting status",
+                                    pod_name=name,
+                                    attempt=attempt,
+                                    max_attempts=max_attempts,
+                                    state=state.waiting.message,
+                                )
+
+            if not finished:
+                time.sleep(0.2)
+
+        except Exception as e:
+            attempt += 1
+            logger.error(
+                "Could not get pod status", pod_name=name, exc_info=e, attempt=attempt, max_attempts=max_attempts
             )
-        except kubernetes.client.rest.ApiException as exc:
-            logger.warning("Could not retrieve pod status", pod_name=name, exc_info=exc)
-            attempt += 1
-            time.sleep(0.2)
-            continue
 
-        pod_status, (reason, message) = _get_pod_state(api_response.status)
+    if error is not None:
+        raise PodError(f"Pod {name} terminated with error: {error}")
 
-        if pod_status != previous_pod_status:
-            previous_pod_status = pod_status
-            logger.info(
-                "Pod status changed",
-                pod_name=name,
-                status=pod_status,
-                reason=reason,
-                message=message,
-                attempt=attempt,
-                max_attempts=max_attempts,
-            )
-
-        if pod_status == ObjectState.COMPLETED:
-            return
-
-        if pod_status == ObjectState.FAILED:
-            raise PodError(f"Pod {name} terminated with error: {reason}")
-
-        if pod_status == ObjectState.PENDING:
-            # Here we basically consume a free retry everytime but we still need to
-            # increment attempt because if at some point our pod is stuck in pending state
-            # we need to exit this function
-            attempt += 1
-            time.sleep(2)
-
-        # Here PodInitializing and ContainerCreating are valid reasons to wait more time
-        # Other possible reasons include "CrashLoopBackOff", "CreateContainerConfigError",
-        # "ErrImagePull", "ImagePullBackOff", "CreateContainerError", "InvalidImageName"
-        if (
-            pod_status == ObjectState.WAITING
-            and reason not in ["PodInitializing", "ContainerCreating"]
-            or pod_status == ObjectState.UNKNOWN
-        ):
-            attempt += 1
-
-        time.sleep(0.2)
-
-    raise PodTimeoutError(f"Pod {name} didn't complete after {max_attempts} attempts")
+    if not finished:
+        raise PodTimeoutError(f"Pod {name} didn't complete after {max_attempts} attempts")
 
 
-def _get_pod_state(pod_status: kubernetes.client.models.V1PodStatus) -> Tuple[ObjectState, Tuple[str, str]]:
-    """extracts the current pod state from the PodStatus Kubernetes object
-
-    Args:
-        pod_status (kubernetes.client.models.V1PodStatus): A Kubernetes PodStatus object
-
-    Returns:
-        Tuple[ObjectState, Tuple[str, str]]: A tuple consisting of the pod state and a detailed reason potentially
-            explaining this state the reason itself is also a Tuple of the form (reason, detailed message)
-    """
-    if pod_status.phase in ["Pending"]:
-        # On the first query the pod just created and often pending as it is not already scheduled to a node
-        return ObjectState.PENDING, ("", "")
-
-    container_statuses = pod_status.init_container_statuses if pod_status.init_container_statuses else []
-    container_statuses += pod_status.container_statuses
-
-    completed_containers = 0
-    for container in container_statuses:
-        container_state: ObjectState = _get_container_state(container)
-        if container_state in [ObjectState.RUNNING, ObjectState.WAITING, ObjectState.FAILED]:
-            return container_state, _get_container_state_reason(container, container_state)
-        if container_state == ObjectState.COMPLETED:
-            completed_containers += 1
-
-    if completed_containers == len(container_statuses):
-        return ObjectState.COMPLETED, _get_container_state_reason(container, container_state)
-    return ObjectState.UNKNOWN, ("", "Could not deduce the pod state from container statuses")
-
-
-def _get_container_state_reason(
-    container_state: kubernetes.client.models.V1ContainerState, current_state: ObjectState
-) -> Tuple[str, str]:
-    """Extracts the reason and detailed reason message from a ContainerState
-
-    Args:
-        container_state (kubernetes.client.models.V1ContainerState): a Kubernetes ContainerState object
-        current_state (ObjectState): State of the container
-
-    Returns:
-        Tuple[str, str]: a Tuple of the form (reason, detailed message)
-    """
-    if current_state in [ObjectState.RUNNING, ObjectState.COMPLETED]:
-        return "", ""
-    if current_state == ObjectState.WAITING:
-        return container_state.waiting.reason, container_state.waiting.message
-    if current_state == ObjectState.FAILED:
-        return container_state.terminated.reason, container_state.terminated.message
-    return "", ""
-
-
-def _get_container_state(container_status: kubernetes.client.models.V1ContainerStatus) -> ObjectState:
-    """Extracts the container state from a ContainerStatus Kubernetes object
-
-    Args:
-        container_status (kubernetes.client.models.V1ContainerStatus): A ContainerStatus object
-
-    Returns:
-        ObjectState: the state of the container
-    """
-    # Here we need to check if we are in a failed state first since kubernetes will retry
-    # we can end up running after a failure
-    if container_status.state.terminated:
-        if container_status.state.exit_code != 0:
-            return ObjectState.FAILED
-        else:
-            return ObjectState.COMPLETED
-    if container_status.state.running:
-        return ObjectState.RUNNING
-    if container_status.state.waiting:
-        return ObjectState.WAITING
-    return ObjectState.UNKNOWN
+def _get_pod_error(state) -> str:
+    error = state.reason
+    if state.message is not None:
+        error += f" ({state.message})"
+    return error
 
 
 def pod_exists(k8s_client, name: str) -> bool:
