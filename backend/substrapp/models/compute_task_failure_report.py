@@ -1,19 +1,23 @@
 import urllib.parse
+import uuid
 from typing import Final
 
 from django.conf import settings
 from django.db import models
+
+LOGS_BASE_PATH: Final[str] = "logs"
+LOGS_FILE_PATH: Final[str] = "file"
 
 _UUID_STRING_REPR_LENGTH: Final[int] = 36
 _SHA256_STRING_REPR_LENGTH: Final[int] = 256 // 4
 
 
 def _upload_to(instance: "ComputeTaskFailureReport", _filename: str) -> str:
-    return instance.compute_task_key
+    return str(instance.compute_task_key)
 
 
 class ComputeTaskFailureReport(models.Model):
-    """Store information relative to a compute task failure."""
+    """Store information relative to a compute task."""
 
     compute_task_key = models.UUIDField(primary_key=True, editable=False)
     logs = models.FileField(
@@ -23,6 +27,10 @@ class ComputeTaskFailureReport(models.Model):
     creation_date = models.DateTimeField(auto_now_add=True)
 
     @property
+    def key(self) -> uuid.UUID:
+        return self.compute_task_key
+
+    @property
     def logs_address(self) -> str:
-        logs_path = f"logs/{self.compute_task_key}"
+        logs_path = f"{LOGS_BASE_PATH}/{self.compute_task_key}/{LOGS_FILE_PATH}"
         return urllib.parse.urljoin(settings.DEFAULT_DOMAIN, logs_path)

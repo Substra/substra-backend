@@ -8,6 +8,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_nested import routers
 
 import substrapp.views as views
+from substrapp.models import compute_task_failure_report
 from substrapp.views.computeplan import BASENAME_PREFIX
 
 # Create a router and register our viewsets with it.
@@ -28,6 +29,7 @@ router.register(r"aggregatetuple", views.ComputeTaskViewSet, basename="aggregate
 router.register(r"composite_traintuple", views.ComputeTaskViewSet, basename="composite_traintuple")
 router.register(r"compute_plan", views.ComputePlanViewSet, basename="compute_plan")
 router.register(r"news_feed", views.NewsFeedViewSet, basename="news_feed")
+router.register(compute_task_failure_report.LOGS_BASE_PATH, views.ComputeTaskLogsViewSet, basename="logs")
 
 compute_plan_router = routers.NestedDefaultRouter(router, r"compute_plan", lookup="compute_plan")
 compute_plan_router.register(r"traintuple", views.CPTaskViewSet, basename=f"{BASENAME_PREFIX}traintuple")

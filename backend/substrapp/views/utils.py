@@ -110,18 +110,22 @@ class PermissionMixin(object):
         if user.is_anonymous:  # safeguard, should never happen
             raise AssetPermissionError()
 
+        permission = self.get_permission(asset)
+
         if type(user) is NodeUser:  # for node
-            permission = asset["permissions"]["process"]
             node_id = user.username
         else:
             # for classic user, test on current msp id
-            # TODO: This should be 'download' instead of 'process',
-            #       but 'download' is not consistently exposed by chaincode yet.
-            permission = asset["permissions"]["process"]
             node_id = get_owner()
 
         if not permission["public"] and node_id not in permission["authorized_ids"]:
             raise AssetPermissionError()
+
+    def get_permission(self, asset):
+        """Get the permission to check from the asset."""
+        # FIXME: This should be 'download' instead of 'process',
+        #  but 'download' is not consistently exposed by chaincode yet.
+        return asset["permissions"]["process"]
 
     def get_storage_address(self, asset, ledger_field) -> str:
         """returns the storage address of the asset or nothing if there is no storage address

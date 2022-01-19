@@ -4,6 +4,7 @@ from .computeplan import ComputePlanViewSet
 from .computeplan import CPAlgoViewSet
 from .computeplan import CPTaskViewSet
 from .computetask import ComputeTaskViewSet
+from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet
 from .datasample import DataSampleViewSet
@@ -28,4 +29,5 @@ __all__ = [
     "CPTaskViewSet",
     "CPAlgoViewSet",
     "NewsFeedViewSet",
+    "ComputeTaskLogsViewSet",
 ]
