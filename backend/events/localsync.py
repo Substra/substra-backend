@@ -2,7 +2,6 @@ import structlog
 from django.conf import settings
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.utils.dateparse import parse_datetime
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.event_pb2 as event_pb2
@@ -94,6 +93,17 @@ def resync():
     for channel_name in settings.LEDGER_CHANNELS.keys():
         with get_orchestrator_client(channel_name) as client:
             # Fetch events assets created
-            for event in client.query_events_generator(event_kind=event_pb2.EVENT_ASSET_CREATED):
-                if not local_latest_event or parse_datetime(event["timestamp"]) >= local_latest_event:
-                    sync_on_event_message(event)
+            for event_count, event in enumerate(
+                client.query_events_generator(
+                    event_kind=event_pb2.EVENT_ASSET_CREATED,
+                    start=local_latest_event.isoformat() if local_latest_event is not None else None,
+                ),
+                start=1,
+            ):
+                sync_on_event_message(event)
+
+            logger.info(
+                f"{event_count} orchestrator events synced since the latest local event",
+                timestamp=local_latest_event,
+                channel=channel_name,
+            )
