@@ -36,35 +36,52 @@ KANIKO_IMAGE = settings.TASK["KANIKO_IMAGE"]
 KANIKO_DOCKER_CONFIG_SECRET_NAME = settings.TASK["KANIKO_DOCKER_CONFIG_SECRET_NAME"]
 CELERY_WORKER_CONCURRENCY = int(getattr(settings, "CELERY_WORKER_CONCURRENCY"))
 SUBTUPLE_TMP_DIR = settings.SUBTUPLE_TMP_DIR
+MAX_IMAGE_BUILD_TIME = 3 * 60 * 60  # 3 hours
 
 
 def build_images(ctx: Context) -> None:
     # Algo
-    if container_image_exists(ctx.algo_image_tag):
-        logger.info("Reusing existing image", image=ctx.algo_image_tag)
-    else:
-        _build_asset_image(
-            ctx,
-            ctx.algo_image_tag,
-            ctx.algo_key,
-            ctx.algo["algorithm"]["storage_address"],
-            ctx.algo["owner"],
-            ctx.algo["algorithm"]["checksum"],
-        )
+    _build_image_if_missing(
+        ctx,
+        ctx.algo_image_tag,
+        ctx.algo_key,
+        ctx.algo["algorithm"]["storage_address"],
+        ctx.algo["owner"],
+        ctx.algo["algorithm"]["checksum"],
+    )
+
     # Metrics
     if ctx.task_category == computetask_pb2.TASK_TEST:
         for metric_key, metric_image_tag in ctx.metrics_image_tags.items():
-            if container_image_exists(metric_image_tag):
-                logger.info("Reusing existing image", image=metric_image_tag)
-            else:
-                _build_asset_image(
-                    ctx,
-                    metric_image_tag,
-                    metric_key,
-                    ctx.metrics[metric_key]["address"]["storage_address"],
-                    ctx.metrics[metric_key]["owner"],
-                    ctx.metrics[metric_key]["address"]["checksum"],
-                )
+            _build_image_if_missing(
+                ctx,
+                metric_image_tag,
+                metric_key,
+                ctx.metrics[metric_key]["address"]["storage_address"],
+                ctx.metrics[metric_key]["owner"],
+                ctx.metrics[metric_key]["address"]["checksum"],
+            )
+
+
+def _build_image_if_missing(
+    ctx: Context, image_tag: str, asset_key: str, asset_storage_address: str, asset_owner: str, asset_checksum: str
+) -> None:
+    """
+    Build the container image and the ImageEntryPoint entry if they don't exist already
+    """
+
+    with lock_resource("image-build", image_tag, ttl=MAX_IMAGE_BUILD_TIME, timeout=MAX_IMAGE_BUILD_TIME):
+        if container_image_exists(image_tag):
+            logger.info("Reusing existing image", image=image_tag)
+        else:
+            _build_asset_image(
+                ctx,
+                image_tag,
+                asset_key,
+                asset_storage_address,
+                asset_owner,
+                asset_checksum,
+            )
 
 
 def _build_asset_image(
@@ -79,8 +96,9 @@ def _build_asset_image(
     Build an asset's container image. Perform multiple steps:
     1. Download the asset (algo or metric) using the provided asset storage_address/owner. Verify its checksum and
        uncompress the data to a temporary folder.
-    2. Extract the ENTRYPOINT from the Dockerfile and save it to the DB.
+    2. Extract the ENTRYPOINT from the Dockerfile.
     3. Build the container image using Kaniko.
+    4. Save the ENTRYPOINT to the DB
     """
 
     os.makedirs(SUBTUPLE_TMP_DIR, exist_ok=True)
@@ -272,16 +290,15 @@ def _build_container_image(path: str, tag: str, ctx: Context) -> None:  # noqa: 
         spec=spec,
     )
 
-    with lock_resource("image-build", pod_name, ttl=30, timeout=30):
-        create_pod = not pod_exists(k8s_client, pod_name)
-        if create_pod:
-            try:
-                logger.info("creating pod: building image", namespace=NAMESPACE, pod=pod_name, image=tag)
-                k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
-            except kubernetes.client.rest.ApiException as e:
-                raise Exception(
-                    f"Error creating pod {NAMESPACE}/{pod_name}. Reason: {e.reason}, status: {e.status}, body: {e.body}"
-                ) from None
+    create_pod = not pod_exists(k8s_client, pod_name)
+    if create_pod:
+        try:
+            logger.info("creating pod: building image", namespace=NAMESPACE, pod=pod_name, image=tag)
+            k8s_client.create_namespaced_pod(body=pod, namespace=NAMESPACE)
+        except kubernetes.client.rest.ApiException as e:
+            raise Exception(
+                f"Error creating pod {NAMESPACE}/{pod_name}. Reason: {e.reason}, status: {e.status}, body: {e.body}"
+            ) from None
 
     try:
         watch_pod(k8s_client, pod_name)
