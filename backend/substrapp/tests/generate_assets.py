@@ -29,6 +29,7 @@ def main():
     assets = {}
 
     assets["metrics"] = client.list_metric()
+    assets["data_samples"] = client.list_data_sample()
     assets["data_managers"] = client.list_dataset()
     assets["algos"] = client.list_algo()
     assets["train_tasks"] = client.list_traintuple()
