@@ -171,7 +171,7 @@ class MetricViewSet(mixins.CreateModelMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         queryset = MetricRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
 
-        query_params = self.request.query_params.get("search")
+        query_params = request.query_params.get("search")
         if query_params is not None:
             queryset = filter_queryset("metric", queryset, query_params)
         queryset = self.paginate_queryset(queryset)

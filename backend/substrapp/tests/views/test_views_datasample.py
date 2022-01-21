@@ -12,6 +12,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from orchestrator.client import OrchestratorClient
 from substrapp.models import DataManager
 from substrapp.serializers import DataSampleSerializer
@@ -79,7 +80,11 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(DataManager.objects, "filter", return_value=FakeFilterDataManager(1)), mock.patch.object(
             OrchestratorClient, "register_datasamples", return_value={}
-        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create):
+        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create,), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
+        ):
 
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
@@ -103,7 +108,11 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(DataManager.objects, "filter", return_value=FakeFilterDataManager(1)), mock.patch.object(
             OrchestratorClient, "register_datasamples", return_value={}
-        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create):
+        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create,), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
+        ):
 
             response = self.client.post(self.url, data=data, format="multipart", **self.extra)
 
@@ -138,7 +147,11 @@ class DataSampleViewTests(APITestCase):
 
         with mock.patch.object(DataManager.objects, "filter", return_value=FakeFilterDataManager(1)), mock.patch.object(
             OrchestratorClient, "register_datasamples", return_value={}
-        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create):
+        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create,), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
+        ):
 
             response = self.client.post(self.url, data=data, format="json", **self.extra)
 
@@ -157,7 +170,11 @@ class DataSampleViewTests(APITestCase):
         data = {"path": target_path, "data_manager_keys": [assets.get_data_manager()["key"]], "test_only": False}
         with mock.patch.object(DataManager.objects, "filter", return_value=FakeFilterDataManager(1)), mock.patch.object(
             OrchestratorClient, "register_datasamples", return_value={}
-        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create):
+        ), mock.patch.object(DataSampleSerializer, "create", wraps=DataSampleSerializer().create,), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
+        ):
             response = self.client.post(url, data=data, format="json", **self.extra)
 
         self.assertEqual(response.data[0]["checksum"], checksum)

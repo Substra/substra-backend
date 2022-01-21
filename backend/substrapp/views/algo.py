@@ -177,7 +177,7 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
     def list(self, request, *args, **kwargs):
         queryset = AlgoRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
 
-        query_params = self.request.query_params.get("search")
+        query_params = request.query_params.get("search")
         if query_params is not None:
 
             def map_category(key, values):

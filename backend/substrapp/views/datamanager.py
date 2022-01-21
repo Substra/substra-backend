@@ -6,18 +6,21 @@ from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from localrep.errors import AlreadyExistsError
+from localrep.models import DataManager as DataManagerRep
+from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
+from localrep.serializers import DataManagerWithRelationsSerializer as DataManagerRepWithRelationsSerializer
 from substrapp.clients import node as node_client
 from substrapp.models import DataManager
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataManagerSerializer
 from substrapp.serializers import OrchestratorDataManagerSerializer
 from substrapp.utils import get_hash
-from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import ValidationExceptionError
@@ -42,11 +45,8 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     serializer_class = DataManagerSerializer
     pagination_class = DefaultPageNumberPagination
 
-    def commit(self, serializer, request):
-        # create on db
-        instance = serializer.save()
-
-        # serialized data for orchestrator db
+    def _register_in_orchestrator(self, request, instance):
+        """Register datamanager in orchestrator."""
         orchestrator_serializer = OrchestratorDataManagerSerializer(
             data={
                 "name": request.data.get("name"),
@@ -58,30 +58,25 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             },
             context={"request": request},
         )
-        if not orchestrator_serializer.is_valid():
-            instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise ValidationError(orchestrator_serializer.errors)
-
-        # create on orchestrator db
-        try:
-            data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except Exception:
-            instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise
-
-        merged_data = dict(serializer.data)
-        merged_data.update(data)
-
-        return merged_data
+        orchestrator_serializer.is_valid(raise_exception=True)
+        return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
 
     def _create(self, request):
+        """Create a new datamanager.
+
+        The workflow is composed of several steps:
+        - Save files in local database to get the addresses.
+        - Register asset in the orchestrator.
+        - Save metadata in local database.
+        """
+        # Step1: save files in local database
         data_opener = request.data.get("data_opener")
         try:
             checksum = get_hash(data_opener)
         except Exception as e:
             raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
 
-        serializer = self.get_serializer(
+        serializer = DataManagerSerializer(
             data={
                 "data_opener": data_opener,
                 "description": request.data.get("description"),
@@ -94,24 +89,50 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             serializer.is_valid(raise_exception=True)
         except Exception as e:
             raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
+
+        instance = serializer.save()
+
+        # Step2: register asset in orchestrator
+        try:
+            localrep_data = self._register_in_orchestrator(request, instance)
+        except Exception:
+            instance.delete()  # warning: post delete signals are not executed by django rollback
+            raise
+
+        # Step3: save metadata in local database
+        localrep_data["channel"] = get_channel_name(request)
+        localrep_serializer = DataManagerRepSerializer(data=localrep_data)
+        try:
+            localrep_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            # May happen if the events app already processed the event pushed by the orchestrator
+            data_manager = DataManagerRep.objects.get(key=localrep_data["key"])
+            data = DataManagerRepSerializer(data_manager).data
+        except Exception:
+            instance.delete()  # warning: post delete signals are not executed by django rollback
+            raise
         else:
-            return self.commit(serializer, request)
+            data = localrep_serializer.data
+
+        # Returns algo metadata from local database (and algo data) to ensure consistency between GET and CREATE views
+        data.update(serializer.data)
+        return data
 
     def create(self, request, *args, **kwargs):
         data = self._create(request)
         headers = self.get_success_headers(data)
         return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def create_or_update_datamanager(self, channel_name, datamanager, key):
+    def create_or_update_datamanager(self, channel_name, data_manager, key):
 
-        instance, created = DataManager.objects.update_or_create(key=key, name=datamanager["name"])
+        instance, created = DataManager.objects.update_or_create(key=key, name=data_manager["name"])
 
         if not instance.data_opener:
             content = node_client.get(
                 channel=channel_name,
-                node_id=datamanager["owner"],
-                url=datamanager["opener"]["storage_address"],
-                checksum=datamanager["opener"]["checksum"],
+                node_id=data_manager["owner"],
+                url=data_manager["opener"]["storage_address"],
+                checksum=data_manager["opener"]["checksum"],
             )
             opener_file = tempfile.TemporaryFile()
             opener_file.write(content)
@@ -120,9 +141,9 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         if not instance.description:
             content = node_client.get(
                 channel=channel_name,
-                node_id=datamanager["owner"],
-                url=datamanager["description"]["storage_address"],
-                checksum=datamanager["description"]["checksum"],
+                node_id=data_manager["owner"],
+                url=data_manager["description"]["storage_address"],
+                checksum=data_manager["description"]["checksum"],
             )
             description_file = tempfile.TemporaryFile()
             description_file.write(content)
@@ -132,11 +153,11 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
 
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            # use query_dataset instead of query_datamanager to
-            # get the datamanager but also its samples
-            data = client.query_dataset(validated_key)
+        try:
+            data_manager = DataManagerRep.objects.filter(channel=get_channel_name(request)).get(key=validated_key)
+        except DataManagerRep.DoesNotExist:
+            raise NotFound
+        data = DataManagerRepWithRelationsSerializer(data_manager).data
 
         # do not cache if node has not process permission
         if node_has_process_permission(data):
@@ -165,17 +186,18 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
         return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_datamanagers()
+        queryset = DataManagerRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            data = filter_list(object_type="dataset", data=data, query_params=query_params)
+            queryset = filter_queryset("datamanager", queryset, query_params)
+        queryset = self.paginate_queryset(queryset)
 
+        data = DataManagerRepSerializer(queryset, many=True).data
         for data_manager in data:
             replace_storage_addresses(request, data_manager)
 
-        return self.paginate_response(data)
+        return self.get_paginated_response(data)
 
 
 class DataManagerPermissionViewSet(PermissionMixin, GenericViewSet):

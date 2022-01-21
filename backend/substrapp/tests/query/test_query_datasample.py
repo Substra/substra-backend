@@ -15,6 +15,7 @@ from grpc import StatusCode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from substrapp.models import DataManager
@@ -108,7 +109,9 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(DataSampleRepSerializer, "save_if_not_exists", return_value=None):
 
             response = self.client.post(self.url, data, format="multipart", **extra)
             self.assertIsNotNone(response.json()[0]["key"])
@@ -133,7 +136,9 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(DataSampleRepSerializer, "save_if_not_exists", return_value=None):
 
             response = self.client.post(self.url, data, format="multipart", **extra)
             jsonr = response.json()
@@ -169,7 +174,9 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(DataSampleRepSerializer, "save_if_not_exists", return_value=None):
 
             self.data_file.seek(0)
             self.data_file_2.seek(0)
@@ -212,7 +219,9 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(DataSampleRepSerializer, "save_if_not_exists", return_value=None):
 
             response = self.client.post(self.url, data, format="multipart", **extra)
             r = response.json()
@@ -247,7 +256,9 @@ class DataSampleQueryTests(APITestCase):
             "HTTP_ACCEPT": "application/json;version=0.0",
         }
 
-        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(DataSampleRepSerializer, "save_if_not_exists", return_value=None):
 
             self.data_file.seek(0)
             self.data_file_2.seek(0)
@@ -397,6 +408,8 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch.object(zipfile, "is_zipfile", return_value=True), mock.patch.object(
             OrchestratorClient, "register_datasamples", return_value={}
+        ), mock.patch.object(OrchestratorClient, "query_datasample", return_value={}), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
         ):
 
             response = self.client.post(self.url, data, format="multipart", **extra)
@@ -530,7 +543,11 @@ class DataSampleQueryTests(APITestCase):
 
         with mock.patch(
             "substrapp.serializers.datasample.DataSampleSerializer.get_validators", return_value=[]
-        ), mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}):
+        ), mock.patch.object(OrchestratorClient, "register_datasamples", return_value={}), mock.patch.object(
+            OrchestratorClient, "query_datasample", return_value={}
+        ), mock.patch.object(
+            DataSampleRepSerializer, "save_if_not_exists", return_value=None
+        ):
             self.data_file.seek(0)
             self.data_tar_file.seek(0)
 

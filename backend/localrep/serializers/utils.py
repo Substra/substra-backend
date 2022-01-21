@@ -1,3 +1,4 @@
+import structlog
 from django.conf import settings
 from django.db.utils import IntegrityError
 from django.utils.translation import gettext_lazy as _
@@ -6,6 +7,8 @@ from rest_framework.exceptions import ValidationError
 
 from localrep.errors import AlreadyExistsError
 from localrep.models.utils import URLValidatorWithOptionalTLD
+
+logger = structlog.get_logger(__name__)
 
 
 class URLFieldWithOptionalTLD(serializers.CharField):
@@ -29,9 +32,9 @@ def make_addressable_serializer(field_name):
 
 def make_permission_serializer(field_name):
     class SinglePermissionSerializer(serializers.Serializer):
-        public = serializers.BooleanField(source=f"permissions_{field_name}_public")
+        public = serializers.BooleanField(source=f"{field_name}_public")
         authorized_ids = serializers.ListField(
-            source=f"permissions_{field_name}_authorized_ids",
+            source=f"{field_name}_authorized_ids",
             child=serializers.CharField(),
         )
 
@@ -39,8 +42,8 @@ def make_permission_serializer(field_name):
 
 
 class PermissionsSerializer(serializers.Serializer):
-    download = make_permission_serializer("download")(source="*")
-    process = make_permission_serializer("process")(source="*")
+    download = make_permission_serializer("permissions_download")(source="*")
+    process = make_permission_serializer("permissions_process")(source="*")
 
 
 class SafeSerializerMixin:
@@ -62,6 +65,8 @@ class SafeSerializerMixin:
         try:
             return self.save()
         except IntegrityError as err:
+            logger.warning("Failed to save asset", error=err.args[0])
+            # WARNING: side effect if another field name contains the pk-field name
             if self.primary_key_name in err.args[0]:
                 raise AlreadyExistsError
             raise

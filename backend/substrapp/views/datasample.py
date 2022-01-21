@@ -21,6 +21,10 @@ from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from localrep.errors import AlreadyExistsError
+from localrep.models import DataManager as DataManagerRep
+from localrep.models import DataSample as DataSampleRep
+from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager
@@ -86,7 +90,25 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             for instance in instances:
                 instance.delete()  # warning: post delete signals are not executed by django rollback
             raise
+
+        # Save in local db to ensure consistency
+        self._localrep_create(request, instances)
         return [self.get_serializer(instance).data for instance in instances]
+
+    def _localrep_create(self, request, instances):
+        for instance in instances:
+            with get_orchestrator_client(get_channel_name(request)) as client:
+                localrep_data = client.query_datasample(str(instance.key))
+            localrep_data["channel"] = get_channel_name(request)
+            localrep_serializer = DataSampleRepSerializer(data=localrep_data)
+            try:
+                localrep_serializer.save_if_not_exists()
+            except AlreadyExistsError:
+                pass
+            except Exception:
+                for instance in instances:
+                    instance.delete()  # warning: post delete signals are not executed by django rollback
+                raise
 
     def _db_create(self, data):
         serializer = self.get_serializer(data=data)
@@ -191,6 +213,17 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
 
         # create on orchestrator db
         data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+
+        # Update relations directly in local db to ensure consistency
+        data_sample_keys = [str(key) for key in orchestrator_serializer.validated_data.get("data_sample_keys")]
+        data_manager_keys = [str(key) for key in orchestrator_serializer.validated_data.get("data_manager_keys")]
+        data_managers = DataManagerRep.objects.filter(key__in=data_manager_keys)
+        data_samples = DataSampleRep.objects.filter(key__in=data_sample_keys)
+        for data_sample in data_samples:
+            # WARNING: bulk update is only for adding new links, not for removing ones
+            data_sample.data_managers.add(*data_managers)
+            data_sample.save()
+
         return ApiResponse(data, status=status.HTTP_200_OK)
 
 

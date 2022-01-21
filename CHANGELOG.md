@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Clear the asset buffer When the disk is full (#472)
 - Add API endpoint to serve failed compute task logs (#579)
 - In the API, allow filtering events by timestamp (#649)
+- Local representation of datamanager assets (#648)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)
@@ -23,10 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - The datamanager asset now has a `logs_permission` field (#581)
-- `localrep` app with `Event` and `Algo`: migration, model and serializer
-- `localsync` module in `events` app, using localrep models and serializers to load orchestrator response and save events and algos metadata in DB.
-- `resync` the local representation at the start of the event app
-- `sync_on_event_message` method to save in the local representation the algos and events when an event on the algo is received.
+- Local representation of algo assets (#473)
+  - `localrep` app with `Event` and `Algo`: migration, model and serializer
+  - `localsync` module in `events` app, using localrep models and serializers to load orchestrator response and save events and algos metadata in DB.
+  - `resync` the local representation at the start of the event app
+  - `sync_on_event_message` method to save in the local representation the algos and events when an event on the algo is received.
+- Local representation of metric assets (#637)
 - Add a news feed endpoint to watch compute task event update (#541)
 
 ### Changed
