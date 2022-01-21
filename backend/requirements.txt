@@ -8,7 +8,7 @@ djangorestframework==3.11.2
 djangorestframework-simplejwt==4.4.0
 drf-spectacular==0.13.0
 pyjwt==1.7.1
-ipython==7.11.1
+ipython==7.16.3
 ipython-genutils==0.2.0
 jedi==0.17.2  # Fix crashes in iPython. See https://github.com/ipython/ipython/issues/12740#issuecomment-751273584
               # A better solution would be to bump ipython to 7.20.0, but it needs python 3.7+
