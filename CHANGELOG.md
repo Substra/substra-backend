@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Clear the asset buffer When the disk is full (#472)
+- Add API endpoint to serve failed compute task logs (#579)
+- In the API, allow filtering events by timestamp (#649)
+
+### Changed
+- When resyncing the local representation, only fetch the latest events (#656)
+
+### Fixed
+- Handle incomplete medata in newsfeed (#652)
+- Fix container image build lock, to prevent ImageEntrypoint concurrency issues (#671)
+
+
 ## [0.8.0] 2022-01-16
 
 ### Added
