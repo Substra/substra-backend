@@ -30,3 +30,6 @@ class DataManager(models.Model):
 
     def get_test_data_samples(self):
         return self.data_samples.filter(test_only=True)
+
+    class Meta:
+        ordering = ["creation_date", "key"]  # required for datasample serializer ordering
