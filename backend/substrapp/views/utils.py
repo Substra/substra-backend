@@ -364,6 +364,8 @@ def add_compute_plan_failed_task(client, data):
     It helps the final user to find which task failed the compute plan.
     """
 
+    failed_task = None
+
     if computeplan_pb2.ComputePlanStatus.Value(data["status"]) == computeplan_pb2.PLAN_STATUS_FAILED:
 
         first_failed_task = next(
@@ -374,13 +376,14 @@ def add_compute_plan_failed_task(client, data):
             None,
         )
 
-        failed_task = client.query_task(key=first_failed_task["asset_key"])
+        if first_failed_task:
+            failed_task_data = client.query_task(key=first_failed_task["asset_key"])
+            failed_task = {
+                "key": failed_task_data["key"],
+                "category": failed_task_data["category"],
+            }
 
-        data["failed_task"] = {}
-        data["failed_task"]["key"] = failed_task["key"]
-        data["failed_task"]["category"] = failed_task["category"]
-    else:
-        data["failed_task"] = None
+    data["failed_task"] = failed_task
 
     return data
 
