@@ -16,7 +16,6 @@ from rest_framework import mixins
 from rest_framework import serializers
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
@@ -29,13 +28,13 @@ from substrapp import exceptions
 from substrapp.exceptions import ServerMediasNoSubdirError
 from substrapp.models import DataManager
 from substrapp.models import DataSample
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import DataSampleSerializer
 from substrapp.serializers import OrchestratorDataSampleSerializer
 from substrapp.serializers import OrchestratorDataSampleUpdateSerializer
 from substrapp.utils import ZipFile
 from substrapp.utils import get_dir_hash
 from substrapp.utils import raise_if_path_traversal
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import get_channel_name
 
@@ -60,15 +59,36 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
         return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
     def _create(self, request):
+        """Create new datasamples.
+
+        The workflow is composed of several steps:
+        - Save files in local database to get the addresses.
+        - Register assets in the orchestrator.
+        - Save metadata in local database.
+        """
+        # Step1: save files in local database
         data_manager_keys = request.data.get("data_manager_keys") or []
         self.check_datamanagers(data_manager_keys)
 
         # incrementally save in db
-        instances = []
+        instances = {}
         for file_data in self._get_files(request):
-            instances.append(self._db_create(file_data))
+            instance = self._db_create(file_data)
+            instances[str(instance.key)] = instance
 
-        # serialized data for orchestrator db
+        # Step2: register asset in orchestrator
+        try:
+            orc_response = self._register_in_orchestrator(request, instances.values())
+        except Exception:
+            for instance in instances.values():
+                instance.delete()  # warning: post delete signals are not executed by django rollback
+            raise
+
+        # Step3: save metadata in local database
+        return self._localrep_create(request, instances, orc_response)
+
+    def _register_in_orchestrator(self, request, instances):
+        """Register datasamples in orchestrator."""
         orchestrator_serializer = OrchestratorDataSampleSerializer(
             data={
                 "test_only": request.data.get("test_only", False),
@@ -77,38 +97,29 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
             },
             context={"request": request},
         )
+        orchestrator_serializer.is_valid(raise_exception=True)
+        return orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
 
-        if not orchestrator_serializer.is_valid():
-            for instance in instances:
-                instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise ValidationError(orchestrator_serializer.errors)
-
-        # create on orchestrator db
-        try:
-            orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
-        except Exception:
-            for instance in instances:
-                instance.delete()  # warning: post delete signals are not executed by django rollback
-            raise
-
-        # Save in local db to ensure consistency
-        self._localrep_create(request, instances)
-        return [self.get_serializer(instance).data for instance in instances]
-
-    def _localrep_create(self, request, instances):
-        for instance in instances:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                localrep_data = client.query_datasample(str(instance.key))
+    def _localrep_create(self, request, instances, orc_response):
+        results = []
+        for localrep_data in orc_response:
             localrep_data["channel"] = get_channel_name(request)
             localrep_serializer = DataSampleRepSerializer(data=localrep_data)
             try:
                 localrep_serializer.save_if_not_exists()
             except AlreadyExistsError:
-                pass
+                data_sample = DataSampleRep.objects.get(key=localrep_data["key"])
+                data = DataSampleRepSerializer(data_sample).data
             except Exception:
-                for instance in instances:
+                for instance in instances.values():
                     instance.delete()  # warning: post delete signals are not executed by django rollback
                 raise
+            else:
+                data = localrep_serializer.data
+            result = self.get_serializer(instances[data["key"]]).data
+            result.update(data)
+            results.append(result)
+        return results
 
     def _db_create(self, data):
         serializer = self.get_serializer(data=data)
@@ -198,10 +209,15 @@ class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet
                 yield {"file": File(open(archive, "rb")), "checksum": checksum}
 
     def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_datasamples()
+        queryset = DataSampleRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
 
-        return self.paginate_response(data)
+        query_params = request.query_params.get("search")
+        if query_params is not None:
+            queryset = filter_queryset("datasample", queryset, query_params)
+        queryset = self.paginate_queryset(queryset)
+
+        data = DataSampleRepSerializer(queryset, many=True).data
+        return self.get_paginated_response(data)
 
     @action(methods=["post"], detail=False)
     def bulk_update(self, request):

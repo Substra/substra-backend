@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add API endpoint to serve failed compute task logs (#579)
 - In the API, allow filtering events by timestamp (#649)
 - Local representation of datamanager assets (#648)
+- Local representation of datasample assets (#668)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)
