@@ -238,7 +238,7 @@ class OrchestratorClient:
         data = self._datasample_client.RegisterDataSamples(
             datasample_pb2.RegisterDataSamplesParam(**args), metadata=self._metadata
         )
-        return MessageToDict(data, **CONVERT_SETTINGS)
+        return MessageToDict(data, **CONVERT_SETTINGS)["data_samples"]
 
     @grpc_retry
     def update_datasample(self, args):

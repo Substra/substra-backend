@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x10\x64\x61tasample.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9b\x01\n\nDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12\x11\n\ttest_only\x18\x04 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x05 \x01(\t\x12\x31\n\rcreation_date\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\\\n\rNewDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\x11\n\ttest_only\x18\x03 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x04 \x01(\t\"H\n\x18RegisterDataSamplesParam\x12,\n\x07samples\x18\x01 \x03(\x0b\x32\x1b.orchestrator.NewDataSample\"\x1d\n\x1bRegisterDataSamplesResponse\"A\n\x16UpdateDataSamplesParam\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\"\x1b\n\x19UpdateDataSamplesResponse\">\n\x15QueryDataSamplesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"c\n\x18QueryDataSamplesResponse\x12.\n\x0c\x64\x61ta_samples\x18\x01 \x03(\x0b\x32\x18.orchestrator.DataSample\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"!\n\x12GetDataSampleParam\x12\x0b\n\x03key\x18\x01 \x01(\t2\x8f\x03\n\x11\x44\x61taSampleService\x12h\n\x13RegisterDataSamples\x12&.orchestrator.RegisterDataSamplesParam\x1a).orchestrator.RegisterDataSamplesResponse\x12\x62\n\x11UpdateDataSamples\x12$.orchestrator.UpdateDataSamplesParam\x1a\'.orchestrator.UpdateDataSamplesResponse\x12_\n\x10QueryDataSamples\x12#.orchestrator.QueryDataSamplesParam\x1a&.orchestrator.QueryDataSamplesResponse\x12K\n\rGetDataSample\x12 .orchestrator.GetDataSampleParam\x1a\x18.orchestrator.DataSampleB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x10\x64\x61tasample.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\"\x9b\x01\n\nDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\r\n\x05owner\x18\x03 \x01(\t\x12\x11\n\ttest_only\x18\x04 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x05 \x01(\t\x12\x31\n\rcreation_date\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\\\n\rNewDataSample\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\x12\x11\n\ttest_only\x18\x03 \x01(\x08\x12\x10\n\x08\x63hecksum\x18\x04 \x01(\t\"H\n\x18RegisterDataSamplesParam\x12,\n\x07samples\x18\x01 \x03(\x0b\x32\x1b.orchestrator.NewDataSample\"M\n\x1bRegisterDataSamplesResponse\x12.\n\x0c\x64\x61ta_samples\x18\x01 \x03(\x0b\x32\x18.orchestrator.DataSample\"A\n\x16UpdateDataSamplesParam\x12\x0c\n\x04keys\x18\x01 \x03(\t\x12\x19\n\x11\x64\x61ta_manager_keys\x18\x02 \x03(\t\"\x1b\n\x19UpdateDataSamplesResponse\">\n\x15QueryDataSamplesParam\x12\x12\n\npage_token\x18\x01 \x01(\t\x12\x11\n\tpage_size\x18\x02 \x01(\r\"c\n\x18QueryDataSamplesResponse\x12.\n\x0c\x64\x61ta_samples\x18\x01 \x03(\x0b\x32\x18.orchestrator.DataSample\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"!\n\x12GetDataSampleParam\x12\x0b\n\x03key\x18\x01 \x01(\t2\x8f\x03\n\x11\x44\x61taSampleService\x12h\n\x13RegisterDataSamples\x12&.orchestrator.RegisterDataSamplesParam\x1a).orchestrator.RegisterDataSamplesResponse\x12\x62\n\x11UpdateDataSamples\x12$.orchestrator.UpdateDataSamplesParam\x1a\'.orchestrator.UpdateDataSamplesResponse\x12_\n\x10QueryDataSamples\x12#.orchestrator.QueryDataSamplesParam\x1a&.orchestrator.QueryDataSamplesResponse\x12K\n\rGetDataSample\x12 .orchestrator.GetDataSampleParam\x1a\x18.orchestrator.DataSampleB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,])
 
@@ -187,6 +187,13 @@ _REGISTERDATASAMPLESRESPONSE = _descriptor.Descriptor(
   containing_type=None,
   create_key=_descriptor._internal_create_key,
   fields=[
+    _descriptor.FieldDescriptor(
+      name='data_samples', full_name='orchestrator.RegisterDataSamplesResponse.data_samples', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
   ],
   extensions=[
   ],
@@ -200,7 +207,7 @@ _REGISTERDATASAMPLESRESPONSE = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=393,
-  serialized_end=422,
+  serialized_end=470,
 )
 
 
@@ -238,8 +245,8 @@ _UPDATEDATASAMPLESPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=424,
-  serialized_end=489,
+  serialized_start=472,
+  serialized_end=537,
 )
 
 
@@ -263,8 +270,8 @@ _UPDATEDATASAMPLESRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=491,
-  serialized_end=518,
+  serialized_start=539,
+  serialized_end=566,
 )
 
 
@@ -302,8 +309,8 @@ _QUERYDATASAMPLESPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=520,
-  serialized_end=582,
+  serialized_start=568,
+  serialized_end=630,
 )
 
 
@@ -341,8 +348,8 @@ _QUERYDATASAMPLESRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=584,
-  serialized_end=683,
+  serialized_start=632,
+  serialized_end=731,
 )
 
 
@@ -373,12 +380,13 @@ _GETDATASAMPLEPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=685,
-  serialized_end=718,
+  serialized_start=733,
+  serialized_end=766,
 )
 
 _DATASAMPLE.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _REGISTERDATASAMPLESPARAM.fields_by_name['samples'].message_type = _NEWDATASAMPLE
+_REGISTERDATASAMPLESRESPONSE.fields_by_name['data_samples'].message_type = _DATASAMPLE
 _QUERYDATASAMPLESRESPONSE.fields_by_name['data_samples'].message_type = _DATASAMPLE
 DESCRIPTOR.message_types_by_name['DataSample'] = _DATASAMPLE
 DESCRIPTOR.message_types_by_name['NewDataSample'] = _NEWDATASAMPLE
@@ -464,8 +472,8 @@ _DATASAMPLESERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=721,
-  serialized_end=1120,
+  serialized_start=769,
+  serialized_end=1168,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterDataSamples',
