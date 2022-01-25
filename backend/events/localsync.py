@@ -49,6 +49,10 @@ def _on_create_datamanager_event(event: dict):
     with get_orchestrator_client(event["channel"]) as client:
         data = client.query_datamanager(event["asset_key"])
     data["channel"] = event["channel"]
+    # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
+    #      the orchestrator and backend used to generate the dumps are both outdated.
+    #      We provide a sensible default: logs are private.
+    data["logs_permission"] = event.get("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})
     serializer = DataManagerSerializer(data=data)
     try:
         serializer.save_if_not_exists()

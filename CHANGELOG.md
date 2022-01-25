@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)
+- Accept datamanager events with missing logs_permissions in localsync (#678)
 
 ### Fixed
 - Handle incomplete medata in newsfeed (#652)
