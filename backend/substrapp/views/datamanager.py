@@ -190,7 +190,7 @@ class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            queryset = filter_queryset("datamanager", queryset, query_params)
+            queryset = filter_queryset("dataset", queryset, query_params)
         queryset = self.paginate_queryset(queryset)
 
         data = DataManagerRepSerializer(queryset, many=True).data

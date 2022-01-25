@@ -100,7 +100,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_filter(self):
         """Filter datamanager on name."""
         name = self.data_manager["name"]
-        params = urlencode({"search": f"datamanager:name:{name}"})
+        params = urlencode({"search": f"dataset:name:{name}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
@@ -109,7 +109,7 @@ class DataManagerViewTests(APITestCase):
     def test_datamanager_list_filter_and(self):
         """Filter datamanager on name and owner."""
         name, owner = self.data_manager["name"], self.data_manager["owner"]
-        params = urlencode({"search": f"datamanager:name:{name},datamanager:owner:{owner}"})
+        params = urlencode({"search": f"dataset:name:{name},dataset:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
@@ -119,7 +119,7 @@ class DataManagerViewTests(APITestCase):
         """Filter datamanager on name_0 or name_1."""
         name_0 = self.data_manager["name"]
         name_1 = self.data_managers[1]["name"]
-        params = urlencode({"search": f"datamanager:name:{name_0}-OR-datamanager:name:{name_1}"})
+        params = urlencode({"search": f"dataset:name:{name_0}-OR-dataset:name:{name_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
@@ -132,8 +132,8 @@ class DataManagerViewTests(APITestCase):
         params = urlencode(
             {
                 "search": (
-                    f"datamanager:name:{name_0},datamanager:owner:{owner_0}"
-                    f"-OR-datamanager:name:{name_1},datamanager:owner:{owner_1}"
+                    f"dataset:name:{name_0},dataset:owner:{owner_0}"
+                    f"-OR-dataset:name:{name_1},dataset:owner:{owner_1}"
                 )
             }
         )
