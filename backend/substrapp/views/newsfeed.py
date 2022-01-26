@@ -84,14 +84,15 @@ class NewsFeedViewSet(GenericViewSet, PaginationMixin):
 
             with get_orchestrator_client(get_channel_name(request)) as client:
                 compute_plan = client.query_compute_plan(compute_plan_key)
+                task_category = client.query_task(event["asset_key"]).get("category")
             # Register the last done compute task event by checking compute plan status
             if compute_task_status == TASK_STATUS_DONE and compute_plan["status"] != PLAN_STATUS_DONE:
                 # next event
                 continue
 
-            item_details = {}
+            item_details = {"task_category": task_category}
             if compute_task_status == TASK_STATUS_FAILED:
-                item_details = {"first_failed_task_key": event["asset_key"]}
+                item_details["first_failed_task_key"] = event["asset_key"]
 
             # No news found so create one
             feed_items[feed_item_key] = {

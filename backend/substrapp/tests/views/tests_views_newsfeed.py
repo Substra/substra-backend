@@ -123,6 +123,26 @@ class NewsFeedViewTests(APITestCase):
         },
     ]
 
+    test_task = {
+        "key": "dummy_key",
+        "category": "TASK_TEST",
+    }
+
+    composite_task = {
+        "key": "dummy_key",
+        "category": "TASK_COMPOSITE",
+    }
+
+    train_task = {
+        "key": "dummy_key",
+        "category": "TASK_TRAIN",
+    }
+
+    aggregate_task = {
+        "key": "dummy_key",
+        "category": "TASK_AGGREGATE",
+    }
+
     def test_can_see_news_feed(self):
         cp = assets.get_compute_plan()
         cp_response = copy.deepcopy(cp)
@@ -131,6 +151,10 @@ class NewsFeedViewTests(APITestCase):
 
         with mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp_response), mock.patch.object(
             OrchestratorClient, "query_events", side_effect=[self.compute_plan_events, self.compute_task_events]
+        ), mock.patch.object(
+            OrchestratorClient,
+            "query_task",
+            side_effect=[self.test_task, self.test_task, self.composite_task, self.train_task, self.aggregate_task],
         ):
             response = self.client.get(url, **self.extra)
             actual = response.json()
@@ -159,10 +183,17 @@ class NewsFeedViewTests(APITestCase):
             for event in actual["results"]:
                 if event["status"] == "STATUS_FAILED":
                     self.assertEqual(event["detail"]["first_failed_task_key"], self.first_failed_task_key)
+                else:
+                    self.assertNotIn("first_failed_task_key", event["detail"])
 
             # test can see failed compute task detail
             for event in actual["results"]:
                 if event["status"] == "STATUS_FAILED":
-                    self.assertTrue(len(event["detail"]), "news item has no detail")
-                elif event["status"] in ("STATUS_CREATED", "STATUS_DOING", "STATUS_DONE"):
-                    self.assertFalse(len(event["detail"]), "news item should not have detail")
+                    self.assertIn("first_failed_task_key", event["detail"])
+
+            # test can see category
+            for event in actual["results"]:
+                if event["status"] == "STATUS_CREATED":
+                    self.assertNotIn("task_category", event["detail"])
+                else:
+                    self.assertIn("task_category", event["detail"])
