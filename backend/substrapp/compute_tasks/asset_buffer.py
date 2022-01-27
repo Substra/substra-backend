@@ -1,5 +1,7 @@
 import os
 import shutil
+from functools import wraps
+from typing import Callable
 from typing import Dict
 from typing import List
 
@@ -73,6 +75,40 @@ def clear_assets_buffer() -> None:
                 logger.error("failed to delete asset from Asset Buffer", asset=file_path, error=e)
 
 
+def add_to_buffer_safe(add_function) -> Callable:
+    """
+    Decorator to safely add an asset to the buffer.
+
+    `add_function` must take a "dst" kwarg, corresponding to the destination path in the asset buffer.
+
+    If the destination path already exists on disk, the function returns. Otherwise, add_function is called, then:
+      - If add_function succeeds, a log is printed
+      - If add_function raises, the destination path is deleted
+    """
+
+    @wraps(add_function)
+    def wrap_function(*args, **kwargs):
+        dst = kwargs["dst"]
+
+        if os.path.exists(dst):
+            return  # asset already exists
+
+        try:
+            add_function(*args, **kwargs)
+        except Exception as e:
+            if os.path.exists(dst):
+                if os.path.isdir(dst):
+                    shutil.rmtree(dst)
+                else:
+                    os.remove(dst)
+            raise e
+        else:
+            _log_added(dst)
+
+    wrap_function.is_asset_buffer_safe = True
+    return wrap_function
+
+
 def add_task_assets_to_buffer(ctx: Context) -> None:
     """
     Copy/Download assets (data samples, openers, models) to the asset buffer.
@@ -137,13 +173,13 @@ def delete_models_from_buffer(model_keys: List[str]) -> None:
 
 def _add_datasample_to_buffer(data_sample_key: str) -> None:
     """Copy data sample to the asset buffer"""
-    from substrapp.models import DataSample
-
     dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Datasamples, data_sample_key)
+    _add_datasample_to_buffer_internal(data_sample_key, dst=dst)
 
-    if os.path.exists(dst):
-        # asset already exists
-        return
+
+@add_to_buffer_safe
+def _add_datasample_to_buffer_internal(data_sample_key: str, dst: str) -> None:
+    from substrapp.models import DataSample
 
     data_sample = DataSample.objects.get(key=data_sample_key)
 
@@ -169,25 +205,20 @@ def _add_datasample_to_buffer(data_sample_key: str) -> None:
         shutil.rmtree(os.path.dirname(dst))
         raise Exception(f"Data Sample ({data_sample_key}) checksum in tuple is not the same as in local db")
 
-    _log_added(dst)
-
 
 def _add_opener_to_buffer(channel_name: str, data_manager: Dict) -> None:
     """Copy opener to the asset buffer"""
 
-    dir = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager["key"])
-    dst = os.path.join(dir, Filenames.Opener)
+    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Openers, data_manager["key"])
+    _add_opener_to_buffer_internal(channel_name, data_manager["opener"], dst=dst)
 
-    if os.path.exists(dst):
-        # asset already exists
-        return
 
-    os.mkdir(dir)
-
-    opener = data_manager["opener"]
-    node_client.download(channel_name, get_owner(), opener["storage_address"], dst, opener["checksum"])
-
-    _log_added(dst)
+@add_to_buffer_safe
+def _add_opener_to_buffer_internal(channel_name: str, opener: Dict, dst: str) -> None:
+    os.mkdir(dst)
+    node_client.download(
+        channel_name, get_owner(), opener["storage_address"], os.path.join(dst, Filenames.Opener), opener["checksum"]
+    )
 
 
 def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
@@ -224,16 +255,15 @@ def _add_models_to_buffer(channel_name: str, models: List[Dict]) -> None:
 
 
 def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
+    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model["key"])
+    _add_model_to_buffer_internal(channel_name, model, node_id, dst=dst)
+
+
+@add_to_buffer_safe
+def _add_model_to_buffer_internal(channel_name: str, model: Dict, node_id: str, dst: str) -> None:
     from substrapp.models import Model
 
-    dst = os.path.join(settings.ASSET_BUFFER_DIR, AssetBufferDirName.Models, model["key"])
-
-    if os.path.exists(dst):
-        # asset already exists
-        return
-
     if "address" in model and "storage_address" in model["address"] and model["address"]["storage_address"]:
-
         node_client.download(
             channel_name,
             node_id,
@@ -253,8 +283,6 @@ def _add_model_to_buffer(channel_name: str, model: Dict, node_id: str) -> None:
         if get_hash(dst, model["compute_task_key"]) != m.checksum:
             shutil.rmtree(os.path.dirname(dst))
             raise Exception("Model checksum in Subtuple is not the same as in local db")
-
-    _log_added(dst)
 
 
 def _add_model_to_buffer_with_lock(channel_name: str, model: Dict, node_id: str) -> None:
