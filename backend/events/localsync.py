@@ -151,6 +151,7 @@ def resync():
 
     for channel_name in settings.LEDGER_CHANNELS.keys():
         with get_orchestrator_client(channel_name) as client:
+            event_count = 0
             # Fetch events assets created
             for event_count, event in enumerate(
                 client.query_events_generator(
