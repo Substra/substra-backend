@@ -1,10 +1,11 @@
-import rest_framework as drf
+from rest_framework import response
+from rest_framework import status
 
 
 class ApiError(Exception):
     """Base error response returned by API."""
 
-    status = drf.status.HTTP_500_INTERNAL_SERVER_ERROR
+    status = status.HTTP_500_INTERNAL_SERVER_ERROR
     message = "Internal server error."
 
     def __init__(self, message=None, data=None):
@@ -17,11 +18,11 @@ class ApiError(Exception):
 
     def response(self):
         """Get HTTP Response from error instance."""
-        return drf.response.Response(self.error, status=self.status)
+        return response.Response(self.error, status=self.status)
 
 
 class BadRequestError(ApiError):
-    status = drf.status.HTTP_400_BAD_REQUEST
+    status = status.HTTP_400_BAD_REQUEST
     message = "Bad request."
 
 
