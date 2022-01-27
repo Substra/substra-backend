@@ -186,15 +186,11 @@ class PermissionMixin(object):
         except AssetPermissionError as e:
             return ApiResponse({"message": str(e)}, status=status.HTTP_403_FORBIDDEN)
 
-        if not orchestrator_field:
-            orchestrator_field = django_field
-
         return self.get_local_file_response(django_field)
 
     def get_local_file_response(self, django_field):
         obj = self.get_object()
         data = getattr(obj, django_field)
-        filename = None
 
         if isinstance(data.storage, MinioStorage):
             filename = str(obj.key)
@@ -396,7 +392,6 @@ def add_compute_plan_duration_or_eta(client, data):
 
     start_date = None
     data["start_date"] = None
-    end_date = None
     data["end_date"] = None
     data["estimated_end_date"] = None
     data["duration"] = None
