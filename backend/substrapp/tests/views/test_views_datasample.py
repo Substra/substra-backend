@@ -277,8 +277,10 @@ class DataSampleViewTests(APITestCase):
 
         self.assertIsNotNone(response.data[0]["key"])
         self.assertIsNotNone(response.data[1]["key"])
-        self.assertEqual(response.data[0]["checksum"], get_dir_hash(target_path1))
-        self.assertEqual(response.data[1]["checksum"], get_dir_hash(target_path2))
+        self.assertEqual(
+            set([response.data[0]["checksum"], response.data[1]["checksum"]]),
+            set([get_dir_hash(target_path1), get_dir_hash(target_path2)]),
+        )
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         # assets created in local db
         self.assertEqual(DataSampleRep.objects.count(), len(self.data_samples) + 2)
