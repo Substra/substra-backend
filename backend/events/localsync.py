@@ -174,6 +174,7 @@ def resync():
             for event_count, event in enumerate(
                 client.query_events_generator(
                     start=local_latest_event.isoformat() if local_latest_event is not None else None,
+                    page_size=settings.LOCALREP_RESYNC_EVENTS_PAGE_SIZE,
                 ),
                 start=1,
             ):

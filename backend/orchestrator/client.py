@@ -552,6 +552,8 @@ class OrchestratorClient:
         """This function returns all events as a generator.
         Until page_token is null or no more events are fetched, a loop call will get page_size events
         which are yield one by one
+
+        XXX: default page size is 1, which has very bad performance when querying lots of assets.
         """
 
         # convert JsonStringDate into pb Timestamp
