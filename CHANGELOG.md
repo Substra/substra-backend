@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local representation of datamanager assets (#648)
 - Add task category in news feed view (#685)
 - Local representation of datasample assets (#668)
+- Local representation of computeplan assets (#651)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)

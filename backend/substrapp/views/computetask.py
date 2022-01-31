@@ -15,7 +15,7 @@ from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
-from substrapp.views.computeplan import create_compute_plan
+from substrapp.views.computeplan import register_compute_plan_in_orchestrator
 from substrapp.views.filters_utils import filter_list
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
@@ -150,7 +150,7 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
 
         if create_cp:
-            create_compute_plan(request, data={"key": data["compute_plan_key"]})
+            register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
 
         # create on orchestrator db
         data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)

@@ -2,17 +2,19 @@ import copy
 import os
 import shutil
 import tempfile
-import urllib
 import uuid
 from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
-from grpc import StatusCode
+from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.error
+import orchestrator.computeplan_pb2 as computeplan_pb2
+from localrep.models import ComputePlan as ComputePlanRep
+from localrep.serializers import AlgoSerializer as AlgoRepSerializer
+from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputePlanViewSet
 from substrapp.views import CPAlgoViewSet
@@ -26,13 +28,36 @@ from ..common import internal_server_error_on_exception
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
+def mock_register_compute_plan(data):
+    """Build orchestrator register response from request data."""
+    return {
+        "key": data["key"],
+        "tag": data["tag"],
+        "metadata": data["metadata"],
+        "delete_intermediary_models": data["delete_intermediary_models"],
+        "status": computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_TODO),
+        "task_count": 0,
+        "done_count": 0,
+        "waiting_count": 0,
+        "todo_count": 0,
+        "doing_count": 0,
+        "canceled_count": 0,
+        "failed_count": 0,
+        "owner": "MyOrg1MSP",
+        "creation_date": "2021-11-04T13:54:09.882662Z",
+    }
+
+
 class AuthenticatedAPITestCase(APITestCase):
     client_class = AuthenticatedClient
 
 
 @override_settings(
     MEDIA_ROOT=MEDIA_ROOT,
-    LEDGER_CHANNELS={"mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True}},
+    LEDGER_CHANNELS={
+        "mychannel": {"chaincode": {"name": "mycc"}, "model_export_enabled": True},
+        "yourchannel": {"chaincode": {"name": "yourcc"}, "model_export_enabled": True},
+    },
 )
 class ComputePlanViewTests(AuthenticatedAPITestCase):
     def setUp(self):
@@ -42,6 +67,14 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.url = reverse("substrapp:compute_plan-list")
 
+        self.compute_plans = assets.get_compute_plans()
+        self.query_compute_plans_index = {}
+        for compute_plan in self.compute_plans:
+            serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            self.query_compute_plans_index[compute_plan["key"]] = compute_plan
+
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
 
@@ -49,6 +82,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         dummy_key = str(uuid.uuid4())
 
         data = {
+            "tag": "foo",
             "traintuples": [
                 {
                     "algo_key": dummy_key,
@@ -66,113 +100,122 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             ],
         }
 
-        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value={}), mock.patch.object(
-            OrchestratorClient, "register_tasks", return_value={}
-        ):
+        with mock.patch.object(
+            OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan
+        ), mock.patch.object(OrchestratorClient, "register_tasks", return_value={}):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
-            self.assertEqual(response.json(), {})
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data["key"])
+        # asset created in local db
+        self.assertEqual(ComputePlanRep.objects.count(), len(self.compute_plans) + 1)
 
     def test_create_without_tasks(self):
-        data = {}
+        data = {"tag": "foo"}
 
-        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value={}):
+        with mock.patch.object(OrchestratorClient, "register_compute_plan", side_effect=mock_register_compute_plan):
             response = self.client.post(self.url, data=data, format="json", **self.extra)
-            self.assertEqual(response.json(), {})
-            self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertIsNotNone(response.data["key"])
+        # asset created in local db
+        self.assertEqual(ComputePlanRep.objects.count(), len(self.compute_plans) + 1)
 
     @internal_server_error_on_exception()
-    @mock.patch.object(ComputePlanViewSet, "commit", side_effect=Exception("Unexpected error"))
-    def test_computeplan_create_fail_internal_server_error(self, commit: mock.Mock):
+    @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.create", side_effect=Exception("Unexpected error"))
+    def test_computeplan_create_fail_internal_server_error(self, _):
         response = self.client.post(self.url, data={}, format="json")
-
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        commit.assert_called_once()
 
     def test_computeplan_list_empty(self):
-        with mock.patch.object(OrchestratorClient, "query_compute_plans", return_value=[]):
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {"count": 0, "next": None, "previous": None, "results": []})
+        ComputePlanRep.objects.all().delete()
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
+
+    def mock_query_compute_plan(self, key):
+        return self.query_compute_plans_index[key]
+
+    def mock_cp_failed_task(self, _, data):
+        compute_plan = self.query_compute_plans_index[data["key"]]
+        data["failed_task"] = compute_plan["failed_task"]
+        return data
+
+    def mock_cp_duration(self, _, data):
+        compute_plan = self.query_compute_plans_index[data["key"]]
+        data["start_date"] = compute_plan["start_date"]
+        data["end_date"] = compute_plan["end_date"]
+        data["estimated_end_date"] = compute_plan["estimated_end_date"]
+        data["duration"] = compute_plan["duration"]
+        return data
 
     def test_computeplan_list_success(self):
-        cps = assets.get_compute_plans()
-        cps_response = copy.deepcopy(cps)
-
-        with mock.patch.object(OrchestratorClient, "query_compute_plans", return_value=cps_response), mock.patch(
-            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=cps_response
+        self.maxDiff = None
+        with mock.patch.object(
+            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
+        ), mock.patch(
+            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
         ):
             response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r["results"], cps)
+        for compute_plan in self.compute_plans:
+            del compute_plan["failed_task"]
+        self.assertEqual(
+            response.json(),
+            {"count": len(self.compute_plans), "next": None, "previous": None, "results": self.compute_plans},
+        )
+
+    def test_computeplan_list_wrong_channel(self):
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.computeplan.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_computeplan_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
+    @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.list", side_effect=Exception("Unexpected error"))
+    def test_computeplan_list_fail_internal_server_error(self, _):
         response = self.client.get(self.url)
-
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        get_channel_name.assert_called_once()
 
     def test_computeplan_retrieve(self):
-        cp = assets.get_compute_plan()
-        cp_response = copy.deepcopy(cp)
-        with mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp_response), mock.patch(
-            "substrapp.views.computeplan.add_cp_extra_information", return_value=cp_response
+        url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])
+        with mock.patch.object(
+            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
+        ), mock.patch(
+            "substrapp.views.computeplan.add_compute_plan_failed_task", side_effect=self.mock_cp_failed_task
+        ), mock.patch(
+            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
         ):
-            url = reverse("substrapp:compute_plan-detail", args=[cp["key"]])
             response = self.client.get(url, **self.extra)
-            actual = response.json()
-            self.assertEqual(actual, cp)
+        self.assertEqual(response.json(), self.compute_plans[0])
 
     def test_computeplan_retrieve_fail(self):
         # Key < 32 chars
-        search_params = "12312323/"
-        response = self.client.get(self.url + search_params, **self.extra)
+        url = reverse("substrapp:compute_plan-detail", args=["12312323"])
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
         # Key not hexa
-        search_params = "X" * 32 + "/"
-        response = self.client.get(self.url + search_params, **self.extra)
+        url = reverse("substrapp:compute_plan-detail", args=["X" * 32])
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-        error = orchestrator.error.OrcError()
-        error.details = "out of range test"
-        error.code = StatusCode.OUT_OF_RANGE
-
-        cp = assets.get_compute_plan()
-
-        with mock.patch.object(OrchestratorClient, "query_compute_plan", side_effect=error):
-            response = self.client.get(f'{self.url}{cp["key"]}/', **self.extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.computeplan.validate_key", side_effect=Exception("Unexpected error"))
-    def test_computeplan_retrieve_fail_internal_server_error(self, validate_key: mock.Mock):
-        response = self.client.get(self.url + "123/")
-
+    @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    def test_computeplan_retrieve_fail_internal_server_error(self, _):
+        url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        validate_key.assert_called_once()
 
     def test_computeplan_cancel(self):
-        cp = assets.get_compute_plan()
-        key = cp["key"]
+        url = reverse("substrapp:compute_plan-cancel", args=[self.compute_plans[0]["key"]])
         with mock.patch.object(OrchestratorClient, "cancel_compute_plan"), mock.patch.object(
-            OrchestratorClient, "query_compute_plan", return_value=cp
+            OrchestratorClient, "query_compute_plan", return_value=self.compute_plans[0]
         ):
-            url = reverse("substrapp:compute_plan-cancel", args=[key])
             response = self.client.post(url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, cp)
+        self.assertEqual(response.json(), self.compute_plans[0])
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.computeplan.validate_key", side_effect=Exception("Unexpected error"))
-    def test_computeplan_cancel_fail_internal_server_error(self, validate_key: mock.Mock):
-        url = reverse("substrapp:compute_plan-cancel", kwargs={"pk": 123})
+    @mock.patch("substrapp.views.computeplan.ComputePlanViewSet.cancel", side_effect=Exception("Unexpected error"))
+    def test_computeplan_cancel_fail_internal_server_error(self, _):
+        url = reverse("substrapp:compute_plan-cancel", args=[self.compute_plans[0]["key"]])
         response = self.client.post(url, data={}, format="json")
-
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        validate_key.assert_called_once()
 
     def test_parse_composite_traintuples(self):
         dummy_key = str(uuid.uuid4())
@@ -227,25 +270,23 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         # # maybe add a test without ?page_size=<int> and add a forbidden response
 
     def test_can_filter_tuples(self):
-
-        cp = assets.get_compute_plan()
-        cp_response = copy.deepcopy(cp)
         tasks_response = assets.get_train_tasks()
         filtered_events = [iter([event]) for tr in tasks_response for event in common.get_task_events(tr["key"])]
 
-        url = reverse("substrapp:compute_plan_traintuple-list", args=[cp["key"]])
-        target_tag = "foo"
-        search_params = "?page_size=10&page=1&search=traintuple%253Atag%253A" + urllib.parse.quote_plus(target_tag)
+        url = reverse("substrapp:compute_plan_traintuple-list", args=[self.compute_plans[0]["key"]])
+        params = urlencode({"page_size": 10, "page": 1, "search": "traintuple:tag:foo"})
 
-        with mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp_response), mock.patch.object(
-            OrchestratorClient, "query_tasks", return_value=tasks_response
-        ), mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None), mock.patch.object(
+        with mock.patch.object(
+            OrchestratorClient, "query_compute_plan", return_value=self.compute_plans[0]
+        ), mock.patch.object(OrchestratorClient, "query_tasks", return_value=tasks_response), mock.patch.object(
+            OrchestratorClient, "get_computetask_output_models", return_value=None
+        ), mock.patch.object(
             OrchestratorClient, "query_events_generator", side_effect=filtered_events
         ), mock.patch(
             "substrapp.views.utils._get_error_type", return_value=None
         ) as mocked_get_error_type:
 
-            response = self.client.get(url + search_params, **self.extra)
+            response = self.client.get(f"{url}?{params}", **self.extra)
             self.assertEqual(response.status_code, status.HTTP_200_OK)
 
             r = response.json()
@@ -253,32 +294,27 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             self.assertEqual(mocked_get_error_type.call_count, 2)
 
     def test_can_see_algos(self):
-        cp = assets.get_compute_plan()
-        cp_response = copy.deepcopy(cp)
-        compute_plan_key = cp_response["key"]
         algos = assets.get_algos()
-        algos_response = copy.deepcopy(algos)
+        for algo in algos:
+            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
 
-        url = reverse("substrapp:compute_plan_algo-list", args=[compute_plan_key])
-        url = f"{url}?page_size=2"
-
-        with mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp_response), mock.patch.object(
-            OrchestratorClient, "query_algos", return_value=[algos_response[0], algos_response[1]]
-        ):
-
-            response = self.client.get(url, **self.extra)
-
+        url = reverse("substrapp:compute_plan_algo-list", args=[self.compute_plans[0]["key"]])
+        params = urlencode({"page_size": 2})
+        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos):
+            response = self.client.get(f"{url}?{params}", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["results"], algos_response[0:2])
+        self.assertEqual(response.json()["results"], algos[0:2])
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.computeplan.validate_key", side_effect=Exception("Unexpected error"))
-    def test_computeplan_update_ledger_fail_internal_server_error(self, validate_key: mock.Mock):
-        url = reverse("substrapp:compute_plan-update-ledger", kwargs={"pk": 123})
+    @mock.patch(
+        "substrapp.views.computeplan.ComputePlanViewSet.update_ledger", side_effect=Exception("Unexpected error")
+    )
+    def test_computeplan_update_ledger_fail_internal_server_error(self, _):
+        url = reverse("substrapp:compute_plan-update-ledger", kwargs={"pk": self.compute_plans[0]["key"]})
         response = self.client.post(url, data={}, format="json")
-
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        validate_key.assert_called_once()
 
 
 class CPTaskViewSetTests(AuthenticatedAPITestCase):

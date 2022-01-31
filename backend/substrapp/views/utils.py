@@ -348,10 +348,20 @@ def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:
     return str(uuid.UUID(str_or_hex_uuid))
 
 
-def add_cp_extra_information(client, data):
-    data = add_compute_plan_failed_task(client, data)
-    data = add_compute_plan_duration_or_eta(client, data)
+def add_cp_status_and_task_counts(client, data):
+    compute_plan = client.query_compute_plan(data["key"])
+    return update_cp_status_and_task_counts(data, compute_plan)
 
+
+def update_cp_status_and_task_counts(data, compute_plan):
+    data["status"] = compute_plan["status"]
+    data["task_count"] = compute_plan["task_count"]
+    data["done_count"] = compute_plan["done_count"]
+    data["waiting_count"] = compute_plan["waiting_count"]
+    data["todo_count"] = compute_plan["todo_count"]
+    data["doing_count"] = compute_plan["doing_count"]
+    data["canceled_count"] = compute_plan["canceled_count"]
+    data["failed_count"] = compute_plan["failed_count"]
     return data
 
 

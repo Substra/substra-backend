@@ -40,6 +40,22 @@ def _on_create_algo_event(event: dict):
         logger.debug("Algo already exists", asset_key=event["asset_key"], event_id=event["id"])
 
 
+def _on_create_computeplan_event(event: dict):
+    """Process create computeplan event to update local database."""
+    from localrep.serializers import ComputePlanSerializer
+
+    logger.debug("Syncing computeplan", asset_key=event["asset_key"], event_id=event["id"])
+
+    with get_orchestrator_client(event["channel"]) as client:
+        data = client.query_compute_plan(event["asset_key"])
+    data["channel"] = event["channel"]
+    serializer = ComputePlanSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("ComputePlan already exists", asset_key=event["asset_key"], event_id=event["id"])
+
+
 def _on_create_datamanager_event(event: dict):
     """Process create datamanager event to update local database."""
     from localrep.serializers import DataManagerSerializer
@@ -118,6 +134,8 @@ def sync_on_event_message(event: dict):
 
     if (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_ALGO):
         _on_create_algo_event(event)
+    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_COMPUTE_PLAN):
+        _on_create_computeplan_event(event)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_DATA_MANAGER):
         _on_create_datamanager_event(event)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_DATA_SAMPLE):

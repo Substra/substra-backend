@@ -4,10 +4,14 @@ import structlog
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
 from libs.pagination import PaginationMixin
+from localrep.errors import AlreadyExistsError
+from localrep.models import ComputePlan as ComputePlanRep
+from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
@@ -15,20 +19,23 @@ from substrapp.serializers import OrchestratorComputePlanSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_compute_plan_duration_or_eta
-from substrapp.views.utils import add_cp_extra_information
+from substrapp.views.utils import add_compute_plan_failed_task
+from substrapp.views.utils import add_cp_status_and_task_counts
 from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
+from substrapp.views.utils import update_cp_status_and_task_counts
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
 
 
-def create_compute_plan(request, data):
+def register_compute_plan_in_orchestrator(request, data):
     serializer = OrchestratorComputePlanSerializer(data=data, context={"request": request})
     try:
         serializer.is_valid(raise_exception=True)
@@ -175,7 +182,19 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             tasks[task_data["key"]] = task_data
         return tasks
 
-    def commit(self, request):
+    def create(self, request, *args, **kwargs):
+        data = self._create(request)
+        headers = self.get_success_headers(data)
+        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
+
+    def _create(self, request):
+        """Create a new computeplan.
+
+        The workflow is composed of several steps:
+        - Register asset in the orchestrator.
+        - Save metadata in local database.
+        """
+        # Step1: register asset in orchestrator
         compute_plan_data = {
             "key": uuid.uuid4(),
             "tag": request.data.get("tag"),
@@ -204,39 +223,62 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             + list(validated_testtuples.values())
         )
 
-        cp = create_compute_plan(request, data=compute_plan_data)
+        localrep_data = register_compute_plan_in_orchestrator(request, data=compute_plan_data)
 
         if tasks:
             with get_orchestrator_client(get_channel_name(request)) as client:
                 client.register_tasks({"tasks": tasks})
 
-        return cp
+        # Step2: save metadata in local database
+        localrep_data["channel"] = get_channel_name(request)
+        localrep_serializer = ComputePlanRepSerializer(data=localrep_data)
+        try:
+            localrep_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            # May happen if the events app already processed the event pushed by the orchestrator
+            cp = ComputePlanRep.objects.get(key=localrep_data["key"])
+            data = ComputePlanRepSerializer(cp).data
+        else:
+            data = localrep_serializer.data
 
-    def create(self, request, *args, **kwargs):
-        data = self.commit(request)
-        headers = self.get_success_headers(data)
-        return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
+        data = update_cp_status_and_task_counts(data, localrep_data)
+
+        return data
 
     def retrieve(self, request, *args, **kwargs):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
         key = self.kwargs[lookup_url_kwarg]
         validated_key = validate_key(key)
 
+        try:
+            compute_plan = ComputePlanRep.objects.get(key=validated_key)
+        except ComputePlanRep.DoesNotExist:
+            raise NotFound
+        data = ComputePlanRepSerializer(compute_plan).data
+
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_compute_plan(validated_key)
-            data = add_cp_extra_information(client, data)
+            # TODO: use localrep tasks
+            data = add_cp_status_and_task_counts(client, data)
+            data = add_compute_plan_failed_task(client, data)
+            data = add_compute_plan_duration_or_eta(client, data)
 
         return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_compute_plans()
-            for datum in data:
-                datum = add_compute_plan_duration_or_eta(client, datum)
+        queryset = ComputePlanRep.objects.filter(channel=get_channel_name(request))
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            data = filter_list(object_type="compute_plan", data=data, query_params=query_params)
+            queryset = filter_queryset("compute_plan", queryset, query_params)
+        queryset = self.paginate_queryset(queryset)
+
+        data = ComputePlanRepSerializer(queryset, many=True).data
+
+        with get_orchestrator_client(get_channel_name(request)) as client:
+            # TODO: use localrep tasks
+            for datum in data:
+                datum = add_cp_status_and_task_counts(client, datum)
+                datum = add_compute_plan_duration_or_eta(client, datum)
 
         return self.paginate_response(data)
 

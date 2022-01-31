@@ -1,4 +1,5 @@
 from .algo import AlgoSerializer
+from .computeplan import ComputePlanSerializer
 from .datamanager import DataManagerSerializer
 from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
@@ -7,6 +8,7 @@ from .metric import MetricSerializer
 
 __all__ = [
     "AlgoSerializer",
+    "ComputePlanSerializer",
     "DataManagerSerializer",
     "DataManagerWithRelationsSerializer",
     "DataSampleSerializer",
