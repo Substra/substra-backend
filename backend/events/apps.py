@@ -139,7 +139,8 @@ async def on_message(message: aio_pika.IncomingMessage):
         try:
             payload = json.loads(message.body)
             logger.debug("Received payload", payload=payload)
-            localsync.sync_on_event_message(payload)
+            with get_orchestrator_client(payload["channel"]) as client:
+                localsync.sync_on_event_message(payload, client)
             on_message_compute_engine(payload)
         except Exception as e:
             logger.exception("Error processing message", e=e)
