@@ -7,7 +7,7 @@ from substrapp.orchestrator import get_orchestrator_client
 from substrapp.views import utils as view_utils
 
 
-class ComputeTaskLogsViewSet(viewsets.GenericViewSet, view_utils.PermissionMixin):
+class ComputeTaskLogsViewSet(view_utils.PermissionMixin, viewsets.GenericViewSet):
     queryset = compute_task_failure_report.ComputeTaskFailureReport.objects.all()
 
     @action(detail=True, url_path=compute_task_failure_report.LOGS_FILE_PATH)
