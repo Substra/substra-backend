@@ -197,16 +197,17 @@ class EventsConfig(AppConfig):
     logger.info("starting event app")
 
     def ready(self):
+        # Init: resync all orchestrator assets
+        while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
+            try:
+                localsync.resync()
+            except Exception as e:
+                time.sleep(30)
+                logger.error("Retry connecting to orchestrator GRPC api", error=e)
+            else:
+                break
+
         with get_event_loop() as loop:
-            # Init: resync all orchestrator assets
-            while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
-                try:
-                    localsync.resync()
-                except Exception as e:
-                    time.sleep(30)
-                    logger.error("Retry connecting to orchestrator GRPC api", error=e)
-                else:
-                    break
             # Run: consume orchestrator new events
             while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
                 try:
