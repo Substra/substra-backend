@@ -2,26 +2,26 @@ import io
 
 import pytest
 
+from orchestrator import failure_report_pb2
 from substrapp.compute_tasks import errors
 
 
 class TestComputeTaskErrorType:
     @pytest.mark.parametrize(
         ("input_value", "expected"),
-        [(e.name, e) for e in errors.ComputeTaskErrorType]
-        + [("Some unexpected internal error", errors.ComputeTaskErrorType.INTERNAL_ERROR)],
+        [(e.value, e) for e in errors.ComputeTaskErrorType] + [(4, errors.ComputeTaskErrorType.INTERNAL_ERROR)],
     )
-    def test_from_str(self, input_value: str, expected: errors.ComputeTaskErrorType):
-        result = errors.ComputeTaskErrorType.from_str(input_value)
+    def test_from_int(self, input_value: int, expected: errors.ComputeTaskErrorType):
+        result = errors.ComputeTaskErrorType.from_int(input_value)
         assert result == expected
 
 
 @pytest.mark.parametrize(
     ("exc", "expected"),
     [
-        (errors.BuildError(), "BUILD_ERROR"),
-        (errors.ExecutionError(logs=io.BytesIO()), "EXECUTION_ERROR"),
-        (Exception(), "INTERNAL_ERROR"),
+        (errors.BuildError(), failure_report_pb2.ERROR_TYPE_BUILD),
+        (errors.ExecutionError(logs=io.BytesIO()), failure_report_pb2.ERROR_TYPE_EXECUTION),
+        (Exception(), failure_report_pb2.ERROR_TYPE_INTERNAL),
     ],
 )
 def test_get_error_type(exc: Exception, expected: str):

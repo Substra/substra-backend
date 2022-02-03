@@ -5,6 +5,7 @@ from typing import Callable
 from typing import Optional
 from wsgiref.util import is_hop_by_hop
 
+import grpc
 from django.conf import settings
 from django.http import FileResponse
 from rest_framework import status
@@ -16,11 +17,14 @@ from rest_framework.settings import api_settings
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.error
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
 from node.authentication import NodeUser
+from orchestrator import client as orc_client
+from orchestrator import failure_report_pb2
 from substrapp.clients import node as node_client
-from substrapp.compute_tasks import errors as compute_task_errors
+from substrapp.compute_tasks import errors
 from substrapp.exceptions import AssetPermissionError
 from substrapp.exceptions import BadRequestError
 from substrapp.orchestrator import get_orchestrator_client
@@ -320,19 +324,45 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
         last_event = None
 
     data["end_date"] = last_event["timestamp"] if last_event else None
-    data["error_type"] = _get_error_type(last_event) if last_event else None
+    data["error_type"] = _get_error_type(client, data, last_event) if last_event else None
 
     return data
 
 
-def _get_error_type(last_event) -> Optional[str]:
+def _get_error_type(client: orc_client.OrchestratorClient, compute_task, last_event) -> Optional[str]:
     # Since STATUS_FAILED is a final status, in case of failure
     # the last event will always be the event dispatched to transition to STATUS_FAILED
-    if last_event["metadata"].get("status") == "STATUS_FAILED":
-        reason = last_event["metadata"]["reason"]
-        return compute_task_errors.ComputeTaskErrorType.from_str(reason).value
+    if not _is_failure_event(last_event):
+        return None
 
-    return None
+    try:
+        error_type_pb2_name = _get_error_type_from_failure_report(client, compute_task)
+    except _FailureReportNotFound:
+        error_type = errors.ComputeTaskErrorType.INTERNAL_ERROR
+    else:
+        error_type = errors.ComputeTaskErrorType.from_int(failure_report_pb2.ErrorType.Value(error_type_pb2_name))
+
+    return error_type.name
+
+
+def _is_failure_event(event):
+    return event["metadata"].get("status") == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED)
+
+
+class _FailureReportNotFound(RuntimeError):
+    pass
+
+
+def _get_error_type_from_failure_report(client: orc_client.OrchestratorClient, compute_task) -> str:
+    try:
+        failure_report = client.get_failure_report({"compute_task_key": compute_task["key"]})
+    except orchestrator.error.OrcError as rpc_error:
+        if rpc_error.code == grpc.StatusCode.NOT_FOUND:
+            raise _FailureReportNotFound
+
+        raise rpc_error
+
+    return failure_report["error_type"]
 
 
 def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:

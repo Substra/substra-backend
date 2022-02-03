@@ -104,21 +104,19 @@ class ComputeTask(Task):
         error_type = compute_task_errors.get_error_type(exc)
 
         with get_orchestrator_client(channel_name) as client:
-            client.update_task_status(compute_task_key, computetask_pb2.TASK_ACTION_FAILED, log=error_type)
-
-            # Only execution errors lead to the creation of compute task failure report instances
-            # to store the execution logs. A failure report is only registered in the orchestrator
-            # when a corresponding compute task failure report exists in the database.
+            # On the backend, only execution errors lead to the creation of compute task failure report instances
+            # to store the execution logs.
             if failure_report:
-                client.register_failure_report(
-                    {
-                        "compute_task_key": compute_task_key,
-                        "logs_address": {
-                            "checksum": failure_report.logs_checksum,
-                            "storage_address": failure_report.logs_address,
-                        },
-                    }
-                )
+                logs_address = {
+                    "checksum": failure_report.logs_checksum,
+                    "storage_address": failure_report.logs_address,
+                }
+            else:
+                logs_address = None
+
+            client.register_failure_report(
+                {"compute_task_key": compute_task_key, "error_type": error_type, "logs_address": logs_address}
+            )
 
     def split_args(self, celery_args):
         channel_name = celery_args[0]

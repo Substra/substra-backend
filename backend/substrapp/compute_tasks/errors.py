@@ -4,6 +4,8 @@ import abc
 import enum
 from typing import BinaryIO
 
+from orchestrator import failure_report_pb2
+
 
 class ComputeTaskErrorType(enum.Enum):
     """The types of errors that can occur in a compute task.
@@ -20,20 +22,17 @@ class ComputeTaskErrorType(enum.Enum):
     These types of errors are safe to advertise to the user.
     """
 
-    def _generate_next_value_(name, start, count, last_values):  # noqa: N805
-        return name
-
-    BUILD_ERROR = enum.auto()
-    EXECUTION_ERROR = enum.auto()
-    INTERNAL_ERROR = enum.auto()
+    BUILD_ERROR = failure_report_pb2.ERROR_TYPE_BUILD
+    EXECUTION_ERROR = failure_report_pb2.ERROR_TYPE_EXECUTION
+    INTERNAL_ERROR = failure_report_pb2.ERROR_TYPE_INTERNAL
 
     @classmethod
-    def from_str(cls, value: str) -> "ComputeTaskErrorType":
-        """Convert a string into a `ComputeTaskErrorType`. If the string passed as argument
+    def from_int(cls, value: int) -> "ComputeTaskErrorType":
+        """Convert an int into a `ComputeTaskErrorType`. If the int passed as argument
         does not correspond to an enum element, the value `INTERNAL_ERROR` is returned.
 
         Args:
-            value: The string to parse.
+            value: The int to parse.
 
         Returns:
             A `ComputeTaskErrorType` element.
@@ -66,17 +65,19 @@ class ExecutionError(_ComputeTaskError):
         super().__init__(*args, **kwargs)
 
 
-def get_error_type(exc: Exception) -> str:
+def get_error_type(exc: Exception) -> failure_report_pb2.ErrorType:
     """From a given exception, return an error type safe to store and to advertise to the user.
 
     Args:
         exc: The exception to process.
 
     Returns:
-        The error code corresponding to the exception, as a string.
+        The error type corresponding to the exception.
     """
 
     if isinstance(exc, _ComputeTaskError):
-        return exc.error_type.value
+        error_type = exc.error_type
+    else:
+        error_type = ComputeTaskErrorType.INTERNAL_ERROR
 
-    return ComputeTaskErrorType.INTERNAL_ERROR.value
+    return error_type.value
