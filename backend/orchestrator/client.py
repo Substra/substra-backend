@@ -321,7 +321,7 @@ class OrchestratorClient:
         data = self._computetask_client.RegisterTasks(
             computetask_pb2.RegisterTasksParam(**args), metadata=self._metadata
         )
-        return MessageToDict(data, **CONVERT_SETTINGS)
+        return MessageToDict(data, **CONVERT_SETTINGS)["tasks"]
 
     @grpc_retry
     def update_task_status(self, compute_task_key, action, log=""):

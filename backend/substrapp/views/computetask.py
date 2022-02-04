@@ -153,12 +153,9 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
             register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
 
         # create on orchestrator db
-        data = orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+        orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
 
-        merged_data = dict(orchestrator_serializer.data)
-        merged_data.update(data)
-
-        return merged_data
+        return dict(orchestrator_serializer.data)
 
     def create(self, request, *args, **kwargs):
         data = self.commit(request)

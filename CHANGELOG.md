@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Accept datamanager events with missing logs_permissions in localsync (#678)
 - Update datasamples protobuf. `register_datasamples` return now the datasamples list registered (#665)
 - When resyncing the local representation, fetch events by page of 1000 instead of one-by-one (#680)
+- Update computetask protobuf. `register_tasks` return now the tasks list registered (#677)
 
 ### Fixed
 - Handle incomplete medata in newsfeed (#652)
