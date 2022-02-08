@@ -345,7 +345,7 @@ LOGGING = {
     "loggers": {
         # root logger
         "": {
-            "level": "DEBUG" if DEBUG else "WARNING",
+            "level": "WARNING",
             "handlers": ["console"],
             "propagate": True,
         },
@@ -367,16 +367,6 @@ LOGGING = {
         },
         # third-party libraries
         "celery": {
-            "level": "INFO",
-            "handlers": ["console"],
-            "propagate": True,
-        },
-        "kubernetes.client.rest": {  # This is too verbose in debug level
-            "level": "INFO" if DEBUG else "WARNING",
-            "handlers": ["console"],
-            "propagate": False,
-        },
-        "amqp.connection.Connection.heartbeat_tick": {  # This is too verbose in debug level
             "level": "INFO",
             "handlers": ["console"],
             "propagate": True,
