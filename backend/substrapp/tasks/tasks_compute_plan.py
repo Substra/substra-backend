@@ -11,6 +11,7 @@ from substrapp.compute_tasks.directories import Directories
 from substrapp.compute_tasks.directories import teardown_compute_plan_dir
 from substrapp.compute_tasks.lock import get_compute_plan_lock
 from substrapp.docker_registry import delete_container_image
+from substrapp.models.image_entrypoint import ImageEntrypoint
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.task_routing import release_worker
 
@@ -78,3 +79,4 @@ def _remove_docker_images(image_prefix, keys):
     for key in keys:
         image_tag = get_image_tag(image_prefix, key)
         delete_container_image(image_tag)
+        ImageEntrypoint.objects.filter(asset_key=key).delete()
