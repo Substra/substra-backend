@@ -59,7 +59,12 @@ endif
 
 .PHONY: orchestrator-grpc
 orchestrator-grpc:	## Generate Python gRPC client files (ORCHESTRATOR_ROOT variable may override the default orchestrator path)
-	python -m grpc_tools.protoc -I ${ORCHESTRATOR_ROOT}/lib/asset/ --python_out=$(GRPC_CLIENT_DIR) --grpc_python_out=$(GRPC_CLIENT_DIR) ${ORCHESTRATOR_ROOT}/lib/asset/*.proto
+	python -m grpc_tools.protoc -I ${ORCHESTRATOR_ROOT}/lib/asset/ \
+		--python_out=$(GRPC_CLIENT_DIR) \
+		--grpc_python_out=$(GRPC_CLIENT_DIR) \
+		--mypy_out=$(GRPC_CLIENT_DIR) \
+		--mypy_grpc_out=$(GRPC_CLIENT_DIR) \
+		${ORCHESTRATOR_ROOT}/lib/asset/*.proto
 	${SED_BINARY} -i -E 's/^import.*_pb2/from . \0/' $(GRPC_CLIENT_DIR)/*_pb2*.py
 
 ### Documentation
