@@ -1,75 +1,118 @@
-import tempfile
+import io
+from typing import Any
 
 import structlog
+import urllib3
 from django.conf import settings
 from django.core.files.base import File
 from django.core.files.storage import Storage
 from django.utils.deconstruct import deconstructible
 from minio import Minio
-from minio import error as merr
 from minio.error import S3Error
 
 logger = structlog.get_logger(__name__)
 
-MINIO_CLIENT_CHUNK_SIZE = 1024 * 1024
-SPOOLED_TEMPORARY_FILE_MAX_SIZE = 1024 * 1024 * 10
 
+class ReadOnlyMinIOFile(File):
+    """A Django File object for files stored in MinIO that only supports read mode"""
 
-# From https://github.com/py-pa/django-minio-storage
-class ReadOnlySpooledTemporaryFile(File):
-    """A django File class which buffers the minio object into a local SpooledTemporaryFile."""
+    name: str
+    _mode: str
+    _storage: "MinioStorage"
+    _file: urllib3.response.HTTPResponse
 
-    minio_client_chunk_size = MINIO_CLIENT_CHUNK_SIZE
-    max_memory_size = SPOOLED_TEMPORARY_FILE_MAX_SIZE
+    def __init__(self, name: str, mode: str, storage: "MinioStorage", **kwargs) -> None:
+        """builds a ReadOnlyMinIOFile
 
-    def __init__(
-        self,
-        name: str,
-        mode: str,
-        storage: "Storage",
-        **kwargs,
-    ):
+        Args:
+            name (str): name of the file to open
+            mode (str): opening mode for the file, only read modes are supported
+            storage (MinioStorage): storage backend used to store this file
+
+        Raises:
+            NotImplementedError: raised if a mode different from read is requested
+        """
         if "w" in mode:
-            raise NotImplementedError("ReadOnlySpooledTemporaryFile storage only support read modes")
-        self._storage: "Storage" = storage
-        self.name: str = name
-        self._mode: str = mode
+            raise NotImplementedError("ReadOnlyMinIOFile storage only supports read modes")
+        self._storage = storage
+        self.name = name
+        self._mode = mode
         self._file = None
 
-    def _get_file(self):
+    def _get_file(self) -> Any:
+        """open the file object
+
+        Returns:
+            Any: an openend file object
+        """
         if self._file is None:
-            try:
-                obj = self._storage.client.get_object(self._storage.bucket, self.name)
-                self._file = tempfile.SpooledTemporaryFile(max_size=self.max_memory_size)
-                for d in obj.stream(amt=self.minio_client_chunk_size):
-                    self._file.write(d)
-                self._file.seek(0)
-                return self._file
-            except merr.ResponseError as error:
-                raise Exception(f"File {self.name} does not exist", error)
-            finally:
-                try:
-                    obj.close()
-                    obj.release_conn()
-                except Exception as e:
-                    logger.error(str(e))
+            self._open_file_at(0)
         return self._file
 
+    def _open_file_at(self, offset: int) -> None:
+        """open the internal file reference at the required position
+
+        Args:
+            offset (int): start byte position of the data
+        """
+        self._file: urllib3.response.HTTPResponse = self._storage.client.get_object(
+            self._storage.bucket, self.name, offset=offset
+        )
+
     def _set_file(self, value):
+        """Set the internal file
+
+        Args:
+            value (urllib3.response.HTTPResponse): the file you want to set
+        """
         self._file = value
 
     file = property(_get_file, _set_file)
 
-    def close(self):
+    def close(self) -> None:
+        """close the file"""
         if self._file is not None:
             self._file.close()
+            self._file.release_conn()
             self._file = None
 
+    def seek(self, offset: int, whence: int = io.SEEK_SET) -> int:
+        """Change the stream position to the given byte offset
+
+        Args:
+            offset (int): offset at which you want to set the stream position
+            whence (int, optional): position from which the offset is computed. Defaults to io.SEEK_SET.
+                only io.SEEK_SET is accepted.
+
+        Raises:
+            NotImplementedError: raised if whence is set to something else than io.SEEK_SET
+
+        Returns:
+            int: the new stream position
+        """
+        if whence != io.SEEK_SET:
+            raise NotImplementedError("This file does not support seek modes other than SEEK_SET")
+        # Not ideal but since HTTPResponse does not support seek()
+        # we need to reopen the file at the required position
+        self.close()
+        self._open_file_at(offset)
+        return offset
+
     def writable(self) -> bool:
+        """checks if this file is writable
+
+        Returns:
+            bool: whether the file is writable or not
+        """
         return False
 
     def write(*args, **kwargs):
-        raise NotImplementedError("this is a read only file")
+        """write to the file
+
+        Raises:
+            NotImplementedError: always raised because this file is readonly
+        """
+        raise NotImplementedError("this is a readonly file")
 
 
 @deconstructible
@@ -101,7 +144,7 @@ class MinioStorage(Storage):
         return self._client
 
     def _open(self, name, mode):
-        return ReadOnlySpooledTemporaryFile(name, mode, self)
+        return ReadOnlyMinIOFile(name, mode, self)
 
     def _save(self, name, content):
         self.client.put_object(self.bucket, name, content.file, content.size)
