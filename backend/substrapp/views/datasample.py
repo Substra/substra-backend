@@ -19,7 +19,6 @@ from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
 from localrep.errors import AlreadyExistsError
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import DataSample as DataSampleRep
@@ -41,7 +40,7 @@ from substrapp.views.utils import get_channel_name
 logger = structlog.get_logger(__name__)
 
 
-class DataSampleViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = DataSample.objects.all()
     serializer_class = DataSampleSerializer
     pagination_class = DefaultPageNumberPagination

@@ -10,7 +10,6 @@ from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
 from localrep.errors import AlreadyExistsError
 from localrep.models import DataManager as DataManagerRep
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
@@ -40,7 +39,7 @@ def replace_storage_addresses(request, data_manager):
     )
 
 
-class DataManagerViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class DataManagerViewSet(mixins.CreateModelMixin, GenericViewSet):
     queryset = DataManager.objects.all()
     serializer_class = DataManagerSerializer
     pagination_class = DefaultPageNumberPagination

@@ -47,7 +47,7 @@ def register_compute_plan_in_orchestrator(request, data):
 BASENAME_PREFIX = "compute_plan_"
 
 
-class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
 
     serializer_class = OrchestratorComputePlanSerializer
     pagination_class = DefaultPageNumberPagination
@@ -280,7 +280,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
                 datum = add_cp_status_and_task_counts(client, datum)
                 datum = add_compute_plan_duration_or_eta(client, datum)
 
-        return self.paginate_response(data)
+        return self.get_paginated_response(data)
 
     @action(detail=True, methods=["POST"])
     def cancel(self, request, *args, **kwargs):
