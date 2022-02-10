@@ -161,12 +161,17 @@ class OrchestratorClient:
         self._event_client = EventServiceStub(self._channel)
         self._info_client = InfoServiceStub(self._channel)
         self._failure_report_client = FailureReportServiceStub(self._channel)
+        self._channel_name = channel_name
 
         self._metadata = (
             ("mspid", mspid),
             ("channel", channel_name),
             ("chaincode", chaincode),
         )
+
+    @property
+    def channel_name(self):
+        return self._channel_name
 
     @grpc_retry
     def register_node(self):

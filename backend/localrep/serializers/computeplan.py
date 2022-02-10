@@ -8,7 +8,6 @@ from orchestrator import computeplan_pb2
 
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
-
     task_count = serializers.IntegerField(read_only=True)
     done_count = serializers.IntegerField(read_only=True)
     waiting_count = serializers.IntegerField(read_only=True)
