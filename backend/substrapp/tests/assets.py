@@ -11651,69 +11651,6 @@ def get_test_tasks():
             }
         },
         {
-            "key": "b92539eb-2b29-43be-bf47-9b10b07b9138",
-            "category": "TASK_TEST",
-            "algo": {
-                "key": "95d0db06-57d0-4bc7-b633-93b5efb4a6f9",
-                "name": "13d5042df7f24ecfa01ca8e9bcc8e822_test_aggregatetuple - Algo 1",
-                "owner": "MyOrg1MSP",
-                "permissions": {
-                    "process": {
-                        "public": True,
-                        "authorized_ids": [
-                            "MyOrg1MSP"
-                        ]
-                    },
-                    "download": {
-                        "public": True,
-                        "authorized_ids": [
-                            "MyOrg1MSP"
-                        ]
-                    }
-                },
-                "metadata": {},
-                "category": "ALGO_AGGREGATE",
-                "creation_date": "2022-01-20T14:21:14.291392Z",
-                "description": {
-                    "checksum": "00fe34c4e54e568fbb7a6316bb6bdd2231ea2a8d69be3608878c599954aa1777",
-                    "storage_address": "http://testserver/algo/95d0db06-57d0-4bc7-b633-93b5efb4a6f9/description/"
-                },
-                "algorithm": {
-                    "checksum": "9dd83ee0fb33853296969a94835c9c33de467e1ec6edc1abff69263cc2a7dae7",
-                    "storage_address": "http://testserver/algo/95d0db06-57d0-4bc7-b633-93b5efb4a6f9/file/"
-                }
-            },
-            "owner": "MyOrg1MSP",
-            "compute_plan_key": "a4b2b8f1-00c5-4abb-a4f1-483130f24819",
-            "metadata": {},
-            "status": "STATUS_DONE",
-            "worker": "MyOrg1MSP",
-            "rank": 1,
-            "parent_task_keys": [
-                "79df8032-65b0-43c2-925a-4db8aa4c391f"
-            ],
-            "parent_tasks": [],
-            "tag": "",
-            "creation_date": "2022-01-20T14:21:15.814755Z",
-            "start_date": "2022-01-20T14:22:42.315504Z",
-            "end_date": "2022-01-20T14:23:15.697430Z",
-            "error_type": None,
-            "test": {
-                "data_manager_key": "8bde2793-447a-4324-9183-623d81f6fc59",
-                "data_manager": None,
-                "data_sample_keys": [
-                    "fd798ae1-276d-4c93-b449-ae88c0cd2351"
-                ],
-                "metric_keys": [
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7"
-                ],
-                "metrics": [],
-                "perfs": {
-                    "580d04d4-8dae-45c7-9be9-5beb4b0037d7": 2.0
-                }
-            }
-        },
-        {
             "key": "24cf805d-2de7-4ec6-b31a-4efed38328fe",
             "category": "TASK_TEST",
             "algo": {
@@ -12533,69 +12470,6 @@ def get_test_tasks():
             }
         },
         {
-            "key": "fcf5303d-264b-45fb-8e45-976665f38c56",
-            "category": "TASK_TEST",
-            "algo": {
-                "key": "12f5d939-7e01-4d6c-999d-47ffa077cfc5",
-                "name": "a0e8bf2ad9514539b5ff6290985f088a_test_aggregate_composite_traintuples - Algo 1",
-                "owner": "MyOrg1MSP",
-                "permissions": {
-                    "process": {
-                        "public": True,
-                        "authorized_ids": [
-                            "MyOrg1MSP"
-                        ]
-                    },
-                    "download": {
-                        "public": True,
-                        "authorized_ids": [
-                            "MyOrg1MSP"
-                        ]
-                    }
-                },
-                "metadata": {},
-                "category": "ALGO_AGGREGATE",
-                "creation_date": "2022-01-20T14:21:09.503024Z",
-                "description": {
-                    "checksum": "6c221c1fdd4c49fa15559bd5a03572f579de4a6a0a466efaecc62c07566052bb",
-                    "storage_address": "http://testserver/algo/12f5d939-7e01-4d6c-999d-47ffa077cfc5/description/"
-                },
-                "algorithm": {
-                    "checksum": "9dd83ee0fb33853296969a94835c9c33de467e1ec6edc1abff69263cc2a7dae7",
-                    "storage_address": "http://testserver/algo/12f5d939-7e01-4d6c-999d-47ffa077cfc5/file/"
-                }
-            },
-            "owner": "MyOrg1MSP",
-            "compute_plan_key": "e26f7df6-91ab-4703-9e24-2a3406c26b8c",
-            "metadata": {},
-            "status": "STATUS_DONE",
-            "worker": "MyOrg1MSP",
-            "rank": 3,
-            "parent_task_keys": [
-                "7c9535d4-7a41-4b24-8171-5a49fb117fd8"
-            ],
-            "parent_tasks": [],
-            "tag": "",
-            "creation_date": "2022-01-20T14:26:06.077790Z",
-            "start_date": "2022-01-20T14:26:12.503731Z",
-            "end_date": "2022-01-20T14:27:08.479763Z",
-            "error_type": None,
-            "test": {
-                "data_manager_key": "22cfbbf9-40c4-4eed-8c38-7fda72d3510e",
-                "data_manager": None,
-                "data_sample_keys": [
-                    "a7da1439-7e61-4c8d-96a5-8c07e84ffe91"
-                ],
-                "metric_keys": [
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c"
-                ],
-                "metrics": [],
-                "perfs": {
-                    "6a9750f5-76d2-4e6b-839f-eabc0611427c": 8.0
-                }
-            }
-        },
-        {
             "key": "1c97e57a-b99a-4a80-a297-4d9e239fc655",
             "category": "TASK_TEST",
             "algo": {
@@ -13172,27 +13046,6 @@ def get_compute_plans():
             "duration": 24
         },
         {
-            "key": "d785f471-2d11-4410-bc62-72fe9f9efe8d",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 1,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 1,
-            "done_count": 0,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_FAILED",
-            "creation_date": "2022-01-20T14:20:11.483564Z",
-            "start_date": "2022-01-20T14:20:49.370596Z",
-            "end_date": "2022-01-20T14:21:07.944577Z",
-            "estimated_end_date": "2022-01-20T14:21:07.944577Z",
-            "duration": 18
-        },
-        {
             "key": "0153ea55-8ad1-4075-9977-50e2460aa5e1",
             "tag": "",
             "owner": "MyOrg1MSP",
@@ -13275,48 +13128,6 @@ def get_compute_plans():
             "end_date": "2022-01-20T14:21:02.911554Z",
             "estimated_end_date": "2022-01-20T14:21:02.911554Z",
             "duration": 19
-        },
-        {
-            "key": "4892ced6-302f-4857-ad2e-89130a7011e3",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 1,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 1,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:20:30.166654Z",
-            "start_date": "2022-01-20T14:21:08.174139Z",
-            "end_date": "2022-01-20T14:21:32.069232Z",
-            "estimated_end_date": "2022-01-20T14:21:32.069232Z",
-            "duration": 23
-        },
-        {
-            "key": "201fb46c-26ce-4599-8b16-df447cb52292",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 1,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 1,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:20:30.398174Z",
-            "start_date": "2022-01-20T14:21:51.658482Z",
-            "end_date": "2022-01-20T14:22:14.687353Z",
-            "estimated_end_date": "2022-01-20T14:22:14.687353Z",
-            "duration": 23
         },
         {
             "key": "026eb1c3-8d8b-4a72-a11a-a909cc058592",
@@ -13424,27 +13235,6 @@ def get_compute_plans():
             "duration": 25
         },
         {
-            "key": "a4b2b8f1-00c5-4abb-a4f1-483130f24819",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 2,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 2,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:21:15.534469Z",
-            "start_date": "2022-01-20T14:22:15.499574Z",
-            "end_date": "2022-01-20T14:23:15.697430Z",
-            "estimated_end_date": "2022-01-20T14:23:15.697430Z",
-            "duration": 60
-        },
-        {
             "key": "db1d0f0e-fb1d-4f0a-8729-4e25cef5e1e0",
             "tag": "",
             "owner": "MyOrg1MSP",
@@ -13508,27 +13298,6 @@ def get_compute_plans():
             "duration": 24
         },
         {
-            "key": "2deccec0-23a7-488d-8eea-03770d91e753",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 1,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 1,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:22:08.584418Z",
-            "start_date": "2022-01-20T14:22:15.643344Z",
-            "end_date": "2022-01-20T14:22:43.324544Z",
-            "estimated_end_date": "2022-01-20T14:22:43.324544Z",
-            "duration": 27
-        },
-        {
             "key": "1e232a31-5910-4b38-ba0e-656928acec04",
             "tag": "",
             "owner": "MyOrg1MSP",
@@ -13571,27 +13340,6 @@ def get_compute_plans():
             "duration": 22
         },
         {
-            "key": "242bb46c-bc7e-4cfd-9cdd-250eb6450546",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 1,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 1,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:22:18.849664Z",
-            "start_date": "2022-01-20T14:23:17.586870Z",
-            "end_date": "2022-01-20T14:23:43.816262Z",
-            "estimated_end_date": "2022-01-20T14:23:43.816262Z",
-            "duration": 26
-        },
-        {
             "key": "d7d6309f-f6c4-4326-9e2e-344dd87e577d",
             "tag": "",
             "owner": "MyOrg1MSP",
@@ -13617,13 +13365,13 @@ def get_compute_plans():
             "tag": "",
             "owner": "MyOrg1MSP",
             "metadata": {},
-            "task_count": 9,
+            "task_count": 7,
             "waiting_count": 0,
             "todo_count": 0,
             "doing_count": 0,
             "canceled_count": 0,
             "failed_count": 0,
-            "done_count": 9,
+            "done_count": 7,
             "failed_task": None,
             "delete_intermediary_models": False,
             "status": "PLAN_STATUS_DONE",
@@ -13737,27 +13485,6 @@ def get_compute_plans():
             "end_date": "2022-01-20T14:24:17.326690Z",
             "estimated_end_date": "2022-01-20T14:24:17.326690Z",
             "duration": 22
-        },
-        {
-            "key": "e26f7df6-91ab-4703-9e24-2a3406c26b8c",
-            "tag": "",
-            "owner": "MyOrg1MSP",
-            "metadata": {},
-            "task_count": 2,
-            "waiting_count": 0,
-            "todo_count": 0,
-            "doing_count": 0,
-            "canceled_count": 0,
-            "failed_count": 0,
-            "done_count": 2,
-            "failed_task": None,
-            "delete_intermediary_models": False,
-            "status": "PLAN_STATUS_DONE",
-            "creation_date": "2022-01-20T14:23:51.706319Z",
-            "start_date": "2022-01-20T14:23:54.587915Z",
-            "end_date": "2022-01-20T14:27:08.479763Z",
-            "estimated_end_date": "2022-01-20T14:27:08.479763Z",
-            "duration": 193
         },
         {
             "key": "12df647c-2932-498a-81b3-c844e76a4af9",
