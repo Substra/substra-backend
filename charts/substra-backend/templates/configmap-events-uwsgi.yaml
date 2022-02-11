@@ -10,3 +10,5 @@ data:
     [uwsgi]
     module                        = backend.wsgi
     http-socket                   = :8000
+    ; need-app needs to be set to true, if not, when the app fail, uwsgi will keep running
+    need-app                      = true

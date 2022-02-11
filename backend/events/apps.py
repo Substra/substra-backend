@@ -1,5 +1,6 @@
 import asyncio
 import contextlib
+import functools
 import json
 import ssl
 import time
@@ -41,13 +42,7 @@ def on_computetask_event(payload):
     metadata = payload["metadata"]
     targeted_organisation = metadata["worker"]
 
-    log = logger.bind(
-        asset_key=asset_key,
-        kind=event_kind,
-        status=metadata["status"],
-    )
-
-    log.info("Processing task")
+    logger.info("Processing task", asset_key=asset_key, kind=event_kind, status=metadata["status"])
 
     event_task_status = computetask_pb2.ComputeTaskStatus.Value(metadata["status"])
 
@@ -82,7 +77,13 @@ def on_computetask_event(payload):
                 computeplan_pb2.PLAN_STATUS_CANCELED,
                 computeplan_pb2.PLAN_STATUS_FAILED,
             ]:
-                log.info("Compute plan finished", plan=compute_plan["key"], status=compute_plan["status"])
+                logger.info(
+                    "Compute plan finished",
+                    plan=compute_plan["key"],
+                    status=compute_plan["status"],
+                    asset_key=asset_key,
+                    kind=event_kind,
+                )
                 from substrapp.tasks.tasks_compute_plan import queue_delete_cp_pod_and_dirs_and_optionally_images
 
                 queue_delete_cp_pod_and_dirs_and_optionally_images(channel_name, compute_plan=compute_plan)
@@ -94,11 +95,13 @@ def on_computetask_event(payload):
         return
 
     if targeted_organisation != my_organisation:
-        log.info(
+        logger.info(
             "Skipping task: this organisation is not the targeted organisation",
             my_organisation=my_organisation,
             targeted_organisation=targeted_organisation,
             assert_key=asset_key,
+            kind=event_kind,
+            status=metadata["status"],
         )
         return
 
@@ -134,11 +137,12 @@ def on_message_compute_engine(payload):
         logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
 
 
-async def on_message(message: aio_pika.IncomingMessage):
+async def on_message(event: asyncio.Event, message: aio_pika.IncomingMessage):
     async with message.process(requeue=True):
         try:
             payload = json.loads(message.body)
             logger.debug("Received payload", payload=payload)
+            event.set()  # for watch_message_activity
             with get_orchestrator_client(payload["channel"]) as client:
                 localsync.sync_on_event_message(payload, client)
             on_message_compute_engine(payload)
@@ -150,7 +154,23 @@ async def on_message(message: aio_pika.IncomingMessage):
             close_old_connections()
 
 
-async def consume(loop):
+async def watch_message_activity(event: asyncio.Event):
+    timeout = settings.ORCHESTRATOR_RABBITMQ_ACTIVTY_TIMEOUT
+    while True:
+        try:
+            # wait for event to be set by on_message
+            await asyncio.wait_for(event.wait(), timeout)
+        except asyncio.TimeoutError:
+            logger.warning("No message received from orchestrator RabbitMQ queue after timeout", timeout=timeout)
+            # Not receiving event means we have a connection issue or the platform is in standby.
+            # Either way, we raise to trigger a reconnection.
+            raise
+
+        else:
+            event.clear()
+
+
+async def consume(loop, event: asyncio.Event):
     # Queues are defined by the orchestrator
     queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
 
@@ -188,9 +208,28 @@ async def consume(loop):
     # Declaring queue
     queue = await channel.get_queue(queue_name, ensure=True)  # type: aio_pika.Queue
 
-    await queue.consume(on_message)
+    on_message_timeout = functools.partial(on_message, event)
+    await queue.consume(on_message_timeout)
 
     return connection
+
+
+def consume_messages():
+    with get_event_loop() as loop:
+        on_received_message_event = asyncio.Event()
+        # Run: consume orchestrator new events
+        while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
+            try:
+                connection = loop.run_until_complete(consume(loop, on_received_message_event))
+            except Exception as e:
+                time.sleep(5)
+                logger.error("Retry connecting to orchestrator RabbitMQ queue", error=e)
+            else:
+                break
+        try:
+            loop.run_until_complete(watch_message_activity(on_received_message_event))
+        finally:
+            loop.run_until_complete(connection.close())
 
 
 class EventsConfig(AppConfig):
@@ -207,18 +246,8 @@ class EventsConfig(AppConfig):
                 logger.error("Retry connecting to orchestrator GRPC api", error=e)
             else:
                 break
-
-        with get_event_loop() as loop:
-            # Run: consume orchestrator new events
-            while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
-                try:
-                    connection = loop.run_until_complete(consume(loop))
-                except Exception as e:
-                    time.sleep(5)
-                    logger.error("Retry connecting to orchestrator RabbitMQ queue", error=e)
-                else:
-                    break
+        while True:
             try:
-                loop.run_forever()
-            finally:
-                loop.run_until_complete(connection.close())
+                consume_messages()
+            except asyncio.TimeoutError as e:
+                logger.error("Restart event app", error=e)

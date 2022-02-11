@@ -1,5 +1,11 @@
 # Changelog
 
+
+### 15.0.2
+
+### Added
+- Set `need-app = true` in event app uwsgi configuration
+
 ### 15.0.1
 
 ### Added

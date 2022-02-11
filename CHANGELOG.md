@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add task category in news feed view (#685)
 - Local representation of datasample assets (#668)
 - Local representation of computeplan assets (#651)
+- Add `ORCHESTRATOR_RABBITMQ_ACTIVTY_TIMEOUT` to restart event app if no activity (#739)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)
