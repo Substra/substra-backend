@@ -1,5 +1,5 @@
 aio-pika==6.8.1
-Django==4.0.1
+Django==4.0.2
 django-structlog==2.2.0
 celery==5.2.3
 checksumdir==1.2.0
