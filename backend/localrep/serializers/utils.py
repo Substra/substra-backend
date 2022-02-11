@@ -30,20 +30,25 @@ def make_addressable_serializer(field_name):
     return AddressableSerializer
 
 
-def make_permission_serializer(field_name):
-    class SinglePermissionSerializer(serializers.Serializer):
-        public = serializers.BooleanField(source=f"{field_name}_public")
+def make_permission_serializer(field_name, public=True):
+    class PrivatePermissionSerializer(serializers.Serializer):
         authorized_ids = serializers.ListField(
             source=f"{field_name}_authorized_ids",
             child=serializers.CharField(),
         )
 
-    return SinglePermissionSerializer
+    class PublicPermissionSerializer(PrivatePermissionSerializer):
+        public = serializers.BooleanField(source=f"{field_name}_public")
+
+    return PublicPermissionSerializer if public else PrivatePermissionSerializer
 
 
-class PermissionsSerializer(serializers.Serializer):
-    download = make_permission_serializer("permissions_download")(source="*")
-    process = make_permission_serializer("permissions_process")(source="*")
+def make_download_process_permission_serializer(prefix="", public=True):
+    class PermissionsSerializer(serializers.Serializer):
+        download = make_permission_serializer(f"{prefix}permissions_download", public)(source="*")
+        process = make_permission_serializer(f"{prefix}permissions_process", public)(source="*")
+
+    return PermissionsSerializer
 
 
 class SafeSerializerMixin:

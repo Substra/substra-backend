@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import transaction
 
 import orchestrator.common_pb2 as common_pb2
+import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from localrep.errors import AlreadyExistsError
 from orchestrator import client as orc_client
@@ -53,6 +54,49 @@ def _create_computeplan(channel: str, data: dict) -> bool:
         return False
     else:
         return True
+
+
+def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+    """Process create computetask event to update local database."""
+    logger.debug("Syncing computetask create", asset_key=event["asset_key"], event_id=event["id"])
+
+    data = client.query_task(event["asset_key"])
+    _create_computetask(event["channel"], data)
+
+
+def _create_computetask(channel: str, data: dict) -> bool:
+    from localrep.serializers import ComputeTaskSerializer
+
+    data["channel"] = channel
+    # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
+    #      the orchestrator and backend used to generate the dumps are both outdated.
+    #      We provide a sensible default: logs are private.
+    data.setdefault("logs_permission", {"public": False, "authorized_ids": [data["owner"]]})
+    serializer = ComputeTaskSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("Computetask already exists", asset_key=data["key"])
+        return False
+    else:
+        return True
+
+
+def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+    """Process update computetask event to update local database."""
+    logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
+
+    data = client.query_task(event["asset_key"])
+    _update_computetask(data)
+
+
+def _update_computetask(data: dict) -> None:
+    """Update only status field."""
+    from localrep.models import ComputeTask
+
+    compute_task = ComputeTask.objects.get(key=data["key"])
+    compute_task.status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
+    compute_task.save()
 
 
 def _on_create_datamanager_event(event: dict, client: orc_client.OrchestratorClient) -> None:
@@ -164,6 +208,10 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
         _on_update_datasample_event(event, client)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_METRIC):
         _on_create_metric_event(event, client)
+    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_COMPUTE_TASK):
+        _on_create_computetask_event(event, client)
+    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_UPDATED, common_pb2.ASSET_COMPUTE_TASK):
+        _on_update_computetask_event(event, client)
     else:
         logger.debug("Nothing to sync", event_kind=event["event_kind"], asset_kind=event["asset_kind"])
 
@@ -259,6 +307,25 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
     logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
+def resync_computetasks(client: orc_client.OrchestratorClient):
+    logger.info("Resyncing computetasks")
+    computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
+    nb_new_assets = 0
+    nb_updated_assets = 0
+
+    for data in computetasks:
+        is_created = _create_computetask(client.channel_name, data)
+        if is_created:
+            logger.debug("Created new computetask", asset_key=data["key"])
+            nb_new_assets += 1
+        else:
+            _update_computetask(data)
+            logger.debug("Updated computetask", asset_key=data["key"])
+            nb_updated_assets += 1
+
+    logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
+
+
 def resync() -> None:
     """Resync the local asset representation.
     Fetch all assets from the orchestrator that are not present locally in the backend.
@@ -273,3 +340,4 @@ def resync() -> None:
             resync_datamanagers(client)
             resync_datasamples(client)
             resync_computeplans(client)
+            resync_computetasks(client)

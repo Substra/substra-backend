@@ -1,7 +1,5 @@
 from django.db import models
 
-from localrep.models import DataManager
-
 
 class DataSample(models.Model):
     """Datasample represent a datasample and its associated metadata"""
@@ -11,4 +9,4 @@ class DataSample(models.Model):
     creation_date = models.DateTimeField()
     channel = models.CharField(max_length=100)
     test_only = models.BooleanField()
-    data_managers = models.ManyToManyField(DataManager, related_name="data_samples", related_query_name="data_sample")
+    data_managers = models.ManyToManyField("DataManager", related_name="data_samples", related_query_name="data_sample")
