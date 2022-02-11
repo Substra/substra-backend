@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Local representation of computeplan assets (#651)
 - Local representation of computetask assets (#688)
 - Add `ORCHESTRATOR_RABBITMQ_ACTIVTY_TIMEOUT` to restart event app if no activity (#739)
-
+- Exponential backoff of celery tasks retry (#736)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)

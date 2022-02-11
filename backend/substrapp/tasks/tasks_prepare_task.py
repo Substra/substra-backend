@@ -3,6 +3,7 @@ from typing import Dict
 import structlog
 from celery.exceptions import Ignore
 from celery.result import AsyncResult
+from django.conf import settings
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
@@ -78,7 +79,15 @@ def queue_prepare_task(channel_name, task):
     prepare_task.apply_async((channel_name, task), task_id=key, queue=worker_queue)
 
 
-@app.task(bind=True, ignore_result=False)
+@app.task(
+    bind=True,
+    ignore_result=False,
+    autoretry_for=settings.CELERY_TASK_AUTORETRY_FOR,
+    max_retries=settings.CELERY_TASK_MAX_RETRIES,
+    retry_backoff=settings.CELERY_TASK_RETRY_BACKOFF,
+    retry_backoff_max=settings.CELERY_TASK_RETRY_BACKOFF_MAX,
+    retry_jitter=settings.CELERY_TASK_RETRY_JITTER,
+)
 def prepare_task(self, channel_name: str, task: Dict) -> None:
     # Keep execution flow in the current queue
     queue = self.request.delivery_info["routing_key"]

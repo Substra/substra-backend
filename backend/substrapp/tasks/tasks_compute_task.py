@@ -56,13 +56,17 @@ from substrapp.utils import list_dir
 
 logger = structlog.get_logger(__name__)
 
-CELERY_TASK_MAX_RETRIES = int(getattr(settings, "CELERY_TASK_MAX_RETRIES"))
-CELERY_TASK_RETRY_DELAY_SECONDS = int(getattr(settings, "CELERY_TASK_RETRY_DELAY_SECONDS"))
-
 MAX_TASK_DURATION = 24 * 60 * 60  # 1 day
 
 
 class ComputeTask(Task):
+
+    autoretry_for = settings.CELERY_TASK_AUTORETRY_FOR
+    max_retries = settings.CELERY_TASK_MAX_RETRIES
+    retry_backoff = settings.CELERY_TASK_RETRY_BACKOFF
+    retry_backoff_max = settings.CELERY_TASK_RETRY_BACKOFF_MAX
+    retry_jitter = settings.CELERY_TASK_RETRY_JITTER
+
     @property
     def attempt(self):
         return self.request.retries + 1
@@ -89,7 +93,7 @@ class ComputeTask(Task):
             "Retrying task",
             celery_task_id=task_id,
             attempt=(self.request.retries + 2),
-            max_attempts=(CELERY_TASK_MAX_RETRIES + 1),
+            max_attempts=(settings.CELERY_TASK_MAX_RETRIES + 1),
         )
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
@@ -237,17 +241,7 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
                 )
                 with lock_resource("asset-buffer", "", timeout=MAX_TASK_DURATION):
                     clear_assets_buffer()
-                raise self.retry(
-                    exc=e,
-                    countdown=CELERY_TASK_RETRY_DELAY_SECONDS,
-                    max_retries=CELERY_TASK_MAX_RETRIES,
-                )
-        except Exception as e:
-            raise self.retry(
-                exc=e,
-                countdown=CELERY_TASK_RETRY_DELAY_SECONDS,
-                max_retries=CELERY_TASK_MAX_RETRIES,
-            )
+                raise
 
         finally:
             # Teardown
