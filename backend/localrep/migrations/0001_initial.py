@@ -52,45 +52,6 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name="Event",
-            fields=[
-                ("id", models.UUIDField(primary_key=True, serialize=False)),
-                ("asset_key", models.CharField(max_length=100)),
-                (
-                    "asset_kind",
-                    models.IntegerField(
-                        choices=[
-                            (0, "ASSET_UNKNOWN"),
-                            (1, "ASSET_NODE"),
-                            (2, "ASSET_METRIC"),
-                            (3, "ASSET_DATA_SAMPLE"),
-                            (4, "ASSET_DATA_MANAGER"),
-                            (5, "ASSET_ALGO"),
-                            (6, "ASSET_COMPUTE_TASK"),
-                            (7, "ASSET_COMPUTE_PLAN"),
-                            (8, "ASSET_MODEL"),
-                            (9, "ASSET_PERFORMANCE"),
-                            (10, "ASSET_FAILURE_REPORT"),
-                        ]
-                    ),
-                ),
-                (
-                    "event_kind",
-                    models.IntegerField(
-                        choices=[
-                            (0, "EVENT_UNKNOWN"),
-                            (1, "EVENT_ASSET_CREATED"),
-                            (2, "EVENT_ASSET_UPDATED"),
-                            (3, "EVENT_ASSET_DISABLED"),
-                        ]
-                    ),
-                ),
-                ("channel", models.CharField(max_length=100)),
-                ("timestamp", models.DateTimeField()),
-                ("metadata", models.JSONField(null=True)),
-            ],
-        ),
-        migrations.CreateModel(
             name="Metric",
             fields=[
                 ("key", models.UUIDField(primary_key=True, serialize=False)),
