@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle missing failed task for failed CP status (#682)
 - Handle case of resync with no new events (#695)
 - Corrupted asset buffer when asset download fails (#673)
+- Possible race condition when deleting pod (#746)
 
 ## [0.8.0] 2022-01-16
 

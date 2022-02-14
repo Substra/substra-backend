@@ -200,17 +200,19 @@ def get_pod_logs(k8s_client, name: str, container: str) -> str:
 
 
 def delete_pod(k8s_client, name: str) -> None:
-    if not pod_exists(k8s_client, name):
-        return
-
     # we retrieve the latest pod list version to retrieve only the latest events when watching for pod deletion
     pod_list_resource_version = k8s_client.list_namespaced_pod(namespace=NAMESPACE).metadata.resource_version
 
-    k8s_client.delete_namespaced_pod(
-        name=name,
-        namespace=NAMESPACE,
-        body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground"),
-    )
+    try:
+        k8s_client.delete_namespaced_pod(
+            name=name,
+            namespace=NAMESPACE,
+            body=kubernetes.client.V1DeleteOptions(propagation_policy="Foreground"),
+        )
+    except kubernetes.client.exceptions.ApiException as exc:
+        if exc.reason == "Not Found":
+            return
+        raise exc
 
     # watch for pod deletion
     watch = kubernetes.watch.Watch()
