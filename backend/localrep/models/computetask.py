@@ -13,9 +13,9 @@ class ComputeTask(models.Model):
 
     key = models.UUIDField(primary_key=True)
     category = models.IntegerField(choices=CATEGORY_CHOICES)
-    algo = models.ForeignKey("Algo", on_delete=models.CASCADE)
+    algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
-    compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE)
+    compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
     parent_tasks = ArrayField(models.CharField(max_length=1024), size=100, null=True)
     rank = models.IntegerField()
     status = models.IntegerField(choices=STATUS_CHOICES)
@@ -27,8 +27,10 @@ class ComputeTask(models.Model):
     metadata = models.JSONField()
 
     # specific fields for train, composite and test tasks
-    data_manager = models.ForeignKey("DataManager", null=True, on_delete=models.deletion.CASCADE)
-    data_samples = models.ManyToManyField("DataSample", null=True)
+    data_manager = models.ForeignKey(
+        "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
+    )
+    data_samples = models.ManyToManyField("DataSample", null=True, related_name="compute_tasks")
 
     # specific fields for train and aggregate tasks
     model_permissions_process_public = models.BooleanField(null=True)
@@ -37,7 +39,7 @@ class ComputeTask(models.Model):
     model_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
 
     # specific fields for test tasks
-    metrics = models.ManyToManyField("Metric", null=True)
+    metrics = models.ManyToManyField("Metric", null=True, related_name="compute_tasks")
 
     # specific fields for composite tasks
     head_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
