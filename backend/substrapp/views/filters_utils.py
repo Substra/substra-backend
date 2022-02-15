@@ -2,6 +2,7 @@ import itertools
 from urllib.parse import unquote
 
 import structlog
+from django.core.exceptions import ValidationError
 from django.db.models import Q
 
 from substrapp import exceptions
@@ -169,4 +170,7 @@ def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
             and_params = param if and_params is None else and_params & param
         or_params = and_params if or_params is None else or_params | and_params
 
-    return queryset.filter(or_params)
+    try:
+        return queryset.filter(or_params)
+    except ValidationError:
+        raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
