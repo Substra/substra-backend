@@ -7,6 +7,13 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  # if DataSampleStorageInServerMedia, add labels selector to be able
+  # to match PersistanceVolume properly
+  {{- if .Values.DataSampleStorageInServerMedia }}
+  selector:
+    matchLabels:
+      {{ include "substra.selectorLabels" . | nindent 8}}
+  {{- end }}
   resources:
     requests:
       storage: {{ .Values.server.persistence.servermedias.size | quote }}

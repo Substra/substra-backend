@@ -47,6 +47,47 @@ Deploy the backend with:
 
 You can draw from this documentation to set up the config according to your needs: number of kubernetes nodes, number of worker replicas, way to spread workers across the kubernetes nodes.
 
+### Run with servermedia profile
+
+To enable storing datasamples on the servermedia PVC instead of minio, use `skaffold run -p servermedias`. The PVs need to be created prior to requesting them inside the PVC:
+
+```
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: backend-org-1-substra-backend-servermedias
+  labels:
+    app.kubernetes.io/instance: < Release.Name > # here it will be backend-org-1
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete # You can also use "Retain" or "Recycle"
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/org-1/servermedias"
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: backend-org-2-substra-backend-servermedias
+  labels:
+    app.kubernetes.io/instance: < Release.Name > # here it will be backend-org-2
+spec:
+  storageClassName: manual
+  persistentVolumeReclaimPolicy: Delete # You can also use "Retain" or "Recycle"
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/tmp/org-2/servermedias"
+```
+
+
+
 ## Django management
 
 To get access to the [Django management tool](https://docs.djangoproject.com/en/2.2/ref/django-admin), spawn a shell in the running container:

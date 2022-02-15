@@ -1,5 +1,9 @@
 # Changelog
 
+### 15.0.3
+
+### Added
+- Add label selectors to servermedias PVCs if `DataSampleStorageInServerMedia` is `true`
 
 ### 15.0.2
 
