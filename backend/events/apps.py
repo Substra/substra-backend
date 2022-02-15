@@ -155,7 +155,7 @@ async def on_message(event: asyncio.Event, message: aio_pika.IncomingMessage):
 
 
 async def watch_message_activity(event: asyncio.Event):
-    timeout = settings.ORCHESTRATOR_RABBITMQ_ACTIVTY_TIMEOUT
+    timeout = settings.ORCHESTRATOR_RABBITMQ_ACTIVITY_TIMEOUT
     while True:
         try:
             # wait for event to be set by on_message
