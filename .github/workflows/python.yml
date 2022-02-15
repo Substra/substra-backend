@@ -66,6 +66,8 @@ jobs:
         run: |
           # If this fails, please run `make migrations` and commit the results
           make check-migrations
+      - name: Check documentation
+        run: python tools/build_settings_doc.py --check
       - name: Test
         run: |
           cd backend/
