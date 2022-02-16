@@ -1,3 +1,4 @@
+import dataclasses
 import datetime
 import os
 import uuid
@@ -5,11 +6,11 @@ from typing import Callable
 from typing import Optional
 from wsgiref.util import is_hop_by_hop
 
+import django.http
 import grpc
 from django.conf import settings
 from django.db.models import Count
 from django.db.models import Q
-from django.http import FileResponse
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -84,7 +85,7 @@ class ApiResponse(Response):
         return response
 
 
-class CustomFileResponse(FileResponse):
+class CustomFileResponse(django.http.FileResponse):
     def set_headers(self, filelike):
         super().set_headers(filelike)
 
@@ -102,6 +103,20 @@ def node_has_process_permission(asset):
 
     permission = asset["permissions"]["process"]
     return permission["public"] or get_owner() in permission["authorized_ids"]
+
+
+@dataclasses.dataclass
+class StorageAddress:
+    url: Optional[str]
+    node_id: str
+
+    @property
+    def is_available(self) -> bool:
+        return bool(self.url)
+
+    @property
+    def is_local(self) -> bool:
+        return get_owner() == self.node_id
 
 
 class PermissionMixin(object):
@@ -134,17 +149,19 @@ class PermissionMixin(object):
         #  but 'download' is not consistently exposed by chaincode yet.
         return asset["permissions"]["process"]
 
-    def get_storage_address(self, asset, ledger_field) -> str:
-        """returns the storage address of the asset or nothing if there is no storage address
+    def get_storage_address(self, asset, orchestrator_field) -> StorageAddress:
+        """Returns the storage address of the asset.
 
         Args:
             asset (Dict): Asset from the Orchestrator
-            ledger_field (str): Key of the dict containing the storage address
+            orchestrator_field (str): Key of the dict containing the storage address
 
         Returns:
-            str: The asset storage address
+            The asset storage address
         """
-        return asset.get(ledger_field, {}).get("storage_address")
+        url = asset.get(orchestrator_field, {}).get("storage_address")
+        node_id = asset["owner"]
+        return StorageAddress(url, node_id)
 
     def download_file(self, request, query_method, django_field, orchestrator_field=None):
         lookup_url_kwarg = self.lookup_url_kwarg or self.lookup_field
@@ -164,13 +181,13 @@ class PermissionMixin(object):
         if not orchestrator_field:
             orchestrator_field = django_field
         storage_address = self.get_storage_address(asset, orchestrator_field)
-        if not storage_address:
+        if not storage_address.is_available:
             return ApiResponse({"message": "Asset not available anymore"}, status=status.HTTP_410_GONE)
 
-        if get_owner() == asset["owner"]:
+        if storage_address.is_local:
             response = self.get_local_file_response(django_field)
         else:
-            response = self._download_remote_file(channel_name, storage_address, asset)
+            response = self._download_remote_file(channel_name, storage_address)
 
         return response
 
@@ -212,11 +229,11 @@ class PermissionMixin(object):
         )
         return response
 
-    def _download_remote_file(self, channel_name, storage_address, asset):
+    def _download_remote_file(self, channel_name: str, storage_address: StorageAddress) -> django.http.FileResponse:
         proxy_response = node_client.http_get(
-            channel_name,
-            asset["owner"],
-            storage_address,
+            channel=channel_name,
+            node_id=storage_address.node_id,
+            url=storage_address.url,
             stream=True,
             headers={HTTP_HEADER_PROXY_ASSET: "True"},
         )

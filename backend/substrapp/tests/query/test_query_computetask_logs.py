@@ -33,17 +33,18 @@ def compute_task_failure_report() -> models.ComputeTaskFailureReport:
     return failure_report
 
 
-def get_compute_task(key: str, owner: str, authorized_ids: List[str]) -> Dict[str, Any]:
+def get_compute_task(key: str, authorized_ids: List[str]) -> Dict[str, Any]:
     return {
         "key": key,
-        "owner": owner,
+        "owner": "task owner",
         "logs_permission": {"public": False, "authorized_ids": authorized_ids},
     }
 
 
-def get_failure_report(compute_task_key: str, logs_address: str) -> Dict[str, Union[str, Dict[str, str]]]:
+def get_failure_report(compute_task_key: str, owner: str, logs_address: str) -> Dict[str, Union[str, Dict[str, str]]]:
     return {
         "compute_task_key": compute_task_key,
+        "owner": owner,
         "logs_address": {
             "checksum": "dummy checksum",
             "storage_address": logs_address,
@@ -76,9 +77,9 @@ def test_download_local_logs_success(
     compute_task_key = str(compute_task_failure_report.compute_task_key)
     owner = conf.settings.LEDGER_MSP_ID
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, owner=owner, authorized_ids=[owner])
+    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
     mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, compute_task_failure_report.logs_address
+        compute_task_key, owner, compute_task_failure_report.logs_address
     )
 
     res = get_logs(key=compute_task_key, client=authenticated_client)
@@ -105,7 +106,7 @@ def test_download_logs_failure_forbidden(
     owner = "foo"
     assert owner != conf.settings.LEDGER_MSP_ID
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, owner=owner, authorized_ids=[owner])
+    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
 
     res = get_logs(key=compute_task_key, client=authenticated_client)
 
@@ -127,9 +128,9 @@ def test_download_local_logs_failure_not_found(
     compute_task_key = str(compute_task_failure_report.compute_task_key)
     owner = conf.settings.LEDGER_MSP_ID
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, owner=owner, authorized_ids=[owner])
+    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=[owner])
     mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, compute_task_failure_report.logs_address
+        compute_task_key, owner, compute_task_failure_report.logs_address
     )
 
     compute_task_failure_report.delete()
@@ -158,9 +159,9 @@ def test_download_remote_logs_success(
     node_models.OutgoingNode.objects.create(node_id=outgoing_node, secret=node_models.Node.generate_secret())
 
     mocked_query_task.return_value = get_compute_task(
-        key=compute_task_key, owner=outgoing_node, authorized_ids=[outgoing_node, current_node]
+        key=compute_task_key, authorized_ids=[outgoing_node, current_node]
     )
-    mocked_get_failure_report.return_value = get_failure_report(compute_task_key, storage_address)
+    mocked_get_failure_report.return_value = get_failure_report(compute_task_key, outgoing_node, storage_address)
 
     with responses.RequestsMock() as mocked_responses:
         mocked_responses.add(
@@ -207,9 +208,9 @@ def test_node_download_logs_success(
     incoming_node = incoming_node_user.username
     authorized_ids = [owner, incoming_node]
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, owner=owner, authorized_ids=authorized_ids)
+    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=authorized_ids)
     mocked_get_failure_report.return_value = get_failure_report(
-        compute_task_key, compute_task_failure_report.logs_address
+        compute_task_key, owner, compute_task_failure_report.logs_address
     )
 
     api_client.force_authenticate(user=incoming_node_user)
@@ -241,7 +242,7 @@ def test_node_download_logs_forbidden(
 
     assert owner != incoming_node
 
-    mocked_query_task.return_value = get_compute_task(key=compute_task_key, owner=owner, authorized_ids=authorized_ids)
+    mocked_query_task.return_value = get_compute_task(key=compute_task_key, authorized_ids=authorized_ids)
 
     api_client.force_authenticate(user=incoming_node_user)
     extra_headers = get_proxy_headers(incoming_node)

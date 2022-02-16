@@ -35,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Handle case of resync with no new events (#695)
 - Corrupted asset buffer when asset download fails (#673)
 - Possible race condition when deleting pod (#746)
+- Use failure report owner to determine whether storage address is local (#748)
 
 ## [0.8.0] 2022-01-16
 

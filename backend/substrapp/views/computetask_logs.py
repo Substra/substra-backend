@@ -19,11 +19,11 @@ class ComputeTaskLogsViewSet(view_utils.PermissionMixin, viewsets.GenericViewSet
         response.headers["Content-Disposition"] = f'attachment; filename="tuple_logs_{pk}.txt"'
         return response
 
-    def get_permission(self, asset):
+    def get_permission(self, asset) -> dict:
         return asset["logs_permission"]
 
-    def get_storage_address(self, asset, ledger_field) -> str:
+    def get_storage_address(self, asset, orchestrator_field) -> view_utils.StorageAddress:
         with get_orchestrator_client(view_utils.get_channel_name(self.request)) as client:
             failure = client.get_failure_report({"compute_task_key": asset["key"]})
 
-        return super().get_storage_address(failure, ledger_field)
+        return view_utils.StorageAddress(url=failure[orchestrator_field]["storage_address"], node_id=failure["owner"])
