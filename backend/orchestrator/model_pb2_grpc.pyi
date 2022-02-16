@@ -12,6 +12,10 @@ class ModelServiceStub:
         model_pb2.NewModel,
         model_pb2.Model] = ...
 
+    RegisterModels: grpc.UnaryUnaryMultiCallable[
+        model_pb2.RegisterModelsParam,
+        model_pb2.RegisterModelsResponse] = ...
+
     GetModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetModelParam,
         model_pb2.Model] = ...
@@ -43,6 +47,12 @@ class ModelServiceServicer(metaclass=abc.ABCMeta):
         request: model_pb2.NewModel,
         context: grpc.ServicerContext,
     ) -> model_pb2.Model: ...
+
+    @abc.abstractmethod
+    def RegisterModels(self,
+        request: model_pb2.RegisterModelsParam,
+        context: grpc.ServicerContext,
+    ) -> model_pb2.RegisterModelsResponse: ...
 
     @abc.abstractmethod
     def GetModel(self,

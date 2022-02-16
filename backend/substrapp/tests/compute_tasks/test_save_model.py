@@ -9,10 +9,12 @@ from grpc import StatusCode
 from parameterized import parameterized
 from rest_framework.test import APITestCase
 
-import orchestrator.model_pb2 as model_pb2
+import orchestrator.computetask_pb2 as compute_task_pb2
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.command import Filenames
-from substrapp.compute_tasks.save_models import _save_model
+from substrapp.compute_tasks.context import Context
+from substrapp.compute_tasks.directories import TaskDirName
+from substrapp.compute_tasks.save_models import save_models
 
 MEDIA_ROOT = tempfile.mkdtemp()
 
@@ -29,8 +31,31 @@ class SaveModelTests(APITestCase):
         """
         from substrapp.models import Model
 
-        task_key = str(uuid.uuid4())
-        model_dir = tempfile.mkdtemp()
+        class FakeDirectories:
+            task_dir: str
+
+            def __init__(self, task_dir) -> None:
+                self.task_dir = task_dir
+
+        data_dir = tempfile.mkdtemp()
+        fake_context = Context(
+            channel_name="mychannel",
+            task={},
+            task_category=compute_task_pb2.TASK_TRAIN,
+            task_key=str(uuid.uuid4()),
+            compute_plan={},
+            compute_plan_key=str(uuid.uuid4()),
+            compute_plan_tag=None,
+            in_models=None,
+            algo=None,
+            metrics=None,
+            data_manager=None,
+            directories=FakeDirectories(data_dir),
+            attempt=0,
+            has_chainkeys=False,
+        )
+        model_dir = os.path.join(data_dir, TaskDirName.OutModels)
+        os.makedirs(model_dir)
         model_src = os.path.join(model_dir, Filenames.OutModel)
 
         with open(model_src, "w") as f:
@@ -40,13 +65,15 @@ class SaveModelTests(APITestCase):
         error.details = "orchestrator unavailable"
         error.code = lambda: StatusCode.UNAVAILABLE
 
-        with mock.patch.object(OrchestratorClient, "register_model") as mregister_model:
+        with mock.patch.object(OrchestratorClient, "register_models") as mregister_model, mock.patch(
+            "substrapp.compute_tasks.save_models.add_model_from_path"
+        ):
 
             if save_model_raise:
                 mregister_model.side_effect = error
 
             try:
-                _save_model("mychannel", model_pb2.MODEL_SIMPLE, model_src, task_key)
+                save_models(fake_context)
             except RpcError as e:
                 if not save_model_raise:
                     # exception expected

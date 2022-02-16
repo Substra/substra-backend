@@ -19,6 +19,11 @@ class ModelServiceStub(object):
                 request_serializer=model__pb2.NewModel.SerializeToString,
                 response_deserializer=model__pb2.Model.FromString,
                 )
+        self.RegisterModels = channel.unary_unary(
+                '/orchestrator.ModelService/RegisterModels',
+                request_serializer=model__pb2.RegisterModelsParam.SerializeToString,
+                response_deserializer=model__pb2.RegisterModelsResponse.FromString,
+                )
         self.GetModel = channel.unary_unary(
                 '/orchestrator.ModelService/GetModel',
                 request_serializer=model__pb2.GetModelParam.SerializeToString,
@@ -55,6 +60,12 @@ class ModelServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def RegisterModel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def RegisterModels(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -103,6 +114,11 @@ def add_ModelServiceServicer_to_server(servicer, server):
                     servicer.RegisterModel,
                     request_deserializer=model__pb2.NewModel.FromString,
                     response_serializer=model__pb2.Model.SerializeToString,
+            ),
+            'RegisterModels': grpc.unary_unary_rpc_method_handler(
+                    servicer.RegisterModels,
+                    request_deserializer=model__pb2.RegisterModelsParam.FromString,
+                    response_serializer=model__pb2.RegisterModelsResponse.SerializeToString,
             ),
             'GetModel': grpc.unary_unary_rpc_method_handler(
                     servicer.GetModel,
@@ -158,6 +174,23 @@ class ModelService(object):
         return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/RegisterModel',
             model__pb2.NewModel.SerializeToString,
             model__pb2.Model.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def RegisterModels(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/orchestrator.ModelService/RegisterModels',
+            model__pb2.RegisterModelsParam.SerializeToString,
+            model__pb2.RegisterModelsResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 

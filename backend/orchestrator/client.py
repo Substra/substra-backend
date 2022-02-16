@@ -470,6 +470,11 @@ class OrchestratorClient:
         return MessageToDict(data, **CONVERT_SETTINGS)
 
     @grpc_retry
+    def register_models(self, args):
+        data = self._model_client.RegisterModels(model_pb2.RegisterModelsParam(**args), metadata=self._metadata)
+        return MessageToDict(data, **CONVERT_SETTINGS).get("models", [])
+
+    @grpc_retry
     def can_disable_model(self, model_key):
         data = self._model_client.CanDisableModel(
             model_pb2.CanDisableModelParam(model_key=model_key), metadata=self._metadata

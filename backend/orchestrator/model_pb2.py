@@ -22,7 +22,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=b'Z\'github.com/owkin/orchestrator/lib/asset',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0bmodel.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xfb\x01\n\x05Model\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x06 \x01(\t\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x8c\x01\n\x08NewModel\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\"5\n\x19GetComputeTaskModelsParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\"C\n\x1cGetComputeTaskModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\")\n\x14\x43\x61nDisableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\".\n\x17\x43\x61nDisableModelResponse\x12\x13\n\x0b\x63\x61n_disable\x18\x01 \x01(\x08\"&\n\x11\x44isableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\"\x1c\n\rGetModelParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"h\n\x10QueryModelsParam\x12-\n\x08\x63\x61tegory\x18\x01 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x12\n\npage_token\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\r\"S\n\x13QueryModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x16\n\x14\x44isableModelResponse*D\n\rModelCategory\x12\x11\n\rMODEL_UNKNOWN\x10\x00\x12\x10\n\x0cMODEL_SIMPLE\x10\x01\x12\x0e\n\nMODEL_HEAD\x10\x02\x32\xf4\x04\n\x0cModelService\x12<\n\rRegisterModel\x12\x16.orchestrator.NewModel\x1a\x13.orchestrator.Model\x12<\n\x08GetModel\x12\x1b.orchestrator.GetModelParam\x1a\x13.orchestrator.Model\x12P\n\x0bQueryModels\x12\x1e.orchestrator.QueryModelsParam\x1a!.orchestrator.QueryModelsResponse\x12q\n\x1aGetComputeTaskOutputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12p\n\x19GetComputeTaskInputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12\\\n\x0f\x43\x61nDisableModel\x12\".orchestrator.CanDisableModelParam\x1a%.orchestrator.CanDisableModelResponse\x12S\n\x0c\x44isableModel\x12\x1f.orchestrator.DisableModelParam\x1a\".orchestrator.DisableModelResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
+  serialized_pb=b'\n\x0bmodel.proto\x12\x0corchestrator\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0c\x63ommon.proto\"\xfb\x01\n\x05Model\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\x12.\n\x0bpermissions\x18\x05 \x01(\x0b\x32\x19.orchestrator.Permissions\x12\r\n\x05owner\x18\x06 \x01(\t\x12\x31\n\rcreation_date\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x8c\x01\n\x08NewModel\x12\x0b\n\x03key\x18\x01 \x01(\t\x12-\n\x08\x63\x61tegory\x18\x02 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x18\n\x10\x63ompute_task_key\x18\x03 \x01(\t\x12*\n\x07\x61\x64\x64ress\x18\x04 \x01(\x0b\x32\x19.orchestrator.Addressable\"=\n\x13RegisterModelsParam\x12&\n\x06models\x18\x01 \x03(\x0b\x32\x16.orchestrator.NewModel\"=\n\x16RegisterModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\"5\n\x19GetComputeTaskModelsParam\x12\x18\n\x10\x63ompute_task_key\x18\x01 \x01(\t\"C\n\x1cGetComputeTaskModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\")\n\x14\x43\x61nDisableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\".\n\x17\x43\x61nDisableModelResponse\x12\x13\n\x0b\x63\x61n_disable\x18\x01 \x01(\x08\"&\n\x11\x44isableModelParam\x12\x11\n\tmodel_key\x18\x01 \x01(\t\"\x1c\n\rGetModelParam\x12\x0b\n\x03key\x18\x01 \x01(\t\"h\n\x10QueryModelsParam\x12-\n\x08\x63\x61tegory\x18\x01 \x01(\x0e\x32\x1b.orchestrator.ModelCategory\x12\x12\n\npage_token\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\r\"S\n\x13QueryModelsResponse\x12#\n\x06models\x18\x01 \x03(\x0b\x32\x13.orchestrator.Model\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x16\n\x14\x44isableModelResponse*D\n\rModelCategory\x12\x11\n\rMODEL_UNKNOWN\x10\x00\x12\x10\n\x0cMODEL_SIMPLE\x10\x01\x12\x0e\n\nMODEL_HEAD\x10\x02\x32\xd4\x05\n\x0cModelService\x12\x41\n\rRegisterModel\x12\x16.orchestrator.NewModel\x1a\x13.orchestrator.Model\"\x03\x88\x02\x01\x12Y\n\x0eRegisterModels\x12!.orchestrator.RegisterModelsParam\x1a$.orchestrator.RegisterModelsResponse\x12<\n\x08GetModel\x12\x1b.orchestrator.GetModelParam\x1a\x13.orchestrator.Model\x12P\n\x0bQueryModels\x12\x1e.orchestrator.QueryModelsParam\x1a!.orchestrator.QueryModelsResponse\x12q\n\x1aGetComputeTaskOutputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12p\n\x19GetComputeTaskInputModels\x12\'.orchestrator.GetComputeTaskModelsParam\x1a*.orchestrator.GetComputeTaskModelsResponse\x12\\\n\x0f\x43\x61nDisableModel\x12\".orchestrator.CanDisableModelParam\x1a%.orchestrator.CanDisableModelResponse\x12S\n\x0c\x44isableModel\x12\x1f.orchestrator.DisableModelParam\x1a\".orchestrator.DisableModelResponseB)Z\'github.com/owkin/orchestrator/lib/assetb\x06proto3'
   ,
   dependencies=[google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,common__pb2.DESCRIPTOR,])
 
@@ -51,8 +51,8 @@ _MODELCATEGORY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=973,
-  serialized_end=1041,
+  serialized_start=1099,
+  serialized_end=1167,
 )
 _sym_db.RegisterEnumDescriptor(_MODELCATEGORY)
 
@@ -190,6 +190,70 @@ _NEWMODEL = _descriptor.Descriptor(
 )
 
 
+_REGISTERMODELSPARAM = _descriptor.Descriptor(
+  name='RegisterModelsParam',
+  full_name='orchestrator.RegisterModelsParam',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='models', full_name='orchestrator.RegisterModelsParam.models', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=473,
+  serialized_end=534,
+)
+
+
+_REGISTERMODELSRESPONSE = _descriptor.Descriptor(
+  name='RegisterModelsResponse',
+  full_name='orchestrator.RegisterModelsResponse',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='models', full_name='orchestrator.RegisterModelsResponse.models', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=536,
+  serialized_end=597,
+)
+
+
 _GETCOMPUTETASKMODELSPARAM = _descriptor.Descriptor(
   name='GetComputeTaskModelsParam',
   full_name='orchestrator.GetComputeTaskModelsParam',
@@ -217,8 +281,8 @@ _GETCOMPUTETASKMODELSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=473,
-  serialized_end=526,
+  serialized_start=599,
+  serialized_end=652,
 )
 
 
@@ -249,8 +313,8 @@ _GETCOMPUTETASKMODELSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=528,
-  serialized_end=595,
+  serialized_start=654,
+  serialized_end=721,
 )
 
 
@@ -281,8 +345,8 @@ _CANDISABLEMODELPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=597,
-  serialized_end=638,
+  serialized_start=723,
+  serialized_end=764,
 )
 
 
@@ -313,8 +377,8 @@ _CANDISABLEMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=640,
-  serialized_end=686,
+  serialized_start=766,
+  serialized_end=812,
 )
 
 
@@ -345,8 +409,8 @@ _DISABLEMODELPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=688,
-  serialized_end=726,
+  serialized_start=814,
+  serialized_end=852,
 )
 
 
@@ -377,8 +441,8 @@ _GETMODELPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=728,
-  serialized_end=756,
+  serialized_start=854,
+  serialized_end=882,
 )
 
 
@@ -423,8 +487,8 @@ _QUERYMODELSPARAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=758,
-  serialized_end=862,
+  serialized_start=884,
+  serialized_end=988,
 )
 
 
@@ -462,8 +526,8 @@ _QUERYMODELSRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=864,
-  serialized_end=947,
+  serialized_start=990,
+  serialized_end=1073,
 )
 
 
@@ -487,8 +551,8 @@ _DISABLEMODELRESPONSE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=949,
-  serialized_end=971,
+  serialized_start=1075,
+  serialized_end=1097,
 )
 
 _MODEL.fields_by_name['category'].enum_type = _MODELCATEGORY
@@ -497,11 +561,15 @@ _MODEL.fields_by_name['permissions'].message_type = common__pb2._PERMISSIONS
 _MODEL.fields_by_name['creation_date'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
 _NEWMODEL.fields_by_name['category'].enum_type = _MODELCATEGORY
 _NEWMODEL.fields_by_name['address'].message_type = common__pb2._ADDRESSABLE
+_REGISTERMODELSPARAM.fields_by_name['models'].message_type = _NEWMODEL
+_REGISTERMODELSRESPONSE.fields_by_name['models'].message_type = _MODEL
 _GETCOMPUTETASKMODELSRESPONSE.fields_by_name['models'].message_type = _MODEL
 _QUERYMODELSPARAM.fields_by_name['category'].enum_type = _MODELCATEGORY
 _QUERYMODELSRESPONSE.fields_by_name['models'].message_type = _MODEL
 DESCRIPTOR.message_types_by_name['Model'] = _MODEL
 DESCRIPTOR.message_types_by_name['NewModel'] = _NEWMODEL
+DESCRIPTOR.message_types_by_name['RegisterModelsParam'] = _REGISTERMODELSPARAM
+DESCRIPTOR.message_types_by_name['RegisterModelsResponse'] = _REGISTERMODELSRESPONSE
 DESCRIPTOR.message_types_by_name['GetComputeTaskModelsParam'] = _GETCOMPUTETASKMODELSPARAM
 DESCRIPTOR.message_types_by_name['GetComputeTaskModelsResponse'] = _GETCOMPUTETASKMODELSRESPONSE
 DESCRIPTOR.message_types_by_name['CanDisableModelParam'] = _CANDISABLEMODELPARAM
@@ -527,6 +595,20 @@ NewModel = _reflection.GeneratedProtocolMessageType('NewModel', (_message.Messag
   # @@protoc_insertion_point(class_scope:orchestrator.NewModel)
   })
 _sym_db.RegisterMessage(NewModel)
+
+RegisterModelsParam = _reflection.GeneratedProtocolMessageType('RegisterModelsParam', (_message.Message,), {
+  'DESCRIPTOR' : _REGISTERMODELSPARAM,
+  '__module__' : 'model_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.RegisterModelsParam)
+  })
+_sym_db.RegisterMessage(RegisterModelsParam)
+
+RegisterModelsResponse = _reflection.GeneratedProtocolMessageType('RegisterModelsResponse', (_message.Message,), {
+  'DESCRIPTOR' : _REGISTERMODELSRESPONSE,
+  '__module__' : 'model_pb2'
+  # @@protoc_insertion_point(class_scope:orchestrator.RegisterModelsResponse)
+  })
+_sym_db.RegisterMessage(RegisterModelsResponse)
 
 GetComputeTaskModelsParam = _reflection.GeneratedProtocolMessageType('GetComputeTaskModelsParam', (_message.Message,), {
   'DESCRIPTOR' : _GETCOMPUTETASKMODELSPARAM,
@@ -601,8 +683,8 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   index=0,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=1044,
-  serialized_end=1672,
+  serialized_start=1170,
+  serialized_end=1894,
   methods=[
   _descriptor.MethodDescriptor(
     name='RegisterModel',
@@ -611,13 +693,23 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_NEWMODEL,
     output_type=_MODEL,
+    serialized_options=b'\210\002\001',
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='RegisterModels',
+    full_name='orchestrator.ModelService.RegisterModels',
+    index=1,
+    containing_service=None,
+    input_type=_REGISTERMODELSPARAM,
+    output_type=_REGISTERMODELSRESPONSE,
     serialized_options=None,
     create_key=_descriptor._internal_create_key,
   ),
   _descriptor.MethodDescriptor(
     name='GetModel',
     full_name='orchestrator.ModelService.GetModel',
-    index=1,
+    index=2,
     containing_service=None,
     input_type=_GETMODELPARAM,
     output_type=_MODEL,
@@ -627,7 +719,7 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='QueryModels',
     full_name='orchestrator.ModelService.QueryModels',
-    index=2,
+    index=3,
     containing_service=None,
     input_type=_QUERYMODELSPARAM,
     output_type=_QUERYMODELSRESPONSE,
@@ -637,7 +729,7 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetComputeTaskOutputModels',
     full_name='orchestrator.ModelService.GetComputeTaskOutputModels',
-    index=3,
+    index=4,
     containing_service=None,
     input_type=_GETCOMPUTETASKMODELSPARAM,
     output_type=_GETCOMPUTETASKMODELSRESPONSE,
@@ -647,7 +739,7 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='GetComputeTaskInputModels',
     full_name='orchestrator.ModelService.GetComputeTaskInputModels',
-    index=4,
+    index=5,
     containing_service=None,
     input_type=_GETCOMPUTETASKMODELSPARAM,
     output_type=_GETCOMPUTETASKMODELSRESPONSE,
@@ -657,7 +749,7 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='CanDisableModel',
     full_name='orchestrator.ModelService.CanDisableModel',
-    index=5,
+    index=6,
     containing_service=None,
     input_type=_CANDISABLEMODELPARAM,
     output_type=_CANDISABLEMODELRESPONSE,
@@ -667,7 +759,7 @@ _MODELSERVICE = _descriptor.ServiceDescriptor(
   _descriptor.MethodDescriptor(
     name='DisableModel',
     full_name='orchestrator.ModelService.DisableModel',
-    index=6,
+    index=7,
     containing_service=None,
     input_type=_DISABLEMODELPARAM,
     output_type=_DISABLEMODELRESPONSE,

@@ -35,6 +35,7 @@ def save_models(ctx: Context) -> None:
     task_category = ctx.task_category
     dirs = ctx.directories
     task_key = ctx.task_key
+    models = []
 
     if task_category not in [
         computetask_pb2.TASK_AGGREGATE,
@@ -44,23 +45,34 @@ def save_models(ctx: Context) -> None:
         raise SaveModelsError(f"Cannot save models for task category {task_category}")
 
     model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutModel)
-    model_key = _save_model(ctx.channel_name, model_pb2.MODEL_SIMPLE, model_path, task_key)
-    add_model_from_path(model_path, str(model_key))
+    simple_model = _save_model_to_local_storage(model_pb2.MODEL_SIMPLE, model_path, task_key)
+    models.append(simple_model)
 
     if task_category == computetask_pb2.TASK_COMPOSITE:
         # If we have a composite task we have two outputs, a MODEL_HEAD and a MODEL_SIMPLE model
         # so we need to register the head part separately
         head_model_path = os.path.join(dirs.task_dir, TaskDirName.OutModels, Filenames.OutHeadModel)
-        head_model_key = _save_model(ctx.channel_name, model_pb2.MODEL_HEAD, head_model_path, task_key)
-        add_model_from_path(head_model_path, str(head_model_key))
+        head_model = _save_model_to_local_storage(model_pb2.MODEL_HEAD, head_model_path, task_key)
+        models.append(head_model)
+
+    try:
+        with get_orchestrator_client(ctx.channel_name) as client:
+            client.register_models({"models": models})
+    except Exception as exc:
+        for model in models:
+            _delete_model(model["key"])
+        raise exc
+
+    add_model_from_path(model_path, str(simple_model["key"]))
+    if task_category == computetask_pb2.TASK_COMPOSITE:
+        add_model_from_path(head_model_path, str(head_model["key"]))
 
 
 @timeit
-def _save_model(channel_name: str, category: int, src_path: str, task_key: str) -> UUID:
+def _save_model_to_local_storage(category: int, src_path: str, task_key: str) -> UUID:
     """Saves a model to the orchestrator and in the data storage
 
     Args:
-        channel_name (str): channel on which we want to register the model
         category (int): model category (head, simple)
         src_path (str): path of the model file on the filesystem
         task_key (str): key of the task that created the model
@@ -78,23 +90,25 @@ def _save_model(channel_name: str, category: int, src_path: str, task_key: str) 
     current_site = settings.DEFAULT_DOMAIN
     storage_address = f'{current_site}{reverse("substrapp:model-file", args=[instance.key])}'
 
-    try:
-        with get_orchestrator_client(channel_name) as client:
-            client.register_model(
-                {
-                    "key": str(instance.key),
-                    "category": category,
-                    "compute_task_key": task_key,
-                    "address": {
-                        "checksum": checksum,
-                        "storage_address": storage_address,
-                    },
-                }
-            )
-    except Exception:
-        instance.delete()
-        raise
+    logger.debug("Saving model in local storage", model_key=instance.key, model_category=category)
 
-    logger.debug("Saving model", model_key=instance.key, model_category=category)
+    return {
+        "key": str(instance.key),
+        "category": category,
+        "compute_task_key": task_key,
+        "address": {
+            "checksum": checksum,
+            "storage_address": storage_address,
+        },
+    }
 
-    return instance.key
+
+def _delete_model(model_key: str) -> None:
+    """Deletes a model from the local storage
+
+    Args:
+        model_key (str): key of the model you want to delete
+    """
+    from substrapp.models import Model
+
+    Model.objects.get(key=model_key).delete()
