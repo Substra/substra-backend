@@ -12,6 +12,7 @@ from libs.pagination import PaginationMixin
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
@@ -29,7 +30,6 @@ from substrapp.views.utils import add_cp_status_and_task_counts
 from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
-from substrapp.views.utils import update_cp_status_and_task_counts
 from substrapp.views.utils import validate_key
 
 logger = structlog.get_logger(__name__)
@@ -227,7 +227,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         if tasks:
             with get_orchestrator_client(get_channel_name(request)) as client:
-                client.register_tasks({"tasks": tasks})
+                registered_tasks_data = client.register_tasks({"tasks": tasks})
 
         # Step2: save metadata in local database
         localrep_data["channel"] = get_channel_name(request)
@@ -241,7 +241,18 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         else:
             data = localrep_serializer.data
 
-        data = update_cp_status_and_task_counts(data, localrep_data)
+        # Save tasks metadata in localrep
+        if tasks:
+            for registered_task_data in registered_tasks_data:
+                registered_task_data["channel"] = get_channel_name(request)
+                task_serializer = ComputeTaskRepSerializer(data=registered_task_data)
+                try:
+                    task_serializer.save_if_not_exists()
+                except AlreadyExistsError:
+                    # May happen if the events app already processed the event pushed by the orchestrator
+                    pass
+
+        data = add_cp_status_and_task_counts(data)
 
         return data
 
@@ -255,10 +266,9 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         except ComputePlanRep.DoesNotExist:
             raise NotFound
         data = ComputePlanRepSerializer(compute_plan).data
+        data = add_cp_status_and_task_counts(data)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            # TODO: use localrep tasks
-            data = add_cp_status_and_task_counts(client, data)
             data = add_compute_plan_failed_task(client, data)
             data = add_compute_plan_duration_or_eta(client, data)
 
@@ -275,9 +285,8 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         data = ComputePlanRepSerializer(queryset, many=True).data
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            # TODO: use localrep tasks
             for datum in data:
-                datum = add_cp_status_and_task_counts(client, datum)
+                datum = add_cp_status_and_task_counts(datum)
                 datum = add_compute_plan_duration_or_eta(client, datum)
 
         return self.get_paginated_response(data)
@@ -322,7 +331,17 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         )
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            client.register_tasks({"tasks": tasks})
+            registered_tasks_data = client.register_tasks({"tasks": tasks})
+
+        # Save tasks metadata in localrep
+        for registered_task_data in registered_tasks_data:
+            registered_task_data["channel"] = get_channel_name(request)
+            task_serializer = ComputeTaskRepSerializer(data=registered_task_data)
+            try:
+                task_serializer.save_if_not_exists()
+            except AlreadyExistsError:
+                # May happen if the events app already processed the event pushed by the orchestrator
+                pass
 
         return ApiResponse({}, status=status.HTTP_200_OK)
 

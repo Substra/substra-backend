@@ -15,6 +15,10 @@ import orchestrator.computeplan_pb2 as computeplan_pb2
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
+from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
+from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
+from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputePlanViewSet
 from substrapp.views import CPAlgoViewSet
@@ -67,13 +71,48 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.url = reverse("substrapp:compute_plan-list")
 
-        self.compute_plans = assets.get_compute_plans()
+        self.algos = assets.get_algos()
+        for algo in self.algos:
+            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.metrics = assets.get_metrics()
+        for metric in self.metrics:
+            serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.data_managers = assets.get_data_managers()
+        for data_manager in self.data_managers:
+            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.data_samples = assets.get_data_samples()
+        for data_sample in self.data_samples:
+            serializer = DataSampleRepSerializer(data={"channel": "mychannel", **data_sample})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
         self.query_compute_plans_index = {}
+        self.compute_plans = assets.get_compute_plans()
         for compute_plan in self.compute_plans:
             serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
             serializer.is_valid(raise_exception=True)
             serializer.save()
             self.query_compute_plans_index[compute_plan["key"]] = compute_plan
+
+        self.compute_tasks = assets.get_train_tasks() + assets.get_test_tasks() + assets.get_composite_tasks()
+        for compute_task in self.compute_tasks:
+            # Missing field from test data
+            compute_task["logs_permission"] = {
+                "public": True,
+                "authorized_ids": [compute_task["owner"]],
+            }
+            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **compute_task})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -148,9 +187,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_computeplan_list_success(self):
         self.maxDiff = None
-        with mock.patch.object(
-            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
-        ), mock.patch(
+        with mock.patch(
             "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
         ):
             response = self.client.get(self.url, **self.extra)
@@ -174,9 +211,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_computeplan_retrieve(self):
         url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])
-        with mock.patch.object(
-            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
-        ), mock.patch(
+        with mock.patch(
             "substrapp.views.computeplan.add_compute_plan_failed_task", side_effect=self.mock_cp_failed_task
         ), mock.patch(
             "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
@@ -294,18 +329,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             self.assertEqual(mocked_get_error_type.call_count, 2)
 
     def test_can_see_algos(self):
-        algos = assets.get_algos()
-        for algo in algos:
-            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-
         url = reverse("substrapp:compute_plan_algo-list", args=[self.compute_plans[0]["key"]])
         params = urlencode({"page_size": 2})
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=algos):
+        with mock.patch.object(OrchestratorClient, "query_algos", return_value=self.algos):
             response = self.client.get(f"{url}?{params}", **self.extra)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["results"], algos[0:2])
+        self.assertEqual(response.json()["results"], self.algos[0:2])
 
     @internal_server_error_on_exception()
     @mock.patch(
