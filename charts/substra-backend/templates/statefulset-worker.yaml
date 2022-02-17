@@ -47,7 +47,7 @@ spec:
         - name: {{ . }}
       {{- end }}
       {{- end }}
-      {{- if .Values.worker.rbac.enable }}
+      {{- if .Values.worker.rbac.create }}
       serviceAccountName: {{ template "substra.fullname" . }}-worker
       {{- end }}
       initContainers:

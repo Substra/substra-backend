@@ -1,5 +1,10 @@
 # Changelog
 
+## 16.0.1
+
+### Fixed
+- Condition for the worker Service Account
+
 ## 16.0.0
 
 ### Added
