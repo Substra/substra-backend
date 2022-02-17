@@ -1,14 +1,24 @@
-# Substra-Backend [![Python](https://github.com/SubstraFoundation/substra-backend/workflows/Python/badge.svg)](https://github.com/SubstraFoundation/substra-backend/actions?query=workflow%3APython) [![Helm](https://github.com/SubstraFoundation/substra-backend/workflows/Helm/badge.svg)](https://github.com/SubstraFoundation/substra-backend/actions?query=workflow%3AHelm) [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds)
+# Substra-Backend [![Python](https://github.com/owkin/connect-backend/actions/workflows/python.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/python.yml) [![Helm](https://github.com/owkin/connect-backend/actions/workflows/helm.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/helm.yml) [![Build](https://github.com/owkin/connect-backend/actions/workflows/gcr.yml/badge.svg)](https://github.com/owkin/connect-backend/actions/workflows/gcr.yml)
 
-Backend of the Substra platform
+Backend of the Connect platform
 
 ## Running a development instance
 
-For the local installation of substra-backend (and companions), please refer to the [setup documentation](https://doc.substra.ai/setup/local_install_skaffold.html).
+This section details how you can get started on running a local connect backend. For this you will need a running Kubernetes cluster and the [orchestrator](https://github.com/owkin/orchestrator) deployed in this cluster.
 
-With [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) already running and requirements fulfilled, this should boils down to:
+If you want to run the connect-backend with Skaffold you will need to add the twuni and bitnami helm repos:
+```sh
+helm repo add twuni https://helm.twun.io
+helm repo add bitnami https://charts.bitnami.com/bitnami
+```
+
+To launch the connect backend:
 ```sh
 skaffold dev
+```
+or
+```sh
+skaffold run
 ```
 
 This will spawn several pods in two different namespaces to simulate several organizations: 'org-1' and 'org-2'.
@@ -17,11 +27,11 @@ Each organization will have:
 - RabbitMQ message broker
 - Docker registry
 - Kaniko cache warmer
-- [Celery beat](./charts/substra-backend/templates/deployment-celerybeat.yaml)
-- 2 celery workers (a [worker](./charts/substra-backend/templates/deployment-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler.yaml) restarting hanging tasks)
+- [Celery beat](./charts/substra-backend/templates/deployment-scheduler.yaml)
+- 2 celery workers (a [worker](./charts/substra-backend/templates/statefulset-worker.yaml) executing tasks and a [scheduler](./charts/substra-backend/templates/deployment-scheduler-worker.yaml) restarting hanging tasks and performing cleanup tasks)
 - an [operator pattern to add accounts](./charts/substra-backend/templates/add-account-operator.yaml)
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
-- the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the chaincode into celery tasks
+- the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the orchestrator into celery tasks
 
 ### Use debugger
 
@@ -183,10 +193,10 @@ pre-commit install
 
 The Substra platform is built from several components (see the [architecture](https://doc.substra.ai/architecture.html) documentation for a comprehensive overview):
 
-- [hlf-k8s](https://github.com/SubstraFoundation/hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
+- [hlf-k8s](https://github.com/owkin/connect-hlf-k8s) is the implementation of Hyperledger Fabric on which this backend rely
 - [orchestrator](https://github.com/owkin/orchestrator) contains the orchestration logic of a federated learning deployment
-- [substra-frontend](https://github.com/SubstraFoundation/substra-frontend) is the frontend consuming the API exposed by the backend
-- [substra-tests](https://github.com/SubstraFoundation/substra-tests) is the Substra end to end test suite
+- [connect-frontend](https://github.com/owkin/connect-frontend) is the frontend consuming the API exposed by the backend
+- [connect-tests](https://github.com/owkin/connect-tests) is the Substra end to end test suite
 
 ## License
 
