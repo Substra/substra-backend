@@ -1,5 +1,9 @@
 ## unreleased
 
+## 16.0.0
+
+Rename the key `worker.rbac.enable` to `worker.rbac.create` in your values file
+
 ## 15.0.0
 
 Apply changes from [minio 8](https://github.com/bitnami/charts/tree/master/bitnami/minio#to-800) and [minio 9](https://github.com/bitnami/charts/tree/master/bitnami/minio#to-900).

@@ -153,3 +153,14 @@ Return the user list
 {{- end }}
 {{- end }}
 {{- end -}}
+
+{{/*
+    Create the name fo the service account to use for the event app
+*/}}
+{{- define "substra.events.serviceAccountName" -}}
+{{- if .Values.events.serviceAccount.create -}}
+    {{ default (printf "%s-event" ( include "substra.fullname" .)) .Values.events.serviceAccount.name }}
+{{- else -}}
+    {{ default "default" .Values.events.serviceAccount.name }}
+{{- end -}}
+{{- end -}}

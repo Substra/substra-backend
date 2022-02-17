@@ -1,16 +1,25 @@
 # Changelog
 
-### 15.0.3
+## 16.0.0
+
+### Added
+
+- Use a separate serviceAccount for the event app to limit permissions scope
+
+### Changed
+- Renamed the key `worker.rbac.enable` to `worker.rbac.create`
+
+## 15.0.3
 
 ### Added
 - Add label selectors to servermedias PVCs if `DataSampleStorageInServerMedia` is `true`
 
-### 15.0.2
+## 15.0.2
 
 ### Added
 - Set `need-app = true` in event app uwsgi configuration
 
-### 15.0.1
+## 15.0.1
 
 ### Added
 - `configMapRef` `-orchestrator` to the `deployment-server` containers: `init-collect-static` and `init-migrate`

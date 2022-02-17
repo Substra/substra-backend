@@ -270,10 +270,10 @@ worker:
   ## @param worker.affinity Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`
   ##
   affinity: {}
-  ## @param worker.rbac.enable Create a role and service account for the worker
+  ## @param worker.rbac.create Create a role and service account for the worker
   ##
   rbac:
-    enable: true
+    create: true
   ## @param worker.persistence.storageClass Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning
   ## @param worker.persistence.size The size of the volume. The size of this volume should be sufficient to store many assets.
   ##
@@ -435,6 +435,18 @@ events:
   ## @param events.affinity Affinity settings for pod assignment
   ##
   affinity: {}
+  ## @param events.rbac.create Create a role and service account for the event app
+  ##
+  rbac:
+    create: true
+  serviceAccount:
+    ## @param events.serviceAccount.create Create a service account for the event app
+    ##
+    create: true
+    ## @param events.serviceAccount.name The name of the ServiceAccount to use
+    ## If not set and create is true, a name is generated using the substra.fullname template
+    ##
+    name: ""
 
 ## @section Orchestrator settings
 ##

@@ -29,7 +29,7 @@ spec:
         runAsUser: {{ .Values.events.podSecurityContext.runAsUser }}
         runAsGroup: {{ .Values.events.podSecurityContext.runAsGroup }}
       {{- end }}
-      serviceAccountName: {{ template "substra.fullname" . }}-worker
+      serviceAccountName: {{ include "substra.events.serviceAccountName" . }}
       containers:
         - name: event-app
           image: {{ include "common.images.name" .Values.events.image }}

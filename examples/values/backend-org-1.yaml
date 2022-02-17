@@ -29,8 +29,6 @@ containerRegistry:
 
 worker:
   concurrency: 3
-  rbac:
-    enable: true
 
 server:
   defaultDomain: http://backend-org-1-substra-backend-server.org-1:8000

@@ -106,7 +106,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `worker.nodeSelector`                          | Node labels for pod assignment                                                                                                                     | `{}`                             |
 | `worker.tolerations`                           | Toleration labels for pod assignment                                                                                                               | `[]`                             |
 | `worker.affinity`                              | Affinity settings for pod assignment, ignored if `DataSampleStorageInServerMedia` is `true`                                                        | `{}`                             |
-| `worker.rbac.enable`                           | Create a role and service account for the worker                                                                                                   | `true`                           |
+| `worker.rbac.create`                           | Create a role and service account for the worker                                                                                                   | `true`                           |
 | `worker.persistence.storageClass`              | Specify the _StorageClass_ used to provision the volume. Or the default _StorageClass_ will be used. Set it to `-` to disable dynamic provisioning | `""`                             |
 | `worker.persistence.size`                      | The size of the volume. The size of this volume should be sufficient to store many assets.                                                         | `10Gi`                           |
 | `worker.computePod.maxStartupWaitSeconds`      | Set the maximum amount of time we will wait for the compute pod to be ready                                                                        | `300`                            |
@@ -169,20 +169,23 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 ### Event app settings
 
-| Name                                   | Description                          | Value                            |
-| -------------------------------------- | ------------------------------------ | -------------------------------- |
-| `events.image.registry`                | Substra event app image registry     | `gcr.io`                         |
-| `events.image.repository`              | Substra event app image repository   | `connect-314908/connect-backend` |
-| `events.image.tag`                     | Substra event app image tag          | `0.4.0`                          |
-| `events.image.pullPolicy`              | Substra event app image pull policy  | `IfNotPresent`                   |
-| `events.image.pullSecrets`             | Specify image pull secrets           | `[]`                             |
-| `events.podSecurityContext.enabled`    | Enable security context              | `true`                           |
-| `events.podSecurityContext.runAsUser`  | User ID for the pod                  | `1001`                           |
-| `events.podSecurityContext.runAsGroup` | Group ID for the pod                 | `1001`                           |
-| `events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod      | `1001`                           |
-| `events.nodeSelector`                  | Node labels for pod assignment       | `{}`                             |
-| `events.tolerations`                   | Toleration labels for pod assignment | `[]`                             |
-| `events.affinity`                      | Affinity settings for pod assignment | `{}`                             |
+| Name                                   | Description                                         | Value                            |
+| -------------------------------------- | --------------------------------------------------- | -------------------------------- |
+| `events.image.registry`                | Substra event app image registry                    | `gcr.io`                         |
+| `events.image.repository`              | Substra event app image repository                  | `connect-314908/connect-backend` |
+| `events.image.tag`                     | Substra event app image tag                         | `0.4.0`                          |
+| `events.image.pullPolicy`              | Substra event app image pull policy                 | `IfNotPresent`                   |
+| `events.image.pullSecrets`             | Specify image pull secrets                          | `[]`                             |
+| `events.podSecurityContext.enabled`    | Enable security context                             | `true`                           |
+| `events.podSecurityContext.runAsUser`  | User ID for the pod                                 | `1001`                           |
+| `events.podSecurityContext.runAsGroup` | Group ID for the pod                                | `1001`                           |
+| `events.podSecurityContext.fsGroup`    | FileSystem group ID for the pod                     | `1001`                           |
+| `events.nodeSelector`                  | Node labels for pod assignment                      | `{}`                             |
+| `events.tolerations`                   | Toleration labels for pod assignment                | `[]`                             |
+| `events.affinity`                      | Affinity settings for pod assignment                | `{}`                             |
+| `events.rbac.create`                   | Create a role and service account for the event app | `true`                           |
+| `events.serviceAccount.create`         | Create a service account for the event app          | `true`                           |
+| `events.serviceAccount.name`           | The name of the ServiceAccount to use               | `""`                             |
 
 
 ### Orchestrator settings
