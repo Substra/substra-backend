@@ -387,13 +387,3 @@ class CPTaskViewSet(GenericSubassetViewset):
         for datum in data:
             datum = add_task_extra_information(client, truncated_basename, datum)
         return data
-
-
-class CPAlgoViewSet(GenericSubassetViewset):
-    # return all algos related to a specific CP
-    def _fetch_data(self, client, compute_plan_pk, truncated_basename, search_params):
-        validated_key = validate_key(compute_plan_pk)
-        data = client.query_algos(compute_plan_key=validated_key)
-        data = self._filter_data(data, search_params, truncated_basename)
-
-        return data

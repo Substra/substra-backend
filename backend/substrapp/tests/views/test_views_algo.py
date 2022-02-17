@@ -15,6 +15,11 @@ from rest_framework.test import APITestCase
 import orchestrator.algo_pb2 as algo_pb2
 from localrep.models import Algo as AlgoRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
+from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
+from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
+from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
+from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
 from orchestrator.error import OrcError
 from orchestrator.error import StatusCode
@@ -137,6 +142,55 @@ class AlgoViewTests(APITestCase):
         self.assertEqual(r["count"], len(self.algos))
         offset = (page - 1) * page_size
         self.assertEqual(r["results"], self.algos[offset : offset + page_size])
+
+    def test_algo_cp_list_success(self):
+        """List algos for a specific compute plan (CPAlgoViewSet)."""
+
+        metrics = assets.get_metrics()
+        for metric in metrics:
+            serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        data_managers = assets.get_data_managers()
+        for data_manager in data_managers:
+            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        data_samples = assets.get_data_samples()
+        for data_sample in data_samples:
+            serializer = DataSampleRepSerializer(data={"channel": "mychannel", **data_sample})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        compute_plans = assets.get_compute_plans()
+        for compute_plan in compute_plans:
+            serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        compute_tasks = assets.get_train_tasks() + assets.get_test_tasks() + assets.get_composite_tasks()
+        for compute_task in compute_tasks:
+            # Missing field from test data
+            compute_task["logs_permission"] = {
+                "public": True,
+                "authorized_ids": [compute_task["owner"]],
+            }
+            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **compute_task})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        # Get a CP with more than one task to have "interesting" results
+        compute_plan_key = [cp["key"] for cp in compute_plans if cp["task_count"] > 1][0]
+        related_algo_keys = [ct["algo"]["key"] for ct in compute_tasks if ct["compute_plan_key"] == compute_plan_key]
+        related_algos = [algo for algo in self.algos if algo["key"] in related_algo_keys]
+
+        url = reverse("substrapp:compute_plan_algo-list", args=[compute_plan_key])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(
+            response.json(), {"count": len(related_algos), "next": None, "previous": None, "results": related_algos}
+        )
 
     def test_algo_create(self):
         def mock_orc_response(data):

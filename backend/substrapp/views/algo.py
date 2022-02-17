@@ -40,7 +40,37 @@ def replace_storage_addresses(request, algo):
     )
 
 
-class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
+class AlgoListMixin:
+    def list(self, request, compute_plan_pk=None):
+        queryset = AlgoRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
+
+        if compute_plan_pk is not None:
+            validated_key = validate_key(compute_plan_pk)
+            queryset = queryset.filter(compute_tasks__compute_plan__key=validated_key).distinct()
+
+        query_params = request.query_params.get("search")
+        if query_params is not None:
+
+            def map_category(key, values):
+                if key == "category":
+                    values = [algo_pb2.AlgoCategory.Value(value) for value in values]
+                return key, values
+
+            queryset = filter_queryset("algo", queryset, query_params, mapping_callback=map_category)
+        queryset = self.paginate_queryset(queryset)
+
+        data = AlgoRepSerializer(queryset, many=True).data
+        for algo in data:
+            replace_storage_addresses(request, algo)
+
+        return self.get_paginated_response(data)
+
+
+class CPAlgoViewSet(AlgoListMixin, GenericViewSet):
+    pagination_class = DefaultPageNumberPagination
+
+
+class AlgoViewSet(AlgoListMixin, mixins.CreateModelMixin, GenericViewSet):
     queryset = Algo.objects.all()
     serializer_class = AlgoSerializer
     pagination_class = DefaultPageNumberPagination
@@ -173,26 +203,6 @@ class AlgoViewSet(mixins.CreateModelMixin, GenericViewSet):
         key = self.kwargs[lookup_url_kwarg]
         data = self._retrieve(request, key)
         return ApiResponse(data, status=status.HTTP_200_OK)
-
-    def list(self, request, *args, **kwargs):
-        queryset = AlgoRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
-
-        query_params = request.query_params.get("search")
-        if query_params is not None:
-
-            def map_category(key, values):
-                if key == "category":
-                    values = [algo_pb2.AlgoCategory.Value(value) for value in values]
-                return key, values
-
-            queryset = filter_queryset("algo", queryset, query_params, mapping_callback=map_category)
-        queryset = self.paginate_queryset(queryset)
-
-        data = AlgoRepSerializer(queryset, many=True).data
-        for algo in data:
-            replace_storage_addresses(request, algo)
-
-        return self.get_paginated_response(data)
 
 
 class AlgoPermissionViewSet(PermissionMixin, GenericViewSet):

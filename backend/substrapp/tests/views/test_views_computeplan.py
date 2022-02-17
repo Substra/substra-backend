@@ -21,7 +21,6 @@ from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
 from substrapp.views import ComputePlanViewSet
-from substrapp.views import CPAlgoViewSet
 from substrapp.views import CPTaskViewSet
 
 from .. import assets
@@ -328,14 +327,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             self.assertEqual(len(r["results"]), 2)
             self.assertEqual(mocked_get_error_type.call_count, 2)
 
-    def test_can_see_algos(self):
-        url = reverse("substrapp:compute_plan_algo-list", args=[self.compute_plans[0]["key"]])
-        params = urlencode({"page_size": 2})
-        with mock.patch.object(OrchestratorClient, "query_algos", return_value=self.algos):
-            response = self.client.get(f"{url}?{params}", **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(response.json()["results"], self.algos[0:2])
-
     @internal_server_error_on_exception()
     @mock.patch(
         "substrapp.views.computeplan.ComputePlanViewSet.update_ledger", side_effect=Exception("Unexpected error")
@@ -351,17 +342,6 @@ class CPTaskViewSetTests(AuthenticatedAPITestCase):
     @mock.patch.object(CPTaskViewSet, "is_page_size_param_present", side_effect=Exception("Unexpected error"))
     def test_list_fail_internal_server_error(self, validate_key: mock.Mock):
         url = reverse("substrapp:compute_plan_composite_traintuple-list", kwargs={"compute_plan_pk": 123})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        validate_key.assert_called_once()
-
-
-class CPAlgoViewSetTests(AuthenticatedAPITestCase):
-    @internal_server_error_on_exception()
-    @mock.patch.object(CPAlgoViewSet, "is_page_size_param_present", side_effect=Exception("Unexpected error"))
-    def test_list_fail_internal_server_error(self, validate_key: mock.Mock):
-        url = reverse("substrapp:compute_plan_algo-list", kwargs={"compute_plan_pk": 123})
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
