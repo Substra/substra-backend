@@ -25,7 +25,6 @@ from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_compute_plan_duration_or_eta
-from substrapp.views.utils import add_compute_plan_failed_task
 from substrapp.views.utils import add_cp_status_and_task_counts
 from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
@@ -269,7 +268,6 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         data = add_cp_status_and_task_counts(data)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = add_compute_plan_failed_task(client, data)
             data = add_compute_plan_duration_or_eta(client, data)
 
         return ApiResponse(data, status=status.HTTP_200_OK)

@@ -434,35 +434,6 @@ def add_cp_status_and_task_counts(data):
     return data
 
 
-def add_compute_plan_failed_task(client, data):
-    """Add the first failed task information to a compute plan data.
-    It helps the final user to find which task failed the compute plan.
-    """
-
-    failed_task = None
-
-    if computeplan_pb2.ComputePlanStatus.Value(data["status"]) == computeplan_pb2.PLAN_STATUS_FAILED:
-
-        first_failed_task = next(
-            client.query_events_generator(
-                event_kind=event_pb2.EVENT_ASSET_UPDATED,
-                metadata={"status": "STATUS_FAILED", "compute_plan_key": data["key"]},
-            ),
-            None,
-        )
-
-        if first_failed_task:
-            failed_task_data = client.query_task(key=first_failed_task["asset_key"])
-            failed_task = {
-                "key": failed_task_data["key"],
-                "category": failed_task_data["category"],
-            }
-
-    data["failed_task"] = failed_task
-
-    return data
-
-
 def add_compute_plan_duration_or_eta(client, data):
     """Add the duration and the estimated time of arrival or end date to a compute plan data."""
 

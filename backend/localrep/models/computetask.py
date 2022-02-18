@@ -4,12 +4,12 @@ from django.db import models
 import orchestrator.computetask_pb2 as computetask_pb2
 from localrep.models.utils import get_enum_choices
 
+CATEGORY_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskCategory)
+STATUS_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskStatus)
+
 
 class ComputeTask(models.Model):
     """ComputeTask represent a computetask and its associated metadata"""
-
-    CATEGORY_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskCategory)
-    STATUS_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskStatus)
 
     key = models.UUIDField(primary_key=True)
     category = models.IntegerField(choices=CATEGORY_CHOICES)

@@ -3,6 +3,7 @@ from django.conf import settings
 from django.db import transaction
 
 import orchestrator.common_pb2 as common_pb2
+import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from localrep.errors import AlreadyExistsError
@@ -84,10 +85,19 @@ def _create_computetask(channel: str, data: dict) -> bool:
 
 def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process update computetask event to update local database."""
+
+    from events.dynamic_fields import add_cp_failed_task
+
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_task(event["asset_key"])
+
     _update_computetask(data)
+
+    if data["status"] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED):
+        # The event processed might not be the first failed one.
+        # We cannot use the task data but need to fetch the first failed event from the orchestrator
+        add_cp_failed_task(data["compute_plan_key"], client)
 
 
 def _update_computetask(data: dict) -> None:
@@ -290,6 +300,8 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
+    from events.dynamic_fields import add_cp_failed_task
+
     logger.info("Resyncing computeplans")
     computeplans = client.query_compute_plans()  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
@@ -297,6 +309,8 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
 
     for data in computeplans:
         is_created = _create_computeplan(client.channel_name, data)
+        if data["status"] == computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_FAILED):
+            add_cp_failed_task(data["key"], client)
         if is_created:
             logger.debug("Created new computeplan", asset_key=data["key"])
             nb_new_assets += 1

@@ -1,9 +1,19 @@
 from rest_framework import serializers
 
 from localrep.models import ComputePlan
+from localrep.serializers.computetask import CategoryField
 from localrep.serializers.utils import SafeSerializerMixin
 from localrep.serializers.utils import get_channel_choices
 from orchestrator import computeplan_pb2
+
+
+class FailedTaskSerializer(serializers.Serializer):
+    key = serializers.CharField(required=False, allow_null=True, max_length=64, source="failed_task_key")
+    category = CategoryField(
+        required=False,
+        allow_null=True,
+        source="failed_task_category",
+    )
 
 
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
@@ -16,6 +26,14 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     canceled_count = serializers.IntegerField(read_only=True)
     failed_count = serializers.IntegerField(read_only=True)
     status = serializers.ChoiceField(read_only=True, choices=computeplan_pb2.ComputePlanStatus.keys())
+    failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if not instance.failed_task_key:
+            # None should be returned to the API not the default OrderedDict
+            data["failed_task"] = None
+        return data
 
     class Meta:
         model = ComputePlan
@@ -27,6 +45,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "creation_date",
             "metadata",
             "channel",
+            "failed_task",
             "task_count",
             "done_count",
             "waiting_count",

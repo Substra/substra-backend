@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - When resyncing the local representation, fetch events by page of 1000 instead of one-by-one (#680)
 - Update computetask protobuf. `register_tasks` return now the tasks list registered (#677)
 - Stream directly asset files from MinIO without loading them on disk (#732)
+- compute_plan["failed_task"] is populated when syncing a failed task event in the event app instead of in the views (#755)
 
 ### Fixed
 - Handle incomplete medata in newsfeed (#652)
@@ -85,7 +86,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add cp start date, end date and duration (#402)
 
 ### Changed
-
 - Datasample upload by path is possible only from the servermedias volumes
 - algo, metrics and datamanager are stored in Minio instead of the medias volume
 - Rename `RUN_AS_GROUP` setting to `COMPUTE_POD_RUN_AS_GROUP`.

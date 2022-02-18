@@ -171,11 +171,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def mock_query_compute_plan(self, key):
         return self.query_compute_plans_index[key]
 
-    def mock_cp_failed_task(self, _, data):
-        compute_plan = self.query_compute_plans_index[data["key"]]
-        data["failed_task"] = compute_plan["failed_task"]
-        return data
-
     def mock_cp_duration(self, _, data):
         compute_plan = self.query_compute_plans_index[data["key"]]
         data["start_date"] = compute_plan["start_date"]
@@ -190,8 +185,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
         ):
             response = self.client.get(self.url, **self.extra)
-        for compute_plan in self.compute_plans:
-            del compute_plan["failed_task"]
         self.assertEqual(
             response.json(),
             {"count": len(self.compute_plans), "next": None, "previous": None, "results": self.compute_plans},
@@ -210,8 +203,9 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_computeplan_retrieve(self):
         url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])
-        with mock.patch(
-            "substrapp.views.computeplan.add_compute_plan_failed_task", side_effect=self.mock_cp_failed_task
+
+        with mock.patch.object(
+            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
         ), mock.patch(
             "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
         ):
