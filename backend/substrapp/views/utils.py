@@ -470,6 +470,7 @@ def add_compute_plan_duration_or_eta(client, data):
     compute_plan_status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
 
     start_date = None
+    end_date = None
     data["start_date"] = None
     data["end_date"] = None
     data["estimated_end_date"] = None
@@ -530,6 +531,8 @@ def add_compute_plan_duration_or_eta(client, data):
             end_date = datetime.datetime.strptime(
                 last_event["timestamp"].split("+")[0].strip("Z")[:-3], "%Y-%m-%dT%H:%M:%S.%f"
             )
+
+        if start_date is not None and end_date is not None:
             data["duration"] = int((end_date - start_date).total_seconds())
 
     return data

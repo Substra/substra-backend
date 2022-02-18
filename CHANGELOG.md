@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Corrupted asset buffer when asset download fails (#673)
 - Possible race condition when deleting pod (#746)
 - Use failure report owner to determine whether storage address is local (#748)
+- Check that start_date and end_date are not `None` to compute duration (#770)
 
 ## [0.8.0] 2022-01-16
 
