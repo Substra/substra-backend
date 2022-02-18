@@ -12,6 +12,7 @@ from rest_framework import status
 from rest_framework.test import APITestCase
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
+import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
@@ -20,6 +21,7 @@ from localrep.serializers import DataManagerSerializer as DataManagerRepSerializ
 from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
+from substrapp.compute_tasks.errors import ComputeTaskErrorType
 from substrapp.views import ComputePlanViewSet
 from substrapp.views import CPTaskViewSet
 
@@ -109,6 +111,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
                 "public": True,
                 "authorized_ids": [compute_task["owner"]],
             }
+            if compute_task["error_type"] is None:
+                del compute_task["error_type"]
+            else:
+                compute_task["error_type"] = failure_report_pb2.ErrorType.Name(
+                    getattr(ComputeTaskErrorType, compute_task["error_type"]).value
+                )
             serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **compute_task})
             serializer.is_valid(raise_exception=True)
             serializer.save()

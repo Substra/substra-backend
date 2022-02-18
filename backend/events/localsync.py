@@ -1,11 +1,13 @@
 import structlog
 from django.conf import settings
 from django.db import transaction
+from django.utils.dateparse import parse_datetime
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
+import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.errors import AlreadyExistsError
 from orchestrator import client as orc_client
 from substrapp.orchestrator import get_orchestrator_client
@@ -65,10 +67,18 @@ def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorCli
     _create_computetask(event["channel"], data)
 
 
-def _create_computetask(channel: str, data: dict) -> bool:
+def _create_computetask(
+    channel: str, data: dict, start_date: str = None, end_date: str = None, error_type: str = None
+) -> bool:
     from localrep.serializers import ComputeTaskSerializer
 
     data["channel"] = channel
+    if start_date is not None:
+        data["start_date"] = parse_datetime(start_date)
+    if end_date is not None:
+        data["end_date"] = parse_datetime(end_date)
+    if error_type is not None:
+        data["error_type"] = error_type
     # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
     #      the orchestrator and backend used to generate the dumps are both outdated.
     #      We provide a sensible default: logs are private.
@@ -87,12 +97,15 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     """Process update computetask event to update local database."""
 
     from events.dynamic_fields import add_cp_failed_task
+    from events.dynamic_fields import fetch_error_type_from_event
+    from events.dynamic_fields import parse_computetask_dates_from_event
 
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_task(event["asset_key"])
-
-    _update_computetask(data)
+    candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
+    error_type = fetch_error_type_from_event(event, client)
+    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, error_type)
 
     if data["status"] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED):
         # The event processed might not be the first failed one.
@@ -100,12 +113,21 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
         add_cp_failed_task(data["compute_plan_key"], client)
 
 
-def _update_computetask(data: dict) -> None:
-    """Update only status field."""
+def _update_computetask(key: str, status: str, start_date: str, end_date: str, error_type: str) -> None:
+    """Update only mutable fields: status, start_date, end_date, error_type"""
     from localrep.models import ComputeTask
 
-    compute_task = ComputeTask.objects.get(key=data["key"])
-    compute_task.status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
+    compute_task = ComputeTask.objects.get(key=key)
+    compute_task.status = computetask_pb2.ComputeTaskStatus.Value(status)
+    # The computetask start/end date is the timestamp of the first event related to the new status.
+    # During a single event sync, we rely on the asset values to deduce if they were previous events.
+    # If so, dates are not updated on the asset
+    if compute_task.start_date is None and start_date is not None:
+        compute_task.start_date = parse_datetime(start_date)
+    if compute_task.end_date is None and end_date is not None:
+        compute_task.end_date = parse_datetime(end_date)
+    if error_type is not None:
+        compute_task.error_type = failure_report_pb2.ErrorType.Value(error_type)
     compute_task.save()
 
 
@@ -162,16 +184,16 @@ def _on_update_datasample_event(event: dict, client: orc_client.OrchestratorClie
     logger.debug("Syncing datasample update", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_datasample(event["asset_key"])
-    _update_datasample(data)
+    _update_datasample(data["key"], data["data_manager_keys"])
 
 
-def _update_datasample(data: dict) -> None:
+def _update_datasample(key: str, data_manager_keys: list[str]) -> None:
     """Update only datamanager relations"""
     from localrep.models import DataManager
     from localrep.models import DataSample
 
-    data_managers = DataManager.objects.filter(key__in=data["data_manager_keys"])
-    data_sample = DataSample.objects.get(key=data["key"])
+    data_managers = DataManager.objects.filter(key__in=data_manager_keys)
+    data_sample = DataSample.objects.get(key=key)
     data_sample.data_managers.set(data_managers)
     data_sample.save()
 
@@ -292,7 +314,7 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
             logger.debug("Created new datasample", asset_key=data["key"])
             nb_new_assets += 1
         else:
-            _update_datasample(data)
+            _update_datasample(data["key"], data["data_manager_keys"])
             logger.debug("Updated datasample", asset_key=data["key"])
             nb_updated_assets += 1
 
@@ -322,18 +344,37 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
 
 
 def resync_computetasks(client: orc_client.OrchestratorClient):
+    from events.dynamic_fields import fetch_error_type_from_event
+    from events.dynamic_fields import parse_computetask_dates_from_event
+
     logger.info("Resyncing computetasks")
     computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
     nb_updated_assets = 0
 
     for data in computetasks:
-        is_created = _create_computetask(client.channel_name, data)
+        start_date, end_date, error_type = None, None, None
+        events = client.query_events(
+            asset_key=data["key"],
+            asset_kind=common_pb2.ASSET_COMPUTE_TASK,
+            event_kind=event_pb2.EVENT_ASSET_UPDATED,
+        )
+        for event in events:
+            candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
+            # The computetask start/end date is the timestamp of the first event related to the new status
+            if start_date is None and candidate_start_date is not None:
+                start_date = candidate_start_date
+            if end_date is None and candidate_end_date is not None:
+                end_date = candidate_end_date
+            if error_type is None:
+                error_type = fetch_error_type_from_event(event, client)
+
+        is_created = _create_computetask(client.channel_name, data, start_date, end_date, error_type)
         if is_created:
             logger.debug("Created new computetask", asset_key=data["key"])
             nb_new_assets += 1
         else:
-            _update_computetask(data)
+            _update_computetask(data["key"], data["status"], start_date, end_date, error_type)
             logger.debug("Updated computetask", asset_key=data["key"])
             nb_updated_assets += 1
 

@@ -1,3 +1,5 @@
+from typing import Optional
+
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.event_pb2 as event_pb2
 from localrep.models import ComputePlan
@@ -28,3 +30,32 @@ def add_cp_failed_task(compute_plan_key: str, client: orc_client.OrchestratorCli
     compute_plan.failed_task_key = task_data["key"]
     compute_plan.failed_task_category = computetask_pb2.ComputeTaskCategory.Value(task_data["category"])
     compute_plan.save()
+
+
+def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Optional[str]]:
+    """Parse start date or end date from computetask related event."""
+    start_date, end_date = None, None
+    # For a single event-sync, we cant equally use task status or event-status as the values are the same.
+    # In case of all-assets re-sync, the task status contains only the last status.
+    # If we want to retrieve start/end dates, we have to reassemble data from the event history.
+    # This is why have to use event-status.
+    status = computetask_pb2.ComputeTaskStatus.Value(event["metadata"]["status"])
+    if status == computetask_pb2.STATUS_DOING:
+        start_date = event["timestamp"]
+    elif status in (
+        computetask_pb2.STATUS_CANCELED,
+        computetask_pb2.STATUS_DONE,
+        computetask_pb2.STATUS_FAILED,
+    ):
+        end_date = event["timestamp"]
+    return start_date, end_date
+
+
+def fetch_error_type_from_event(event: dict, client: orc_client.OrchestratorClient) -> Optional[str]:
+    error_type = None
+    status = computetask_pb2.ComputeTaskStatus.Value(event["metadata"]["status"])
+    if status == computetask_pb2.STATUS_FAILED:
+        failure_report = client.get_failure_report({"compute_task_key": event["asset_key"]})
+        if failure_report:
+            error_type = failure_report["error_type"]
+    return error_type

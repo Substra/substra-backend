@@ -3,6 +3,7 @@ import copy
 from rest_framework import serializers
 
 import orchestrator.computetask_pb2 as computetask_pb2
+import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
@@ -32,6 +33,14 @@ class StatusField(serializers.Field):
         return computetask_pb2.ComputeTaskStatus.Value(data)
 
 
+class ErrorTypeField(serializers.Field):
+    def to_representation(self, instance):
+        return failure_report_pb2.ErrorType.Name(instance)
+
+    def to_internal_value(self, data):
+        return failure_report_pb2.ErrorType.Value(data)
+
+
 class AlgoField(serializers.Field):
     def to_representation(self, data):
         return AlgoSerializer(instance=data).data
@@ -43,6 +52,7 @@ class AlgoField(serializers.Field):
 class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     category = CategoryField()
     status = StatusField()
+    error_type = ErrorTypeField(required=False)
     logs_permission = make_permission_serializer("logs_permission")(source="*")
 
     algo = AlgoField()
@@ -127,6 +137,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "creation_date",
             "data_manager_key",
             "data_sample_keys",
+            "end_date",
+            "error_type",
             "head_permissions",
             "key",
             "logs_permission",
@@ -136,7 +148,9 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "owner",
             "parent_task_keys",
             "rank",
+            "start_date",
             "status",
+            "tag",
             "trunk_permissions",
             "worker",
         ]
