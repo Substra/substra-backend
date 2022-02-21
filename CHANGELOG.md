@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exponential backoff of celery tasks retry (#736)
 - Compute CP tasks count and status from localrep data (#717)
 - Use localrep data in CPAlgoViewSet (#763)
+- Local representation of performance assets (#778)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)

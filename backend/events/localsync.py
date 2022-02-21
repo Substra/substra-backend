@@ -2,6 +2,7 @@ import structlog
 from django.conf import settings
 from django.db import transaction
 from django.utils.dateparse import parse_datetime
+from rest_framework.exceptions import ValidationError
 
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
@@ -111,6 +112,10 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
         # The event processed might not be the first failed one.
         # We cannot use the task data but need to fetch the first failed event from the orchestrator
         add_cp_failed_task(data["compute_plan_key"], client)
+    elif data["category"] == computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST) and data[
+        "status"
+    ] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE):
+        _creating_computetask_performances(data["key"], client)
 
 
 def _update_computetask(key: str, status: str, start_date: str, end_date: str, error_type: str) -> None:
@@ -215,6 +220,22 @@ def _create_metric(channel: str, data: dict) -> bool:
         serializer.save_if_not_exists()
     except AlreadyExistsError:
         logger.debug("Metric already exists", asset_key=data["key"])
+        return False
+    else:
+        return True
+
+
+def _create_performance(channel: str, data: dict) -> bool:
+    from localrep.serializers import PerformanceSerializer
+
+    data["channel"] = channel
+    serializer = PerformanceSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except ValidationError:
+        logger.debug(
+            "Performance already exists", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
+        )
         return False
     else:
         return True
@@ -343,6 +364,33 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
     logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
+def _creating_computetask_performances(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
+    logger.info("creating task performances ", task_key=compute_task_key)
+    performances = client.get_compute_task_performances(compute_task_key)
+    nb_new_assets = 0
+    nb_skipped_assets = 0
+
+    for data in performances:
+        is_created = _create_performance(client.channel_name, data)
+        if is_created:
+            logger.debug(
+                "Created new performance", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
+            )
+            nb_new_assets += 1
+        else:
+            logger.debug(
+                "Skipped performance", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
+            )
+            nb_skipped_assets += 1
+
+    logger.info(
+        "Done creating performances for task",
+        task_key=compute_task_key,
+        nb_new_assets=nb_new_assets,
+        nb_skipped_assets=nb_skipped_assets,
+    )
+
+
 def resync_computetasks(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import fetch_error_type_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
@@ -377,6 +425,13 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
             _update_computetask(data["key"], data["status"], start_date, end_date, error_type)
             logger.debug("Updated computetask", asset_key=data["key"])
             nb_updated_assets += 1
+        if data["category"] == computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST) and data[
+            "status"
+        ] in [
+            computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING),
+            computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE),
+        ]:
+            _creating_computetask_performances(data["key"], client)
 
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
 
