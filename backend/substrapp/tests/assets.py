@@ -5088,16 +5088,16 @@ def get_train_tasks():
                 "data_manager_key": "4d49d316-c2dd-43e9-8b80-e0dd2676f52c",
                 "data_manager": None,
                 "data_sample_keys": [
-                    "d8254291-b976-4bc5-889c-b473478aaffa",
-                    "633ba83e-f735-4dfa-8182-b1e39c750415",
-                    "496df155-0441-4ffd-a06f-8ef106f24887",
-                    "3ec2ff55-380b-47bb-ae61-506556ab8155",
-                    "bb69ca94-b684-44fe-8382-29b910a5a26f",
-                    "665b75d6-bf2b-4e5a-a09c-81dd17c41d0b",
-                    "c7086185-699a-4878-b1ac-24fdb51a7f2d",
-                    "68792e67-a4fd-45d2-8c2e-d65063f04b05",
                     "1a103374-0c54-46e8-b105-18839a4361f4",
-                    "80669e08-bb07-4193-8c2a-cad3eff5b906"
+                    "3ec2ff55-380b-47bb-ae61-506556ab8155",
+                    "496df155-0441-4ffd-a06f-8ef106f24887",
+                    "633ba83e-f735-4dfa-8182-b1e39c750415",
+                    "665b75d6-bf2b-4e5a-a09c-81dd17c41d0b",
+                    "68792e67-a4fd-45d2-8c2e-d65063f04b05",
+                    "80669e08-bb07-4193-8c2a-cad3eff5b906",
+                    "bb69ca94-b684-44fe-8382-29b910a5a26f",
+                    "c7086185-699a-4878-b1ac-24fdb51a7f2d",
+                    "d8254291-b976-4bc5-889c-b473478aaffa",
                 ],
                 "model_permissions": {
                     "process": {
@@ -11385,8 +11385,8 @@ def get_test_tasks():
                 "data_manager_key": "f9233208-ab5c-4b36-be24-e183dc025b3f",
                 "data_manager": None,
                 "data_sample_keys": [
+                    "4d8f238d-1b6f-4fb5-bf63-5cc4969334c4",
                     "86de996f-48b2-45cc-abb2-4f8fcdc21b24",
-                    "4d8f238d-1b6f-4fb5-bf63-5cc4969334c4"
                 ],
                 "metric_keys": [
                     "b4490c5e-2ae8-420a-9895-55904873d27a"
