@@ -50,6 +50,9 @@ class Migration(migrations.Migration):
                 ("metadata", models.JSONField()),
                 ("channel", models.CharField(max_length=100)),
             ],
+            options={
+                "ordering": ["creation_date", "key"],
+            },
         ),
         migrations.CreateModel(
             name="Metric",
@@ -78,5 +81,8 @@ class Migration(migrations.Migration):
                 ("metadata", models.JSONField()),
                 ("channel", models.CharField(max_length=100)),
             ],
+            options={
+                "ordering": ["creation_date", "key"],
+            },
         ),
     ]

@@ -38,6 +38,9 @@ class Migration(migrations.Migration):
                 ),
                 ("channel", models.CharField(max_length=100)),
             ],
+            options={
+                "ordering": ["creation_date", "key"],
+            },
         ),
         migrations.CreateModel(
             name="ComputeTask",
@@ -168,5 +171,8 @@ class Migration(migrations.Migration):
                 ),
                 ("metrics", models.ManyToManyField(null=True, related_name="compute_tasks", to="localrep.Metric")),
             ],
+            options={
+                "ordering": ["creation_date", "key"],
+            },
         ),
     ]

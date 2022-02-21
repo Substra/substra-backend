@@ -15,3 +15,6 @@ class ComputePlan(models.Model):
     failed_task_key = models.CharField(max_length=100, null=True)
     failed_task_category = models.IntegerField(choices=CATEGORY_CHOICES, null=True)
     channel = models.CharField(max_length=100)
+
+    class Meta:
+        ordering = ["creation_date", "key"]  # default order for relations serializations

@@ -52,3 +52,6 @@ class ComputeTask(models.Model):
     head_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
     trunk_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
     trunk_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+
+    class Meta:
+        ordering = ["creation_date", "key"]  # default order for relations serializations

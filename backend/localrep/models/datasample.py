@@ -10,3 +10,6 @@ class DataSample(models.Model):
     channel = models.CharField(max_length=100)
     test_only = models.BooleanField()
     data_managers = models.ManyToManyField("DataManager", related_name="data_samples", related_query_name="data_sample")
+
+    class Meta:
+        ordering = ["creation_date", "key"]  # default order for relations serializations

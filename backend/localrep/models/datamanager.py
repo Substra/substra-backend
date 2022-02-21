@@ -32,4 +32,4 @@ class DataManager(models.Model):
         return self.data_samples.filter(test_only=True)
 
     class Meta:
-        ordering = ["creation_date", "key"]  # required for datasample serializer ordering
+        ordering = ["creation_date", "key"]  # default order for relations serializations

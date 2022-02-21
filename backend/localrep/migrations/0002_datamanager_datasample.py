@@ -66,5 +66,8 @@ class Migration(migrations.Migration):
                     ),
                 ),
             ],
+            options={
+                "ordering": ["creation_date", "key"],
+            },
         ),
     ]

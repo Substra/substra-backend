@@ -26,3 +26,6 @@ class Algo(models.Model):
     creation_date = models.DateTimeField()
     metadata = models.JSONField()
     channel = models.CharField(max_length=100)
+
+    class Meta:
+        ordering = ["creation_date", "key"]  # default order for relations serializations
