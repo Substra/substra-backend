@@ -24,6 +24,7 @@ import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
+from localrep.models import Performance as PerformanceRep
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
@@ -317,8 +318,11 @@ def add_task_extra_information(client, basename, data, channel, expand_relations
     # add performances for test tasks
     if basename in ["testtuple"]:
         if task_status == computetask_pb2.STATUS_DONE:
-            performances = client.get_compute_task_performances(data["key"])
-            performances = {performance["metric_key"]: performance["performance_value"] for performance in performances}
+            performances = PerformanceRep.objects.filter(
+                compute_task_id=data["key"],
+                channel=channel,
+            ).order_by("creation_date", "id")
+            performances = {str(perf.metric_id): perf.value for perf in performances}
             data[TASK_FIELD[basename]]["perfs"] = performances
 
     if expand_relationships and basename in ["traintuple", "testtuple", "composite_traintuple"]:

@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import tempfile
+from datetime import datetime
 from unittest import mock
 
 from django.test import override_settings
@@ -15,6 +16,7 @@ import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
+from localrep.models import Performance as PerformanceRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
@@ -297,8 +299,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     def test_testtask_list_success(self):
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(self.test_tasks), "next": None, "previous": None, "results": self.test_tasks},
@@ -320,8 +321,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         key = self.test_tasks[0]["key"]
         params = urlencode({"search": f"testtuple:key:{key}"})
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
 
     def test_testtask_list_filter_and(self):
@@ -329,8 +329,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         key, owner = self.test_tasks[0]["key"], self.test_tasks[0]["owner"]
         params = urlencode({"search": f"testtuple:key:{key},testtuple:owner:{owner}"})
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
 
     def test_testtask_list_filter_or(self):
@@ -339,8 +338,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
         key_1 = self.test_tasks[1]["key"]
         params = urlencode({"search": f"testtuple:key:{key_0}-OR-testtuple:key:{key_1}"})
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
 
     def test_testtask_list_filter_or_and(self):
@@ -356,8 +354,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
             }
         )
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
 
     @parameterized.expand(
@@ -370,8 +367,7 @@ class TestTaskViewTests(ComputeTaskViewTests):
     def test_testtask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
         self.assertEqual(r["count"], len(self.test_tasks))
         offset = (page - 1) * page_size
@@ -386,23 +382,22 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
         url = reverse("substrapp:compute_plan_testtuple-list", args=[compute_plan_key])
         self.mock_performances_in_test_data(value={})
-        with mock.patch.object(OrchestratorClient, "get_compute_task_performances", return_value=[]):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         self.assertEqual(
             response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
         )
 
     def test_testtask_retrieve(self):
         url = reverse("substrapp:testtuple-detail", args=[self.test_tasks[0]["key"]])
-        with mock.patch.object(
-            OrchestratorClient,
-            "get_compute_task_performances",
-            return_value=[
-                {"metric_key": key, "performance_value": val}
-                for key, val in self.test_tasks[0]["test"]["perfs"].items()
-            ],
-        ):
-            response = self.client.get(url, **self.extra)
+        for metric_key, perf_value in self.test_tasks[0]["test"]["perfs"].items():
+            PerformanceRep.objects.create(
+                compute_task_id=self.test_tasks[0]["key"],
+                metric_id=metric_key,
+                value=perf_value,
+                creation_date=datetime.now(),
+                channel="mychannel",
+            )
+        response = self.client.get(url, **self.extra)
         # retrieve view expand relationships
         data_manager = DataManagerRep.objects.get(key=self.test_tasks[0]["test"]["data_manager_key"])
         self.test_tasks[0]["test"]["data_manager"] = DataManagerRepSerializer(data_manager).data

@@ -1,5 +1,7 @@
 from rest_framework import serializers
 
+from localrep.models import ComputeTask
+from localrep.models import Metric
 from localrep.models import Performance
 from localrep.serializers.utils import SafeSerializerMixin
 
@@ -11,6 +13,20 @@ class PerformanceSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     # ensures no dupplicates are created
     primary_key_name = "id"
 
+    compute_task_key = serializers.PrimaryKeyRelatedField(
+        queryset=ComputeTask.objects.all(), source="compute_task", pk_field=serializers.UUIDField(format="hex_verbose")
+    )
+    metric_key = serializers.PrimaryKeyRelatedField(
+        queryset=Metric.objects.all(), source="metric", pk_field=serializers.UUIDField(format="hex_verbose")
+    )
+    performance_value = serializers.FloatField(source="value")
+
     class Meta:
         model = Performance
-        fields = ["compute_task_key", "metric_key", "performance_value", "creation_date", "channel"]
+        fields = [
+            "channel",
+            "compute_task_key",
+            "creation_date",
+            "metric_key",
+            "performance_value",
+        ]
