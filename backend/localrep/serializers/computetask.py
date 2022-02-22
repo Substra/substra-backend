@@ -8,7 +8,6 @@ from localrep.models import Algo
 from localrep.models import ComputePlan
 from localrep.models import ComputeTask
 from localrep.models import DataManager
-from localrep.models import DataSample
 from localrep.models import Metric
 from localrep.serializers import AlgoSerializer
 from localrep.serializers.utils import SafeSerializerMixin
@@ -57,22 +56,33 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
 
     algo = AlgoField()
 
-    compute_plan_key = serializers.PrimaryKeyRelatedField(queryset=ComputePlan.objects.all(), source="compute_plan")
+    # Need to set `pk_field` for `PrimaryKeyRelatedField` in order to correctly serialize `UUID` to `str`
+    # See: https://stackoverflow.com/a/51636009
+    compute_plan_key = serializers.PrimaryKeyRelatedField(
+        queryset=ComputePlan.objects.all(),
+        source="compute_plan",
+        pk_field=serializers.UUIDField(format="hex_verbose"),
+    )
     parent_task_keys = serializers.ListField(source="parent_tasks", child=serializers.CharField(), required=False)
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
 
     data_manager_key = serializers.PrimaryKeyRelatedField(
-        queryset=DataManager.objects.all(), source="data_manager", required=False
+        queryset=DataManager.objects.all(),
+        source="data_manager",
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
     )
-    data_sample_keys = serializers.PrimaryKeyRelatedField(
-        queryset=DataSample.objects.all(), many=True, source="data_samples", required=False
-    )
+    data_sample_keys = serializers.ListField(source="data_samples", child=serializers.CharField(), required=False)
     metric_keys = serializers.PrimaryKeyRelatedField(
-        queryset=Metric.objects.all(), many=True, source="metrics", required=False
+        queryset=Metric.objects.all(),
+        many=True,
+        source="metrics",
+        required=False,
+        pk_field=serializers.UUIDField(format="hex_verbose"),
     )
     model_permissions = make_download_process_permission_serializer("model_")(source="*", required=False)
-    head_permissions = make_download_process_permission_serializer("head_", public=False)(source="*", required=False)
-    trunk_permissions = make_download_process_permission_serializer("trunk_", public=False)(source="*", required=False)
+    head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
+    trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
 
     def to_internal_value(self, data):
         prepared_data = copy.deepcopy(data)

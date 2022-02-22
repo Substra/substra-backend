@@ -13883,10 +13883,10 @@ def get_composite_tasks():
                 "data_manager_key": "f9233208-ab5c-4b36-be24-e183dc025b3f",
                 "data_manager": None,
                 "data_sample_keys": [
-                    "86de996f-48b2-45cc-abb2-4f8fcdc21b24",
+                    "eb31dad4-75fd-40cc-8270-f8c780a9284e",
                     "4d8f238d-1b6f-4fb5-bf63-5cc4969334c4",
+                    "86de996f-48b2-45cc-abb2-4f8fcdc21b24",
                     "b63fdea0-e2aa-47e3-bd37-056f9c050667",
-                    "eb31dad4-75fd-40cc-8270-f8c780a9284e"
                 ],
                 "head_permissions": {
                     "process": {

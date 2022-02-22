@@ -2,23 +2,15 @@ import functools
 import os
 import tempfile
 import uuid
-from typing import Type
 from unittest import mock
 
-import grpc
-import pytest
 import requests
 from django.core.files.storage import FileSystemStorage
 from django.test import override_settings
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.error
-from orchestrator import computetask_pb2
-from orchestrator import failure_report_pb2
 from orchestrator.client import OrchestratorClient
-from substrapp.compute_tasks import errors
-from substrapp.views import utils
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
 from substrapp.views.utils import if_true
@@ -142,80 +134,6 @@ class PermissionMixinDownloadFileTests(APITestCase):
         self.assertEqual(res_content, content)
         self.assertEqual(res["Content-Disposition"], f'attachment; filename="{filename}"')
         self.assertFalse(permission_mixin.get_object.called)
-
-
-ERROR_TYPE_INTERNAL = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_INTERNAL)
-ERROR_TYPE_EXECUTION = failure_report_pb2.ErrorType.Name(failure_report_pb2.ERROR_TYPE_EXECUTION)
-STATUS_FAILED = computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED)
-
-
-class TestGetErrorType:
-    def test_get_error_type_task_has_not_failed(self):
-        last_event = {"metadata": {}}
-        error_type = utils._get_error_type(None, None, last_event)
-
-        assert error_type is None
-
-    def test_get_error_type_using_failure_report(self):
-        failure_report = {"error_type": ERROR_TYPE_EXECUTION}
-        orc_client = mock.Mock()
-        orc_client.get_failure_report.return_value = failure_report
-        last_event = {"metadata": {"status": STATUS_FAILED}}
-        error_type = utils._get_error_type(orc_client, {"key": "0"}, last_event)
-
-        assert error_type == errors.ComputeTaskErrorType.EXECUTION_ERROR.name
-
-    def test_fetch_error_type_failure_report_not_found(self):
-        orc_client = mock.Mock()
-        orc_client.get_failure_report.side_effect = [utils._FailureReportNotFound]
-        last_event = {"metadata": {"status": STATUS_FAILED}}
-        error_type = utils._get_error_type(orc_client, {"key": "0"}, last_event)
-
-        assert error_type == errors.ComputeTaskErrorType.INTERNAL_ERROR.name
-        orc_client.get_failure_report.assert_called_once()
-
-
-@pytest.mark.parametrize(
-    ("input_event", "expected"),
-    [
-        ({"metadata": {}}, False),
-        ({"metadata": {"status": "foo"}}, False),
-        ({"metadata": {"status": STATUS_FAILED}}, True),
-    ],
-)
-def test_is_failure_event(input_event, expected):
-    assert utils._is_failure_event(input_event) is expected
-
-
-class TestGetErrorTypeFromFailureReport:
-    @pytest.mark.parametrize("input_error_type", failure_report_pb2.ErrorType.keys())
-    def test_get_error_type_from_failure_report(self, input_error_type: str):
-        orc_client = mock.Mock()
-        orc_client.get_failure_report.return_value = {"error_type": input_error_type}
-        error_type = utils._get_error_type_from_failure_report(orc_client, {"key": "0"})
-
-        assert error_type == input_error_type
-        orc_client.get_failure_report.assert_called_once()
-
-    @pytest.mark.parametrize(
-        ("grpc_status_code", "expected_error"),
-        [
-            (grpc.StatusCode.NOT_FOUND, utils._FailureReportNotFound),
-            (grpc.StatusCode.ABORTED, orchestrator.error.OrcError),
-        ],
-    )
-    def test_get_error_type_from_failure_report_error(
-        self, grpc_status_code: grpc.StatusCode, expected_error: Type[Exception]
-    ):
-        orc_client = mock.Mock()
-        error = orchestrator.error.OrcError()
-        error.code = grpc_status_code
-        orc_client.get_failure_report.side_effect = [error]
-
-        with pytest.raises(expected_error):
-            utils._get_error_type_from_failure_report(orc_client, {"key": "0"})
-
-        orc_client.get_failure_report.assert_called_once()
 
 
 def test_if_true():

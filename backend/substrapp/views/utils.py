@@ -7,7 +7,6 @@ from typing import Optional
 from wsgiref.util import is_hop_by_hop
 
 import django.http
-import grpc
 from django.conf import settings
 from django.db.models import Count
 from django.db.models import Q
@@ -20,12 +19,15 @@ from rest_framework.settings import api_settings
 import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.error
 import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
+from localrep.models import DataManager as DataManagerRep
+from localrep.models import Metric as MetricRep
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
+from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
+from localrep.serializers import MetricSerializer as MetricRepSerializer
 from node.authentication import NodeUser
-from orchestrator import client as orc_client
 from orchestrator import failure_report_pb2
 from substrapp.clients import node as node_client
 from substrapp.compute_tasks import errors
@@ -34,6 +36,8 @@ from substrapp.exceptions import BadRequestError
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.storages.minio import MinioStorage
 from substrapp.utils import get_owner
+
+CP_BASENAME_PREFIX = "compute_plan_"
 
 TASK_CATEGORY = {
     "unknown": computetask_pb2.TASK_UNKNOWN,
@@ -302,8 +306,7 @@ def is_proxied_request(request) -> bool:
     return HTTP_HEADER_PROXY_ASSET in request.headers
 
 
-def add_task_extra_information(client, basename, data, expand_relationships=False):
-
+def add_task_extra_information(client, basename, data, channel, expand_relationships=False):
     task_status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
 
     # add model information on a training compute task or performance on a testing compute task
@@ -319,70 +322,32 @@ def add_task_extra_information(client, basename, data, expand_relationships=Fals
             data[TASK_FIELD[basename]]["perfs"] = performances
 
     if expand_relationships and basename in ["traintuple", "testtuple", "composite_traintuple"]:
-        data_manager_key = data[TASK_FIELD[basename]]["data_manager_key"]
-        data[TASK_FIELD[basename]]["data_manager"] = client.query_datamanager(data_manager_key)
+        data_manager = DataManagerRep.objects.get(
+            key=data[TASK_FIELD[basename]]["data_manager_key"],
+            channel=channel,
+        )
+        data[TASK_FIELD[basename]]["data_manager"] = DataManagerRepSerializer(data_manager).data
 
     if expand_relationships and basename == "testtuple":
-        metric_keys = data[TASK_FIELD[basename]]["metric_keys"]
-        data[TASK_FIELD[basename]]["metrics"] = [client.query_metric(metric_key) for metric_key in metric_keys]
+        metrics = MetricRep.objects.filter(
+            key__in=data[TASK_FIELD[basename]]["metric_keys"],
+            channel=channel,
+        ).order_by("creation_date", "key")
+        data[TASK_FIELD[basename]]["metrics"] = MetricRepSerializer(metrics, many=True).data
 
     if expand_relationships:
-        data["parent_tasks"] = [client.query_task(key) for key in data["parent_task_keys"]]
+        parent_tasks = ComputeTaskRep.objects.filter(
+            key__in=data["parent_task_keys"],
+            channel=channel,
+        ).order_by("creation_date", "key")
+        data["parent_tasks"] = ComputeTaskRepSerializer(parent_tasks, many=True).data
 
-    # fetch task start and end dates from its events
-    first_event = client.query_single_event(
-        event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], metadata={"status": "STATUS_DOING"}
-    )
-
-    data["start_date"] = first_event["timestamp"] if first_event else None
-
-    if task_status in [computetask_pb2.STATUS_FAILED, computetask_pb2.STATUS_CANCELED, computetask_pb2.STATUS_DONE]:
-        last_event = client.query_single_event(
-            event_kind=event_pb2.EVENT_ASSET_UPDATED, asset_key=data["key"], sort=common_pb2.DESCENDING
-        )
-    else:
-        last_event = None
-
-    data["end_date"] = last_event["timestamp"] if last_event else None
-    data["error_type"] = _get_error_type(client, data, last_event) if last_event else None
+    if data["error_type"] is not None:
+        data["error_type"] = errors.ComputeTaskErrorType.from_int(
+            failure_report_pb2.ErrorType.Value(data["error_type"])
+        ).name
 
     return data
-
-
-def _get_error_type(client: orc_client.OrchestratorClient, compute_task, last_event) -> Optional[str]:
-    # Since STATUS_FAILED is a final status, in case of failure
-    # the last event will always be the event dispatched to transition to STATUS_FAILED
-    if not _is_failure_event(last_event):
-        return None
-
-    try:
-        error_type_pb2_name = _get_error_type_from_failure_report(client, compute_task)
-    except _FailureReportNotFound:
-        error_type = errors.ComputeTaskErrorType.INTERNAL_ERROR
-    else:
-        error_type = errors.ComputeTaskErrorType.from_int(failure_report_pb2.ErrorType.Value(error_type_pb2_name))
-
-    return error_type.name
-
-
-def _is_failure_event(event):
-    return event["metadata"].get("status") == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED)
-
-
-class _FailureReportNotFound(RuntimeError):
-    pass
-
-
-def _get_error_type_from_failure_report(client: orc_client.OrchestratorClient, compute_task) -> str:
-    try:
-        failure_report = client.get_failure_report({"compute_task_key": compute_task["key"]})
-    except orchestrator.error.OrcError as rpc_error:
-        if rpc_error.code == grpc.StatusCode.NOT_FOUND:
-            raise _FailureReportNotFound
-
-        raise rpc_error
-
-    return failure_report["error_type"]
 
 
 def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:

@@ -4,11 +4,15 @@ import structlog
 from django.urls import reverse
 from rest_framework import mixins
 from rest_framework import status
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 import orchestrator.computetask_pb2 as computetask_pb2
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
+from localrep.errors import AlreadyExistsError
+from localrep.models import ComputeTask as ComputeTaskRep
+from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from substrapp.compute_tasks.context import TASK_DATA_FIELD
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
@@ -16,7 +20,8 @@ from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
 from substrapp.views.computeplan import register_compute_plan_in_orchestrator
-from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
+from substrapp.views.utils import CP_BASENAME_PREFIX
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
@@ -72,7 +77,48 @@ def replace_storage_addresses(request, task):
         )
 
 
-class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSet):
+class ComputeTaskListMixin:
+    def list(self, request, compute_plan_pk=None):
+        category = self.basename.removeprefix(CP_BASENAME_PREFIX)
+        queryset = ComputeTaskRep.objects.filter(
+            channel=get_channel_name(request),
+            category=TASK_CATEGORY[category],
+        ).order_by("creation_date", "key")
+
+        if compute_plan_pk is not None:
+            validated_key = validate_key(compute_plan_pk)
+            queryset = queryset.filter(compute_plan__key=validated_key)
+
+        query_params = request.query_params.get("search")
+        if query_params is not None:
+
+            def map_status_and_cp_key(key, values):
+                if key == "status":
+                    values = [computetask_pb2.ComputeTaskstatus.Value(value) for value in values]
+                elif key == "compute_plan_key":
+                    key = "compute_plan__key"
+                return key, values
+
+            queryset = filter_queryset(category, queryset, query_params, mapping_callback=map_status_and_cp_key)
+        queryset = self.paginate_queryset(queryset)
+
+        data = ComputeTaskRepSerializer(queryset, many=True).data
+        for datum in data:
+            with get_orchestrator_client(get_channel_name(request)) as client:
+                datum = add_task_extra_information(client, category, datum, get_channel_name(request))
+            replace_storage_addresses(request, datum)
+
+        return self.get_paginated_response(data)
+
+
+class CPTaskViewSet(ComputeTaskListMixin, GenericViewSet):
+    pagination_class = DefaultPageNumberPagination
+
+    def get_queryset(self):
+        return []
+
+
+class ComputeTaskViewSet(ComputeTaskListMixin, mixins.CreateModelMixin, GenericViewSet):
     serializer_classes = {
         "traintuple": OrchestratorTrainTaskSerializer,
         "testtuple": OrchestratorTestTaskSerializer,
@@ -87,8 +133,8 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
     def get_queryset(self):
         return []
 
-    # TODO: 'commit' is too complex, consider refactoring
-    def commit(self, request):  # noqa: C901
+    def _register_in_orchestrator(self, request):
+        """Register computetask in orchestrator."""
         data = {
             "key": uuid.uuid4(),
             "category": TASK_CATEGORY[self.basename],
@@ -121,11 +167,10 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
                     st=status.HTTP_400_BAD_REQUEST,
                 )
 
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                first_parent_task_id = to_string_uuid(data["parent_task_keys"][0])
-                parent_task = client.query_task(first_parent_task_id)
-                data["algo_key"] = parent_task["algo"]["key"]
-                data["compute_plan_key"] = parent_task["compute_plan_key"]
+            first_parent_task_id = to_string_uuid(data["parent_task_keys"][0])
+            parent_task = ComputeTaskRep.objects.get(key=first_parent_task_id)
+            data["algo_key"] = parent_task.algo.key
+            data["compute_plan_key"] = parent_task.compute_plan.key
 
         elif self.basename == "aggregatetuple":
             data["worker"] = request.data.get("worker")
@@ -143,47 +188,65 @@ class ComputeTaskViewSet(mixins.CreateModelMixin, PaginationMixin, GenericViewSe
                 data["compute_plan_key"] = uuid.uuid4()
 
         orchestrator_serializer = self.get_serializer(data=data, context={"request": request})
-
-        try:
-            orchestrator_serializer.is_valid(raise_exception=True)
-        except Exception as e:
-            raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
-
+        orchestrator_serializer.is_valid(raise_exception=True)
+        registered_tasks_data = orchestrator_serializer.create(
+            get_channel_name(request), orchestrator_serializer.validated_data
+        )
+        registered_cp_data = None
         if create_cp:
-            register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
+            registered_cp_data = register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
+        return registered_cp_data, registered_tasks_data[0]
 
-        # create on orchestrator db
-        orchestrator_serializer.create(get_channel_name(request), orchestrator_serializer.validated_data)
+    def _create(self, request):  # noqa: C901
+        """Create a new computetask.
 
-        return dict(orchestrator_serializer.data)
+        The workflow is composed of several steps:
+        - Register asset in the orchestrator.
+        - Save metadata in local database.
+        """
+
+        # Step1: register asset in orchestrator
+        registered_cp_data, registered_task_data = self._register_in_orchestrator(request)
+
+        # Step2: save metadata in local database
+        if registered_cp_data is not None:
+            registered_cp_data["channel"] = get_channel_name(request)
+            localrep_cp_serializer = ComputePlanRepSerializer(data=registered_cp_data)
+            try:
+                localrep_cp_serializer.save_if_not_exists()
+            except AlreadyExistsError:
+                pass
+
+        registered_task_data["channel"] = get_channel_name(request)
+        localrep_task_serializer = ComputeTaskRepSerializer(data=registered_task_data)
+        try:
+            localrep_task_serializer.save_if_not_exists()
+        except AlreadyExistsError:
+            # May happen if the events app already processed the event pushed by the orchestrator
+            compute_task = ComputeTaskRep.objects.get(key=registered_task_data["key"])
+            localrep_task_data = ComputeTaskRepSerializer(compute_task).data
+        else:
+            localrep_task_data = localrep_task_serializer.data
+
+        return localrep_task_data
 
     def create(self, request, *args, **kwargs):
-        data = self.commit(request)
+        data = self._create(request)
         headers = self.get_success_headers(data)
         return ApiResponse(data, status=status.HTTP_201_CREATED, headers=headers)
 
-    def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_tasks(category=TASK_CATEGORY[self.basename])
-
-        query_params = request.query_params.get("search")
-        if query_params is not None:
-            data = filter_list(object_type=self.basename, data=data, query_params=query_params)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            for datum in data:
-                datum = add_task_extra_information(client, self.basename, datum)
-
-        for task in data:
-            replace_storage_addresses(request, task)
-
-        return self.paginate_response(data)
-
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
+        try:
+            compute_task = ComputeTaskRep.objects.filter(channel=get_channel_name(request)).get(key=validated_key)
+        except ComputeTaskRep.DoesNotExist:
+            raise NotFound
+        data = ComputeTaskRepSerializer(compute_task).data
+
         with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_task(validated_key)
-            data = add_task_extra_information(client, self.basename, data, expand_relationships=True)
+            data = add_task_extra_information(
+                client, self.basename, data, get_channel_name(request), expand_relationships=True
+            )
 
         replace_storage_addresses(request, data)
 

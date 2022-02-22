@@ -326,7 +326,10 @@ class OrchestratorClient:
         data = self._computetask_client.RegisterTasks(
             computetask_pb2.RegisterTasksParam(**args), metadata=self._metadata
         )
-        return MessageToDict(data, **CONVERT_SETTINGS)["tasks"]
+        data = MessageToDict(data, **CONVERT_SETTINGS)["tasks"]
+        for datum in data:
+            datum["tag"] = datum["metadata"].pop("__tag__", "")
+        return data
 
     @grpc_retry
     def update_task_status(self, compute_task_key, action, log=""):
@@ -363,11 +366,7 @@ class OrchestratorClient:
             page_token = data.get("next_page_token")
             # handle tag
             for datum in tasks:
-                tag = ""
-                if "__tag__" in datum["metadata"]:
-                    tag = datum["metadata"]["__tag__"]
-                    del datum["metadata"]["__tag__"]
-                datum["tag"] = tag
+                datum["tag"] = datum["metadata"].pop("__tag__", "")
             res.extend(tasks)
             if page_token == "" or not tasks:  # nosec
                 break
@@ -377,13 +376,7 @@ class OrchestratorClient:
     def query_task(self, key):
         data = self._computetask_client.GetTask(computetask_pb2.GetTaskParam(key=key), metadata=self._metadata)
         data = MessageToDict(data, **CONVERT_SETTINGS)
-
-        # handle tag
-        tag = ""
-        if "__tag__" in data["metadata"]:
-            tag = data["metadata"]["__tag__"]
-            del data["metadata"]["__tag__"]
-        data["tag"] = tag
+        data["tag"] = data["metadata"].pop("__tag__", "")
         return data
 
     @grpc_retry

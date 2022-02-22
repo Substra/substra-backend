@@ -18,6 +18,7 @@ class ComputeTask(models.Model):
     algo = models.ForeignKey("Algo", on_delete=models.CASCADE, related_name="compute_tasks")
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
+    # patch waiting for a solution to insert parent task in hierarchical order
     parent_tasks = ArrayField(models.CharField(max_length=1024), size=100, null=True)
     rank = models.IntegerField()
     status = models.IntegerField(choices=STATUS_CHOICES)
@@ -33,10 +34,11 @@ class ComputeTask(models.Model):
     metadata = models.JSONField()
 
     # specific fields for train, composite and test tasks
+    # patch waiting for a solution to preserve related datasample order without sync time overhead
     data_manager = models.ForeignKey(
         "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
     )
-    data_samples = models.ManyToManyField("DataSample", null=True, related_name="compute_tasks")
+    data_samples = ArrayField(models.CharField(max_length=1024), size=100, null=True)
 
     # specific fields for train and aggregate tasks
     model_permissions_process_public = models.BooleanField(null=True)
@@ -49,9 +51,13 @@ class ComputeTask(models.Model):
 
     # specific fields for composite tasks
     head_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    head_permissions_process_public = models.BooleanField(null=True)
     head_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    head_permissions_download_public = models.BooleanField(null=True)
     trunk_permissions_process_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    trunk_permissions_process_public = models.BooleanField(null=True)
     trunk_permissions_download_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    trunk_permissions_download_public = models.BooleanField(null=True)
 
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations

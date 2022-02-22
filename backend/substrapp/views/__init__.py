@@ -2,8 +2,8 @@ from .algo import AlgoPermissionViewSet
 from .algo import AlgoViewSet
 from .algo import CPAlgoViewSet
 from .computeplan import ComputePlanViewSet
-from .computeplan import CPTaskViewSet
 from .computetask import ComputeTaskViewSet
+from .computetask import CPTaskViewSet
 from .computetask_logs import ComputeTaskLogsViewSet
 from .datamanager import DataManagerPermissionViewSet
 from .datamanager import DataManagerViewSet

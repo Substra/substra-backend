@@ -8,7 +8,6 @@ from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
@@ -19,14 +18,12 @@ from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
 from substrapp.serializers import OrchestratorComputePlanSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
 from substrapp.serializers import OrchestratorTrainTaskSerializer
-from substrapp.views.filters_utils import filter_list
 from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_compute_plan_duration_or_eta
 from substrapp.views.utils import add_cp_status_and_task_counts
-from substrapp.views.utils import add_task_extra_information
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
@@ -41,9 +38,6 @@ def register_compute_plan_in_orchestrator(request, data):
     except Exception as e:
         raise ValidationExceptionError(e.args, "(not computed)", status.HTTP_400_BAD_REQUEST)
     return serializer.create(get_channel_name(request), serializer.validated_data)
-
-
-BASENAME_PREFIX = "compute_plan_"
 
 
 class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
@@ -342,46 +336,3 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
                 pass
 
         return ApiResponse({}, status=status.HTTP_200_OK)
-
-
-class GenericSubassetViewset(PaginationMixin, GenericViewSet):
-
-    pagination_class = DefaultPageNumberPagination
-
-    def get_queryset(self):
-        return []
-
-    def list(self, request, compute_plan_pk):
-        if not self.is_page_size_param_present():
-            # We choose to force the page_size parameter in these views in order to limit the number of queries
-            # to the chaincode
-            return ApiResponse(status=status.HTTP_400_BAD_REQUEST, data="page_size param is required")
-
-        validated_key = validate_key(compute_plan_pk)
-        truncated_basename = self.basename.removeprefix(BASENAME_PREFIX)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            search_params = request.query_params.get("search")
-            data = self._fetch_data(client, validated_key, truncated_basename, search_params)
-
-        return self.paginate_response(data)
-
-    def _filter_data(self, data, search_params, truncated_basename):
-        if search_params is None:
-            return data
-        return filter_list(
-            object_type=truncated_basename,
-            data=data,
-            query_params=search_params,
-        )
-
-
-class CPTaskViewSet(GenericSubassetViewset):
-    def _fetch_data(self, client, compute_plan_pk, truncated_basename, search_params):
-        category = TASK_CATEGORY[truncated_basename]
-        data = client.query_tasks(category=category, compute_plan_key=compute_plan_pk)
-        data = self._filter_data(data, search_params, truncated_basename)
-
-        for datum in data:
-            datum = add_task_extra_information(client, truncated_basename, datum)
-        return data

@@ -69,6 +69,9 @@ class AlgoListMixin:
 class CPAlgoViewSet(AlgoListMixin, GenericViewSet):
     pagination_class = DefaultPageNumberPagination
 
+    def get_queryset(self):
+        return []
+
 
 class AlgoViewSet(AlgoListMixin, mixins.CreateModelMixin, GenericViewSet):
     queryset = Algo.objects.all()

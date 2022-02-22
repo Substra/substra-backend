@@ -1,4 +1,3 @@
-import copy
 import os
 import shutil
 import tempfile
@@ -7,7 +6,6 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
-from django.utils.http import urlencode
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -23,10 +21,8 @@ from localrep.serializers import MetricSerializer as MetricRepSerializer
 from orchestrator.client import OrchestratorClient
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
 from substrapp.views import ComputePlanViewSet
-from substrapp.views import CPTaskViewSet
 
 from .. import assets
-from .. import common
 from ..common import AuthenticatedClient
 from ..common import internal_server_error_on_exception
 
@@ -275,60 +271,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
         self.assertEqual(len(tasks[dummy_key]["parent_task_keys"]), 2)
 
-    def test_can_see_traintuple(self):
-
-        cp = assets.get_compute_plan()
-        cp_response = copy.deepcopy(cp)
-        tasks = assets.get_train_tasks()[0:2]
-        tasks_response = copy.deepcopy(tasks)
-        filtered_events = [iter([event]) for tr in tasks_response for event in common.get_task_events(tr["key"])]
-
-        url = reverse("substrapp:compute_plan_traintuple-list", args=[cp["key"]])
-        url = f"{url}?page_size=2"
-
-        with mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp_response), mock.patch.object(
-            OrchestratorClient, "query_tasks", return_value=tasks_response
-        ), mock.patch.object(
-            OrchestratorClient, "get_computetask_output_models", side_effect=common.get_task_output_models
-        ), mock.patch.object(
-            OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ), mock.patch(
-            "substrapp.views.utils._get_error_type", return_value=None
-        ) as mocked_get_error_type:
-
-            response = self.client.get(url, **self.extra)
-            self.assertEqual(mocked_get_error_type.call_count, 2)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-        expected = [{**t, "error_type": None} for t in tasks[0:2]]
-        self.assertEqual(response.json()["results"], expected)
-        # # maybe add a test without ?page_size=<int> and add a forbidden response
-
-    def test_can_filter_tuples(self):
-        tasks_response = assets.get_train_tasks()
-        filtered_events = [iter([event]) for tr in tasks_response for event in common.get_task_events(tr["key"])]
-
-        url = reverse("substrapp:compute_plan_traintuple-list", args=[self.compute_plans[0]["key"]])
-        params = urlencode({"page_size": 10, "page": 1, "search": "traintuple:tag:foo"})
-
-        with mock.patch.object(
-            OrchestratorClient, "query_compute_plan", return_value=self.compute_plans[0]
-        ), mock.patch.object(OrchestratorClient, "query_tasks", return_value=tasks_response), mock.patch.object(
-            OrchestratorClient, "get_computetask_output_models", return_value=None
-        ), mock.patch.object(
-            OrchestratorClient, "query_events_generator", side_effect=filtered_events
-        ), mock.patch(
-            "substrapp.views.utils._get_error_type", return_value=None
-        ) as mocked_get_error_type:
-
-            response = self.client.get(f"{url}?{params}", **self.extra)
-            self.assertEqual(response.status_code, status.HTTP_200_OK)
-
-            r = response.json()
-            self.assertEqual(len(r["results"]), 2)
-            self.assertEqual(mocked_get_error_type.call_count, 2)
-
     @internal_server_error_on_exception()
     @mock.patch(
         "substrapp.views.computeplan.ComputePlanViewSet.update_ledger", side_effect=Exception("Unexpected error")
@@ -337,14 +279,3 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         url = reverse("substrapp:compute_plan-update-ledger", kwargs={"pk": self.compute_plans[0]["key"]})
         response = self.client.post(url, data={}, format="json")
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class CPTaskViewSetTests(AuthenticatedAPITestCase):
-    @internal_server_error_on_exception()
-    @mock.patch.object(CPTaskViewSet, "is_page_size_param_present", side_effect=Exception("Unexpected error"))
-    def test_list_fail_internal_server_error(self, validate_key: mock.Mock):
-        url = reverse("substrapp:compute_plan_composite_traintuple-list", kwargs={"compute_plan_pk": 123})
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        validate_key.assert_called_once()
