@@ -61,9 +61,7 @@ class Migration(migrations.Migration):
                 ("owner", models.CharField(max_length=100)),
                 (
                     "parent_tasks",
-                    django.contrib.postgres.fields.ArrayField(
-                        base_field=models.CharField(max_length=1024), null=True, size=100
-                    ),
+                    django.contrib.postgres.fields.ArrayField(base_field=models.UUIDField(), null=True, size=None),
                 ),
                 ("rank", models.IntegerField()),
                 (
@@ -171,9 +169,7 @@ class Migration(migrations.Migration):
                 ),
                 (
                     "data_samples",
-                    django.contrib.postgres.fields.ArrayField(
-                        base_field=models.CharField(max_length=1024), null=True, size=100
-                    ),
+                    django.contrib.postgres.fields.ArrayField(base_field=models.UUIDField(), null=True, size=None),
                 ),
                 ("metrics", models.ManyToManyField(null=True, related_name="compute_tasks", to="localrep.Metric")),
             ],

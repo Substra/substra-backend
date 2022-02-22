@@ -19,7 +19,7 @@ class ComputeTask(models.Model):
     owner = models.CharField(max_length=100)
     compute_plan = models.ForeignKey("ComputePlan", on_delete=models.deletion.CASCADE, related_name="compute_tasks")
     # patch waiting for a solution to insert parent task in hierarchical order
-    parent_tasks = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    parent_tasks = ArrayField(models.UUIDField(), null=True)
     rank = models.IntegerField()
     status = models.IntegerField(choices=STATUS_CHOICES)
     worker = models.CharField(max_length=100)
@@ -38,7 +38,7 @@ class ComputeTask(models.Model):
     data_manager = models.ForeignKey(
         "DataManager", null=True, on_delete=models.deletion.CASCADE, related_name="compute_tasks"
     )
-    data_samples = ArrayField(models.CharField(max_length=1024), size=100, null=True)
+    data_samples = ArrayField(models.UUIDField(), null=True)
 
     # specific fields for train and aggregate tasks
     model_permissions_process_public = models.BooleanField(null=True)
