@@ -21,7 +21,6 @@ from rest_framework.settings import api_settings
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.model_pb2 as model_pb2
-from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
@@ -396,10 +395,6 @@ def add_compute_plan_estimated_end_date(data):
             data["estimated_end_date"] = (datetime.datetime.now() + estimated_duration).strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             )
-            # update CP curent duration
-            compute_plan = ComputePlanRep.objects.get(key=data["key"])
-            compute_plan.duration = int(current_duration.total_seconds())
-            compute_plan.save()
     elif compute_plan_status in [
         computeplan_pb2.PLAN_STATUS_FAILED,
         computeplan_pb2.PLAN_STATUS_CANCELED,

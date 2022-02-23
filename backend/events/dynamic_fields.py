@@ -67,7 +67,7 @@ def add_cp_dates_and_duration(compute_plan_key: str) -> None:
     compute_plan = ComputePlan.objects.get(key=compute_plan_key)
 
     if not compute_plan.start_date:
-        first_started_task = compute_plan.compute_tasks.filter(start_date__isnull=False).earliest("start_date")
+        first_started_task = compute_plan.compute_tasks.filter(start_date__isnull=False).order_by("start_date").first()
         if first_started_task:
             compute_plan.start_date = first_started_task.start_date
 
@@ -76,7 +76,7 @@ def add_cp_dates_and_duration(compute_plan_key: str) -> None:
         compute_plan.end_date = None  # end date could be reset when cp is updated with new tasks
         compute_plan.duration = None
     else:
-        last_ended_task = compute_plan.compute_tasks.filter(end_date__isnull=False).latest("end_date")
+        last_ended_task = compute_plan.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
         if last_ended_task:
             compute_plan.end_date = last_ended_task.end_date
             compute_plan.duration = (compute_plan.end_date - compute_plan.start_date).seconds

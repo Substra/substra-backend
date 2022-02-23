@@ -171,7 +171,6 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     def test_computeplan_list_success(self):
-        self.maxDiff = None
         for compute_plan in self.compute_plans:
             if compute_plan["status"] == "PLAN_STATUS_UNKNOWN":
                 del compute_plan["estimated_end_date"]
