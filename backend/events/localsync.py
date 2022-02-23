@@ -62,10 +62,16 @@ def _create_computeplan(channel: str, data: dict) -> bool:
 
 def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process create computetask event to update local database."""
+
+    from localrep.models.computeplan import ComputePlan
+
     logger.debug("Syncing computetask create", asset_key=event["asset_key"], event_id=event["id"])
 
     data = client.query_task(event["asset_key"])
     _create_computetask(event["channel"], data)
+
+    compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
+    compute_plan.update_status()
 
 
 def _create_computetask(
@@ -100,6 +106,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     from events.dynamic_fields import add_cp_failed_task
     from events.dynamic_fields import fetch_error_type_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
+    from localrep.models.computeplan import ComputePlan
 
     logger.debug("Syncing computetask update", asset_key=event["asset_key"], event_id=event["id"])
 
@@ -116,6 +123,9 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
         "status"
     ] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE):
         _creating_computetask_performances(data["key"], client)
+
+    compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
+    compute_plan.update_status()
 
 
 def _update_computetask(key: str, status: str, start_date: str, end_date: str, error_type: str) -> None:
@@ -344,6 +354,7 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import add_cp_failed_task
+    from localrep.models.computeplan import ComputePlan
 
     logger.info("Resyncing computeplans")
     computeplans = client.query_compute_plans()  # TODO: Add filter on last_modification_date
@@ -360,7 +371,8 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
         else:
             logger.debug("Skipped computeplan", asset_key=data["key"])
             nb_skipped_assets += 1
-
+        compute_plan = ComputePlan.objects.get(key=data["key"])
+        compute_plan.update_status()
     logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 

@@ -367,28 +367,7 @@ def to_string_uuid(str_or_hex_uuid: uuid.UUID) -> str:
     return str(uuid.UUID(str_or_hex_uuid))
 
 
-def get_cp_status(stats):
-    """
-    Compute cp status from tasks counts.
-    See: `orchestrator/lib/persistence/computeplan_dbal.go`
-    """
-    if stats["task_count"] == 0:
-        return computeplan_pb2.PLAN_STATUS_UNKNOWN
-    elif stats["done_count"] == stats["task_count"]:
-        return computeplan_pb2.PLAN_STATUS_DONE
-    elif stats["failed_count"] > 0:
-        return computeplan_pb2.PLAN_STATUS_FAILED
-    elif stats["canceled_count"] > 0:
-        return computeplan_pb2.PLAN_STATUS_CANCELED
-    elif stats["waiting_count"] == stats["task_count"]:
-        return computeplan_pb2.PLAN_STATUS_WAITING
-    elif stats["waiting_count"] < stats["task_count"] and stats["doing_count"] == 0 and stats["done_count"] == 0:
-        return computeplan_pb2.PLAN_STATUS_TODO
-    else:
-        return computeplan_pb2.PLAN_STATUS_DOING
-
-
-def add_cp_status_and_task_counts(data):
+def add_cp_task_counts(data):
     stats = ComputeTaskRep.objects.filter(compute_plan__key=data["key"]).aggregate(
         task_count=Count("key"),
         done_count=Count("key", filter=Q(status=computetask_pb2.STATUS_DONE)),
@@ -399,7 +378,6 @@ def add_cp_status_and_task_counts(data):
         failed_count=Count("key", filter=Q(status=computetask_pb2.STATUS_FAILED)),
     )
     data.update(stats)
-    data["status"] = computeplan_pb2.ComputePlanStatus.Name(get_cp_status(stats))
     return data
 
 

@@ -23,7 +23,7 @@ from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
 from substrapp.views.utils import add_compute_plan_duration_or_eta
-from substrapp.views.utils import add_cp_status_and_task_counts
+from substrapp.views.utils import add_cp_task_counts
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
 from substrapp.views.utils import validate_key
@@ -245,7 +245,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
                     # May happen if the events app already processed the event pushed by the orchestrator
                     pass
 
-        data = add_cp_status_and_task_counts(data)
+        data = add_cp_task_counts(data)
 
         return data
 
@@ -259,7 +259,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
         except ComputePlanRep.DoesNotExist:
             raise NotFound
         data = ComputePlanRepSerializer(compute_plan).data
-        data = add_cp_status_and_task_counts(data)
+        data = add_cp_task_counts(data)
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             data = add_compute_plan_duration_or_eta(client, data)
@@ -278,7 +278,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         with get_orchestrator_client(get_channel_name(request)) as client:
             for datum in data:
-                datum = add_cp_status_and_task_counts(datum)
+                datum = add_cp_task_counts(datum)
                 datum = add_compute_plan_duration_or_eta(client, datum)
 
         return self.get_paginated_response(data)
@@ -334,5 +334,10 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
             except AlreadyExistsError:
                 # May happen if the events app already processed the event pushed by the orchestrator
                 pass
+
+        # Update cp status after creating tasks
+
+        compute_plan = ComputePlanRep.objects.get(key=validated_key)
+        compute_plan.update_status()
 
         return ApiResponse({}, status=status.HTTP_200_OK)

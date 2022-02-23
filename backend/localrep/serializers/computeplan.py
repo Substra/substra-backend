@@ -16,6 +16,14 @@ class FailedTaskSerializer(serializers.Serializer):
     )
 
 
+class StatusField(serializers.Field):
+    def to_representation(self, instance):
+        return computeplan_pb2.ComputePlanStatus.Name(instance)
+
+    def to_internal_value(self, data):
+        return computeplan_pb2.ComputePlanStatus.Value(data)
+
+
 class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     channel = serializers.ChoiceField(choices=get_channel_choices(), write_only=True)
     task_count = serializers.IntegerField(read_only=True)
@@ -25,7 +33,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     doing_count = serializers.IntegerField(read_only=True)
     canceled_count = serializers.IntegerField(read_only=True)
     failed_count = serializers.IntegerField(read_only=True)
-    status = serializers.ChoiceField(read_only=True, choices=computeplan_pb2.ComputePlanStatus.keys())
+    status = StatusField()
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
 
     def to_representation(self, instance):
