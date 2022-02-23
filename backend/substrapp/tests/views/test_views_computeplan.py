@@ -92,13 +92,11 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
-        self.query_compute_plans_index = {}
         self.compute_plans = assets.get_compute_plans()
         for compute_plan in self.compute_plans:
             serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
             serializer.is_valid(raise_exception=True)
             serializer.save()
-            self.query_compute_plans_index[compute_plan["key"]] = compute_plan
 
         self.compute_tasks = assets.get_train_tasks() + assets.get_test_tasks() + assets.get_composite_tasks()
         for compute_task in self.compute_tasks:
@@ -172,23 +170,12 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-    def mock_query_compute_plan(self, key):
-        return self.query_compute_plans_index[key]
-
-    def mock_cp_duration(self, _, data):
-        compute_plan = self.query_compute_plans_index[data["key"]]
-        data["start_date"] = compute_plan["start_date"]
-        data["end_date"] = compute_plan["end_date"]
-        data["estimated_end_date"] = compute_plan["estimated_end_date"]
-        data["duration"] = compute_plan["duration"]
-        return data
-
     def test_computeplan_list_success(self):
         self.maxDiff = None
-        with mock.patch(
-            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
-        ):
-            response = self.client.get(self.url, **self.extra)
+        for compute_plan in self.compute_plans:
+            if compute_plan["status"] == "PLAN_STATUS_UNKNOWN":
+                del compute_plan["estimated_end_date"]
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(self.compute_plans), "next": None, "previous": None, "results": self.compute_plans},
@@ -207,13 +194,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
 
     def test_computeplan_retrieve(self):
         url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])
-
-        with mock.patch.object(
-            OrchestratorClient, "query_compute_plan", side_effect=self.mock_query_compute_plan
-        ), mock.patch(
-            "substrapp.views.computeplan.add_compute_plan_duration_or_eta", side_effect=self.mock_cp_duration
-        ):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.json(), self.compute_plans[0])
 
     def test_computeplan_retrieve_fail(self):

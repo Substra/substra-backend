@@ -23,6 +23,9 @@ class ComputePlan(models.Model):
     status = models.IntegerField(choices=STATUS_CHOICES, default=computeplan_pb2.ComputePlanStatus.PLAN_STATUS_UNKNOWN)
     tag = models.CharField(max_length=100, blank=True)
     creation_date = models.DateTimeField()
+    start_date = models.DateTimeField(null=True)
+    end_date = models.DateTimeField(null=True)
+    duration = models.IntegerField(null=True)  # duration in seconds
     metadata = models.JSONField(null=True)
     failed_task_key = models.CharField(max_length=100, null=True)
     failed_task_category = models.IntegerField(choices=CATEGORY_CHOICES, null=True)

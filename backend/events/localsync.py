@@ -103,6 +103,7 @@ def _create_computetask(
 def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process update computetask event to update local database."""
 
+    from events.dynamic_fields import add_cp_dates_and_duration
     from events.dynamic_fields import add_cp_failed_task
     from events.dynamic_fields import fetch_error_type_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
@@ -115,13 +116,15 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     error_type = fetch_error_type_from_event(event, client)
     _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, error_type)
 
-    if data["status"] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_FAILED):
+    status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
+    category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
+    if status != computetask_pb2.STATUS_TODO:
+        add_cp_dates_and_duration(data["compute_plan_key"])
+    if status == computetask_pb2.STATUS_FAILED:
         # The event processed might not be the first failed one.
         # We cannot use the task data but need to fetch the first failed event from the orchestrator
         add_cp_failed_task(data["compute_plan_key"], client)
-    elif data["category"] == computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST) and data[
-        "status"
-    ] == computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE):
+    elif status == computetask_pb2.STATUS_DONE and category == computetask_pb2.TASK_TEST:
         _creating_computetask_performances(data["key"], client)
 
     compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
@@ -353,17 +356,22 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
+    from events.dynamic_fields import add_cp_dates_and_duration
     from events.dynamic_fields import add_cp_failed_task
     from localrep.models.computeplan import ComputePlan
 
     logger.info("Resyncing computeplans")
+
     computeplans = client.query_compute_plans()  # TODO: Add filter on last_modification_date
     nb_new_assets = 0
     nb_skipped_assets = 0
 
     for data in computeplans:
         is_created = _create_computeplan(client.channel_name, data)
-        if data["status"] == computeplan_pb2.ComputePlanStatus.Name(computeplan_pb2.PLAN_STATUS_FAILED):
+        status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
+        if status != computeplan_pb2.PLAN_STATUS_TODO:
+            add_cp_dates_and_duration(data["key"])
+        if status == computeplan_pb2.PLAN_STATUS_FAILED:
             add_cp_failed_task(data["key"], client)
         if is_created:
             logger.debug("Created new computeplan", asset_key=data["key"])

@@ -36,6 +36,9 @@ class Migration(migrations.Migration):
                 ),
                 ("tag", models.CharField(blank=True, max_length=100)),
                 ("creation_date", models.DateTimeField()),
+                ("start_date", models.DateTimeField(null=True)),
+                ("end_date", models.DateTimeField(null=True)),
+                ("duration", models.IntegerField(null=True)),
                 ("metadata", models.JSONField(null=True)),
                 ("failed_task_key", models.CharField(max_length=100, null=True)),
                 (

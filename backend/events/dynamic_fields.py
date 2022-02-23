@@ -59,3 +59,26 @@ def fetch_error_type_from_event(event: dict, client: orc_client.OrchestratorClie
         if failure_report:
             error_type = failure_report["error_type"]
     return error_type
+
+
+def add_cp_dates_and_duration(compute_plan_key: str) -> None:
+    """Update start_date, end_date, duration fields."""
+
+    compute_plan = ComputePlan.objects.get(key=compute_plan_key)
+
+    if not compute_plan.start_date:
+        first_started_task = compute_plan.compute_tasks.filter(start_date__isnull=False).earliest("start_date")
+        if first_started_task:
+            compute_plan.start_date = first_started_task.start_date
+
+    ongoing_tasks = compute_plan.compute_tasks.filter(end_date__isnull=True).exists()
+    if ongoing_tasks:
+        compute_plan.end_date = None  # end date could be reset when cp is updated with new tasks
+        compute_plan.duration = None
+    else:
+        last_ended_task = compute_plan.compute_tasks.filter(end_date__isnull=False).latest("end_date")
+        if last_ended_task:
+            compute_plan.end_date = last_ended_task.end_date
+            compute_plan.duration = (compute_plan.end_date - compute_plan.start_date).seconds
+
+    compute_plan.save()

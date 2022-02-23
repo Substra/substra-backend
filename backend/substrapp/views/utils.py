@@ -10,17 +10,18 @@ import django.http
 from django.conf import settings
 from django.db.models import Count
 from django.db.models import Q
+from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-import orchestrator.common_pb2 as common_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
-import orchestrator.event_pb2 as event_pb2
 import orchestrator.model_pb2 as model_pb2
+from localrep.models import ComputePlan as ComputePlanRep
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
@@ -381,78 +382,30 @@ def add_cp_task_counts(data):
     return data
 
 
-def add_compute_plan_duration_or_eta(client, data):
-    """Add the duration and the estimated time of arrival or end date to a compute plan data."""
+def add_compute_plan_estimated_end_date(data):
+    """Add the estimated time of arrival to a compute plan data."""
 
-    current_date = datetime.datetime.now()
     compute_plan_status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
 
-    start_date = None
-    end_date = None
-    data["start_date"] = None
-    data["end_date"] = None
-    data["estimated_end_date"] = None
-    data["duration"] = None
-
-    first_event = next(
-        client.query_events_generator(
-            event_kind=event_pb2.EVENT_ASSET_UPDATED,
-            metadata={"status": "STATUS_DOING", "compute_plan_key": data["key"]},
-        ),
-        None,
-    )
-
-    last_event = next(
-        client.query_events_generator(
-            event_kind=event_pb2.EVENT_ASSET_UPDATED,
-            metadata={"compute_plan_key": data["key"]},
-            sort=common_pb2.DESCENDING,
-        ),
-        None,
-    )
-
-    if (
-        compute_plan_status
-        in [
-            computeplan_pb2.PLAN_STATUS_DOING,
-            computeplan_pb2.PLAN_STATUS_FAILED,
-            computeplan_pb2.PLAN_STATUS_CANCELED,
-            computeplan_pb2.PLAN_STATUS_DONE,
-        ]
-        and first_event
-    ):
-        data["start_date"] = first_event["timestamp"]
-        if data["start_date"]:
-            start_date = datetime.datetime.strptime(
-                first_event["timestamp"].split("+")[0].strip("Z")[:-3], "%Y-%m-%dT%H:%M:%S.%f"
-            )
-
-    # duration and estimated_end_date
     if compute_plan_status == computeplan_pb2.PLAN_STATUS_DOING:
-        if data["done_count"] and start_date is not None:
+        if data["done_count"] and data["start_date"] is not None:
             remaining_tasks_count = data["task_count"] - data["done_count"]
-            current_duration = current_date - start_date
+            current_duration = timezone.now() - parse_datetime(data["start_date"])
             time_per_task = current_duration / data["done_count"]
             estimated_duration = remaining_tasks_count * time_per_task
-            data["duration"] = int(current_duration.total_seconds())
-            data["estimated_end_date"] = (current_date + estimated_duration).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-
-    if (
-        compute_plan_status
-        in [computeplan_pb2.PLAN_STATUS_FAILED, computeplan_pb2.PLAN_STATUS_CANCELED, computeplan_pb2.PLAN_STATUS_DONE]
-        and last_event
-    ):
-
-        data["end_date"] = last_event["timestamp"]
-        data["estimated_end_date"] = data["end_date"]
-        if data["end_date"]:
-            end_date = datetime.datetime.strptime(
-                last_event["timestamp"].split("+")[0].strip("Z")[:-3], "%Y-%m-%dT%H:%M:%S.%f"
+            data["estimated_end_date"] = (datetime.datetime.now() + estimated_duration).strftime(
+                "%Y-%m-%dT%H:%M:%S.%fZ"
             )
-
-        if start_date is not None and end_date is not None:
-            data["duration"] = int((end_date - start_date).total_seconds())
-
+            # update CP curent duration
+            compute_plan = ComputePlanRep.objects.get(key=data["key"])
+            compute_plan.duration = int(current_duration.total_seconds())
+            compute_plan.save()
+    elif compute_plan_status in [
+        computeplan_pb2.PLAN_STATUS_FAILED,
+        computeplan_pb2.PLAN_STATUS_CANCELED,
+        computeplan_pb2.PLAN_STATUS_DONE,
+    ]:
+        data["estimated_end_date"] = data["end_date"]
     return data
 
 

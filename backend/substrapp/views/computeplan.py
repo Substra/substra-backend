@@ -22,7 +22,7 @@ from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import TASK_CATEGORY
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import ValidationExceptionError
-from substrapp.views.utils import add_compute_plan_duration_or_eta
+from substrapp.views.utils import add_compute_plan_estimated_end_date
 from substrapp.views.utils import add_cp_task_counts
 from substrapp.views.utils import get_channel_name
 from substrapp.views.utils import to_string_uuid
@@ -260,9 +260,7 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
             raise NotFound
         data = ComputePlanRepSerializer(compute_plan).data
         data = add_cp_task_counts(data)
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = add_compute_plan_duration_or_eta(client, data)
+        data = add_compute_plan_estimated_end_date(data)
 
         return ApiResponse(data, status=status.HTTP_200_OK)
 
@@ -276,10 +274,9 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         data = ComputePlanRepSerializer(queryset, many=True).data
 
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            for datum in data:
-                datum = add_cp_task_counts(datum)
-                datum = add_compute_plan_duration_or_eta(client, datum)
+        for datum in data:
+            datum = add_cp_task_counts(datum)
+            datum = add_compute_plan_estimated_end_date(datum)
 
         return self.get_paginated_response(data)
 
