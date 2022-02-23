@@ -187,14 +187,15 @@ class ComputeTaskViewSet(ComputeTaskListMixin, mixins.CreateModelMixin, GenericV
                 create_cp = True
                 data["compute_plan_key"] = uuid.uuid4()
 
+        registered_cp_data = None
+        if create_cp:
+            registered_cp_data = register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
+
         orchestrator_serializer = self.get_serializer(data=data, context={"request": request})
         orchestrator_serializer.is_valid(raise_exception=True)
         registered_tasks_data = orchestrator_serializer.create(
             get_channel_name(request), orchestrator_serializer.validated_data
         )
-        registered_cp_data = None
-        if create_cp:
-            registered_cp_data = register_compute_plan_in_orchestrator(request, data={"key": data["compute_plan_key"]})
         return registered_cp_data, registered_tasks_data[0]
 
     def _create(self, request):  # noqa: C901

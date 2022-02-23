@@ -122,9 +122,10 @@ class TrainTaskQueryTests(ComputeTaskQueryTests):
             "train_data_sample_keys": train_task["train"]["data_sample_keys"],
         }
 
-        response = self.client.post(self.url, data, format="json", **self.extra)
-        self.assertIn("This field may not be null.", response.json()["algo_key"])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
+            response = self.client.post(self.url, data, format="json", **self.extra)
+            self.assertIn("This field may not be null.", response.json()["algo_key"])
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
 
 @override_settings(
@@ -230,6 +231,8 @@ class CompositeTaskQueryTests(ComputeTaskQueryTests):
             "train_data_sample_keys": composite_task["composite"]["data_sample_keys"],
         }
 
-        response = self.client.post(self.url, data, format="multipart", **self.extra)
-        self.assertIn("This field may not be null.", response.json()["algo_key"])
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        with mock.patch.object(OrchestratorClient, "register_compute_plan", return_value=self.compute_plans[0]):
+            response = self.client.post(self.url, data, format="multipart", **self.extra)
+            print(response.json())
+            self.assertIn("This field may not be null.", response.json()["algo_key"])
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
