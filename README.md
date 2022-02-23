@@ -1,3 +1,9 @@
+**This repository is inactive.**
+
+The Substra project is under active development as a closed-source solution. There are ongoing strategic discussions regarding the possibility of open-sourcing newer versions, but no conclusion has been reached yet.
+
+---
+
 # Substra-Backend [![Python](https://github.com/SubstraFoundation/substra-backend/workflows/Python/badge.svg)](https://github.com/SubstraFoundation/substra-backend/actions?query=workflow%3APython) [![Helm](https://github.com/SubstraFoundation/substra-backend/workflows/Helm/badge.svg)](https://github.com/SubstraFoundation/substra-backend/actions?query=workflow%3AHelm) [![Docker Cloud Build Status](https://img.shields.io/docker/cloud/build/substrafoundation/substra-backend)](https://hub.docker.com/r/substrafoundation/substra-backend/builds)
 
 Backend of the Substra platform
