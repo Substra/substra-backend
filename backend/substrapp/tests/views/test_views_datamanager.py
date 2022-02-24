@@ -98,42 +98,41 @@ class DataManagerViewTests(APITestCase):
                 self.assertEqual(result[field]["storage_address"], data_manager[field]["storage_address"])
 
     def test_datamanager_list_filter(self):
-        """Filter datamanager on name."""
-        name = self.data_manager["name"]
-        params = urlencode({"search": f"dataset:name:{name}"})
+        """Filter datamanager on key."""
+        key = self.data_manager["key"]
+        params = urlencode({"search": f"dataset:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
         )
 
     def test_datamanager_list_filter_and(self):
-        """Filter datamanager on name and owner."""
-        name, owner = self.data_manager["name"], self.data_manager["owner"]
-        params = urlencode({"search": f"dataset:name:{name},dataset:owner:{owner}"})
+        """Filter datamanager on key and owner."""
+        key, owner = self.data_manager["key"], self.data_manager["owner"]
+        params = urlencode({"search": f"dataset:key:{key},dataset:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
         )
 
     def test_datamanager_list_filter_or(self):
-        """Filter datamanager on name_0 or name_1."""
-        name_0 = self.data_manager["name"]
-        name_1 = self.data_managers[1]["name"]
-        params = urlencode({"search": f"dataset:name:{name_0}-OR-dataset:name:{name_1}"})
+        """Filter datamanager on key_0 or key_1."""
+        key_0 = self.data_manager["key"]
+        key_1 = self.data_managers[1]["key"]
+        params = urlencode({"search": f"dataset:key:{key_0}-OR-dataset:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
         )
 
     def test_datamanager_list_filter_or_and(self):
-        """Filter datamanager on (name_0 and owner_0) or (name_1 and owner_1)."""
-        name_0, owner_0 = self.data_manager["name"], self.data_manager["owner"]
-        name_1, owner_1 = self.data_managers[1]["name"], self.data_managers[1]["owner"]
+        """Filter datamanager on (key_0 and owner_0) or (key_1 and owner_1)."""
+        key_0, owner_0 = self.data_manager["key"], self.data_manager["owner"]
+        key_1, owner_1 = self.data_managers[1]["key"], self.data_managers[1]["owner"]
         params = urlencode(
             {
                 "search": (
-                    f"dataset:name:{name_0},dataset:owner:{owner_0}"
-                    f"-OR-dataset:name:{name_1},dataset:owner:{owner_1}"
+                    f"dataset:key:{key_0},dataset:owner:{owner_0}" f"-OR-dataset:key:{key_1},dataset:owner:{owner_1}"
                 )
             }
         )

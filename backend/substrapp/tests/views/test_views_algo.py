@@ -85,8 +85,7 @@ class AlgoViewTests(APITestCase):
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @mock.patch("substrapp.views.algo.node_client.get", return_value=b"content")
-    def test_algo_list_storage_addresses_update(self, _):
+    def test_algo_list_storage_addresses_update(self):
         for algo in AlgoRep.objects.all():
             algo.description_address.replace("http://testserver", "http://remotetestserver")
             algo.algorithm_address.replace("http://testserver", "http://remotetestserver")
@@ -99,33 +98,33 @@ class AlgoViewTests(APITestCase):
                 self.assertEqual(result[field]["storage_address"], algo[field]["storage_address"])
 
     def test_algo_list_filter(self):
-        """Filter algo on name."""
-        name = self.algos[0]["name"]
-        params = urlencode({"search": f"algo:name:{name}"})
+        """Filter algo on key."""
+        key = self.algos[0]["key"]
+        params = urlencode({"search": f"algo:key:{key}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.algos[:1]})
 
     def test_algo_list_filter_and(self):
-        """Filter algo on name and owner."""
-        name, owner = self.algos[0]["name"], self.algos[0]["owner"]
-        params = urlencode({"search": f"algo:name:{name},algo:owner:{owner}"})
+        """Filter algo on key and owner."""
+        key, owner = self.algos[0]["key"], self.algos[0]["owner"]
+        params = urlencode({"search": f"algo:key:{key},algo:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.algos[:1]})
 
     def test_algo_list_filter_or(self):
-        """Filter algo on name_0 or name_1."""
-        name_0 = self.algos[0]["name"]
-        name_1 = self.algos[1]["name"]
-        params = urlencode({"search": f"algo:name:{name_0}-OR-algo:name:{name_1}"})
+        """Filter algo on key_0 or key_1."""
+        key_0 = self.algos[0]["key"]
+        key_1 = self.algos[1]["key"]
+        params = urlencode({"search": f"algo:key:{key_0}-OR-algo:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.algos[:2]})
 
     def test_algo_list_filter_or_and(self):
-        """Filter algo on (name_0 and owner_0) or (name_1 and owner_1)."""
-        name_0, owner_0 = self.algos[0]["name"], self.algos[0]["owner"]
-        name_1, owner_1 = self.algos[1]["name"], self.algos[1]["owner"]
+        """Filter algo on (key_0 and owner_0) or (key_1 and owner_1)."""
+        key_0, owner_0 = self.algos[0]["key"], self.algos[0]["owner"]
+        key_1, owner_1 = self.algos[1]["key"], self.algos[1]["owner"]
         params = urlencode(
-            {"search": f"algo:name:{name_0},algo:owner:{owner_0}-OR-algo:name:{name_1},algo:owner:{owner_1}"}
+            {"search": f"algo:key:{key_0},algo:owner:{owner_0}-OR-algo:key:{key_1},algo:owner:{owner_1}"}
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.algos[:2]})

@@ -106,26 +106,26 @@ class MetricViewTests(APITestCase):
                 self.assertEqual(result[field]["storage_address"], metric[field]["storage_address"])
 
     def test_metric_list_filter_and(self):
-        """Filter metric on name and owner."""
-        name, owner = self.metrics[0]["name"], self.metrics[0]["owner"]
-        params = urlencode({"search": f"metric:name:{name},metric:owner:{owner}"})
+        """Filter metric on key and owner."""
+        key, owner = self.metrics[0]["key"], self.metrics[0]["owner"]
+        params = urlencode({"search": f"metric:key:{key},metric:owner:{owner}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.metrics[:1]})
 
     def test_metric_list_filter_or(self):
-        """Filter metric on name_0 or name_1."""
-        name_0 = self.metrics[0]["name"]
-        name_1 = self.metrics[1]["name"]
-        params = urlencode({"search": f"metric:name:{name_0}-OR-metric:name:{name_1}"})
+        """Filter metric on key_0 or key_1."""
+        key_0 = self.metrics[0]["key"]
+        key_1 = self.metrics[1]["key"]
+        params = urlencode({"search": f"metric:key:{key_0}-OR-metric:key:{key_1}"})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.metrics[:2]})
 
     def test_metric_list_filter_or_and(self):
-        """Filter metric on (name_0 and owner_0) or (name_1 and owner_1)."""
-        name_0, owner_0 = self.metrics[0]["name"], self.metrics[0]["owner"]
-        name_1, owner_1 = self.metrics[1]["name"], self.metrics[1]["owner"]
+        """Filter metric on (key_0 and owner_0) or (key_1 and owner_1)."""
+        key_0, owner_0 = self.metrics[0]["key"], self.metrics[0]["owner"]
+        key_1, owner_1 = self.metrics[1]["key"], self.metrics[1]["owner"]
         params = urlencode(
-            {"search": f"metric:name:{name_0},metric:owner:{owner_0}-OR-metric:name:{name_1},metric:owner:{owner_1}"}
+            {"search": f"metric:key:{key_0},metric:owner:{owner_0}-OR-metric:key:{key_1},metric:owner:{owner_1}"}
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.metrics[:2]})
