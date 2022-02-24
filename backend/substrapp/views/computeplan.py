@@ -7,6 +7,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
+import orchestrator.computeplan_pb2 as computeplan_pb2
 from libs.pagination import DefaultPageNumberPagination
 from localrep.errors import AlreadyExistsError
 from localrep.models import ComputePlan as ComputePlanRep
@@ -269,7 +270,13 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            queryset = filter_queryset("compute_plan", queryset, query_params)
+
+            def map_status(key, values):
+                if key == "status":
+                    values = [computeplan_pb2.ComputePlanStatus.Value(value) for value in values]
+                return key, values
+
+            queryset = filter_queryset("compute_plan", queryset, query_params, mapping_callback=map_status)
         queryset = self.paginate_queryset(queryset)
 
         data = ComputePlanRepSerializer(queryset, many=True).data

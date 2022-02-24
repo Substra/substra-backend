@@ -159,6 +159,8 @@ def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
     or_params = None
     for or_filter in filters:
         and_params = None
+        if set(or_filter.keys()) != {object_type}:
+            raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
         for key, values in or_filter[object_type].items():
             if mapping_callback is not None:
                 key, values = mapping_callback(key, values)

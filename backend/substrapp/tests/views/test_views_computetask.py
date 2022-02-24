@@ -219,6 +219,29 @@ class TrainTaskViewTests(ComputeTaskViewTests):
 
     @parameterized.expand(
         [
+            ("STATUS_UNKNOWN",),
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+        ]
+    )
+    def test_traintask_list_filter_by_status(self, status):
+        """Filter traintask on status."""
+        filtered_train_tasks = [task for task in self.train_tasks if task["status"] == status]
+        params = urlencode({"search": f"traintuple:status:{status}"})
+        self.mock_output_models_in_test_data(value=None)
+        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
+        )
+
+    @parameterized.expand(
+        [
             ("page_size_5_page_1", 5, 1),
             ("page_size_1_page_2", 1, 2),
             ("page_size_2_page_3", 2, 3),
@@ -361,6 +384,27 @@ class TestTaskViewTests(ComputeTaskViewTests):
         )
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
+
+    @parameterized.expand(
+        [
+            ("STATUS_UNKNOWN",),
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+        ]
+    )
+    def test_testtask_list_filter_by_status(self, status):
+        """Filter testtask on status."""
+        filtered_test_tasks = [task for task in self.test_tasks if task["status"] == status]
+        params = urlencode({"search": f"testtuple:status:{status}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_test_tasks), "next": None, "previous": None, "results": filtered_test_tasks},
+        )
 
     @parameterized.expand(
         [
@@ -509,6 +553,34 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
             response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
+        )
+
+    @parameterized.expand(
+        [
+            ("STATUS_UNKNOWN",),
+            ("STATUS_WAITING",),
+            ("STATUS_TODO",),
+            ("STATUS_DOING",),
+            ("STATUS_DONE",),
+            ("STATUS_CANCELED",),
+            ("STATUS_FAILED",),
+        ]
+    )
+    def test_compositetask_list_filter_by_status(self, status):
+        """Filter compositetask on status."""
+        filtered_composite_tasks = [task for task in self.composite_tasks if task["status"] == status]
+        params = urlencode({"search": f"composite_traintuple:status:{status}"})
+        self.mock_output_models_in_test_data(value=None)
+        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
+            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {
+                "count": len(filtered_composite_tasks),
+                "next": None,
+                "previous": None,
+                "results": filtered_composite_tasks,
+            },
         )
 
     @parameterized.expand(

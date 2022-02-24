@@ -6,6 +6,8 @@ from unittest import mock
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils.http import urlencode
+from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
@@ -190,6 +192,26 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
     def test_computeplan_list_fail_internal_server_error(self, _):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @parameterized.expand(
+        [
+            ("PLAN_STATUS_WAITING",),
+            ("PLAN_STATUS_TODO",),
+            ("PLAN_STATUS_DOING",),
+            ("PLAN_STATUS_DONE",),
+            ("PLAN_STATUS_CANCELED",),
+            ("PLAN_STATUS_FAILED",),
+        ]
+    )
+    def test_computeplan_list_filter_by_status(self, status):
+        """Filter computeplan on status."""
+        filtered_compute_plans = [cp for cp in self.compute_plans if cp["status"] == status]
+        params = urlencode({"search": f"compute_plan:status:{status}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_compute_plans), "next": None, "previous": None, "results": filtered_compute_plans},
+        )
 
     def test_computeplan_retrieve(self):
         url = reverse("substrapp:compute_plan-detail", args=[self.compute_plans[0]["key"]])

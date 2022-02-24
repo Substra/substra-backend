@@ -94,7 +94,7 @@ class ComputeTaskListMixin:
 
             def map_status_and_cp_key(key, values):
                 if key == "status":
-                    values = [computetask_pb2.ComputeTaskstatus.Value(value) for value in values]
+                    values = [computetask_pb2.ComputeTaskStatus.Value(value) for value in values]
                 elif key == "compute_plan_key":
                     key = "compute_plan__key"
                 return key, values

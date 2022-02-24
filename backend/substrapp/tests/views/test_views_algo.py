@@ -132,6 +132,24 @@ class AlgoViewTests(APITestCase):
 
     @parameterized.expand(
         [
+            ("ALGO_UNKNOWN",),
+            ("ALGO_SIMPLE",),
+            ("ALGO_AGGREGATE",),
+            ("ALGO_COMPOSITE",),
+        ]
+    )
+    def test_algo_list_filter_by_category(self, category):
+        """Filter algo on category."""
+        filtered_algos = [task for task in self.algos if task["category"] == category]
+        params = urlencode({"search": f"algo:category:{category}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_algos), "next": None, "previous": None, "results": filtered_algos},
+        )
+
+    @parameterized.expand(
+        [
             ("page_size_5_page_1", 5, 1),
             ("page_size_1_page_2", 1, 2),
             ("page_size_2_page_3", 2, 3),
