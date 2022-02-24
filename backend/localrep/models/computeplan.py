@@ -34,6 +34,23 @@ class ComputePlan(models.Model):
     class Meta:
         ordering = ["creation_date", "key"]  # default order for relations serializations
 
+    def _add_failed_task(self) -> None:
+        if self.failed_task_key is not None:
+            # failed_task field is already populated
+            return
+
+        first_failed_task = (
+            self.compute_tasks.filter(end_date__isnull=False, status=computetask_pb2.ComputeTaskStatus.STATUS_FAILED)
+            .order_by("end_date")
+            .first()
+        )
+
+        if first_failed_task is None:
+            return
+
+        self.failed_task_key = first_failed_task.key
+        self.failed_task_category = first_failed_task.category
+
     def update_status(self) -> None:
         """
         Compute cp status from tasks counts.
@@ -77,4 +94,8 @@ class ComputePlan(models.Model):
         )
 
         self.status = compute_plan_status
+
+        if self.status == computeplan_pb2.PLAN_STATUS_FAILED:
+            self._add_failed_task()
+
         self.save()

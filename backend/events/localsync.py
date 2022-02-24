@@ -104,7 +104,6 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     """Process update computetask event to update local database."""
 
     from events.dynamic_fields import add_cp_dates_and_duration
-    from events.dynamic_fields import add_cp_failed_task
     from events.dynamic_fields import fetch_error_type_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
@@ -120,10 +119,6 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
     if status != computetask_pb2.STATUS_TODO:
         add_cp_dates_and_duration(data["compute_plan_key"])
-    if status == computetask_pb2.STATUS_FAILED:
-        # The event processed might not be the first failed one.
-        # We cannot use the task data but need to fetch the first failed event from the orchestrator
-        add_cp_failed_task(data["compute_plan_key"], client)
     elif status == computetask_pb2.STATUS_DONE and category == computetask_pb2.TASK_TEST:
         _creating_computetask_performances(data["key"], client)
 
@@ -357,7 +352,6 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import add_cp_dates_and_duration
-    from events.dynamic_fields import add_cp_failed_task
     from localrep.models.computeplan import ComputePlan
 
     logger.info("Resyncing computeplans")
@@ -371,8 +365,6 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
         status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
         if status != computeplan_pb2.PLAN_STATUS_TODO:
             add_cp_dates_and_duration(data["key"])
-        if status == computeplan_pb2.PLAN_STATUS_FAILED:
-            add_cp_failed_task(data["key"], client)
         if is_created:
             logger.debug("Created new computeplan", asset_key=data["key"])
             nb_new_assets += 1
