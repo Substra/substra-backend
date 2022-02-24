@@ -12,6 +12,7 @@ from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
+import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
@@ -79,10 +80,13 @@ class ComputeTaskViewTests(APITestCase):
         self.test_tasks = assets.get_test_tasks()
         self.composite_tasks = assets.get_composite_tasks()
         for compute_task in self.train_tasks + self.test_tasks + self.composite_tasks:
-            data = self.clean_input_data(compute_task)
-            serializer = ComputeTaskRepSerializer(data=data)
+            cleaned_compute_task = self.clean_input_data(compute_task)
+            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
+            if compute_task["status"] == "STATUS_DONE":
+                self.create_output_assets(compute_task)
 
     def clean_input_data(self, compute_task):
         # Missing field from test data
@@ -90,22 +94,20 @@ class ComputeTaskViewTests(APITestCase):
             "public": True,
             "authorized_ids": [compute_task["owner"]],
         }
-        # Unexpected fields from test data
+
+        # Remove unexpected fields from test data (only for expand relationships)
+        field = compute_task["category"].removeprefix("TASK_").lower()
         del compute_task["parent_tasks"]  # only for expand relationships
-        if "train" in compute_task:
-            del compute_task["train"]["data_manager"]  # only for expand relationships
-            if compute_task["status"] != "STATUS_DONE":
-                del compute_task["train"]["models"]
-        elif "test" in compute_task:
-            del compute_task["test"]["data_manager"]  # only for expand relationships
+        del compute_task[field]["data_manager"]  # only for expand relationships
+        if compute_task["category"] == "TASK_TEST":
             del compute_task["test"]["metrics"]  # only for expand relationships
             if compute_task["status"] != "STATUS_DONE":
                 del compute_task["test"]["perfs"]
-        elif "composite" in compute_task:
-            del compute_task["composite"]["data_manager"]  # only for expand relationships
+        else:
             if compute_task["status"] != "STATUS_DONE":
-                del compute_task["composite"]["models"]
-        data = {"channel": "mychannel", **compute_task}
+                del compute_task[field]["models"]
+
+        data = {**compute_task}
         if data["error_type"] is None:
             del data["error_type"]
         else:
@@ -113,6 +115,18 @@ class ComputeTaskViewTests(APITestCase):
                 getattr(ComputeTaskErrorType, data["error_type"]).value
             )
         return data
+
+    def create_output_assets(self, compute_task):
+        """Create performances."""
+        if compute_task["category"] == "TASK_TEST":
+            for metric_key, perf_value in compute_task["test"]["perfs"].items():
+                PerformanceRep.objects.create(
+                    compute_task_id=compute_task["key"],
+                    metric_id=metric_key,
+                    value=perf_value,
+                    creation_date=datetime.now(),
+                    channel="mychannel",
+                )
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -129,7 +143,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         self.url = reverse("substrapp:traintuple-list")
 
     def test_traintask_list_empty(self):
-        ComputeTaskRep.objects.all().delete()
+        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_TRAIN).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
@@ -288,17 +302,12 @@ class TestTaskViewTests(ComputeTaskViewTests):
         self.url = reverse("substrapp:testtuple-list")
 
     def test_testtask_list_empty(self):
-        ComputeTaskRep.objects.all().delete()
+        PerformanceRep.objects.filter(compute_task__category=computetask_pb2.TASK_TEST).delete()
+        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_TEST).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-    def mock_performances_in_test_data(self, value):
-        for test_task in self.test_tasks:
-            if test_task["status"] == "STATUS_DONE":
-                test_task["test"]["perfs"] = value
-
     def test_testtask_list_success(self):
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
@@ -320,7 +329,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         """Filter testtask on key."""
         key = self.test_tasks[0]["key"]
         params = urlencode({"search": f"testtuple:key:{key}"})
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
 
@@ -328,7 +336,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         """Filter testtask on key and owner."""
         key, owner = self.test_tasks[0]["key"], self.test_tasks[0]["owner"]
         params = urlencode({"search": f"testtuple:key:{key},testtuple:owner:{owner}"})
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
 
@@ -337,7 +344,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         key_0 = self.test_tasks[0]["key"]
         key_1 = self.test_tasks[1]["key"]
         params = urlencode({"search": f"testtuple:key:{key_0}-OR-testtuple:key:{key_1}"})
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
 
@@ -353,7 +359,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
                 )
             }
         )
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
 
@@ -366,7 +371,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
     )
     def test_testtask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
         self.assertEqual(r["count"], len(self.test_tasks))
@@ -381,7 +385,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
         related_tasks = [ct for ct in self.test_tasks if ct["key"] in related_task_keys]
 
         url = reverse("substrapp:compute_plan_testtuple-list", args=[compute_plan_key])
-        self.mock_performances_in_test_data(value={})
         response = self.client.get(url, **self.extra)
         self.assertEqual(
             response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
@@ -389,14 +392,6 @@ class TestTaskViewTests(ComputeTaskViewTests):
 
     def test_testtask_retrieve(self):
         url = reverse("substrapp:testtuple-detail", args=[self.test_tasks[0]["key"]])
-        for metric_key, perf_value in self.test_tasks[0]["test"]["perfs"].items():
-            PerformanceRep.objects.create(
-                compute_task_id=self.test_tasks[0]["key"],
-                metric_id=metric_key,
-                value=perf_value,
-                creation_date=datetime.now(),
-                channel="mychannel",
-            )
         response = self.client.get(url, **self.extra)
         # retrieve view expand relationships
         data_manager = DataManagerRep.objects.get(key=self.test_tasks[0]["test"]["data_manager_key"])
@@ -434,7 +429,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         self.url = reverse("substrapp:composite_traintuple-list")
 
     def test_compositetask_list_empty(self):
-        ComputeTaskRep.objects.all().delete()
+        ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_COMPOSITE).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
