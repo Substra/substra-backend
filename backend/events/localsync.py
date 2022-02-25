@@ -119,8 +119,11 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
     if status != computetask_pb2.STATUS_TODO:
         add_cp_dates_and_duration(data["compute_plan_key"])
-    elif status == computetask_pb2.STATUS_DONE and category == computetask_pb2.TASK_TEST:
-        _creating_computetask_performances(data["key"], client)
+    if status == computetask_pb2.STATUS_DONE:
+        if category == computetask_pb2.TASK_TEST:
+            _sync_performances(data["key"], client)
+        else:
+            _sync_models(data["key"], client)
 
     compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
     compute_plan.update_status()
@@ -244,6 +247,20 @@ def _create_performance(channel: str, data: dict) -> bool:
         logger.debug(
             "Performance already exists", compute_task_key=data["compute_task_key"], metric_key=data["metric_key"]
         )
+        return False
+    else:
+        return True
+
+
+def _create_model(channel: str, data: dict) -> bool:
+    from localrep.serializers import ModelSerializer
+
+    data["channel"] = channel
+    serializer = ModelSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("Model already exists", asset_key=data["key"])
         return False
     else:
         return True
@@ -376,8 +393,8 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
     logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
-def _creating_computetask_performances(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
-    logger.info("creating task performances ", task_key=compute_task_key)
+def _sync_performances(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
+    logger.info("Syncing performances ", task_key=compute_task_key)
     performances = client.get_compute_task_performances(compute_task_key)
     nb_new_assets = 0
     nb_skipped_assets = 0
@@ -401,6 +418,22 @@ def _creating_computetask_performances(compute_task_key: str, client: orc_client
         nb_new_assets=nb_new_assets,
         nb_skipped_assets=nb_skipped_assets,
     )
+
+
+def _sync_models(compute_task_key: str, client: orc_client.OrchestratorClient) -> None:
+    logger.info("Syncing models ", task_key=compute_task_key)
+    models = client.get_computetask_output_models(compute_task_key)
+    nb_new_assets = 0
+    nb_skipped_assets = 0
+
+    for data in models:
+        is_created = _create_model(client.channel_name, data)
+        if is_created:
+            logger.debug("Created new model", asset_key=data["key"])
+            nb_new_assets += 1
+        else:
+            logger.debug("Skipped model", asset_key=data["key"])
+            nb_skipped_assets += 1
 
 
 def resync_computetasks(client: orc_client.OrchestratorClient):
@@ -437,13 +470,14 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
             _update_computetask(data["key"], data["status"], start_date, end_date, error_type)
             logger.debug("Updated computetask", asset_key=data["key"])
             nb_updated_assets += 1
-        if data["category"] == computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST) and data[
-            "status"
-        ] in [
-            computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DOING),
-            computetask_pb2.ComputeTaskStatus.Name(computetask_pb2.STATUS_DONE),
-        ]:
-            _creating_computetask_performances(data["key"], client)
+
+        status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
+        category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
+        if status == computetask_pb2.STATUS_DONE:
+            if category == computetask_pb2.TASK_TEST:
+                _sync_performances(data["key"], client)
+            else:
+                _sync_models(data["key"], client)
 
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
 

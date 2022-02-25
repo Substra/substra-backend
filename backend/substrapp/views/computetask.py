@@ -14,7 +14,6 @@ from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from substrapp.compute_tasks.context import TASK_DATA_FIELD
-from substrapp.orchestrator import get_orchestrator_client
 from substrapp.serializers import OrchestratorAggregateTaskSerializer
 from substrapp.serializers import OrchestratorCompositeTrainTaskSerializer
 from substrapp.serializers import OrchestratorTestTaskSerializer
@@ -104,8 +103,7 @@ class ComputeTaskListMixin:
 
         data = ComputeTaskRepSerializer(queryset, many=True).data
         for datum in data:
-            with get_orchestrator_client(get_channel_name(request)) as client:
-                datum = add_task_extra_information(client, category, datum, get_channel_name(request))
+            datum = add_task_extra_information(category, datum, get_channel_name(request))
             replace_storage_addresses(request, datum)
 
         return self.get_paginated_response(data)
@@ -243,11 +241,7 @@ class ComputeTaskViewSet(ComputeTaskListMixin, mixins.CreateModelMixin, GenericV
         except ComputeTaskRep.DoesNotExist:
             raise NotFound
         data = ComputeTaskRepSerializer(compute_task).data
-
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = add_task_extra_information(
-                client, self.basename, data, get_channel_name(request), expand_relationships=True
-            )
+        data = add_task_extra_information(self.basename, data, get_channel_name(request), expand_relationships=True)
 
         replace_storage_addresses(request, data)
 

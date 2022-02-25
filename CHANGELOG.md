@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use localrep performances in tasks views (#780)
 - Localrep computeplan status field, that is synced when recieving computetask event update instead of in the computeplan view  (#762)
 - Compute and store cp dates and duration during sync (#757)
+- Local representation of model assets (#784)
 
 ### Changed
 - When resyncing the local representation, only fetch the latest events (#656)

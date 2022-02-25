@@ -4,6 +4,7 @@ import shutil
 import tempfile
 from datetime import datetime
 from unittest import mock
+from uuid import uuid4
 
 from django.test import override_settings
 from django.urls import reverse
@@ -17,6 +18,7 @@ import orchestrator.failure_report_pb2 as failure_report_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
+from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import AlgoSerializer as AlgoRepSerializer
 from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
@@ -24,7 +26,7 @@ from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializ
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import DataSampleSerializer as DataSampleRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
-from orchestrator.client import OrchestratorClient
+from localrep.serializers import ModelSerializer as ModelRepSerializer
 from substrapp.compute_tasks.errors import ComputeTaskErrorType
 
 from .. import assets
@@ -117,7 +119,7 @@ class ComputeTaskViewTests(APITestCase):
         return data
 
     def create_output_assets(self, compute_task):
-        """Create performances."""
+        """Create models or performances."""
         if compute_task["category"] == "TASK_TEST":
             for metric_key, perf_value in compute_task["test"]["perfs"].items():
                 PerformanceRep.objects.create(
@@ -127,6 +129,19 @@ class ComputeTaskViewTests(APITestCase):
                     creation_date=datetime.now(),
                     channel="mychannel",
                 )
+        else:
+            field = compute_task["category"].removeprefix("TASK_").lower()
+            for model in compute_task[field]["models"]:
+                # stale test data
+                if model["address"] is None:
+                    model["key"] == uuid4()
+                    model["address"] = {
+                        "checksum": "dummy-checksum",
+                        "storage_address": f"http://testserver/model/{model['key']}/file/",
+                    }
+                serializer = ModelRepSerializer(data={"channel": "mychannel", **model})
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
@@ -143,19 +158,13 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         self.url = reverse("substrapp:traintuple-list")
 
     def test_traintask_list_empty(self):
+        ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_TRAIN).delete()
         ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_TRAIN).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-    def mock_output_models_in_test_data(self, value):
-        for train_task in self.train_tasks:
-            if train_task["status"] == "STATUS_DONE":
-                train_task["train"]["models"] = value
-
     def test_traintask_list_success(self):
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(self.train_tasks), "next": None, "previous": None, "results": self.train_tasks},
@@ -176,18 +185,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """Filter traintask on key."""
         key = self.train_tasks[0]["key"]
         params = urlencode({"search": f"traintuple:key:{key}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.train_tasks[:1]})
 
     def test_traintask_list_filter_and(self):
         """Filter traintask on key and owner."""
         key, owner = self.train_tasks[0]["key"], self.train_tasks[0]["owner"]
         params = urlencode({"search": f"traintuple:key:{key},traintuple:owner:{owner}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.train_tasks[:1]})
 
     def test_traintask_list_filter_or(self):
@@ -195,9 +200,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         key_0 = self.train_tasks[0]["key"]
         key_1 = self.train_tasks[1]["key"]
         params = urlencode({"search": f"traintuple:key:{key_0}-OR-traintuple:key:{key_1}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
 
     def test_traintask_list_filter_or_and(self):
@@ -212,9 +215,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
                 )
             }
         )
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
 
     @parameterized.expand(
@@ -232,9 +233,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         """Filter traintask on status."""
         filtered_train_tasks = [task for task in self.train_tasks if task["status"] == status]
         params = urlencode({"search": f"traintuple:status:{status}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(filtered_train_tasks), "next": None, "previous": None, "results": filtered_train_tasks},
@@ -249,9 +248,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
     )
     def test_traintask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
         self.assertEqual(r["count"], len(self.train_tasks))
         offset = (page - 1) * page_size
@@ -265,9 +262,7 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         related_tasks = [ct for ct in self.train_tasks if ct["key"] in related_task_keys]
 
         url = reverse("substrapp:compute_plan_traintuple-list", args=[compute_plan_key])
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         self.assertEqual(
             response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
         )
@@ -279,19 +274,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         related_tasks = [ct for ct in self.train_tasks if ct["key"] in related_task_keys]
 
         params = urlencode({"search": f"traintuple:compute_plan_key:{compute_plan_key}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
         )
 
     def test_traintask_retrieve(self):
         url = reverse("substrapp:traintuple-detail", args=[self.train_tasks[0]["key"]])
-        with mock.patch.object(
-            OrchestratorClient, "get_computetask_output_models", return_value=self.train_tasks[0]["train"]["models"]
-        ):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         # retrieve view expand relationships
         data_manager = DataManagerRep.objects.get(key=self.train_tasks[0]["train"]["data_manager_key"])
         self.train_tasks[0]["train"]["data_manager"] = DataManagerRepSerializer(data_manager).data
@@ -473,19 +463,13 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         self.url = reverse("substrapp:composite_traintuple-list")
 
     def test_compositetask_list_empty(self):
+        ModelRep.objects.filter(compute_task__category=computetask_pb2.TASK_COMPOSITE).delete()
         ComputeTaskRep.objects.filter(category=computetask_pb2.TASK_COMPOSITE).delete()
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-    def mock_output_models_in_test_data(self, value):
-        for composite_task in self.composite_tasks:
-            if composite_task["status"] == "STATUS_DONE":
-                composite_task["composite"]["models"] = value
-
     def test_compositetask_list_success(self):
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(self.url, **self.extra)
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(
             response.json(),
             {"count": len(self.composite_tasks), "next": None, "previous": None, "results": self.composite_tasks},
@@ -506,9 +490,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         """Filter compositetask on key."""
         key = self.composite_tasks[0]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.composite_tasks[:1]}
         )
@@ -517,9 +499,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         """Filter compositetask on key and owner."""
         key, owner = self.composite_tasks[0]["key"], self.composite_tasks[0]["owner"]
         params = urlencode({"search": f"composite_traintuple:key:{key},composite_traintuple:owner:{owner}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.composite_tasks[:1]}
         )
@@ -529,9 +509,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         key_0 = self.composite_tasks[0]["key"]
         key_1 = self.composite_tasks[1]["key"]
         params = urlencode({"search": f"composite_traintuple:key:{key_0}-OR-composite_traintuple:key:{key_1}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
         )
@@ -548,9 +526,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
                 )
             }
         )
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
         )
@@ -570,9 +546,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         """Filter compositetask on status."""
         filtered_composite_tasks = [task for task in self.composite_tasks if task["status"] == status]
         params = urlencode({"search": f"composite_traintuple:status:{status}"})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(),
             {
@@ -592,9 +566,7 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
     )
     def test_compositetask_list_pagination_success(self, _, page_size, page):
         params = urlencode({"page_size": page_size, "page": page})
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(f"{self.url}?{params}", **self.extra)
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
         r = response.json()
         self.assertEqual(r["count"], len(self.composite_tasks))
         offset = (page - 1) * page_size
@@ -608,21 +580,14 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         related_tasks = [ct for ct in self.composite_tasks if ct["key"] in related_task_keys]
 
         url = reverse("substrapp:compute_plan_composite_traintuple-list", args=[compute_plan_key])
-        self.mock_output_models_in_test_data(value=None)
-        with mock.patch.object(OrchestratorClient, "get_computetask_output_models", return_value=None):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         self.assertEqual(
             response.json(), {"count": len(related_tasks), "next": None, "previous": None, "results": related_tasks}
         )
 
     def test_compositetask_retrieve(self):
         url = reverse("substrapp:composite_traintuple-detail", args=[self.composite_tasks[0]["key"]])
-        with mock.patch.object(
-            OrchestratorClient,
-            "get_computetask_output_models",
-            return_value=self.composite_tasks[0]["composite"]["models"],
-        ):
-            response = self.client.get(url, **self.extra)
+        response = self.client.get(url, **self.extra)
         # retrieve view expand relationships
         data_manager = DataManagerRep.objects.get(key=self.composite_tasks[0]["composite"]["data_manager_key"])
         self.composite_tasks[0]["composite"]["data_manager"] = DataManagerRepSerializer(data_manager).data

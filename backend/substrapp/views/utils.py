@@ -24,10 +24,12 @@ import orchestrator.model_pb2 as model_pb2
 from localrep.models import ComputeTask as ComputeTaskRep
 from localrep.models import DataManager as DataManagerRep
 from localrep.models import Metric as MetricRep
+from localrep.models import Model as ModelRep
 from localrep.models import Performance as PerformanceRep
 from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
 from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from localrep.serializers import MetricSerializer as MetricRepSerializer
+from localrep.serializers import ModelSerializer as ModelRepSerializer
 from node.authentication import NodeUser
 from orchestrator import failure_report_pb2
 from substrapp.clients import node as node_client
@@ -307,13 +309,17 @@ def is_proxied_request(request) -> bool:
     return HTTP_HEADER_PROXY_ASSET in request.headers
 
 
-def add_task_extra_information(client, basename, data, channel, expand_relationships=False):
+def add_task_extra_information(basename, data, channel, expand_relationships=False):
     task_status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
 
     # add model information on a training compute task or performance on a testing compute task
     if basename in ["traintuple", "aggregatetuple", "composite_traintuple"]:
         if task_status == computetask_pb2.STATUS_DONE:
-            data[TASK_FIELD[basename]]["models"] = client.get_computetask_output_models(data["key"])
+            models = ModelRep.objects.filter(
+                compute_task_id=data["key"],
+                channel=channel,
+            ).order_by("creation_date", "key")
+            data[TASK_FIELD[basename]]["models"] = ModelRepSerializer(models, many=True).data
 
     # add performances for test tasks
     if basename in ["testtuple"]:
