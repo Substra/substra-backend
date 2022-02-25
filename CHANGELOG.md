@@ -48,6 +48,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Assets filtering on enums (#788)
 - Synchronize performances and models before update computetask status (#792)
 - Compute CP status after computetasks resync (#793)
+- Safe serializer should not break db transaction (#794)
 
 ## [0.8.0] 2022-01-16
 

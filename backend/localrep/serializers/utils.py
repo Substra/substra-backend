@@ -1,5 +1,6 @@
 import structlog
 from django.conf import settings
+from django.db import transaction
 from django.db.utils import IntegrityError
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
@@ -68,7 +69,8 @@ class SafeSerializerMixin:
             raise
 
         try:
-            return self.save()
+            with transaction.atomic():
+                return self.save()
         except IntegrityError as err:
             logger.warning("Failed to save asset", error=err.args[0])
             # WARNING: side effect if another field name contains the pk-field name
