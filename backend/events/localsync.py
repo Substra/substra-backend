@@ -113,7 +113,6 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     data = client.query_task(event["asset_key"])
     candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
     error_type = fetch_error_type_from_event(event, client)
-    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, error_type)
 
     status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
     category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
@@ -125,6 +124,9 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
         else:
             _sync_models(data["key"], client)
 
+    # Update computetask after synchronize performances and models,
+    # because when the status is done, the outputs should be available.
+    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, error_type)
     compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
     compute_plan.update_status()
 
