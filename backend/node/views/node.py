@@ -23,7 +23,7 @@ class NodeViewSet(mixins.ListModelMixin, GenericViewSet):
         except OrcError as rpc_error:
             return ApiResponse({"message": rpc_error.details}, status=rpc_error.http_status())
         except Exception as e:
-            logger.error("cannot list nodes", error=e)
+            logger.exception("cannot list nodes", e=e)
             return ApiResponse({"message": "Internal Server Error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         current_node_id = get_owner()

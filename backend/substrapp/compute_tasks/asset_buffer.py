@@ -72,7 +72,7 @@ def clear_assets_buffer() -> None:
                     shutil.rmtree(file_path)
             except (OSError, shutil.Error) as e:
                 # Intentionally don't raise. Keep on deleting from asset buffer.
-                logger.error("failed to delete asset from Asset Buffer", asset=file_path, error=e)
+                logger.exception("failed to delete asset from Asset Buffer", asset=file_path, e=e)
 
 
 def add_to_buffer_safe(add_function) -> Callable:

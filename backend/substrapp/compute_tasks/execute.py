@@ -107,7 +107,7 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
         _exec(k8s_client, ctx, compute_pod, exec_command)
 
     except (PodError, PodTimeoutError) as e:
-        logger.error(e)
+        logger.exception("failed to execute task", e=e)
         raise
 
     except PodReadinessTimeoutError as e:

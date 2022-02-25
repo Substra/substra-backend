@@ -200,7 +200,7 @@ def resync():
             localsync.resync()
         except Exception as e:
             time.sleep(30)
-            logger.error("Retry connecting to orchestrator GRPC api", error=e)
+            logger.exception("Retry connecting to orchestrator GRPC api", e=e)
         else:
             break
 
@@ -220,4 +220,4 @@ class EventsConfig(AppConfig):
                 consume()
             except Exception as e:
                 time.sleep(5)
-                logger.error("Retry consume messages from the orchestrator RabbitMQ queue", error=e)
+                logger.exception("Retry consume messages from the orchestrator RabbitMQ queue", e=e)

@@ -165,7 +165,7 @@ class DataSampleViewSet(mixins.CreateModelMixin, GenericViewSet):
                 try:
                     archive = _get_archive(f)
                 except Exception as e:
-                    logger.error(e)
+                    logger.exception("failed to get archive", e=e)
                     raise e
                 else:
                     with tempfile.TemporaryDirectory() as tmp_path:
