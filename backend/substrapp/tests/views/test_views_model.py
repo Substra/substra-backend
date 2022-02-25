@@ -1,21 +1,24 @@
-import copy
 import logging
 import os
 import shutil
 import tempfile
+from operator import itemgetter
 from unittest import mock
 
 from django.contrib.auth.models import User
 from django.test import override_settings
 from django.urls import reverse
-from grpc import StatusCode
+from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
 from rest_framework.test import APITestCase
 
-import orchestrator.error
+from localrep.models import Model as ModelRep
+from localrep.serializers import AlgoSerializer as AlgoRepSerializer
+from localrep.serializers import ComputePlanSerializer as ComputePlanRepSerializer
+from localrep.serializers import ComputeTaskSerializer as ComputeTaskRepSerializer
+from localrep.serializers import DataManagerSerializer as DataManagerRepSerializer
 from node.authentication import NodeUser
-from orchestrator.client import OrchestratorClient
 from substrapp.views.model import ModelPermissionViewSet
 from substrapp.views.utils import AssetPermissionError
 
@@ -23,6 +26,8 @@ from .. import assets
 from ..common import AuthenticatedClient
 from ..common import get_sample_model
 from ..common import internal_server_error_on_exception
+from .test_views_computetask import clean_input_data
+from .test_views_computetask import create_output_assets
 
 CHANNEL = "mychannel"
 TEST_ORG = "MyTestOrg"
@@ -42,91 +47,169 @@ class ModelViewTests(APITestCase):
         if not os.path.exists(MEDIA_ROOT):
             os.makedirs(MEDIA_ROOT)
         self.model, self.model_filename = get_sample_model()
-
         self.extra = {"HTTP_SUBSTRA_CHANNEL_NAME": CHANNEL, "HTTP_ACCEPT": "application/json;version=0.0"}
-
         self.logger = logging.getLogger("django.request")
         self.previous_level = self.logger.getEffectiveLevel()
         self.logger.setLevel(logging.ERROR)
-
-        self.maxDiff = None
-
         self.url = reverse("substrapp:model-list")
+
+        self.algos = assets.get_algos()
+        for algo in self.algos:
+            serializer = AlgoRepSerializer(data={"channel": "mychannel", **algo})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.data_managers = assets.get_data_managers()
+        for data_manager in self.data_managers:
+            serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.compute_plans = assets.get_compute_plans()
+        for compute_plan in self.compute_plans:
+            serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+        self.compute_tasks = assets.get_train_tasks()
+        self.models = []
+        for compute_task in self.compute_tasks:
+            cleaned_compute_task = clean_input_data(compute_task)
+            serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+            if compute_task["status"] == "STATUS_DONE":
+                create_output_assets(compute_task)
+                self.models += compute_task["train"]["models"]
+        self.models.sort(key=itemgetter("creation_date", "key"))
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
         self.logger.setLevel(self.previous_level)
 
     def test_model_list_empty(self):
-        with mock.patch.object(OrchestratorClient, "query_models", return_value=[]):
-            response = self.client.get(self.url, **self.extra)
-            r = response.json()
-            self.assertEqual(r, {"count": 0, "next": None, "previous": None, "results": []})
+        ModelRep.objects.all().delete()
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
-    def test_model_list_filter_fail(self):
-        models = assets.get_models()
-        with mock.patch.object(OrchestratorClient, "query_models", return_value=models):
-            search_params = "?search=modeERRORl"
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-            self.assertIn("Malformed search filters", r["message"])
+    def test_model_list_success(self):
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(
+            response.json(), {"count": len(self.models), "next": None, "previous": None, "results": self.models}
+        )
 
-    def test_model_list_filter_key(self):
-        models = assets.get_models()
-        o_models = copy.deepcopy(models)
-        with mock.patch.object(OrchestratorClient, "query_models", return_value=o_models):
-            key = models[1]["key"]
-            search_params = f"?search=model%253Akey%253A{key}"
-            response = self.client.get(self.url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(len(r["results"]), 1)
+    def test_model_list_wrong_channel(self):
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(self.url, **extra)
+        self.assertEqual(response.json(), {"count": 0, "next": None, "previous": None, "results": []})
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.model.get_channel_name", side_effect=Exception("Unexpected error"))
-    def test_model_list_fail_internal_server_error(self, get_channel_name: mock.Mock):
-        response = self.client.get(self.url)
-
+    @mock.patch("substrapp.views.model.ModelViewSet.list", side_effect=Exception("Unexpected error"))
+    def test_model_list_fail(self, _):
+        response = self.client.get(self.url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        get_channel_name.assert_called_once()
+
+    def test_model_list_storage_addresses_update(self):
+        for model in ModelRep.objects.all():
+            model.model_address.replace("http://testserver", "http://remotetestserver")
+            model.save()
+
+        response = self.client.get(self.url, **self.extra)
+        self.assertEqual(response.data["count"], len(self.models))
+        for result, model in zip(response.data["results"], self.models):
+            self.assertEqual(result["address"]["storage_address"], model["address"]["storage_address"])
+
+    def test_model_list_filter(self):
+        """Filter model on key."""
+        key = self.models[0]["key"]
+        params = urlencode({"search": f"model:key:{key}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.models[:1]})
+
+    def test_model_list_filter_and(self):
+        """Filter model on key and owner."""
+        key, owner = self.models[0]["key"], self.models[0]["owner"]
+        params = urlencode({"search": f"model:key:{key},model:owner:{owner}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.models[:1]})
+
+    def test_model_list_filter_or(self):
+        """Filter model on key_0 or key_1."""
+        key_0 = self.models[0]["key"]
+        key_1 = self.models[1]["key"]
+        params = urlencode({"search": f"model:key:{key_0}-OR-model:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.models[:2]})
+
+    def test_model_list_filter_or_and(self):
+        """Filter model on (key_0 and owner_0) or (key_1 and owner_1)."""
+        key_0, owner_0 = self.models[0]["key"], self.models[0]["owner"]
+        key_1, owner_1 = self.models[1]["key"], self.models[1]["owner"]
+        params = urlencode(
+            {"search": f"model:key:{key_0},model:owner:{owner_0}-OR-model:key:{key_1},model:owner:{owner_1}"}
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.models[:2]})
+
+    @parameterized.expand(
+        [
+            ("MODEL_UNKNOWN",),
+            ("MODEL_SIMPLE",),
+            ("MODEL_HEAD",),
+        ]
+    )
+    def test_model_list_filter_by_category(self, category):
+        """Filter model on category."""
+        filtered_models = [task for task in self.models if task["category"] == category]
+        params = urlencode({"search": f"model:category:{category}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(),
+            {"count": len(filtered_models), "next": None, "previous": None, "results": filtered_models},
+        )
+
+    @parameterized.expand(
+        [
+            ("page_size_5_page_1", 5, 1),
+            ("page_size_1_page_2", 1, 2),
+            ("page_size_2_page_3", 2, 3),
+        ]
+    )
+    def test_model_list_pagination_success(self, _, page_size, page):
+        params = urlencode({"page_size": page_size, "page": page})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        r = response.json()
+        self.assertEqual(r["count"], len(self.models))
+        offset = (page - 1) * page_size
+        self.assertEqual(r["results"], self.models[offset : offset + page_size])
 
     def test_model_retrieve(self):
-        model = assets.get_model()
-        expected = copy.deepcopy(model)
-        with mock.patch.object(OrchestratorClient, "query_model", return_value=model):
-            url = reverse("substrapp:model-list")
-            search_params = model["key"] + "/"
-            response = self.client.get(url + search_params, **self.extra)
-            r = response.json()
-            self.assertEqual(r, expected)
+        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.json(), self.models[0])
 
-    def test_model_retrieve_fail(self):
-        # Key < 32 chars
-        search_params = "12312323/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_model_retrieve_wrong_channel(self):
+        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        extra = {"HTTP_SUBSTRA_CHANNEL_NAME": "yourchannel", "HTTP_ACCEPT": "application/json;version=0.0"}
+        response = self.client.get(url, **extra)
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
-        # Key not hexa
-        search_params = "X" * 32 + "/"
-        response = self.client.get(self.url + search_params, **self.extra)
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+    def test_model_retrieve_storage_addresses_update(self):
+        model = ModelRep.objects.get(key=self.models[0]["key"])
+        model.model_address.replace("http://testserver", "http://remotetestserver")
+        model.save()
 
-        error = orchestrator.error.OrcError
-        error.details = "out of range test"
-        error.code = StatusCode.OUT_OF_RANGE
-
-        metric = assets.get_metric()
-
-        with mock.patch.object(OrchestratorClient, "query_model", side_effect=error):
-            response = self.client.get(f'{self.url}{metric["key"]}/', **self.extra)
-            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        response = self.client.get(url, **self.extra)
+        self.assertEqual(response.data["address"]["storage_address"], self.models[0]["address"]["storage_address"])
 
     @internal_server_error_on_exception()
-    @mock.patch("substrapp.views.model.ModelViewSet._retrieve", side_effect=Exception("Unexpected error"))
-    def test_model_retrieve_fail_internal_server_error(self, _retrieve: mock.Mock):
-        response = self.client.get(self.url + "123/")
-
+    @mock.patch("substrapp.views.model.ModelViewSet.retrieve", side_effect=Exception("Unexpected error"))
+    def test_model_retrieve_fail(self, _):
+        url = reverse("substrapp:model-detail", args=[self.models[0]["key"]])
+        response = self.client.get(url, **self.extra)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        _retrieve.assert_called_once()
 
     def test_model_download_by_node_for_worker(self):
         """ "Simple node-to-node download, e.g. worker downloads in-model"""
@@ -237,24 +320,3 @@ class ModelViewTests(APITestCase):
                 {"key": MODEL_KEY, "permissions": {"process": {"public": True}}},
                 is_proxied_request=False,
             )
-
-    @parameterized.expand(
-        [
-            ("one_page_test", 4, 1, 0, 4),
-            ("one_element_per_page_page_two", 1, 2, 1, 2),
-            ("two_element_per_page_page_two", 2, 2, 2, 4),
-        ]
-    )
-    def test_model_list_pagination_success(self, _, page_size, page_number, index_down, index_up):
-        models = assets.get_models()
-        o_models = copy.deepcopy(models)
-        url = reverse("substrapp:model-list")
-        url = f"{url}?page_size={page_size}&page={page_number}"
-        with mock.patch.object(OrchestratorClient, "query_models", return_value=o_models):
-            response = self.client.get(url, **self.extra)
-        r = response.json()
-        self.assertContains(response, "count", 1)
-        self.assertContains(response, "next", 1)
-        self.assertContains(response, "previous", 1)
-        self.assertContains(response, "results", 1)
-        self.assertEqual(r["results"], models[index_down:index_up])

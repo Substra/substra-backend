@@ -36,6 +36,59 @@ from ..common import internal_server_error_on_exception
 MEDIA_ROOT = tempfile.mkdtemp()
 
 
+def clean_input_data(compute_task):
+    # Missing field from test data
+    compute_task["logs_permission"] = {
+        "public": True,
+        "authorized_ids": [compute_task["owner"]],
+    }
+
+    # Remove unexpected fields from test data (only for expand relationships)
+    field = compute_task["category"].removeprefix("TASK_").lower()
+    del compute_task["parent_tasks"]  # only for expand relationships
+    del compute_task[field]["data_manager"]  # only for expand relationships
+    if compute_task["category"] == "TASK_TEST":
+        del compute_task["test"]["metrics"]  # only for expand relationships
+        if compute_task["status"] != "STATUS_DONE":
+            del compute_task["test"]["perfs"]
+    else:
+        if compute_task["status"] != "STATUS_DONE":
+            del compute_task[field]["models"]
+
+    data = {**compute_task}
+    if data["error_type"] is None:
+        del data["error_type"]
+    else:
+        data["error_type"] = failure_report_pb2.ErrorType.Name(getattr(ComputeTaskErrorType, data["error_type"]).value)
+    return data
+
+
+def create_output_assets(compute_task):
+    """Create models or performances."""
+    if compute_task["category"] == "TASK_TEST":
+        for metric_key, perf_value in compute_task["test"]["perfs"].items():
+            PerformanceRep.objects.create(
+                compute_task_id=compute_task["key"],
+                metric_id=metric_key,
+                value=perf_value,
+                creation_date=datetime.now(),
+                channel="mychannel",
+            )
+    else:
+        field = compute_task["category"].removeprefix("TASK_").lower()
+        for model in compute_task[field]["models"]:
+            # stale test data
+            if model["address"] is None:
+                model["key"] == uuid4()
+                model["address"] = {
+                    "checksum": "dummy-checksum",
+                    "storage_address": f"http://testserver/model/{model['key']}/file/",
+                }
+            serializer = ModelRepSerializer(data={"channel": "mychannel", **model})
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+
+
 class ComputeTaskViewTests(APITestCase):
     client_class = AuthenticatedClient
 
@@ -82,66 +135,13 @@ class ComputeTaskViewTests(APITestCase):
         self.test_tasks = assets.get_test_tasks()
         self.composite_tasks = assets.get_composite_tasks()
         for compute_task in self.train_tasks + self.test_tasks + self.composite_tasks:
-            cleaned_compute_task = self.clean_input_data(compute_task)
+            cleaned_compute_task = clean_input_data(compute_task)
             serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
             serializer.is_valid(raise_exception=True)
             serializer.save()
 
             if compute_task["status"] == "STATUS_DONE":
-                self.create_output_assets(compute_task)
-
-    def clean_input_data(self, compute_task):
-        # Missing field from test data
-        compute_task["logs_permission"] = {
-            "public": True,
-            "authorized_ids": [compute_task["owner"]],
-        }
-
-        # Remove unexpected fields from test data (only for expand relationships)
-        field = compute_task["category"].removeprefix("TASK_").lower()
-        del compute_task["parent_tasks"]  # only for expand relationships
-        del compute_task[field]["data_manager"]  # only for expand relationships
-        if compute_task["category"] == "TASK_TEST":
-            del compute_task["test"]["metrics"]  # only for expand relationships
-            if compute_task["status"] != "STATUS_DONE":
-                del compute_task["test"]["perfs"]
-        else:
-            if compute_task["status"] != "STATUS_DONE":
-                del compute_task[field]["models"]
-
-        data = {**compute_task}
-        if data["error_type"] is None:
-            del data["error_type"]
-        else:
-            data["error_type"] = failure_report_pb2.ErrorType.Name(
-                getattr(ComputeTaskErrorType, data["error_type"]).value
-            )
-        return data
-
-    def create_output_assets(self, compute_task):
-        """Create models or performances."""
-        if compute_task["category"] == "TASK_TEST":
-            for metric_key, perf_value in compute_task["test"]["perfs"].items():
-                PerformanceRep.objects.create(
-                    compute_task_id=compute_task["key"],
-                    metric_id=metric_key,
-                    value=perf_value,
-                    creation_date=datetime.now(),
-                    channel="mychannel",
-                )
-        else:
-            field = compute_task["category"].removeprefix("TASK_").lower()
-            for model in compute_task[field]["models"]:
-                # stale test data
-                if model["address"] is None:
-                    model["key"] == uuid4()
-                    model["address"] = {
-                        "checksum": "dummy-checksum",
-                        "storage_address": f"http://testserver/model/{model['key']}/file/",
-                    }
-                serializer = ModelRepSerializer(data={"channel": "mychannel", **model})
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
+                create_output_assets(compute_task)
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

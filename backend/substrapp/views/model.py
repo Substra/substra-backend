@@ -6,15 +6,17 @@ from django.urls.base import reverse
 from django.views.decorators import gzip
 from rest_framework import status
 from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound
 from rest_framework.viewsets import GenericViewSet
 
+import orchestrator.model_pb2 as model_pb2
 from libs.pagination import DefaultPageNumberPagination
-from libs.pagination import PaginationMixin
+from localrep.models import Model as ModelRep
+from localrep.serializers import ModelSerializer as ModelRepSerializer
 from node.authentication import NodeUser
 from substrapp.clients import node as node_client
 from substrapp.models import Model
-from substrapp.orchestrator import get_orchestrator_client
-from substrapp.views.filters_utils import filter_list
+from substrapp.views.filters_utils import filter_queryset
 from substrapp.views.utils import ApiResponse
 from substrapp.views.utils import AssetPermissionError
 from substrapp.views.utils import PermissionMixin
@@ -34,7 +36,7 @@ def replace_storage_addresses(request, model):
         )
 
 
-class ModelViewSet(PaginationMixin, GenericViewSet):
+class ModelViewSet(GenericViewSet):
     queryset = Model.objects.all()
     pagination_class = DefaultPageNumberPagination
 
@@ -58,8 +60,11 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
     def _retrieve(self, request, key):
         validated_key = validate_key(key)
 
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_model(validated_key)
+        try:
+            model = ModelRep.objects.filter(channel=get_channel_name(request)).get(key=validated_key)
+        except ModelRep.DoesNotExist:
+            raise NotFound
+        data = ModelRepSerializer(model).data
 
         replace_storage_addresses(request, data)
 
@@ -73,21 +78,24 @@ class ModelViewSet(PaginationMixin, GenericViewSet):
         return ApiResponse(data, status=status.HTTP_200_OK)
 
     def list(self, request, *args, **kwargs):
-        with get_orchestrator_client(get_channel_name(request)) as client:
-            data = client.query_models()
+        queryset = ModelRep.objects.filter(channel=get_channel_name(request)).order_by("creation_date", "key")
 
         query_params = request.query_params.get("search")
         if query_params is not None:
-            data = filter_list(
-                object_type="model",
-                data=data,
-                query_params=query_params,
-            )
 
+            def map_category(key, values):
+                if key == "category":
+                    values = [model_pb2.ModelCategory.Value(value) for value in values]
+                return key, values
+
+            queryset = filter_queryset("model", queryset, query_params, mapping_callback=map_category)
+        queryset = self.paginate_queryset(queryset)
+
+        data = ModelRepSerializer(queryset, many=True).data
         for model in data:
             replace_storage_addresses(request, model)
 
-        return self.paginate_response(data)
+        return self.get_paginated_response(data)
 
 
 class ModelPermissionViewSet(PermissionMixin, GenericViewSet):
