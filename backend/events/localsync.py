@@ -371,7 +371,6 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import add_cp_dates_and_duration
-    from localrep.models.computeplan import ComputePlan
 
     logger.info("Resyncing computeplans")
 
@@ -390,8 +389,6 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
         else:
             logger.debug("Skipped computeplan", asset_key=data["key"])
             nb_skipped_assets += 1
-        compute_plan = ComputePlan.objects.get(key=data["key"])
-        compute_plan.update_status()
     logger.info("Done resync computeplans", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
 
 
@@ -441,6 +438,7 @@ def _sync_models(compute_task_key: str, client: orc_client.OrchestratorClient) -
 def resync_computetasks(client: orc_client.OrchestratorClient):
     from events.dynamic_fields import fetch_error_type_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
+    from localrep.models.computeplan import ComputePlan
 
     logger.info("Resyncing computetasks")
     computetasks = client.query_tasks()  # TODO: Add filter on last_modification_date
@@ -480,6 +478,9 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
                 _sync_performances(data["key"], client)
             else:
                 _sync_models(data["key"], client)
+
+    for compute_plan in ComputePlan.objects.all():
+        compute_plan.update_status()
 
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
 
