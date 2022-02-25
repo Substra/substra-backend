@@ -1,10 +1,6 @@
-import os
-
 from ..deps.ledger import *
 from ..deps.orchestrator import *
 from ..dev import *
-
-ORCHESTRATOR_RABBITMQ_ACTIVITY_TIMEOUT = int(os.getenv("ORCHESTRATOR_RABBITMQ_ACTIVITY_TIMEOUT", 1800))
 
 INSTALLED_APPS = [
     "django.contrib.auth",

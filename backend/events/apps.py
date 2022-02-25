@@ -1,11 +1,9 @@
-import asyncio
-import contextlib
-import functools
 import json
 import ssl
 import time
+from contextlib import closing
 
-import aio_pika
+import pika
 import structlog
 from django.apps import AppConfig
 from django.conf import settings
@@ -22,16 +20,6 @@ from substrapp.utils import get_owner
 ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT = 30
 
 logger = structlog.get_logger("events")
-
-
-@contextlib.contextmanager
-def get_event_loop():
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        yield loop
-    finally:
-        loop.close()
 
 
 def on_computetask_event(payload):
@@ -137,99 +125,84 @@ def on_message_compute_engine(payload):
         logger.debug("Nothing to do", asset_kind=payload["asset_kind"])
 
 
-async def on_message(event: asyncio.Event, message: aio_pika.IncomingMessage):
-    async with message.process(requeue=True):
-        try:
-            payload = json.loads(message.body)
-            logger.debug("Received payload", payload=payload)
-            event.set()  # for watch_message_activity
-            with get_orchestrator_client(payload["channel"]) as client:
-                localsync.sync_on_event_message(payload, client)
-            on_message_compute_engine(payload)
-        except Exception as e:
-            logger.exception("Error processing message", e=e)
-            raise
-        finally:
-            # Django does not automatically close the DB connection when the async process ends
-            close_old_connections()
+def on_message(channel, method_frame, header_frame, body):
+    try:
+        payload = json.loads(body.decode())
+        logger.debug("Received payload", payload=payload)
+        with get_orchestrator_client(payload["channel"]) as client:
+            localsync.sync_on_event_message(payload, client)
+        on_message_compute_engine(payload)
+    except Exception as e:
+        logger.exception("Error processing message", e=e)
+        # we choose to requeue the message on error
+        channel.basic_reject(delivery_tag=method_frame.delivery_tag, requeue=True)
+        raise
+    else:
+        channel.basic_ack(delivery_tag=method_frame.delivery_tag)
+    finally:
+        # we are not sure that, in a django context, all db connection are closed automatically
+        # when the function ends
+        close_old_connections()
 
 
-async def watch_message_activity(event: asyncio.Event):
-    timeout = settings.ORCHESTRATOR_RABBITMQ_ACTIVITY_TIMEOUT
-    while True:
-        try:
-            # wait for event to be set by on_message
-            await asyncio.wait_for(event.wait(), timeout)
-        except asyncio.TimeoutError:
-            logger.warning("No message received from orchestrator RabbitMQ queue after timeout", timeout=timeout)
-            # Not receiving event means we have a connection issue or the platform is in standby.
-            # Either way, we raise to trigger a reconnection.
-            raise
-
-        else:
-            event.clear()
-
-
-async def consume(loop, event: asyncio.Event):
-    # Queues are defined by the orchestrator
-    queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
-
-    log = logger.bind(
-        queue=queue_name,
+def get_rabbitmq_connection():
+    credentials = pika.credentials.PlainCredentials(
+        username=settings.ORCHESTRATOR_RABBITMQ_AUTH_USER, password=settings.ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD
     )
 
     ssl_options = None
     if settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED:
-        ssl_options = {
-            "ca_certs": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH,
-            "certfile": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH,
-            "keyfile": settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH,
-            "cert_reqs": ssl.CERT_REQUIRED,
-        }
+        context = ssl.SSLContext(ssl.PROTOCOL_TLSv1_2)
+        context.load_verify_locations(settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CACERT_PATH)
+        context.verify_mode = ssl.CERT_REQUIRED
+        context.load_cert_chain(
+            settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_CERT_PATH,
+            settings.ORCHESTRATOR_RABBITMQ_TLS_CLIENT_KEY_PATH,
+        )
+        ssl_options = pika.SSLOptions(context, settings.ORCHESTRATOR_RABBITMQ_HOST)
+
+    return pika.BlockingConnection(
+        pika.ConnectionParameters(
+            host=settings.ORCHESTRATOR_RABBITMQ_HOST,
+            port=settings.ORCHESTRATOR_RABBITMQ_PORT,
+            credentials=credentials,
+            ssl_options=ssl_options,
+            blocked_connection_timeout=ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT,
+            heartbeat=60,
+        )
+    )
+
+
+def consume():
+
+    # Queues are defined by the orchestrator and are named according user login
+    queue_name = settings.ORCHESTRATOR_RABBITMQ_AUTH_USER
+
+    log = logger.bind(queue=queue_name)
 
     log.info("Attempting to connect to orchestrator RabbitMQ")
 
-    connection = await aio_pika.connect_robust(
-        host=settings.ORCHESTRATOR_RABBITMQ_HOST,
-        port=settings.ORCHESTRATOR_RABBITMQ_PORT,
-        login=settings.ORCHESTRATOR_RABBITMQ_AUTH_USER,
-        password=settings.ORCHESTRATOR_RABBITMQ_AUTH_PASSWORD,
-        ssl=settings.ORCHESTRATOR_RABBITMQ_TLS_ENABLED,
-        ssl_options=ssl_options,
-        loop=loop,
-        timeout=ORCHESTRATOR_RABBITMQ_CONNECTION_TIMEOUT,
-    )
-
-    log.info("Connected to orchestrator RabbitMQ")
-
-    # Creating channel
-    channel = await connection.channel()  # type: aio_pika.Channel
-
-    # Declaring queue
-    queue = await channel.get_queue(queue_name, ensure=True)  # type: aio_pika.Queue
-
-    on_message_timeout = functools.partial(on_message, event)
-    await queue.consume(on_message_timeout)
-
-    return connection
+    # It's not necessary to disconnect the channel as connection close will do it for us
+    # close will be called by the closing contextlib function
+    # https://pika.readthedocs.io/en/stable/modules/connection.html#pika.connection.Connection.close
+    with closing(get_rabbitmq_connection()) as connection:
+        log.info("Connected to orchestrator RabbitMQ")
+        channel = connection.channel()  # Creating channel
+        channel.queue_declare(queue=queue_name, passive=True)  # Declaring queue
+        channel.basic_consume(queue=queue_name, on_message_callback=on_message, auto_ack=False)
+        log.info("Starting to consume messages from orchestrator RabbitMQ")
+        channel.start_consuming()
 
 
-def consume_messages():
-    with get_event_loop() as loop:
-        on_received_message_event = asyncio.Event()
-        # Run: consume orchestrator new events
-        while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
-            try:
-                connection = loop.run_until_complete(consume(loop, on_received_message_event))
-            except Exception as e:
-                time.sleep(5)
-                logger.error("Retry connecting to orchestrator RabbitMQ queue", error=e)
-            else:
-                break
+def resync():
+    while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
         try:
-            loop.run_until_complete(watch_message_activity(on_received_message_event))
-        finally:
-            loop.run_until_complete(connection.close())
+            localsync.resync()
+        except Exception as e:
+            time.sleep(30)
+            logger.error("Retry connecting to orchestrator GRPC api", error=e)
+        else:
+            break
 
 
 class EventsConfig(AppConfig):
@@ -237,17 +210,14 @@ class EventsConfig(AppConfig):
     logger.info("starting event app")
 
     def ready(self):
+
         # Init: resync all orchestrator assets
-        while True:  # watchmedo intercepts exit signals and blocks k8s pods restart
-            try:
-                localsync.resync()
-            except Exception as e:
-                time.sleep(30)
-                logger.error("Retry connecting to orchestrator GRPC api", error=e)
-            else:
-                break
+        resync()
+
+        # Consume rabbitmq messages infinitely
         while True:
             try:
-                consume_messages()
-            except asyncio.TimeoutError as e:
-                logger.error("Restart event app", error=e)
+                consume()
+            except Exception as e:
+                time.sleep(5)
+                logger.error("Retry consume messages from the orchestrator RabbitMQ queue", error=e)

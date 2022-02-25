@@ -112,4 +112,3 @@ They can be set in the [chart](../charts/substra-backend/README) through the `co
 
 | Setting | Default value |
 | ---     | ---           |
-| `ORCHESTRATOR_RABBITMQ_ACTIVITY_TIMEOUT` | `1800` |
