@@ -1,4 +1,3 @@
-import itertools
 from urllib.parse import unquote
 
 import structlog
@@ -88,44 +87,6 @@ def get_filters(query_params):
                     filters[idx].update({parent: filter})
 
     return filters
-
-
-def flatten_without_duplicates(list_of_list):
-    res = []
-    for item in itertools.chain.from_iterable(list_of_list):
-        if item not in res:
-            res.append(item)
-    return res
-
-
-def filter_list(object_type, data, query_params):
-    """
-    Filter django model instances by user request search param.
-    """
-    try:
-        filters = get_filters(query_params)
-    except Exception:
-        raise exceptions.BadRequestError(f"Malformed search filters: invalid syntax: {query_params}")
-
-    object_list = []
-
-    for user_filter in filters:
-        for filter_key, subfilters in user_filter.items():
-            if not filter_key == object_type:
-                raise exceptions.BadRequestError(
-                    f"Malformed search filters: the filter {filter_key} should"
-                    f"be the same as the object type {object_type}"
-                )
-
-            # Will be appended in object_list after being filtered
-            filtered_list = data
-            # Filter by own asset
-            for attribute, val in subfilters.items():
-                filtered_list = [x for x in filtered_list if x.get(attribute) in val]
-
-            object_list.append(filtered_list)
-
-    return flatten_without_duplicates(object_list)
 
 
 def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
