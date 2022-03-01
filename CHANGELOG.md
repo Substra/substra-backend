@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0] 2022-03-01
+
 ### Added
 - Clear the asset buffer When the disk is full (#472)
 - Add API endpoint to serve failed compute task logs (#579)
