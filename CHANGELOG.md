@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Store computetasks logs address and owner in localrep (#801)
+- Optimize computetask list queryset (#810)
 
 ## [0.9.0] 2022-03-01
 

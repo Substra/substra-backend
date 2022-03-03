@@ -49,11 +49,6 @@ def clean_input_data(compute_task):
     del compute_task[field]["data_manager"]  # only for expand relationships
     if compute_task["category"] == "TASK_TEST":
         del compute_task["test"]["metrics"]  # only for expand relationships
-        if compute_task["status"] != "STATUS_DONE":
-            del compute_task["test"]["perfs"]
-    else:
-        if compute_task["status"] != "STATUS_DONE":
-            del compute_task[field]["models"]
 
     data = {**compute_task}
     if data["error_type"] is None:

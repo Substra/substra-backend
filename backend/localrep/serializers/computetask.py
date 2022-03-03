@@ -9,7 +9,9 @@ from localrep.models import ComputePlan
 from localrep.models import ComputeTask
 from localrep.models import DataManager
 from localrep.models import Metric
-from localrep.serializers import AlgoSerializer
+from localrep.serializers.algo import AlgoSerializer
+from localrep.serializers.model import ModelSerializer
+from localrep.serializers.performance import PerformanceSerializer
 from localrep.serializers.utils import SafeSerializerMixin
 from localrep.serializers.utils import get_channel_choices
 from localrep.serializers.utils import make_addressable_serializer
@@ -57,6 +59,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     logs_address = make_addressable_serializer("logs")(source="*", required=False)
 
     algo = AlgoField()
+    models = ModelSerializer(many=True, read_only=True)
+    perfs = PerformanceSerializer(many=True, read_only=True, source="performances")
 
     # Need to set `pk_field` for `PrimaryKeyRelatedField` in order to correctly serialize `UUID` to `str`
     # See: https://stackoverflow.com/a/51636009
@@ -86,6 +90,17 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     head_permissions = make_download_process_permission_serializer("head_")(source="*", required=False)
     trunk_permissions = make_download_process_permission_serializer("trunk_")(source="*", required=False)
 
+    def __init__(self, *args, **kwargs):
+        # FIXME: quick optimization to avoid useless DB queries, to replace by category based serializers
+        category = kwargs.pop("category", None)
+        super().__init__(*args, **kwargs)
+        if category is not None:
+            if category == "testtuple":
+                self.fields.pop("models")
+            else:
+                self.fields.pop("perfs")
+                self.fields.pop("metric_keys")
+
     def to_internal_value(self, data):
         prepared_data = copy.deepcopy(data)
         task_category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
@@ -114,30 +129,42 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
                 "data_manager_key": data["data_manager_key"],
                 "data_sample_keys": data["data_sample_keys"],
                 "model_permissions": data["model_permissions"],
+                "models": data["models"] or None,  # sdk does not support empty list
             }
         elif instance.category == computetask_pb2.TASK_TEST:
             data["test"] = {
                 "data_manager_key": data["data_manager_key"],
                 "data_sample_keys": data["data_sample_keys"],
                 "metric_keys": data["metric_keys"],
+                "perfs": {perf["metric_key"]: perf["performance_value"] for perf in data["perfs"]} or None,
             }
         elif instance.category == computetask_pb2.TASK_AGGREGATE:
-            data["aggregate"] = {"model_permissions": data["model_permissions"]}
+            data["aggregate"] = {
+                "model_permissions": data["model_permissions"],
+                "models": data["models"] or None,
+            }
         elif instance.category == computetask_pb2.TASK_COMPOSITE:
             data["composite"] = {
                 "data_manager_key": data["data_manager_key"],
                 "data_sample_keys": data["data_sample_keys"],
                 "head_permissions": data["head_permissions"],
                 "trunk_permissions": data["trunk_permissions"],
+                "models": data["models"] or None,
             }
         del data["data_manager_key"]
         del data["data_sample_keys"]
-        del data["metric_keys"]
         del data["model_permissions"]
         del data["head_permissions"]
         del data["trunk_permissions"]
         del data["logs_address"]
         del data["logs_owner"]
+        # fields could be removed at init
+        if "models" in data:
+            del data["models"]
+        if "perfs" in data:
+            del data["perfs"]
+        if "metric_keys" in data:
+            del data["metric_keys"]
 
         return data
 
@@ -161,8 +188,10 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "metadata",
             "metric_keys",
             "model_permissions",
+            "models",
             "owner",
             "parent_task_keys",
+            "perfs",
             "rank",
             "start_date",
             "status",

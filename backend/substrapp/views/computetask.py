@@ -79,10 +79,18 @@ def replace_storage_addresses(request, task):
 class ComputeTaskListMixin:
     def list(self, request, compute_plan_pk=None):
         category = self.basename.removeprefix(CP_BASENAME_PREFIX)
-        queryset = ComputeTaskRep.objects.filter(
-            channel=get_channel_name(request),
-            category=TASK_CATEGORY[category],
-        ).order_by("creation_date", "key")
+        queryset = (
+            ComputeTaskRep.objects.filter(
+                channel=get_channel_name(request),
+                category=TASK_CATEGORY[category],
+            )
+            .order_by("creation_date", "key")
+            .select_related("algo")
+        )
+        if category == "testtuple":
+            queryset = queryset.prefetch_related("performances", "metrics")
+        else:
+            queryset = queryset.prefetch_related("models")
 
         if compute_plan_pk is not None:
             validated_key = validate_key(compute_plan_pk)
@@ -95,13 +103,13 @@ class ComputeTaskListMixin:
                 if key == "status":
                     values = [computetask_pb2.ComputeTaskStatus.Value(value) for value in values]
                 elif key == "compute_plan_key":
-                    key = "compute_plan__key"
+                    key = "compute_plan_id"
                 return key, values
 
             queryset = filter_queryset(category, queryset, query_params, mapping_callback=map_status_and_cp_key)
         queryset = self.paginate_queryset(queryset)
 
-        data = ComputeTaskRepSerializer(queryset, many=True).data
+        data = ComputeTaskRepSerializer(queryset, many=True, category=category).data
         for datum in data:
             datum = add_task_extra_information(category, datum, get_channel_name(request))
             replace_storage_addresses(request, datum)
