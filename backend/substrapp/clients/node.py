@@ -61,7 +61,7 @@ def http_get(
             timeout=settings.HTTP_CLIENT_TIMEOUT_SECONDS,
         )
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout) as e:
-        logger.error("Get asset failure", url=url, status=response.status_code, text=response.text)
+        logger.exception("Get asset failure", url=url, e=e)
         raise NodeError(f"Failed to fetch {url}") from e
 
     try:
