@@ -112,6 +112,14 @@ class MetricViewTests(APITestCase):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.metrics[:1]})
 
+    def test_metric_list_filter_in(self):
+        """Filter metric in key_0, key_1."""
+        key_0 = self.metrics[0]["key"]
+        key_1 = self.metrics[1]["key"]
+        params = urlencode({"search": f"metric:key:{key_0},metric:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.metrics[:2]})
+
     def test_metric_list_filter_or(self):
         """Filter metric on key_0 or key_1."""
         key_0 = self.metrics[0]["key"]

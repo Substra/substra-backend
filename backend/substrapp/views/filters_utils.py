@@ -20,6 +20,9 @@ FILTER_QUERIES = {
 def get_filters(query_params):
     """
     Transform user request search param in filters.
+        - Logical AND is represented by a comma `,`
+        - Logical OR is represented by `-OR-`
+        - But comma used for the same field is equivalent to `IN`
 
     >>> get_filters("algo:name:algo1")
     [
@@ -36,6 +39,15 @@ def get_filters(query_params):
             "algo": {
                 "name": "algo1",
                 "owner": "owner1",
+            },
+        },
+    ]
+
+    >>> get_filters("algo:name:algo1,algo:name:algo2")
+    [
+        {
+            "algo": {
+                "name": ["algo1", "algo2"],
             },
         },
     ]
@@ -99,6 +111,9 @@ def filter_queryset(object_type, queryset, query_params, mapping_callback=None):
 
     >>> filter_queryset("algo", Algo.objects, "algo:name:algo1,algo:owner:owner1")
     Algo.objects.filter(Q(name="algo1") & Q(owner="owner1"))
+
+    >>> filter_queryset("algo", Algo.objects, "algo:name:algo1,algo:name:algo2")
+    Algo.objects.filter(name__in=[algo1", "algo_2"])
 
     >>> filter_queryset("algo", Algo.objects, "algo:name:algo1-OR-algo:owner:owner1")
     Algo.objects.filter(Q(name="algo1") | Q(owner="owner1"))

@@ -128,6 +128,16 @@ class DataSampleViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_samples[:1]}
         )
 
+    def test_datasample_list_filter_in(self):
+        """Filter datasample in key_0, key_1."""
+        key_0 = self.data_samples[0]["key"]
+        key_1 = self.data_samples[1]["key"]
+        params = urlencode({"search": f"datasample:key:{key_0},datasample:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_samples[:2]}
+        )
+
     def test_datasample_list_filter_or(self):
         """Filter datasample on key_0 or key_1."""
         key_0 = self.data_samples[0]["key"]

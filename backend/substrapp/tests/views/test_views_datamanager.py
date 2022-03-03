@@ -115,6 +115,16 @@ class DataManagerViewTests(APITestCase):
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.data_managers[:1]}
         )
 
+    def test_datamanager_list_filter_in(self):
+        """Filter datamanager in key_0, key_1."""
+        key_0 = self.data_manager["key"]
+        key_1 = self.data_managers[1]["key"]
+        params = urlencode({"search": f"dataset:key:{key_0},dataset:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.data_managers[:2]}
+        )
+
     def test_datamanager_list_filter_or(self):
         """Filter datamanager on key_0 or key_1."""
         key_0 = self.data_manager["key"]

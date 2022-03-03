@@ -190,6 +190,14 @@ class TrainTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.train_tasks[:1]})
 
+    def test_traintask_list_filter_in(self):
+        """Filter traintask in key_0, key_1."""
+        key_0 = self.train_tasks[0]["key"]
+        key_1 = self.train_tasks[1]["key"]
+        params = urlencode({"search": f"traintuple:key:{key_0},traintuple:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.train_tasks[:2]})
+
     def test_traintask_list_filter_or(self):
         """Filter traintask on key_0 or key_1."""
         key_0 = self.train_tasks[0]["key"]
@@ -347,6 +355,14 @@ class TestTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(response.json(), {"count": 1, "next": None, "previous": None, "results": self.test_tasks[:1]})
 
+    def test_testtask_list_filter_in(self):
+        """Filter testtask in key_0, key_1."""
+        key_0 = self.test_tasks[0]["key"]
+        key_1 = self.test_tasks[1]["key"]
+        params = urlencode({"search": f"testtuple:key:{key_0},testtuple:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(response.json(), {"count": 2, "next": None, "previous": None, "results": self.test_tasks[:2]})
+
     def test_testtask_list_filter_or(self):
         """Filter testtask on key_0 or key_1."""
         key_0 = self.test_tasks[0]["key"]
@@ -497,6 +513,16 @@ class CompositeTaskViewTests(ComputeTaskViewTests):
         response = self.client.get(f"{self.url}?{params}", **self.extra)
         self.assertEqual(
             response.json(), {"count": 1, "next": None, "previous": None, "results": self.composite_tasks[:1]}
+        )
+
+    def test_compositetask_list_filter_in(self):
+        """Filter compositetask in key_0, key_1."""
+        key_0 = self.composite_tasks[0]["key"]
+        key_1 = self.composite_tasks[1]["key"]
+        params = urlencode({"search": f"composite_traintuple:key:{key_0},composite_traintuple:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.composite_tasks[:2]}
         )
 
     def test_compositetask_list_filter_or(self):
