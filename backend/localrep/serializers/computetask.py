@@ -12,6 +12,7 @@ from localrep.models import Metric
 from localrep.serializers import AlgoSerializer
 from localrep.serializers.utils import SafeSerializerMixin
 from localrep.serializers.utils import get_channel_choices
+from localrep.serializers.utils import make_addressable_serializer
 from localrep.serializers.utils import make_download_process_permission_serializer
 from localrep.serializers.utils import make_permission_serializer
 
@@ -53,6 +54,7 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     status = StatusField()
     error_type = ErrorTypeField(required=False)
     logs_permission = make_permission_serializer("logs_permission")(source="*")
+    logs_address = make_addressable_serializer("logs")(source="*", required=False)
 
     algo = AlgoField()
 
@@ -134,6 +136,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
         del data["model_permissions"]
         del data["head_permissions"]
         del data["trunk_permissions"]
+        del data["logs_address"]
+        del data["logs_owner"]
 
         return data
 
@@ -151,6 +155,8 @@ class ComputeTaskSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "error_type",
             "head_permissions",
             "key",
+            "logs_address",
+            "logs_owner",
             "logs_permission",
             "metadata",
             "metric_keys",

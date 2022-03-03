@@ -75,7 +75,7 @@ def _on_create_computetask_event(event: dict, client: orc_client.OrchestratorCli
 
 
 def _create_computetask(
-    channel: str, data: dict, start_date: str = None, end_date: str = None, error_type: str = None
+    channel: str, data: dict, start_date: str = None, end_date: str = None, failure_report: dict = None
 ) -> bool:
     from localrep.serializers import ComputeTaskSerializer
 
@@ -84,8 +84,12 @@ def _create_computetask(
         data["start_date"] = parse_datetime(start_date)
     if end_date is not None:
         data["end_date"] = parse_datetime(end_date)
-    if error_type is not None:
-        data["error_type"] = error_type
+    if failure_report is not None:
+        data["error_type"] = failure_report["error_type"]
+        if "logs_address" in failure_report:
+            data["logs_address"] = failure_report["logs_address"]
+        if "owner" in failure_report:
+            data["logs_owner"] = failure_report["owner"]
     # XXX: in case of localsync of MDY dumps, logs_permission won't be provided:
     #      the orchestrator and backend used to generate the dumps are both outdated.
     #      We provide a sensible default: logs are private.
@@ -104,7 +108,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     """Process update computetask event to update local database."""
 
     from events.dynamic_fields import add_cp_dates_and_duration
-    from events.dynamic_fields import fetch_error_type_from_event
+    from events.dynamic_fields import fetch_failure_report_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
 
@@ -112,7 +116,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
 
     data = client.query_task(event["asset_key"])
     candidate_start_date, candidate_end_date = parse_computetask_dates_from_event(event)
-    error_type = fetch_error_type_from_event(event, client)
+    failure_report = fetch_failure_report_from_event(event, client)
 
     status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
     category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
@@ -126,13 +130,13 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
 
     # Update computetask after synchronize performances and models,
     # because when the status is done, the outputs should be available.
-    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, error_type)
+    _update_computetask(data["key"], data["status"], candidate_start_date, candidate_end_date, failure_report)
     compute_plan = ComputePlan.objects.get(key=data["compute_plan_key"])
     compute_plan.update_status()
 
 
-def _update_computetask(key: str, status: str, start_date: str, end_date: str, error_type: str) -> None:
-    """Update only mutable fields: status, start_date, end_date, error_type"""
+def _update_computetask(key: str, status: str, start_date: str, end_date: str, failure_report: dict = None) -> None:
+    """Update only mutable fields: status, start_date, end_date, error_type, logs_address, logs_checksum, logs_owner"""
     from localrep.models import ComputeTask
 
     compute_task = ComputeTask.objects.get(key=key)
@@ -144,8 +148,13 @@ def _update_computetask(key: str, status: str, start_date: str, end_date: str, e
         compute_task.start_date = parse_datetime(start_date)
     if compute_task.end_date is None and end_date is not None:
         compute_task.end_date = parse_datetime(end_date)
-    if error_type is not None:
-        compute_task.error_type = failure_report_pb2.ErrorType.Value(error_type)
+    if failure_report is not None:
+        compute_task.error_type = failure_report_pb2.ErrorType.Value(failure_report["error_type"])
+        if "logs_address" in failure_report:
+            compute_task.logs_address = failure_report["logs_address"]["storage_address"]
+            compute_task.logs_checksum = failure_report["logs_address"]["checksum"]
+        if "owner" in failure_report:
+            compute_task.logs_owner = failure_report["owner"]
     compute_task.save()
 
 
@@ -436,7 +445,7 @@ def _sync_models(compute_task_key: str, client: orc_client.OrchestratorClient) -
 
 
 def resync_computetasks(client: orc_client.OrchestratorClient):
-    from events.dynamic_fields import fetch_error_type_from_event
+    from events.dynamic_fields import fetch_failure_report_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
 
@@ -446,7 +455,7 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
     nb_updated_assets = 0
 
     for data in computetasks:
-        start_date, end_date, error_type = None, None, None
+        start_date, end_date, failure_report = None, None, None
         events = client.query_events(
             asset_key=data["key"],
             asset_kind=common_pb2.ASSET_COMPUTE_TASK,
@@ -459,15 +468,15 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
                 start_date = candidate_start_date
             if end_date is None and candidate_end_date is not None:
                 end_date = candidate_end_date
-            if error_type is None:
-                error_type = fetch_error_type_from_event(event, client)
+            if failure_report is None:
+                failure_report = fetch_failure_report_from_event(event, client)
 
-        is_created = _create_computetask(client.channel_name, data, start_date, end_date, error_type)
+        is_created = _create_computetask(client.channel_name, data, start_date, end_date, failure_report)
         if is_created:
             logger.debug("Created new computetask", asset_key=data["key"])
             nb_new_assets += 1
         else:
-            _update_computetask(data["key"], data["status"], start_date, end_date, error_type)
+            _update_computetask(data["key"], data["status"], start_date, end_date, failure_report)
             logger.debug("Updated computetask", asset_key=data["key"])
             nb_updated_assets += 1
 

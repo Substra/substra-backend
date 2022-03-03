@@ -3,6 +3,7 @@ from django.db import models
 
 import orchestrator.computetask_pb2 as computetask_pb2
 import orchestrator.failure_report_pb2 as failure_report_pb2
+from localrep.models.utils import URLValidatorWithOptionalTLD
 from localrep.models.utils import get_enum_choices
 
 CATEGORY_CHOICES = get_enum_choices(computetask_pb2.ComputeTaskCategory)
@@ -30,6 +31,9 @@ class ComputeTask(models.Model):
     tag = models.CharField(max_length=100, null=True, blank=True)
     logs_permission_public = models.BooleanField()
     logs_permission_authorized_ids = ArrayField(models.CharField(max_length=1024), size=100)
+    logs_address = models.URLField(validators=[URLValidatorWithOptionalTLD()], null=True)
+    logs_checksum = models.CharField(max_length=64, null=True)
+    logs_owner = models.CharField(max_length=100, null=True)
     channel = models.CharField(max_length=100)
     metadata = models.JSONField()
 

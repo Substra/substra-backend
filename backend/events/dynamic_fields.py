@@ -24,14 +24,10 @@ def parse_computetask_dates_from_event(event: dict) -> tuple[Optional[str], Opti
     return start_date, end_date
 
 
-def fetch_error_type_from_event(event: dict, client: orc_client.OrchestratorClient) -> Optional[str]:
-    error_type = None
+def fetch_failure_report_from_event(event: dict, client: orc_client.OrchestratorClient) -> Optional[str]:
     status = computetask_pb2.ComputeTaskStatus.Value(event["metadata"]["status"])
     if status == computetask_pb2.STATUS_FAILED:
-        failure_report = client.get_failure_report({"compute_task_key": event["asset_key"]})
-        if failure_report:
-            error_type = failure_report["error_type"]
-    return error_type
+        return client.get_failure_report({"compute_task_key": event["asset_key"]})
 
 
 def add_cp_dates_and_duration(compute_plan_key: str) -> None:
