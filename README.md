@@ -33,6 +33,10 @@ Each organization will have:
 - the [API backend](./charts/substra-backend/templates/deployment-server.yaml)
 - the [events backend](./charts/substra-backend/templates/deployment-events.yaml) converting events from the orchestrator into celery tasks
 
+### VSCode
+
+For Visual Studio resources for connect-backend, see [this page](./docs/vscode.md)
+
 ### Use debugger
 
 Add a breakpoint, then attach to the `backend-server` container.
