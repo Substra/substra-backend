@@ -1,8 +1,6 @@
 import os
 import shutil
 import tempfile
-from datetime import datetime
-from datetime import timedelta
 from uuid import uuid4
 
 from django.test import override_settings
@@ -10,46 +8,11 @@ from django.urls import reverse
 from rest_framework.test import APITestCase
 
 import orchestrator.computeplan_pb2 as computeplan_pb2
-from localrep.models import ComputePlan as ComputePlanRep
+from substrapp.tests import factory
 
 from ..common import AuthenticatedClient
 
 MEDIA_ROOT = tempfile.mkdtemp()
-
-
-def add_cp_with_dates(status):
-    """
-    Add computeplan with:
-        - creation_date now
-        - start_date in 1h (depending on the status)
-        - end_date in 2h (depending on the status)
-    """
-    compute_plan = ComputePlanRep(
-        key=uuid4(),
-        status=status,
-        creation_date=datetime.now(),
-        tag="",
-        owner="MyOrg1MSP",
-        channel="mychannel",
-    )
-    if status in (
-        computeplan_pb2.PLAN_STATUS_DOING,
-        computeplan_pb2.PLAN_STATUS_DONE,
-        computeplan_pb2.PLAN_STATUS_FAILED,
-        computeplan_pb2.PLAN_STATUS_CANCELED,
-    ):
-        compute_plan.start_date = compute_plan.creation_date + timedelta(hours=1)
-    if status in (
-        computeplan_pb2.PLAN_STATUS_DONE,
-        computeplan_pb2.PLAN_STATUS_FAILED,
-        computeplan_pb2.PLAN_STATUS_CANCELED,
-    ):
-        compute_plan.end_date = compute_plan.creation_date + timedelta(hours=2)
-    if status == computeplan_pb2.PLAN_STATUS_FAILED:
-        compute_plan.failed_task_key = str(uuid4())
-        compute_plan.failed_task_category = 0
-    compute_plan.save()
-    return compute_plan
 
 
 @override_settings(
@@ -76,11 +39,14 @@ class NewsFeedViewTests(APITestCase):
         # first all CPs are created in the order below
         # then they all start in the same order (depending on the status)
         # finally they all end in the same order (depending on the status)
-        todo_cp = add_cp_with_dates(computeplan_pb2.PLAN_STATUS_TODO)  # no start_date, end_date
-        doing_cp = add_cp_with_dates(computeplan_pb2.PLAN_STATUS_DOING)  # no end_date
-        canceled_cp = add_cp_with_dates(computeplan_pb2.PLAN_STATUS_CANCELED)
-        failed_cp = add_cp_with_dates(computeplan_pb2.PLAN_STATUS_FAILED)
-        done_cp = add_cp_with_dates(computeplan_pb2.PLAN_STATUS_DONE)
+        todo_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_TODO)  # no start_date, end_date
+        doing_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DOING)  # no end_date
+        canceled_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_CANCELED)
+        failed_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_FAILED)
+        failed_cp.failed_task_key = str(uuid4())
+        failed_cp.failed_task_category = 0
+        failed_cp.save()
+        done_cp = factory.create_computeplan(status=computeplan_pb2.PLAN_STATUS_DONE)
 
         # we expect items to be sorted from the latest to the earliest
         expected_items = [
