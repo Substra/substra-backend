@@ -23,7 +23,7 @@ class ExpiryObtainAuthToken(ObtainAuthToken):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
 
-        if settings.TOKEN_STRATEGY == "reuse":
+        if settings.TOKEN_STRATEGY == "reuse":  # nosec
             token, created = Token.objects.get_or_create(user=user)
 
             # token_expire_handler will check, if the token is expired it will generate new one
