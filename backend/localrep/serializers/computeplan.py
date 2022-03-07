@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from localrep.models import ComputePlan
@@ -35,6 +36,7 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
     failed_count = serializers.IntegerField(read_only=True)
     status = StatusField()
     failed_task = FailedTaskSerializer(read_only=True, allow_null=True, required=False, source="*")
+    duration = serializers.SerializerMethodField()
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -66,3 +68,8 @@ class ComputePlanSerializer(serializers.ModelSerializer, SafeSerializerMixin):
             "failed_count",
             "status",
         ]
+
+    def get_duration(self, instance):
+        if not instance.start_date:
+            return None
+        return ((instance.end_date or timezone.now()) - instance.start_date).seconds

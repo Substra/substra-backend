@@ -107,7 +107,7 @@ def _create_computetask(
 def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorClient) -> None:
     """Process update computetask event to update local database."""
 
-    from events.dynamic_fields import add_cp_dates_and_duration
+    from events.dynamic_fields import add_cp_dates
     from events.dynamic_fields import fetch_failure_report_from_event
     from events.dynamic_fields import parse_computetask_dates_from_event
     from localrep.models.computeplan import ComputePlan
@@ -121,7 +121,7 @@ def _on_update_computetask_event(event: dict, client: orc_client.OrchestratorCli
     status = computetask_pb2.ComputeTaskStatus.Value(data["status"])
     category = computetask_pb2.ComputeTaskCategory.Value(data["category"])
     if status != computetask_pb2.STATUS_TODO:
-        add_cp_dates_and_duration(data["compute_plan_key"])
+        add_cp_dates(data["compute_plan_key"])
     if status == computetask_pb2.STATUS_DONE:
         if category == computetask_pb2.TASK_TEST:
             _sync_performances(data["key"], client)
@@ -379,7 +379,7 @@ def resync_datasamples(client: orc_client.OrchestratorClient):
 
 
 def resync_computeplans(client: orc_client.OrchestratorClient):
-    from events.dynamic_fields import add_cp_dates_and_duration
+    from events.dynamic_fields import add_cp_dates
 
     logger.info("Resyncing computeplans")
 
@@ -391,7 +391,7 @@ def resync_computeplans(client: orc_client.OrchestratorClient):
         is_created = _create_computeplan(client.channel_name, data)
         status = computeplan_pb2.ComputePlanStatus.Value(data["status"])
         if status != computeplan_pb2.PLAN_STATUS_TODO:
-            add_cp_dates_and_duration(data["key"])
+            add_cp_dates(data["key"])
         if is_created:
             logger.debug("Created new computeplan", asset_key=data["key"])
             nb_new_assets += 1

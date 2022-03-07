@@ -30,8 +30,8 @@ def fetch_failure_report_from_event(event: dict, client: orc_client.Orchestrator
         return client.get_failure_report({"compute_task_key": event["asset_key"]})
 
 
-def add_cp_dates_and_duration(compute_plan_key: str) -> None:
-    """Update start_date, end_date, duration fields."""
+def add_cp_dates(compute_plan_key: str) -> None:
+    """Update start_date, end_date"""
 
     compute_plan = ComputePlan.objects.get(key=compute_plan_key)
 
@@ -43,11 +43,9 @@ def add_cp_dates_and_duration(compute_plan_key: str) -> None:
     ongoing_tasks = compute_plan.compute_tasks.filter(end_date__isnull=True).exists()
     if ongoing_tasks:
         compute_plan.end_date = None  # end date could be reset when cp is updated with new tasks
-        compute_plan.duration = None
     else:
         last_ended_task = compute_plan.compute_tasks.filter(end_date__isnull=False).order_by("end_date").last()
         if last_ended_task:
             compute_plan.end_date = last_ended_task.end_date
-            compute_plan.duration = (compute_plan.end_date - compute_plan.start_date).seconds
 
     compute_plan.save()

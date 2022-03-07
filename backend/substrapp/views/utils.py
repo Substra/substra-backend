@@ -11,7 +11,6 @@ from django.conf import settings
 from django.db.models import Count
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.dateparse import parse_datetime
 from rest_framework import status
 from rest_framework.authentication import BasicAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -371,10 +370,9 @@ def add_compute_plan_estimated_end_date(data):
     if compute_plan_status == computeplan_pb2.PLAN_STATUS_DOING:
         if data["done_count"] and data["start_date"] is not None:
             remaining_tasks_count = data["task_count"] - data["done_count"]
-            current_duration = timezone.now() - parse_datetime(data["start_date"])
-            time_per_task = current_duration / data["done_count"]
+            time_per_task = data["duration"] / data["done_count"]
             estimated_duration = remaining_tasks_count * time_per_task
-            data["estimated_end_date"] = (datetime.datetime.now() + estimated_duration).strftime(
+            data["estimated_end_date"] = (timezone.now() + datetime.timedelta(seconds=estimated_duration)).strftime(
                 "%Y-%m-%dT%H:%M:%S.%fZ"
             )
     elif compute_plan_status in [
