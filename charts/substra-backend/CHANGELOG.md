@@ -1,5 +1,10 @@
 # Changelog
 
+## 16.0.2
+
+### Changed
+- Increase the number of threads on uWSGI to 10 (#820)
+
 ## 16.0.1
 
 ### Fixed

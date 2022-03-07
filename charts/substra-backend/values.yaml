@@ -46,7 +46,7 @@ psp:
 ## @param server.subpath The subpath under which the API is served
 ## @param server.commonHostDomain The common host under which the backend and frontend are served
 ## @param server.uwsgiProcesses The number of uwsgi processes
-## @param server.uwsgiThreads The numer of uwsgi threads
+## @param server.uwsgiThreads The number of uwsgi threads
 ##
 server:
   replicaCount: 1
@@ -54,7 +54,7 @@ server:
   subpath: ""
   commonHostDomain: ""
   uwsgiProcesses: 20
-  uwsgiThreads: 2
+  uwsgiThreads: 10
 
   ## Substra backend image version
   ## @param server.image.registry Substra backend server image registry

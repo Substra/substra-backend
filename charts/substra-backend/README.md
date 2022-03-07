@@ -41,7 +41,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 | `server.subpath`                            | The subpath under which the API is served                                                                                                          | `""`                             |
 | `server.commonHostDomain`                   | The common host under which the backend and frontend are served                                                                                    | `""`                             |
 | `server.uwsgiProcesses`                     | The number of uwsgi processes                                                                                                                      | `20`                             |
-| `server.uwsgiThreads`                       | The numer of uwsgi threads                                                                                                                         | `2`                              |
+| `server.uwsgiThreads`                       | The number of uwsgi threads                                                                                                                        | `10`                             |
 | `server.image.registry`                     | Substra backend server image registry                                                                                                              | `gcr.io`                         |
 | `server.image.repository`                   | Substra backend server image repository                                                                                                            | `connect-314908/connect-backend` |
 | `server.image.tag`                          | Substra backend server image tag                                                                                                                   | `0.4.0`                          |
@@ -310,4 +310,3 @@ spec:
 
 
 ```
-
