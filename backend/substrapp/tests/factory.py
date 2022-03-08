@@ -120,8 +120,8 @@ def get_computetask_dates(status: int, creation_date: datetime.datetime) -> tupl
     return start_date, end_date
 
 
-def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime, int]:
-    start_date = end_date = duration = None
+def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tuple[datetime, datetime]:
+    start_date = end_date = None
     if status in (
         computeplan_pb2.PLAN_STATUS_DOING,
         computeplan_pb2.PLAN_STATUS_DONE,
@@ -135,8 +135,7 @@ def get_computeplan_dates(status: int, creation_date: datetime.datetime) -> tupl
         computeplan_pb2.PLAN_STATUS_CANCELED,
     ):
         end_date = creation_date + datetime.timedelta(days=2)
-        duration = (end_date - start_date).seconds
-    return start_date, end_date, duration
+    return start_date, end_date
 
 
 def create_algo(
@@ -252,7 +251,7 @@ def create_computeplan(
     channel: str = DEFAULT_CHANNEL,
 ) -> ComputePlan:
     creation_date = datetime.datetime.now()
-    start_date, end_date, duration = get_computeplan_dates(status, creation_date)
+    start_date, end_date = get_computeplan_dates(status, creation_date)
     if key is None:
         key = uuid.uuid4()
     return ComputePlan.objects.create(
@@ -262,7 +261,6 @@ def create_computeplan(
         delete_intermediary_models=delete_intermediary_models,
         start_date=start_date,
         end_date=end_date,
-        duration=duration,
         failed_task_key=failed_task_key,
         failed_task_category=failed_task_category,
         metadata=metadata or {},
