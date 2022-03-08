@@ -10,19 +10,19 @@ class DataSampleServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.RegisterDataSamplesParam,
-        datasample_pb2.RegisterDataSamplesResponse] = ...
+        datasample_pb2.RegisterDataSamplesResponse]
 
     UpdateDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.UpdateDataSamplesParam,
-        datasample_pb2.UpdateDataSamplesResponse] = ...
+        datasample_pb2.UpdateDataSamplesResponse]
 
     QueryDataSamples: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.QueryDataSamplesParam,
-        datasample_pb2.QueryDataSamplesResponse] = ...
+        datasample_pb2.QueryDataSamplesResponse]
 
     GetDataSample: grpc.UnaryUnaryMultiCallable[
         datasample_pb2.GetDataSampleParam,
-        datasample_pb2.DataSample] = ...
+        datasample_pb2.DataSample]
 
 
 class DataSampleServiceServicer(metaclass=abc.ABCMeta):

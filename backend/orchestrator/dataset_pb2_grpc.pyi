@@ -10,7 +10,7 @@ class DatasetServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     GetDataset: grpc.UnaryUnaryMultiCallable[
         dataset_pb2.GetDatasetParam,
-        dataset_pb2.Dataset] = ...
+        dataset_pb2.Dataset]
 
 
 class DatasetServiceServicer(metaclass=abc.ABCMeta):

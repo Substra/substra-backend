@@ -10,15 +10,15 @@ class DataManagerServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.NewDataManager,
-        datamanager_pb2.DataManager] = ...
+        datamanager_pb2.DataManager]
 
     GetDataManager: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.GetDataManagerParam,
-        datamanager_pb2.DataManager] = ...
+        datamanager_pb2.DataManager]
 
     QueryDataManagers: grpc.UnaryUnaryMultiCallable[
         datamanager_pb2.QueryDataManagersParam,
-        datamanager_pb2.QueryDataManagersResponse] = ...
+        datamanager_pb2.QueryDataManagersResponse]
 
 
 class DataManagerServiceServicer(metaclass=abc.ABCMeta):

@@ -10,35 +10,35 @@ class ModelServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.NewModel,
-        model_pb2.Model] = ...
+        model_pb2.Model]
 
     RegisterModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.RegisterModelsParam,
-        model_pb2.RegisterModelsResponse] = ...
+        model_pb2.RegisterModelsResponse]
 
     GetModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetModelParam,
-        model_pb2.Model] = ...
+        model_pb2.Model]
 
     QueryModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.QueryModelsParam,
-        model_pb2.QueryModelsResponse] = ...
+        model_pb2.QueryModelsResponse]
 
     GetComputeTaskOutputModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetComputeTaskModelsParam,
-        model_pb2.GetComputeTaskModelsResponse] = ...
+        model_pb2.GetComputeTaskModelsResponse]
 
     GetComputeTaskInputModels: grpc.UnaryUnaryMultiCallable[
         model_pb2.GetComputeTaskModelsParam,
-        model_pb2.GetComputeTaskModelsResponse] = ...
+        model_pb2.GetComputeTaskModelsResponse]
 
     CanDisableModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.CanDisableModelParam,
-        model_pb2.CanDisableModelResponse] = ...
+        model_pb2.CanDisableModelResponse]
 
     DisableModel: grpc.UnaryUnaryMultiCallable[
         model_pb2.DisableModelParam,
-        model_pb2.DisableModelResponse] = ...
+        model_pb2.DisableModelResponse]
 
 
 class ModelServiceServicer(metaclass=abc.ABCMeta):

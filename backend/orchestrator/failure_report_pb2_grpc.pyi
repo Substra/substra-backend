@@ -10,11 +10,11 @@ class FailureReportServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterFailureReport: grpc.UnaryUnaryMultiCallable[
         failure_report_pb2.NewFailureReport,
-        failure_report_pb2.FailureReport] = ...
+        failure_report_pb2.FailureReport]
 
     GetFailureReport: grpc.UnaryUnaryMultiCallable[
         failure_report_pb2.GetFailureReportParam,
-        failure_report_pb2.FailureReport] = ...
+        failure_report_pb2.FailureReport]
 
 
 class FailureReportServiceServicer(metaclass=abc.ABCMeta):

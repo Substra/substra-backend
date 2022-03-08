@@ -8,24 +8,24 @@ import google.protobuf.message
 import typing
 import typing_extensions
 
-DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
+DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class QueryVersionParam(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
     def __init__(self,
         ) -> None: ...
 global___QueryVersionParam = QueryVersionParam
 
 class QueryVersionResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
     ORCHESTRATOR_FIELD_NUMBER: builtins.int
     CHAINCODE_FIELD_NUMBER: builtins.int
-    orchestrator: typing.Text = ...
-    chaincode: typing.Text = ...
+    orchestrator: typing.Text
+    chaincode: typing.Text
     def __init__(self,
         *,
-        orchestrator : typing.Text = ...,
-        chaincode : typing.Text = ...,
+        orchestrator: typing.Text = ...,
+        chaincode: typing.Text = ...,
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["chaincode",b"chaincode","orchestrator",b"orchestrator"]) -> None: ...
 global___QueryVersionResponse = QueryVersionResponse

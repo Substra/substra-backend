@@ -10,19 +10,19 @@ class ComputeTaskServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterTasks: grpc.UnaryUnaryMultiCallable[
         computetask_pb2.RegisterTasksParam,
-        computetask_pb2.RegisterTasksResponse] = ...
+        computetask_pb2.RegisterTasksResponse]
 
     QueryTasks: grpc.UnaryUnaryMultiCallable[
         computetask_pb2.QueryTasksParam,
-        computetask_pb2.QueryTasksResponse] = ...
+        computetask_pb2.QueryTasksResponse]
 
     GetTask: grpc.UnaryUnaryMultiCallable[
         computetask_pb2.GetTaskParam,
-        computetask_pb2.ComputeTask] = ...
+        computetask_pb2.ComputeTask]
 
     ApplyTaskAction: grpc.UnaryUnaryMultiCallable[
         computetask_pb2.ApplyTaskActionParam,
-        computetask_pb2.ApplyTaskActionResponse] = ...
+        computetask_pb2.ApplyTaskActionResponse]
 
 
 class ComputeTaskServiceServicer(metaclass=abc.ABCMeta):

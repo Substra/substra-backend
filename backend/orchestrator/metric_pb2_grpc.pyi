@@ -10,15 +10,15 @@ class MetricServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterMetric: grpc.UnaryUnaryMultiCallable[
         metric_pb2.NewMetric,
-        metric_pb2.Metric] = ...
+        metric_pb2.Metric]
 
     GetMetric: grpc.UnaryUnaryMultiCallable[
         metric_pb2.GetMetricParam,
-        metric_pb2.Metric] = ...
+        metric_pb2.Metric]
 
     QueryMetrics: grpc.UnaryUnaryMultiCallable[
         metric_pb2.QueryMetricsParam,
-        metric_pb2.QueryMetricsResponse] = ...
+        metric_pb2.QueryMetricsResponse]
 
 
 class MetricServiceServicer(metaclass=abc.ABCMeta):

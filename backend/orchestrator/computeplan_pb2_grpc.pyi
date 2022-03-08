@@ -10,19 +10,19 @@ class ComputePlanServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterPlan: grpc.UnaryUnaryMultiCallable[
         computeplan_pb2.NewComputePlan,
-        computeplan_pb2.ComputePlan] = ...
+        computeplan_pb2.ComputePlan]
 
     GetPlan: grpc.UnaryUnaryMultiCallable[
         computeplan_pb2.GetComputePlanParam,
-        computeplan_pb2.ComputePlan] = ...
+        computeplan_pb2.ComputePlan]
 
     ApplyPlanAction: grpc.UnaryUnaryMultiCallable[
         computeplan_pb2.ApplyPlanActionParam,
-        computeplan_pb2.ApplyPlanActionResponse] = ...
+        computeplan_pb2.ApplyPlanActionResponse]
 
     QueryPlans: grpc.UnaryUnaryMultiCallable[
         computeplan_pb2.QueryPlansParam,
-        computeplan_pb2.QueryPlansResponse] = ...
+        computeplan_pb2.QueryPlansResponse]
 
 
 class ComputePlanServiceServicer(metaclass=abc.ABCMeta):

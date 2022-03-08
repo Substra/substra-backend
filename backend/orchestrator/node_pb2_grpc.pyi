@@ -10,11 +10,11 @@ class NodeServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterNode: grpc.UnaryUnaryMultiCallable[
         node_pb2.RegisterNodeParam,
-        node_pb2.Node] = ...
+        node_pb2.Node]
 
     GetAllNodes: grpc.UnaryUnaryMultiCallable[
         node_pb2.GetAllNodesParam,
-        node_pb2.GetAllNodesResponse] = ...
+        node_pb2.GetAllNodesResponse]
 
 
 class NodeServiceServicer(metaclass=abc.ABCMeta):

@@ -10,15 +10,15 @@ class AlgoServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     RegisterAlgo: grpc.UnaryUnaryMultiCallable[
         algo_pb2.NewAlgo,
-        algo_pb2.Algo] = ...
+        algo_pb2.Algo]
 
     GetAlgo: grpc.UnaryUnaryMultiCallable[
         algo_pb2.GetAlgoParam,
-        algo_pb2.Algo] = ...
+        algo_pb2.Algo]
 
     QueryAlgos: grpc.UnaryUnaryMultiCallable[
         algo_pb2.QueryAlgosParam,
-        algo_pb2.QueryAlgosResponse] = ...
+        algo_pb2.QueryAlgosResponse]
 
 
 class AlgoServiceServicer(metaclass=abc.ABCMeta):

@@ -10,11 +10,11 @@ import google.protobuf.message
 import typing
 import typing_extensions
 
-DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
+DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 
 class Dataset(google.protobuf.message.Message):
     """Dataset references several related samples"""
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
     DATA_MANAGER_FIELD_NUMBER: builtins.int
     TRAIN_DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
     TEST_DATA_SAMPLE_KEYS_FIELD_NUMBER: builtins.int
@@ -26,21 +26,21 @@ class Dataset(google.protobuf.message.Message):
     def test_data_sample_keys(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[typing.Text]: ...
     def __init__(self,
         *,
-        data_manager : typing.Optional[datamanager_pb2.DataManager] = ...,
-        train_data_sample_keys : typing.Optional[typing.Iterable[typing.Text]] = ...,
-        test_data_sample_keys : typing.Optional[typing.Iterable[typing.Text]] = ...,
+        data_manager: typing.Optional[datamanager_pb2.DataManager] = ...,
+        train_data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
+        test_data_sample_keys: typing.Optional[typing.Iterable[typing.Text]] = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["data_manager",b"data_manager"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["data_manager",b"data_manager","test_data_sample_keys",b"test_data_sample_keys","train_data_sample_keys",b"train_data_sample_keys"]) -> None: ...
 global___Dataset = Dataset
 
 class GetDatasetParam(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
     KEY_FIELD_NUMBER: builtins.int
-    key: typing.Text = ...
+    key: typing.Text
     def __init__(self,
         *,
-        key : typing.Text = ...,
+        key: typing.Text = ...,
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["key",b"key"]) -> None: ...
 global___GetDatasetParam = GetDatasetParam

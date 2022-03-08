@@ -10,7 +10,7 @@ class EventServiceStub:
     def __init__(self, channel: grpc.Channel) -> None: ...
     QueryEvents: grpc.UnaryUnaryMultiCallable[
         event_pb2.QueryEventsParam,
-        event_pb2.QueryEventsResponse] = ...
+        event_pb2.QueryEventsResponse]
 
 
 class EventServiceServicer(metaclass=abc.ABCMeta):
