@@ -38,5 +38,6 @@ class NodeRegisterConfig(AppConfig):
         proc.start()
 
     def ready(self):
-        for channel_name in settings.LEDGER_CHANNELS.keys():
-            self.register_node(channel_name)
+        if not settings.ISOLATED:
+            for channel_name in settings.LEDGER_CHANNELS.keys():
+                self.register_node(channel_name)

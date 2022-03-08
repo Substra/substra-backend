@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Full-text search in CP name (#823)
 - Local representation of node assets (#814)
 
+### Changed
+- Make possible to start the backend-server without orchestrator connection available (#811)
+
 ## [0.9.0] 2022-03-01
 
 ### Added

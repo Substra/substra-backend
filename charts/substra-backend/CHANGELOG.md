@@ -1,5 +1,10 @@
 # Changelog
 
+## 16.1.0
+
+### Added
+- boolean `enabled` fields for event, worker, schedulers services
+
 ## 16.0.2
 
 ### Changed

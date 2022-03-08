@@ -1,0 +1,39 @@
+config:
+  ISOLATED: "True"
+
+rabbitmq:
+  enabled: false
+
+docker-registry:
+  enabled: false
+
+containerRegistry:
+  local: false
+
+schedulerWorker:
+  enabled: false
+
+scheduler:
+  enabled: false
+
+worker:
+  enabled: false
+
+privateCa:
+  enabled: false
+
+orchestrator:
+  tls:
+    enabled: false
+  rabbitmq:
+    tls:
+      enabled: false
+
+events:
+  enabled: false
+
+hooks:
+  deleteComputePods:
+    enabled: false
+  deleteWorkerPvc:
+    enabled: false

@@ -230,6 +230,9 @@ server:
 ## @section Substra worker settings
 ##
 worker:
+  ## @param worker.enabled Enable worker service
+  ##
+  enabled: true
   ## @param worker.replicaCount Replica count for the worker service
   ##
   replicaCount: 1
@@ -295,6 +298,9 @@ worker:
 ## @section Substra periodic tasks worker settings
 ##
 schedulerWorker:
+  ## @param schedulerWorker.enabled Enable scheduler worker service
+  ##
+  enabled: true
   ## @param schedulerWorker.replicaCount Replica count for the periodic tasks worker
   ##
   replicaCount: 1
@@ -336,6 +342,9 @@ schedulerWorker:
 
 ## @section Celery task scheduler settings
 scheduler:
+  ## @param scheduler.enabled Enable scheduler service
+  ##
+  enabled: true
   ## @param scheduler.replicaCount Replica count for the scheduler server
   ##
   replicaCount: 1
@@ -404,6 +413,9 @@ containerRegistry:
 ## @section Event app settings
 ##
 events:
+  ## @param events.enabled Enable event service
+  ##
+  enabled: true
   ## @param events.image.registry Substra event app image registry
   ## @param events.image.repository Substra event app image repository
   ## @param events.image.tag Substra event app image tag

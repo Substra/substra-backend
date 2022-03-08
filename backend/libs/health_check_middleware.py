@@ -1,8 +1,11 @@
+import structlog
 from django.conf import settings
 from django.http import HttpResponse
 
 from localrep.models import ChannelNode as ChannelNodeRep
 from substrapp.orchestrator import get_orchestrator_client
+
+logger = structlog.get_logger(__name__)
 
 
 class HealthCheckMiddleware(object):
@@ -23,7 +26,9 @@ class HealthCheckMiddleware(object):
         Returns that the server is alive.
         """
         validate_connections()
+
         validate_channels()
+
         return HttpResponse("OK")
 
     def readiness(self, request):
@@ -31,15 +36,18 @@ class HealthCheckMiddleware(object):
         Returns that the server is alive.
         """
         validate_connections()
+
         validate_channels()
+
         return HttpResponse("OK")
 
 
 def validate_connections():
-    # Check orchestrator connection for each channel
-    for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
-        with get_orchestrator_client(channel_name) as client:
-            client.query_version()
+    if not settings.ISOLATED:
+        # Check orchestrator connection for each channel
+        for channel_name, channel_settings in settings.LEDGER_CHANNELS.items():
+            with get_orchestrator_client(channel_name) as client:
+                client.query_version()
 
 
 def validate_channels():

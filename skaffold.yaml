@@ -159,9 +159,14 @@ profiles:
         value: [ examples/values/backend-org-2.yaml, examples/values/add-worker-server-node-selectors.yaml ]
   - name: isolated
     patches:
-      - op: add
-        path: /deploy/helm/releases/0/setValues/config.ISOLATED
-        value: "True"
-      - op: add
-        path: /deploy/helm/releases/1/setValues/config.ISOLATED
-        value: "True"
+      - op: remove
+        path: /deploy/kubectl/manifests/3
+      - op: remove
+        path: /deploy/kubectl/manifests/2
+      - op: remove
+        path: /deploy/kubectl/manifests/1
+      - op: replace
+        path: /deploy/helm/releases/0/valuesFiles
+        value: [ examples/values/backend-org-1.yaml, examples/values/isolated.yaml ]
+      - op: remove
+        path: /deploy/helm/releases/1

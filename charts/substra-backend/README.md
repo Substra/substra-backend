@@ -91,6 +91,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 | Name                                           | Description                                                                                                                                        | Value                            |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- |
+| `worker.enabled`                               | Enable worker service                                                                                                                              | `true`                           |
 | `worker.replicaCount`                          | Replica count for the worker service                                                                                                               | `1`                              |
 | `worker.concurrency`                           | Maximum amount of tasks to process in parallel                                                                                                     | `1`                              |
 | `worker.image.registry`                        | Substra backend worker image registry                                                                                                              | `gcr.io`                         |
@@ -119,6 +120,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 | Name                                            | Description                                       | Value                            |
 | ----------------------------------------------- | ------------------------------------------------- | -------------------------------- |
+| `schedulerWorker.enabled`                       | Enable scheduler worker service                   | `true`                           |
 | `schedulerWorker.replicaCount`                  | Replica count for the periodic tasks worker       | `1`                              |
 | `schedulerWorker.image.registry`                | Substra backend tasks scheduler image registry    | `gcr.io`                         |
 | `schedulerWorker.image.repository`              | Substra backend tasks scheduler image repository  | `connect-314908/connect-backend` |
@@ -139,6 +141,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 | Name                                      | Description                                       | Value                            |
 | ----------------------------------------- | ------------------------------------------------- | -------------------------------- |
+| `scheduler.enabled`                       | Enable scheduler service                          | `true`                           |
 | `scheduler.replicaCount`                  | Replica count for the scheduler server            | `1`                              |
 | `scheduler.image.registry`                | Subsra backend tasks scheduler image registry     | `gcr.io`                         |
 | `scheduler.image.repository`              | Substra backend tasks scheduler image repository  | `connect-314908/connect-backend` |
@@ -171,6 +174,7 @@ See [CHANGELOG.md](./CHANGELOG.md)
 
 | Name                                   | Description                                         | Value                            |
 | -------------------------------------- | --------------------------------------------------- | -------------------------------- |
+| `events.enabled`                       | Enable event service                                | `true`                           |
 | `events.image.registry`                | Substra event app image registry                    | `gcr.io`                         |
 | `events.image.repository`              | Substra event app image repository                  | `connect-314908/connect-backend` |
 | `events.image.tag`                     | Substra event app image tag                         | `0.4.0`                          |

@@ -52,8 +52,11 @@ class Info(APIView):
             channel_name = get_channel_name(request)
             channel = settings.LEDGER_CHANNELS[channel_name]
 
-            with get_orchestrator_client(channel_name) as client:
-                orchestrator_versions = client.query_version()
+            orchestrator_versions = {}
+
+            if not settings.ISOLATED:
+                with get_orchestrator_client(channel_name) as client:
+                    orchestrator_versions = client.query_version()
 
             res["channel"] = channel_name
             res["version"] = settings.BACKEND_VERSION
