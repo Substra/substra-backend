@@ -7,7 +7,7 @@ django-cors-headers==3.11.0
 django-celery-results==2.3.0
 djangorestframework==3.13.1
 djangorestframework-simplejwt==4.7.1
-drf-spectacular==0.21.1
+drf-spectacular==0.21.2
 drf-nested-routers==0.93.4
 pika==1.2.0
 pyjwt==2.3.0
