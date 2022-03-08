@@ -5,6 +5,7 @@ from .datamanager import DataManager
 from .datasample import DataSample
 from .metric import Metric
 from .model import Model
+from .node import ChannelNode
 from .performance import Performance
 
 __all__ = [
@@ -15,5 +16,6 @@ __all__ = [
     "DataSample",
     "Metric",
     "Model",
+    "ChannelNode",
     "Performance",
 ]

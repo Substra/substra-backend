@@ -6,6 +6,7 @@ from .datamanager import DataManagerWithRelationsSerializer
 from .datasample import DataSampleSerializer
 from .metric import MetricSerializer
 from .model import ModelSerializer
+from .node import ChannelNodeSerializer
 from .performance import PerformanceSerializer
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "DataSampleSerializer",
     "MetricSerializer",
     "ModelSerializer",
+    "ChannelNodeSerializer",
     "PerformanceSerializer",
 ]

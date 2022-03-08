@@ -301,6 +301,8 @@ def sync_on_event_message(event: dict, client: orc_client.OrchestratorClient) ->
         _on_create_computetask_event(event, client)
     elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_UPDATED, common_pb2.ASSET_COMPUTE_TASK):
         _on_update_computetask_event(event, client)
+    elif (event_kind, asset_kind) == (event_pb2.EVENT_ASSET_CREATED, common_pb2.ASSET_NODE):
+        _on_create_node_event(event, client)
     else:
         logger.debug("Nothing to sync", event_kind=event["event_kind"], asset_kind=event["asset_kind"])
 
@@ -494,6 +496,46 @@ def resync_computetasks(client: orc_client.OrchestratorClient):
     logger.info("Done resync computetasks", nb_new_assets=nb_new_assets, nb_updated_assets=nb_updated_assets)
 
 
+def _on_create_node_event(event: dict, client: orc_client.OrchestratorClient) -> None:
+    """Process create node event to update local database."""
+    logger.debug("Syncing node create", asset_key=event["asset_key"], event_id=event["id"])
+
+    # there is no query_node method, we extract data from the event directly
+    _create_node(event["channel"], {"id": event["asset_key"], "creation_date": event["timestamp"]})
+
+
+def _create_node(channel: str, data: dict) -> bool:
+    from localrep.serializers import ChannelNodeSerializer
+
+    data["channel"] = channel
+    serializer = ChannelNodeSerializer(data=data)
+    try:
+        serializer.save_if_not_exists()
+    except AlreadyExistsError:
+        logger.debug("Node already exists", node_id=data["id"], channel=data["channel"])
+        return False
+    else:
+        return True
+
+
+def resync_nodes(client: orc_client.OrchestratorClient):
+    logger.info("Resyncing nodes")
+    nodes = client.query_nodes()
+    nb_new_assets = 0
+    nb_skipped_assets = 0
+
+    for data in nodes:
+        is_created = _create_node(client.channel_name, data)
+        if is_created:
+            logger.debug("Created new node", node_id=data["id"])
+            nb_new_assets += 1
+        else:
+            logger.debug("Skipped node", node_id=data["id"])
+            nb_skipped_assets += 1
+
+    logger.info("Done resync nodes", nb_new_assets=nb_new_assets, nb_skipped_assets=nb_skipped_assets)
+
+
 def resync() -> None:
     """Resync the local asset representation.
     Fetch all assets from the orchestrator that are not present locally in the backend.
@@ -503,6 +545,7 @@ def resync() -> None:
     for channel_name in settings.LEDGER_CHANNELS.keys():
         logger.info("Resyncing for channel", channel=channel_name)
         with get_orchestrator_client(channel_name) as client:
+            resync_nodes(client)
             resync_algos(client)
             resync_metrics(client)
             resync_datamanagers(client)
