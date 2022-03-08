@@ -193,6 +193,108 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+    def test_computeplan_list_filter(self):
+        """Filter compute_plan on key."""
+        key = self.compute_plans[0]["key"]
+        params = urlencode({"search": f"compute_plan:key:{key}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.compute_plans[:1]}
+        )
+
+    def test_computeplan_list_filter_and(self):
+        """Filter compute_plan on key and tag."""
+        key, tag = self.compute_plans[0]["key"], self.compute_plans[0]["tag"]
+        params = urlencode({"search": f"compute_plan:key:{key},compute_plan:tag:{tag}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.compute_plans[:1]}
+        )
+
+    def test_computeplan_list_filter_in(self):
+        """Filter compute_plan in key_0, key_1."""
+        key_0 = self.compute_plans[0]["key"]
+        key_1 = self.compute_plans[1]["key"]
+        params = urlencode({"search": f"compute_plan:key:{key_0},compute_plan:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.compute_plans[:2]}
+        )
+
+    def test_computeplan_list_filter_or(self):
+        """Filter compute_plan on key_0 or key_1."""
+        key_0 = self.compute_plans[0]["key"]
+        key_1 = self.compute_plans[1]["key"]
+        params = urlencode({"search": f"compute_plan:key:{key_0}-OR-compute_plan:key:{key_1}"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.compute_plans[:2]}
+        )
+
+    def test_computeplan_list_filter_or_and(self):
+        """Filter compute_plan on (key_0 and tag_0) or (key_1 and tag_1)."""
+        key_0, tag_0 = self.compute_plans[0]["key"], self.compute_plans[0]["tag"]
+        key_1, tag_1 = self.compute_plans[1]["key"], self.compute_plans[1]["tag"]
+        params = urlencode(
+            {
+                "search": (
+                    f"compute_plan:key:{key_0},compute_plan:tag:{tag_0}"
+                    f"-OR-compute_plan:key:{key_1},compute_plan:tag:{tag_1}"
+                )
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 2, "next": None, "previous": None, "results": self.compute_plans[:2]}
+        )
+
+    def test_computeplan_match(self):
+        """Match compute_plan on part of the name."""
+        key = self.compute_plans[0]["key"]
+        name = "cp156-MP-classification-PH1"
+        self.compute_plans[0]["metadata"]["name"] = name
+        instance = ComputePlanRep.objects.get(key=key)
+        instance.metadata["name"] = name
+        instance.save()
+        params = urlencode({"match": "cp156"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.compute_plans[:1]}
+        )
+
+    def test_computeplan_match_multiple_parts(self):
+        """Match compute_plan on multiple parts of the name."""
+        key = self.compute_plans[0]["key"]
+        name = "cp156-MP-classification-PH1"
+        self.compute_plans[0]["metadata"]["name"] = name
+        instance = ComputePlanRep.objects.get(key=key)
+        instance.metadata["name"] = name
+        instance.save()
+        params = urlencode({"match": "cp156 PH1"})
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.compute_plans[:1]}
+        )
+
+    def test_computeplan_match_and_filter(self):
+        """Match compute_plan with filter."""
+        key = self.compute_plans[0]["key"]
+        name = "cp156-MP-classification-PH1"
+        self.compute_plans[0]["metadata"]["name"] = name
+        instance = ComputePlanRep.objects.get(key=key)
+        instance.metadata["name"] = name
+        instance.save()
+        params = urlencode(
+            {
+                "search": f"compute_plan:key:{key}",
+                "match": "cp156 PH1",
+            }
+        )
+        response = self.client.get(f"{self.url}?{params}", **self.extra)
+        self.assertEqual(
+            response.json(), {"count": 1, "next": None, "previous": None, "results": self.compute_plans[:1]}
+        )
+
     @parameterized.expand(
         [
             ("PLAN_STATUS_WAITING",),

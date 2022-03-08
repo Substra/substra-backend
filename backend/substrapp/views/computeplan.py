@@ -1,6 +1,8 @@
 import uuid
 
 import structlog
+from django.db.models import CharField
+from django.db.models.functions import Cast
 from rest_framework import mixins
 from rest_framework import status
 from rest_framework.decorators import action
@@ -277,6 +279,13 @@ class ComputePlanViewSet(mixins.CreateModelMixin, GenericViewSet):
                 return key, values
 
             queryset = filter_queryset("compute_plan", queryset, query_params, mapping_callback=map_status)
+
+        match_values = request.query_params.get("match")
+        if match_values is not None:
+            queryset = queryset.annotate(name=Cast("metadata__name", CharField()))
+            for value in match_values.split(" "):
+                queryset = queryset.filter(name__contains=value)
+
         queryset = self.paginate_queryset(queryset)
 
         data = ComputePlanRepSerializer(queryset, many=True).data
