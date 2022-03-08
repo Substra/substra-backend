@@ -8,8 +8,7 @@ from django.conf import settings
 import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from orchestrator.error import OrcError
-from substrapp.compute_tasks.compute_task import is_task_runnable_preloaded
-from substrapp.exceptions import TaskNotFoundError
+from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.orchestrator import get_orchestrator_client
 from substrapp.tasks.tasks_compute_task import compute_task
 from substrapp.utils import get_owner
@@ -65,9 +64,9 @@ def queue_prepare_task(channel_name, task):
         )
         return
 
-    if not _is_task_runnable(channel_name, key):
-        # Avoid creating celery task if the compute task is not with STATUS_TODO
-        return
+    with get_orchestrator_client(channel_name) as client:
+        if not task_utils.is_task_runnable(key, client):
+            return  # avoid creating Celery task
 
     # get mapping cp to worker or create a new one
     worker_queue = get_worker_queue(task["compute_plan_key"])
@@ -93,43 +92,26 @@ def prepare_task(self, channel_name: str, task: Dict) -> None:
     queue = self.request.delivery_info["routing_key"]
     compute_plan_key = task["compute_plan_key"]
 
-    if not _is_task_runnable(channel_name, task["key"]):
-        # Check that the compute task to process is still in STATUS_TODO
+    with get_orchestrator_client(channel_name) as client:
+        # Check that the compute task to process is still runnable
         # There can be some time elapsed between the celery task creation and the time the worker pick up the task
-        return
+        if not task_utils.is_task_runnable(task["key"], client):
+            return
 
-    try:
-        with get_orchestrator_client(channel_name) as client:
+        try:
             logger.info("Updating task status to STATUS_DOING", task_key=task["key"])
             client.update_task_status(task["key"], computetask_pb2.TASK_ACTION_DOING, log="")
-    except OrcError as rpc_error:
-        logger.exception(
-            f"failed to update task status to DOING, {rpc_error.details}",
-            task_key=task["key"],
-        )
-        raise Ignore()
-    except Exception as e:
-        logger.exception(
-            f"failed to update task status to DOING, {e}",
-            task_key=task["key"],
-        )
-        raise Ignore()
+        except OrcError as rpc_error:
+            logger.exception(
+                f"failed to update task status to DOING, {rpc_error.details}",
+                task_key=task["key"],
+            )
+            raise Ignore
+        except Exception as e:
+            logger.exception(
+                f"failed to update task status to DOING, {e}",
+                task_key=task["key"],
+            )
+            raise Ignore
 
     compute_task.apply_async((channel_name, task, compute_plan_key), queue=queue)
-
-
-def _is_task_runnable(channel_name: str, task_key: str) -> bool:
-    # Early return if task status is not todo
-    # Can happen if we re-process all events (backend-server restart)
-    # We need to fetch the task again to get the last
-    # version of it in case of processing old events
-    try:
-        with get_orchestrator_client(channel_name) as client:
-            task = client.query_task(task_key)
-    except TaskNotFoundError:
-        # use the provided task if the previous call fail
-        # It can happen for new task that are not already
-        # in the ledger local db
-        return True
-
-    return is_task_runnable_preloaded(channel_name, task)

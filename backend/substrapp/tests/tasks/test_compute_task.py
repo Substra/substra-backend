@@ -71,8 +71,8 @@ class ComputeTaskTests(APITestCase):
         ) as mteardown_task_dirs, mock.patch.object(
             OrchestratorClient, "register_performance"
         ) as mregister_performance, mock.patch(
-            "substrapp.tasks.tasks_compute_task.is_task_runnable"
-        ) as mis_task_runnable, mock.patch.object(
+            "substrapp.compute_tasks.compute_task.raise_if_task_not_runnable"
+        ) as mraise_if_task_not_runnable, mock.patch.object(
             OrchestratorClient, "query_compute_plan", return_value={}
         ), mock.patch.object(
             OrchestratorClient, "get_computetask_input_models"
@@ -94,7 +94,7 @@ class ComputeTaskTests(APITestCase):
             self.assertEqual(msave_models.call_count, 1)
             self.assertEqual(mcommit_dir.call_count, 1)
             self.assertEqual(mteardown_task_dirs.call_count, 1)
-            self.assertEqual(mis_task_runnable.call_count, 1)
+            self.assertEqual(mraise_if_task_not_runnable.call_count, 1)
 
             # test RPC error
             error = RpcError()
@@ -124,7 +124,7 @@ class ComputeTaskTests(APITestCase):
             "category": computetask_pb2.ComputeTaskCategory.Name(computetask_pb2.TASK_TEST),
         }
 
-        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable", return_value=True), mock.patch(
+        with mock.patch("substrapp.compute_tasks.compute_task.raise_if_task_not_runnable"), mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
         ), mock.patch("substrapp.tasks.tasks_compute_task.init_compute_plan_dirs"), mock.patch(
             "substrapp.tasks.tasks_compute_task.init_task_dirs"

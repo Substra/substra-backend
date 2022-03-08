@@ -58,9 +58,13 @@ class LocalFolderTests(APITestCase):
         with open(os.path.join(local_folder_committed, file), "w") as x:
             x.write(initial_value)
 
-        with mock.patch("substrapp.tasks.tasks_compute_task.is_task_runnable") as mis_task_runnable, mock.patch(
+        with mock.patch(
+            "substrapp.compute_tasks.compute_task.raise_if_task_not_runnable"
+        ) as mraise_if_task_not_runnable, mock.patch(
             "substrapp.tasks.tasks_compute_task.Context.from_task"
-        ) as mfrom_task, mock.patch("substrapp.tasks.tasks_compute_task.init_asset_buffer"), mock.patch(
+        ) as mfrom_task, mock.patch(
+            "substrapp.tasks.tasks_compute_task.init_asset_buffer"
+        ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_task_assets_to_buffer"
         ), mock.patch(
             "substrapp.tasks.tasks_compute_task.add_assets_to_taskdir"
@@ -74,7 +78,7 @@ class LocalFolderTests(APITestCase):
             "substrapp.tasks.tasks_compute_task.teardown_task_dirs"
         ):
 
-            mis_task_runnable.return_value = True
+            mraise_if_task_not_runnable.return_value = True
             mfrom_task.return_value = FakeContext
 
             # The function `execute_compute_task` will:

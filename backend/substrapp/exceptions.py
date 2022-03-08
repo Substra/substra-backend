@@ -50,10 +50,6 @@ class IntegrityError(Exception):
     """An asset downloaded from a node has an invalid checksum"""
 
 
-class TaskNotFoundError(Exception):
-    """A celery task was not found"""
-
-
 class ServerMediasNoSubdirError(Exception):
     """A supplied servermedias path didn't contain the expected subdir"""
 

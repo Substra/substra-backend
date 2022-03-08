@@ -18,6 +18,7 @@ import os
 from os import path
 from typing import Optional
 
+import celery.exceptions
 import structlog
 from celery import Task
 from django.conf import settings
@@ -27,6 +28,7 @@ import orchestrator.computetask_pb2 as computetask_pb2
 from backend.celery import app
 from substrapp import models
 from substrapp import utils
+from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.asset_buffer import add_assets_to_taskdir
 from substrapp.compute_tasks.asset_buffer import add_task_assets_to_buffer
@@ -35,7 +37,6 @@ from substrapp.compute_tasks.asset_buffer import init_asset_buffer
 from substrapp.compute_tasks.chainkeys import prepare_chainkeys_dir
 from substrapp.compute_tasks.command import Filenames
 from substrapp.compute_tasks.compute_pod import delete_compute_plan_pods
-from substrapp.compute_tasks.compute_task import is_task_runnable
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.directories import CPDirName
 from substrapp.compute_tasks.directories import Directories
@@ -128,8 +129,7 @@ class ComputeTask(Task):
         return channel_name, task
 
 
-# TODO: 'compute_task' is too complex, consider refactoring
-@app.task(  # noqa: C901
+@app.task(
     bind=True,
     acks_late=True,
     reject_on_worker_lost=True,
@@ -140,6 +140,14 @@ class ComputeTask(Task):
 # see http://docs.celeryproject.org/en/latest/userguide/configuration.html#task-reject-on-worker-lost
 # and https://github.com/celery/celery/issues/5106
 def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
+    try:
+        return _run(self, channel_name, task, compute_plan_key)
+    except (task_utils.ComputePlanNonRunnableStatusError, task_utils.TaskNonRunnableStatusError):
+        raise celery.exceptions.Ignore
+
+
+# TODO: function too complex, consider refactoring
+def _run(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     task_category = computetask_pb2.ComputeTaskCategory.Value(task["category"])
 
     try:
@@ -156,9 +164,9 @@ def compute_task(self, channel_name: str, task, compute_plan_key):  # noqa: C901
     task_key = task["key"]
     logger.bind(compute_task_key=task_key, compute_plan_key=compute_plan_key)
 
-    # We use allow_doing=True to allow celery retries.
-    if not is_task_runnable(channel_name, task_key, allow_doing=True):
-        raise Exception(f"Gracefully aborting execution of task {task_key}. Task is not in a runnable state anymore.")
+    with get_orchestrator_client(channel_name) as client:
+        # Set allow_doing=True to allow celery retries.
+        task_utils.abort_task_if_not_runnable(task_key, client, allow_doing=True)
 
     logger.info(
         "Computing task",

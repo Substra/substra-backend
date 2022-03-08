@@ -15,12 +15,12 @@ from django.conf import settings
 from kubernetes.stream import stream
 
 import orchestrator.computetask_pb2 as computetask_pb2
+from substrapp.compute_tasks import compute_task as task_utils
 from substrapp.compute_tasks import errors as compute_task_errors
 from substrapp.compute_tasks.command import get_exec_command
 from substrapp.compute_tasks.compute_pod import ComputePod
 from substrapp.compute_tasks.compute_pod import Label
 from substrapp.compute_tasks.compute_pod import create_pod
-from substrapp.compute_tasks.compute_task import is_task_runnable
 from substrapp.compute_tasks.context import Context
 from substrapp.compute_tasks.environment import get_environment
 from substrapp.compute_tasks.volumes import get_volumes
@@ -33,6 +33,7 @@ from substrapp.kubernetes_utils import delete_pod
 from substrapp.kubernetes_utils import get_volume
 from substrapp.kubernetes_utils import pod_exists_by_label_selector
 from substrapp.kubernetes_utils import wait_for_pod_readiness
+from substrapp.orchestrator import get_orchestrator_client
 from substrapp.utils import timeit
 
 logger = structlog.get_logger(__name__)
@@ -85,12 +86,10 @@ def _execute_compute_task(ctx: Context, is_testtuple_eval: bool, image_tag: str 
 
             volume_mounts, volumes = get_volumes(dirs, is_testtuple_eval)
 
-            # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
-            # We use allow_doing=True to allow celery retries.
-            if not is_task_runnable(channel_name, ctx.task_key, allow_doing=True):
-                raise Exception(
-                    f"Gracefully aborting execution of task {ctx.task_key}. Task is not in a runnable state anymore."
-                )
+            with get_orchestrator_client(channel_name) as client:
+                # Only create the pod if the compute plan hasn't been cancelled by a concurrent process.
+                # We use allow_doing=True to allow celery retries.
+                task_utils.abort_task_if_not_runnable(ctx.task_key, client, allow_doing=True)
 
             create_pod(k8s_client, compute_pod, pod_name, image, env, volume_mounts, volumes)
             wait_for_pod_readiness(

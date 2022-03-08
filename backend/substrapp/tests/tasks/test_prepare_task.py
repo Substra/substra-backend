@@ -43,7 +43,7 @@ class PrepareTaskTests(APITestCase):
         ) as mrequest, mock.patch(
             "celery.worker.request.Request.delivery_info", new_callable=mock.PropertyMock
         ) as mdeliveryinfo, mock.patch(
-            "substrapp.tasks.tasks_prepare_task._is_task_runnable"
+            "substrapp.compute_tasks.compute_task.is_task_runnable"
         ) as m_is_task_runnable, mock.patch.object(
             OrchestratorClient, "update_task_status"
         ) as mtask_status:
@@ -64,7 +64,7 @@ class PrepareTaskTests(APITestCase):
         ) as mdeliveryinfo, mock.patch.object(
             OrchestratorClient, "update_task_status"
         ), mock.patch(
-            "substrapp.tasks.tasks_prepare_task._is_task_runnable"
+            "substrapp.compute_tasks.compute_task.is_task_runnable"
         ) as m_is_task_runnable:
             mrequest.return_value = mdeliveryinfo
             mdeliveryinfo.return_value = {"routing_key": "routing_key"}
@@ -72,4 +72,4 @@ class PrepareTaskTests(APITestCase):
             m_is_task_runnable.return_value = True
             prepare_task(CHANNEL, self.task)
 
-            m_is_task_runnable.assert_called_once_with(CHANNEL, self.task["key"])
+            m_is_task_runnable.assert_called_once()

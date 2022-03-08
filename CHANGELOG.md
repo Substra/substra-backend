@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stream directly asset files from MinIO without loading them on disk (#732)
 - compute_plan["failed_task"] is populated when syncing a failed task event in the event app instead of in the views (#755)
 - Switch from aiopika to pika in the event app (#768)
+- Cancel a compute task when its compute plan is not runnable (#796)
 
 ### Fixed
 - Handle incomplete medata in newsfeed (#652)

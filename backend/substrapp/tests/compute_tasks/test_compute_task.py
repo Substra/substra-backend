@@ -1,107 +1,106 @@
+import itertools
+from typing import Optional
+from typing import Type
 from unittest import mock
 
-from django.test import override_settings
-from parameterized import parameterized
-from rest_framework.test import APITestCase
+import pytest
 
-import orchestrator.computeplan_pb2 as computeplan_pb2
-import orchestrator.computetask_pb2 as computetask_pb2
-from orchestrator.client import OrchestratorClient
-from substrapp.compute_tasks.compute_task import is_task_runnable
+from orchestrator import client as orc_client
+from substrapp.compute_tasks import compute_task as task_utils
 
-CHANNEL = "mychannel"
+RUNNABLE_TASK_STATUSES = sorted(task_utils._RUNNABLE_TASK_STATUSES)
+NON_RUNNABLE_TASK_STATUSES = sorted(task_utils._NON_RUNNABLE_TASK_STATUSES)
 
 
-@override_settings(LEDGER_CHANNELS={CHANNEL: {"chaincode": {"name": "mycc"}, "model_export_enabled": True}})
-class ComputeTaskTests(APITestCase):
-    @parameterized.expand(
-        [
-            (
-                "disallow_doing_task_todo_cp_todo",
-                False,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_TODO,
-                True,
-            ),
-            (
-                "disallow_doing_task_doing_cp_doing",
-                False,
-                computetask_pb2.STATUS_DOING,
-                computeplan_pb2.PLAN_STATUS_DOING,
-                False,
-            ),
-            (
-                "disallow_doing_todo_todo_cp_doing",
-                False,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_DOING,
-                True,
-            ),
-            (
-                "disallow_doing_task_todo_cp_failed",
-                False,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_FAILED,
-                False,
-            ),
-            (
-                "disallow_doing_task_failed_cp_todo",
-                False,
-                computetask_pb2.STATUS_FAILED,
-                computeplan_pb2.PLAN_STATUS_TODO,
-                False,
-            ),
-            (
-                "allow_doing_task_todo_cp_todo",
-                True,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_TODO,
-                True,
-            ),
-            (
-                "disallow_doing_task_doing_cp_doing",
-                True,
-                computetask_pb2.STATUS_DOING,
-                computeplan_pb2.PLAN_STATUS_DOING,
-                True,
-            ),
-            (
-                "allow_doing_task_todo_cp_failed",
-                True,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_FAILED,
-                False,
-            ),
-            (
-                "allow_doing_task_failed_cp_todo",
-                True,
-                computetask_pb2.STATUS_FAILED,
-                computeplan_pb2.PLAN_STATUS_TODO,
-                False,
-            ),
-            (
-                "allow_doing_task_todo_cp_doing",
-                True,
-                computetask_pb2.STATUS_TODO,
-                computeplan_pb2.PLAN_STATUS_DOING,
-                True,
-            ),
-        ]
-    )
-    def test_is_task_runnable(self, _, allow_doing, task_status, cp_status, expected):
-        task = {
-            "compute_plan_key": "cp_key",
-            "status": computetask_pb2.ComputeTaskStatus.Name(task_status),
-        }
+@pytest.mark.parametrize(
+    ("task_status", "is_runnable"),
+    [(s, True) for s in RUNNABLE_TASK_STATUSES] + [(s, False) for s in NON_RUNNABLE_TASK_STATUSES],
+)
+def test_is_task_status_runnable(task_status: str, is_runnable: bool):
+    compute_task = {"status": task_status}
+    assert task_utils._is_task_status_runnable(compute_task, allow_doing=False) is is_runnable
 
-        cp = {
-            "status": computeplan_pb2.ComputePlanStatus.Name(cp_status),
-        }
 
-        with (
-            mock.patch.object(OrchestratorClient, "query_task", return_value=task),
-            mock.patch.object(OrchestratorClient, "query_compute_plan", return_value=cp),
-        ):
+def test_is_task_status_runnable_allow_doing():
+    compute_task = {"status": task_utils._TASK_STATUS_DOING}
+    assert task_utils._is_task_status_runnable(compute_task, allow_doing=True)
 
-            actual = is_task_runnable(CHANNEL, "", allow_doing)
-            self.assertEqual(expected, actual)
+
+RUNNABLE_COMPUTE_PLAN_STATUSES = sorted(task_utils._RUNNABLE_COMPUTE_PLAN_STATUSES)
+NON_RUNNABLE_COMPUTE_PLAN_STATUSES = sorted(task_utils._NON_RUNNABLE_COMPUTE_PLAN_STATUSES)
+
+
+@pytest.mark.parametrize(
+    ("compute_plan_status", "is_runnable"),
+    [(s, True) for s in RUNNABLE_COMPUTE_PLAN_STATUSES] + [(s, False) for s in NON_RUNNABLE_COMPUTE_PLAN_STATUSES],
+)
+def test_is_compute_plan_status_runnable(compute_plan_status: int, is_runnable: bool):
+    compute_plan = {"status": compute_plan_status}
+    assert task_utils._is_compute_plan_status_runnable(compute_plan) is is_runnable
+
+
+@pytest.fixture
+def client() -> mock.Mock:
+    return mock.Mock(spec=orc_client.OrchestratorClient)
+
+
+@pytest.mark.parametrize("task_status", NON_RUNNABLE_TASK_STATUSES)
+def test_raise_if_task_not_runnable_raise_TaskNonRunnableStatusError(task_status: str, client: mock.Mock):  # noqa: N802
+    client.query_task.return_value = {"status": task_status}
+
+    with pytest.raises(task_utils.TaskNonRunnableStatusError) as exc:
+        task_utils.raise_if_task_not_runnable("task-key", client)
+        assert exc.status == task_status
+
+    client.query_task.assert_called_once()
+
+
+@pytest.mark.parametrize("compute_plan_status", NON_RUNNABLE_COMPUTE_PLAN_STATUSES)
+def test_raise_if_task_not_runnable_raise_ComputePlanNonRunnableStatusError(  # noqa: N802
+    compute_plan_status: str, client: mock.Mock
+):
+    task_status = RUNNABLE_TASK_STATUSES[0]
+    client.query_task.return_value = {"status": task_status, "compute_plan_key": "cp-key"}
+    client.query_compute_plan.return_value = {"status": compute_plan_status}
+
+    with pytest.raises(task_utils.ComputePlanNonRunnableStatusError) as exc:
+        task_utils.raise_if_task_not_runnable("task-key", client)
+        assert exc.status == compute_plan_status
+
+    client.query_task.assert_called_once()
+    client.query_compute_plan.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("task_status", "compute_plan_status"),
+    list(itertools.product(RUNNABLE_TASK_STATUSES, RUNNABLE_COMPUTE_PLAN_STATUSES)),
+)
+def test_raise_if_task_not_runnable_do_not_raise(task_status: str, compute_plan_status: str, client: mock.Mock):
+    client.query_task.return_value = {"status": task_status, "compute_plan_key": "cp-key"}
+    client.query_compute_plan.return_value = {"status": compute_plan_status}
+
+    task_utils.raise_if_task_not_runnable("task-key", client)
+
+    client.query_task.assert_called_once()
+    client.query_compute_plan.assert_called_once()
+
+
+@pytest.mark.parametrize("compute_plan_status", RUNNABLE_COMPUTE_PLAN_STATUSES)
+def test_raise_if_task_not_runnable_allow_doing_do_not_raise(compute_plan_status: str, client: mock.Mock):
+    client.query_task.return_value = {"status": task_utils._TASK_STATUS_DOING, "compute_plan_key": "cp-key"}
+    client.query_compute_plan.return_value = {"status": compute_plan_status}
+
+    task_utils.raise_if_task_not_runnable("task-key", client, allow_doing=True)
+
+    client.query_task.assert_called_once()
+    client.query_compute_plan.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "exception", [task_utils.TaskNonRunnableStatusError, task_utils.ComputePlanNonRunnableStatusError, None]
+)
+@mock.patch("substrapp.compute_tasks.compute_task.raise_if_task_not_runnable", autospec=True)
+def is_task_runnable(raise_if_task_not_runnable: mock.Mock, exception: Optional[Type[Exception]]):
+    raise_if_task_not_runnable.side_effect = [exception]
+    expected = not exception
+    assert task_utils.is_task_runnable("task-key", None) is expected
