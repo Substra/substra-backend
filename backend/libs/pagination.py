@@ -1,7 +1,7 @@
 from django.conf import settings
 from rest_framework.pagination import PageNumberPagination
 
-REALLY_BIG_INT = 2 ** 32
+REALLY_BIG_INT = 2**32
 
 
 class DefaultPageNumberPagination(PageNumberPagination):
