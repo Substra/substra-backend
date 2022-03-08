@@ -48,6 +48,7 @@ class DataManagerViewTests(APITestCase):
 
         # retrieve view
         self.data_manager = assets.get_data_manager()
+        self.data_manager["creation_date"] = self.data_manager["creation_date"].replace("+00:00", "Z")
         # list view
         self.data_managers = assets.get_data_managers()
         for data_manager in self.data_managers:
@@ -56,6 +57,7 @@ class DataManagerViewTests(APITestCase):
             serializer = DataManagerRepSerializer(data={"channel": "mychannel", **data_manager})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            data_manager["creation_date"] = data_manager["creation_date"].replace("+00:00", "Z")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

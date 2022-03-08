@@ -64,7 +64,6 @@ def main():
             v = v.replace("true", "True")
             v = v.replace("false", "False")
             v = v.replace("null", "None")
-            v = v.replace("+00:00", "Z")
             v = textwrap.indent(v, 4 * " ").lstrip(" ")
             f.write(f"def get_{k}():\n")
             f.write(f"    return {v}\n")

@@ -67,7 +67,7 @@ class AlgoViewTests(APITestCase):
                 },
                 "metadata": {},
                 "category": algo_pb2.AlgoCategory.Name(algo.category),
-                "creation_date": algo.creation_date.isoformat() + "Z",
+                "creation_date": algo.creation_date.isoformat().replace("+00:00", "Z"),
                 "description": {
                     "checksum": "dummy-checksum",
                     "storage_address": f"http://testserver/algo/{algo.key}/description/",

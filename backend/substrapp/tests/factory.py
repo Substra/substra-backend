@@ -48,6 +48,8 @@ Customized example:
 import datetime
 import uuid
 
+from django.utils import timezone
+
 import orchestrator.algo_pb2 as algo_pb2
 import orchestrator.computeplan_pb2 as computeplan_pb2
 import orchestrator.computetask_pb2 as computetask_pb2
@@ -158,7 +160,7 @@ def create_algo(
         algorithm_checksum=DUMMY_CHECKSUM,
         description_address=get_storage_address("algo", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         owner=owner,
         channel=channel,
         **get_permissions(owner, public),
@@ -184,7 +186,7 @@ def create_metric(
         description_address=get_storage_address("metric", key, "description"),
         description_checksum=DUMMY_CHECKSUM,
         owner=owner,
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         channel=channel,
         **get_permissions(owner, public),
     )
@@ -212,7 +214,7 @@ def create_datamanager(
         description_checksum=DUMMY_CHECKSUM,
         logs_permission_public=True,
         logs_permission_authorized_ids=[owner],
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         owner=owner,
         channel=channel,
         **get_permissions(owner, public),
@@ -231,7 +233,7 @@ def create_datasample(
     data_sample = DataSample.objects.create(
         key=key,
         test_only=test_only,
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         owner=owner,
         channel=channel,
     )
@@ -250,7 +252,7 @@ def create_computeplan(
     metadata: dict = None,
     channel: str = DEFAULT_CHANNEL,
 ) -> ComputePlan:
-    creation_date = datetime.datetime.now()
+    creation_date = timezone.now()
     start_date, end_date = get_computeplan_dates(status, creation_date)
     if key is None:
         key = uuid.uuid4()
@@ -287,7 +289,7 @@ def create_computetask(
     channel: str = DEFAULT_CHANNEL,
     public: bool = False,
 ) -> ComputeTask:
-    creation_date = datetime.datetime.now()
+    creation_date = timezone.now()
     start_date, end_date = get_computetask_dates(status, creation_date)
     if key is None:
         key = uuid.uuid4()
@@ -337,7 +339,7 @@ def create_model(
         category=category,
         model_address=get_storage_address("model", key, "file"),
         model_checksum=DUMMY_CHECKSUM,
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         owner=owner,
         channel=channel,
         **get_permissions(owner, public),
@@ -352,7 +354,7 @@ def create_performance(
 ) -> Performance:
     return Performance.objects.create(
         value=value,
-        creation_date=datetime.datetime.now(),
+        creation_date=timezone.now(),
         channel=channel,
         metric=metric,
         compute_task=compute_task,

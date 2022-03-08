@@ -2,12 +2,12 @@ import logging
 import os
 import shutil
 import tempfile
-from datetime import datetime
 from unittest import mock
 from uuid import uuid4
 
 from django.test import override_settings
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.http import urlencode
 from parameterized import parameterized
 from rest_framework import status
@@ -66,7 +66,7 @@ def create_output_assets(compute_task):
                 compute_task_id=compute_task["key"],
                 metric_id=metric_key,
                 value=perf_value,
-                creation_date=datetime.now(),
+                creation_date=timezone.now(),
                 channel="mychannel",
             )
     else:
@@ -82,6 +82,7 @@ def create_output_assets(compute_task):
             serializer = ModelRepSerializer(data={"channel": "mychannel", **model})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            model["creation_date"] = model["creation_date"].replace("+00:00", "Z")
 
 
 class ComputeTaskViewTests(APITestCase):
@@ -134,9 +135,19 @@ class ComputeTaskViewTests(APITestCase):
             serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **cleaned_compute_task})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            self.patch_dates(compute_task)
 
             if compute_task["status"] == "STATUS_DONE":
                 create_output_assets(compute_task)
+
+    @staticmethod
+    def patch_dates(compute_task):
+        compute_task["creation_date"] = compute_task["creation_date"].replace("+00:00", "Z")
+        if compute_task["start_date"]:
+            compute_task["start_date"] = compute_task["start_date"].replace("+00:00", "Z")
+        if compute_task["end_date"]:
+            compute_task["end_date"] = compute_task["end_date"].replace("+00:00", "Z")
+        compute_task["algo"]["creation_date"] = compute_task["algo"]["creation_date"].replace("+00:00", "Z")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

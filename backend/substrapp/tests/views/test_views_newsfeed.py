@@ -145,7 +145,7 @@ class NewsFeedViewTests(APITestCase):
         ]
         for item in expected_items:
             item["asset_key"] = str(item["asset_key"])
-            item["timestamp"] = item["timestamp"].isoformat() + "Z"
+            item["timestamp"] = item["timestamp"].isoformat().replace("+00:00", "Z")
 
         response = self.client.get(self.url, **self.extra)
         self.assertEqual(

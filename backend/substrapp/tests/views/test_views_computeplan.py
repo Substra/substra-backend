@@ -99,6 +99,7 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             serializer = ComputePlanRepSerializer(data={"channel": "mychannel", **compute_plan})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            self.patch_dates(compute_plan)
 
         self.compute_tasks = assets.get_train_tasks() + assets.get_test_tasks() + assets.get_composite_tasks()
         for compute_task in self.compute_tasks:
@@ -116,6 +117,16 @@ class ComputePlanViewTests(AuthenticatedAPITestCase):
             serializer = ComputeTaskRepSerializer(data={"channel": "mychannel", **compute_task})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+
+    @staticmethod
+    def patch_dates(compute_plan):
+        compute_plan["creation_date"] = compute_plan["creation_date"].replace("+00:00", "Z")
+        if compute_plan["start_date"]:
+            compute_plan["start_date"] = compute_plan["start_date"].replace("+00:00", "Z")
+        if compute_plan["end_date"]:
+            compute_plan["end_date"] = compute_plan["end_date"].replace("+00:00", "Z")
+        if compute_plan["estimated_end_date"]:
+            compute_plan["estimated_end_date"] = compute_plan["estimated_end_date"].replace("+00:00", "Z")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

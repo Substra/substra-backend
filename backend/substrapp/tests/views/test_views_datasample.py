@@ -82,6 +82,7 @@ class DataSampleViewTests(APITestCase):
             serializer = DataSampleRepSerializer(data={"channel": "mychannel", **data_sample})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            data_sample["creation_date"] = data_sample["creation_date"].replace("+00:00", "Z")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)

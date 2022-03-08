@@ -64,6 +64,7 @@ class MetricViewTests(APITestCase):
             serializer = MetricRepSerializer(data={"channel": "mychannel", **metric})
             serializer.is_valid(raise_exception=True)
             serializer.save()
+            metric["creation_date"] = metric["creation_date"].replace("+00:00", "Z")
 
     def tearDown(self):
         shutil.rmtree(MEDIA_ROOT, ignore_errors=True)
